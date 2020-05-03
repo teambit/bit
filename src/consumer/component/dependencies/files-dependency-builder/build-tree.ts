@@ -14,10 +14,12 @@ import {
   FileObject,
   ImportSpecifier,
   DependencyTreeParams,
-  ResolveModulesConfig
+  ResolveModulesConfig,
+  ResolvedNodePackage
 } from './types/dependency-tree-type';
 import PackageJson from '../../package-json';
 import { PathOsBased, PathLinuxAbsolute } from '../../../../utils/path';
+import { BitId } from '../../../../bit-id';
 
 export type LinkFile = {
   file: string;
@@ -45,16 +47,6 @@ const byType = (list, bindingPrefix): SimpleGroupedDependencies => {
   return grouped(list);
 };
 
-interface ResolvedNodePackage {
-  fullPath: PathLinuxAbsolute;
-  name: string;
-  // Version from the package.json of the package itself
-  concreteVersion?: string;
-  // Version from the dependent package.json
-  versionUsedByDependent?: string;
-  // mark the package as component (in case it was install as regular package)
-  bitComponent: boolean;
-}
 /**
  * Get a path to node package and return the name and version
  *
@@ -66,7 +58,7 @@ export function resolveNodePackage(cwd: string, packageFullPath: PathLinuxAbsolu
   const result: ResolvedNodePackage = {
     fullPath: packageFullPath,
     name: '',
-    bitComponent: false
+    componentId: undefined
   };
   // Start by searching in the component dir and up from there
   // If not found search in package dir itself.
@@ -99,7 +91,7 @@ export function resolveNodePackage(cwd: string, packageFullPath: PathLinuxAbsolu
 
   // don't propagate here since loading a package.json of another folder and taking the version from it will result wrong version
   // This for example happen in the following case:
-  // if you have 2 authored component which one dependet on the other
+  // if you have 2 authored component which one dependent on the other
   // we will look for the package.json on the dependency but won't find it
   // if we propagate we will take the version from the root's package json which has nothing with the component version
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -115,8 +107,8 @@ export function resolveNodePackage(cwd: string, packageFullPath: PathLinuxAbsolu
   }
   result.name = packageInfo.name;
   result.concreteVersion = packageInfo.version;
-  if (packageInfo.component) {
-    result.bitComponent = true;
+  if (packageInfo.componentId) {
+    result.componentId = new BitId(packageInfo.componentId);
   }
   return result;
 }
@@ -143,7 +135,7 @@ function resolvePackageDirFromFilePath(absolutePackageFilePath: string): string 
 }
 
 interface GroupedDependenciesResolved {
-  bits: string[];
+  bits: Array<ResolvedNodePackage>;
   packages: PackageDependency;
   files: string[];
   unidentifiedPackages: PathOsBased[];
@@ -161,7 +153,7 @@ interface GroupedDependenciesResolved {
 function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResolved {
   const groups = byType(list, bindingPrefix);
   const resultGroups: GroupedDependenciesResolved = {
-    bits: groups.bits,
+    bits: [],
     packages: {},
     files: groups.files,
     unidentifiedPackages: []
@@ -173,8 +165,8 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
       const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
-        if (resolvedPackage.bitComponent) {
-          resultGroups.bits.push(packagePath);
+        if (resolvedPackage.componentId) {
+          resultGroups.bits.push(resolvedPackage);
         } else {
           const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
           if (version) {
@@ -187,6 +179,15 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
       } else unidentifiedPackages.push(packagePath);
     });
     resultGroups.packages = packages;
+    groups.bits.forEach(packagePath => {
+      const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
+      // If the package is actually a component add it to the components (bits) list
+      if (resolvedPackage) {
+        resultGroups.bits.push(resolvedPackage);
+      } else {
+        unidentifiedPackages.push(packagePath);
+      }
+    });
     if (!R.isEmpty(unidentifiedPackages)) {
       resultGroups.unidentifiedPackages = unidentifiedPackages;
     }
@@ -293,7 +294,7 @@ function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNam
 
 type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
 type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
-type FoundPackages = { packages: { [packageName: string]: string }; bits: string[] };
+type FoundPackages = { packages: { [packageName: string]: string }; bits: Array<string | ResolvedNodePackage> };
 /**
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
@@ -351,8 +352,8 @@ function groupMissing(
 
         // If the package is actually a component add it to the components (bits) list
         if (resolvedPackage) {
-          if (resolvedPackage.bitComponent) {
-            foundPackages.bits.push(resolvedPath);
+          if (resolvedPackage.componentId) {
+            foundPackages.bits.push(resolvedPackage);
           } else {
             const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
             if (version) {
@@ -478,9 +479,10 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
     });
   });
   foundPackages.bits.forEach(component => {
+    const compPath = typeof component === 'string' ? component : component.fullPath;
     missingGroups.forEach((fileDep: MissingGroupItem) => {
-      if (fileDep.bits && fileDep.bits.includes(component)) {
-        fileDep.bits = fileDep.bits.filter(existComponent => existComponent !== component);
+      if (fileDep.bits && fileDep.bits.includes(compPath)) {
+        fileDep.bits = fileDep.bits.filter(existComponent => existComponent !== compPath);
         if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
         if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
         // @ts-ignore

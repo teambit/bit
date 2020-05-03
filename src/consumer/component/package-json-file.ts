@@ -108,7 +108,8 @@ export default class PackageJsonFile {
       // Used for determine that a package is a component
       // Used when resolve dependencies to identify that some package should be treated as component
       // TODO: replace by better way to identify that something is a component for sure
-      component: true,
+      // TODO: Maybe need to add the binding prefix here
+      componentId: component.id.serialize(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

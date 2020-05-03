@@ -8,7 +8,7 @@ import Component from '../../../component/consumer-component';
 import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
-import { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
+import { ImportSpecifier, FileObject, Tree } from '../files-dependency-builder/types/dependency-tree-type';
 import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
@@ -328,32 +328,32 @@ export default class DependencyResolver {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
     }
     const rootDirFullPath = path.join(this.consumerPath, this.componentMap.rootDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.tree[depFile].files && this.tree[depFile].files.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      for (const file of this.tree[depFile].files) {
+    const files = this.tree[depFile].files || [];
+
+    if (files && !R.isEmpty(files)) {
+      for (const file of files) {
         const fullDepFile = path.resolve(rootDirFullPath, file.file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(this.consumerPath, fullDepFile));
         const componentId = this.consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
-        if (componentId) return componentId; // eslint-disable-line consistent-return
+        if (componentId) return componentId;
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.tree[depFile].bits && this.tree[depFile].bits.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      for (const bit of this.tree[depFile].bits) {
-        const componentId = this.consumer.getComponentIdFromNodeModulesPath(bit, this.component.bindingPrefix);
-        if (componentId) return componentId; // eslint-disable-line consistent-return
+    if (this.tree[depFile].bits && !R.isEmpty(this.tree[depFile].bits)) {
+      const bits = this.tree[depFile].bits || [];
+      for (const bit of bits) {
+        if (bit.componentId) {
+          return bit.componentId;
+        }
+        const componentId = this.consumer.getComponentIdFromNodeModulesPath(bit.fullPath, this.component.bindingPrefix);
+        if (componentId) return componentId;
       }
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.tree[depFile].files && this.tree[depFile].files.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      for (const file of this.tree[depFile].files) {
+    if (files && !R.isEmpty(files)) {
+      for (const file of files) {
         if (file.file !== depFile) {
           const componentId = this.traverseTreeForComponentId(file.file);
-          if (componentId) return componentId; // eslint-disable-line consistent-return
+          if (componentId) return componentId;
         } else {
           logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file.file} depends on itself`);
         }
@@ -696,30 +696,24 @@ either, use the ignore file syntax or change the require statement to have a mod
   processBits(originFile: PathLinuxRelative, fileType: FileType) {
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    let componentId;
     bits.forEach(bitDep => {
-      const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
-      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-      const getExistingId = (): BitId | null | undefined => {
+      if (bitDep.componentId) {
+        componentId = bitDep.componentId;
+      } else {
+        componentId = this.consumer.getComponentIdFromNodeModulesPath(bitDep.fullPath, this.component.bindingPrefix);
+      }
+      if (componentId && this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+        return;
+      }
+      const getExistingId = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIds.filterWithoutVersion(componentId);
         if (existingIds.length === 1) return existingIds[0];
-        // maybe the dependencies were imported as npm packages
-        // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
-        const basePath = this.componentMap.rootDir
-          ? path.join(this.consumerPath, this.componentMap.rootDir)
-          : this.consumerPath;
-        const depPath = path.join(basePath, bitDep);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const packageJson = PackageJson.findPackage(depPath);
-        if (packageJson) {
-          const depVersion = packageJson.version;
-          return componentId.changeVersion(depVersion);
-        }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
           if (modelDep) return modelDep;
         }
-        return null;
+        return undefined;
       };
       const existingId = getExistingId();
       if (existingId) {

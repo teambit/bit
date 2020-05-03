@@ -1,9 +1,9 @@
 import R from 'ramda';
 import { BitId } from '../../../bit-id';
 import { PathLinux } from '../../../utils/path';
-import { ImportSpecifier } from './dependency-resolver/types/dependency-tree-type';
 import { pathJoinLinux } from '../../../utils/path';
 import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
+import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
 
 /**
  * a dependency component may have multiple files that are required from the parent component, each

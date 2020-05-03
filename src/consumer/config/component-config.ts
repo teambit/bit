@@ -144,6 +144,10 @@ export default class ComponentConfig extends AbstractConfig {
       workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
     } else {
       workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
+      const defaultOwner = workspaceConfig?.workspaceSettings.defaultOwner;
+      if (defaultOwner) {
+        workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
+      }
     }
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);

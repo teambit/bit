@@ -10,7 +10,6 @@ import {
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
@@ -18,6 +17,7 @@ import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
+import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
