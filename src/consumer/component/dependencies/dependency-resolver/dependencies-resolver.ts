@@ -21,7 +21,6 @@ import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
 import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 import { getDependencyTree } from '../files-dependency-builder';
-import PackageJson from '../../package-json';
 
 export type AllDependencies = {
   dependencies: Dependency[];
