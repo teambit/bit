@@ -367,8 +367,8 @@ export default class CommandHelper {
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
   }
-  link() {
-    return this.runCmd('bit link');
+  link(flags?: string) {
+    return this.runCmd(`bit link ${flags || ''}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
