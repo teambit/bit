@@ -11,6 +11,7 @@ export default class Link extends Command {
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
   opts = [
+    ['j', 'json', 'return the output as JSON'],
     ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")']
   ] as CommandOptions;
   private = false;
@@ -20,7 +21,14 @@ export default class Link extends Command {
     return link(ids, rewire);
   }
 
-  report(results: { linksResults: LinksResult[]; codemodResults?: CodemodResult[] }): string {
+  report(
+    results: { linksResults: LinksResult[]; codemodResults?: CodemodResult[] },
+    _args: any,
+    flags: Record<string, any>
+  ): string {
+    if (flags.json) {
+      return JSON.stringify(results, null, 2);
+    }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const linksResultsStr = linkTemplate(results.linksResults);
     const rewireResults = results.codemodResults ? `\n\n${codemodTemplate(results.codemodResults)}` : '';
