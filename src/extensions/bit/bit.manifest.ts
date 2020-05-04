@@ -6,6 +6,7 @@ import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
 
 import { CompileExt } from '../compile';
+import { WatchExt } from '../watch';
 import { TestExt } from '../test';
 import { ComponentGraphExt } from '../graph';
 import { CreateExt } from '../create';
@@ -21,6 +22,7 @@ export default {
     FlowsExt,
     PackExt,
     CompileExt,
+    WatchExt,
     TestExt,
     ComposerExt,
     InstallExt,

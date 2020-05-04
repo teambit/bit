@@ -7,9 +7,7 @@ import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-// @todo: "bit watch" doesn't work as it should, it will be fixed on the next PR.
-// the fix for bit-watch can't be done until this PR is fixed first.
-describe.skip('bit watch command', function() {
+describe('bit watch command', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
