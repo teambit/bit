@@ -87,12 +87,7 @@ export default class WatchComponents {
     if (!isNew && !componentId) {
       return null;
     }
-    // a workaround. since we load the consumer here, we create a new instance of the scope so the
-    // onBuild hook gets lost. obviously, it's a hack, but this command will be replaced soon by
-    // the new "watch" extension.
-    const onBuild = this.consumer.scope.onBuild;
     this.consumer = await loadConsumer(undefined, true);
-    this.consumer.scope.onBuild = onBuild;
     if (!componentId) {
       componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
     }
