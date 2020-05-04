@@ -6,9 +6,9 @@ import { Compile } from '@bit/bit.core.compile';
 
 export type ServeConfig = {};
 
-export type ServeDeps = [BitCli, Compile, Workspace];
+export type testDeps = [BitCli, Compile, Workspace];
 
-export async function provideTest([cli, compile, workspace]: ServeDeps) {
+export async function provideTest([cli, compile, workspace]: testDeps) {
   const test = new Test(compile, workspace);
   // @ts-ignore
   cli.register(new TestCmd(test));

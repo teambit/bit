@@ -1,7 +1,7 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { difference, groupBy } from 'ramda';
 import { compact } from 'ramda-adjunct';
-import { Consumer } from 'bit-bin/consumer';
+import { Consumer, loadConsumer } from 'bit-bin/consumer';
 import { Scope } from '@bit/bit.core.scope';
 import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
 import { Component, ComponentFactory, ComponentID } from '@bit/bit.core.component';
@@ -32,7 +32,7 @@ export default class Workspace {
     /**
      * private access to the legacy consumer instance.
      */
-    readonly consumer: Consumer,
+    public consumer: Consumer,
 
     /**
      * Workspace's configuration
@@ -293,5 +293,13 @@ export default class Workspace {
 
     // Remove empty manifests as a result of loading issue
     return manifests.filter(manifest => manifest);
+  }
+
+  /**
+   * this should be rarely in-use.
+   * it's currently used by watch extension as a quick workaround to load .bitmap and the components
+   */
+  async _reloadConsumer() {
+    this.consumer = await loadConsumer(this.path, true);
   }
 }

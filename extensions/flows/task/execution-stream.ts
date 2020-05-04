@@ -1,7 +1,9 @@
 import { ReplaySubject, Subject } from 'rxjs';
 import { ContainerExec } from '@bit/bit.core.isolator';
+import logger from 'bit-bin/logger/logger';
 
-export function createExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<any> {
+export function createExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<unknown> {
+  logger.debug(`flowsExt, createExecutionStream of ${id} started`);
   let message: any = null;
   const subscriber = new ReplaySubject();
   subscriber.next({
@@ -19,6 +21,7 @@ export function createExecutionStream(exec: ContainerExec, id: string, time: Dat
   });
 
   exec.stderr.on('data', function(data) {
+    logger.debug(`flowsExt, createExecutionStream of ${id} got error: ${data.toString()}`);
     subscriber.next({
       type: 'task:stderr',
       id,
@@ -31,6 +34,7 @@ export function createExecutionStream(exec: ContainerExec, id: string, time: Dat
   });
 
   exec.on('close', function() {
+    logger.debug(`flowsExt, createExecutionStream of ${id} completed!`);
     const streamMessage = {
       type: 'task:result',
       id,

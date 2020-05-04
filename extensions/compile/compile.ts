@@ -1,4 +1,5 @@
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import { Workspace } from '@bit/bit.core.workspace';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { BitId } from 'bit-bin/bit-id';
@@ -9,6 +10,12 @@ import { Capsule } from '@bit/bit.core.isolator';
 import DataToPersist from 'bit-bin/consumer/component/sources/data-to-persist';
 import { Scope } from '@bit/bit.core.scope';
 import { Flows, IdsAndFlows } from '@bit/bit.core.flows';
+import logger from 'bit-bin/logger/logger';
+import loader from 'bit-bin/cli/loader';
+import { Dist } from 'bit-bin/consumer/component/sources';
+import GeneralError from 'bit-bin/error/general-error';
+
+type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -24,13 +31,72 @@ export class Compile {
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
-  async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
-    const reportResults: any = await this.compile(ids.map(id => id.toString()));
-    const resultsP = Object.values(reportResults.value).map(async (reportResult: any) => {
+  async compileDuringBuild(
+    ids: BitId[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    return this.compile(
+      ids.map(id => id.toString()),
+      noCache,
+      verbose,
+      dontPrintEnvMsg
+    );
+  }
+
+  async compile(
+    componentsIds: string[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    const componentsAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
+    logger.debug(`compilerExt, completed created of capsules for ${componentsIds.join(', ')}`);
+    const idsAndFlows = new IdsAndFlows();
+    const componentsWithLegacyCompilers: ComponentAndCapsule[] = [];
+    componentsAndCapsules.forEach(c => {
+      const compileCoreConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+      const compileConfig = compileCoreConfig || c.component.config.extensions.findExtension('compile')?.config;
+      const compiler = compileConfig ? [compileConfig.compiler] : [];
+      if (compileConfig) {
+        idsAndFlows.push({ id: c.consumerComponent.id, value: compiler });
+      } else {
+        componentsWithLegacyCompilers.push(c);
+      }
+    });
+    let newCompilersResult: BuildResult[] = [];
+    let oldCompilersResult: BuildResult[] = [];
+    if (idsAndFlows.length) {
+      newCompilersResult = await this.compileWithNewCompilers(
+        idsAndFlows,
+        componentsAndCapsules.map(c => c.consumerComponent)
+      );
+    }
+    if (componentsWithLegacyCompilers.length) {
+      oldCompilersResult = await this.compileWithLegacyCompilers(
+        componentsWithLegacyCompilers,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
+      );
+    }
+
+    return [...newCompilersResult, ...oldCompilersResult];
+  }
+
+  async compileWithNewCompilers(idsAndFlows: IdsAndFlows, components: ConsumerComponent[]): Promise<BuildResult[]> {
+    const reportResults: any = await this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
+    // @todo fix once flows.run() get types
+    const resultsP: any = Object.values(reportResults.value).map(async (reportResult: any) => {
       const result = reportResult.result.value.tasks;
       const id: BitId = reportResult.result.id;
-      if (!result.length || !result[0].value) return { id };
-      const distDir = result[0].value.dir;
+      if (!result.length) return { id };
+      const firstResult = result[0]; // for compile it's always one result because there is only one task to run
+      // @todo: currently the error is not passed into runMultiple method. once it's there, show the acutal error.
+      if (firstResult.code !== 0) throw new Error(`failed compiling ${id.toString()}`);
+      if (!firstResult.value) return { id };
+      const distDir = firstResult.value.dir;
       if (!distDir) {
         throw new Error(
           `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
@@ -47,22 +113,88 @@ export class Compile {
       });
       return { id, dists: distFilesObjects };
     });
-    return Promise.all(resultsP);
+    const extensionsResults: buildHookResult[] = await Promise.all(resultsP);
+    // @ts-ignore
+    return components
+      .map(component => {
+        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
+        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
+        const builtFiles = resultFromCompiler.dists;
+        builtFiles.forEach(file => {
+          if (!file.path || !('content' in file) || typeof file.content !== 'string') {
+            throw new GeneralError(
+              'compile interface expects to get files in a form of { path: string, content: string }'
+            );
+          }
+        });
+        // @todo: once tag is working, check if anything is missing here. currently the path is a
+        // relative path with "dist", but can be easily changed from the compile extension
+        const distsFiles = builtFiles.map(file => {
+          return new Dist({
+            path: file.path,
+            contents: Buffer.from(file.content)
+          });
+        });
+        component.setDists(distsFiles);
+        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
+      })
+      .filter(x => x);
   }
 
-  // @todo: what is the return type here?
-  async compile(componentsIds: string[]) {
-    const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
-    const idsAndScriptsArr = componentAndCapsules
-      .map(c => {
-        const compileCoreConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
-        const compileConfig = compileCoreConfig || c.component.config.extensions.findExtension('compile')?.config;
-        const compiler = compileConfig ? [compileConfig.compiler] : [];
-        return { id: c.consumerComponent.id, value: compiler };
-      })
-      .filter(i => i.value);
-    const idsAndFlows = new IdsAndFlows(...idsAndScriptsArr);
-    return this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
+  async compileWithLegacyCompilers(
+    componentsAndCapsules: ComponentAndCapsule[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    // @todo: uncomment this part once we're ready to let legacy-compilers write the dists on the capsule
+
+    // const build = async (componentAndCapsules: ComponentAndCapsule) => {
+    //   const component = componentAndCapsules.consumerComponent;
+    //   if (component.compiler) loader.start(`building component - ${component.id}`);
+    //   await component.build({
+    //     scope: this.workspace.consumer.scope,
+    //     consumer: this.workspace.consumer
+    //   });
+    //   if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
+    //     return { component: component.id.toString(), buildResults: null };
+    //   }
+    //   const dataToPersist = new DataToPersist();
+    //   const filesToAdd = component.dists.get().map(file => {
+    //     file.updatePaths({ newBase: 'dist' });
+    //     return file;
+    //   });
+    //   dataToPersist.addManyFiles(filesToAdd);
+    //   await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
+    //   const buildResults = component.dists.get().map(d => d.path);
+    //   if (component.compiler) loader.succeed();
+    //   return { component: component.id.toString(), buildResults };
+    // };
+    // const buildResults = await pMapSeries(componentsAndCapsules, build);
+
+    const components = componentsAndCapsules.map(c => c.consumerComponent);
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
+    const build = async (component: ConsumerComponent) => {
+      if (component.compiler) loader.start(`building component - ${component.id}`);
+      //
+      await component.build({
+        scope: this.workspace.consumer.scope,
+        consumer: this.workspace.consumer,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
+      });
+      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
+      if (component.compiler) loader.succeed();
+      return { component: component.id.toString(), buildResults };
+    };
+    const writeLinks = async (component: ConsumerComponent) =>
+      component.dists.writeDistsLinks(component, this.workspace.consumer);
+
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+
+    return buildResults;
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {

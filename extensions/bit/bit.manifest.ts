@@ -6,6 +6,7 @@ import { ComposerExt } from '@bit/bit.core.composer';
 import { InstallExt } from '@bit/bit.core.install';
 
 import { CompileExt } from '@bit/bit.core.compile';
+import { WatchExt } from '@bit/bit.core.watch';
 import { TestExt } from '@bit/bit.core.test';
 import { ComponentGraphExt } from '@bit/bit.core.graph';
 import { CreateExt } from '@bit/bit.core.create';
@@ -21,6 +22,7 @@ export default {
     FlowsExt,
     PackExt,
     CompileExt,
+    WatchExt,
     TestExt,
     ComposerExt,
     InstallExt,
