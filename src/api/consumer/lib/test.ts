@@ -19,7 +19,7 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 export default (async function test(
   id: string | undefined,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
+  forkLevel: ForkLevel = TESTS_FORK_LEVEL.NONE,
   includeUnmodified = false,
   verbose?: boolean | null
 ): Promise<SpecsResultsWithMetaData> {
