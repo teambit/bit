@@ -707,6 +707,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!bits || R.isEmpty(bits)) return;
     let componentId;
     bits.forEach(bitDep => {
+      const version = bitDep.concreteVersion || bitDep.versionUsedByDependent;
       if (bitDep.componentId) {
         componentId = bitDep.componentId;
       } else if (bitDep.fullPath) {
@@ -714,6 +715,9 @@ either, use the ignore file syntax or change the require statement to have a mod
         // We can only get here if the prefix was DEFAULT_BINDINGS_PREFIX
       } else {
         componentId = packageNameToComponentId(this.consumer, bitDep.name, DEFAULT_BINDINGS_PREFIX);
+      }
+      if (componentId && version) {
+        componentId.changeVersion(version);
       }
       if (componentId && this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
@@ -727,7 +731,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         }
         return undefined;
       };
-      const existingId = getExistingId();
+      const existingId = componentId && version ? componentId : getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
