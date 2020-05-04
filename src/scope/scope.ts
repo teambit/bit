@@ -47,7 +47,6 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
-import { Dist } from '../consumer/component/sources';
 import { LEGACY_SHARED_DIR_FEATURE, isFeatureEnabled } from '../api/consumer/lib/feature-toggle';
 
 const removeNils = R.reject(R.isNil);
