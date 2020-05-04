@@ -158,9 +158,9 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
     files: groups.files,
     unidentifiedPackages: []
   };
+  const unidentifiedPackages: string[] = [];
   if (groups.packages) {
     const packages = {};
-    const unidentifiedPackages: string[] = [];
     groups.packages.forEach(packagePath => {
       const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
       // If the package is actually a component add it to the components (bits) list
@@ -179,6 +179,8 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
       } else unidentifiedPackages.push(packagePath);
     });
     resultGroups.packages = packages;
+  }
+  if (groups.bits) {
     groups.bits.forEach(packagePath => {
       const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
       // If the package is actually a component add it to the components (bits) list
@@ -188,9 +190,9 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
         unidentifiedPackages.push(packagePath);
       }
     });
-    if (!R.isEmpty(unidentifiedPackages)) {
-      resultGroups.unidentifiedPackages = unidentifiedPackages;
-    }
+  }
+  if (!R.isEmpty(unidentifiedPackages)) {
+    resultGroups.unidentifiedPackages = unidentifiedPackages;
   }
   return resultGroups;
 }
