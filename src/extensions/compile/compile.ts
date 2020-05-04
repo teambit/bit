@@ -121,7 +121,7 @@ export class Compile {
         if (!resultFromCompiler || !resultFromCompiler.dists) return null;
         const builtFiles = resultFromCompiler.dists;
         builtFiles.forEach(file => {
-          if (!file.path || !file.content || typeof file.content !== 'string') {
+          if (!file.path || !('content' in file) || typeof file.content !== 'string') {
             throw new GeneralError(
               'compile interface expects to get files in a form of { path: string, content: string }'
             );
