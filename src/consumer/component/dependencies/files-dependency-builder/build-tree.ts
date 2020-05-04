@@ -479,7 +479,7 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
         fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-        set(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
+        set(tree[fileDep.originFile], ['packages', pkg], foundPackages.packages[pkg]);
       }
       if (fileDep.bits && fileDep.bits.includes(pkg)) {
         fileDep.bits = fileDep.bits.filter(packageName => packageName !== pkg);
