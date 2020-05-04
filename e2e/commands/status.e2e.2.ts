@@ -612,7 +612,7 @@ describe('bit status command', function() {
       helper.fixtures.createComponentBarFoo(fooFixture);
       helper.fixtures.addComponentBarFoo();
       helper.npm.initNpm();
-      helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': 'v1.0.0' } });
+      helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': '1.0.0' } });
       output = helper.command.runCmd('bit status');
     });
     it('should not show the bit package as missing', () => {
