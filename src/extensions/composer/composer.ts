@@ -6,6 +6,7 @@ export default class Composer {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async serve(componentId: ComponentId) {
+    // @ts-ignore
     const observable = await this.watcher.watch();
     observable.subscribe(() => {});
   }

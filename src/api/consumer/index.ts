@@ -16,7 +16,6 @@ import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import config from './lib/global-config';
-import watchAll from './lib/watch';
 import { addOne as add, addMany } from './lib/add';
 import untrack from './lib/untrack';
 import unTagAction from './lib/untag';
@@ -58,7 +57,6 @@ export {
   remoteAdd,
   remoteList,
   remoteRm,
-  watchAll,
   add,
   addMany,
   dependencyStatus,
