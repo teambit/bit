@@ -717,7 +717,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         componentId = packageNameToComponentId(this.consumer, bitDep.name, DEFAULT_BINDINGS_PREFIX);
       }
       if (componentId && version) {
-        componentId.changeVersion(version);
+        componentId = componentId.changeVersion(version);
       }
       if (componentId && this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
