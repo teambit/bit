@@ -54,8 +54,7 @@ export default class SourceFile extends AbstractVinyl {
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
-  // @ts-ignore
-  clone(): SourceFile {
+  clone(): this {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(this);
   }

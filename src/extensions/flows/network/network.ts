@@ -1,7 +1,7 @@
 /* eslint-disable no-bitwise */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-this-alias */
-import { ReplaySubject, from, zip } from 'rxjs';
+import { ReplaySubject, from, zip, Observable } from 'rxjs';
 import { mergeMap, map, filter, mergeAll, tap } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
@@ -14,6 +14,7 @@ import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator';
+import logger from '../../../logger/logger';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
@@ -76,22 +77,29 @@ export class Network {
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
-    let amount = 0;
+    let seederAmount = 0;
 
     return function walk() {
+      logger.debug(`flowsExt, network.walk graph.nodes().length: ${graph.nodes().length}`);
       if (!graph.nodes().length) {
-        // console.log('end');
+        logger.debug('flowsExt, network.walk endNetwork going to send network:result');
         endNetwork(stream, startTime, visitedCache);
         return;
       }
 
-      const seeders = from(getSeeders(graph, visitedCache, amount));
-      const flows = from(getSeeders(graph, visitedCache, amount)).pipe(
+      const seeders: string[] = getSeeders(graph, visitedCache, seederAmount);
+      logger.debug(`flowsExt, network.walk, seeders: ${seeders.join(', ')}`);
+      const seedersObservables: Observable<string> = from(seeders);
+      const flows: Observable<Flow> = seedersObservables.pipe(
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
       );
-      amount += getSeeders(graph, visitedCache, amount).length;
+      seederAmount += seeders.length;
+      logger.debug(`flowsExt, network.walk, amount: ${seederAmount}`);
 
-      zip(zip(seeders, flows).pipe(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))), seeders)
+      zip(
+        zip(seedersObservables, flows).pipe(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
+        seedersObservables
+      )
         .pipe(
           map(([flowStream, seed]) => {
             // console.log('visited ', seed)
@@ -110,20 +118,25 @@ export class Network {
             const seed = data.id.toString();
             const cacheValue = visitedCache[seed];
             cacheValue.result = data;
-            amount -= 1;
+            seederAmount -= 1;
+            logger.debug(`flowsExt, network.walk, next, removing ${seed}. amount is decreased to ${seederAmount}`);
             graph.removeNode(seed);
             // console.log(`got ${data.type} from ${seed} amount is now ${amount}`, graph.nodes());
             handlePostFlow(postFlow, cacheValue);
-            if (amount === 0) {
+            if (seederAmount === 0) {
               walk();
             }
             return data;
           },
           error(err) {
             const seed = err.id;
-            amount -= 1;
+            seederAmount -= 1;
+            logger.debug(`flowsExt, network.walk, ERROR, removing ${seed}. amount is decreased to ${seederAmount}`);
             graph.removeNode(seed);
             handleNetworkError(seed, graph, visitedCache, err);
+            if (seederAmount === 0) {
+              walk();
+            }
           }
         });
     };
@@ -147,11 +160,11 @@ function handlePostFlow(postFlow: PostFlow | null, cacheValue: CacheValue) {
   }
 }
 
-function getSeeders(g: Graph, cache: Cache, amount = 0) {
-  const sources = getSources(g, cache);
-  return sources.length ? sources.slice(0, Math.max(5 - amount, 1)) : [g.nodes()[0]].filter(v => v);
+function getSeeders(g: Graph, cache: Cache, amount = 0): string[] {
+  const nonVisited = getNonVisitedNodes(g, cache);
+  return nonVisited.length ? nonVisited.slice(0, Math.max(5 - amount, 1)) : [g.nodes()[0]].filter(v => v);
 }
-function getSources(g: Graph, cache: Cache) {
+function getNonVisitedNodes(g: Graph, cache: Cache): string[] {
   return g.sources().filter(seed => !cache[seed].visited);
 }
 

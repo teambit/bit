@@ -249,6 +249,10 @@ export default class Version extends BitObject {
     return BitIds.fromArray(allDependencies);
   }
 
+  getDependenciesIdsExcludeExtensions(): BitIds {
+    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
+  }
+
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
     const getUpdated = (flattenedDependencies: BitIds): BitIds => {
       const updatedIds = flattenedDependencies.map(depId => {

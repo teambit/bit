@@ -4,6 +4,7 @@
 import { Subject, ReplaySubject } from 'rxjs';
 import { Task } from '../task';
 import { Capsule } from '../../isolator';
+import logger from '../../../logger/logger';
 
 export class Flow {
   private result: any[] = [];
@@ -24,14 +25,18 @@ export class Flow {
       startTime
     });
     if (this.tasks && this.tasks.length) {
+      logger.debug(`flowsExt, flow.execute of ${id}. tasks: ${this.tasks.join(', ')}`);
       this.execSequence(capsule, subject, startTime, 0);
     } else {
+      logger.debug(`flowsExt, flow.execute of ${id}. no tasks. handleDone`);
       setImmediate(() => this.handleDone(subject, capsule, startTime));
     }
     return subject;
   }
 
   private execSequence(capsule: Capsule, subject: Subject<any>, start: Date, index: number) {
+    const id = capsule.component.id.toString();
+    logger.debug(`flowsExt, flow.execSequence of ${id}. index: ${index}`);
     const that = this;
     const task = Task.execute(this.tasks[index], capsule);
     subject.next(task);
@@ -72,6 +77,7 @@ export class Flow {
 
   private handleDone(subject: Subject<any>, capsule: Capsule, startTime: Date, isError = false) {
     const endTime = new Date();
+    logger.debug(`flowsExt, flow.handleDone of ${capsule.component.id.toString()}. isError: ${isError}`);
     subject[isError ? 'error' : 'next']({
       type: 'flow:result',
       id: capsule.component.id,
