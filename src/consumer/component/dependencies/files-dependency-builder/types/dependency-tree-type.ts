@@ -39,7 +39,7 @@ export type LinkFile = {
 type MissingType = 'files' | 'packages' | 'bits';
 
 export interface ResolvedNodePackage {
-  fullPath: PathLinuxAbsolute;
+  fullPath?: PathLinuxAbsolute;
   name: string;
   // Version from the package.json of the package itself
   concreteVersion?: string;

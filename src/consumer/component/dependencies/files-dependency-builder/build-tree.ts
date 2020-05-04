@@ -300,7 +300,7 @@ function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNam
 
 type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
 type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
-type FoundPackages = { packages: { [packageName: string]: string }; bits: Array<string | ResolvedNodePackage> };
+type FoundPackages = { packages: { [packageName: string]: string }; bits: Array<ResolvedNodePackage> };
 /**
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
@@ -374,24 +374,30 @@ function groupMissing(
         }
       });
     }
+    // this was disabled since it cause these bugs:
+    // (as part of 9ddeb61aa29c170cd58df0c2cc1cc30db1ebded8 of bit-javascript)
+    // https://github.com/teambit/bit/issues/635
+    // https://github.com/teambit/bit/issues/690
+    // later it re-enabled by this commit (d192a295632255dba9f0d62232fb237feeb8f33a of bit-javascript)
+    // we should think if we really want it
     if (packageJson) {
       const result = findPackagesInPackageJson(packageJson, missingPackages);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       groups.packages = result.missingPackages;
-      Object.assign(foundPackages, result.foundPackages);
+      Object.assign(foundPackages.packages, result.foundPackages);
 
       if (group.bits) {
         const foundBits = findPackagesInPackageJson(packageJson, group.bits);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        groups.bits = foundBits.missingPackages;
-        Object.assign(foundPackages, foundBits.foundPackages);
+        R.forEachObjIndexed((version, name) => {
+          const resolvedFoundBit: ResolvedNodePackage = {
+            name,
+            versionUsedByDependent: version
+          };
+          foundPackages.bits.push(resolvedFoundBit);
+        }, foundBits.foundPackages);
       }
     }
   });
-
-  // temporarily disable this functionality since it cause this bugs:
-  // https://github.com/teambit/bit/issues/635
-  // https://github.com/teambit/bit/issues/690
 
   return { missingGroups: groups, foundPackages };
 }
@@ -485,10 +491,14 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
     });
   });
   foundPackages.bits.forEach(component => {
-    const compPath = typeof component === 'string' ? component : component.fullPath;
     missingGroups.forEach((fileDep: MissingGroupItem) => {
-      if (fileDep.bits && fileDep.bits.includes(compPath)) {
-        fileDep.bits = fileDep.bits.filter(existComponent => existComponent !== compPath);
+      if (
+        fileDep.bits &&
+        ((component.fullPath && fileDep.bits.includes(component.fullPath)) || fileDep.bits.includes(component.name))
+      ) {
+        fileDep.bits = fileDep.bits.filter(existComponent => {
+          return existComponent !== component.fullPath && existComponent !== component.name;
+        });
         if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
         if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
         // @ts-ignore

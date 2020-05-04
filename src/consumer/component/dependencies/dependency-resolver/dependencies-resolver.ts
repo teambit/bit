@@ -1,7 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component/consumer-component';
@@ -21,6 +21,7 @@ import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
 import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 import { getDependencyTree } from '../files-dependency-builder';
+import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -343,8 +344,17 @@ export default class DependencyResolver {
         if (bit.componentId) {
           return bit.componentId;
         }
-        const componentId = this.consumer.getComponentIdFromNodeModulesPath(bit.fullPath, this.component.bindingPrefix);
-        if (componentId) return componentId;
+        if (bit.fullPath) {
+          const componentId = this.consumer.getComponentIdFromNodeModulesPath(
+            bit.fullPath,
+            this.component.bindingPrefix
+          );
+          if (componentId) return componentId;
+          // We can only get here if the prefix was DEFAULT_BINDINGS_PREFIX
+        } else {
+          const componentId = packageNameToComponentId(this.consumer, bit.name, DEFAULT_BINDINGS_PREFIX);
+          return componentId;
+        }
       }
     }
 
@@ -699,8 +709,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     bits.forEach(bitDep => {
       if (bitDep.componentId) {
         componentId = bitDep.componentId;
-      } else {
+      } else if (bitDep.fullPath) {
         componentId = this.consumer.getComponentIdFromNodeModulesPath(bitDep.fullPath, this.component.bindingPrefix);
+        // We can only get here if the prefix was DEFAULT_BINDINGS_PREFIX
+      } else {
+        componentId = packageNameToComponentId(this.consumer, bitDep.name, DEFAULT_BINDINGS_PREFIX);
       }
       if (componentId && this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
