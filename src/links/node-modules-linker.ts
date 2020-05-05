@@ -278,7 +278,7 @@ export default class NodeModuleLinker {
   async _getDependenciesLinks(component: Component, componentMap: ComponentMap): Promise<Symlink[]> {
     const getSymlinks = async (dependency: Dependency): Promise<Symlink[]> => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
-      const depModel = await this.consumer?.scope.getModelComponentIfExist(dependency.id);
+      const depModel = await (this.consumer?.scope.getModelComponentIfExist(dependency.id) || Promise.resolve());
       const bindingPrefix = depModel ? depModel.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
