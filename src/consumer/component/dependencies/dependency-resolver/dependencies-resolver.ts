@@ -1,7 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component/consumer-component';
