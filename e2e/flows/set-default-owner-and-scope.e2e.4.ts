@@ -7,6 +7,7 @@ chai.use(require('chai-fs'));
 
 // (supportNpmCiRegistryTesting ? describe : describe.skip)(
 describe('set default owner and scope', function() {
+  this.timeout(0);
   let helper: Helper;
   before(() => {
     const helperOptions: HelperOptions = {
