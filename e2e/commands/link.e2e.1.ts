@@ -228,34 +228,34 @@ console.log(isType());`;
       // is-type
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithUtilsIsType();
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       // is-string
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest');
       helper.command.importComponent('utils/is-type');
       const isStringFixture = `const isType = require('@bitTest/${helper.scopes.remote}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.fixtures.addComponentUtilsIsString();
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       // is-string2
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
       helper.command.addComponentAllowFiles('test/is-string2.js', { i: 'test/is-string2' });
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('test/is-string2');
 
       const appJsFixture = `const isString2 = require('@bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
