@@ -17,6 +17,7 @@ import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
+import logger from '../../logger/logger';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -55,6 +56,7 @@ export default class Isolator {
   }
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
+    logger.debug(`isolatorExt, createNetworkFromConsumer ${seeders.join(', ')}`);
     const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
