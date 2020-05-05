@@ -23,6 +23,19 @@
         "@types/node": "^12.12.25"
       }
     },
+    "cli": {
+      "extensions": {
+        "typescript": {},
+        "compile": {
+          "compiler": "#@bit/bit.core.typescript:transpile"
+        }
+      },
+      "bin": "app.js",
+      // why this is needed? try to automate this
+      "devDependencies": {
+        "@types/node": "^12.12.25"
+      }
+    },
     "flows": {
       // could be nicer to not repeat myself, I only want to add devDependency for this component
       // but keep the same "extensions" as other components in the general "*"
