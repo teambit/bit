@@ -350,9 +350,8 @@ export default class DependencyResolver {
             this.component.bindingPrefix
           );
           if (componentId) return componentId;
-          // We can only get here if the prefix was DEFAULT_BINDINGS_PREFIX
         } else {
-          const componentId = packageNameToComponentId(this.consumer, bit.name, DEFAULT_BINDINGS_PREFIX);
+          const componentId = packageNameToComponentId(this.consumer, bit.name, this.component.bindingPrefix);
           return componentId;
         }
       }
@@ -712,9 +711,8 @@ either, use the ignore file syntax or change the require statement to have a mod
         componentId = bitDep.componentId;
       } else if (bitDep.fullPath) {
         componentId = this.consumer.getComponentIdFromNodeModulesPath(bitDep.fullPath, this.component.bindingPrefix);
-        // We can only get here if the prefix was DEFAULT_BINDINGS_PREFIX
       } else {
-        componentId = packageNameToComponentId(this.consumer, bitDep.name, DEFAULT_BINDINGS_PREFIX);
+        componentId = packageNameToComponentId(this.consumer, bitDep.name, this.component.bindingPrefix);
       }
       if (componentId && version) {
         componentId = componentId.changeVersion(version);
