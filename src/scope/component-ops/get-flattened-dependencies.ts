@@ -44,8 +44,10 @@ export async function getAllFlattenedDependencies(
   });
 
   const getFlattenedDevDeps = () => {
-    const flattenedDevAndExt = BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExtensionDependencies]);
-    return flattenedDevAndExt.removeMultipleIfExistWithoutVersion(flattenedDependencies);
+    // remove extensions dependencies that are also regular dependencies
+    // (no need to do the same for devDependencies, because their duplicated are removed previously)
+    const flattenedExt = flattenedExtensionDependencies.removeMultipleIfExistWithoutVersion(flattenedDependencies);
+    return BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExt]);
   };
 
   return {
