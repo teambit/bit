@@ -43,9 +43,14 @@ export async function getAllFlattenedDependencies(
     prodGraph: graphDeps
   });
 
+  const getFlattenedDevDeps = () => {
+    const flattenedDevAndExt = BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExtensionDependencies]);
+    return flattenedDevAndExt.removeMultipleIfExistWithoutVersion(flattenedDependencies);
+  };
+
   return {
     flattenedDependencies,
-    flattenedDevDependencies: BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExtensionDependencies])
+    flattenedDevDependencies: getFlattenedDevDeps()
   };
 }
 
