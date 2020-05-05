@@ -103,9 +103,16 @@ chai.use(require('chai-fs'));
         helper.command.addComponent('bar');
         output = helper.command.tagAllComponents();
       });
-      // a guard for Flows tag that exits unexpectedly
+      // a guard for Flows bug that exits unexpectedly
       it('should be able to tag', () => {
         expect(output).to.have.string('2 component(s) tagged');
+      });
+      it('should still save the dists on the component with the compiler', () => {
+        const catHelp = helper.command.catComponent('help@latest');
+        expect(catHelp).to.have.property('dists');
+        const dists = catHelp.dists;
+        const files = dists.map(d => d.relativePath);
+        expect(files).to.include('help.js');
       });
     });
   });
