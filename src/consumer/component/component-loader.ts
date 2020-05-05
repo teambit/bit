@@ -24,15 +24,21 @@ export default class ComponentLoader {
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
+      id: id.toString()
+    });
     const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
     const idStr = idWithVersion.toString();
-    if (this._componentsCacheForCapsule[idStr]) {
-      return this._componentsCacheForCapsule[idStr];
+    if (!this._componentsCacheForCapsule[idStr]) {
+      const { components } = await this.loadMany(BitIds.fromArray([id]));
+      const component = components[0].clone();
+      this._componentsCacheForCapsule[idStr] = component;
     }
-    const { components } = await this.loadMany(BitIds.fromArray([id]));
-    const component = components[0].clone();
-    this._componentsCacheForCapsule[idStr] = component;
-    return component;
+
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
+      id: id.toString()
+    });
+    return this._componentsCacheForCapsule[idStr];
   }
 
   async loadMany(
