@@ -1,8 +1,8 @@
 import { omit } from 'ramda';
-import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
+import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 
 const LEGACY_PROPS = [
   'dependenciesDirectory',
@@ -21,7 +21,7 @@ export type ComponentScopeDirMapEntry = {
 export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
-  owner?: string;
+  defaultOwner?: string;
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
@@ -64,6 +64,12 @@ export class WorkspaceSettings {
 
   get defaultScope(): string | undefined {
     // TODO: change when supporting many dirs<>scopes mapping
+    const defaultOwner = this.defaultOwner;
+    const defaultOwnerPrefix = `${defaultOwner}.`;
+    // For legacy workspace where the default scope contain the owner
+    if (defaultOwner && this.data.workspace.defaultScope?.startsWith(defaultOwner)) {
+      return this.data.workspace.defaultScope.replace(defaultOwnerPrefix, '');
+    }
     return this.data.workspace.defaultScope;
   }
 
@@ -82,6 +88,10 @@ export class WorkspaceSettings {
     return this.data.dependencyResolver.packageManager;
   }
 
+  get defaultOwner() {
+    return this.data.workspace.defaultOwner;
+  }
+
   _setPackageManager(clientName: PackageManagerClients) {
     this.data.dependencyResolver.packageManager = clientName;
   }
@@ -95,7 +105,7 @@ export class WorkspaceSettings {
   }
 
   get _bindingPrefix() {
-    return this.data.bindingPrefix;
+    return this.data.workspace.defaultOwner;
   }
 
   get _dependenciesDirectory() {
@@ -172,7 +182,8 @@ export class WorkspaceSettings {
     const data = {
       workspace: {
         defaultScope: legacyConfig.defaultScope,
-        defaultDirectory: legacyConfig.componentsDefaultDirectory
+        defaultDirectory: legacyConfig.componentsDefaultDirectory,
+        defaultOwner: legacyConfig.bindingPrefix
       },
       dependencyResolver: {
         packageManager: legacyConfig.packageManager,
@@ -183,7 +194,6 @@ export class WorkspaceSettings {
         useWorkspaces: legacyConfig.useWorkspaces
       },
       dependenciesDirectory: legacyConfig.dependenciesDirectory,
-      bindingPrefix: legacyConfig.bindingPrefix,
       resolveModules: legacyConfig.resolveModules,
       saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
       distEntry: legacyConfig.distEntry,

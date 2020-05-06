@@ -1,3 +1,4 @@
+import pMapSeries from 'p-map-series';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
@@ -144,6 +145,10 @@ export default class ComponentConfig extends AbstractConfig {
       workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
     } else {
       workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
+      const defaultOwner = workspaceConfig?.workspaceSettings.defaultOwner;
+      if (defaultOwner) {
+        workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
+      }
     }
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
@@ -335,13 +340,15 @@ export default class ComponentConfig extends AbstractConfig {
    * @memberof ComponentConfig
    */
   static async runOnLoadEvent(componentConfigLoadingRegistry: ConfigLoadRegistry, id: BitId, config: any) {
-    const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(async extId => {
-      const func = componentConfigLoadingRegistry[extId];
-      return func(id, config);
-    });
     try {
-      await Promise.all(onLoadSubscribersP);
+      await pMapSeries(Object.keys(componentConfigLoadingRegistry), async (extId: string) => {
+        const func = componentConfigLoadingRegistry[extId];
+        return func(id, config);
+      });
     } catch (err) {
+      // @todo: once we have a way to indicate this to the user, remove the next two lines
+      logger.console('runOnLoadEvent failed loading a load event', err);
+      logger.console(err);
       logger.warn('extension on load event throw an error');
       logger.warn(err);
     }

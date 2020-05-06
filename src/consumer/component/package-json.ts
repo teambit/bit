@@ -3,6 +3,7 @@ import R from 'ramda';
 import parents from 'parents';
 import path from 'path';
 import { PACKAGE_JSON } from '../../constants';
+import { BitId } from '../../bit-id';
 
 function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
@@ -23,6 +24,7 @@ export type PackageJsonProps = {
   scripts?: Record<string, any>;
   workspaces?: string[];
   private?: boolean;
+  componentId?: BitId;
 };
 
 export default class PackageJson {
@@ -37,6 +39,7 @@ export default class PackageJson {
   license?: string;
   scripts?: Record<string, any>;
   workspaces?: string[];
+  componentId?: BitId;
 
   constructor(
     componentRootFolder: string,
@@ -50,7 +53,8 @@ export default class PackageJson {
       peerDependencies,
       license,
       scripts,
-      workspaces
+      workspaces,
+      componentId
     }: PackageJsonProps
   ) {
     this.name = name;
@@ -64,6 +68,7 @@ export default class PackageJson {
     this.license = license;
     this.scripts = scripts;
     this.workspaces = workspaces;
+    this.componentId = componentId;
   }
 
   static loadSync(componentRootFolder: string): PackageJson | null {
@@ -104,7 +109,7 @@ export default class PackageJson {
    * https://github.com/jalba/find-package
    *
    */
-  static findPackage(dir, addPaths) {
+  static findPackage(dir, addPaths?) {
     const pathToConfig = this.findPath(dir);
     let configJSON: any = null;
     // eslint-disable-next-line import/no-dynamic-require, global-require

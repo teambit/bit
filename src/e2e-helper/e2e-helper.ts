@@ -4,7 +4,7 @@ import { VERSION_DELIMITER } from '../constants';
 import { removeChalkCharacters } from '../utils';
 import { FileStatus } from '../consumer/versions-ops/merge-version';
 
-import ScopesData from './e2e-scopes';
+import ScopesData, { ScopesOptions } from './e2e-scopes';
 import BitJsonHelper from './e2e-bit-json-helper';
 import FsHelper from './e2e-fs-helper';
 import CommandHelper from './e2e-command-helper';
@@ -20,6 +20,9 @@ import ScopeHelper from './e2e-scope-helper';
 import GitHelper from './e2e-git-helper';
 import BitJsoncHelper from './e2e-bit-jsonc-helper';
 
+export type HelperOptions = {
+  scopesOptions?: ScopesOptions;
+};
 export default class Helper {
   debugMode: boolean;
   scopes: ScopesData;
@@ -37,9 +40,9 @@ export default class Helper {
   packageJson: PackageJsonHelper;
   scopeHelper: ScopeHelper;
   git: GitHelper;
-  constructor() {
+  constructor(helperOptions?: HelperOptions) {
     this.debugMode = !!process.env.npm_config_debug; // default = false
-    this.scopes = new ScopesData(); // generates dirs and scope names
+    this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
     this.bitJson = new BitJsonHelper(this.scopes);
     this.bitJsonc = new BitJsoncHelper(this.scopes);
     this.packageJson = new PackageJsonHelper(this.scopes);

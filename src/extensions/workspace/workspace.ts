@@ -249,6 +249,7 @@ export default class Workspace {
       return [];
     }
 
+    legacyLogger.debug(`workspaceExt, resolveExtensions ${extensionsIds.join(', ')}`);
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
     const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
     let extensionsComponents;
@@ -274,7 +275,6 @@ export default class Workspace {
       this.consumer,
       { packageManager: 'yarn' }
     );
-
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
       try {
