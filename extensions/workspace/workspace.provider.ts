@@ -22,6 +22,8 @@ export type WorkspaceCoreConfig = {
    * will be generated accordingly.
    */
   defaultScope: string;
+
+  defaultOwner: string;
 };
 
 export default async function provideWorkspace(
