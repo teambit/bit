@@ -142,56 +142,58 @@ export class Compile {
 
   async compileWithLegacyCompilers(
     componentsAndCapsules: ComponentAndCapsule[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     noCache?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     verbose?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     dontPrintEnvMsg?: boolean
   ): Promise<BuildResult[]> {
-    // @todo: uncomment this part once we're ready to let legacy-compilers write the dists on the capsule
-
-    // const build = async (componentAndCapsules: ComponentAndCapsule) => {
-    //   const component = componentAndCapsules.consumerComponent;
-    //   if (component.compiler) loader.start(`building component - ${component.id}`);
-    //   await component.build({
-    //     scope: this.workspace.consumer.scope,
-    //     consumer: this.workspace.consumer
-    //   });
-    //   if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
-    //     return { component: component.id.toString(), buildResults: null };
-    //   }
-    //   const dataToPersist = new DataToPersist();
-    //   const filesToAdd = component.dists.get().map(file => {
-    //     file.updatePaths({ newBase: 'dist' });
-    //     return file;
-    //   });
-    //   dataToPersist.addManyFiles(filesToAdd);
-    //   await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
-    //   const buildResults = component.dists.get().map(d => d.path);
-    //   if (component.compiler) loader.succeed();
-    //   return { component: component.id.toString(), buildResults };
-    // };
-    // const buildResults = await pMapSeries(componentsAndCapsules, build);
-
-    const components = componentsAndCapsules.map(c => c.consumerComponent);
-    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
-    const build = async (component: ConsumerComponent) => {
+    const build = async (componentAndCapsules: ComponentAndCapsule) => {
+      const component = componentAndCapsules.consumerComponent;
       if (component.compiler) loader.start(`building component - ${component.id}`);
-      //
       await component.build({
         scope: this.workspace.consumer.scope,
-        consumer: this.workspace.consumer,
-        noCache,
-        verbose,
-        dontPrintEnvMsg
+        consumer: this.workspace.consumer
       });
-      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
+      if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
+        return { component: component.id.toString(), buildResults: null };
+      }
+      const dataToPersist = new DataToPersist();
+      const filesToAdd = component.dists.get().map(file => {
+        file.updatePaths({ newBase: 'dist' });
+        return file;
+      });
+      dataToPersist.addManyFiles(filesToAdd);
+      await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
+      const buildResults = component.dists.get().map(d => d.path);
       if (component.compiler) loader.succeed();
       return { component: component.id.toString(), buildResults };
     };
-    const writeLinks = async (component: ConsumerComponent) =>
-      component.dists.writeDistsLinks(component, this.workspace.consumer);
+    const buildResults = await pMapSeries(componentsAndCapsules, build);
 
-    const buildResults = await pMapSeries(components, build);
-    await pMapSeries(components, writeLinks);
+    // this is the old build mechanism if needed
+
+    // const components = componentsAndCapsules.map(c => c.consumerComponent);
+    // logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
+    // const build = async (component: ConsumerComponent) => {
+    //   if (component.compiler) loader.start(`building component - ${component.id}`);
+    //   //
+    //   await component.build({
+    //     scope: this.workspace.consumer.scope,
+    //     consumer: this.workspace.consumer,
+    //     noCache,
+    //     verbose,
+    //     dontPrintEnvMsg
+    //   });
+    //   const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
+    //   if (component.compiler) loader.succeed();
+    //   return { component: component.id.toString(), buildResults };
+    // };
+    // const writeLinks = async (component: ConsumerComponent) =>
+    //   component.dists.writeDistsLinks(component, this.workspace.consumer);
+    // const buildResults = await pMapSeries(components, build);
+    // await pMapSeries(components, writeLinks);
 
     return buildResults;
   }
