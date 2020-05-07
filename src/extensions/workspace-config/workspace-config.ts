@@ -237,7 +237,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
       }
     };
 
-    return this.ensure(dirPath, newProps, { standAlone });
+    return WorkspaceConfig.ensure(dirPath, newProps, { standAlone });
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
