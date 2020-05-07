@@ -2,7 +2,6 @@ import pMapSeries from 'p-map-series';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
-import { WorkspaceConfig } from '../../extensions/workspace-config';
 import { PathOsBasedRelative } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';

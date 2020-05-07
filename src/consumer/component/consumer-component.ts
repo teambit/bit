@@ -5,7 +5,6 @@ import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
 import { Dist, License, SourceFile } from '../component/sources';
-import { WorkspaceConfig } from '../../extensions/workspace-config';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
