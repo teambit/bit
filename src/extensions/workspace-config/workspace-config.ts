@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
-import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
+import LegacyWorkspaceConfig, { WorkspaceConfigProps } from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { BIT_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
@@ -17,6 +17,7 @@ import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
+import { ILegacyWorkspaceConfig } from '../../consumer/config';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -34,7 +35,7 @@ export type WorkspaceConfigFileProps = {
   $schemaVersion: string;
 } & WorkspaceConfigFileInputProps;
 
-export default class WorkspaceConfig {
+export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
   _path?: string;
   // Return only the configs that are workspace related (without components configs or schema definition)
   workspaceSettings: WorkspaceSettings;
@@ -165,7 +166,7 @@ export default class WorkspaceConfig {
         componentsDefaultDirectory: props?.workspace?.workspace.defaultDirectory
       };
       const standAlone = legacyInitProps?.standAlone ?? false;
-      const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, standAlone, legacyProps);
+      const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
       const instance = this.fromLegacyConfig(legacyConfig);
       return instance;
     }
@@ -208,6 +209,35 @@ export default class WorkspaceConfig {
       }
       throw err;
     }
+  }
+
+  /**
+   * A function that register to the legacy ensure function in order to transform old props structure
+   * to the new one
+   *
+   * @static
+   * @param {PathOsBasedAbsolute} dirPath
+   * @param {WorkspaceConfigFileProps} [workspaceConfigProps={} as any]
+   * @returns {Promise<WorkspaceConfig>}
+   * @memberof WorkspaceConfig
+   */
+  static async onLegacyEnsure(
+    dirPath: PathOsBasedAbsolute,
+    standAlone: boolean,
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
+  ): Promise<WorkspaceConfig> {
+    const newProps: WorkspaceConfigFileInputProps = {
+      workspace: {
+        workspace: {
+          defaultDirectory: workspaceConfigProps.componentsDefaultDirectory
+        },
+        dependencyResolver: {
+          packageManager: workspaceConfigProps.packageManager
+        }
+      }
+    };
+
+    return this.ensure(dirPath, newProps, { standAlone });
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
@@ -254,7 +284,7 @@ export default class WorkspaceConfig {
       instance.path = jsoncPath;
       return instance;
     }
-    const legacyConfig = await LegacyWorkspaceConfig.loadIfExist(dirPath);
+    const legacyConfig = await LegacyWorkspaceConfig._loadIfExist(dirPath);
     if (legacyConfig) {
       return this.fromLegacyConfig(legacyConfig);
     }

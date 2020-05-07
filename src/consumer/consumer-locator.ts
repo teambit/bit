@@ -6,11 +6,11 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
-import { WorkspaceConfig } from '../extensions/workspace-config';
+import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from './config';
 
 export type ConsumerInfo = {
   path: string;
-  consumerConfig: WorkspaceConfig | undefined;
+  consumerConfig: ILegacyWorkspaceConfig | undefined;
   hasBitMap: boolean;
   hasScope: boolean;
 };
@@ -85,7 +85,7 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | u
     return (await fs.pathExists(composeBitHiddenDirPath(path))) || fs.pathExists(composeBitGitHiddenDirPath(path));
   }
 
-  async function getConsumerConfigIfExists(path: string): Promise<WorkspaceConfig | undefined> {
-    return WorkspaceConfig.loadIfExist(path);
+  async function getConsumerConfigIfExists(path: string): Promise<ILegacyWorkspaceConfig | undefined> {
+    return LegacyWorkspaceConfig.loadIfExist(path);
   }
 }

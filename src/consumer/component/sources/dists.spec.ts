@@ -1,23 +1,23 @@
 import { expect } from 'chai';
 import Dists from '../../../consumer/component/sources/dists';
-import { WorkspaceConfig } from '../../../extensions/workspace-config';
+import WorkspaceConfig from '../../config/workspace-config';
 
 describe('Dists', () => {
   describe('getNodePathDir', () => {
     let consumer;
     before(() => {
-      consumer = { config: WorkspaceConfig.fromLegacyConfig({}) };
+      consumer = { config: WorkspaceConfig.mock({}) };
       consumer.toAbsolutePath = src => src;
     });
     it('should return null when custom module resolution is not configured', () => {
       expect(Dists.getNodePathDir(consumer)).to.be.undefined;
     });
     it('when distTarget and distEntry are not configured it should return the default dist plus the customDir', () => {
-      consumer.config = WorkspaceConfig.fromLegacyConfig({ resolveModules: { modulesDirectories: ['src'] } });
+      consumer.config = WorkspaceConfig.mock({ resolveModules: { modulesDirectories: ['src'] } });
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/src');
     });
     it('when distEntry equals to customDir it should return the distTarget', () => {
-      consumer.config = WorkspaceConfig.fromLegacyConfig({
+      consumer.config = WorkspaceConfig.mock({
         distTarget: 'dist',
         distEntry: 'src',
         resolveModules: { modulesDirectories: ['src'] }
@@ -26,7 +26,7 @@ describe('Dists', () => {
       expect(Dists.getNodePathDir(consumer)).to.equal('dist');
     });
     it('when distEntry starts with customDir it should return the distTarget + (customDir - distEntry)', () => {
-      consumer.config = WorkspaceConfig.fromLegacyConfig({
+      consumer.config = WorkspaceConfig.mock({
         distTarget: 'dist',
         distEntry: 'src',
         resolveModules: { modulesDirectories: ['src/custom'] }
@@ -34,7 +34,7 @@ describe('Dists', () => {
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/custom');
     });
     it('when distEntry starts partially with customDir it should return the distTarget + (customDir - distEntry)', () => {
-      consumer.config = WorkspaceConfig.fromLegacyConfig({
+      consumer.config = WorkspaceConfig.mock({
         distTarget: 'dist',
         distEntry: 'src',
         resolveModules: { modulesDirectories: ['src2'] }
@@ -42,7 +42,7 @@ describe('Dists', () => {
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/src2');
     });
     it('when there are many custom-dirs it should return them with a separator according to the OS', () => {
-      consumer.config = WorkspaceConfig.fromLegacyConfig({
+      consumer.config = WorkspaceConfig.mock({
         distTarget: 'dist',
         distEntry: 'src',
         resolveModules: { modulesDirectories: ['custom1', 'custom2'] }

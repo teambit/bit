@@ -63,9 +63,9 @@ export type Tree = {
 };
 
 export type ResolveModulesConfig = {
-  modulesDirectories: string[];
+  modulesDirectories?: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  aliases: { [key: string]: string }; // e.g. { '@': 'src' }
+  aliases?: { [key: string]: string }; // e.g. { '@': 'src' }
 };
 
 export type DependencyTreeParams = {

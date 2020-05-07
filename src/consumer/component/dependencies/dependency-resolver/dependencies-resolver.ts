@@ -445,9 +445,8 @@ export default class DependencyResolver {
     if (!depFile.includes('dist')) return null;
     const resolveModules = this.consumer.config.workspaceSettings._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
-    const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
-      depFile.startsWith(resolveModules.aliases[alias])
-    );
+    const aliases = resolveModules.aliases;
+    const foundAlias = Object.keys(aliases).find(alias => depFile.startsWith(aliases[alias]));
     if (!foundAlias) return null;
     const newDepFile = depFile.replace(
       `${resolveModules.aliases[foundAlias]}/dist`,

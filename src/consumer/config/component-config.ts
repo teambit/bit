@@ -13,6 +13,7 @@ import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import logger from '../../logger/logger';
 import { ExtensionDataList } from './extension-data';
+import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 
 type ConfigProps = {
   lang?: string;
@@ -137,7 +138,7 @@ export default class ComponentConfig extends AbstractConfig {
     consumer: Consumer,
     componentId: BitId,
     componentConfig: Record<string, any>,
-    workspaceConfig: WorkspaceConfig | undefined
+    workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
     const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
     let workspaceConfigToMerge;
@@ -177,7 +178,7 @@ export default class ComponentConfig extends AbstractConfig {
     componentId: BitId;
     componentDir: PathOsBasedRelative | undefined;
     workspaceDir: PathOsBasedRelative;
-    workspaceConfig: WorkspaceConfig;
+    workspaceConfig: ILegacyWorkspaceConfig;
   }): Promise<ComponentConfig> {
     let bitJsonPath;
     let componentHasWrittenConfig = false;
