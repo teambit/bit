@@ -8,7 +8,7 @@ import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
 import { MergeResultsTwoWay } from './two-way-merge';
-import { PathLinux, PathOsBased } from '../../../utils/path';
+import { PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import ComponentWriter from '../../component-ops/component-writer';
 import { Tmp } from '../../../scope/repositories';
@@ -25,9 +25,8 @@ export const FileStatus = {
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged')
 };
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-export type FilesStatus = { [fileName: PathLinux]: keyof typeof FileStatus };
+// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
+export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
 export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
 export type FailedComponents = { id: BitId; failureMessage: string };
 export type ApplyVersionResults = {

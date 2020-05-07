@@ -1,57 +1,60 @@
 import { ReplaySubject } from 'rxjs';
-import { Reporter } from '../../reporter';
+import { EventEmitter } from 'events';
+import { tap, filter, take } from 'rxjs/operators';
+import { flattenNestedMap } from '../util/flatten-nested-map';
+import { LogPublisher } from '../../logger';
 
-export async function handleRunStream(stream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
-  const summary: { [k: string]: string } = {};
-  const streamPromise = await new Promise(resolve =>
-    stream.subscribe({
-      next(networkData: any) {
-        if (networkData instanceof ReplaySubject) {
-          handleFlowStream(networkData, reporter, summary, verbose);
-        } else if (networkData.type === 'network:start') {
-          //
-        } else if (networkData.type === 'network:result') {
-          summary['network:result'] = networkData;
+export const flowEvents = new EventEmitter();
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = true): void => {
+  [logger].forEach(log => log[level](msg.id, msg.value));
+};
+const printAll = (logs: LogPublisher[], id: string, msg: string) => {
+  logs.forEach(log => log.info(id, msg));
+};
+
+const strategies: { [k: string]: (msg: any, logger: LogPublisher, verbose: boolean) => void } = {
+  'task:stdout': (msg: any, logger: LogPublisher, verbose = true) => {
+    verbose && printAll([logger, console], msg.id, msg.value);
+  },
+  'task:stderr': function(msg, logger: LogPublisher) {
+    [logger, console].forEach(log => log.info(msg.id, msg.value));
+  },
+  'flow:start': function(msg: any) {
+    flowEvents.emit('flowStarted', msg.id.toString());
+    print();
+  },
+  'flow:result': function(msg: any) {
+    flowEvents.emit('flowExecuted', msg.id.toString());
+    print();
+  },
+  'network:start': print(),
+  'network:result': print()
+};
+
+/**
+ * Takes a Reporter (currently logger) with an execution stream and display results to the UI
+ * TODO: Replace event emitter with in flows with reporter handling here.
+ *
+ * @param runStream network stream from execution
+ * @param logger way to publish logs - TODO should change to reporter
+ * @param verbose UI option to verbose log everything
+ */
+export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublisher, verbose: boolean) {
+  return runStream
+    .pipe(
+      flattenNestedMap(),
+      tap((message: any) => {
+        if (strategies[message.type]) {
+          strategies[message.type](message, logger, verbose);
         } else {
-          reporter.createLogger('run-infra').warn(`~~~~~~ Got ${networkData.type} on ${networkData.id}~~~~~~`);
+          logger.debug(message.id, `got unknown message from network: ${message.type} from ${message.id}`);
         }
-      },
-      complete() {
-        resolve(summary);
-      },
-      error() {
-        resolve(summary);
-      }
-    })
-  );
-
-  return streamPromise;
-}
-function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, summery: any, verbose: boolean) {
-  networkData.subscribe({
-    next(flowData: any) {
-      if (flowData.type === 'flow:start') {
-        reporter.createLogger(flowData.id).info(`***** started ${flowData.id} *****`);
-      } else if (flowData.type === 'flow:result') {
-        reporter.createLogger(flowData.id).info(`***** finished ${flowData.id} - duration:${flowData.duration} *****`);
-        summery[flowData.id] = flowData;
-      } else if (flowData instanceof ReplaySubject) {
-        handleTaskStream(flowData, reporter, verbose);
-      }
-    },
-    error() {},
-    complete() {}
-  });
-}
-
-function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
-  taskStream.subscribe({
-    next(data: any) {
-      if (data.type === 'task:stdout' && verbose) {
-        reporter.createLogger(data.id).info(data.value);
-      } else if (data.type === 'task:stderr') {
-        reporter.createLogger(data.id).warn(data.value);
-      }
-    }
-  });
+      }),
+      filter((message: any) => message.type.trim() === 'network:result'),
+      // tap(message => console.log('tap message:', message.type)),
+      take(1)
+    )
+    .toPromise();
 }

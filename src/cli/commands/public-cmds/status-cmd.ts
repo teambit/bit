@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
@@ -24,8 +24,7 @@ export default class Status extends Command {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['j', 'json', 'return a json version of the component']];
+  opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
   loader = true;
   migration = true;
   json = false;

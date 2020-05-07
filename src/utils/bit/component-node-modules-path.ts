@@ -5,7 +5,7 @@ import BitId from '../../bit-id/bit-id';
 import componentIdToPackageName from './component-id-to-package-name';
 
 export default function getNodeModulesPathOfComponent(
-  bindingPrefix: string | null | undefined,
+  bindingPrefix: string | undefined,
   id: BitId,
   allowNonScope = false,
   defaultScope?: string | null // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true

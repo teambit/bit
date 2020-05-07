@@ -6,11 +6,11 @@ import { BitId } from '../../bit-id';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scope } from '../scope';
-import { Flows } from '../flows';
-import { IdsAndFlows } from '../flows/flows';
+import { Flows, IdsAndFlows } from '../flows';
+import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import { Dist } from '../../consumer/component/sources';
 import GeneralError from '../../error/general-error';
@@ -31,12 +31,28 @@ export class Compile {
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
-  async compileDuringBuild(ids: BitId[]): Promise<BuildResult[]> {
-    return this.compile(ids.map(id => id.toString()));
+  async compileDuringBuild(
+    ids: BitId[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    return this.compile(
+      ids.map(id => id.toString()),
+      noCache,
+      verbose,
+      dontPrintEnvMsg
+    );
   }
 
-  async compile(componentsIds: string[]): Promise<BuildResult[]> {
+  async compile(
+    componentsIds: string[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
     const componentsAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
+    logger.debug(`compilerExt, completed created of capsules for ${componentsIds.join(', ')}`);
     const idsAndFlows = new IdsAndFlows();
     const componentsWithLegacyCompilers: ComponentAndCapsule[] = [];
     componentsAndCapsules.forEach(c => {
@@ -57,37 +73,46 @@ export class Compile {
       );
     }
     if (componentsWithLegacyCompilers.length) {
-      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers);
+      oldCompilersResult = await this.compileWithLegacyCompilers(
+        componentsWithLegacyCompilers,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
+      );
     }
 
     return [...newCompilersResult, ...oldCompilersResult];
   }
 
   async compileWithNewCompilers(idsAndFlows: IdsAndFlows, components: ConsumerComponent[]): Promise<BuildResult[]> {
-    const reportResults = await this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
-    // @ts-ignore please fix once flows.run() get types
-    const resultsP: buildHookResult[] = Object.values(reportResults.value).map((reportResult: any) => {
-      const result = reportResult.result;
-      const id: BitId = result.id;
-      if (!result.value || !result.value.length) return { id };
-      // @todo: check why this is an array and values are needed
-      const distDir = result.value[0].value.dir;
+    const reportResults: any = await this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
+    // @todo fix once flows.run() get types
+    const resultsP: any = Object.values(reportResults.value).map(async (reportResult: any) => {
+      const result = reportResult.result.value.tasks;
+      const id: BitId = reportResult.result.id;
+      if (!result.length) return { id };
+      const firstResult = result[0]; // for compile it's always one result because there is only one task to run
+      // @todo: currently the error is not passed into runMultiple method. once it's there, show the acutal error.
+      if (firstResult.code !== 0) throw new Error(`failed compiling ${id.toString()}`);
+      if (!firstResult.value) return { id };
+      const distDir = firstResult.value.dir;
       if (!distDir) {
         throw new Error(
           `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
         );
       }
-      const distFiles = result.capsule.fs.readdirSync(distDir);
+      const capsule: Capsule = reportResult.result.value.capsule;
+      const distFiles = await getFilesFromCapsuleRecursive(capsule, distDir, path.join(capsule.wrkDir, distDir));
       const distFilesObjects = distFiles.map(distFilePath => {
         const distPath = path.join(distDir, distFilePath);
         return {
           path: distFilePath,
-          content: result.capsule.fs.readFileSync(distPath).toString()
+          content: capsule.fs.readFileSync(distPath).toString()
         };
       });
       return { id, dists: distFilesObjects };
     });
-    const extensionsResults = await Promise.all(resultsP);
+    const extensionsResults: buildHookResult[] = await Promise.all(resultsP);
     // @ts-ignore
     return components
       .map(component => {
@@ -109,37 +134,65 @@ export class Compile {
             contents: Buffer.from(file.content)
           });
         });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.setDists(distsFiles);
         return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
       })
       .filter(x => x);
   }
 
-  async compileWithLegacyCompilers(componentsAndCapsules: ComponentAndCapsule[]): Promise<BuildResult[]> {
-    const build = async (componentAndCapsules: ComponentAndCapsule) => {
-      const component = componentAndCapsules.consumerComponent;
+  async compileWithLegacyCompilers(
+    componentsAndCapsules: ComponentAndCapsule[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    // @todo: uncomment this part once we're ready to let legacy-compilers write the dists on the capsule
+
+    // const build = async (componentAndCapsules: ComponentAndCapsule) => {
+    //   const component = componentAndCapsules.consumerComponent;
+    //   if (component.compiler) loader.start(`building component - ${component.id}`);
+    //   await component.build({
+    //     scope: this.workspace.consumer.scope,
+    //     consumer: this.workspace.consumer
+    //   });
+    //   if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
+    //     return { component: component.id.toString(), buildResults: null };
+    //   }
+    //   const dataToPersist = new DataToPersist();
+    //   const filesToAdd = component.dists.get().map(file => {
+    //     file.updatePaths({ newBase: 'dist' });
+    //     return file;
+    //   });
+    //   dataToPersist.addManyFiles(filesToAdd);
+    //   await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
+    //   const buildResults = component.dists.get().map(d => d.path);
+    //   if (component.compiler) loader.succeed();
+    //   return { component: component.id.toString(), buildResults };
+    // };
+    // const buildResults = await pMapSeries(componentsAndCapsules, build);
+
+    const components = componentsAndCapsules.map(c => c.consumerComponent);
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
+    const build = async (component: ConsumerComponent) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
+      //
       await component.build({
         scope: this.workspace.consumer.scope,
-        consumer: this.workspace.consumer
+        consumer: this.workspace.consumer,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
       });
-      if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
-        return { component: component.id.toString(), buildResults: null };
-      }
-      const dataToPersist = new DataToPersist();
-      const filesToAdd = component.dists.get().map(file => {
-        file.updatePaths({ newBase: 'dist' });
-        return file;
-      });
-      dataToPersist.addManyFiles(filesToAdd);
-      await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
-      const buildResults = component.dists.get().map(d => d.path);
+      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
       if (component.compiler) loader.succeed();
       return { component: component.id.toString(), buildResults };
     };
+    const writeLinks = async (component: ConsumerComponent) =>
+      component.dists.writeDistsLinks(component, this.workspace.consumer);
 
-    const buildResults = await pMapSeries(componentsAndCapsules, build);
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+
     return buildResults;
   }
 
@@ -202,4 +255,20 @@ async function pipeRunTask(ids: string[], task: Function, workspace: Workspace) 
   const components = await getComponentsAndCapsules(ids, workspace);
   const results = await Promise.all(components.map(component => task(component)));
   return { results, components };
+}
+
+// @todo: refactor. was taken partly from stackOverflow.
+// it uses the absolute path because for some reason `capsule.fs.promises.readdir` doesn't work
+// the same as `capsule.fs.readdir` and it doesn't have the capsule dir as pwd.
+async function getFilesFromCapsuleRecursive(capsule: Capsule, distDir: string, dir: string) {
+  const subDirs = await capsule.fs.promises.readdir(dir);
+  const files = await Promise.all(
+    subDirs.map(async subDir => {
+      const res = path.resolve(dir, subDir);
+      return (await capsule.fs.promises.stat(res)).isDirectory()
+        ? getFilesFromCapsuleRecursive(capsule, distDir, res)
+        : path.relative(path.join(capsule.wrkDir, distDir), res);
+    })
+  );
+  return files.reduce((a, f) => a.concat(f), []);
 }

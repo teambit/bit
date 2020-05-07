@@ -11,6 +11,7 @@ import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import Dependency from '../dependency';
 import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
+import { resolveModulePath, resolveNodePackage } from '../files-dependency-builder';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -36,8 +37,6 @@ import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension
 export default function updateDependenciesVersions(consumer: Consumer, component: Component) {
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
-  updateDependencies(component.compilerDependencies);
-  updateDependencies(component.testerDependencies);
   updateExtensions(component.extensions);
 
   function resolveVersion(id: BitId): string | undefined {
@@ -128,10 +127,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
+    const modulePath = resolveModulePath(packageName, basePath, consumerPath);
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
+    const packageObject = resolveNodePackage(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
     const version = packageObject[packageId];

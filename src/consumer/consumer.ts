@@ -3,12 +3,8 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import chalk from 'chalk';
-import format from 'string-format';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
-import { Driver } from '../driver';
-import DriverNotFound from '../driver/exceptions/driver-not-found';
 import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -22,8 +18,7 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS,
-  DEFAULT_LANGUAGE
+  DEPENDENCIES_FIELDS
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -70,7 +65,6 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
-import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import PackageJsonFile from './component/package-json-file';
 import ComponentMap from './bit-map/component-map';
@@ -111,8 +105,6 @@ export default class Consumer {
   addedGitHooks: string[] | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _driver: Driver;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
@@ -137,7 +129,6 @@ export default class Consumer {
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
-    this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
@@ -151,14 +142,6 @@ export default class Consumer {
   get tester(): Promise<TesterExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(TESTER_ENV_TYPE);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get driver(): Driver {
-    if (!this._driver) {
-      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
-    }
-    return this._driver;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -198,31 +181,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Check if the driver installed and print message if not
-   *
-   *
-   * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
-   * @returns {boolean} true if the driver exists, false otherwise
-   * @memberof Consumer
-   */
-  warnForMissingDriver(msg?: string): boolean {
-    try {
-      this.driver.getDriver(false);
-
-      return true;
-    } catch (err) {
-      msg = msg
-        ? format(msg, err)
-        : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
-      if (err instanceof DriverNotFound) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        console.log(chalk.yellow(msg)); // eslint-disable-line
-      }
-      throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
-    }
   }
 
   /**
@@ -366,17 +324,6 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponentsForCapsule(ids: BitId[]): Promise<Component[]> {
-    const allComponents = await Promise.all(
-      ids.map(async id => {
-        const component = await this.loadComponentForCapsule(id);
-        const componenetWithDependencies = await loadFlattenedDependenciesForCapsule(this, component);
-        return R.concat([component], componenetWithDependencies.allDependencies);
-      })
-    );
-    return R.uniqBy((component: Component) => component.id.toString(), R.flatten(allComponents));
-  }
-
   loadComponentForCapsule(id: BitId): Promise<Component> {
     return this.componentLoader.loadForCapsule(id);
   }
@@ -388,8 +335,7 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
+  importEnvironment(bitId: BitId, verbose = false, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
@@ -508,8 +454,6 @@ export default class Consumer {
       };
       copyDependenciesVersionsFromModelToFS(version.dependencies, componentFromModel.dependencies);
       copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
-      copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
-      copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
       sortProperties(version);
 
@@ -532,8 +476,6 @@ export default class Consumer {
       componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
       version.dependencies.sort();
       version.devDependencies.sort();
-      version.compilerDependencies.sort();
-      version.testerDependencies.sort();
       version.packageDependencies = sortObject(version.packageDependencies);
       version.devPackageDependencies = sortObject(version.devPackageDependencies);
       version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
@@ -542,8 +484,6 @@ export default class Consumer {
       sortOverrides(version.overrides);
       componentFromModel.dependencies.sort();
       componentFromModel.devDependencies.sort();
-      componentFromModel.compilerDependencies.sort();
-      componentFromModel.testerDependencies.sort();
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
       componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
@@ -916,8 +856,6 @@ export default class Consumer {
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
-    let modelCompilerDependencies = new Dependencies([]);
-    let modelTesterDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // find the model version of the component and get the stored versions of the dependencies
@@ -927,14 +865,10 @@ export default class Consumer {
         // otherwise, the component is probably on the file-system only and not on the model.
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
-        modelCompilerDependencies = mainComponentFromModel.compilerDependencies;
-        modelTesterDependencies = mainComponentFromModel.testerDependencies;
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
-    await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
-    await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {

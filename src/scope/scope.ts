@@ -15,7 +15,8 @@ import {
   SCOPE_JSON,
   COMPONENT_ORIGINS,
   NODE_PATH_SEPARATOR,
-  CURRENT_UPSTREAM
+  CURRENT_UPSTREAM,
+  LATEST
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -46,7 +47,6 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
-import { Dist } from '../consumer/component/sources';
 import { LEGACY_SHARED_DIR_FEATURE, isFeatureEnabled } from '../api/consumer/lib/feature-toggle';
 
 const removeNils = R.reject(R.isNil);
@@ -300,7 +300,7 @@ export default class Scope {
     // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
     // for authored and will change the component files.
     if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
-      return R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
+      return R.flatten(await Promise.all(this.onBuild.map(func => func(ids, noCache, verbose, dontPrintEnvMsg))));
     }
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {
@@ -317,37 +317,6 @@ export default class Scope {
     return buildResults;
   }
 
-  _buildResultsFromExtension(
-    components: Component[],
-    extensionsResults: Array<{ id: BitId; dists?: Array<{ path: string; content: string }> }>
-  ) {
-    return components
-      .map(component => {
-        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
-        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
-        const builtFiles = resultFromCompiler.dists;
-        builtFiles.forEach(file => {
-          if (!file.path || !file.content || typeof file.content !== 'string') {
-            throw new GeneralError(
-              'compile interface expects to get files in a form of { path: string, content: string }'
-            );
-          }
-        });
-        // @todo: once tag is working, check if anything is missing here. currently the path is a
-        // relative path with "dist", but can be easily changed from the compile extension
-        const distsFiles = builtFiles.map(file => {
-          return new Dist({
-            path: file.path,
-            contents: Buffer.from(file.content)
-          });
-        });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.setDists(distsFiles);
-        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
-      })
-      .filter(x => x);
-  }
-
   /**
    * when custom-module-resolution is used, the test process needs to set the custom module
    * directory to the dist directory
@@ -359,10 +328,7 @@ export default class Scope {
       nodePathDirDist &&
       components.some(
         component =>
-          (component.dependencies.isCustomResolvedUsed() ||
-            component.devDependencies.isCustomResolvedUsed() ||
-            component.compilerDependencies.isCustomResolvedUsed() ||
-            component.testerDependencies.isCustomResolvedUsed()) &&
+          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
           component.componentMap &&
           component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
           !component.dists.isEmpty()
@@ -776,7 +742,7 @@ export default class Scope {
     });
   }
 
-  async loadModelComponentByIdStr(id: string): Promise<Component> {
+  async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
@@ -784,17 +750,16 @@ export default class Scope {
     return this.objects.load(ref);
   }
 
-  /**
-   * if it's not in the scope, it's probably new, we assume it doesn't have scope.
-   */
-  async isIdHasScope(id: BitIdStr): Promise<boolean> {
-    const component = await this.loadModelComponentByIdStr(id);
-    return Boolean(component && component.scope);
-  }
-
   async getParsedId(id: BitIdStr): Promise<BitId> {
-    const idHasScope = await this.isIdHasScope(id);
-    return BitId.parse(id, idHasScope);
+    const component = await this.loadModelComponentByIdStr(id);
+    const idHasScope = Boolean(component && component.scope);
+    if (!idHasScope) {
+      // if it's not in the scope, it's probably new, we assume it doesn't have scope.
+      return BitId.parse(id, false);
+    }
+    const bitId: BitId = component.toBitId();
+    const version = BitId.getVersionOnlyFromString(id);
+    return bitId.changeVersion(version || LATEST);
   }
 
   static ensure(

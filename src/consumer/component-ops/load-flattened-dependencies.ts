@@ -1,4 +1,5 @@
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
 import Component from '../component/consumer-component';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { Consumer } from '..';
@@ -6,30 +7,26 @@ import BitIds from '../../bit-id/bit-ids';
 import BitId from '../../bit-id/bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 
-export default (async function loadFlattenedDependenciesForCapsule(
+export default async function loadFlattenedDependenciesForCapsule(
   consumer: Consumer,
   component: Component
 ): Promise<ComponentWithDependencies> {
   const dependencies = await loadManyDependencies(component.dependencies.getAllIds());
   const devDependencies = await loadManyDependencies(component.devDependencies.getAllIds());
-  const compilerDependencies = await loadManyDependencies(component.compilerDependencies.getAllIds());
-  const testerDependencies = await loadManyDependencies(component.testerDependencies.getAllIds());
-
+  const extensionDependencies = await loadManyDependencies(component.extensions.extensionsBitIds);
   await loadFlattened(dependencies);
   await loadFlattened(devDependencies);
-  await loadFlattened(compilerDependencies);
-  await loadFlattened(testerDependencies);
+  await loadFlattened(extensionDependencies);
 
   return new ComponentWithDependencies({
     component,
     dependencies,
     devDependencies,
-    compilerDependencies,
-    testerDependencies
+    extensionDependencies
   });
 
   async function loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
-    return Promise.all(dependenciesIds.map(dep => loadDependency(dep)));
+    return pMapSeries(dependenciesIds, (dep: BitId) => loadDependency(dep));
   }
 
   async function loadDependency(dependencyId: BitId): Promise<Component> {
@@ -64,7 +61,7 @@ export default (async function loadFlattenedDependenciesForCapsule(
 
   async function loadFlattenedFromFsRecursively(components: Component[]) {
     const currentIds = BitIds.fromArray(components.map(c => c.id));
-    const ids = R.flatten(components.filter(c => c.loadedFromFileSystem).map(c => c.dependencies.getAllIds()));
+    const ids = R.flatten(components.filter(c => c.loadedFromFileSystem).map(c => c.getAllDependenciesIds()));
     const idsUniq = BitIds.uniqFromArray(ids);
     const newIds = idsUniq.filter(id => !currentIds.has(id));
     if (R.isEmpty(newIds)) return;
@@ -73,4 +70,4 @@ export default (async function loadFlattenedDependenciesForCapsule(
     components.push(...deps);
     await loadFlattened(components);
   }
-});
+}

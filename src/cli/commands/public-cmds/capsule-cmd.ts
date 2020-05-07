@@ -1,10 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
 import _ from 'lodash';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { loadConsumerIfExist } from '../../../consumer';
 import { capsuleIsolate } from '../../../api/consumer';
 import { Capsule } from '../../../extensions/isolator/capsule';
-import { Reporter } from '../../../extensions/reporter';
+import { Logger } from '../../../extensions/logger';
 import { PackageManager } from '../../../extensions/package-manager';
 import { Isolator } from '../../../extensions/isolator';
 import { ListResults } from '../../../extensions/isolator/isolator';
@@ -15,16 +15,15 @@ export class CapsuleList extends Command {
   name = 'capsule-list';
   description = `list all capsules`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['j', 'json', 'json format']];
+  opts = [['j', 'json', 'json format']] as CommandOptions;
   loader = true;
   migration = true;
 
   async action(): Promise<ListResults[] | ListResults> {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
-    const reporter = new Reporter();
-    const packageManager = new PackageManager('librarian', reporter);
+    const logger = new Logger();
+    const packageManager = new PackageManager('librarian', logger);
     // const capsule = await Capsule.provide();
     const isolatorExt = await Isolator.provide([packageManager]);
     return isolatorExt.list(consumer);
@@ -40,13 +39,12 @@ export class CapsuleCreate extends Command {
   name = 'capsule-create [path...]';
   description = `capsule`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
     ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['d', 'installPackages', 'install packages in capsule with npm']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
 

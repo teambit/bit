@@ -26,8 +26,7 @@ const tableColumnConfig = {
 
 export default function paintComponent(
   component: ConsumerComponent,
-  componentModel?: ConsumerComponent,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  componentModel: ConsumerComponent | undefined,
   showRemoteVersion: boolean,
   detailed: boolean,
   dependenciesInfo: DependenciesInfo[],
@@ -137,8 +136,6 @@ export default function paintComponent(
       'mainFile',
       'dependencies',
       'devDependencies',
-      'compilerDependencies',
-      'testerDependencies',
       'packages',
       'devPackages',
       'peerDependencies',
@@ -201,14 +198,7 @@ export default function paintComponent(
     };
     const dependenciesRows = getDependenciesRows(component.dependencies.get());
     const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), 'dev');
-    const compilerDependenciesRows = getDependenciesRows(component.compilerDependencies.get(), 'compiler');
-    const testerDependenciesRows = getDependenciesRows(component.testerDependencies.get(), 'tester');
-    const allDependenciesRows = [
-      ...dependenciesRows,
-      ...devDependenciesRows,
-      ...compilerDependenciesRows,
-      ...testerDependenciesRows
-    ];
+    const allDependenciesRows = [...dependenciesRows, ...devDependenciesRows];
 
     const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
     return dependenciesTable;

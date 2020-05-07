@@ -17,12 +17,11 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
  * @param {boolean} verbose
  */
 export default (async function test(
-  id?: string,
+  id: string | undefined,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
+  forkLevel: ForkLevel = TESTS_FORK_LEVEL.NONE,
   includeUnmodified = false,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  verbose: boolean | null | undefined
+  verbose?: boolean | null
 ): Promise<SpecsResultsWithMetaData> {
   loader.start(BEFORE_RUNNING_SPECS);
 
@@ -48,7 +47,7 @@ export default (async function test(
 });
 
 export async function testInProcess(
-  id?: string,
+  id: string | undefined,
   includeUnmodified = false,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined,

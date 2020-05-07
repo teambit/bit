@@ -59,8 +59,8 @@ describe('harmony extension config', function() {
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
           output = helper.general.runWithTryCatch('bit tag bar/foo');
-          expect(output).to.have.string('has a dependency "dummy-extension"');
-          expect(output).to.have.string('this dependency was not included in the tag command');
+          expect(output).to.have.string('has an extension "dummy-extension"');
+          expect(output).to.have.string('this extension was not included in the tag command');
         });
         describe('tagging extension and component together', () => {
           let componentModel;
@@ -77,10 +77,12 @@ describe('harmony extension config', function() {
           it('should persist extension config during tag', () => {
             expect(componentModel.extensions[0].config).to.deep.equal(config);
           });
-          it('should insert extensions into the component dev deps', () => {
-            expect(componentModel.devDependencies).to.be.of.length(1);
-            expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
-            expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
+          it('should not insert extensions into the component dev deps', () => {
+            expect(componentModel.devDependencies).to.be.of.length(0);
+          });
+          it('should insert extensions flattened dependencies into the component dev flattened dependencies', () => {
+            expect(componentModel.flattenedDevDependencies).to.be.of.length(1);
+            expect(componentModel.flattenedDevDependencies[0].name).to.equal('dummy-extension');
           });
           it('should auto tag the component when tagging the extension again', () => {
             output = helper.command.tagComponent('dummy-extension', 'message', '-f');
@@ -101,10 +103,8 @@ describe('harmony extension config', function() {
           it('should have version for extension in the component models when tagging the extension before component', () => {
             expect(componentModel.extensions[0].extensionId.version).to.equal('0.0.1');
           });
-          it('should insert extensions into the component dev deps', () => {
-            expect(componentModel.devDependencies).to.be.of.length(1);
-            expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
-            expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
+          it('should not insert extensions into the component dev deps', () => {
+            expect(componentModel.devDependencies).to.be.of.length(0);
           });
         });
         describe('exporting component with extension', () => {
@@ -149,6 +149,26 @@ describe('harmony extension config', function() {
               expect(componentModel.extensions[0].extensionId.scope).to.equal(helper.scopes.remote);
             });
           });
+        });
+      });
+      describe('imported component', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+          helper.scopeHelper.reInitRemoteScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.tagComponent('dummy-extension');
+          helper.command.exportComponent('dummy-extension');
+          helper.extensions.setExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('bar/foo');
+        });
+        it('should auto-import the extensions as well', () => {
+          const scopeList = helper.command.listLocalScopeParsed('--scope');
+          const ids = scopeList.map(entry => entry.id);
+          expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
         });
       });
     });

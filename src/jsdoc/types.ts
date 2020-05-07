@@ -1,4 +1,5 @@
 import { PathLinux } from '../utils/path';
+import { Example } from './example-tag-parser';
 
 export type Method = {
   name: string;
@@ -26,12 +27,10 @@ export type Doclet = {
   filePath: PathLinux;
   name: string;
   description: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  args?: Array;
+  args?: Record<string, any>[];
   returns?: Record<string, any>;
   access?: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  examples?: Array;
+  examples?: Example[];
   methods?: Method[];
   properties?: DocProp[];
   static?: boolean;

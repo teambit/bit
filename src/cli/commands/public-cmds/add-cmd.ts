@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import R from 'ramda';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { add } from '../../../api/consumer';
 import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
@@ -15,7 +15,6 @@ export default class Add extends Command {
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components`;
   alias = 'a';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
@@ -33,7 +32,7 @@ export default class Add extends Command {
     ['', 'allow-files', 'allow adding individual files to component (not recommended)'],
     ['', 'allow-relative-paths', 'allow import statements between components with relative paths (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
 

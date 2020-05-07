@@ -29,7 +29,7 @@ describe('bit link', function() {
       describe('when scopeDefault is not set', () => {
         let linkOutput;
         before(() => {
-          linkOutput = helper.command.runCmd('bit link');
+          linkOutput = helper.command.link();
         });
         it('should create links although the paths do not have scope name (until export)', () => {
           expect(linkOutput).to.have.string(path.normalize('node_modules/@bit/utils.is-type/utils/is-type.js'));
@@ -140,11 +140,11 @@ console.log(isType());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
+      helper.bitJson.modifyField('bindingPrefix', 'testLink');
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'testLink');
       helper.command.importComponent('bar/foo');
     });
     describe('auto linking', () => {
@@ -179,11 +179,11 @@ console.log(isType());`;
       helper.fs.createFile('bar2', 'foo2.js');
       helper.fixtures.addComponentBarFoo();
       helper.command.addComponentAllowFiles('bar2/foo2.js', { i: 'bar2/foo2' });
+      helper.bitJson.modifyField('bindingPrefix', 'test');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'test');
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
     });
@@ -212,11 +212,11 @@ console.log(isType());`;
       )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.fixtures.addComponentUtilsIsString();
+      helper.bitJson.modifyField('bindingPrefix', 'bitTest');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest');
       helper.command.importComponent('utils/is-string');
     });
     it('node_modules should contain custom dir name', () => {
@@ -228,34 +228,34 @@ console.log(isType());`;
       // is-type
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithUtilsIsType();
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       // is-string
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest');
       helper.command.importComponent('utils/is-type');
       const isStringFixture = `const isType = require('@bitTest/${helper.scopes.remote}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.fixtures.addComponentUtilsIsString();
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       // is-string2
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
       helper.command.addComponentAllowFiles('test/is-string2.js', { i: 'test/is-string2' });
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('test/is-string2');
 
       const appJsFixture = `const isString2 = require('@bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
@@ -356,6 +356,19 @@ console.log(isType());`;
       it('the app should work after changing the code', () => {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('with entering specific ids', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeLink);
+        output = helper.command.linkAndRewire('bar/foo');
+      });
+      it('should link only the specified ids', () => {
+        expect(output).to.have.string('linked 1 components');
+      });
+      it('should rewire only the specified ids', () => {
+        expect(output).to.have.string('rewired 1 components');
       });
     });
     describe('with css files in one dir and extension', () => {

@@ -4,11 +4,12 @@ import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
-import { Reporter } from '../reporter';
+import { Logger } from '../logger';
 import { WorkspaceConfig } from '../workspace-config';
 import ConsumerComponent from '../../consumer/component';
+import { DependencyResolver } from '../dependency-resolver';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -21,10 +22,12 @@ export type WorkspaceCoreConfig = {
    * will be generated accordingly.
    */
   defaultScope: string;
+
+  defaultOwner: string;
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, reporter]: WorkspaceDeps,
+  [workspaceConfig, scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -43,7 +46,8 @@ export default async function provideWorkspace(
         scope,
         component,
         isolator,
-        reporter.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
+        dependencyResolver,
+        logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );

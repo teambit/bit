@@ -3,6 +3,7 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import WatchRunner from '../watch-runner';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -56,7 +57,7 @@ describe('bit watch command', function() {
       });
     });
     describe('as imported', function() {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
         // @ts-ignore
         this.skip;

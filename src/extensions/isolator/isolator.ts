@@ -2,7 +2,7 @@ import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
-import { CACHE_ROOT } from '../../constants';
+import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { PackageManager } from '../package-manager';
@@ -12,10 +12,14 @@ import Consumer from '../../consumer/consumer';
 import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { symlinkCapsulesToWorkspace } from './symlink-capsules-to-workspace';
 import { PathOsBasedAbsolute } from '../../utils/path';
+import PackageJsonFile from '../../consumer/component/package-json-file';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
+import logger from '../../logger/logger';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -54,6 +58,7 @@ export default class Isolator {
   }
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: Record<string, any>): Promise<Network> {
+    logger.debug(`isolatorExt, createNetworkFromConsumer ${seeders.join(', ')}`);
     const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
@@ -85,29 +90,31 @@ export default class Isolator {
         return { id, value: c };
       })
     );
-    const packageManager = this.packageManager;
-    const before = await getPackageJSONInCapsules(capsules, packageManager);
+    const capsulesWithPackagesData = await getCapsulesPackageJsonData(capsules);
 
     await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
-    const after = await getPackageJSONInCapsules(capsules, packageManager);
-    const toInstall = capsules.filter((item, i) => {
-      return (
-        !equals(before[i], after[i]) ||
-        after[i].packageManager === '' ||
-        !isOldPackageManager(after[i].packageManager, config, packageManager)
+    if (config.installPackages) {
+      const capsulesToInstall: Capsule[] = capsulesWithPackagesData
+        .filter(capsuleWithPackageData => {
+          const packageJsonHasChanged = !equals(
+            capsuleWithPackageData.previousPackageJson,
+            capsuleWithPackageData.currentPackageJson
+          );
+          return packageJsonHasChanged;
+        })
+        .map(capsuleWithPackageData => capsuleWithPackageData.capsule);
+      await this.packageManager.runInstall(capsulesToInstall, { packageManager: config.packageManager });
+      await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList);
+    }
+    // rewrite the package-json with the component dependencies in it. the original package.json
+    // that was written before, didn't have these dependencies in order for the package-manager to
+    // be able to install them without crushing when the versions don't exist yet
+    capsulesWithPackagesData.forEach(capsuleWithPackageData => {
+      capsuleWithPackageData.capsule.fs.writeFileSync(
+        PACKAGE_JSON,
+        JSON.stringify(capsuleWithPackageData.currentPackageJson, null, 2)
       );
     });
-    //   await Promise.all(
-    //   capsules
-    //     .filter((_, i) => !isOldPackageManager(config, after, i, packageManager))
-    //     .map(capsule => packageManager.removeLockFilesInCapsule(capsule))
-    // );
-    //  const toInstall = capsules;
-    if (config.installPackages && config.packageManager) {
-      await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
-    } else if (config.installPackages) {
-      await this.packageManager.runInstall(toInstall);
-    }
 
     if (opts && opts.consumerPath) {
       await symlinkCapsulesToWorkspace(capsuleList, components, opts.consumerPath);
@@ -137,31 +144,58 @@ export default class Isolator {
   }
 }
 
-function isOldPackageManager(
-  name: string,
-  config: { installPackages: boolean; packageManager: undefined },
-  packageManager: PackageManager
-) {
-  const res = config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
-  return res;
-}
+type CapsulePackageJsonData = {
+  capsule: Capsule;
+  currentPackageJson: Record<string, any>;
+  previousPackageJson: Record<string, any> | null;
+};
 
-async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager) {
-  const resolvedJsons = await Promise.all(
+async function getCapsulesPackageJsonData(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
+  return Promise.all(
     capsules.map(async capsule => {
       const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
-      let capsuleJson: any = null;
-      let packageManager = '';
-
+      let previousPackageJson: any = null;
+      // @ts-ignore this capsule.component thing MUST BE FIXED, once done, if it doesn't have the ConsumerComponent, use the "component" var above
+      const currentPackageJson = getCurrentPackageJson(capsule.component as ConsumerComponent);
+      const result: CapsulePackageJsonData = {
+        capsule,
+        currentPackageJson: currentPackageJson.packageJsonObject,
+        previousPackageJson: null
+      };
       try {
-        capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
-        packageManager = await pm.checkPackageManagerInCapsule(capsule);
-        // console.log('packageMannagr in ', capsule.wrkDir, ':', packageManager || 'ERRROR!!!')
-        return { capsuleJson: JSON.parse(capsuleJson), packageManager };
-        // eslint-disable-next-line no-empty
-      } catch (e) {}
-      return { capsuleJson, packageManager };
+        previousPackageJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
+        result.previousPackageJson = JSON.parse(previousPackageJson);
+      } catch (e) {
+        // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
+      }
+      return result;
     })
   );
-  return resolvedJsons;
+}
+
+function getCurrentPackageJson(component: ConsumerComponent): PackageJsonFile {
+  const newVersion = '0.0.1-new';
+  const getBitDependencies = (dependencies: BitIds) => {
+    return dependencies.reduce((acc, depId: BitId) => {
+      const packageDependency = depId.hasVersion() ? depId.version : newVersion;
+      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      acc[packageName] = packageDependency;
+      return acc;
+    }, {});
+  };
+  const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
+  const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
+  const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
+  const packageJson = PackageJsonFile.createFromComponent('.', component, false);
+  const addDependencies = (packageJsonFile: PackageJsonFile) => {
+    packageJsonFile.addDependencies(bitDependencies);
+    packageJsonFile.addDevDependencies({
+      ...bitDevDependencies,
+      ...bitExtensionDependencies
+    });
+  };
+  addDependencies(packageJson);
+  packageJson.addOrUpdateProperty('version', component.id.hasVersion() ? component.id.version : newVersion);
+  packageJson.removeDependency('bit-bin');
+  return packageJson;
 }

@@ -7,7 +7,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
+import { resolveGroupId, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
@@ -63,7 +63,7 @@ export default class Repository {
   }
 
   ensureDir() {
-    return mkdirp(this.getPath());
+    return fs.ensureDir(this.getPath());
   }
 
   getPath() {
@@ -102,11 +102,11 @@ export default class Repository {
         return parsedObject;
       })
       .catch(err => {
-        if (err.code === 'ENOENT') {
-          logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
-        } else {
+        if (err.code !== 'ENOENT') {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+          throw err;
         }
+        logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
         if (throws) throw err;
         return null;
       });

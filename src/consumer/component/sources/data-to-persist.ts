@@ -73,7 +73,7 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
+  async persistAllToCapsule(capsule: any, opts = { keepExistingCapsule: false }) {
     this._log();
     this._validateRelative();
     if (!opts.keepExistingCapsule) {

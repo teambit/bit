@@ -7,20 +7,21 @@ import { promises as fs } from 'fs';
 import { lock, unlock } from 'proper-lockfile';
 import { join } from 'path';
 import { CACHE_ROOT } from '../../constants';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
+import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class ExecutionCache {
   constructor(private pathToCache: string) {}
 
   hash(capsule: Capsule, name: string) {
-    // const component = capsule.component.toLegacyConsumerComponent
     const configString = JSON.stringify(path(['component', 'extensions'], capsule));
     // for some reason in this point i get consumerComponent and not a component
     const consumerComponent = (capsule.component as any) as ConsumerComponent;
-    // capsule.component..extensions.flows
     const { files, packageJsonFile } = consumerComponent;
-    const content = `${configString}\n${capsule.wrkDir}\n${[...files, packageJsonFile!.toVinylFile()]
+    const vinylFiles: AbstractVinyl[] = [...files];
+    if (packageJsonFile) vinylFiles.push(packageJsonFile.toVinylFile());
+    const content = `${configString}\n${capsule.wrkDir}\n${vinylFiles
       .map(file => (file.contents || '').toString())
       .join('\n')}`;
     const md5 = createHash('md5', { encoding: 'utf8' })
@@ -31,7 +32,6 @@ export class ExecutionCache {
   }
 
   async saveHashValue(capsule: Capsule, name: string): Promise<void> {
-    // const release = await lock(this.pathToCache, { realpath: false });
     await safeGetLock(this.pathToCache);
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
@@ -43,9 +43,6 @@ export class ExecutionCache {
   }
 
   async getCacheValue(wrkDir: string, name: string): Promise<string | undefined> {
-    // const release = await lock(this.pathToCache, {
-    //   realpath: false
-    // });
     await safeGetLock(this.pathToCache);
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
@@ -94,7 +91,6 @@ async function safeGetLock(
       await options.init(cachePath);
     } else {
       lockState = 'UNLOCKERROR';
-      // console.log('something else: ', e.code) should log this
     }
   }
   return lockState === 'UNLOCK'

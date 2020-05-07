@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
@@ -17,7 +17,6 @@ export default class Tag extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
@@ -34,7 +33,7 @@ export default class Tag extends Command {
     ['', 'allow-files', 'allow component to have files spread over multiple directories (not recommended)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed

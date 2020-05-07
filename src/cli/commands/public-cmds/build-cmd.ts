@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { build, buildAll } from '../../../api/consumer';
 import { empty } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -8,11 +8,10 @@ export default class Build extends Command {
   name = 'build [id]';
   description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true; // In case the compiler is not installed yet
