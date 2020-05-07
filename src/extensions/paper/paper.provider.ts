@@ -1,4 +1,4 @@
-import { Paper } from '../paper';
+import { Paper } from './paper';
 import { Reporter } from '../reporter';
 import CommandRegistry from './registry';
 
