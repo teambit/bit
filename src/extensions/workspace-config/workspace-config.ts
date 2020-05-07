@@ -167,7 +167,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
       };
       const standAlone = legacyInitProps?.standAlone ?? false;
       const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
-      const instance = this.fromLegacyConfig(legacyConfig);
+      const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
@@ -175,7 +175,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
     const merged = assign(template, props);
     const instance = new WorkspaceConfig(merged, undefined);
     if (dirPath) {
-      instance.path = this.composeBitJsoncPath(dirPath);
+      instance.path = WorkspaceConfig.composeBitJsoncPath(dirPath);
     }
     return instance;
   }
@@ -241,7 +241,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
-    const bitJsoncPath = this.composeBitJsoncPath(dirPath);
+    const bitJsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
     if (resetHard) {
       // Call the legacy reset hard to make sure there is no old bit.json kept
       LegacyWorkspaceConfig.reset(dirPath, true);
@@ -265,7 +265,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
   }
 
   static async pathHasBitJsonc(dirPath: PathOsBased): Promise<boolean> {
-    return fs.pathExists(this.composeBitJsoncPath(dirPath));
+    return fs.pathExists(WorkspaceConfig.composeBitJsoncPath(dirPath));
   }
 
   /**
@@ -277,16 +277,16 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
    * @memberof WorkspaceConfig
    */
   static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
-    const jsoncExist = await this.pathHasBitJsonc(dirPath);
+    const jsoncExist = await WorkspaceConfig.pathHasBitJsonc(dirPath);
     if (jsoncExist) {
-      const jsoncPath = this.composeBitJsoncPath(dirPath);
-      const instance = await this._loadFromBitJsonc(jsoncPath);
+      const jsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
+      const instance = await WorkspaceConfig._loadFromBitJsonc(jsoncPath);
       instance.path = jsoncPath;
       return instance;
     }
     const legacyConfig = await LegacyWorkspaceConfig._loadIfExist(dirPath);
     if (legacyConfig) {
-      return this.fromLegacyConfig(legacyConfig);
+      return WorkspaceConfig.fromLegacyConfig(legacyConfig);
     }
     return undefined;
   }
@@ -295,7 +295,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
     const contentBuffer = await fs.readFile(bitJsoncPath);
     try {
       const parsed = parse(contentBuffer.toString());
-      return this.fromObject(parsed);
+      return WorkspaceConfig.fromObject(parsed);
     } catch (e) {
       throw new InvalidConfigFile(bitJsoncPath);
     }
