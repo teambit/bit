@@ -1,4 +1,4 @@
-import { ComponentFactory } from '../component';
+import ComponentFactory from './component-factory';
 import { Isolator } from '../isolator';
 
 type ComponentDeps = [Isolator];
