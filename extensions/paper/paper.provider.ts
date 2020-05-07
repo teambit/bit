@@ -1,4 +1,4 @@
-import { Paper } from '../paper';
+import { Paper } from './paper';
 import { Reporter } from '@bit/bit.core.reporter';
 import CommandRegistry from './registry';
 

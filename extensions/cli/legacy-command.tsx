@@ -4,7 +4,7 @@ import React from 'react';
 import { Command, PaperOptions, GenericObject } from '@bit/bit.core.paper';
 import LegacyInterface from 'bit-bin/cli/command';
 import allHelp from 'bit-bin/cli/templates/all-help';
-import { getID } from '@bit/bit.core.paper/registry';
+import { getID } from '@bit/bit.core.paper';
 import { Paper } from '@bit/bit.core.paper';
 
 export class LegacyCommand implements Command {
