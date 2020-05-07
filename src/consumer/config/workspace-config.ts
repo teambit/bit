@@ -285,7 +285,7 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
     const loadFunc = this.workspaceConfigLoadingRegistry;
-    if (loadFunc && R.isFunction(loadFunc)) {
+    if (loadFunc && typeof loadFunc === 'function') {
       return loadFunc(dirPath);
     }
     return undefined;
