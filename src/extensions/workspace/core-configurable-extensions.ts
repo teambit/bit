@@ -5,7 +5,6 @@ import { ExtensionManifest } from '@teambit/harmony';
 // 2. to have the manifest for the core extensions so it will be able to load it
 import { ComposerExt } from '../composer';
 import { PackageManagerExt } from '../package-manager';
-import workspaceExt from './workspace.manifest';
 import { FlowsExt } from '../flows';
 import { CreateExt } from '../create';
 
@@ -15,8 +14,7 @@ const coreConfigurableExtensions: { [extName: string]: ExtensionManifest } = {
   [FlowsExt.name]: FlowsExt,
   [CreateExt.name]: CreateExt,
   // TODO: take the name from the extension. Its hard coded because currently that's how it is in the config
-  dependencyResolver: PackageManagerExt,
-  [workspaceExt.name]: workspaceExt
+  dependencyResolver: PackageManagerExt
 };
 
 export { coreConfigurableExtensions };

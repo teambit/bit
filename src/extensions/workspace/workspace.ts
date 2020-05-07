@@ -195,10 +195,8 @@ export default class Workspace {
   async loadWorkspaceExtensions() {
     const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
     const extensionsConfigGroups = this.groupByCoreExtensions(extensionsConfig);
-    // Do not load workspace extension again
-    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true.filter(
-      config => config.id !== 'workspace'
-    );
+    // this list doesn't include thw workspace ext, so it won't be loaded again
+    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true;
     const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
       configEntry => coreConfigurableExtensions[configEntry.id]
     );
