@@ -794,22 +794,27 @@ export default class Scope {
     }
   }
 
+  static scopeCache: { [path: string]: Scope } = {};
+
   static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-
-    const scopeJsonPath = getScopeJsonPath(scopePath);
-    const scopeJsonExist = fs.existsSync(scopeJsonPath);
-    let scopeJson;
-    if (scopeJsonExist) {
-      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
-    } else {
-      scopeJson = Scope.ensureScopeJson(scopePath);
+    if (!Scope.scopeCache[scopePath]) {
+      const scopeJsonPath = getScopeJsonPath(scopePath);
+      const scopeJsonExist = fs.existsSync(scopeJsonPath);
+      let scopeJson;
+      if (scopeJsonExist) {
+        scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+      } else {
+        scopeJson = Scope.ensureScopeJson(scopePath);
+      }
+      const objects = await Repository.load({ scopePath, scopeJson });
+      const scope = new Scope({ path: scopePath, scopeJson, objects });
+      Scope.scopeCache[scopePath] = scope;
     }
-    const objects = await Repository.load({ scopePath, scopeJson });
-    return new Scope({ path: scopePath, scopeJson, objects });
+    return Scope.scopeCache[scopePath];
   }
 }

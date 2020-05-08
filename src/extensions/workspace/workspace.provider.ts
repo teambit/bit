@@ -40,8 +40,6 @@ export default async function provideWorkspace(
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      // @todo: fix this by maybe having the scope singleton, similar to the consumer.
-      if (scope.legacyScope) consumer.scope = scope.legacyScope;
       const workspace = new Workspace(
         consumer,
         workspaceConfig,
