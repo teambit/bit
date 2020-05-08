@@ -17,9 +17,21 @@ function transpile() {
     console.log('transpile -> stderr', err.stderr ? err.stderr.toString() : '');
     // @todo: probably a bug in Flows. when the next line is un-commented, Flows hangs
     // return { err };
+    return { dir: 'dist', results, err };
   }
+  updatePackageJsonWithMainDist();
   console.log('transpile -> results', results);
   return { dir: 'dist', results };
+}
+
+function updatePackageJsonWithMainDist() {
+  const packageJsonPath = 'package.json';
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
+  const currentMain = packageJson.main;
+  if (currentMain.startsWith('dist/')) return;
+  const fileNameNoExt = path.parse(currentMain).name;
+  packageJson.main = `dist/${fileNameNoExt}.js`;
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 }
 
 module.exports = transpile;
