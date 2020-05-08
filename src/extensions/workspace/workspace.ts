@@ -1,5 +1,5 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
-import { difference, groupBy } from 'ramda';
+import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { Scope } from '../scope';
@@ -15,8 +15,7 @@ import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
-import { coreConfigurableExtensions } from './core-configurable-extensions';
+import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 import legacyLogger from '../../logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
@@ -194,28 +193,9 @@ export default class Workspace {
 
   async loadWorkspaceExtensions() {
     const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
-    const extensionsConfigGroups = this.groupByCoreExtensions(extensionsConfig);
-    // this list doesn't include thw workspace ext, so it won't be loaded again
-    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true;
-    const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
-      configEntry => coreConfigurableExtensions[configEntry.id]
-    );
-    const externalExtensionsWithoutLegacy = extensionsConfigGroups.false._filterLegacy();
+    const externalExtensionsWithoutLegacy = extensionsConfig._filterLegacy();
     const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
-    await this.loadExtensions([...coreExtensionsManifests, ...externalExtensionsManifests]);
-  }
-
-  private groupByCoreExtensions(
-    extensionsConfig: ExtensionConfigList
-  ): { true: ExtensionConfigList; false: ExtensionConfigList } {
-    const coreNames = Object.keys(coreConfigurableExtensions);
-    const isCore = (config: ExtensionConfigEntry): boolean => {
-      return coreNames.includes(config.id);
-    };
-    const groups = groupBy(isCore, extensionsConfig);
-    groups.false = ExtensionConfigList.fromArray(groups.false);
-    groups.true = ExtensionConfigList.fromArray(groups.true);
-    return groups;
+    await this.loadExtensions([...externalExtensionsManifests]);
   }
 
   async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
