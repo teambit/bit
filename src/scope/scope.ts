@@ -786,12 +786,15 @@ export default class Scope {
     return scopeJson;
   }
 
+  static scopeCache: { [path: string]: Scope } = {};
+
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     await Repository.reset(path);
     if (resetHard) {
       logger.info(`deleting the whole scope at ${path}`);
       await fs.emptyDir(path);
     }
+    Scope.scopeCache = {};
   }
 
   static async load(absPath: string): Promise<Scope> {
@@ -800,16 +803,19 @@ export default class Scope {
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-
-    const scopeJsonPath = getScopeJsonPath(scopePath);
-    const scopeJsonExist = fs.existsSync(scopeJsonPath);
-    let scopeJson;
-    if (scopeJsonExist) {
-      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
-    } else {
-      scopeJson = Scope.ensureScopeJson(scopePath);
+    if (!Scope.scopeCache[scopePath]) {
+      const scopeJsonPath = getScopeJsonPath(scopePath);
+      const scopeJsonExist = fs.existsSync(scopeJsonPath);
+      let scopeJson;
+      if (scopeJsonExist) {
+        scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+      } else {
+        scopeJson = Scope.ensureScopeJson(scopePath);
+      }
+      const objects = await Repository.load({ scopePath, scopeJson });
+      const scope = new Scope({ path: scopePath, scopeJson, objects });
+      Scope.scopeCache[scopePath] = scope;
     }
-    const objects = await Repository.load({ scopePath, scopeJson });
-    return new Scope({ path: scopePath, scopeJson, objects });
+    return Scope.scopeCache[scopePath];
   }
 }
