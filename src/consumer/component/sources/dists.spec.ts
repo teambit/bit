@@ -38,7 +38,7 @@ describe('Dists', () => {
         workspaceSettings: {
           _distTarget: 'dist',
           _distEntry: 'src',
-          _resolveModules: { modulesDirectories: ['src'] }
+          _resolveModules: { modulesDirectories: ['src/custom'] }
         }
       };
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/custom');
@@ -48,7 +48,7 @@ describe('Dists', () => {
         workspaceSettings: {
           _distTarget: 'dist',
           _distEntry: 'src',
-          _resolveModules: { modulesDirectories: ['src'] }
+          _resolveModules: { modulesDirectories: ['src2'] }
         }
       };
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/src2');
@@ -58,7 +58,7 @@ describe('Dists', () => {
         workspaceSettings: {
           _distTarget: 'dist',
           _distEntry: 'src',
-          _resolveModules: { modulesDirectories: ['src'] }
+          _resolveModules: { modulesDirectories: ['custom1', 'custom2'] }
         }
       };
       const delimiter = process.platform === 'win32' ? ';' : ':';
