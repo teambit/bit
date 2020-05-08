@@ -18,8 +18,7 @@ import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
 import { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
-import { WorkspaceConfig } from '../extensions/workspace-config';
-import ComponentConfig from '../consumer/config';
+import ComponentConfig, { ILegacyWorkspaceConfig } from '../consumer/config';
 import logger from '../logger/logger';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import installExtensions from '../scope/extensions/install-extensions';
@@ -252,7 +251,7 @@ export default class EnvExtension extends BaseExtension {
     componentFromModel: ConsumerComponent;
     componentConfig: ComponentConfig | undefined;
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
-    workspaceConfig: WorkspaceConfig;
+    workspaceConfig: ILegacyWorkspaceConfig;
     envType: EnvType;
     context?: Record<string, any>;
   }): Promise<EnvExtension | null | undefined> {

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
-import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
+import LegacyWorkspaceConfig, { WorkspaceConfigProps } from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { BIT_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
@@ -17,6 +17,7 @@ import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
+import { ILegacyWorkspaceConfig } from '../../consumer/config';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -34,7 +35,7 @@ export type WorkspaceConfigFileProps = {
   $schemaVersion: string;
 } & WorkspaceConfigFileInputProps;
 
-export default class WorkspaceConfig {
+export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
   _path?: string;
   // Return only the configs that are workspace related (without components configs or schema definition)
   workspaceSettings: WorkspaceSettings;
@@ -165,8 +166,8 @@ export default class WorkspaceConfig {
         componentsDefaultDirectory: props?.workspace?.workspace.defaultDirectory
       };
       const standAlone = legacyInitProps?.standAlone ?? false;
-      const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, standAlone, legacyProps);
-      const instance = this.fromLegacyConfig(legacyConfig);
+      const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
+      const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
@@ -174,7 +175,7 @@ export default class WorkspaceConfig {
     const merged = assign(template, props);
     const instance = new WorkspaceConfig(merged, undefined);
     if (dirPath) {
-      instance.path = this.composeBitJsoncPath(dirPath);
+      instance.path = WorkspaceConfig.composeBitJsoncPath(dirPath);
     }
     return instance;
   }
@@ -210,8 +211,37 @@ export default class WorkspaceConfig {
     }
   }
 
+  /**
+   * A function that register to the legacy ensure function in order to transform old props structure
+   * to the new one
+   *
+   * @static
+   * @param {PathOsBasedAbsolute} dirPath
+   * @param {WorkspaceConfigFileProps} [workspaceConfigProps={} as any]
+   * @returns {Promise<WorkspaceConfig>}
+   * @memberof WorkspaceConfig
+   */
+  static async onLegacyEnsure(
+    dirPath: PathOsBasedAbsolute,
+    standAlone: boolean,
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
+  ): Promise<WorkspaceConfig> {
+    const newProps: WorkspaceConfigFileInputProps = {
+      workspace: {
+        workspace: {
+          defaultDirectory: workspaceConfigProps.componentsDefaultDirectory
+        },
+        dependencyResolver: {
+          packageManager: workspaceConfigProps.packageManager
+        }
+      }
+    };
+
+    return WorkspaceConfig.ensure(dirPath, newProps, { standAlone });
+  }
+
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
-    const bitJsoncPath = this.composeBitJsoncPath(dirPath);
+    const bitJsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
     if (resetHard) {
       // Call the legacy reset hard to make sure there is no old bit.json kept
       LegacyWorkspaceConfig.reset(dirPath, true);
@@ -235,7 +265,7 @@ export default class WorkspaceConfig {
   }
 
   static async pathHasBitJsonc(dirPath: PathOsBased): Promise<boolean> {
-    return fs.pathExists(this.composeBitJsoncPath(dirPath));
+    return fs.pathExists(WorkspaceConfig.composeBitJsoncPath(dirPath));
   }
 
   /**
@@ -247,16 +277,16 @@ export default class WorkspaceConfig {
    * @memberof WorkspaceConfig
    */
   static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
-    const jsoncExist = await this.pathHasBitJsonc(dirPath);
+    const jsoncExist = await WorkspaceConfig.pathHasBitJsonc(dirPath);
     if (jsoncExist) {
-      const jsoncPath = this.composeBitJsoncPath(dirPath);
-      const instance = await this._loadFromBitJsonc(jsoncPath);
+      const jsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
+      const instance = await WorkspaceConfig._loadFromBitJsonc(jsoncPath);
       instance.path = jsoncPath;
       return instance;
     }
-    const legacyConfig = await LegacyWorkspaceConfig.loadIfExist(dirPath);
+    const legacyConfig = await LegacyWorkspaceConfig._loadIfExist(dirPath);
     if (legacyConfig) {
-      return this.fromLegacyConfig(legacyConfig);
+      return WorkspaceConfig.fromLegacyConfig(legacyConfig);
     }
     return undefined;
   }
@@ -265,7 +295,7 @@ export default class WorkspaceConfig {
     const contentBuffer = await fs.readFile(bitJsoncPath);
     try {
       const parsed = parse(contentBuffer.toString());
-      return this.fromObject(parsed);
+      return WorkspaceConfig.fromObject(parsed);
     } catch (e) {
       throw new InvalidConfigFile(bitJsoncPath);
     }

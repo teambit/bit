@@ -10,7 +10,7 @@ import {
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBasedAbsolute, PathOsBased } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
@@ -18,9 +18,18 @@ import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
+
+type WorkspaceConfigLoadFunction = (dirPath: string | PathOsBased) => Promise<ILegacyWorkspaceConfig | undefined>;
+type WorkspaceConfigEnsureFunction = (
+  dirPath: PathOsBasedAbsolute,
+  standAlone: boolean,
+  workspaceConfigProps: WorkspaceConfigProps
+) => Promise<ILegacyWorkspaceConfig>;
+type WorkspaceConfigMockFunction = (props: WorkspaceConfigProps) => ILegacyWorkspaceConfig;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
@@ -60,6 +69,20 @@ export default class WorkspaceConfig extends AbstractConfig {
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
+
+  static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
+  static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
+    this.workspaceConfigLoadingRegistry = func;
+  }
+  static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
+  static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
+    this.workspaceConfigEnsuringRegistry = func;
+  }
+
+  static workspaceConfigMockingRegistry: WorkspaceConfigMockFunction;
+  static registerOnWorkspaceConfigMocking(func: WorkspaceConfigMockFunction) {
+    this.workspaceConfigMockingRegistry = func;
+  }
 
   constructor({
     compiler,
@@ -151,6 +174,15 @@ export default class WorkspaceConfig extends AbstractConfig {
     dirPath: PathOsBasedAbsolute,
     standAlone: boolean,
     workspaceConfigProps: WorkspaceConfigProps = {} as any
+  ): Promise<ILegacyWorkspaceConfig> {
+    const ensureFunc = this.workspaceConfigEnsuringRegistry;
+    return ensureFunc(dirPath, standAlone, workspaceConfigProps);
+  }
+
+  static async _ensure(
+    dirPath: PathOsBasedAbsolute,
+    standAlone: boolean,
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
       const workspaceConfig = await this.load(dirPath);
@@ -173,14 +205,14 @@ export default class WorkspaceConfig extends AbstractConfig {
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
-      logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
+      logger.info(`deleting the workspace configuration file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
     if (resetHard) await deleteBitJsonFile();
   }
 
   static fromPlainObject(object: Record<string, any>) {
-    WorkspaceConfig.validate(object);
+    this.validate(object);
     const {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       env,
@@ -239,14 +271,27 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async load(dirPath: string): Promise<WorkspaceConfig> {
-    const res = await this.loadIfExist(dirPath);
+    const res = await this._loadIfExist(dirPath);
     if (!res) {
       throw new BitConfigNotFound();
     }
     return res;
   }
 
-  static async loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
+  static mock(props: WorkspaceConfigProps): ILegacyWorkspaceConfig {
+    const mockFunc = this.workspaceConfigMockingRegistry;
+    return mockFunc(props);
+  }
+
+  static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
+    const loadFunc = this.workspaceConfigLoadingRegistry;
+    if (loadFunc && typeof loadFunc === 'function') {
+      return loadFunc(dirPath);
+    }
+    return undefined;
+  }
+
+  static async _loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
     const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
     const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
 

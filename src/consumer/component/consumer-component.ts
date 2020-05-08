@@ -3,9 +3,8 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentConfig from '../config';
+import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
 import { Dist, License, SourceFile } from '../component/sources';
-import { WorkspaceConfig } from '../../extensions/workspace-config';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
@@ -1035,7 +1034,7 @@ export default class Component {
     consumer: Consumer;
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const workspaceConfig: WorkspaceConfig = consumer.config;
+    const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const bitMap: BitMap = consumer.bitMap;
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {

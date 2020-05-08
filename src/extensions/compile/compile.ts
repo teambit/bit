@@ -27,6 +27,7 @@ type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: strin
 
 export class Compile {
   constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
+    // @todo: why the scope is undefined here?
     const func = this.compileDuringBuild.bind(this);
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }

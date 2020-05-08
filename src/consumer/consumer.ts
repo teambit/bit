@@ -5,7 +5,6 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
-import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -70,10 +69,12 @@ import PackageJsonFile from './component/package-json-file';
 import ComponentMap from './bit-map/component-map';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
 import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
+import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import { ILegacyWorkspaceConfig } from './config';
 
 type ConsumerProps = {
   projectPath: string;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
@@ -98,7 +99,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
@@ -741,9 +742,9 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigFileProps);
+    return this.ensure(projectPath, noGit, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -758,14 +759,14 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps, { standAlone });
+    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
