@@ -786,15 +786,16 @@ export default class Scope {
     return scopeJson;
   }
 
+  static scopeCache: { [path: string]: Scope } = {};
+
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     await Repository.reset(path);
     if (resetHard) {
       logger.info(`deleting the whole scope at ${path}`);
       await fs.emptyDir(path);
     }
+    Scope.scopeCache = {};
   }
-
-  static scopeCache: { [path: string]: Scope } = {};
 
   static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
