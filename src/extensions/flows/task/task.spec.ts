@@ -1,7 +1,7 @@
 import { remove } from 'fs-extra';
 import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
-import { Task } from './task';
+import { executeTask } from './task';
 
 describe('task', function() {
   this.afterAll(async function() {
@@ -58,7 +58,7 @@ function expectMessage(stream, message: string, pipeName = 'task:stdout', code =
 async function runTask(task: string, id = '@bit-test/button', getter = getTestCase) {
   const test = getter(id);
   const capsule = await createFakeCapsule(test, id);
-  const stream = Task.execute(task, capsule);
+  const stream = executeTask(task, capsule);
   return stream;
 }
 
