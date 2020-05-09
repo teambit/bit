@@ -32,7 +32,7 @@ chai.use(require('chai-fs'));
         extensions: {
           [`${helper.scopes.remote}/extensions/gulp-ts`]: {},
           compile: {
-            compiler: `#@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`
+            compiler: `@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`
           }
         }
       };
