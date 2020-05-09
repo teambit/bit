@@ -1,10 +1,7 @@
-/* eslint-disable no-bitwise */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-this-alias */
-import { ReplaySubject, from, zip, Observable, concat } from 'rxjs';
-import { mergeMap, map, filter, mergeAll, tap, concatAll, take, toArray, combineAll } from 'rxjs/operators';
+import { ReplaySubject, from } from 'rxjs';
+import { mergeMap, map, filter, mergeAll, tap, concatAll } from 'rxjs/operators';
 
-import { Graph, alg } from 'graphlib';
+import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
 import { Consumer } from '../../../consumer';
@@ -14,8 +11,7 @@ import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator';
-import logger from '../../../logger/logger';
-import { sortGraphByLevels as toposortByLevels } from '../util/sort-graph-by-levels';
+import { toposortByLevels } from '../util/sort-graph-by-levels';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
@@ -137,8 +133,10 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
       };
       return accum;
     }, {}),
+    // eslint-disable-next-line no-bitwise
     code: !!~Object.entries(visitedCache).findIndex(
-      ([k, value]: [string, CacheValue]) => !value.visited || value.result instanceof Error
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ([_k, value]: [string, CacheValue]) => !value.visited || value.result instanceof Error
     )
   };
   network.next(endMessage);

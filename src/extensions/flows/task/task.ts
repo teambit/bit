@@ -5,7 +5,7 @@ import { join } from 'path';
 import { createExecutionStream } from './execution-stream';
 import { Capsule, ContainerExec } from '../../isolator';
 
-export const PackageMarker = '#';
+export const PackageMarker = '@';
 
 export class Task {
   static execute(task: string, capsule: Capsule): Subject<any> {
@@ -34,7 +34,7 @@ export class Task {
 function createHostScript(capsule: Capsule, task: string) {
   const parts = task
     .trim()
-    .slice(1)
+    // .slice(1)
     .split(':');
   const host = '__bit_container.js';
   const containerScript = getContainerScript();

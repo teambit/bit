@@ -5,7 +5,7 @@ type Level = {
   edges: string[];
 };
 
-export function sortGraphByLevels(graph: Graph) {
+export function toposortByLevels(graph: Graph) {
   return alg
     .topsort(graph)
     .reduce((accum: Array<Level>, curr) => {
