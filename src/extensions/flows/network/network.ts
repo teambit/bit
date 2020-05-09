@@ -1,10 +1,10 @@
 /* eslint-disable no-bitwise */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-this-alias */
-import { ReplaySubject, from, zip, Observable } from 'rxjs';
-import { mergeMap, map, filter, mergeAll, tap } from 'rxjs/operators';
+import { ReplaySubject, from, zip, Observable, concat } from 'rxjs';
+import { mergeMap, map, filter, mergeAll, tap, concatAll, take, toArray, combineAll } from 'rxjs/operators';
 
-import { Graph } from 'graphlib';
+import { Graph, alg } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
 import { Consumer } from '../../../consumer';
@@ -15,6 +15,7 @@ import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator';
 import logger from '../../../logger/logger';
+import { sortGraphByLevels as toposortByLevels } from '../util/sort-graph-by-levels';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
@@ -62,10 +63,7 @@ export class Network {
     });
 
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
-    const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
-
-    walk();
-    this.emitter.emit('executionEnded');
+    this.traverse(graph, networkStream, visitedCache, startTime);
     return networkStream;
   }
 
@@ -73,73 +71,40 @@ export class Network {
     this.emitter.on('workspaceLoaded', cb);
   }
 
-  // remove emitter
-  private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
+  traverse(graph: Graph, stream: ReplaySubject<any>, visitedCache: Cache, startTime: Date) {
+    const sorted = toposortByLevels(graph);
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
-    let seederAmount = 0;
-
-    return function walk() {
-      logger.debug(`flowsExt, network.walk graph.nodes().length: ${graph.nodes().length}`);
-      if (!graph.nodes().length) {
-        logger.debug('flowsExt, network.walk endNetwork going to send network:result');
-        endNetwork(stream, startTime, visitedCache);
-        return;
-      }
-
-      const seeders: string[] = getSeeders(graph, visitedCache, seederAmount);
-      logger.debug(`flowsExt, network.walk, seeders: ${seeders.join(', ')}`);
-      const seedersObservables: Observable<string> = from(seeders);
-      const flows: Observable<Flow> = seedersObservables.pipe(
-        mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
-      );
-      seederAmount += seeders.length;
-      logger.debug(`flowsExt, network.walk, amount: ${seederAmount}`);
-
-      zip(
-        zip(seedersObservables, flows).pipe(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
-        seedersObservables
+    from(sorted)
+      .pipe(
+        mergeMap(level =>
+          from(
+            level.map(flowId =>
+              getFlow(visitedCache[flowId].capsule).then(flow => {
+                visitedCache[flowId].visited = true;
+                return flow.execute(visitedCache[flowId].capsule);
+              })
+            )
+          )
+        ),
+        concatAll(),
+        map(flowStream => {
+          stream.next(flowStream);
+          return flowStream;
+        }),
+        mergeAll(),
+        filter((data: any) => data.type === 'flow:result'),
+        tap(data => (visitedCache[data.id.toString()].result = data)),
+        tap(data => handlePostFlow(postFlow, visitedCache[data.id.toString()]))
       )
-        .pipe(
-          map(([flowStream, seed]) => {
-            // console.log('visited ', seed)
-            visitedCache[seed].visited = true;
-            stream.next(flowStream);
-            return flowStream;
-          }),
-          mergeAll(),
-          // tap((x: any) =>
-          //   console.log('~~~~~got this', x.type, 'from', typeof x.id === 'string' ? x.id : x.id && x.id.toString())
-          // ),
-          filter((data: any) => data.type === 'flow:result')
-        )
-        .subscribe({
-          next(data: any) {
-            const seed = data.id.toString();
-            const cacheValue = visitedCache[seed];
-            cacheValue.result = data;
-            seederAmount -= 1;
-            logger.debug(`flowsExt, network.walk, next, removing ${seed}. amount is decreased to ${seederAmount}`);
-            graph.removeNode(seed);
-            // console.log(`got ${data.type} from ${seed} amount is now ${amount}`, graph.nodes());
-            handlePostFlow(postFlow, cacheValue);
-            if (seederAmount === 0) {
-              walk();
-            }
-            return data;
-          },
-          error(err) {
-            const seed = err.id;
-            seederAmount -= 1;
-            logger.debug(`flowsExt, network.walk, ERROR, removing ${seed}. amount is decreased to ${seederAmount}`);
-            graph.removeNode(seed);
-            handleNetworkError(seed, graph, visitedCache, err);
-            if (seederAmount === 0) {
-              walk();
-            }
-          }
-        });
-    };
+      .subscribe({
+        complete() {
+          endNetwork(stream, startTime, visitedCache);
+        },
+        error(err: any) {
+          handleNetworkError(err.id, graph, visitedCache, err);
+        }
+      });
   }
 
   private async createGraph(options: ExecutionOptions) {
@@ -158,14 +123,6 @@ function handlePostFlow(postFlow: PostFlow | null, cacheValue: CacheValue) {
   if (postFlow) {
     postFlow(cacheValue.capsule).catch(() => {});
   }
-}
-
-function getSeeders(g: Graph, cache: Cache, amount = 0): string[] {
-  const nonVisited = getNonVisitedNodes(g, cache);
-  return nonVisited.length ? nonVisited.slice(0, Math.max(5 - amount, 1)) : [g.nodes()[0]].filter(v => v);
-}
-function getNonVisitedNodes(g: Graph, cache: Cache): string[] {
-  return g.sources().filter(seed => !cache[seed].visited);
 }
 
 function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCache: Cache) {
@@ -188,7 +145,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
   network.complete();
 }
 
-function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: Error) {
+function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: any) {
   const dependents = getNeighborsByDirection(seed, graph);
   dependents
     .map(dependent => {

@@ -81,7 +81,7 @@ describe('Network', () => {
   it('structure is l->a c->h c->a c->l', function() {
     // this.timeout(1000 * 100)
     return getTestCaseFunc(
-      'bit/c-->bit/l-->bit/h-->bit/a',
+      'bit/c-->bit/l-->bit/a-->bit/h',
       {
         'bit/a': [],
         'bit/l': ['bit/a'],
