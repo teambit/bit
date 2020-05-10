@@ -3,13 +3,8 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import chalk from 'chalk';
-import format from 'string-format';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
-import { Driver } from '../driver';
-import DriverNotFound from '../driver/exceptions/driver-not-found';
-import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -22,8 +17,7 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS,
-  DEFAULT_LANGUAGE
+  DEPENDENCIES_FIELDS
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -70,16 +64,17 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
-import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import PackageJsonFile from './component/package-json-file';
 import ComponentMap from './bit-map/component-map';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
 import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
+import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import { ILegacyWorkspaceConfig } from './config';
 
 type ConsumerProps = {
   projectPath: string;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
@@ -104,14 +99,12 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
   addedGitHooks: string[] | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
@@ -137,7 +130,6 @@ export default class Consumer {
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
-    this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
@@ -151,14 +143,6 @@ export default class Consumer {
   get tester(): Promise<TesterExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(TESTER_ENV_TYPE);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get driver(): Driver {
-    if (!this._driver) {
-      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
-    }
-    return this._driver;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -198,31 +182,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Check if the driver installed and print message if not
-   *
-   *
-   * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
-   * @returns {boolean} true if the driver exists, false otherwise
-   * @memberof Consumer
-   */
-  warnForMissingDriver(msg?: string): boolean {
-    try {
-      this.driver.getDriver(false);
-
-      return true;
-    } catch (err) {
-      msg = msg
-        ? format(msg, err)
-        : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
-      if (err instanceof DriverNotFound) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        console.log(chalk.yellow(msg)); // eslint-disable-line
-      }
-      throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
-    }
   }
 
   /**
@@ -366,17 +325,6 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponentsForCapsule(ids: BitId[]): Promise<Component[]> {
-    const allComponents = await Promise.all(
-      ids.map(async id => {
-        const component = await this.loadComponentForCapsule(id);
-        const componenetWithDependencies = await loadFlattenedDependenciesForCapsule(this, component);
-        return R.concat([component], componenetWithDependencies.allDependencies);
-      })
-    );
-    return R.uniqBy((component: Component) => component.id.toString(), R.flatten(allComponents));
-  }
-
   loadComponentForCapsule(id: BitId): Promise<Component> {
     return this.componentLoader.loadForCapsule(id);
   }
@@ -388,8 +336,7 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
+  importEnvironment(bitId: BitId, verbose = false, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
@@ -795,9 +742,9 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigFileProps);
+    return this.ensure(projectPath, noGit, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -812,14 +759,14 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps, { standAlone });
+    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,

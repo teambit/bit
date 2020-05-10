@@ -106,9 +106,7 @@ export default class NodeModuleLinker {
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
-    const bindingPrefix = this.consumer
-      ? this.consumer.config.workspaceSettings._bindingPrefix
-      : DEFAULT_BINDINGS_PREFIX;
+    const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
       bindingPrefix,
       componentId,
@@ -243,7 +241,7 @@ export default class NodeModuleLinker {
       this.dataToPersist.addManySymlinks(componentsDependenciesLinks.symlinks);
     }
     if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component, componentMap);
+      const dependenciesLinks = await this._getDependenciesLinks(component, componentMap);
       this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
   }
@@ -277,29 +275,30 @@ export default class NodeModuleLinker {
     });
   }
 
-  _getDependenciesLinks(component: Component, componentMap: ComponentMap): Symlink[] {
-    const getSymlinks = (dependency: Dependency): Symlink[] => {
+  async _getDependenciesLinks(component: Component, componentMap: ComponentMap): Promise<Symlink[]> {
+    const getSymlinks = async (dependency: Dependency): Promise<Symlink[]> => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
+      const depModel = await (this.consumer?.scope.getModelComponentIfExist(dependency.id) || Promise.resolve());
+      const bindingPrefix = depModel ? depModel.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
-      dependenciesLinks.push(
-        this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, component.bindingPrefix)
-      );
+      dependenciesLinks.push(this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix));
       if (this.consumer && !this.consumer.shouldDistsBeInsideTheComponent()) {
         // when dists are written outside the component, it doesn't matter whether a component
         // has dists files or not, in case it doesn't have, the files are copied from the component
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
-        const distSymlink = this._getDependencyLink(from, dependency.id, to, component.bindingPrefix);
+        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix);
         distSymlink.forDistOutsideComponentsDir = true;
         dependenciesLinks.push(distSymlink);
       }
       return dependenciesLinks;
     };
-    const symlinks = component.getAllDependencies().map((dependency: Dependency) => getSymlinks(dependency));
+    const symlinksP = component.getAllDependencies().map((dependency: Dependency) => getSymlinks(dependency));
+    const symlinks = await Promise.all(symlinksP);
     return R.flatten(symlinks);
   }
 

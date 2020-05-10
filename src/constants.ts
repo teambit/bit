@@ -58,9 +58,11 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
+export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+
+export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -417,3 +419,7 @@ export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/d
 export const UNABLE_TO_LOAD_EXTENSION = (id: string) => `couldn't load extension ${id}, see full error in the log file`;
 export const UNABLE_TO_LOAD_EXTENSION_FROM_LIST = (ids: string[]) =>
   `couldn't load one of the following extensions ${ids.join(', ')}, see full error in the log file`;
+
+// todo: move the following two lines to the watch extension once its e2e moved to the extension dir
+export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
+export const WATCHER_COMPLETED_MSG = 'watching for changes';

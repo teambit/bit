@@ -52,6 +52,10 @@ export default class BitJsoncHelper {
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
   }
+
+  addDefaultOwner(owner: string) {
+    this.addKeyValToWorkspace('defaultOwner', owner);
+  }
 }
 
 function composePath(dir: string): string {

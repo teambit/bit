@@ -7,7 +7,6 @@ import { ComponentWithDependencies } from '../../scope';
 import ManyComponentsWriter, { ManyComponentsWriterParams } from '../../consumer/component-ops/many-components-writer';
 
 import CapsuleList from './capsule-list';
-import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 import { Dependencies } from '../../consumer/component/dependencies';
@@ -20,10 +19,17 @@ export default async function writeComponentsToCapsules(
   packageManager: string
 ) {
   components = components.map(c => c.clone());
-  const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const getClonedFromGraph = (id: BitId): ConsumerComponent => graph.node(id.toString()).clone();
+    const getClonedFromGraph = (id: BitId): ConsumerComponent => {
+      const consumerComponent = graph.node(id.toString());
+      if (!consumerComponent) {
+        throw new Error(
+          `unable to find the dependency "${id.toString()}" of "${component.id.toString()}" in the graph`
+        );
+      }
+      return consumerComponent.clone();
+    };
     const getDeps = (dependencies: Dependencies) => dependencies.get().map(dep => getClonedFromGraph(dep.id));
     const dependencies = getDeps(component.dependencies);
     const devDependencies = getDeps(component.devDependencies);
@@ -52,7 +58,6 @@ export default async function writeComponentsToCapsules(
     excludeRegistryPrefix: false,
     silentPackageManagerResult: false,
     isolated: true,
-    capsulePaths,
     packageManager,
     applyExtensionsAddedConfig: true
   };
@@ -71,7 +76,7 @@ export default async function writeComponentsToCapsules(
   // write data to capsule
   await Promise.all(
     manyComponentsWriter.writtenComponents.map(async componentToWrite => {
-      const capsule = capsuleList.getValue(componentToWrite.id);
+      const capsule = capsuleList.getCapsule(componentToWrite.id);
       if (!capsule) return;
       await componentToWrite.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
     })
@@ -85,15 +90,4 @@ function normalizeComponentDir(componentWithDependencies: ComponentWithDependenc
   allComponents.forEach(component => {
     component.stripOriginallySharedDir(manipulateDirData);
   });
-}
-
-function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
-  const capsulePaths = capsules.map(componentCapsule => {
-    const id = componentCapsule.component.id;
-    return {
-      id: id instanceof BitId ? id : id.legacyComponentId,
-      value: componentCapsule.wrkDir
-    };
-  });
-  return new CapsulePaths(...capsulePaths);
 }

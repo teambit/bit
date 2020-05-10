@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import packProvider from './pack.provider';
 import { ScopeExt } from '../scope';
 import { BitCliExt } from '../cli';
@@ -7,4 +8,4 @@ export default {
   dependencies: [BitCliExt, ScopeExt],
   config: {},
   provider: packProvider
-};
+} as ExtensionManifest;

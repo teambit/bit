@@ -1,1 +1,1 @@
-export { Task } from './task';
+export { executeTask } from './task';

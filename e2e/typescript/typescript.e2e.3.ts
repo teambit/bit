@@ -402,7 +402,7 @@ describe('typescript', function() {
         helper.command.importComponent('bar/foo');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
+        const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');

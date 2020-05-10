@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
@@ -19,7 +19,6 @@ export default class Import extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
   ${WILDCARD_HELP('import')}`;
   alias = 'i';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],
@@ -57,7 +56,7 @@ export default class Import extends Command {
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

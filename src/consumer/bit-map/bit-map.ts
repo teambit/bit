@@ -26,8 +26,8 @@ export default class BitMap {
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  allTrackDirs: { [trackDir: PathLinux]: BitId } | undefined;
+  // trackDir key is PathLinux. (ts doesn't allow keys other than string and numbers)
+  allTrackDirs: { [trackDir: string]: BitId } | undefined;
 
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;

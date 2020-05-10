@@ -13,10 +13,10 @@ import { pathNormalizeToLinux } from '../../../utils/path';
 import Source from '../../../scope/models/source';
 import { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
-import { WorkspaceConfig } from '../../../extensions/workspace-config';
 import { ComponentWithDependencies } from '../../../scope';
 import BitMap from '../../bit-map';
 import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
+import { ILegacyWorkspaceConfig } from '../../config';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -57,8 +57,7 @@ export default class Dists {
   distEntryShouldBeStripped: boolean | null | undefined = false;
   _mainDistFile: PathOsBasedRelative | null | undefined;
   distsRootDir: PathOsBasedRelative | null | undefined; // populated only after getDistDirForConsumer() is called
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(dists?: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
+  constructor(dists: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
     this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
@@ -101,7 +100,7 @@ export default class Dists {
   }
 
   static getDistDirWhenDistIsOutsideCompDir(
-    workspaceConfig: WorkspaceConfig,
+    workspaceConfig: ILegacyWorkspaceConfig,
     componentRootDir: PathLinux
   ): PathOsBasedRelative {
     if (workspaceConfig.workspaceSettings._distEntry)

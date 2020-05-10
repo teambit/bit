@@ -1,10 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, AppContext } from 'ink';
 import React from 'react';
-import { Command, PaperOptions, GenericObject } from '../paper/command';
+import { Command, PaperOptions, GenericObject } from '../paper';
 import LegacyInterface from '../../cli/command';
 import allHelp from '../../cli/templates/all-help';
-import { getID } from '../paper/registry';
+import { getID } from '../paper';
 import { Paper } from '../paper';
 
 export class LegacyCommand implements Command {

@@ -20,7 +20,6 @@ import barFooSass from '../../fixtures/consumer-components/sass/bar-foo.json';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import utilsIsStringSass from '../../fixtures/consumer-components/sass/utils-is-string.json';
 import * as globalConfig from '../api/consumer/lib/global-config';
-import { WorkspaceConfig } from '../extensions/workspace-config';
 
 const mockBitMap = () => {
   return {
@@ -41,11 +40,13 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
     toAbsolutePath: str => `/root/${str}`
   };
   if (!distIsInsideTheComponent) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    consumer.config = WorkspaceConfig.fromLegacyConfig({
-      distTarget: 'dist',
-      distEntry: 'src'
-    });
+    // @ts-ignore
+    consumer.config = {
+      workspaceSettings: {
+        _distTarget: 'dist',
+        _distEntry: 'src'
+      }
+    };
     consumer.shouldDistsBeInsideTheComponent = () => false;
   }
 

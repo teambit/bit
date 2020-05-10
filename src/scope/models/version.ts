@@ -80,7 +80,6 @@ export type VersionProps = {
 /**
  * Represent a version model in the scope
  */
-// @ts-ignore
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
@@ -248,6 +247,10 @@ export default class Version extends BitObject {
   getAllDependenciesIds(): BitIds {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
     return BitIds.fromArray(allDependencies);
+  }
+
+  getDependenciesIdsExcludeExtensions(): BitIds {
+    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {

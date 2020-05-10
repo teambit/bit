@@ -18,8 +18,7 @@ import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
 import { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
-import { WorkspaceConfig } from '../extensions/workspace-config';
-import ComponentConfig from '../consumer/config';
+import ComponentConfig, { ILegacyWorkspaceConfig } from '../consumer/config';
 import logger from '../logger/logger';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import installExtensions from '../scope/extensions/install-extensions';
@@ -112,7 +111,6 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toObject(): Record<string, any> {
     const baseObject: Record<string, any> = super.toObject();
     const object = { ...baseObject };
@@ -155,7 +153,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    const baseExtensionProps: BaseExtensionProps = await super.load(props);
+    const baseExtensionProps = (await super.load(props)) as BaseExtensionProps;
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, ...baseExtensionProps };
     const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
@@ -212,11 +210,8 @@ export default class EnvExtension extends BaseExtension {
     return undefined;
   }
 
-  /**
-   * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
-   */
   static async loadFromModelObject(modelObject: EnvExtensionModel & { envType: EnvType }): Promise<EnvExtensionProps> {
-    const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
+    const baseExtensionProps: BaseExtensionProps = super.loadFromModelObjectBase(modelObject);
     const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
     return envExtensionProps;
   }
@@ -225,7 +220,7 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
     logger.silly('env-extension, loadFromModelObject');
-    const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
+    const baseExtensionProps: BaseExtensionProps = super.loadFromModelObjectBase(modelObject);
     const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
     return envExtensionProps;
   }
@@ -256,7 +251,7 @@ export default class EnvExtension extends BaseExtension {
     componentFromModel: ConsumerComponent;
     componentConfig: ComponentConfig | undefined;
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
-    workspaceConfig: WorkspaceConfig;
+    workspaceConfig: ILegacyWorkspaceConfig;
     envType: EnvType;
     context?: Record<string, any>;
   }): Promise<EnvExtension | null | undefined> {

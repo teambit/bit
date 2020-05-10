@@ -1,10 +1,10 @@
-import Watch from './watch';
-import WatchComponents from '../../consumer/component-ops/watch-components';
+import { BitCliExt } from '../cli';
+import { WorkspaceExt } from '../workspace';
+import { CompileExt } from '../compile';
+import { provideWatch } from './watch.provider';
 
 export default {
   name: 'Watch',
-  dependencies: [],
-  provider: async () => {
-    return new Watch(new WatchComponents(true));
-  }
+  dependencies: [BitCliExt, CompileExt, WorkspaceExt],
+  provider: provideWatch
 };

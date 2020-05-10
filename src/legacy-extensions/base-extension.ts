@@ -204,7 +204,7 @@ export default class BaseExtension {
     };
   }
 
-  toObject() {
+  toObject(): Record<string, any> {
     return this.toModelObject();
   }
 
@@ -272,7 +272,7 @@ export default class BaseExtension {
     scopePath,
     throws = false,
     context
-  }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
+  }: BaseLoadArgsProps): Promise<BaseExtensionProps | BaseExtension> {
     logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
@@ -319,7 +319,7 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static loadFromModelObject(modelObject: string | BaseExtensionModel) {
+  static loadFromModelObjectBase(modelObject: string | BaseExtensionModel): BaseExtensionProps {
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {
