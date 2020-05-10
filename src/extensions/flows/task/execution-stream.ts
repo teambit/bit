@@ -2,7 +2,7 @@ import { ReplaySubject, Subject } from 'rxjs';
 import { ContainerExec } from '../../isolator';
 import logger from '../../../logger/logger';
 
-export function createExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<unknown> {
+export function listenToExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<unknown> {
   logger.debug(`flowsExt, createExecutionStream of ${id} started`);
   let message: any = null;
   const subscriber = new ReplaySubject();

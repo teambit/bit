@@ -34,7 +34,7 @@ describe('flows functionality', function() {
           [`${helper.scopes.remote}/extensions/gulp-ts`]: {},
           flows: {
             tasks: {
-              build: [`#@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`]
+              build: [`@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`]
             }
           }
         }

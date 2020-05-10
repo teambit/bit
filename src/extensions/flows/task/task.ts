@@ -2,39 +2,37 @@
 
 import { Subject } from 'rxjs';
 import { join } from 'path';
-import { createExecutionStream } from './execution-stream';
+import { listenToExecutionStream } from './execution-stream';
 import { Capsule, ContainerExec } from '../../isolator';
 
-export const PackageMarker = '#';
+export const PackageMarker = '@';
 
-export class Task {
-  static execute(task: string, capsule: Capsule): Subject<any> {
-    const isExtension = (taskString: string) => (taskString || '').trim().startsWith(PackageMarker);
+export function executeTask(task: string, capsule: Capsule): Subject<any> {
+  const isExtension = (taskString: string) => (taskString || '').trim().startsWith(PackageMarker);
 
-    const time = new Date();
-    const exec: ContainerExec = new ContainerExec();
-    const stream = createExecutionStream(exec, `${capsule.component.id.toString()}:${task}`, time);
-    if (isExtension(task)) {
-      const { host, pathToScript } = createHostScript(capsule, task);
-      capsule.execNode(host, { args: [pathToScript] }, exec);
-    } else {
-      capsule.typedExec(
-        {
-          command: task.trim().split(' '),
-          stdio: 'ipc',
-          cwd: ''
-        } as any,
-        exec
-      );
-    }
-    return stream;
+  const time = new Date();
+  const exec: ContainerExec = new ContainerExec();
+  const stream = listenToExecutionStream(exec, `${capsule.component.id.toString()}:${task}`, time);
+  if (isExtension(task)) {
+    const { host, pathToScript } = createHostScript(capsule, task);
+    capsule.execNode(host, { args: [pathToScript] }, exec);
+  } else {
+    capsule.typedExec(
+      {
+        command: task.trim().split(' '),
+        stdio: 'ipc',
+        cwd: ''
+      } as any,
+      exec
+    );
   }
+  return stream;
 }
 
 function createHostScript(capsule: Capsule, task: string) {
   const parts = task
     .trim()
-    .slice(1)
+    // .slice(1)
     .split(':');
   const host = '__bit_container.js';
   const containerScript = getContainerScript();

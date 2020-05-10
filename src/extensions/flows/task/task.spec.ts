@@ -1,7 +1,7 @@
 import { remove } from 'fs-extra';
 import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
-import { Task } from './task';
+import { executeTask } from './task';
 
 describe('task', function() {
   this.afterAll(async function() {
@@ -24,12 +24,12 @@ describe('task', function() {
 
   describe('should run module', function() {
     it('with stdout and result', async function() {
-      const stream = await runTask('#@bit/extension', '@bit-test/button0', createModuleTestCase);
+      const stream = await runTask('@bit/extension', '@bit-test/button0', createModuleTestCase);
       return expectMessage(stream, 'hello-module', 'task:stdout', 0, { message: 'hello-module' });
     });
 
     it('with stderr and result', async function() {
-      const stream = await runTask('#@bit/ext-err', '@bit-test/button1', getErrorCase as any);
+      const stream = await runTask('@bit/ext-err', '@bit-test/button1', getErrorCase as any);
       return expectMessage(stream, 'hello-module', 'task:stderr', 0, { message: 'hello-module' });
     });
   });
@@ -58,7 +58,7 @@ function expectMessage(stream, message: string, pipeName = 'task:stdout', code =
 async function runTask(task: string, id = '@bit-test/button', getter = getTestCase) {
   const test = getter(id);
   const capsule = await createFakeCapsule(test, id);
-  const stream = Task.execute(task, capsule);
+  const stream = executeTask(task, capsule);
   return stream;
 }
 

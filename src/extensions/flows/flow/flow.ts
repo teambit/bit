@@ -2,7 +2,7 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable max-len */
 import { Subject, ReplaySubject } from 'rxjs';
-import { Task } from '../task';
+import { executeTask } from '../task';
 import { Capsule } from '../../isolator';
 import logger from '../../../logger/logger';
 
@@ -38,12 +38,10 @@ export class Flow {
     const id = capsule.component.id.toString();
     logger.debug(`flowsExt, flow.execSequence of ${id}. index: ${index}`);
     const that = this;
-    const task = Task.execute(this.tasks[index], capsule);
+    const task = executeTask(this.tasks[index], capsule);
     subject.next(task);
     task.subscribe({
       next(data) {
-        // uncomment to get the errors coming from the task. as of now, there is no better way to get them
-        // console.log("Flow -> next -> data", data)
         if (data.type === 'task:result') {
           that.result.push(data);
           if (data.code) {
