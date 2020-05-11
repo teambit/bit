@@ -246,6 +246,7 @@ export default class Workspace {
       legacyLogger.warn(warning);
       legacyLogger.warn(`error: ${errorMessage}`);
       legacyLogger.silly(e.stack);
+      throw e;
     }
 
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
