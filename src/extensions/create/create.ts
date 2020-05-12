@@ -105,8 +105,8 @@ export class Registry {
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
     const extension = this.harmony.get(manifest.name);
     if (!extension) throw new Error(manifest.name);
-    if (!this.templates[extension.name]) this.templates[extension.name] = {};
-    this.templates[extension.name] = templateFunc;
+    if (!this.templates[manifest.name]) this.templates[manifest.name] = {};
+    this.templates[manifest.name] = templateFunc;
     return this;
   }
 }
