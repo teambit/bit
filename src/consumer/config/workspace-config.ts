@@ -23,8 +23,10 @@ import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 
-type WorkspaceConfigLoadFunction = (dirPath: string | PathOsBased) => Promise<ILegacyWorkspaceConfig | undefined>;
-type WorkspaceConfigEnsureFunction = (
+export type WorkspaceConfigLoadFunction = (
+  dirPath: string | PathOsBased
+) => Promise<ILegacyWorkspaceConfig | undefined>;
+export type WorkspaceConfigEnsureFunction = (
   dirPath: PathOsBasedAbsolute,
   standAlone: boolean,
   workspaceConfigProps: WorkspaceConfigProps

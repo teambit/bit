@@ -1,27 +1,34 @@
-// import WorkspaceConfig from './workspace-config';
-import { getConsumerInfo } from '../../consumer/consumer-locator';
-import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
-import WorkspaceConfig from './workspace-config';
+import LegacyWorkspaceConfig, {
+  WorkspaceConfigEnsureFunction,
+  WorkspaceConfigLoadFunction
+} from '../../consumer/config/workspace-config';
+import { Config } from './config';
+import { ILegacyWorkspaceConfig } from '../../consumer/config';
 
-export type WorkspaceConfigDeps = [];
+export type ConfigDeps = [];
 
-export type WorkspaceConfigConfig = {};
+export type ConfigConfig = {};
 
-export default async function provideWorkspaceConfig() {
-  LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(WorkspaceConfig.loadIfExist);
-  LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(WorkspaceConfig.onLegacyEnsure);
-  LegacyWorkspaceConfig.registerOnWorkspaceConfigMocking(WorkspaceConfig.fromLegacyConfig);
-  // Using the getConsumerInfo since it is doing propagation until it finds the config
-  try {
-    const workspaceInfo = await getConsumerInfo(process.cwd());
-    if (workspaceInfo && workspaceInfo.consumerConfig) {
-      const config = workspaceInfo.consumerConfig;
-      // const coreExtensionsConfig = config.getCoreExtensionsConfig();
-      // harmony.setExtensionsConfig(coreExtensionsConfig);
-      return config;
+export default async function provideConfig() {
+  const config = await Config.loadIfExist(process.cwd());
+  LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
+  LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
+  return config;
+}
+
+function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
+  return async (): Promise<ILegacyWorkspaceConfig | undefined> => {
+    if (config && config.type === 'workspace') {
+      return config.config as ILegacyWorkspaceConfig;
     }
-  } catch (e) {
     return undefined;
-  }
-  return undefined;
+  };
+}
+
+function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
+  return async (args): Promise<ILegacyWorkspaceConfig> => {
+    const config = await Config.ensureWorkspace(args);
+    const workspaceConfig = config.config;
+    return workspaceConfig as ILegacyWorkspaceConfig;
+  };
 }
