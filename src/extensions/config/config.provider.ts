@@ -21,11 +21,11 @@ export default async function provideConfig() {
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
   return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
     if (config && config.type === 'workspace' && dirPath === path.dirname(config.path)) {
-      return config.config as ILegacyWorkspaceConfig;
+      return (config.config as any) as ILegacyWorkspaceConfig;
     }
     const newConfig = await Config.loadIfExist(dirPath);
     if (newConfig && newConfig.type === 'workspace') {
-      return newConfig.config as ILegacyWorkspaceConfig;
+      return (newConfig.config as any) as ILegacyWorkspaceConfig;
     }
     return undefined;
   };
@@ -35,6 +35,6 @@ function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
   return async (args): Promise<ILegacyWorkspaceConfig> => {
     const config = await Config.ensureWorkspace(args);
     const workspaceConfig = config.config;
-    return workspaceConfig as ILegacyWorkspaceConfig;
+    return (workspaceConfig as any) as ILegacyWorkspaceConfig;
   };
 }

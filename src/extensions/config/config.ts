@@ -1,7 +1,7 @@
 import { ConfigType, HostConfig } from './types';
-import { WorkspaceConfig } from './workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import { WorkspaceConfigFileInputProps, LegacyInitProps } from './workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileInputProps, LegacyInitProps } from './workspace-config';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
 
 export class Config {
   constructor(public config: HostConfig, private configType: ConfigType) {}
@@ -40,5 +40,13 @@ export class Config {
   ): Promise<Config> {
     const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps, legacyInitProps);
     return new Config(workspaceConfig, 'workspace');
+  }
+
+  get extensions(): ExtensionConfigList {
+    return this.config.extensions;
+  }
+
+  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
+    return this.config.extension(extensionId, ignoreVersion);
   }
 }

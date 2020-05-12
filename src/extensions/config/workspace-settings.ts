@@ -128,19 +128,14 @@ export class WorkspaceSettings implements ILegacyWorkspaceSettings {
     return this.data.distTarget;
   }
 
-  get extensionsConfig(): ExtensionConfigList {
-    // const workspaceExtProps = pick(WORKSPACE_EXT_PROPS, this.data);
-    // TODO: take name from the extension
-    // const workspaceExtEntry = { id: 'workspace', config: workspaceExtProps };
-    // const otherExtensionsProps = omit(WORKSPACE_EXT_PROPS, this.data);
+  get extensions(): ExtensionConfigList {
     const withoutLegacyProps = omit(LEGACY_PROPS, this.data);
     const res = ExtensionConfigList.fromObject(withoutLegacyProps);
-    // res.push(workspaceExtEntry);
     return res;
   }
 
-  getExtensionConfig(extensionId: string): { [key: string]: any } | undefined {
-    const existing = this.extensionsConfig.findExtension(extensionId, true);
+  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
+    const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
   }
 
@@ -151,7 +146,7 @@ export class WorkspaceSettings implements ILegacyWorkspaceSettings {
    * @memberof WorkspaceSettings
    */
   updateExtensionVersion(newExtensionId: string) {
-    const existing = this.extensionsConfig.findExtension(newExtensionId, true);
+    const existing = this.extension(newExtensionId, true);
     if (!existing) {
       throw new GeneralError(`extension ${newExtensionId} not found in workspace config`);
     }
@@ -160,7 +155,7 @@ export class WorkspaceSettings implements ILegacyWorkspaceSettings {
   }
 
   addExtension(extensionEntry: ExtensionConfigEntry, override = false) {
-    const existing = this.extensionsConfig.findExtension(extensionEntry.id, true);
+    const existing = this.extension(extensionEntry.id, true);
     if (existing) {
       if (!override) {
         throw new GeneralError(`extension ${extensionEntry.id} already exist in workspace config`);

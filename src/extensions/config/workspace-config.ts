@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { pick, omit } from 'ramda';
+import { omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, { WorkspaceConfigProps } from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
@@ -17,7 +17,8 @@ import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
-import { ILegacyWorkspaceConfig } from '../../consumer/config';
+import { ILegacyWorkspaceConfig, ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { HostConfig } from './types';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -36,7 +37,7 @@ export type WorkspaceConfigFileProps = {
   $schemaVersion: string;
 } & WorkspaceConfigFileInputProps;
 
-export class WorkspaceConfig implements ILegacyWorkspaceConfig {
+export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
   _path?: string;
   // Return only the configs that are workspace related (without components configs or schema definition)
   workspaceSettings: WorkspaceSettings;
@@ -92,6 +93,14 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig {
     return this.legacyConfig?.tester;
   }
 
+  get extensions(): ExtensionConfigList {
+    return this.workspaceSettings.extensions;
+  }
+
+  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
+    return this.workspaceSettings.extension(extensionId, ignoreVersion);
+  }
+
   /**
    * Return the components section of the config file
    *
@@ -117,10 +126,6 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig {
       config.env.tester = config.env.tester || plainLegacy.env.tester;
     }
     return config;
-  }
-
-  getExtensionConfig(extensionId: string) {
-    return this.workspaceSettings.getExtensionConfig(extensionId);
   }
 
   /**
@@ -341,20 +346,5 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig {
       return this.legacyConfig.toPlainObject();
     }
     return undefined;
-  }
-
-  /**
-   * Returns object with configs per extensions
-   *
-   * @memberof WorkspaceConfig
-   */
-  getCoreExtensionsConfig(): { [extensionName: string]: any } {
-    const workspaceConfig = this.workspaceSettings;
-    // TODO: take it somehow from harmony that should get it by the workspace extension manifest
-    const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory', 'defaultOwner'];
-    const workspaceExtProps = pick(workspaceExtPropNames, workspaceConfig);
-    const result = omit(workspaceExtPropNames, workspaceConfig);
-    result.workspace = workspaceExtProps;
-    return result;
   }
 }
