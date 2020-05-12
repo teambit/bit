@@ -36,7 +36,7 @@ export type WorkspaceConfigFileProps = {
   $schemaVersion: string;
 } & WorkspaceConfigFileInputProps;
 
-export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
+export class WorkspaceConfig implements ILegacyWorkspaceConfig {
   _path?: string;
   // Return only the configs that are workspace related (without components configs or schema definition)
   workspaceSettings: WorkspaceSettings;

@@ -3,7 +3,6 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { Scope } from '../scope';
-import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
@@ -16,11 +15,11 @@ import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
-import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
+import { ComponentScopeDirMap } from '../config/workspace-settings';
 import legacyLogger from '../../logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
 import { DependencyResolver } from '../dependency-resolver';
-import { EXT_NAME } from './constants';
+import { WorkspaceExtConfig } from './types';
 /**
  * API of the Bit Workspace
  */
@@ -29,15 +28,11 @@ export default class Workspace {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
      */
     public consumer: Consumer,
-
-    /**
-     * Workspace's configuration
-     */
-    readonly config: WorkspaceConfig,
 
     /**
      * access to the Workspace's `Scope` instance
@@ -62,9 +57,8 @@ export default class Workspace {
      */
     private harmony: Harmony
   ) {
-    const workspaceExtConfig = this.config.getExtensionConfig(EXT_NAME);
-    this.owner = workspaceExtConfig?.owner;
-    this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
+    this.owner = this.config?.defaultOwner;
+    this.componentsScopeDirsMap = this.config?.components || [];
   }
 
   /**
@@ -281,5 +275,9 @@ export default class Workspace {
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+  }
+
+  get defaultDirectory(): string {
+    return this.config.defaultDirectory;
   }
 }

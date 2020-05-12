@@ -5,11 +5,11 @@ import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
-import { WorkspaceConfig } from '../workspace-config';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolver } from '../dependency-resolver';
+import { WorkspaceExtConfig } from './types';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
+export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -27,7 +27,8 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
+  [scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
+  config: WorkspaceExtConfig,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -41,8 +42,8 @@ export default async function provideWorkspace(
     const consumer = await loadConsumerIfExist();
     if (consumer) {
       const workspace = new Workspace(
+        config,
         consumer,
-        workspaceConfig,
         scope,
         component,
         isolator,

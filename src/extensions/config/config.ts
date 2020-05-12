@@ -1,5 +1,5 @@
 import { ConfigType, HostConfig } from './types';
-import { WorkspaceConfig } from '.';
+import { WorkspaceConfig } from './workspace-config';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { WorkspaceConfigFileInputProps, LegacyInitProps } from './workspace-config';
 
