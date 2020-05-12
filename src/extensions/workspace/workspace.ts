@@ -20,6 +20,7 @@ import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 import legacyLogger from '../../logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
 import { DependencyResolver } from '../dependency-resolver';
+import { EXT_NAME } from './constants';
 /**
  * API of the Bit Workspace
  */
@@ -61,7 +62,7 @@ export default class Workspace {
      */
     private harmony: Harmony
   ) {
-    const workspaceExtConfig = this.config.getExtensionConfig('workspace');
+    const workspaceExtConfig = this.config.getExtensionConfig(EXT_NAME);
     this.owner = workspaceExtConfig?.owner;
     this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
   }
