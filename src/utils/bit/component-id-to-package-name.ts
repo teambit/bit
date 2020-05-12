@@ -22,7 +22,7 @@ export default function componentIdToPackageName(
   // Make sure we don't have the prefix also as part of the scope name
   // since prefixes are now taken from the owner name, and the scope name has the owner name as well.
   const registryPrefixWithDotWithoutAt = `${registryPrefix}.`.replace('@', '');
-  if (nameWithoutPrefix.startsWith(registryPrefixWithDotWithoutAt)) {
+  if (nameWithoutPrefix.startsWith(registryPrefixWithDotWithoutAt) && registryPrefix !== '@bit') {
     nameWithoutPrefix = nameWithoutPrefix.replace(registryPrefixWithDotWithoutAt, '');
   }
   return `${registryPrefix}/${nameWithoutPrefix}`;
