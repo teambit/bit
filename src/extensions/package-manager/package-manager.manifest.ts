@@ -4,7 +4,7 @@ import { providePackageManager } from './package-manager.provider';
 const DEFAULT_PACKAGE_MANAGER = 'librarian';
 
 export default {
-  name: 'packageManager',
+  name: '@teambit/package-manager',
   dependencies: [LoggerExt],
   config: {
     packageManager: DEFAULT_PACKAGE_MANAGER
