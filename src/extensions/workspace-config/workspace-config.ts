@@ -4,7 +4,7 @@ import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, { WorkspaceConfigProps } from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
-import { BIT_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
+import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -30,6 +30,7 @@ export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
   variants?: ConsumerOverrides;
 };
+
 export type WorkspaceConfigFileProps = {
   $schema: string;
   $schemaVersion: string;
@@ -271,7 +272,7 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
    * @memberof WorkspaceConfig
    */
   static composeBitJsoncPath(dirPath: PathOsBased): PathOsBased {
-    return path.join(dirPath, BIT_JSONC);
+    return path.join(dirPath, WORKSPACE_JSONC);
   }
 
   static async pathHasBitJsonc(dirPath: PathOsBased): Promise<boolean> {
