@@ -38,7 +38,7 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_JSONC = 'bit.jsonc';
+export const WORKSPACE_JSONC = 'workspace.jsonc';
 
 export const GIT_IGNORE = '.gitignore';
 
