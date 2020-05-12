@@ -8,22 +8,22 @@
   /**
    * main configuration of the Bit workspace.
   **/
-  "workspace": {
+  "@teambit/workspace": {
 
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
-     */
-    "owner": "ripples",
+    **/
+    "defaultOwner": "teambit",
 
     /**
      * set the default scope when there is no matching for the component in the components array.
-     */
+     **/
     // "defaultScope": "my-scope",
 
     /**
      * set the default directory when there is no matching for the component in the components array.
      **/
-    // "defaultDirectory": "components",
+    "defaultDirectory": "components",
 
     /**
     * set the default structure of components in your project.
@@ -43,13 +43,13 @@
   /**
    * main configuration for component dependency resolution.
   **/
-  "dependencyResolver": {
+  "@teambit/dependency-resolver": {
     /**
      * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
      * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
      * and totally removes the need of a 'node_modules' directory in your project.
     */
-    "packageManager": "librarian",
+    "packageManager": "pnpm",
 
     /**
     * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
@@ -71,34 +71,44 @@
   },
 
   /**
+   * automate Bit workflow with Git.
+  */
+  // "@teambit/git": {
+    /**
+     * fetch dependency and component updates on `git pull`.
+    **/
+    // "dependencyUpdateOnPull": true
+  // },
+
+  /**
    * workspace variants allow to set different subsets of configuration for components in your workspace.
    * this is extremely useful for upgrading, aligning and building components with a
    * new set of dependencies.
   **/
-  "variants": {
+  "@teambit/variants": {
     /**
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.
     **/
     "base/*": {
       /**
-       * apply the react environment on all ui components.
+      * apply the react environment on all ui components.
         **/
-      "extensions/react": {
+      "@teambit/react": {
         /**
-         * turn on typescript compiler.
+        * turn on typescript compiler.
         **/
         "typescript": true,
 
         /**
-         * root component is the one to be deployed and served.
+        * root component is the one to be deployed and served.
         **/
         "root": "ui/homepage",
 
         /**
-         * sets react version to be bigger or equal to 16.0.0.
-         * this will add react and @types/react (in case typescript is turned on) as peer dependencies
-         * with this SemVer.
+        * sets react version to be bigger or equal to 16.0.0.
+        * this will add react and @types/react (in case typescript is turned on) as peer dependencies
+        * with this SemVer.
         **/
         "version": ">=16.0.0"
       },
@@ -107,14 +117,16 @@
         /**
         * main configuration file for handling the build process of components.
         */
-        "build": {
+        "@teambit/flows": {
           /**
           * configure build tasks. configuration of build tasks is basically a map of `task name`
           * pointed to an array of tasks. each task can be either a bash command or an extension
           * which exposes a task. reserved task names: build, test, runs on pre-tag.
           */
           "tasks": {
-            "build": ["extensions/react-ts"]
+            "build": ["@teambit/react:build", "mv dist dist-copy"],
+            "test": ["mocha ."],
+            "deploy": ["firebase deploy"]
           }
         }
       },
@@ -123,7 +135,7 @@
        * configure storybook extension on all ui components. :TODO: @gilad please define config for
        * storybook extension
       */
-      "extensions/storybook": {}
+      "@teambit/storybook": {}
     },
 
     /**
@@ -132,37 +144,29 @@
      * react 15 as well.
     **/
     "ui/base/*": {
-      "peerDependencies": {
-        "react": ">15.0.1"
+      "@teambit/component": {
+        "peerDependencies": {
+          "react": ">15.0.1"
+        }
       }
     },
 
     "extensions/*": {
+      "@teambit/extension": {
+        // need to decide configuration for extension environment.
+      },
+
       /**
-       * configure extensions to be compiled by the TypeScript environment.
-      */
-      "typescript": {},
-      /**
-       * configure the creation of new components in your workspace through the `bit create` command.
-       * this is helpful for setting component structure standards.
+      * configure the creation of new components in your workspace through the `bit create` command.
+      * this is helpful for setting component structure standards.
       **/
-      "create": {
+      "@teambit/create": {
         /**
-         * default component template for Bit to use for creation of components upon `bit create`.
-         * default template is:
+        * default component template for Bit to use for creation of components upon `bit create`.
+        * default template is:
         */
-        "defaultTemplate": "bit.create/extension"
+        "defaultTemplate": "@teambit/extension-template"
       }
     }
-  },
-
-  /**
-   * automate Bit workflow with Git.
-  */
-  // "gitPolicy": {
-    /**
-     * fetch dependency and component updates on `git pull`.
-    **/
-    // "dependencyUpdateOnPull": true
-  // }
+  }
 }
