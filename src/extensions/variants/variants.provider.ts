@@ -1,10 +1,6 @@
-import { Variants } from './variants';
-import { WorkspaceConfig } from '../workspace-config';
+import { Variants, Patterns } from './variants';
 
-// TODO: remove this once config passed through harmony
-export type VariantsDeps = [WorkspaceConfig];
-
-export async function provideVariants([workspaceConfig]: VariantsDeps) {
-  const variants = new Variants(workspaceConfig);
+export async function provideVariants(_deps, config: Patterns) {
+  const variants = new Variants(config);
   return variants;
 }

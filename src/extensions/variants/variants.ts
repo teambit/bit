@@ -1,15 +1,22 @@
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { BitId } from '../../bit-id';
 
-type Patterns = { [pattern: string]: Record<string, any> };
+export type Patterns = { [pattern: string]: Record<string, any> };
 
 export class Variants {
   constructor(private patterns) {}
 
+  /**
+   * Get all the patterns defined in the variants section of the workspace
+   */
   all(): ConsumerOverrides {
     return ConsumerOverrides.load(this.patterns);
   }
 
+  /**
+   * Gets the config for specific component after merge all matching patterns of the component id in the variants section
+   * @param componentId
+   */
   getComponentConfig(componentId: BitId): ConsumerOverridesOfComponent {
     const patterns = this.patterns;
     const config = patterns?.getOverrideComponentData(componentId) || {};
