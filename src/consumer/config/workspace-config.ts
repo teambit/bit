@@ -280,11 +280,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     return res;
   }
 
-  static mock(props: WorkspaceConfigProps): ILegacyWorkspaceConfig {
-    const mockFunc = this.workspaceConfigMockingRegistry;
-    return mockFunc(props);
-  }
-
   static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
     const loadFunc = this.workspaceConfigLoadingRegistry;
     if (loadFunc && typeof loadFunc === 'function') {
