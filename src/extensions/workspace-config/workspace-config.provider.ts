@@ -1,9 +1,11 @@
+import path from 'path';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction
 } from '../../consumer/config/workspace-config';
 import { Config } from './config';
 import { ILegacyWorkspaceConfig } from '../../consumer/config';
+import { PathOsBased } from '../../utils/path';
 
 export type ConfigDeps = [];
 
@@ -17,9 +19,13 @@ export default async function provideConfig() {
 }
 
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
-  return async (): Promise<ILegacyWorkspaceConfig | undefined> => {
-    if (config && config.type === 'workspace') {
+  return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
+    if (config && config.type === 'workspace' && dirPath === path.dirname(config.path)) {
       return config.config as ILegacyWorkspaceConfig;
+    }
+    const newConfig = await Config.loadIfExist(dirPath);
+    if (newConfig && newConfig.type === 'workspace') {
+      return newConfig.config as ILegacyWorkspaceConfig;
     }
     return undefined;
   };

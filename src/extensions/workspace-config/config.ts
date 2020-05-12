@@ -10,6 +10,10 @@ export class Config {
     return this.configType;
   }
 
+  get path() {
+    return this.config.path;
+  }
+
   static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined> {
     const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
     if (workspaceConfig) {
