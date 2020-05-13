@@ -23,9 +23,9 @@ function linkBitBinInCapsule(capsule) {
     if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
       return pathOutsideNodeModules;
     }
-    if (__dirname.includes('node_modules')) {
-      // for bit-bin development, the cli extension is installed as a package in node_modules
-      return path.join(__dirname.split('node_modules')[0], 'dist');
+    if (__dirname.includes('build-harmony')) {
+      // for bit-bin development, the cli extension is installed as a package in build-harmony directory
+      return path.join(__dirname.split('build-harmony')[0], 'dist');
     }
     throw new Error('unable to link bit-bin to the capsule, the location of bit-bin is unknown');
   };
