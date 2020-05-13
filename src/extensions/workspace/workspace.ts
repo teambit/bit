@@ -187,13 +187,6 @@ export default class Workspace implements ComponentHost {
     return addResults;
   }
 
-  // async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
-  //   const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
-  //   if (extensionsManifests && extensionsManifests.length) {
-  //     await this.loadExtensions(extensionsManifests);
-  //   }
-  // }
-
   /**
    * Calculate the component config based on the component.json file in the component folder and the matching
    * pattern in the variants config
