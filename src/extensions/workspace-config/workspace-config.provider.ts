@@ -10,7 +10,6 @@ export type WorkspaceConfigConfig = {};
 export default async function provideWorkspaceConfig() {
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(WorkspaceConfig.loadIfExist);
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(WorkspaceConfig.onLegacyEnsure);
-  LegacyWorkspaceConfig.registerOnWorkspaceConfigMocking(WorkspaceConfig.fromLegacyConfig);
   // Using the getConsumerInfo since it is doing propagation until it finds the config
   try {
     const workspaceInfo = await getConsumerInfo(process.cwd());
