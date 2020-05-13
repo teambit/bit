@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
-import { ResolvedComponent } from '../workspace/resolved-component';
+import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { Capsule } from '../isolator';

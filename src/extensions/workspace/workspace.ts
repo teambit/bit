@@ -1,4 +1,4 @@
-import { Harmony, ExtensionManifest } from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
@@ -7,23 +7,21 @@ import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { LogPublisher } from '../logger';
 import ConsumerComponent from '../../consumer/component';
-import { ResolvedComponent } from './resolved-component';
+import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 import { ComponentScopeDirMap } from '../config/workspace-settings';
-import legacyLogger from '../../logger/logger';
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
 import { DependencyResolver } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
+import { ComponentHost, LogPublisher } from '../types';
+import { loadResolvedExtensions } from '../utils/load-extensions';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace {
+export default class Workspace implements ComponentHost {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -194,61 +192,17 @@ export default class Workspace {
   // }
 
   /**
-   * load all of bit's extensions.
-   * :TODO must be refactored by @gilad
+   * Load all unloaded extensions from a list
+   * @param extensions list of extensions with config to load
    */
-  // private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
-  //   // const extensionsIds = extensionsConfig.ids;
-  //   if (!extensionsIds || !extensionsIds.length) {
-  //     return [];
-  //   }
-
-  //   legacyLogger.debug(`workspaceExt, resolveExtensions ${extensionsIds.join(', ')}`);
-  //   const allRegisteredExtensionIds = this.harmony.extensionsIds;
-  //   const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
-  //   let extensionsComponents;
-  //   // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
-  //   try {
-  //     extensionsComponents = await this.getMany(nonRegisteredExtensions);
-  //   } catch (e) {
-  //     let errorMessage = e.message;
-  //     if (e instanceof MissingBitMapComponent) {
-  //       errorMessage = `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`;
-  //     }
-
-  //     const ids = nonRegisteredExtensions;
-  //     const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-  //     this.logger.warn(warning);
-  //     legacyLogger.warn(warning);
-  //     legacyLogger.warn(`error: ${errorMessage}`);
-  //     legacyLogger.silly(e.stack);
-  //     throw e;
-  //   }
-
-  //   const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
-  //     extensionsComponents.map(c => c.id.toString()),
-  //     this.consumer,
-  //     { packageManager: 'yarn' }
-  //   );
-  //   const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
-  //     const extPath = value.wrkDir;
-  //     try {
-  //       // eslint-disable-next-line global-require, import/no-dynamic-require
-  //       const mod = require(extPath);
-  //       mod.name = id.toString();
-  //       return mod;
-  //     } catch (e) {
-  //       const warning = UNABLE_TO_LOAD_EXTENSION(id.toString());
-  //       this.logger.warn(warning);
-  //       legacyLogger.warn(`${warning} error: ${e.message}`);
-  //       legacyLogger.silly(e.stack);
-  //     }
-  //     return undefined;
-  //   });
-
-  //   // Remove empty manifests as a result of loading issue
-  //   return manifests.filter(manifest => manifest);
-  // }
+  async loadExtensions(extensions: ExtensionConfigList): Promise<void> {
+    const extensionsIds = extensions.ids;
+    const loadedExtensions = this.harmony.extensionsIds;
+    const extensionsToLoad = difference(extensionsIds, loadedExtensions);
+    let resolvedExtensions: ResolvedComponent[] = [];
+    resolvedExtensions = await this.load(extensionsToLoad);
+    return loadResolvedExtensions(this.harmony, resolvedExtensions, this.logger);
+  }
 
   /**
    * this should be rarely in-use.

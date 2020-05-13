@@ -1,6 +1,10 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../src/constants';
+// TODO: think about how to change this require or move this tests
+import {
+  UNABLE_TO_LOAD_EXTENSION,
+  UNABLE_TO_LOAD_EXTENSION_FROM_LIST
+} from '../../src/extensions/utils/load-extensions/constants';
 
 chai.use(require('chai-fs'));
 
