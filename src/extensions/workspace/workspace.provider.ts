@@ -7,9 +7,10 @@ import { Isolator } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolver } from '../dependency-resolver';
+import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
+export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -27,7 +28,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
+  [scope, component, isolator, dependencyResolver, variants, logger]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   harmony: Harmony
 ) {
@@ -48,11 +49,13 @@ export default async function provideWorkspace(
         component,
         isolator,
         dependencyResolver,
+        variants,
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
+        return workspace.loadComponentExtensions(id);
         // const extensionsConfig = componentConfig.allExtensions().toExtensionConfigList();
         // const res = await workspace.loadExtensionsByConfig(extensionsConfig);
         // return res;

@@ -18,6 +18,7 @@ import { DependencyResolver } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
+import { Variants } from '../variants';
 /**
  * API of the Bit Workspace
  */
@@ -45,6 +46,8 @@ export default class Workspace implements ComponentHost {
     readonly isolateEnv: Isolator,
 
     private dependencyResolver: DependencyResolver,
+
+    private variants: Variants,
 
     private logger: LogPublisher,
 
@@ -190,6 +193,24 @@ export default class Workspace implements ComponentHost {
   //     await this.loadExtensions(extensionsManifests);
   //   }
   // }
+
+  /**
+   * Calculate the component config based on the component.json file in the component folder and the matching
+   * pattern in the variants config
+   * @param componentId
+   */
+  componentConfig(componentId: BitId) {
+    // TODO: read the component.json file and merge it inside
+    return this.variants.getComponentConfig(componentId);
+  }
+
+  async loadComponentExtensions(componentId: BitId): Promise<void> {
+    const config = this.componentConfig(componentId);
+    const extensions = config.extensions
+      ? ExtensionConfigList.fromObject(config.extensions)
+      : ExtensionConfigList.fromArray([]);
+    return this.loadExtensions(extensions);
+  }
 
   /**
    * Load all unloaded extensions from a list
