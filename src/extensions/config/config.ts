@@ -14,13 +14,16 @@ export class Config {
     return this.config.path;
   }
 
-  static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined> {
+  static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined | any> {
     const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
     if (workspaceConfig) {
       return new Config(workspaceConfig, 'workspace');
     }
     // TODO: try load scope config here
-    return undefined;
+    // return undefined;
+    // TODO: change to return a maybe type
+    return {};
+    // return new Config(workspaceConfig, 'workspace');
   }
 
   /**

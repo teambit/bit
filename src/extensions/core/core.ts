@@ -12,7 +12,7 @@ export default class Core {
   constructor(
     readonly harmony: Harmony,
 
-    readonly config: Config,
+    readonly config: Config | undefined,
 
     private logger: LogPublisher,
 
@@ -38,8 +38,11 @@ export default class Core {
    * Load all unloaded extensions (3rd party extensions) registered in the config file
    */
   async init(): Promise<void> {
-    const extensions = this.config.extensions._filterLegacy();
-    return this.loadExtensions(extensions);
+    if (this.config) {
+      const extensions = this.config.extensions._filterLegacy();
+      return this.loadExtensions(extensions);
+    }
+    return undefined;
   }
 
   /**

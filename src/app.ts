@@ -18,11 +18,14 @@ Bluebird.config({
 HooksManager.init();
 try {
   harmony
-    .run([ConfigExt, BitExt])
+    .run(ConfigExt)
+    .then(() => {
+      return harmony.set([BitExt]);
+    })
     .then(() => {
       const cli = harmony.get('cli');
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
-      return cli?.instance.run();
+      return cli?.run();
     })
     .catch(err => {
       const originalError = err.originalError || err;
