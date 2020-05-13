@@ -29,7 +29,6 @@ type WorkspaceConfigEnsureFunction = (
   standAlone: boolean,
   workspaceConfigProps: WorkspaceConfigProps
 ) => Promise<ILegacyWorkspaceConfig>;
-type WorkspaceConfigMockFunction = (props: WorkspaceConfigProps) => ILegacyWorkspaceConfig;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
@@ -77,11 +76,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
   static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
     this.workspaceConfigEnsuringRegistry = func;
-  }
-
-  static workspaceConfigMockingRegistry: WorkspaceConfigMockFunction;
-  static registerOnWorkspaceConfigMocking(func: WorkspaceConfigMockFunction) {
-    this.workspaceConfigMockingRegistry = func;
   }
 
   constructor({
@@ -276,11 +270,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       throw new BitConfigNotFound();
     }
     return res;
-  }
-
-  static mock(props: WorkspaceConfigProps): ILegacyWorkspaceConfig {
-    const mockFunc = this.workspaceConfigMockingRegistry;
-    return mockFunc(props);
   }
 
   static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
