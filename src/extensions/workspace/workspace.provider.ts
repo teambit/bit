@@ -53,9 +53,9 @@ export default async function provideWorkspace(
         harmony
       );
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
-        const extensionsConfig = componentConfig.allExtensions().toExtensionConfigList();
-        const res = await workspace.loadExtensionsByConfig(extensionsConfig);
-        return res;
+        // const extensionsConfig = componentConfig.allExtensions().toExtensionConfigList();
+        // const res = await workspace.loadExtensionsByConfig(extensionsConfig);
+        // return res;
       });
       return workspace;
     }

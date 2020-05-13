@@ -3,6 +3,7 @@ import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
+import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
@@ -17,13 +18,10 @@ Bluebird.config({
 HooksManager.init();
 try {
   harmony
-    .run(BitExt)
+    .run([ConfigExt, BitExt])
     .then(() => {
-      // harmony.set([BitCliExt]);
-    })
-    .then(() => {
-      const cli = harmony.get('BitCli');
-      // @ts-ignore :TODO until refactoring cli extension to dynamiclly load extensions
+      const cli = harmony.get('cli');
+      // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
       return cli?.instance.run();
     })
     .catch(err => {

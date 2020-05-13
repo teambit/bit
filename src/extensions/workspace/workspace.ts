@@ -114,9 +114,9 @@ export default class Workspace {
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
-   * fully load components, inclduing dependency resuoltion and prepare them for runtime.
+   * fully load components, including dependency resolution and prepare them for runtime.
    */
-  async load(ids: Array<BitId | string>) {
+  async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const components = await this.getMany(ids);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
@@ -186,88 +186,69 @@ export default class Workspace {
     return addResults;
   }
 
-  async loadWorkspaceExtensions() {
-    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
-    const externalExtensionsWithoutLegacy = extensionsConfig._filterLegacy();
-    const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
-    await this.loadExtensions([...externalExtensionsManifests]);
-  }
-
-  async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
-    const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
-    if (extensionsManifests && extensionsManifests.length) {
-      await this.loadExtensions(extensionsManifests);
-    }
-  }
-
-  private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
-    try {
-      await this.harmony.set(extensionsManifests);
-    } catch (e) {
-      const ids = extensionsManifests.map(manifest => manifest.name);
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning);
-      legacyLogger.warn(`${warning} error: ${e.message}`);
-      legacyLogger.silly(e.stack);
-    }
-  }
+  // async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
+  //   const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
+  //   if (extensionsManifests && extensionsManifests.length) {
+  //     await this.loadExtensions(extensionsManifests);
+  //   }
+  // }
 
   /**
    * load all of bit's extensions.
    * :TODO must be refactored by @gilad
    */
-  private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
-    // const extensionsIds = extensionsConfig.ids;
-    if (!extensionsIds || !extensionsIds.length) {
-      return [];
-    }
+  // private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
+  //   // const extensionsIds = extensionsConfig.ids;
+  //   if (!extensionsIds || !extensionsIds.length) {
+  //     return [];
+  //   }
 
-    legacyLogger.debug(`workspaceExt, resolveExtensions ${extensionsIds.join(', ')}`);
-    const allRegisteredExtensionIds = this.harmony.extensionsIds;
-    const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
-    let extensionsComponents;
-    // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
-    try {
-      extensionsComponents = await this.getMany(nonRegisteredExtensions);
-    } catch (e) {
-      let errorMessage = e.message;
-      if (e instanceof MissingBitMapComponent) {
-        errorMessage = `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`;
-      }
+  //   legacyLogger.debug(`workspaceExt, resolveExtensions ${extensionsIds.join(', ')}`);
+  //   const allRegisteredExtensionIds = this.harmony.extensionsIds;
+  //   const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+  //   let extensionsComponents;
+  //   // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
+  //   try {
+  //     extensionsComponents = await this.getMany(nonRegisteredExtensions);
+  //   } catch (e) {
+  //     let errorMessage = e.message;
+  //     if (e instanceof MissingBitMapComponent) {
+  //       errorMessage = `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`;
+  //     }
 
-      const ids = nonRegisteredExtensions;
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning);
-      legacyLogger.warn(warning);
-      legacyLogger.warn(`error: ${errorMessage}`);
-      legacyLogger.silly(e.stack);
-      throw e;
-    }
+  //     const ids = nonRegisteredExtensions;
+  //     const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
+  //     this.logger.warn(warning);
+  //     legacyLogger.warn(warning);
+  //     legacyLogger.warn(`error: ${errorMessage}`);
+  //     legacyLogger.silly(e.stack);
+  //     throw e;
+  //   }
 
-    const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
-      extensionsComponents.map(c => c.id.toString()),
-      this.consumer,
-      { packageManager: 'yarn' }
-    );
-    const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
-      const extPath = value.wrkDir;
-      try {
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const mod = require(extPath);
-        mod.name = id.toString();
-        return mod;
-      } catch (e) {
-        const warning = UNABLE_TO_LOAD_EXTENSION(id.toString());
-        this.logger.warn(warning);
-        legacyLogger.warn(`${warning} error: ${e.message}`);
-        legacyLogger.silly(e.stack);
-      }
-      return undefined;
-    });
+  //   const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
+  //     extensionsComponents.map(c => c.id.toString()),
+  //     this.consumer,
+  //     { packageManager: 'yarn' }
+  //   );
+  //   const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
+  //     const extPath = value.wrkDir;
+  //     try {
+  //       // eslint-disable-next-line global-require, import/no-dynamic-require
+  //       const mod = require(extPath);
+  //       mod.name = id.toString();
+  //       return mod;
+  //     } catch (e) {
+  //       const warning = UNABLE_TO_LOAD_EXTENSION(id.toString());
+  //       this.logger.warn(warning);
+  //       legacyLogger.warn(`${warning} error: ${e.message}`);
+  //       legacyLogger.silly(e.stack);
+  //     }
+  //     return undefined;
+  //   });
 
-    // Remove empty manifests as a result of loading issue
-    return manifests.filter(manifest => manifest);
-  }
+  //   // Remove empty manifests as a result of loading issue
+  //   return manifests.filter(manifest => manifest);
+  // }
 
   /**
    * this should be rarely in-use.

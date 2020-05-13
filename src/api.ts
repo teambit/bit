@@ -11,7 +11,6 @@ HooksManager.init();
 
 export * from '@teambit/harmony';
 export { Workspace } from './extensions/workspace';
-export { Bit } from './extensions/bit';
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

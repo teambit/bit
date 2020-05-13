@@ -1,4 +1,5 @@
 import path from 'path';
+import { Harmony } from '@teambit/harmony';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction
@@ -11,10 +12,14 @@ export type ConfigDeps = [];
 
 export type ConfigConfig = {};
 
-export default async function provideConfig() {
+export default async function provideConfig(_deps, _config, harmony: Harmony) {
   const config = await Config.loadIfExist(process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
+  // Send all configs to harmony
+  config?.extensions.forEach(extension => {
+    harmony.config.set(extension.id, extension.config);
+  });
   return config;
 }
 
