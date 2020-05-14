@@ -5,13 +5,13 @@
   - read workspace config (workspace.jsonc / package.json / bit.json) or scope.json
   - transforms legacy config to new one if needed
   - pass to harmony all configs
-- load API extension
+- load bit extension
   - load pre-configured core extensions (hard coded) (via harmony - all the core extension are its dependencies) (cli is not part of the deps)
   (this include cli)
 //- load cli extension
 - harmony.get(cli).run
-- ask harmony for bit extension
-- call bitExtension.loadConfiguredExtensions (see below) // core
+- ask harmony for core extension
+- call core.loadConfiguredExtensions (see below) // core
   - ask core for a list of 3rd party extension (how core knows to distinct between core and 3rd party? maybe we can get the entire list
   including the core, and filter it by not already loaded by harmony)
   - create capsules for the list (by calling workspace or scope)
