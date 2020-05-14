@@ -248,7 +248,6 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     };
 
     this.packageJson.addKeyValue({ dependencies });
-    this.command.runCmd('npm i');
     this.command.link();
 
     // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
