@@ -1,3 +1,4 @@
+import path from 'path';
 import { Harmony } from '@teambit/harmony';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
@@ -10,7 +11,7 @@ import { Isolator } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
-import { PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 import { ComponentScopeDirMap } from '../config/workspace-settings';
@@ -19,6 +20,8 @@ import { WorkspaceExtConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
+import LegacyComponentConfig from '../../consumer/config';
+
 /**
  * API of the Bit Workspace
  */
@@ -188,13 +191,47 @@ export default class Workspace implements ComponentHost {
   }
 
   /**
+   * Get the component root dir in the file system (relative to workspace or full)
+   * @param componentId
+   * @param relative return the path relative to the workspace or full path
+   */
+  componentDir(componentId: BitId, relative = false): PathOsBased | undefined {
+    const componentMap = this.consumer.bitMap.getComponent(componentId);
+    const relativeComponentDir = componentMap.getComponentDir();
+    if (relative) {
+      return relativeComponentDir;
+    }
+
+    if (relativeComponentDir) {
+      return path.join(this.path, relativeComponentDir);
+    }
+    return undefined;
+  }
+
+  // TODO: gilad - add return value
+  /**
    * Calculate the component config based on the component.json file in the component folder and the matching
    * pattern in the variants config
    * @param componentId
    */
   componentConfig(componentId: BitId) {
     // TODO: read the component.json file and merge it inside
-    return this.variants.getComponentConfig(componentId);
+    const inlineConfig = this.inlineComponentConfig(componentId);
+    const variantConfig = this.variants.getComponentConfig(componentId);
+  }
+
+  // TODO: gilad - add return value
+  /**
+   * return the component config from its folder (bit.json / package.json / component.json)
+   * @param componentId
+   */
+  private inlineComponentConfig(componentId: BitId) {
+    // TODO: Load from component.json file
+    const legacyConfigProps = LegacyComponentConfig.loadConfigFromFolder({
+      workspaceDir: this.path,
+      componentDir: this.componentDir(componentId)
+    });
+    return legacyConfigProps;
   }
 
   async loadComponentExtensions(componentId: BitId): Promise<void> {
