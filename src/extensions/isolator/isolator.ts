@@ -18,6 +18,7 @@ import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import logger from '../../logger/logger';
+import { DEPENDENCIES_FIELDS } from '../../constants';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -92,10 +93,9 @@ export default class Isolator {
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
         .filter(capsuleWithPackageData => {
-          const packageJsonHasChanged = !equals(
-            capsuleWithPackageData.previousPackageJson,
-            capsuleWithPackageData.currentPackageJson
-          );
+          const packageJsonHasChanged = wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
+          // @todo: when a component is tagged, it changes all package-json of its dependents, but it
+          // should not trigger any "npm install" because they dependencies are symlinked by us
           return packageJsonHasChanged;
         })
         .map(capsuleWithPackageData => capsuleWithPackageData.capsule);
@@ -141,6 +141,12 @@ type CapsulePackageJsonData = {
   currentPackageJson: Record<string, any>;
   previousPackageJson: Record<string, any> | null;
 };
+
+function wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
+  const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
+  if (!previousPackageJson) return true;
+  return DEPENDENCIES_FIELDS.some(field => !equals(previousPackageJson[field], currentPackageJson[field]));
+}
 
 async function getCapsulesPackageJsonData(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
   return Promise.all(

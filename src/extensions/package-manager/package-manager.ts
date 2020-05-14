@@ -18,7 +18,18 @@ export type installOpts = {
 
 function linkBitBinInCapsule(capsule) {
   const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
-  const localBitBinPath = path.join(__dirname, '../..');
+  const getLocalBitBinPath = () => {
+    const pathOutsideNodeModules = path.join(__dirname, '../..');
+    if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
+      return pathOutsideNodeModules;
+    }
+    if (__dirname.includes('build-harmony')) {
+      // for bit-bin development, the cli extension is installed as a package in build-harmony directory
+      return path.join(__dirname.split('build-harmony')[0], 'dist');
+    }
+    throw new Error('unable to link bit-bin to the capsule, the location of bit-bin is unknown');
+  };
+  const localBitBinPath = getLocalBitBinPath();
   // if there are no deps, sometimes the node_modules folder is not created
   // and we need it in order to perform the linking
   try {

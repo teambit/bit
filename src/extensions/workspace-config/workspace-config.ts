@@ -170,7 +170,17 @@ export default class WorkspaceConfig implements ILegacyWorkspaceConfig {
       const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
-    const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
+    const getTemplateFile = async () => {
+      try {
+        return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+        // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
+        return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
+      }
+    };
+    const templateFile = await getTemplateFile();
+    const templateStr = templateFile.toString();
     const template = parse(templateStr);
     const merged = assign(template, props);
     const instance = new WorkspaceConfig(merged, undefined);
