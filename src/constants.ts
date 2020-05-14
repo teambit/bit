@@ -155,6 +155,7 @@ export const IGNORE_LIST = [
   '**/.bitmap',
   '**/.gitignore',
   '**/bit.json',
+  '**/component.json',
   '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
