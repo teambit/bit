@@ -191,7 +191,7 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
     const merged = assign(template, props);
     const instance = new WorkspaceConfig(merged, undefined);
     if (dirPath) {
-      instance.path = WorkspaceConfig.composeBitJsoncPath(dirPath);
+      instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
     }
     return instance;
   }
@@ -257,13 +257,13 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
-    const bitJsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
+    const workspaceJsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
     if (resetHard) {
       // Call the legacy reset hard to make sure there is no old bit.json kept
       LegacyWorkspaceConfig.reset(dirPath, true);
-      if (bitJsoncPath) {
-        logger.info(`deleting the consumer bit.jsonc file at ${bitJsoncPath}`);
-        await fs.remove(bitJsoncPath);
+      if (workspaceJsoncPath) {
+        logger.info(`deleting the consumer bit.jsonc file at ${workspaceJsoncPath}`);
+        await fs.remove(workspaceJsoncPath);
       }
     }
   }
@@ -276,12 +276,12 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
    * @returns {PathOsBased}
    * @memberof WorkspaceConfig
    */
-  static composeBitJsoncPath(dirPath: PathOsBased): PathOsBased {
+  static composeWorkspaceJsoncPath(dirPath: PathOsBased): PathOsBased {
     return path.join(dirPath, WORKSPACE_JSONC);
   }
 
-  static async pathHasBitJsonc(dirPath: PathOsBased): Promise<boolean> {
-    return fs.pathExists(WorkspaceConfig.composeBitJsoncPath(dirPath));
+  static async pathHasWorkspaceJsonc(dirPath: PathOsBased): Promise<boolean> {
+    return fs.pathExists(WorkspaceConfig.composeWorkspaceJsoncPath(dirPath));
   }
 
   /**
@@ -293,10 +293,10 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
    * @memberof WorkspaceConfig
    */
   static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
-    const jsoncExist = await WorkspaceConfig.pathHasBitJsonc(dirPath);
+    const jsoncExist = await WorkspaceConfig.pathHasWorkspaceJsonc(dirPath);
     if (jsoncExist) {
-      const jsoncPath = WorkspaceConfig.composeBitJsoncPath(dirPath);
-      const instance = await WorkspaceConfig._loadFromBitJsonc(jsoncPath);
+      const jsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
+      const instance = await WorkspaceConfig._loadFromWorkspaceJsonc(jsoncPath);
       instance.path = jsoncPath;
       return instance;
     }
@@ -307,13 +307,13 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
     return undefined;
   }
 
-  static async _loadFromBitJsonc(bitJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
-    const contentBuffer = await fs.readFile(bitJsoncPath);
+  static async _loadFromWorkspaceJsonc(workspaceJsoncPath: PathOsBased): Promise<WorkspaceConfig> {
+    const contentBuffer = await fs.readFile(workspaceJsoncPath);
     try {
       const parsed = parse(contentBuffer.toString());
       return WorkspaceConfig.fromObject(parsed);
     } catch (e) {
-      throw new InvalidConfigFile(bitJsoncPath);
+      throw new InvalidConfigFile(workspaceJsoncPath);
     }
   }
 
@@ -334,7 +334,7 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
     if (this.data) {
       const jsonStr = stringify(this.data, undefined, 2);
       const base = workspaceDir;
-      const fullPath = workspaceDir ? WorkspaceConfig.composeBitJsoncPath(workspaceDir) : this.path;
+      const fullPath = workspaceDir ? WorkspaceConfig.composeWorkspaceJsoncPath(workspaceDir) : this.path;
       const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
       return [jsonFile];
     }
