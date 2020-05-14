@@ -59,7 +59,7 @@ export class Compile {
     componentsAndCapsules.forEach(c => {
       const compileCore = c.component.config.extensions.findCoreExtension('compile');
       const compileComponent = c.component.config.extensions.findExtension('compile');
-      const compileComponentExported = c.component.config.extensions.findExtension('bit.core/compile');
+      const compileComponentExported = c.component.config.extensions.findExtension('bit.core/compile', true);
       const compileExtension = compileCore || compileComponent || compileComponentExported;
       const compileConfig = compileExtension?.config;
       const compiler = compileConfig ? [compileConfig.compiler] : [];

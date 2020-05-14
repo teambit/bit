@@ -31,7 +31,6 @@ export type WorkspaceConfigEnsureFunction = (
   standAlone: boolean,
   workspaceConfigProps: WorkspaceConfigProps
 ) => Promise<ILegacyWorkspaceConfig>;
-type WorkspaceConfigMockFunction = (props: WorkspaceConfigProps) => ILegacyWorkspaceConfig;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
@@ -79,11 +78,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
   static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
     this.workspaceConfigEnsuringRegistry = func;
-  }
-
-  static workspaceConfigMockingRegistry: WorkspaceConfigMockFunction;
-  static registerOnWorkspaceConfigMocking(func: WorkspaceConfigMockFunction) {
-    this.workspaceConfigMockingRegistry = func;
   }
 
   constructor({
