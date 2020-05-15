@@ -122,8 +122,8 @@ chai.use(require('chai-fs'));
   describe('workspace with a new compile extension using typescript compiler', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let scopeBeforeTag: string;
-    before(async () => {
-      helper.scopeHelper.initWorkspaceAndRemoteScope();
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       helper.fixtures.populateComponentsTS();
 
