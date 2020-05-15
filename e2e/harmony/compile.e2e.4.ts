@@ -116,4 +116,41 @@ chai.use(require('chai-fs'));
       });
     });
   });
+  describe('workspace with a new compile extension using typescript compiler', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let scopeBeforeTag: string;
+    before(async () => {
+      helper.scopeHelper.initWorkspaceAndRemoteScope();
+
+      const sourceDir = path.join(helper.fixtures.getFixturesDir(), 'components');
+      const destination = path.join(helper.scopes.localPath, 'components');
+      fs.copySync(path.join(sourceDir, 'help'), path.join(destination, 'help'));
+      helper.command.addComponent('components/*');
+
+      helper.fixtures.addExtensionTS();
+
+      const bitjsonc = helper.bitJsonc.read();
+      bitjsonc.variants.help = {
+        extensions: {
+          [`${helper.scopes.remote}/extensions/typescript`]: {},
+          compile: {
+            compiler: `@bit/${helper.scopes.remote}.extensions.typescript:transpile`
+          }
+        }
+      };
+      helper.bitJsonc.write(bitjsonc);
+
+      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('compile from the cmd', () => {
+      before(() => {
+        helper.command.runCmd('bit compile');
+      });
+      it('should write dists files inside the capsule', () => {
+        const helpCapsule = helper.command.getCapsuleOfComponent('help');
+        expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
+        expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
+      });
+    });
+  });
 });
