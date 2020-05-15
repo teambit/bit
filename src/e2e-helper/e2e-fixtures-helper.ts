@@ -166,6 +166,25 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
+  populateComponentsTS(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `export default () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `import ${nextComp} from '../${nextComp}';
+export default () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
+      this.command.addComponent(`comp${i}`);
+    }
+    this.command.linkAndRewire();
+    this.fs.outputFile('app.js', "const comp1 = require('./comp1').default;\nconsole.log(comp1())");
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
   /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component
@@ -233,6 +252,28 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     // once defaultScope is mandatory, make sure this is working without the next two lines
     this.command.tagComponent('extensions/gulp-ts');
     this.command.exportComponent('extensions/gulp-ts');
+  }
+
+  addExtensionTS() {
+    const extensionsDir = path.join(__dirname, '..', 'extensions');
+    const extDestination = path.join(this.scopes.localPath, 'extensions');
+    fs.copySync(path.join(extensionsDir, 'typescript'), path.join(extDestination, 'typescript'));
+
+    this.command.addComponent('extensions/typescript', { i: 'extensions/typescript' });
+
+    this.npm.initNpm();
+    const dependencies = {
+      typescript: '^3.8'
+    };
+
+    this.packageJson.addKeyValue({ dependencies });
+    this.command.link();
+
+    // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
+    // first, the full-id won't be recognized when loading the extension.
+    // once defaultScope is mandatory, make sure this is working without the next two lines
+    this.command.tagComponent('extensions/typescript');
+    this.command.exportComponent('extensions/typescript');
   }
 
   /**
