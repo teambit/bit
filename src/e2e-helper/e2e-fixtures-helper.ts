@@ -166,6 +166,25 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
+  populateComponentsTS(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `export default () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `import ${nextComp} from '../${nextComp}';
+export default () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
+      this.command.addComponent(`comp${i}`);
+    }
+    this.command.linkAndRewire();
+    this.fs.outputFile('app.js', "const comp1 = require('./comp1').default;\nconsole.log(comp1())");
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
   /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component

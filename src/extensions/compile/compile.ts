@@ -1,3 +1,4 @@
+import { Harmony } from '@teambit/harmony';
 import path from 'path';
 import pMapSeries from 'p-map-series';
 import { Workspace } from '../workspace';
@@ -9,11 +10,13 @@ import { Component } from '../component';
 import { Capsule } from '../isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scope } from '../scope';
-import { Flows, IdsAndFlows } from '../flows';
+import { Flows, IdsAndFlows, TASK_SEPARATOR } from '../flows';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import { Dist } from '../../consumer/component/sources';
 import GeneralError from '../../error/general-error';
+import { packageNameToComponentId } from '../../utils/bit/package-name-to-component-id';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -26,7 +29,7 @@ export type ComponentAndCapsule = {
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
 export class Compile {
-  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
+  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope, private harmony: Harmony) {
     // @todo: why the scope is undefined here?
     const func = this.compileDuringBuild.bind(this);
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
@@ -62,9 +65,10 @@ export class Compile {
       const compileComponentExported = c.component.config.extensions.findExtension('bit.core/compile', true);
       const compileExtension = compileCore || compileComponent || compileComponentExported;
       const compileConfig = compileExtension?.config;
-      const compiler = compileConfig ? [compileConfig.compiler] : [];
+      const taskName = this.getTaskNameFromCompiler(compileConfig, c.component.config.extensions);
+      const value = taskName ? [taskName] : [];
       if (compileConfig) {
-        idsAndFlows.push({ id: c.consumerComponent.id, value: compiler });
+        idsAndFlows.push({ id: c.consumerComponent.id, value });
       } else {
         componentsWithLegacyCompilers.push(c);
       }
@@ -87,6 +91,51 @@ export class Compile {
     }
 
     return [...newCompilersResult, ...oldCompilersResult];
+  }
+
+  private getTaskNameFromCompiler(compileConfig, extensions: ExtensionDataList): string | null {
+    if (!compileConfig || !compileConfig.compiler) return null;
+    const compiler = compileConfig.compiler as string;
+    const compilerBitId = this.getCompilerBitId(compiler, extensions);
+    const compilerExtension = this.harmony.get(compilerBitId.toString());
+    if (!compilerExtension) {
+      throw new Error(`failed to get "${compiler}" extension from Harmony.
+the following extensions are available: ${this.harmony.extensionsIds.join(', ')}`);
+    }
+    const compilerInstance = compilerExtension.instance as any;
+    if (!compilerInstance) {
+      throw new GeneralError(`failed to get the instance of the compiler "${compiler}".
+please make sure the compiler provider returns anything`);
+    }
+    const defineCompiler = compilerInstance.defineCompiler;
+    if (!defineCompiler || typeof defineCompiler !== 'function') {
+      throw new GeneralError(`the compiler "${compiler}" instance doesn't have "defineCompiler" function`);
+    }
+    const compilerDefinition = defineCompiler();
+    const taskFile = compilerDefinition.taskFile;
+    if (!taskFile) {
+      throw new GeneralError(`the "defineCompiler" function of "${compiler}" doesn't return taskFile definition`);
+    }
+    return compiler + TASK_SEPARATOR + taskFile;
+  }
+
+  /**
+   * @todo: fix!
+   * in the config, the specific-compiler is entered into "compiler" field as a package-name.
+   * e.g. @bit/core.typescript.
+   * this function finds the full BitId of this compiler, including the version.
+   * the full id is needed in order to get the instance from harmony.
+   *
+   * currently, it's an ugly workaround. the bindingPrefix is hard-coded as @bit.
+   * the reason of not fixing it now is that soon will be a better way to get this data.
+   */
+  private getCompilerBitId(compiler: string, extensions: ExtensionDataList): BitId {
+    const compilerBitId = packageNameToComponentId(this.workspace.consumer, compiler, '@bit');
+    const compilerExtensionConfig = extensions.findExtension(compilerBitId.toString(), true);
+    if (!compilerExtensionConfig) throw new Error(`the compiler ${compilerBitId.toString()} was not loaded`);
+    if (!compilerExtensionConfig.extensionId)
+      throw new Error(`the compiler ${compilerBitId.toString()} has no extension id`);
+    return compilerExtensionConfig.extensionId;
   }
 
   async compileWithNewCompilers(idsAndFlows: IdsAndFlows, components: ConsumerComponent[]): Promise<BuildResult[]> {

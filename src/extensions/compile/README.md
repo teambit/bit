@@ -6,7 +6,7 @@ An example:
 "extensions": {
   "scripts": {
     "build": [
-      "my-compiler"
+      "my-compiler:task-name"
     ],
   }
 }
@@ -24,3 +24,10 @@ An example:
 ```
 
 To run: `bit compile`
+
+### Compiler Implementation
+The provider should implement `defineCompiler` function which returns the filename of the task file without the extension.
+An example:
+```
+const defineCompiler = () => ({ taskFile: 'transpile' });
+```
