@@ -3,6 +3,7 @@
     "target": "es2015",
     "module": "commonjs",
     "jsx": "react",
+    "composite": true,
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,

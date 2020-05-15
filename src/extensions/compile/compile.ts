@@ -28,6 +28,18 @@ export type ComponentAndCapsule = {
 
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
+type CompilerInstance = {
+  defineCompiler: () => { taskFile: string };
+  watchMultiple?: (capsulePaths: string[]) => any;
+};
+
+type AggregatedWatcher = {
+  compilerId: BitId;
+  compilerInstance: CompilerInstance;
+  componentIds: BitId[];
+  capsulePaths: string[];
+};
+
 export class Compile {
   constructor(private workspace: Workspace, private flows: Flows, private scope: Scope, private harmony: Harmony) {
     // @todo: why the scope is undefined here?
@@ -50,7 +62,7 @@ export class Compile {
   }
 
   async compile(
-    componentsIds: string[],
+    componentsIds: string[] | BitId[], // when empty, it compiles all
     noCache?: boolean,
     verbose?: boolean,
     dontPrintEnvMsg?: boolean
@@ -93,9 +105,7 @@ export class Compile {
     return [...newCompilersResult, ...oldCompilersResult];
   }
 
-  private getTaskNameFromCompiler(compileConfig, extensions: ExtensionDataList): string | null {
-    if (!compileConfig || !compileConfig.compiler) return null;
-    const compiler = compileConfig.compiler as string;
+  private getCompilerInstance(compiler: string, extensions: ExtensionDataList): CompilerInstance {
     const compilerBitId = this.getCompilerBitId(compiler, extensions);
     const compilerExtension = this.harmony.get(compilerBitId.toString());
     if (!compilerExtension) {
@@ -107,6 +117,13 @@ the following extensions are available: ${this.harmony.extensionsIds.join(', ')}
       throw new GeneralError(`failed to get the instance of the compiler "${compiler}".
 please make sure the compiler provider returns anything`);
     }
+    return compilerInstance;
+  }
+
+  private getTaskNameFromCompiler(compileConfig, extensions: ExtensionDataList): string | null {
+    if (!compileConfig || !compileConfig.compiler) return null;
+    const compiler = compileConfig.compiler as string;
+    const compilerInstance = this.getCompilerInstance(compiler, extensions);
     const defineCompiler = compilerInstance.defineCompiler;
     if (!defineCompiler || typeof defineCompiler !== 'function') {
       throw new GeneralError(`the compiler "${compiler}" instance doesn't have "defineCompiler" function`);
@@ -275,21 +292,59 @@ please make sure the compiler provider returns anything`);
     await dataToPersist.persistAllToCapsule(componentAndCapsule.capsule);
     return distsFiles.map(d => d.path);
   }
+
+  public async aggregateWatchersByCompiler(): Promise<AggregatedWatcher[]> {
+    const componentsAndCapsules = await getComponentsAndCapsules([], this.workspace);
+    logger.debug(`compilerExt.getWatchProcesses, completed created of capsules`);
+    const watchers: AggregatedWatcher[] = [];
+    componentsAndCapsules.forEach(c => {
+      const extensions = c.component.config.extensions;
+      const compileCore = extensions.findCoreExtension('compile');
+      const compileComponent = extensions.findExtension('compile');
+      const compileComponentExported = extensions.findExtension('bit.core/compile', true);
+      const compileExtension = compileCore || compileComponent || compileComponentExported;
+      const compileConfig = compileExtension?.config;
+      if (!compileConfig || !compileConfig.compiler) return;
+
+      const compilerInstance = this.getCompilerInstance(compileConfig.compiler as string, extensions);
+      if (!compilerInstance.watchMultiple) return; // the component doesn't support it, ignore.
+      const compilerId = this.getCompilerBitId(compileConfig.compiler as string, extensions);
+      const existingWatcher = watchers.find(w => w.compilerId.isEqual(compilerId));
+      if (existingWatcher) {
+        existingWatcher.componentIds.push(c.consumerComponent.id);
+        existingWatcher.capsulePaths.push(c.capsule.wrkDir);
+      } else {
+        watchers.push({
+          compilerId,
+          compilerInstance,
+          componentIds: [c.consumerComponent.id],
+          capsulePaths: [c.capsule.wrkDir]
+        });
+      }
+    });
+    return watchers;
+  }
 }
 
-function getBitIds(componentsIds: string[], workspace: Workspace): BitId[] {
+function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): BitId[] {
   if (componentsIds.length) {
-    return componentsIds.map(idStr => workspace.consumer.getParsedId(idStr));
+    return componentsIds.map(compId => (compId instanceof BitId ? compId : workspace.consumer.getParsedId(compId)));
   }
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }
 
-async function getResolvedComponents(componentsIds: string[], workspace: Workspace): Promise<ResolvedComponent[]> {
+async function getResolvedComponents(
+  componentsIds: string[] | BitId[],
+  workspace: Workspace
+): Promise<ResolvedComponent[]> {
   const bitIds = getBitIds(componentsIds, workspace);
   return workspace.load(bitIds.map(id => id.toString()));
 }
 
-async function getComponentsAndCapsules(componentsIds: string[], workspace: Workspace): Promise<ComponentAndCapsule[]> {
+async function getComponentsAndCapsules(
+  componentsIds: string[] | BitId[],
+  workspace: Workspace
+): Promise<ComponentAndCapsule[]> {
   const resolvedComponents = await getResolvedComponents(componentsIds, workspace);
   return Promise.all(
     resolvedComponents.map(async (resolvedComponent: ResolvedComponent) => {
