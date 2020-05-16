@@ -5,8 +5,9 @@ import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
 import { Flows } from '../flows';
+import { Environments } from './environments.extension';
 
-export default class ComposeCmd implements Command {
+export class StartCmd implements Command {
   name = 'start [id]';
   description = 'start a dev environment for a workspace or a specific component';
   alias = 'c';
@@ -14,7 +15,7 @@ export default class ComposeCmd implements Command {
   shortDescription = '';
   options = [];
 
-  constructor(private workspace: Workspace, private flows: Flows) {}
+  constructor(private envoronments: Environments) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async render([id]: CLIArgs): Promise<React.ReactElement> {

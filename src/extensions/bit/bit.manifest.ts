@@ -2,9 +2,8 @@ import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
 import provideBit from './bit.provider';
-import { ComposerExt } from '../composer';
+import { Environments } from '../environments';
 import { InstallExt } from '../install';
-
 import { CompileExt } from '../compile';
 import { WatchExt } from '../watch';
 import { TestExt } from '../test';
@@ -18,13 +17,13 @@ export default {
   name: 'Bit',
   dependencies: [
     WorkspaceExt,
+    Environments,
     ScopeExt,
     FlowsExt,
     PackExt,
     CompileExt,
     WatchExt,
     TestExt,
-    ComposerExt,
     InstallExt,
     CreateExt,
     InsightsExt,
