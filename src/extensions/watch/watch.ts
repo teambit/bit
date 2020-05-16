@@ -92,7 +92,9 @@ export default class Watch {
   async populateWatcherProcesses() {
     const watchers = await this.compile.aggregateWatchersByCompiler();
     const allIds = watchers.map(w => w.componentIds);
-    await this.compile.compile(R.flatten(allIds), false);
+    const flattenedIds = R.flatten(allIds);
+    if (!flattenedIds.length) return;
+    await this.compile.compile(flattenedIds, false);
     this.multipleWatchers = watchers.map(watcher => {
       if (!watcher.compilerInstance.watchMultiple) {
         throw new Error(`compiler ${watcher.compilerId.toString()} doesn't implement watchMultiple`);
