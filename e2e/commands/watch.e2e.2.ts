@@ -106,7 +106,7 @@ describe('bit watch command', function() {
   describe('watch using TS Project Reference', () => {
     before(() => {
       helper.command.resetFeatures();
-      helper.scopeHelper.initWorkspaceAndRemoteScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.addExtensionTS();
       helper.fs.outputFile('bar/foo.js');
