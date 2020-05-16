@@ -2,6 +2,7 @@ import { StartCmd } from './start.cmd';
 import { Watch, WatchExt } from '../watch';
 import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
+import { Component } from '../component';
 import { BitId as ComponentId } from '../../bit-id';
 import { Environment } from './environment';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -15,12 +16,28 @@ export type EnvsConfig = {
 export class Environments {
   static dependencies = [BitCliExt, WatchExt, WorkspaceExt];
 
-  constructor(readonly config: EnvsConfig, private watcher: Watch, private envSlot: EnvsRegistry) {}
+  constructor(
+    /**
+     * environments extension configuration.
+     */
+    readonly config: EnvsConfig,
 
-  async start() {
+    /**
+     * instance of the watcher extension.
+     */
+    private watcher: Watch,
+
+    /**
+     * slot for allowing extensions to register new env
+     */
+    private envSlot: EnvsRegistry
+  ) {}
+
+  async start(components?: Component[]) {
     // :TODO how to standardize this? we need to make sure all validation errors will throw nicely at least.
-    if (!this.config.env) throw new Error('@teambit/environments must be configured via workspace.json');
-    this.envSlot.get(this.config.env);
+    const env = this.envSlot.get(this.config.env);
+    if (!env) throw new Error('environment was not defined');
+    env.start();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -36,10 +53,14 @@ export class Environments {
 
   static slots = [Slot.withType<Environment>()];
 
+  static defaultConfig = {
+    env: 'React'
+  };
+
   static async provider(
     [cli, watcher, workspace]: [BitCli, Watch, Workspace],
     config: EnvsConfig,
-    [envSlot]: EnvsRegistry
+    [envSlot]: [EnvsRegistry]
   ) {
     const envs = new Environments(config, watcher, envSlot);
     cli.register(new StartCmd(envs));

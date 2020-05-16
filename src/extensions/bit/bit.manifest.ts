@@ -7,6 +7,7 @@ import { InstallExt } from '../install';
 import { CompileExt } from '../compile';
 import { WatchExt } from '../watch';
 import { TestExt } from '../test';
+import { React } from '../react';
 import { ComponentGraphExt } from '../graph';
 import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';
@@ -27,6 +28,7 @@ export default {
     InstallExt,
     CreateExt,
     InsightsExt,
+    React,
     ComponentGraphExt
   ],
   provider: provideBit

@@ -4,7 +4,7 @@ import { ReactEnv } from './react.env';
 export class React {
   static dependencies = [Environments];
 
-  dev() {}
+  start() {}
 
   build() {}
 

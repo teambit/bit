@@ -1,7 +1,9 @@
 import { Environment } from '../environments';
 
 export class ReactEnv implements Environment {
-  dev() {}
+  start() {
+    console.log('start react here!');
+  }
 
   build() {}
 

@@ -24,7 +24,7 @@ try {
     .then(() => {
       const cli = harmony.get('BitCli');
       // @ts-ignore :TODO until refactoring cli extension to dynamiclly load extensions
-      return cli?.instance.run();
+      return cli.run();
     })
     .catch(err => {
       const originalError = err.originalError || err;

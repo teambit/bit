@@ -15,10 +15,11 @@ export class StartCmd implements Command {
   shortDescription = '';
   options = [];
 
-  constructor(private envoronments: Environments) {}
+  constructor(private envs: Environments) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async render([id]: CLIArgs): Promise<React.ReactElement> {
+    this.envs.start();
     // eslint-disable-line @typescript-eslint/no-unused-vars
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async () => {
