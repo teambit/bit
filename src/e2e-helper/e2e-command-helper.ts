@@ -35,6 +35,9 @@ export default class CommandHelper {
   setFeatures(featuresToggle: string) {
     this.featuresToggle = featuresToggle;
   }
+  resetFeatures() {
+    this.featuresToggle = undefined;
+  }
 
   runCmd(
     cmd: string,
