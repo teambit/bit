@@ -107,17 +107,13 @@ export class Compile {
 
   private getCompilerInstance(compiler: string, extensions: ExtensionDataList): CompilerInstance {
     const compilerBitId = this.getCompilerBitId(compiler, extensions);
-    const compilerExtension = this.harmony.get(compilerBitId.toString());
+    const compilerExtension = this.harmony.get<CompilerInstance>(compilerBitId.toString());
     if (!compilerExtension) {
       throw new Error(`failed to get "${compiler}" extension from Harmony.
 the following extensions are available: ${this.harmony.extensionsIds.join(', ')}`);
     }
-    const compilerInstance = compilerExtension.instance as any;
-    if (!compilerInstance) {
-      throw new GeneralError(`failed to get the instance of the compiler "${compiler}".
-please make sure the compiler provider returns anything`);
-    }
-    return compilerInstance;
+
+    return compilerExtension;
   }
 
   private getTaskNameFromCompiler(compileConfig, extensions: ExtensionDataList): string | null {
