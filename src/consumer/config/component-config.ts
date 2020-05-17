@@ -10,7 +10,6 @@ import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
-import logger from '../../logger/logger';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 

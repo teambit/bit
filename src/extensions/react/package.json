@@ -1,0 +1,17 @@
+{
+  "name": "@teambit/react",
+  "dependencies": {
+    "html-webpack-plugin": "^4.3.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "webpack": "^4.43.0",
+    "webpack-dev-server": "^3.11.0",
+    "@babel/core": "^7.9.6",
+    "babel-loader": "^8.1.0",
+    "babel-preset-react-app": "^9.1.2"
+  },
+  "devDependencies": {
+    "@types/webpack": "^4.41.13",
+    "@types/webpack-dev-server": "^3.10.1"
+  }
+}

@@ -115,6 +115,7 @@ export function execAction(command, concrete, args): Promise<any> {
           )}`
         );
         loader.off();
+        console.log(err);
         const errorHandled = defaultHandleError(err) || command.handleError(err);
         if (command.private) return serializeErrAndExit(err, command.name);
         // uncomment this to see the entire error object on the console

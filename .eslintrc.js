@@ -8,7 +8,10 @@ module.exports = {
     }
   },
   parserOptions: {
-    project: './tsconfig.json'
+    project: './tsconfig.json',
+    ecmaFeatures: {
+      jsx: true // Allows for the parsing of JSX
+    }
   },
   extends: [
     'airbnb-typescript/base',

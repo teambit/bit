@@ -10,6 +10,7 @@
     "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
+    "strictPropertyInitialization": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,

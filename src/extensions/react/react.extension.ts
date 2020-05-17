@@ -12,5 +12,6 @@ export class React {
 
   static provider([envs]: [Environments]) {
     envs.register(new ReactEnv());
+    return {};
   }
 }

@@ -1,11 +1,10 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { StartCmd } from './start.cmd';
-import { Watch, WatchExt } from '../watch';
 import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
-import { BitId as ComponentId } from '../../bit-id';
 import { Environment } from './environment';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { EnvRuntime, RuntimeDef } from './runtime';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -13,8 +12,10 @@ export type EnvsConfig = {
   env: string;
 };
 
+type RawEnvMap = { [key: string]: { components: Component[]; env: Environment } };
+
 export class Environments {
-  static dependencies = [BitCliExt, WatchExt, WorkspaceExt];
+  static dependencies = [BitCliExt, WorkspaceExt];
 
   constructor(
     /**
@@ -23,9 +24,9 @@ export class Environments {
     readonly config: EnvsConfig,
 
     /**
-     * instance of the watcher extension.
+     * component workspace.
      */
-    private watcher: Watch,
+    private workspace: Workspace,
 
     /**
      * slot for allowing extensions to register new env
@@ -33,37 +34,63 @@ export class Environments {
     private envSlot: EnvsRegistry
   ) {}
 
-  async start(components?: Component[]) {
+  // hack until gilad fixes ids.
+  readonly id: string = '@teambit/envs';
+
+  /**
+   * create a development runtime environment.
+   */
+  async dev(components?: Component[]): Promise<EnvRuntime> {
     // :TODO how to standardize this? we need to make sure all validation errors will throw nicely at least.
-    const env = this.envSlot.get(this.config.env);
-    if (!env) throw new Error('environment was not defined');
-    env.start();
+    return this.createRuntime(components || (await this.workspace.list()));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async serve(componentId: ComponentId) {
-    // @ts-ignore
-    const observable = await this.watcher.watch();
-    observable.subscribe(() => {});
-  }
-
+  /**
+   * register an environment.
+   */
   register(env: Environment) {
     return this.envSlot.register(env);
+  }
+
+  private createRuntime(components: Component[]): EnvRuntime {
+    return new EnvRuntime(this.aggregateByDefs(components));
+  }
+
+  // :TODO can be refactorerd to few utilities who will make repeating this very easy.
+  private aggregateByDefs(components: Component[]): RuntimeDef[] {
+    const map = {};
+    components.forEach((current: Component) => {
+      // :TODO fix this api. replace with `this.id` and improve naming.
+      const extension = current.config.extensions.findExtension('@teambit/envs');
+      // this can also be handled better
+      if (!extension) return;
+      const envId = extension.config.env;
+      // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
+      const env = this.envSlot.get(envId);
+      if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
+
+      if (map[envId]) map[envId].components.push(current);
+      else
+        map[envId] = {
+          components: [current],
+          env
+        };
+    }, {});
+
+    return Object.keys(map).map(key => {
+      return new RuntimeDef(key, map[key].env, map[key].components);
+    });
   }
 
   static slots = [Slot.withType<Environment>()];
 
   static defaultConfig = {
-    env: 'React'
+    version: '>=16.0.0'
   };
 
-  static async provider(
-    [cli, watcher, workspace]: [BitCli, Watch, Workspace],
-    config: EnvsConfig,
-    [envSlot]: [EnvsRegistry]
-  ) {
-    const envs = new Environments(config, watcher, envSlot);
-    cli.register(new StartCmd(envs));
+  static async provider([cli, workspace]: [BitCli, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+    const envs = new Environments(config, workspace, envSlot);
+    cli.register(new StartCmd(envs, workspace));
     return envs;
   }
 }

@@ -155,6 +155,8 @@ export default class Workspace {
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
+  byPattern(pattern: string): Promise<Component[]> {}
+
   /**
    * @todo: remove the string option, use only BitId
    */

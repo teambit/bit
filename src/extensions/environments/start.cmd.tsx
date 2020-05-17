@@ -1,42 +1,69 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color } from 'ink';
+import { Box, Color, Text } from 'ink';
+import { EnvRuntime } from './runtime';
+// import { EnvConsole } from './components';
+// make sure to update eslint to read JSX.
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Flows } from '../flows';
 import { Environments } from './environments.extension';
 
 export class StartCmd implements Command {
-  name = 'start [id]';
+  name = 'start [pattern]';
   description = 'start a dev environment for a workspace or a specific component';
   alias = 'c';
   group = 'development';
   shortDescription = '';
   options = [];
 
-  constructor(private envs: Environments) {}
+  constructor(
+    /**
+     * access to the extension instance.
+     */
+    private envs: Environments,
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async render([id]: CLIArgs): Promise<React.ReactElement> {
-    this.envs.start();
-    // eslint-disable-line @typescript-eslint/no-unused-vars
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async () => {
-      // @ts-ignore
-      // const components = id ? await this.workspace.get(id) : await this.workspace.list();
-      // const components = await this.workspace.get('base/card');
-      // const resolved = await this.flows.run(components, 'build');
+    /**
+     * access to workspace.
+     */
+    private workspace: Workspace
+  ) {}
 
-      // const data = resolved.reduce((map, component) => {
-      //   map[component.component.id.toString()] = component.capsule.wrkDir;
-      //   return map;
-      // }, {});
-
-      // eslint-disable-next-line no-console
-      // start(data);
-
-      return <Color green>das</Color>;
-    });
+  private clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
+
+  // @ts-ignore TODO: align cli api.
+  async render([userPattern]: [CLIArgs]): Promise<React.ReactElement> {
+    // @teambit/variants should be the one to take care of component patterns.
+    const pattern = userPattern && userPattern.toString();
+    const envRuntime = await this.envs.dev(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    envRuntime.dev();
+    // this.clearConsole();
+    return <EnvConsole runtime={envRuntime} />;
+  }
+}
+
+export function EnvConsole({ runtime }: { runtime: EnvRuntime }) {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCounter(previousCounter => previousCounter + 1);
+    }, 100);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  return (
+    <Box>
+      {runtime.defs.map((def, key) => (
+        <Box key={key}>
+          <Color cyan>starting development environment "{def.id}"...</Color>
+        </Box>
+      ))}
+    </Box>
+  );
 }
