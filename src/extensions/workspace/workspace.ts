@@ -218,6 +218,11 @@ export default class Workspace implements ComponentHost {
     // TODO: read the component.json file and merge it inside
     const inlineConfig = this.inlineComponentConfig(componentId);
     const variantConfig = this.variants.getComponentConfig(componentId);
+    // For legacy configs it will be undefined.
+    // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
+    // under transformLegacyPropsToExtensions
+    if (!variantConfig) {
+    }
   }
 
   // TODO: gilad - add return value
@@ -231,6 +236,7 @@ export default class Workspace implements ComponentHost {
       workspaceDir: this.path,
       componentDir: this.componentDir(componentId)
     });
+    // TODO: make sure it's a new format
     return legacyConfigProps;
   }
 
