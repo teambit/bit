@@ -7,6 +7,7 @@ import LegacyWorkspaceConfig, {
 import { Config } from './config';
 import { ILegacyWorkspaceConfig } from '../../consumer/config';
 import { PathOsBased } from '../../utils/path';
+import { WorkspaceConfig } from './workspace-config';
 
 export type ConfigDeps = [];
 
@@ -29,11 +30,11 @@ export default async function provideConfig(_deps, _config, harmony: Harmony) {
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
   return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
     if (config && config.type === 'workspace' && dirPath === path.dirname(config.path)) {
-      return (config.config as any) as ILegacyWorkspaceConfig;
+      return (config.config as WorkspaceConfig).toLegacy();
     }
     const newConfig = await Config.loadIfExist(dirPath);
     if (newConfig && newConfig.type === 'workspace') {
-      return (newConfig.config as any) as ILegacyWorkspaceConfig;
+      return (newConfig.config as WorkspaceConfig).toLegacy();
     }
     return undefined;
   };
@@ -43,6 +44,6 @@ function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
   return async (args): Promise<ILegacyWorkspaceConfig> => {
     const config = await Config.ensureWorkspace(args);
     const workspaceConfig = config.config;
-    return (workspaceConfig as any) as ILegacyWorkspaceConfig;
+    return (workspaceConfig as WorkspaceConfig).toLegacy();
   };
 }

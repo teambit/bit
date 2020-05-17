@@ -22,11 +22,11 @@ interface DependencyResolverExtensionProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface ILegacyWorkspaceSettings {
+export interface ILegacyWorkspaceConfig {
   defaultScope?: string;
   _useWorkspaces?: boolean;
-  dependencyResolver: DependencyResolverExtensionProps;
-  packageManager: PackageManagerClients;
+  dependencyResolver?: DependencyResolverExtensionProps;
+  packageManager?: PackageManagerClients;
   _bindingPrefix?: string;
   _distEntry?: string;
   _distTarget?: string;
@@ -36,10 +36,6 @@ export interface ILegacyWorkspaceSettings {
   _resolveModules?: ResolveModulesConfig;
   _manageWorkspaces?: boolean;
   defaultOwner?: string;
-}
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface ILegacyWorkspaceConfig {
-  workspaceSettings: ILegacyWorkspaceSettings;
   path: string;
   _getEnvsByType: (type: EnvType) => Compilers | Testers | undefined;
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;

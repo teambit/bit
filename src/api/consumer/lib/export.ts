@@ -176,8 +176,8 @@ async function getComponentsToExport(
 }
 
 function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
-  const workspaceDefaultScope = consumer.config.workspaceSettings.defaultScope;
-  let workspaceDefaultOwner = consumer.config.workspaceSettings.defaultOwner;
+  const workspaceDefaultScope = consumer.config.defaultScope;
+  let workspaceDefaultOwner = consumer.config.defaultOwner;
   // For backward computability don't treat the default binding prefix as real owner
   if (workspaceDefaultOwner === DEFAULT_BINDINGS_PREFIX) {
     workspaceDefaultOwner = undefined;

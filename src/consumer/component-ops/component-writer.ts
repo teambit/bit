@@ -408,7 +408,7 @@ export default class ComponentWriter {
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config.workspaceSettings._bindingPrefix, this.component.id)
+          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
           : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath

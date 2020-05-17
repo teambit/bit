@@ -148,10 +148,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(
-        this.config.workspaceSettings.componentsDefaultDirectory,
-        this.config.workspaceSettings._dependenciesDirectory
-      );
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
     }
     return this._dirStructure;
   }
@@ -375,7 +372,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.workspaceSettings._saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -392,7 +389,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.workspaceSettings._distEntry && !this.config.workspaceSettings._distTarget;
+    return !this.config._distEntry && !this.config._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -682,7 +679,7 @@ export default class Consumer {
     ): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.workspaceSettings.defaultScope);
+        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
       }
       return componentMap.rootDir;
     };
@@ -796,7 +793,7 @@ export default class Consumer {
     const config = await WorkspaceConfig.ensure(consumerPath);
     // isolated environments in the workspace rely on a physical node_modules folder
     // for this reason, we must use a package manager that supports one
-    config.workspaceSettings._setPackageManager('npm');
+    config._setPackageManager('npm');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,

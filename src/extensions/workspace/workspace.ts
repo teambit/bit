@@ -14,13 +14,13 @@ import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
-import { ComponentScopeDirMap } from '../config/workspace-settings';
 import { DependencyResolver } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import LegacyComponentConfig from '../../consumer/config';
+import { ComponentScopeDirMap } from '../config/workspace-config';
 
 /**
  * API of the Bit Workspace

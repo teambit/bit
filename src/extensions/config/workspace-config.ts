@@ -2,7 +2,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
-import LegacyWorkspaceConfig, { WorkspaceConfigProps } from '../../consumer/config/workspace-config';
+import LegacyWorkspaceConfig, {
+  WorkspaceConfigProps as LegacyWorkspaceConfigProps
+} from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
@@ -10,47 +12,90 @@ import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Compilers, Testers } from '../../consumer/config/abstract-config';
-import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings';
 
 import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
 import { ILegacyWorkspaceConfig, ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 
-const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
-const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
+const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 
 export type LegacyInitProps = {
   standAlone?: boolean;
 };
 
-export type WorkspaceConfigFileInputProps = {
-  workspace: WorkspaceSettingsProps;
-  variants?: ConsumerOverrides;
+export type WorkspaceConfigFileProps = {
+  // TODO: make it no optional
+  $schema?: string;
+  $schemaVersion?: string;
+} & ExtensionsDefs;
+
+export type ComponentScopeDirMapEntry = {
+  defaultScope?: string;
+  directory: string;
 };
 
-export type WorkspaceConfigFileProps = {
-  $schema: string;
-  $schemaVersion: string;
-} & WorkspaceConfigFileInputProps;
+export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
-export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
+export type WorkspaceExtensionProps = {
+  defaultOwner?: string;
+  defaultScope?: string;
+  defaultDirectory?: string;
+  components?: ComponentScopeDirMap;
+};
+
+export type PackageManagerClients = 'librarian' | 'npm' | 'yarn' | undefined;
+
+export interface DependencyResolverExtensionProps {
+  packageManager: PackageManagerClients;
+  strictPeerDependencies?: boolean;
+  extraArgs?: string[];
+  packageManagerProcessOptions?: any;
+  useWorkspaces?: boolean;
+  manageWorkspaces?: boolean;
+}
+
+export type WorkspaceSettingsNewProps = {
+  '@teambit/workspace': WorkspaceExtensionProps;
+  '@teambit/dependency-resolver': DependencyResolverExtensionProps;
+};
+
+export type WorkspaceLegacyProps = {
+  dependenciesDirectory?: string;
+  bindingPrefix?: string;
+  resolveModules?: ResolveModulesConfig;
+  saveDependenciesAsComponents?: boolean;
+  distEntry?: string;
+  distTarget?: string;
+};
+
+export type ExtensionsDefs = WorkspaceSettingsNewProps;
+
+export class WorkspaceConfig implements HostConfig {
   _path?: string;
-  // Return only the configs that are workspace related (without components configs or schema definition)
-  workspaceSettings: WorkspaceSettings;
+  _extensions: ExtensionsDefs;
+  _legacyProps?: WorkspaceLegacyProps;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
       const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, data);
-      this.workspaceSettings = WorkspaceSettings.fromObject(withoutInternalConfig);
-      // } else if (legacyConfig){
+      this._extensions = withoutInternalConfig;
     } else {
       // We know we have either data or legacy config
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.workspaceSettings = WorkspaceSettings.fromLegacyConfig(legacyConfig!);
+      this._extensions = transformLegacyPropsToExtensions(legacyConfig!);
+      if (legacyConfig) {
+        this._legacyProps = {
+          dependenciesDirectory: legacyConfig.dependenciesDirectory,
+          resolveModules: legacyConfig.resolveModules,
+          saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
+          distEntry: legacyConfig.distEntry,
+          distTarget: legacyConfig.distTarget
+        };
+      }
     }
   }
 
@@ -62,70 +107,14 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
     this._path = configPath;
   }
 
-  get lang(): string {
-    return this.legacyConfig?.lang || DEFAULT_LANGUAGE;
-  }
-
-  get _compiler(): Compilers | undefined {
-    return this.legacyConfig?.compiler;
-  }
-
-  _setCompiler(compiler) {
-    if (this.legacyConfig) {
-      this.legacyConfig.setCompiler(compiler);
-    }
-  }
-
-  get _tester(): Testers | undefined {
-    return this.legacyConfig?.tester;
-  }
-
-  _setTester(tester) {
-    if (this.legacyConfig) {
-      this.legacyConfig.setTester(tester);
-    }
-  }
-
-  _getEnvsByType(type: EnvType): Compilers | Testers | undefined {
-    if (type === COMPILER_ENV_TYPE) {
-      return this.legacyConfig?.compiler;
-    }
-    return this.legacyConfig?.tester;
-  }
-
   get extensions(): ExtensionConfigList {
-    return this.workspaceSettings.extensions;
+    const res = ExtensionConfigList.fromObject(this._extensions);
+    return res;
   }
 
   extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
-    return this.workspaceSettings.extension(extensionId, ignoreVersion);
-  }
-
-  /**
-   * Return the components section of the config file
-   *
-   * @readonly
-   * @memberof WorkspaceConfig
-   */
-  get componentsConfig(): ConsumerOverrides | undefined {
-    if (this.data) {
-      return ConsumerOverrides.load(this.data.variants);
-    }
-    // legacy configs
-    return this.legacyConfig?.overrides;
-  }
-
-  getComponentConfig(componentId: BitId): ConsumerOverridesOfComponent {
-    const componentsConfig = this.componentsConfig;
-    const config = componentsConfig?.getOverrideComponentData(componentId) || {};
-    const plainLegacy = this._legacyPlainObject();
-    // Update envs from the root workspace object in case of legacy workspace config
-    if (plainLegacy) {
-      config.env = config.env || {};
-      config.env.compiler = config.env.compiler || plainLegacy.env.compiler;
-      config.env.tester = config.env.tester || plainLegacy.env.tester;
-    }
-    return config;
+    const existing = this.extensions.findExtension(extensionId, ignoreVersion);
+    return existing?.config;
   }
 
   /**
@@ -161,15 +150,15 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
    * @memberof WorkspaceConfig
    */
   static async create(
-    props: WorkspaceConfigFileInputProps,
+    props: WorkspaceConfigFileProps,
     dirPath?: PathOsBasedAbsolute,
     legacyInitProps?: LegacyInitProps
   ) {
     if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
       // Only support here what needed for e2e tests
       const legacyProps = {
-        packageManager: props?.workspace?.dependencyResolver?.packageManager,
-        componentsDefaultDirectory: props?.workspace?.workspace.defaultDirectory
+        packageManager: props['@teambit/dependency-resolver'].packageManager,
+        componentsDefaultDirectory: props['@teambit/workspace'].defaultDirectory
       };
       const standAlone = legacyInitProps?.standAlone ?? false;
       const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
@@ -208,7 +197,7 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any,
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
     legacyInitProps?: LegacyInitProps
   ): Promise<WorkspaceConfig> {
     try {
@@ -230,29 +219,18 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
   /**
    * A function that register to the legacy ensure function in order to transform old props structure
    * to the new one
-   *
-   * @static
-   * @param {PathOsBasedAbsolute} dirPath
-   * @param {WorkspaceConfigFileProps} [workspaceConfigProps={} as any]
-   * @returns {Promise<WorkspaceConfig>}
-   * @memberof WorkspaceConfig
+   * @param dirPath
+   * @param standAlone
+   * @param legacyWorkspaceConfigProps
    */
   static async onLegacyEnsure(
     dirPath: PathOsBasedAbsolute,
     standAlone: boolean,
-    workspaceConfigProps: WorkspaceConfigProps = {} as any
+    legacyWorkspaceConfigProps: LegacyWorkspaceConfigProps = {} as any
   ): Promise<WorkspaceConfig> {
-    const newProps: WorkspaceConfigFileInputProps = {
-      workspace: {
-        workspace: {
-          defaultDirectory: workspaceConfigProps.componentsDefaultDirectory
-        },
-        dependencyResolver: {
-          packageManager: workspaceConfigProps.packageManager
-        }
-      }
-    };
-
+    const newProps: WorkspaceConfigFileProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
+    // TODO: gilad move to constants file
+    newProps.$schemaVersion = '1.0.0';
     return WorkspaceConfig.ensure(dirPath, newProps, { standAlone });
   }
 
@@ -347,4 +325,73 @@ export class WorkspaceConfig implements ILegacyWorkspaceConfig, HostConfig {
     }
     return undefined;
   }
+
+  toLegacy(): ILegacyWorkspaceConfig {
+    const _setCompiler = compiler => {
+      if (this.legacyConfig) {
+        this.legacyConfig.setCompiler(compiler);
+      }
+    };
+
+    const _setTester = tester => {
+      if (this.legacyConfig) {
+        this.legacyConfig.setTester(tester);
+      }
+    };
+
+    const _getEnvsByType = (type: EnvType): Compilers | Testers | undefined => {
+      if (type === COMPILER_ENV_TYPE) {
+        return this.legacyConfig?.compiler;
+      }
+      return this.legacyConfig?.tester;
+    };
+
+    return {
+      lang: this.legacyConfig?.lang || DEFAULT_LANGUAGE,
+      defaultScope: this.data?.['@teambit/workspace'].defaultScope,
+      _useWorkspaces: this.data?.['@teambit/dependency-resolver'].useWorkspaces,
+      dependencyResolver: this.data?.['@teambit/dependency-resolver'],
+      packageManager: this.data?.['@teambit/dependency-resolver'].packageManager,
+      _bindingPrefix: this.data?.['@teambit/workspace'].defaultOwner,
+      _distEntry: this._legacyProps?.distEntry,
+      _distTarget: this._legacyProps?.distTarget,
+      _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
+      _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
+      componentsDefaultDirectory: this.data?.['@teambit/workspace'].defaultDirectory,
+      _resolveModules: this._legacyProps?.resolveModules,
+      _manageWorkspaces: this.data?.['@teambit/dependency-resolver'].manageWorkspaces,
+      defaultOwner: this.data?.['@teambit/workspace'].defaultOwner,
+      // @ts-ignore
+      path: this._path,
+      _getEnvsByType,
+      write: this.write,
+      toVinyl: this.toVinyl,
+      // componentsConfig: ConsumerOverrides | undefined,
+      // getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent,
+      _legacyPlainObject: this.legacyConfig ? this.legacyConfig?.toPlainObject : () => undefined,
+      _compiler: this.legacyConfig?.compiler,
+      _setCompiler,
+      _tester: this.legacyConfig?.tester,
+      _setTester
+    };
+  }
+}
+
+function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps) {
+  const data = {
+    '@teambit/workspace': {
+      defaultScope: legacyConfig.defaultScope,
+      defaultDirectory: legacyConfig.componentsDefaultDirectory,
+      defaultOwner: legacyConfig.bindingPrefix
+    },
+    '@teambit/dependency-resolver': {
+      packageManager: legacyConfig.packageManager,
+      strictPeerDependnecies: false,
+      extraArgs: legacyConfig.packageManagerArgs,
+      packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
+      manageWorkspaces: legacyConfig.manageWorkspaces,
+      useWorkspaces: legacyConfig.useWorkspaces
+    }
+  };
+  return data;
 }

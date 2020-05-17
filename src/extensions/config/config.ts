@@ -1,6 +1,6 @@
 import { ConfigType, HostConfig } from './types';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import { WorkspaceConfig, WorkspaceConfigFileInputProps, LegacyInitProps } from './workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
 
 export class Config {
@@ -38,7 +38,7 @@ export class Config {
    */
   static async ensureWorkspace(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any,
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
     legacyInitProps?: LegacyInitProps
   ): Promise<Config> {
     const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps, legacyInitProps);
