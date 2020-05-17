@@ -30,6 +30,7 @@ export type WorkspaceCoreConfig = {
 export default async function provideWorkspace(
   [scope, component, isolator, dependencyResolver, variants, logger]: WorkspaceDeps,
   config: WorkspaceExtConfig,
+  _slots,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.

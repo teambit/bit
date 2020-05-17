@@ -13,7 +13,7 @@ export type ConfigDeps = [];
 
 export type ConfigConfig = {};
 
-export default async function provideConfig(_deps, _config, harmony: Harmony) {
+export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
   const config = await Config.loadIfExist(process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());

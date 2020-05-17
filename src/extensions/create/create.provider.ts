@@ -12,6 +12,7 @@ export type CreateDeps = [BitCli, Workspace];
 export async function provideCreate(
   [cli, workspace]: CreateDeps,
   config: CreateExtConfig,
+  _slots,
   harmony: Harmony
 ): Promise<Create> {
   const create = new Create(config, workspace, new Registry(harmony));
