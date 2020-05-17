@@ -364,11 +364,11 @@ export class WorkspaceConfig implements HostConfig {
       // @ts-ignore
       path: this._path,
       _getEnvsByType,
-      write: this.write,
-      toVinyl: this.toVinyl,
+      write: this.write.bind(this),
+      toVinyl: this.toVinyl.bind(this),
       // componentsConfig: ConsumerOverrides | undefined,
       // getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent,
-      _legacyPlainObject: this.legacyConfig ? this.legacyConfig?.toPlainObject : () => undefined,
+      _legacyPlainObject: this.legacyConfig ? this.legacyConfig?.toPlainObject.bind(this) : () => undefined,
       _compiler: this.legacyConfig?.compiler,
       _setCompiler,
       _tester: this.legacyConfig?.tester,
@@ -392,6 +392,8 @@ function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | 
       manageWorkspaces: legacyConfig.manageWorkspaces,
       useWorkspaces: legacyConfig.useWorkspaces
     }
+    // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
+    // TODO: new extensions (via dependency-resolver extension and pkg extensions)
   };
   return data;
 }
