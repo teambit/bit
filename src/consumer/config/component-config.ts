@@ -2,7 +2,7 @@ import pMapSeries from 'p-map-series';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
-import { PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
@@ -155,6 +155,78 @@ export default class ComponentConfig extends AbstractConfig {
     // Do not try to load extension for itself (usually happen when using '*' pattern)
     mergedObject.extensions = mergedObject.extensions.remove(componentId);
     return ComponentConfig.fromPlainObject(mergedObject);
+  }
+
+  /**
+   * component config is written by default to package.json inside "bit" property.
+   * in case "eject-conf" was running or the component was imported with "--conf" flag, the
+   * bit.json is written as well.
+   *
+   * @param {*} componentDir root component directory, needed for loading package.json file.
+   * in case a component is authored, leave this param empty to not load the project package.json
+   * @param {*} workspaceConfig
+   */
+  static async loadConfigFromFolder({
+    componentDir,
+    workspaceDir
+  }: {
+    componentDir: PathOsBasedAbsolute | undefined;
+    workspaceDir: PathOsBasedAbsolute;
+  }): Promise<{ componentHasWrittenConfig: boolean; config: any; packageJsonFile: any }> {
+    let bitJsonPath;
+    let componentHasWrittenConfig = false;
+    let packageJsonFile;
+
+    if (componentDir) {
+      bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+    }
+    const loadBitJson = async () => {
+      if (!bitJsonPath) {
+        return {};
+      }
+      try {
+        const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
+        if (file) {
+          componentHasWrittenConfig = true;
+          return file;
+        }
+        return {};
+      } catch (e) {
+        throw new ShowDoctorError(
+          `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
+        );
+      }
+    };
+    const loadPackageJson = async (): Promise<PackageJsonFile | {}> => {
+      if (!componentDir) return {};
+      try {
+        const file = await PackageJsonFile.load(workspaceDir, componentDir);
+        packageJsonFile = file;
+        const packageJsonObject = file.fileExist ? file.packageJsonObject : undefined;
+        const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
+        if (packageJsonHasConfig) {
+          const packageJsonConfig = packageJsonObject?.bit;
+          componentHasWrittenConfig = true;
+          return packageJsonConfig;
+        }
+        return {};
+      } catch (e) {
+        throw new ShowDoctorError(
+          `package.json at ${AbstractConfig.composePackageJsonPath(
+            componentDir
+          )} is not a valid JSON file, consider to re-import the file to re-generate the file`
+        );
+      }
+    };
+
+    const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
+    // in case of conflicts, bit.json wins package.json
+    const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    return {
+      config,
+      packageJsonFile,
+      componentHasWrittenConfig
+    };
   }
 
   /**
