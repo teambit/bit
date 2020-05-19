@@ -30,13 +30,15 @@ try {
     .catch(err => {
       const originalError = err.originalError || err;
       const errorHandlerExist = findErrorDefinition(originalError);
-      let handledError = err;
+      let handledError;
       if (originalError instanceof PaperError) {
         // at this point CLI or Harmony might be broken.
         // handling by paper
         PaperError.handleError(err);
       } else if (errorHandlerExist) {
         handledError = defaultHandleError(originalError);
+      } else {
+        handledError = err;
       }
       logErrAndExit(handledError, process.argv[1] || '');
     });
