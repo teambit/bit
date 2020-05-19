@@ -199,7 +199,7 @@ const _getNpmList = async (
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
   const npmList = await _getNpmList(packageManager, dir);
-  // it's probably a valid json with errors, that's fine, parse it.
+  // If the npmList.stdout starts with '{' it's probably a valid json so no throw an error
   if (npmList.stderr && !npmList.stdout.startsWith('{')) {
     logger.error('npm-client got an error', npmList.stderr);
     throw new Error(
