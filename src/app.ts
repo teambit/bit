@@ -4,6 +4,7 @@ import HooksManager from './hooks';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
+import { PaperError } from './extensions/paper';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -29,7 +30,16 @@ try {
     .catch(err => {
       const originalError = err.originalError || err;
       const errorHandlerExist = findErrorDefinition(originalError);
-      const handledError = errorHandlerExist ? defaultHandleError(originalError) : err;
+      let handledError;
+      if (originalError instanceof PaperError) {
+        // at this point CLI or Harmony might be broken.
+        // handling by paper
+        PaperError.handleError(err);
+      } else if (errorHandlerExist) {
+        handledError = defaultHandleError(originalError);
+      } else {
+        handledError = err;
+      }
       logErrAndExit(handledError, process.argv[1] || '');
     });
   // Catching errors from the load phase
