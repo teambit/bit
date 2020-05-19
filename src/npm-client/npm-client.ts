@@ -1,4 +1,5 @@
 import execa from 'execa';
+import { spawn } from 'child_process';
 import pMapSeries from 'p-map-series';
 import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
@@ -155,6 +156,41 @@ const _installInOneDirectory = ({
     });
 };
 
+const _getNpmList = async (
+  packageManager: string,
+  dir: PathOsBased
+): Promise<{ stdout: string; stderr: string; code: number }> => {
+  // We don't use here execa since there is a bug with execa (2.*) with some node versions
+  // execa uses util.getSystemErrorName which not available in some node versions
+  // see more here - https://github.com/sindresorhus/execa/issues/318
+  // We also use spwan instead of exec since the output might be very long and exec is limited with
+  // handling such long outputs
+  // once we stop support node < 10 we can replace it with something like
+  // npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
+  return new Promise(resolve => {
+    let stdout = '';
+    let stderr = '';
+    const ls = spawn(packageManager, ['list', '-j'], { cwd: dir });
+    ls.stdout.on('data', data => {
+      // console.log(`stdout: ${data}`);
+      stdout += data;
+    });
+
+    ls.stderr.on('data', data => {
+      stderr += data;
+    });
+
+    ls.on('close', code => {
+      const res = {
+        stdout,
+        stderr,
+        code
+      };
+      resolve(res);
+    });
+  });
+};
+
 /**
  * Get peer dependencies for directory
  * you should run this after you run npm install
@@ -162,17 +198,13 @@ const _installInOneDirectory = ({
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
-  let npmList;
-  try {
-    npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
-  } catch (err) {
-    if (err.stdout && err.stdout.startsWith('{')) {
-      // it's probably a valid json with errors, that's fine, parse it.
-      npmList = err;
-    } else {
-      logger.error('npm-client got an error', err);
-      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
-    }
+  const npmList = await _getNpmList(packageManager, dir);
+  // it's probably a valid json with errors, that's fine, parse it.
+  if (npmList.stderr && !npmList.stdout.startsWith('{')) {
+    logger.error('npm-client got an error', npmList.stderr);
+    throw new Error(
+      `failed running ${packageManager} list on folder ${dir} to find the peer dependencies due to an error: ${npmList.stderr}`
+    );
   }
   const peerDepsObject = await getPeerDepsFromNpmList(npmList.stdout, packageManager);
   return objectToArray(peerDepsObject);

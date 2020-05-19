@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - upgrade typescript to 3.8.3
 - [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
 - [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
+- fix importing compilers and testers for old node versions
 
 ## [[14.7.7-dev.3] - 2020-03-31]
 
