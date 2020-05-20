@@ -1,8 +1,6 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-import { render } from 'ink';
-import { PaperError } from '../extensions/paper/exceptions';
 import { paintSpecsResults } from './chalk-box';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
@@ -633,12 +631,6 @@ function handleNonBitCustomErrors(err: Error): string {
 }
 
 export default (err: Error): string | undefined => {
-  if (err instanceof PaperError) {
-    const { unmount } = render(err.render());
-    unmount();
-    return undefined;
-  }
-
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {

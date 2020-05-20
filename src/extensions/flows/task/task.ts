@@ -7,6 +7,8 @@ import { Capsule, ContainerExec } from '../../isolator';
 
 export const PackageMarker = '@';
 
+export const TASK_SEPARATOR = ':'; // separate between the package-name and the task file
+
 export function executeTask(task: string, capsule: Capsule): Subject<any> {
   const isExtension = (taskString: string) => (taskString || '').trim().startsWith(PackageMarker);
 
