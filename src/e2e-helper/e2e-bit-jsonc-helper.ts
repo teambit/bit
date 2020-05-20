@@ -2,6 +2,7 @@ import { parse, stringify, assign } from 'comment-json';
 import * as path from 'path';
 import fs from 'fs-extra';
 import ScopesData from './e2e-scopes';
+import { WORKSPACE_JSONC } from '../constants';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class BitJsoncHelper {
@@ -34,13 +35,11 @@ export default class BitJsoncHelper {
 
   addToVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, key: string, val: any) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc.variants;
+    const variants = bitJsonc['@teambit/variants'];
     const newVariant = variants[variant] ?? {};
     assign(newVariant, { [key]: val });
-    // console.log('currentVariants', currentVariants)
     assign(variants, { [variant]: newVariant });
-
-    this.addKeyVal(bitJsoncDir, 'variants', variants);
+    this.addKeyVal(bitJsoncDir, '@teambit/variants', variants);
   }
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
@@ -59,5 +58,5 @@ export default class BitJsoncHelper {
 }
 
 function composePath(dir: string): string {
-  return path.join(dir, 'bit.jsonc');
+  return path.join(dir, WORKSPACE_JSONC);
 }
