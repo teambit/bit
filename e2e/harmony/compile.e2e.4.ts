@@ -27,16 +27,14 @@ chai.use(require('chai-fs'));
 
       helper.fixtures.addExtensionGulpTS();
 
-      const bitjsonc = helper.bitJsonc.read();
-      bitjsonc.variants.help = {
-        extensions: {
-          [`${helper.scopes.remote}/extensions/gulp-ts`]: {},
-          compile: {
-            compiler: `@bit/${helper.scopes.remote}.extensions.gulp-ts`
-          }
-        }
+      const gulpExtensionKey = `${helper.scopes.remote}/extensions/gulp-ts`;
+      const gulpExtensionVal = {};
+      const compileExtensionKey = 'compile';
+      const compileExtensionVal = {
+        compiler: `@bit/${helper.scopes.remote}.extensions.gulp-ts`
       };
-      helper.bitJsonc.write(bitjsonc);
+      helper.bitJsonc.addToVariant(undefined, 'help', gulpExtensionKey, gulpExtensionVal);
+      helper.bitJsonc.addToVariant(undefined, 'help', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd', () => {
