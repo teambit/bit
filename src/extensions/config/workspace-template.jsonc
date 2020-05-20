@@ -49,7 +49,7 @@
      * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
      * and totally removes the need of a 'node_modules' directory in your project.
     */
-    "packageManager": "pnpm",
+    "packageManager": "npm",
 
     /**
     * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
