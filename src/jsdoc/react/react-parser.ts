@@ -20,13 +20,13 @@ function formatProperties(props) {
     return description;
   };
   return Object.keys(props).map(name => {
-    const { type, description, required, defaultValue, flowType } = props[name];
+    const { type, description, required, defaultValue, flowType, tsType } = props[name];
 
     return {
       name,
       description: parseDescription(description),
       required,
-      type: stringifyType(type || flowType),
+      type: stringifyType(type || flowType || tsType),
       defaultValue
     };
   });
@@ -58,6 +58,8 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
 }
 
 function stringifyType(prop: { name: string; value?: any; raw?: string }): string {
+  if (!prop) return '?'; // TODO!
+
   const { name } = prop;
   let transformed;
 
@@ -96,9 +98,11 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
 export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[] | undefined> {
   const doclets: Array<Doclet> = [];
   try {
-    const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllComponentDefinitions, undefined, {
-      configFile: false
+    const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllExportedComponentDefinitions, undefined, {
+      configFile: false,
+      filename: filePath // should we use pathNormalizeToLinux(filePath) ?
     });
+
     if (componentsInfo) {
       return componentsInfo.map(componentInfo => {
         const formatted = fromReactDocs(componentInfo, filePath);
