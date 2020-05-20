@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { omit, mapObjIndexed, isEmpty } from 'ramda';
+import { omit, isEmpty } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps
@@ -17,7 +17,7 @@ import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
-import { ILegacyWorkspaceConfig, ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { ILegacyWorkspaceConfig, ExtensionConfigList } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
@@ -118,7 +118,7 @@ export class WorkspaceConfig implements HostConfig {
     return res;
   }
 
-  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
+  extension(extensionId: string, ignoreVersion: boolean): any {
     const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
   }
@@ -382,19 +382,19 @@ export class WorkspaceConfig implements HostConfig {
 
     return {
       lang: this.legacyConfig?.lang || DEFAULT_LANGUAGE,
-      defaultScope: this.data?.['@teambit/workspace'].defaultScope,
-      _useWorkspaces: this.data?.['@teambit/dependency-resolver'].useWorkspaces,
-      dependencyResolver: this.data?.['@teambit/dependency-resolver'],
-      packageManager: this.data?.['@teambit/dependency-resolver'].packageManager,
-      _bindingPrefix: this.data?.['@teambit/workspace'].defaultOwner,
+      defaultScope: this.extension('@teambit/workspace', true)?.defaultScope,
+      _useWorkspaces: this.extension('@teambit/dependency-resolver', true)?.useWorkspaces,
+      dependencyResolver: this.extension('@teambit/dependency-resolver', true),
+      packageManager: this.extension('@teambit/dependency-resolver', true)?.packageManager,
+      _bindingPrefix: this.extension('@teambit/workspace', true)?.defaultOwner,
       _distEntry: this._legacyProps?.distEntry,
       _distTarget: this._legacyProps?.distTarget,
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
-      componentsDefaultDirectory: this.data?.['@teambit/workspace'].defaultDirectory,
+      componentsDefaultDirectory: this.extension('@teambit/workspace', true)?.defaultDirectory,
       _resolveModules: this._legacyProps?.resolveModules,
-      _manageWorkspaces: this.data?.['@teambit/dependency-resolver'].manageWorkspaces,
-      defaultOwner: this.data?.['@teambit/workspace'].defaultOwner,
+      _manageWorkspaces: this.extension('@teambit/dependency-resolver', true)?.manageWorkspaces,
+      defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
       // @ts-ignore
       path: this._path,
       _getEnvsByType,
@@ -413,7 +413,9 @@ export class WorkspaceConfig implements HostConfig {
   }
 }
 
-export function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps) {
+export function transformLegacyPropsToExtensions(
+  legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps
+): ExtensionsDefs {
   // TODO: move to utils
   const removeUndefined = obj => {
     // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
@@ -451,5 +453,6 @@ export function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceCo
   if (variants && !isEmpty(variants)) {
     data['@teambit/variants'] = variants;
   }
+  // @ts-ignore
   return data;
 }
