@@ -402,7 +402,9 @@ export class WorkspaceConfig implements HostConfig {
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.getVariantsConfig(),
       getComponentConfig: this.getVariantConfig.bind(this),
-      _legacyPlainObject: this.legacyConfig ? this.legacyConfig?.toPlainObject.bind(this) : () => undefined,
+      _legacyPlainObject: this.legacyConfig
+        ? this.legacyConfig?.toPlainObject.bind(this.legacyConfig)
+        : () => undefined,
       _compiler: this.legacyConfig?.compiler,
       _setCompiler,
       _tester: this.legacyConfig?.tester,
