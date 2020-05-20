@@ -5,7 +5,10 @@ export type VariantsDeps = [Config];
 
 export async function provideVariants([configInstance]: VariantsDeps, config: Patterns) {
   const variants = new Variants(config);
-  configInstance.registerGetVariantsConfig(variants.all.bind(variants));
-  configInstance.registerGetVariantConfig(variants.getComponentConfig.bind(variants));
+  // TODO: fix when config become maybe
+  if (configInstance.type) {
+    configInstance.registerGetVariantsConfig(variants.all.bind(variants));
+    configInstance.registerGetVariantConfig(variants.getComponentConfig.bind(variants));
+  }
   return variants;
 }
