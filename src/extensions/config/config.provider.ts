@@ -5,9 +5,9 @@ import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction
 } from '../../consumer/config/workspace-config';
 import { Config } from './config';
-import { ILegacyWorkspaceConfig } from '../../consumer/config';
+import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from '../../consumer/config';
 import { PathOsBased } from '../../utils/path';
-import { WorkspaceConfig } from './workspace-config';
+import { WorkspaceConfig, LegacyInitProps, transformLegacyPropsToExtensions } from './workspace-config';
 
 export type ConfigDeps = [];
 
@@ -42,9 +42,21 @@ function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
 }
 
 function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
-  return async (args): Promise<ILegacyWorkspaceConfig> => {
-    const config = await Config.ensureWorkspace(args);
+  const func: WorkspaceConfigEnsureFunction = async (
+    dirPath: string,
+    standAlone: boolean,
+    legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
+  ) => {
+    let workspaceConfigProps;
+    if (legacyWorkspaceConfigProps) {
+      workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
+    }
+    const legacyInitProps: LegacyInitProps = {
+      standAlone
+    };
+    const config = await Config.ensureWorkspace(dirPath, workspaceConfigProps, legacyInitProps);
     const workspaceConfig = config.config;
     return (workspaceConfig as WorkspaceConfig).toLegacy();
   };
+  return func;
 }

@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { omit } from 'ramda';
+import { omit, mapObjIndexed, isEmpty } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps
@@ -405,25 +405,43 @@ export class WorkspaceConfig implements HostConfig {
   }
 }
 
-function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps) {
-  const data = {
-    '@teambit/workspace': {
-      defaultScope: legacyConfig.defaultScope,
-      defaultDirectory: legacyConfig.componentsDefaultDirectory,
-      defaultOwner: legacyConfig.bindingPrefix
-    },
-    '@teambit/dependency-resolver': {
-      packageManager: legacyConfig.packageManager,
-      strictPeerDependnecies: false,
-      extraArgs: legacyConfig.packageManagerArgs,
-      packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
-      manageWorkspaces: legacyConfig.manageWorkspaces,
-      useWorkspaces: legacyConfig.useWorkspaces
-    },
-    // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
-    // TODO: new extensions (via dependency-resolver extension and pkg extensions)
-    // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
-    '@teambit/variants': legacyConfig.overrides?.overrides
+export function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps) {
+  // TODO: move to utils
+  const removeUndefined = obj => {
+    // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
+    // return res;
+    Object.entries(obj).forEach(e => {
+      if (e[1] === undefined) delete obj[e[0]];
+    });
+    return obj;
   };
+
+  const workspace = removeUndefined({
+    defaultScope: legacyConfig.defaultScope,
+    defaultDirectory: legacyConfig.componentsDefaultDirectory,
+    defaultOwner: legacyConfig.bindingPrefix
+  });
+  const dependencyResolver = removeUndefined({
+    packageManager: legacyConfig.packageManager,
+    // strictPeerDependencies: false,
+    extraArgs: legacyConfig.packageManagerArgs,
+    packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
+    manageWorkspaces: legacyConfig.manageWorkspaces,
+    useWorkspaces: legacyConfig.useWorkspaces
+  });
+  const variants = legacyConfig.overrides?.overrides;
+  const data = {};
+  if (workspace && !isEmpty(workspace)) {
+    data['@teambit/workspace'] = workspace;
+  }
+  if (dependencyResolver && !isEmpty(dependencyResolver)) {
+    data['@teambit/dependency-resolver'] = dependencyResolver;
+  }
+  // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
+  // TODO: new extensions (via dependency-resolver extension and pkg extensions)
+  // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
+  if (variants && !isEmpty(variants)) {
+    data['@teambit/variants'] = variants;
+  }
   return data;
 }
