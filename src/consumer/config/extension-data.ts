@@ -80,7 +80,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     );
   }
 
-  toConfigObject() {
+  toObject() {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
     return res;
