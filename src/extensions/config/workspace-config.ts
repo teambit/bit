@@ -184,10 +184,14 @@ export class WorkspaceConfig implements HostConfig {
   ) {
     if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
       // Only support here what needed for e2e tests
-      const legacyProps = {
-        packageManager: props['@teambit/dependency-resolver'].packageManager,
-        componentsDefaultDirectory: props['@teambit/workspace'].defaultDirectory
-      };
+      const legacyProps: LegacyWorkspaceConfigProps = {};
+      if (props['@teambit/dependency-resolver']) {
+        legacyProps.packageManager = props['@teambit/dependency-resolver'].packageManager;
+      }
+      if (props['@teambit/workspace']) {
+        legacyProps.componentsDefaultDirectory = props['@teambit/workspace'].defaultDirectory;
+      }
+
       const standAlone = legacyInitProps?.standAlone ?? false;
       const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
       const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
