@@ -14,9 +14,10 @@ export type ConfigDeps = [];
 export type ConfigConfig = {};
 
 export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
-  const config = await Config.loadIfExist(process.cwd());
+  const config: Config = await Config.loadIfExist(process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
+
   // TODO: change once config become maybe
   if (config.extensions) {
     // Send all configs to harmony
@@ -29,7 +30,7 @@ export default async function provideConfig(_deps, _config, _slots, harmony: Har
 
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
   return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
-    if (config && config.type === 'workspace' && dirPath === path.dirname(config.path)) {
+    if (config?.workspaceConfig && config.path && dirPath === path.dirname(config.path)) {
       return (config.config as WorkspaceConfig).toLegacy();
     }
     const newConfig = await Config.loadIfExist(dirPath);

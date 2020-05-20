@@ -186,7 +186,7 @@ function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string 
   const idsArray = ids.map(id => {
     if (remote) return id.changeScope(remote);
     if (id.hasScope()) return id;
-    const overrides = consumer.config.componentsConfig?.getOverrideComponentData(id);
+    const overrides = consumer.config.getComponentConfig(id);
     const componentDefaultScope = overrides ? overrides.defaultScope : null;
     // TODO: handle separation of owner from default scope on component
     // TODO: handle owner of component

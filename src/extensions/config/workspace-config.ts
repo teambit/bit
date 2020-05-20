@@ -20,6 +20,10 @@ import { InvalidBitJson } from '../../consumer/config/exceptions';
 import { ILegacyWorkspaceConfig, ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
+import { BitId } from '../../bit-id';
+
+export type ComponentsConfigFn = () => ConsumerOverrides;
+export type ComponentConfigFn = (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 
@@ -78,6 +82,8 @@ export class WorkspaceConfig implements HostConfig {
   _path?: string;
   _extensions: ExtensionsDefs;
   _legacyProps?: WorkspaceLegacyProps;
+  _getVariantsConfig?: ComponentsConfigFn;
+  _getVariantConfig?: ComponentConfigFn;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
@@ -115,6 +121,28 @@ export class WorkspaceConfig implements HostConfig {
   extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
     const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
+  }
+
+  registerGetVariantsConfig(fn: ComponentsConfigFn): void {
+    this._getVariantsConfig = fn;
+  }
+
+  registerGetVariantConfig(fn: ComponentConfigFn): void {
+    this._getVariantConfig = fn;
+  }
+
+  getVariantsConfig(): ConsumerOverrides | undefined {
+    if (this._getVariantsConfig && typeof this._getVariantsConfig === 'function') {
+      return this._getVariantsConfig();
+    }
+    return undefined;
+  }
+
+  getVariantConfig(componentId: BitId): ConsumerOverridesOfComponent | undefined {
+    if (this._getVariantConfig && typeof this._getVariantConfig === 'function') {
+      return this._getVariantConfig(componentId);
+    }
+    return undefined;
   }
 
   /**
@@ -366,8 +394,8 @@ export class WorkspaceConfig implements HostConfig {
       _getEnvsByType,
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
-      // componentsConfig: ConsumerOverrides | undefined,
-      // getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent,
+      componentsConfig: this.getVariantsConfig(),
+      getComponentConfig: this.getVariantConfig.bind(this),
       _legacyPlainObject: this.legacyConfig ? this.legacyConfig?.toPlainObject.bind(this) : () => undefined,
       _compiler: this.legacyConfig?.compiler,
       _setCompiler,
@@ -391,9 +419,11 @@ function transformLegacyPropsToExtensions(legacyConfig: LegacyWorkspaceConfig | 
       packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
       manageWorkspaces: legacyConfig.manageWorkspaces,
       useWorkspaces: legacyConfig.useWorkspaces
-    }
+    },
     // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
     // TODO: new extensions (via dependency-resolver extension and pkg extensions)
+    // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
+    '@teambit/variants': legacyConfig.overrides?.overrides
   };
   return data;
 }

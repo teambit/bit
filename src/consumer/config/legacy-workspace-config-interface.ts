@@ -41,7 +41,7 @@ export interface ILegacyWorkspaceConfig {
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;
   toVinyl: (workspaceDir: PathOsBasedAbsolute) => Promise<AbstractVinyl[] | undefined>;
   componentsConfig: ConsumerOverrides | undefined;
-  getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent;
+  getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
   _legacyPlainObject: () => { [prop: string]: any } | undefined;
   _setCompiler: (compiler) => void;
   _setTester: (tester) => void;

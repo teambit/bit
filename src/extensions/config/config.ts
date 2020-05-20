@@ -1,23 +1,46 @@
 import { ConfigType, HostConfig } from './types';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
+import {
+  WorkspaceConfig,
+  WorkspaceConfigFileProps,
+  LegacyInitProps,
+  ComponentsConfigFn,
+  ComponentConfigFn
+} from './workspace-config';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
 
-export class Config {
-  constructor(public config: HostConfig, private configType: ConfigType) {}
+// export type ConfigProps = {
+//   workspaceConfig: WorkspaceConfig;
+// } | {
+//   scopeConfig: WorkspaceConfig;
+// };
 
-  get type() {
-    return this.configType;
+export class Config {
+  constructor(public workspaceConfig?: WorkspaceConfig, public scopeConfig?: WorkspaceConfig) {}
+  // constructor(private props: ConfigProps) {}
+
+  get type(): ConfigType {
+    if (this.workspaceConfig) {
+      return 'workspace';
+    }
+    return 'scope';
   }
 
-  get path() {
-    return this.config.path;
+  get path(): PathOsBased | undefined {
+    return this.config?.path;
+  }
+
+  get config(): HostConfig | undefined {
+    if (this.workspaceConfig) {
+      return this.workspaceConfig;
+    }
+    return this.scopeConfig;
   }
 
   static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined | any> {
     const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
     if (workspaceConfig) {
-      return new Config(workspaceConfig, 'workspace');
+      return new Config(workspaceConfig);
     }
     // TODO: try load scope config here
     // return undefined;
@@ -42,14 +65,25 @@ export class Config {
     legacyInitProps?: LegacyInitProps
   ): Promise<Config> {
     const workspaceConfig = await WorkspaceConfig.ensure(dirPath, workspaceConfigProps, legacyInitProps);
-    return new Config(workspaceConfig, 'workspace');
+    return new Config(workspaceConfig);
   }
 
-  get extensions(): ExtensionConfigList {
-    return this.config.extensions;
+  get extensions(): ExtensionConfigList | undefined {
+    return this.config?.extensions;
   }
 
-  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry {
-    return this.config.extension(extensionId, ignoreVersion);
+  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry | undefined {
+    return this.config?.extension(extensionId, ignoreVersion);
+  }
+
+  registerGetVariantsConfig(fn: ComponentsConfigFn) {
+    if (this.workspaceConfig) {
+      this.workspaceConfig.registerGetVariantsConfig(fn);
+    }
+  }
+  registerGetVariantConfig(fn: ComponentConfigFn) {
+    if (this.workspaceConfig) {
+      this.workspaceConfig.registerGetVariantConfig(fn);
+    }
   }
 }
