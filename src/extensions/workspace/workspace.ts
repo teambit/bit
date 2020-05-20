@@ -240,13 +240,13 @@ export default class Workspace implements ComponentHost {
     return legacyConfigProps;
   }
 
-  async loadComponentExtensions(componentId: BitId): Promise<void> {
-    const config = this.componentConfig(componentId);
-    const extensions = config.extensions
-      ? ExtensionConfigList.fromObject(config.extensions)
-      : ExtensionConfigList.fromArray([]);
-    return this.loadExtensions(extensions);
-  }
+  // async loadComponentExtensions(componentId: BitId): Promise<void> {
+  //   const config = this.componentConfig(componentId);
+  //   const extensions = config.extensions
+  //     ? ExtensionConfigList.fromObject(config.extensions)
+  //     : ExtensionConfigList.fromArray([]);
+  //   return this.loadExtensions(extensions);
+  // }
 
   /**
    * Load all unloaded extensions from a list

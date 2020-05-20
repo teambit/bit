@@ -55,9 +55,9 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
-        return workspace.loadComponentExtensions(id);
-      });
+      // ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
+      //   return workspace.loadComponentExtensions(id);
+      // });
       return workspace;
     }
 
