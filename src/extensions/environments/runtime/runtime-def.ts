@@ -1,5 +1,6 @@
 import { Environment } from '../environment';
 import { Component } from '../../component';
+import { Workspace } from '../../workspace';
 
 export class RuntimeDef {
   constructor(
@@ -19,7 +20,7 @@ export class RuntimeDef {
     readonly components: Component[]
   ) {}
 
-  dev() {
-    return this.env.dev(this.components);
+  dev(workspace: Workspace) {
+    return this.env.dev(workspace, this.components);
   }
 }

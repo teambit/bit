@@ -12,8 +12,6 @@ export type EnvsConfig = {
   env: string;
 };
 
-type RawEnvMap = { [key: string]: { components: Component[]; env: Environment } };
-
 export class Environments {
   static dependencies = [BitCliExt, WorkspaceExt];
 
@@ -26,6 +24,7 @@ export class Environments {
     /**
      * component workspace.
      */
+
     private workspace: Workspace,
 
     /**
@@ -53,7 +52,7 @@ export class Environments {
   }
 
   private createRuntime(components: Component[]): EnvRuntime {
-    return new EnvRuntime(this.aggregateByDefs(components));
+    return new EnvRuntime(this.workspace, this.aggregateByDefs(components));
   }
 
   // :TODO can be refactorerd to few utilities who will make repeating this very easy.
@@ -61,7 +60,7 @@ export class Environments {
     const map = {};
     components.forEach((current: Component) => {
       // :TODO fix this api. replace with `this.id` and improve naming.
-      const extension = current.config.extensions.findExtension('@teambit/envs');
+      const extension = current.config.extensions.findExtension(this.id);
       // this can also be handled better
       if (!extension) return;
       const envId = extension.config.env;

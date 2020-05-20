@@ -1,9 +1,10 @@
 const path = require('path');
-const fs = require('fs');
+const html = require('./html');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = function createWebpackConfig(workspaceDir, entryFiles) {
+module.exports = function(workspaceDir, entryFiles) {
   // Gets absolute path of file within app directory
+  entryFiles = entryFiles.concat([path.join(__dirname, './composer')]);
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -42,12 +43,16 @@ module.exports = function createWebpackConfig(workspaceDir, entryFiles) {
       publicPath: '/'
     },
 
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js']
+    },
+
     module: {
       rules: [
         {
-          test: /\.(js|jsx)$/,
+          test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
-          include: resolveWorkspacePath('components'),
+          include: workspaceDir,
           loader: require.resolve('babel-loader'),
           options: {
             presets: [
@@ -65,7 +70,7 @@ module.exports = function createWebpackConfig(workspaceDir, entryFiles) {
       // filename output defined above.
       new HtmlWebpackPlugin({
         inject: true,
-        template: '/Users/ranmizrahi/Bit/bit/src/extensions/react/assets/index.html'
+        templateContent: html(workspaceDir)
       })
     ]
   };

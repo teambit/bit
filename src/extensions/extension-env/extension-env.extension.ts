@@ -1,11 +1,10 @@
 import { Environments } from '../environments';
-import { ReactEnv } from './react.env';
+import { ExtEnv } from './ext-env';
 
-export class React {
+export class ExtensionEnv {
   static dependencies = [Environments];
 
   static provider([envs]: [Environments]) {
-    envs.register(new ReactEnv());
-    return {};
+    envs.register(new ExtEnv());
   }
 }

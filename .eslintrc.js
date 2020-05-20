@@ -19,6 +19,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
+    'plugin:react/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',

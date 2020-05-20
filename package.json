@@ -250,6 +250,7 @@
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-mocha": "^6.2.2",
     "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-unicorn": "^12.1.0",
     "gh-release": "^3.5.0",
     "husky": "^0.14.3",

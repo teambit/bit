@@ -59,7 +59,7 @@ export function EnvConsole({ runtime }: { runtime: EnvRuntime }) {
 
   return (
     <Box>
-      {runtime.defs.map((def, key) => (
+      {runtime.runtimeEnvs.map((def, key) => (
         <Box key={key}>
           <Color cyan>starting development environment "{def.id}"...</Color>
         </Box>
