@@ -140,17 +140,18 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
     const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
-    let workspaceConfigToMerge;
+    let legacyWorkspaceConfigToMerge = {};
     if (plainWorkspaceConfig) {
-      workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
-    } else {
-      workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
-      const defaultOwner = workspaceConfig?.defaultOwner;
-      if (defaultOwner) {
-        workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
-      }
+      legacyWorkspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
     }
-    const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
+    const componentConfigFromWorkspaceToMerge = workspaceConfig?.getComponentConfig(componentId) || {};
+    const defaultOwner = workspaceConfig?.defaultOwner;
+    if (defaultOwner) {
+      componentConfigFromWorkspaceToMerge.bindingPrefix = defaultOwner.startsWith('@')
+        ? defaultOwner
+        : `@${defaultOwner}`;
+    }
+    const mergedObject = R.merge(legacyWorkspaceConfigToMerge, componentConfigFromWorkspaceToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
     // Do not try to load extension for itself (usually happen when using '*' pattern)
     mergedObject.extensions = mergedObject.extensions.remove(componentId);
