@@ -1107,9 +1107,9 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
-    const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
+    const isAuthored = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(id) : null;
+    const overridesFromConsumer = isAuthored ? workspaceConfig?.getComponentConfig(id) : null;
 
     const propsToLoadEnvs = {
       consumerPath,
