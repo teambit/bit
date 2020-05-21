@@ -23,6 +23,7 @@ interface DependencyResolverExtensionProps {
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface ILegacyWorkspaceConfig {
+  lang: string;
   defaultScope?: string;
   _useWorkspaces?: boolean;
   dependencyResolver?: DependencyResolverExtensionProps;
@@ -44,6 +45,8 @@ export interface ILegacyWorkspaceConfig {
   componentsConfig: ConsumerOverrides | undefined;
   getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
   _legacyPlainObject: () => { [prop: string]: any } | undefined;
+  _compiler?: Compilers;
   _setCompiler: (compiler) => void;
   _setTester: (tester) => void;
+  _tester?: Testers;
 }
