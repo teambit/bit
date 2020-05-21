@@ -6,6 +6,7 @@ import LegacyWorkspaceConfig, {
 } from '../../consumer/config/workspace-config';
 import { Config } from './config';
 import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from '../../consumer/config';
+import { getConsumerInfo } from '../../consumer';
 import { PathOsBased } from '../../utils/path';
 import { WorkspaceConfig, LegacyInitProps, transformLegacyPropsToExtensions } from './workspace-config';
 
@@ -14,7 +15,8 @@ export type ConfigDeps = [];
 export type ConfigConfig = {};
 
 export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
-  const config: Config = await Config.loadIfExist(process.cwd());
+  const consumerInfo = await getConsumerInfo(process.cwd());
+  const config: Config = await Config.loadIfExist(consumerInfo?.path || process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
 
