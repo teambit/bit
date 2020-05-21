@@ -1,12 +1,17 @@
 import { find, forEachObjIndexed } from 'ramda';
 import { BitId } from '../../bit-id';
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+export interface IExtensionConfigList {
+  ids: string[];
+}
+
 export interface ExtensionConfigEntry {
   id: string;
   config: any;
 }
 
-export class ExtensionConfigList extends Array<ExtensionConfigEntry> {
+export class ExtensionConfigList extends Array<ExtensionConfigEntry> implements IExtensionConfigList {
   get ids(): string[] {
     return this.map(entry => entry.id);
   }

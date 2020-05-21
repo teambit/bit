@@ -3,12 +3,12 @@ import { Config } from '../config';
 
 export type VariantsDeps = [Config];
 
-export async function provideVariants([configInstance]: VariantsDeps, config: Patterns) {
-  const variants = new Variants(config);
+export async function provideVariants([hostConfig]: VariantsDeps, config: Patterns) {
+  const variants = new Variants(config, hostConfig);
   // TODO: fix when config become maybe
-  if (configInstance.type) {
-    configInstance.registerGetVariantsConfig(variants.all.bind(variants));
-    configInstance.registerGetVariantConfig(variants.getComponentConfig.bind(variants));
+  if (hostConfig.type) {
+    hostConfig.registerGetVariantsConfig(variants.legacy.bind(variants));
+    hostConfig.registerGetVariantConfig(variants.legacyById.bind(variants));
   }
   return variants;
 }

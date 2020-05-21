@@ -2,7 +2,7 @@
 // import { ComponentID } from '../extensions/component';
 // import { Component } from '../component';
 
-import { ExtensionConfigList } from '../../consumer/config';
+import { IExtensionConfigList } from '../../consumer/config';
 
 /**
  * An interface for components hosts
@@ -12,5 +12,5 @@ import { ExtensionConfigList } from '../../consumer/config';
  */
 export default interface ComponentHost {
   // get: (id: string) => Promise<Component | undefined>;
-  loadExtensions: (extensions: ExtensionConfigList) => Promise<void>;
+  loadExtensions: (extensions: IExtensionConfigList) => Promise<void>;
 }

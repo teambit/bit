@@ -7,5 +7,5 @@ export {
   WorkspaceConfigLoadFunction
 } from './workspace-config';
 export { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
-export { ExtensionConfigList, ExtensionConfigEntry } from './extension-config-list';
+export { ExtensionConfigList, ExtensionConfigEntry, IExtensionConfigList } from './extension-config-list';
 export default ComponentConfig;

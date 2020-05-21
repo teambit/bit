@@ -13,7 +13,7 @@ import { ResolvedComponent } from '../utils/resolved-component/resolved-componen
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
+import { IExtensionConfigList } from '../../consumer/config';
 import { DependencyResolver } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
@@ -216,13 +216,13 @@ export default class Workspace implements ComponentHost {
    */
   componentConfig(componentId: BitId) {
     // TODO: read the component.json file and merge it inside
-    const inlineConfig = this.inlineComponentConfig(componentId);
-    const variantConfig = this.variants.getComponentConfig(componentId);
+    // const inlineConfig = this.inlineComponentConfig(componentId);
+    // const variantConfig = this.variants.getComponentConfig(componentId);
     // For legacy configs it will be undefined.
     // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
     // under transformLegacyPropsToExtensions
-    if (!variantConfig) {
-    }
+    // if (!variantConfig) {
+    // }
   }
 
   // TODO: gilad - add return value
@@ -252,7 +252,7 @@ export default class Workspace implements ComponentHost {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionConfigList): Promise<void> {
+  async loadExtensions(extensions: IExtensionConfigList): Promise<void> {
     const extensionsIds = extensions.ids;
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);

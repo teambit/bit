@@ -152,9 +152,9 @@
     },
 
     "extensions/*": {
-      "@teambit/extension": {
+      // "@teambit/extension": {
         // need to decide configuration for extension environment.
-      },
+      // },
 
       /**
       * configure the creation of new components in your workspace through the `bit create` command.

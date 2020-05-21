@@ -9,6 +9,7 @@ import ConsumerComponent from '../../consumer/component';
 import { DependencyResolver } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
+import ComponentConfig from '../../consumer/config';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
 
@@ -55,9 +56,9 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      // ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
-      //   return workspace.loadComponentExtensions(id);
-      // });
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
+        return workspace.loadExtensions(componentConfig.extensions);
+      });
       return workspace;
     }
 

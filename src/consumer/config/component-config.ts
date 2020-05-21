@@ -356,7 +356,7 @@ export default class ComponentConfig extends AbstractConfig {
     accumulativeAddedConfig: any
   ): Promise<any> {
     // Disabled for now, we will replace it with other mechanism
-    // await this.runOnLoadEvent(componentConfigLoadingRegistry, id, config);
+    await this.runOnLoadEvent(componentConfigLoadingRegistry, id, config);
     // We should only ask for new config from extension applied on the component
     // (added to the variant by the user or added by one of those extension)
     const extensionsAppliedOnTheComponent = config.allExtensions().ids;

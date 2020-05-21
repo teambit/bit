@@ -2,7 +2,7 @@
 import R, { find, forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import Consumer from '../consumer';
-import { ExtensionConfigList } from './extension-config-list';
+import { ExtensionConfigList, IExtensionConfigList } from './extension-config-list';
 
 export class ExtensionDataEntry {
   constructor(
@@ -43,7 +43,7 @@ export class ExtensionDataEntry {
   }
 }
 
-export class ExtensionDataList extends Array<ExtensionDataEntry> {
+export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExtensionConfigList {
   get ids(): string[] {
     const list = this.map(entry => entry.stringId);
     return list;

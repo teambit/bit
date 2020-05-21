@@ -84,12 +84,15 @@ export class WorkspaceConfig implements HostConfig {
   _legacyProps?: WorkspaceLegacyProps;
   _getVariantsConfig?: ComponentsConfigFn;
   _getVariantConfig?: ComponentConfigFn;
+  isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
       const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, data);
       this._extensions = withoutInternalConfig;
+      this.isLegacy = false;
     } else {
+      this.isLegacy = true;
       // We know we have either data or legacy config
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this._extensions = transformLegacyPropsToExtensions(legacyConfig!);
@@ -395,6 +398,7 @@ export class WorkspaceConfig implements HostConfig {
       _resolveModules: this._legacyProps?.resolveModules,
       _manageWorkspaces: this.extension('@teambit/dependency-resolver', true)?.manageWorkspaces,
       defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
+      extensions: this.extensions.toObject(),
       // @ts-ignore
       path: this._path,
       _getEnvsByType,
