@@ -83,9 +83,7 @@ export class Environments {
 
   static slots = [Slot.withType<Environment>()];
 
-  static defaultConfig = {
-    version: '>=16.0.0'
-  };
+  static defaultConfig = {};
 
   static async provider([cli, workspace]: [BitCli, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
     const envs = new Environments(config, workspace, envSlot);

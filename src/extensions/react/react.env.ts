@@ -1,20 +1,60 @@
 import webpack from 'webpack';
+import http from 'http';
+import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
 import { Environment } from '../environments';
 import { Component } from '../component';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
+import { LogPublisher } from '../logger';
 
 export class ReactEnv implements Environment {
+  constructor(private logger: LogPublisher) {}
+
   dev(workspace: Workspace, components: Component[]) {
     const config = createWebpackConfig(workspace.path, this.getEntries(components));
     const compiler = webpack(config);
 
-    const devSever = new WebpackDevServer(compiler);
+    const devSever = new WebpackDevServer(compiler, {
+      publicPath: config.output.publicPath,
+      hot: true,
+      historyApiFallback: true,
+      setup(app) {
+        const server = new http.Server(app);
+        const io = socketIO(server);
+
+        io.on('connection', () => {
+          io.sockets.emit(
+            'components',
+            components.map(component => {
+              return {
+                id: component.id.toString(),
+                paths: component.filesystem.read
+              };
+            })
+          );
+        });
+
+        server.listen(4000, () => {
+          // console.log('listening on *:4000');
+        });
+      },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:4000',
+          pathRewrite: { '^/api': '' }
+        },
+        '/socket.io': {
+          target: 'http://localhost:4000',
+          ws: true
+        }
+      }
+    });
+
     devSever.listen(3000, 'localhost', err => {
       if (err) {
-        return console.log(err);
+        this.logger.error(err);
       }
     });
   }
@@ -27,8 +67,8 @@ export class ReactEnv implements Environment {
     return components.map(component => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
-        // @ts-ignore
         component.state._consumer.componentMap?.getComponentDir(),
+        // @ts-ignore
         component.config.main
       );
 

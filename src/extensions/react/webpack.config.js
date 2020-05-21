@@ -1,10 +1,11 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const html = require('./html');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = function(workspaceDir, entryFiles) {
   // Gets absolute path of file within app directory
-  entryFiles = entryFiles.concat([path.join(__dirname, './composer')]);
+  entryFiles = entryFiles.concat([path.join(__dirname, './preview')]);
+
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -17,12 +18,30 @@ module.exports = function(workspaceDir, entryFiles) {
     // Environment mode
     mode: 'development',
 
+    devtool: 'inline-source-map',
+
     // Entry point of app
-    entry: entryFiles.map(filePath => resolveWorkspacePath(filePath)),
+    entry: {
+      main: path.join(__dirname, './composer'),
+      preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
+    },
 
     output: {
       // Development filename output
-      filename: 'static/js/bundle.js'
+      filename: 'static/js/[name].bundle.js',
+
+      pathinfo: true,
+
+      futureEmitAssets: true,
+
+      chunkFilename: 'static/js/[name].chunk.js',
+
+      // point sourcemap entries to original disk locations (format as URL on windows)
+      devtoolModuleFilenameTemplate: info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+
+      // this defaults to 'window', but by setting it to 'this' then
+      // module chunks which are built will work in web workers as well.
+      globalObject: 'this'
     },
 
     devServer: {
@@ -70,7 +89,13 @@ module.exports = function(workspaceDir, entryFiles) {
       // filename output defined above.
       new HtmlWebpackPlugin({
         inject: true,
-        templateContent: html(workspaceDir)
+        templateContent: html('My component workspace'),
+        chunks: ['main']
+      }),
+      new HtmlWebpackPlugin({
+        templateContent: html('Component preview'),
+        chunks: ['preview'],
+        filename: 'preview.html'
       })
     ]
   };
