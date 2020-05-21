@@ -214,16 +214,16 @@ export default class Workspace implements ComponentHost {
    * pattern in the variants config
    * @param componentId
    */
-  componentConfig(componentId: BitId) {
-    // TODO: read the component.json file and merge it inside
-    // const inlineConfig = this.inlineComponentConfig(componentId);
-    // const variantConfig = this.variants.getComponentConfig(componentId);
-    // For legacy configs it will be undefined.
-    // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
-    // under transformLegacyPropsToExtensions
-    // if (!variantConfig) {
-    // }
-  }
+  // componentConfig(componentId: BitId) {
+  // TODO: read the component.json file and merge it inside
+  // const inlineConfig = this.inlineComponentConfig(componentId);
+  // const variantConfig = this.variants.getComponentConfig(componentId);
+  // For legacy configs it will be undefined.
+  // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
+  // under transformLegacyPropsToExtensions
+  // if (!variantConfig) {
+  // }
+  // }
 
   // TODO: gilad - add return value
   /**

@@ -1,4 +1,3 @@
-import { intersection, all } from 'ramda';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { BitId } from '../../bit-id';
 import { Config } from '../config';
