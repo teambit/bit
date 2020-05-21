@@ -139,10 +139,16 @@ export default class ComponentConfig extends AbstractConfig {
     componentConfig: Record<string, any>,
     workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
-    const workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId) || {};
-    const defaultOwner = workspaceConfig?.defaultOwner;
-    if (defaultOwner) {
-      workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
+    const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
+    let workspaceConfigToMerge;
+    if (plainWorkspaceConfig) {
+      workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
+    } else {
+      workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
+      const defaultOwner = workspaceConfig?.defaultOwner;
+      if (defaultOwner) {
+        workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
+      }
     }
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
