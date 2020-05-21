@@ -19,7 +19,7 @@ export default class Core {
     /**
      * Scope
      */
-    readonly scope: Scope | undefined,
+    readonly scope: Scope,
 
     /**
      * Workspace
@@ -28,7 +28,9 @@ export default class Core {
   ) {
     if (workspace) {
       this.host = workspace;
-    } else if (scope) {
+    } else {
+      // TODO: implement the ComponentHost interface by scope (then remove the ts-ignore)
+      // @ts-ignore
       this.host = scope;
     }
   }
@@ -44,7 +46,7 @@ export default class Core {
    * Load all unloaded extensions (3rd party extensions) registered in the config file
    */
   async init(): Promise<void> {
-    if (this.config) {
+    if (this.config && this.config.extensions) {
       const extensions = this.config.extensions._filterLegacy();
       return this.loadExtensions(extensions);
     }
