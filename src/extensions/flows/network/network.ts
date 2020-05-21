@@ -99,6 +99,7 @@ export class Network {
         },
         error(err: any) {
           handleNetworkError(err.id, graph, visitedCache, err);
+          endNetwork(stream, startTime, visitedCache);
         }
       });
   }
