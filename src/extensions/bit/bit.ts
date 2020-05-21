@@ -1,5 +1,6 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
+import { WorkspaceConfig } from '../workspace-config';
 
 export default class Bit {
   constructor(
@@ -24,7 +25,7 @@ export default class Bit {
   /**
    * returns bit's configuration.
    */
-  get config() {
+  get config(): WorkspaceConfig | null {
     if (!this.workspace) return null;
     return this.workspace.config;
   }
