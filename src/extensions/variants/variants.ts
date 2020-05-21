@@ -32,15 +32,7 @@ export class Variants {
     if (!this.hostConfig.workspaceConfig?.isLegacy) {
       config = transformConfigToLegacy(rawConfig);
     }
-    // Add the envs from the root workspace config in case of legacy workspace config
-    if (this.hostConfig.workspaceConfig) {
-      const plainLegacy = this.hostConfig.workspaceConfig.toLegacy()._legacyPlainObject();
-      if (plainLegacy) {
-        config.env = config.env || {};
-        config.env.compiler = config.env.compiler || plainLegacy.env.compiler;
-        config.env.tester = config.env.tester || plainLegacy.env.tester;
-      }
-    }
+
     return config;
   }
 
