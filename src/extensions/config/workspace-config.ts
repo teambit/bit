@@ -400,7 +400,7 @@ export class WorkspaceConfig implements HostConfig {
       defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
       extensions: this.extensions.toObject(),
       // @ts-ignore
-      path: this._path,
+      path: this.path,
       _getEnvsByType,
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
