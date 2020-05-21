@@ -4,7 +4,10 @@ const html = require('./html');
 
 module.exports = function(workspaceDir, entryFiles) {
   // Gets absolute path of file within app directory
-  entryFiles = entryFiles.concat([path.join(__dirname, './preview')]);
+  entryFiles = entryFiles.concat([
+    path.join(__dirname, './preview'),
+    '/Users/ranmizrahi/Bit/react-new-project/components/logo/logo.docs.tsx'
+  ]);
 
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 

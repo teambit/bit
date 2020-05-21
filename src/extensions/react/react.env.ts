@@ -28,9 +28,12 @@ export class ReactEnv implements Environment {
           io.sockets.emit(
             'components',
             components.map(component => {
+              const docs = component.filesystem.readdirSync('/').filter(path => path.includes('.docs.'))[0];
               return {
                 id: component.id.toString(),
-                paths: component.filesystem.read
+                docs: docs
+                  ? join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs)
+                  : null
               };
             })
           );
