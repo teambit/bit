@@ -126,18 +126,14 @@ chai.use(require('chai-fs'));
       helper.fixtures.populateComponentsTS();
 
       helper.fixtures.addExtensionTS();
-
-      const bitjsonc = helper.bitJsonc.read();
-      bitjsonc.variants['*'] = {
-        extensions: {
-          [`${helper.scopes.remote}/extensions/typescript`]: {},
-          compile: {
-            compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-          }
-        }
+      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
+      const tsExtensionVal = {};
+      const compileExtensionKey = 'compile';
+      const compileExtensionVal = {
+        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
       };
-      helper.bitJsonc.write(bitjsonc);
-
+      helper.bitJsonc.addToVariant(undefined, '*', tsExtensionKey, tsExtensionVal);
+      helper.bitJsonc.addToVariant(undefined, '*', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd', () => {
