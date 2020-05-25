@@ -168,31 +168,9 @@ export default class NodeModuleLinker {
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const isMain = file === componentMap.mainFile;
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
-      const possiblyDist = component.dists.calculateDistFileForAuthored(
-        path.normalize(fileWithRootDir),
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer,
-        isMain
-      );
       const dest = path.join(linkPath, file);
-      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
-      const fileContent = getLinkToFileContent(destRelative);
-      if (fileContent) {
-        const linkFile = LinkFile.load({
-          filePath: dest,
-          content: fileContent,
-          srcPath: file,
-          componentId,
-          override: true
-        });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.dataToPersist.addFile(linkFile);
-      } else {
-        // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
-      }
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
     });
     this._deleteOldLinksOfIdWithoutScope(component);
     this._createPackageJsonForAuthor(component);
