@@ -18,6 +18,7 @@ import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import { ConsumerInfo } from '../../../consumer/consumer-locator';
 import npmClient from '../../../npm-client';
+import WorkspaceConfig from '../../../consumer/config/workspace-config';
 
 // run specific check
 export type DoctorMetaData = {
@@ -152,9 +153,10 @@ async function _generateExamineResultsTarFile(
   if (bitmap) {
     pack.entry({ name: '.bitmap' }, bitmap);
   }
-  if (consumerInfo && consumerInfo.consumerConfig) {
+  if (consumerInfo && consumerInfo.hasConsumerConfig) {
     // TODO: support new config as well
-    const legacyPlainConfig = consumerInfo?.consumerConfig?._legacyPlainObject();
+    const config = await WorkspaceConfig.loadIfExist(consumerInfo.path);
+    const legacyPlainConfig = config?._legacyPlainObject();
     if (legacyPlainConfig) {
       pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));
     }
