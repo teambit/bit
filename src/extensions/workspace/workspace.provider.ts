@@ -2,7 +2,7 @@ import { Harmony } from '@teambit/harmony';
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { loadConsumerIfExist, Consumer } from '../../consumer';
+import { Consumer } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
