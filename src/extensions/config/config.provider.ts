@@ -2,7 +2,8 @@ import path from 'path';
 import { Harmony } from '@teambit/harmony';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
-  WorkspaceConfigLoadFunction
+  WorkspaceConfigLoadFunction,
+  WorkspaceConfigIsExistFunction
 } from '../../consumer/config/workspace-config';
 import { Config } from './config';
 import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from '../../consumer/config';
@@ -15,6 +16,7 @@ export type ConfigDeps = [];
 export type ConfigConfig = {};
 
 export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
+  LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
   const consumerInfo = await getConsumerInfo(process.cwd());
   const config: Config = await Config.loadIfExist(consumerInfo?.path || process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
@@ -28,6 +30,12 @@ export default async function provideConfig(_deps, _config, _slots, harmony: Har
     });
   }
   return config;
+}
+
+function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
+  return async (dirPath: PathOsBased): Promise<boolean | undefined> => {
+    return WorkspaceConfig.isExist(dirPath);
+  };
 }
 
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {

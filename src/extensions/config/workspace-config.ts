@@ -296,7 +296,20 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   static async pathHasWorkspaceJsonc(dirPath: PathOsBased): Promise<boolean> {
-    return fs.pathExists(WorkspaceConfig.composeWorkspaceJsoncPath(dirPath));
+    const isExist = await fs.pathExists(WorkspaceConfig.composeWorkspaceJsoncPath(dirPath));
+    return isExist;
+  }
+
+  /**
+   * Check if the given dir has workspace config (new or legacy)
+   * @param dirPath
+   */
+  static async isExist(dirPath: PathOsBased): Promise<boolean | undefined> {
+    const jsoncExist = await WorkspaceConfig.pathHasWorkspaceJsonc(dirPath);
+    if (jsoncExist) {
+      return true;
+    }
+    return LegacyWorkspaceConfig._isExist(dirPath);
   }
 
   /**
