@@ -13,6 +13,7 @@ import { Consumer } from '..';
 import logger from '../../logger/logger';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 
 type ConfigProps = {
   lang?: string;
@@ -146,7 +147,8 @@ export default class ComponentConfig extends AbstractConfig {
     }
     const componentConfigFromWorkspaceToMerge = workspaceConfig?.getComponentConfig(componentId) || {};
     const defaultOwner = workspaceConfig?.defaultOwner;
-    if (defaultOwner) {
+
+    if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
       componentConfigFromWorkspaceToMerge.bindingPrefix = defaultOwner.startsWith('@')
         ? defaultOwner
         : `@${defaultOwner}`;
