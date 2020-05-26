@@ -38,6 +38,21 @@ export default class BitJsoncHelper {
     const variants = bitJsonc['@teambit/variants'];
     const newVariant = variants[variant] ?? {};
     assign(newVariant, { [key]: val });
+    this.setVariant(bitJsoncDir, variant, newVariant);
+  }
+
+  /**
+   * Replace the entire variant config with the provided config.
+   * In case you only want to add new extension to variant you probably want to use addToVariant
+   * @param bitJsoncDir
+   * @param variant
+   * @param config
+   */
+  setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
+    const bitJsonc = this.read(bitJsoncDir);
+    const variants = bitJsonc['@teambit/variants'];
+    const newVariant = variants[variant] ?? {};
+    assign(newVariant, config);
     assign(variants, { [variant]: newVariant });
     this.addKeyVal(bitJsoncDir, '@teambit/variants', variants);
   }

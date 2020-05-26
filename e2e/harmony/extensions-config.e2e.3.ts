@@ -25,7 +25,7 @@ describe('harmony extension config', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
-        helper.extensions.setExtensionToVariant('*', 'Scope', config);
+        helper.extensions.addExtensionToVariant('*', 'Scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
@@ -53,7 +53,7 @@ describe('harmony extension config', function() {
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.setExtensionToVariant('*', 'dummy-extension', config);
+        helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
         localBeforeTag = helper.scopeHelper.cloneLocalScope();
       });
       describe('extension is new component on the workspace', () => {
@@ -158,7 +158,7 @@ describe('harmony extension config', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension');
           helper.command.exportComponent('dummy-extension');
-          helper.extensions.setExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
           helper.scopeHelper.reInitLocalScope();
@@ -190,7 +190,7 @@ describe('harmony extension config', function() {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.setExtensionToVariant('*', 'simple-config', config);
+        helper.extensions.addExtensionToVariant('*', 'simple-config', config);
       });
       it('should run the add config hook', function() {
         output = helper.command.showComponent();
@@ -212,7 +212,7 @@ describe('harmony extension config', function() {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'nested-extensions');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(`${extensionFolder}/*`);
-        helper.extensions.setExtensionToVariant('bar/foo', 'nested-extension-level1', config);
+        helper.extensions.addExtensionToVariant('bar/foo', 'nested-extension-level1', config);
         output = helper.command.showComponent();
       });
       it('should runs all nested extensions', () => {

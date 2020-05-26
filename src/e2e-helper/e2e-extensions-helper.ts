@@ -32,9 +32,12 @@ export default class ExtensionsHelper {
     this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
   }
 
-  // TODO: gilad - refactor
   addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
     this.bitJsonc.addToVariant(this.scopes.localPath, variant, extName, extConfig);
+  }
+
+  removeAllExtensionsFromVariant(variant: string) {
+    this.bitJsonc.setVariant(this.scopes.localPath, variant, {});
   }
 
   /**
@@ -48,6 +51,7 @@ export default class ExtensionsHelper {
    */
   setExtensionToVariant(variant: string, extName: string, extConfig = {}) {
     const extensionEntry = { [extName]: extConfig };
+    this.removeAllExtensionsFromVariant(variant);
     this.bitJsonc.addToVariant(this.scopes.localPath, variant, 'extensions', extensionEntry);
   }
 
