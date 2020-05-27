@@ -50,9 +50,8 @@ export default class ExtensionsHelper {
    * @memberof ExtensionsHelper
    */
   setExtensionToVariant(variant: string, extName: string, extConfig = {}) {
-    const extensionEntry = { [extName]: extConfig };
     this.removeAllExtensionsFromVariant(variant);
-    this.bitJsonc.addToVariant(this.scopes.localPath, variant, 'extensions', extensionEntry);
+    this.addExtensionToVariant(variant, extName, extConfig);
   }
 
   createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
