@@ -784,8 +784,18 @@ export default class Component {
           const oneFileSpecResult = async testFile => {
             const testFilePath = testFile.path;
             try {
+              const componentRootDir = component.componentMap?.getTrackDir();
               const context: Record<string, any> = {
+                /**
+                 * @deprecated
+                 * this is not the component dir, it's the workspace dir
+                 */
                 componentDir: cwd,
+                /**
+                 * absolute path of the component in the workspace.
+                 * available only when is running inside the workspace and the component has either trackDir or rootDir
+                 */
+                componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null,
                 isolate: isolateFunc
               };
 
