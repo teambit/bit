@@ -7,7 +7,7 @@
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
+    "outDir": "dist",
     "rootDir": ".",
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -18,5 +18,8 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "dist"
+  ]
 }
