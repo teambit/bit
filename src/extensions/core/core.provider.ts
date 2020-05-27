@@ -19,6 +19,6 @@ export default async function provideCore(
   // TODO: change to get the maybe value
   const actualConfig = config.type ? config : undefined;
   const core = new Core(harmony, actualConfig, logger.createLogPublisher('core'), scope, workspace);
-  core.init();
+  await core.init();
   return core;
 }
