@@ -33,8 +33,8 @@ chai.use(require('chai-fs'));
       const compileExtensionVal = {
         compiler: `@bit/${helper.scopes.remote}.extensions.gulp-ts`
       };
-      helper.bitJsonc.addToVariant(undefined, 'help', gulpExtensionKey, gulpExtensionVal);
-      helper.bitJsonc.addToVariant(undefined, 'help', compileExtensionKey, compileExtensionVal);
+      helper.extensions.addExtensionToVariant('help', gulpExtensionKey, gulpExtensionVal);
+      helper.extensions.addExtensionToVariant('help', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd', () => {
@@ -132,8 +132,8 @@ chai.use(require('chai-fs'));
       const compileExtensionVal = {
         compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
       };
-      helper.bitJsonc.addToVariant(undefined, '*', tsExtensionKey, tsExtensionVal);
-      helper.bitJsonc.addToVariant(undefined, '*', compileExtensionKey, compileExtensionVal);
+      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
+      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd', () => {
