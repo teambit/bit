@@ -2,7 +2,7 @@ import { Harmony } from '@teambit/harmony';
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { Consumer } from '../../consumer';
+import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
@@ -42,8 +42,8 @@ export default async function provideWorkspace(
   // an unresolved issue here is when running tasks, such as "bit run build" outside of a consumer.
   // we'll have to fix this asap.
   try {
-    // const consumer = await loadConsumerIfExist();
-    const consumer = await Consumer.load(process.cwd());
+    const consumer = await loadConsumerIfExist();
+
     if (consumer) {
       const workspace = new Workspace(
         config,
