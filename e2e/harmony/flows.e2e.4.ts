@@ -27,19 +27,14 @@ describe('flows functionality', function() {
       fs.copySync(path.join(sourceDir, 'app'), path.join(destination, 'app'));
       helper.command.addComponent('components/*');
 
-      helper.fixtures.addExtensionGulpTS();
-      const bitjsonc = helper.bitJsonc.read();
-      bitjsonc.variants.help = {
-        extensions: {
-          [`${helper.scopes.remote}/extensions/gulp-ts`]: {},
-          flows: {
-            tasks: {
-              build: [`@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`]
-            }
-          }
+      const gulpExtensionKey = `${helper.scopes.remote}/extensions/gulp-ts`;
+      const flowExtensionConfig = {
+        tasks: {
+          build: [`@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`]
         }
       };
-      helper.bitJsonc.write(bitjsonc);
+      helper.extensions.addExtensionToVariant('help', gulpExtensionKey, {});
+      helper.extensions.addExtensionToVariant('help', 'flows', { flowExtensionConfig });
 
       taskOutput = helper.command.runTask('build help');
     });
