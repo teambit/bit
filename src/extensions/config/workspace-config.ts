@@ -396,6 +396,11 @@ export class WorkspaceConfig implements HostConfig {
       return this.legacyConfig?.tester;
     };
 
+    let componentsDefaultDirectory = this.extension('@teambit/workspace', true)?.defaultDirectory;
+    if (componentsDefaultDirectory) {
+      componentsDefaultDirectory = `${componentsDefaultDirectory}/{name}`;
+    }
+
     return {
       lang: this.legacyConfig?.lang || DEFAULT_LANGUAGE,
       defaultScope: this.extension('@teambit/workspace', true)?.defaultScope,
@@ -407,7 +412,7 @@ export class WorkspaceConfig implements HostConfig {
       _distTarget: this._legacyProps?.distTarget,
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
-      componentsDefaultDirectory: this.extension('@teambit/workspace', true)?.defaultDirectory,
+      componentsDefaultDirectory,
       _resolveModules: this._legacyProps?.resolveModules,
       _manageWorkspaces: this.extension('@teambit/dependency-resolver', true)?.manageWorkspaces,
       defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
