@@ -795,7 +795,7 @@ export default class Component {
                  * absolute path of the component in the workspace.
                  * available only when is running inside the workspace and the component has either trackDir or rootDir
                  */
-                componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null, // absolute path of the
+                componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null,
                 isolate: isolateFunc
               };
 
