@@ -125,7 +125,7 @@ describe('bit watch command', function() {
         };
         helper.extensions.addExtensionToVariant('*', 'compile', compileExtConfig);
       });
-      describe.only('run bit watch', () => {
+      describe('run bit watch', () => {
         let watchRunner: WatchRunner;
         before(async () => {
           watchRunner = new WatchRunner(helper);
