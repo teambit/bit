@@ -397,7 +397,7 @@ export class WorkspaceConfig implements HostConfig {
     };
 
     let componentsDefaultDirectory = this.extension('@teambit/workspace', true)?.defaultDirectory;
-    if (componentsDefaultDirectory && !componentsDefaultDirectory.include('{name}')) {
+    if (componentsDefaultDirectory && !componentsDefaultDirectory.includes('{name}')) {
       componentsDefaultDirectory = `${componentsDefaultDirectory}/{name}`;
     }
 
