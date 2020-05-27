@@ -6,7 +6,7 @@ export type MenuProps = {
   onClick: (id: Component) => void;
 };
 
-export function Menu({ components, onClick }: MenuProps) {
+export function ComponentMenu({ components, onClick }: MenuProps) {
   if (!components) return <div>hi there</div>;
   return (
     <ul>

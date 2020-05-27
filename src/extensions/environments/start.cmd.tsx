@@ -38,8 +38,9 @@ export class StartCmd implements Command {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     const envRuntime = await this.envs.dev(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    this.clearConsole();
     envRuntime.dev();
-    // this.clearConsole();
+    this.clearConsole();
     return <EnvConsole runtime={envRuntime} />;
   }
 }
@@ -61,7 +62,7 @@ export function EnvConsole({ runtime }: { runtime: EnvRuntime }) {
     <Box>
       {runtime.runtimeEnvs.map((def, key) => (
         <Box key={key}>
-          <Color cyan>starting development environment "{def.id}"...</Color>
+          <Color cyan>starting development environment: {def.id}...</Color>
         </Box>
       ))}
     </Box>

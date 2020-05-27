@@ -1,5 +1,7 @@
 import webpack from 'webpack';
 import http from 'http';
+import fs from 'fs';
+import { resolve } from 'path';
 import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
@@ -8,27 +10,68 @@ import { Component } from '../component';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
 import { LogPublisher } from '../logger';
+import { ExtensionDataEntry } from '../../consumer/config/extension-data';
+import { docsTemplate } from './docs.tpl';
 
 export class ReactEnv implements Environment {
-  constructor(private logger: LogPublisher) {}
+  constructor(private logger: LogPublisher, services: []) {}
 
-  dev(workspace: Workspace, components: Component[]) {
-    const config = createWebpackConfig(workspace.path, this.getEntries(components));
+  // this should happen on component load.
+  patchComponents(components: Component[], workspace: Workspace) {
+    return components.map(component => {
+      const docs = component.filesystem.readdirSync('/').filter(path => path.includes('.docs.'))[0];
+      if (!docs) return component;
+      const filepath = join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs);
+      component.state.store.push(
+        new ExtensionDataEntry(
+          undefined,
+          undefined,
+          '@teambit/docs',
+          {},
+          {
+            filepath
+          }
+        )
+      );
+
+      return component;
+    });
+  }
+
+  lint() {
+    return this.services.lint({});
+  }
+
+  test() {}
+
+  e2e() {}
+
+  compile() {}
+
+  dev(workspace: Workspace, components: Component[], options: any) {
+    // if (config.compiler.watch) {
+    //   this.typescript.watch();
+    // }
+    // remove once gilad has metada
+    const patchedComponent = this.patchComponents(components, workspace);
+    const config = createWebpackConfig(workspace.path, this.getEntries(patchedComponent));
     const compiler = webpack(config);
 
     const devSever = new WebpackDevServer(compiler, {
       publicPath: config.output.publicPath,
       hot: true,
       historyApiFallback: true,
-      setup(app) {
+      before(app) {
         const server = new http.Server(app);
         const io = socketIO(server);
 
         io.on('connection', () => {
           io.sockets.emit(
             'components',
-            components.map(component => {
+            patchedComponent.map(component => {
+              // refactor to compoisitions
               const docs = component.filesystem.readdirSync('/').filter(path => path.includes('.docs.'))[0];
+
               return {
                 id: component.id.toString(),
                 docs: docs
@@ -67,7 +110,11 @@ export class ReactEnv implements Environment {
   serve() {}
 
   private getEntries(components: Component[]) {
-    return components.map(component => {
+    const docs = docsTemplate(components);
+    const docsPath = resolve(join(__dirname, '/__docs.js'));
+    fs.writeFileSync(docsPath, docs);
+
+    const paths = components.map(component => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
         component.state._consumer.componentMap?.getComponentDir(),
@@ -77,5 +124,7 @@ export class ReactEnv implements Environment {
 
       return path;
     });
+
+    return paths.concat(docsPath);
   }
 }

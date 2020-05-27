@@ -10,5 +10,6 @@ import { DependencyResolverExt } from '../dependency-resolver';
 export default {
   name: 'workspace',
   dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, IsolatorExt, DependencyResolverExt, LoggerExt],
-  provider: workspaceProvider
+  provider: workspaceProvider,
+  defineRuntime: 'browser'
 } as ExtensionManifest;

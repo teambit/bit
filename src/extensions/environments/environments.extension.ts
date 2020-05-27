@@ -10,6 +10,7 @@ export type EnvsRegistry = SlotRegistry<Environment>;
 
 export type EnvsConfig = {
   env: string;
+  options: EnvOptions;
 };
 
 export class Environments {

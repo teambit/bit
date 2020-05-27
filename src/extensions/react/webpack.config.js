@@ -1,12 +1,14 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const path = require('path');
 const html = require('./html');
 
 module.exports = function(workspaceDir, entryFiles) {
   // Gets absolute path of file within app directory
   entryFiles = entryFiles.concat([
-    path.join(__dirname, './preview'),
-    '/Users/ranmizrahi/Bit/react-new-project/components/logo/logo.docs.tsx'
+    path.join(__dirname, './browser'),
+    path.join(__dirname, './preview')
+    // '/Users/ranmizrahi/Bit/react-new-project/components/logo/logo.docs.tsx'
   ]);
 
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
@@ -25,7 +27,7 @@ module.exports = function(workspaceDir, entryFiles) {
 
     // Entry point of app
     entry: {
-      main: path.join(__dirname, './composer'),
+      main: path.join(__dirname, '../composer'),
       preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
     },
 
@@ -80,13 +82,15 @@ module.exports = function(workspaceDir, entryFiles) {
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app')
-            ]
+            ],
+            plugins: [require.resolve('react-refresh/babel')]
           }
         }
       ]
     },
 
     plugins: [
+      new ReactRefreshWebpackPlugin(),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the
       // filename output defined above.
