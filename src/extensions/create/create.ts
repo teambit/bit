@@ -38,7 +38,7 @@ export class Create {
   }
 
   private getComponentPath(name: string) {
-    return composeComponentPath(new BitId({ name }), this.workspace.defaultDirectory);
+    return composeComponentPath(new BitId({ name }), this.workspace.legacyDefaultDirectory);
   }
 
   private getTemplateResults(templateFunc: Function, compName: string, templateExtName: string): TemplateFuncResult {
@@ -100,8 +100,10 @@ export class Registry {
    * set a script to the registry.
    */
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
-    const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new Error(manifest.name);
+    // TODO: is this really needed? maybe it's just a template name and not must be a real extension id / manifest?
+    // TODO: why we need to fetch it from harmony at all?
+    const extensionConfig = this.harmony.config.get(manifest.name);
+    if (!extensionConfig) throw new Error(manifest.name);
     if (!this.templates[manifest.name]) this.templates[manifest.name] = {};
     this.templates[manifest.name] = templateFunc;
     return this;

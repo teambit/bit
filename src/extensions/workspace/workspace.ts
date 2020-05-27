@@ -269,7 +269,15 @@ export default class Workspace implements ComponentHost {
     this.consumer = await loadConsumer(this.path, true);
   }
 
+  // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
   get defaultDirectory(): string {
     return this.config.defaultDirectory;
+  }
+
+  get legacyDefaultDirectory(): string {
+    if (this.defaultDirectory && !this.defaultDirectory.includes('{name}')) {
+      return `${this.defaultDirectory}/{name}`;
+    }
+    return this.defaultDirectory;
   }
 }
