@@ -189,7 +189,8 @@ export default class NodeModuleLinker {
           content: fileContent,
           srcPath: file,
           componentId,
-          override: true
+          override: true,
+          ignorePreviousSymlink: true // in case the component didn't have a compiler before, this file was a symlink
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);
