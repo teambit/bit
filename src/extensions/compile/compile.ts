@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { Harmony } from '@teambit/harmony';
 import path from 'path';
 import pMapSeries from 'p-map-series';
@@ -19,7 +18,6 @@ import { Dist } from '../../consumer/component/sources';
 import GeneralError from '../../error/general-error';
 import { packageNameToComponentId } from '../../utils/bit/package-name-to-component-id';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
-import CompilerExtension from '../../legacy-extensions/compiler-extension';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
