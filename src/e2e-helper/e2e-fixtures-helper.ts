@@ -170,15 +170,18 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     const getImp = index => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;
       const nextComp = `comp${index + 1}`;
-      return `import ${nextComp} from '../${nextComp}';
+      return `import ${nextComp} from '@bit/${this.scopes.remote}.${nextComp}';
 export default () => 'comp${index} and ' + ${nextComp}();`;
     };
     for (let i = 1; i <= numOfComponents; i += 1) {
       this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
       this.command.addComponent(`comp${i}`);
     }
-    this.command.linkAndRewire();
-    this.fs.outputFile('app.js', "const comp1 = require('./comp1').default;\nconsole.log(comp1())");
+    this.command.link();
+    this.fs.outputFile(
+      'app.js',
+      `const comp1 = require('@bit/${this.scopes.remote}.comp1').default;\nconsole.log(comp1())`
+    );
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)
