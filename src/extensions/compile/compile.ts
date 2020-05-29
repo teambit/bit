@@ -11,7 +11,7 @@ import { Component } from '../component';
 import { Capsule } from '../isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scope } from '../scope';
-import { Flows, IdsAndFlows, TASK_SEPARATOR } from '../flows';
+import { Flows, IdsAndFlows, TASK_SEPARATOR, SCRIPT_FILENAME } from '../flows';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import { Dist } from '../../consumer/component/sources';
@@ -273,8 +273,12 @@ please make sure the compiler provider returns anything`);
       // @todo: currently the error is not passed into runMultiple method. once it's there, show the acutal error.
       // although it sometimes has "err" the data there doesn't help. Flows changes it somewhere to unreadable data.
       if (firstResult.code !== 0 || firstResult.value.err) {
+        // an example of id: 'bar:@bit/remote-scope.extensions.typescript:transpile'
+        const taskItSplit = firstResult.id.split(':');
+        const taskFile = `${taskItSplit[1]}/${taskItSplit[2]}`;
         throw new Error(
-          `failed compiling ${id.toString()}. debug it by cd into the capsule dir and running the transpile script`
+          `failed compiling ${id.toString()}. debug it by cd into the capsule dir and running the transpile script.
+cd ${reportResult.result.value.capsule.wrkDir} && node ${SCRIPT_FILENAME} ${taskFile}`
         );
       }
       if (!firstResult.value) return { id };
