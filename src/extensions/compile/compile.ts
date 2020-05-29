@@ -271,7 +271,12 @@ please make sure the compiler provider returns anything`);
       if (!result.length) return { id };
       const firstResult = result[0]; // for compile it's always one result because there is only one task to run
       // @todo: currently the error is not passed into runMultiple method. once it's there, show the acutal error.
-      if (firstResult.code !== 0) throw new Error(`failed compiling ${id.toString()}`);
+      // although it sometimes has "err" the data there doesn't help. Flows changes it somewhere to unreadable data.
+      if (firstResult.code !== 0 || firstResult.value.err) {
+        throw new Error(
+          `failed compiling ${id.toString()}. debug it by cd into the capsule dir and running the transpile script`
+        );
+      }
       if (!firstResult.value) return { id };
       const distDir = firstResult.value.dir;
       if (!distDir) {
