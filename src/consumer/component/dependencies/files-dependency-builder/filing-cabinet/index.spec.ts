@@ -20,7 +20,17 @@ require('resolve-dependency-path');
 require('sass-lookup');
 require('app-module-path');
 require('module-definition');
-require('module-lookup-amd');
+try {
+  require('module-lookup-amd');
+} catch (err) {
+  console.log(`mocha suppresses the error, so console.error is needed to show the error on the screen.
+the problem is with module-lookup-amd that calls requirejs package, which requires a file r.js, which is an invalid js file.
+the error occurs on some specific node versions, such as v12.16.3.
+if you get the error, please change your node version. (e.g. v12.7.0 is fine).
+`);
+  console.error(err);
+  throw err;
+}
 
 describe('filing-cabinet', () => {
   describe('JavaScript', () => {
