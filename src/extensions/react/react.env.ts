@@ -5,7 +5,8 @@ import { resolve } from 'path';
 import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
-import { Environment } from '../envs';
+import { Environment } from '../environments';
+import jestConfig from './jest/jest.config';
 import { Component } from '../component';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
@@ -42,7 +43,7 @@ export class ReactEnv implements Environment {
   lint() {}
 
   test() {
-    return this.jest.createTester();
+    return this.jest.createTester(require.resolve('./jest/jest.config'));
   }
 
   e2e() {}

@@ -5,6 +5,13 @@ import { WorkspaceExt, Workspace } from '../workspace';
 import { TesterService } from './tester.service';
 import { Component } from '../component';
 
+export type TesterExtensionConfig = {
+  /**
+   * regex of the text environment.
+   */
+  testRegex: string;
+};
+
 export class TesterExtension {
   static dependencies = [CLIExtension, Environments, WorkspaceExt];
 
@@ -15,6 +22,13 @@ export class TesterExtension {
     const results = await envs.run(this.testerService);
     return results;
   }
+
+  static defaultConfig = {
+    /**
+     * default test regex for which files tester to apply on.
+     */
+    testRegex: '*.{spec,test}.{js,jsx,ts,tsx}'
+  };
 
   static provider([cli, envs, workspace]: [CLI, Environments, Workspace]) {
     const tester = new TesterExtension(envs, workspace, new TesterService());

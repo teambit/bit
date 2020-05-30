@@ -1,6 +1,7 @@
 import { EnvRuntime } from './env-runtime';
 import { Workspace } from '../../workspace';
 import { EnvService } from '../services';
+import { EnvContext } from '../context';
 
 export class Runtime {
   constructor(
@@ -16,11 +17,13 @@ export class Runtime {
   ) {}
 
   async run(service: EnvService) {
-    return this.runtimeEnvs.map(def => {
+    const contexts = this.runtimeEnvs.map(env => {
       return {
-        env: def.id,
-        res: def.run(this.workspace, service)
+        env: env.id,
+        res: service.run(new EnvContext(env.id, this, env.env, env.components, this.workspace))
       };
     });
+
+    return contexts;
   }
 }

@@ -3,8 +3,8 @@ import { JestTester } from './jest.tester';
 export class JestExtension {
   static dependencies = [];
 
-  createTester() {
-    return new JestTester();
+  createTester(jestConfig: any) {
+    return new JestTester(jestConfig);
   }
 
   static provider() {

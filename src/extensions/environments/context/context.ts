@@ -1,5 +1,10 @@
 import { Component } from '../../component';
 import { Workspace } from '../../workspace';
+import { Runtime } from '../runtime';
+
+export type ServiceMap<T> = {
+  [env: string]: T;
+};
 
 export class EnvContext {
   constructor(
@@ -7,6 +12,11 @@ export class EnvContext {
      * extension ID of the environment
      */
     readonly id: string,
+
+    /**
+     * upper scope of all environment contexts.
+     */
+    readonly envRuntime: Runtime,
 
     /**
      * instance of the env
@@ -23,6 +33,8 @@ export class EnvContext {
      */
     readonly workspace: Workspace
   ) {}
+
+  applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
 
   apply<T>(name: string, args: any[]): T {
     if (!this.envInstance[name]) {
