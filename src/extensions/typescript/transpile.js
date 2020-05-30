@@ -10,6 +10,10 @@ const path = require('path');
 const childProcess = require('child_process');
 const tsconfig = require('./tsconfig.default.json');
 
+function createCompileTask() {
+  return;
+}
+
 console.log(process.cwd());
 function transpile() {
   fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfig, null, 2));

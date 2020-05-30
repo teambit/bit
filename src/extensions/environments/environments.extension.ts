@@ -4,7 +4,7 @@ import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
-import { EnvRuntime, RuntimeDef } from './runtime';
+import { EnvRuntime, Runtime } from './runtime';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -12,6 +12,8 @@ export type EnvsConfig = {
   env: string;
   options: EnvOptions;
 };
+
+export type EnvOptions = {};
 
 export class Environments {
   static dependencies = [BitCliExt, WorkspaceExt];
@@ -29,7 +31,7 @@ export class Environments {
     private workspace: Workspace,
 
     /**
-     * slot for allowing extensions to register new env
+     * slot for allowing extensions to register new environment.
      */
     private envSlot: EnvsRegistry
   ) {}
@@ -40,24 +42,29 @@ export class Environments {
   /**
    * create a development runtime environment.
    */
-  async dev(components?: Component[]): Promise<EnvRuntime> {
+  async dev(components?: Component[]): Promise<Runtime> {
     // :TODO how to standardize this? we need to make sure all validation errors will throw nicely at least.
+    return this.createRuntime(components || (await this.workspace.list()));
+  }
+
+  async createEnvironment(components?: Component[]): Promise<Runtime> {
     return this.createRuntime(components || (await this.workspace.list()));
   }
 
   /**
    * register an environment.
    */
-  register(env: Environment) {
+  registerEnv(env: { [key: string]: string }) {
+    // @ts-ignore
     return this.envSlot.register(env);
   }
 
-  private createRuntime(components: Component[]): EnvRuntime {
-    return new EnvRuntime(this.workspace, this.aggregateByDefs(components));
+  private createRuntime(components: Component[]): Runtime {
+    return new Runtime(this.workspace, this.aggregateByDefs(components));
   }
 
   // :TODO can be refactorerd to few utilities who will make repeating this very easy.
-  private aggregateByDefs(components: Component[]): RuntimeDef[] {
+  private aggregateByDefs(components: Component[]): EnvRuntime[] {
     const map = {};
     components.forEach((current: Component) => {
       // :TODO fix this api. replace with `this.id` and improve naming.
@@ -69,6 +76,7 @@ export class Environments {
       const env = this.envSlot.get(envId);
       if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
 
+      // handle config as well when aggregating envs.
       if (map[envId]) map[envId].components.push(current);
       else
         map[envId] = {
@@ -78,7 +86,7 @@ export class Environments {
     }, {});
 
     return Object.keys(map).map(key => {
-      return new RuntimeDef(key, map[key].env, map[key].components);
+      return new EnvRuntime(key, map[key].env, map[key].components);
     });
   }
 

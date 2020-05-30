@@ -13,11 +13,13 @@ import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';
 import { InsightsExt } from '../insights';
 import { PackExt } from '../pack';
+import { TesterExtension } from '../tester';
 
 export default {
   name: 'Bit',
   dependencies: [
     WorkspaceExt,
+    TesterExtension,
     Environments,
     ScopeExt,
     FlowsExt,

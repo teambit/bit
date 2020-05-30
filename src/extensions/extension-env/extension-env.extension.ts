@@ -1,4 +1,4 @@
-import { Environments } from '../environments';
+import { Environments } from '../envs';
 import { ExtEnv } from './ext-env';
 
 export class ExtensionEnv {

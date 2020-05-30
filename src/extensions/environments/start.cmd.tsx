@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Box, Color, Text } from 'ink';
-import { EnvRuntime } from './runtime';
+import { Runtime } from './runtime';
 // import { EnvConsole } from './components';
 // make sure to update eslint to read JSX.
 import { Command, CLIArgs } from '../paper';
@@ -34,10 +34,10 @@ export class StartCmd implements Command {
   }
 
   // @ts-ignore TODO: align cli api.
-  async render([userPattern]: [CLIArgs]): Promise<React.ReactElement> {
+  async render([userPattern]: CLIArgs): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
-    const envRuntime = await this.envs.dev(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    const envRuntime = await this.envs.createEnvironment(pattern ? await this.workspace.byPattern(pattern) : undefined);
     this.clearConsole();
     envRuntime.dev();
     this.clearConsole();
@@ -45,8 +45,8 @@ export class StartCmd implements Command {
   }
 }
 
-export function EnvConsole({ runtime }: { runtime: EnvRuntime }) {
-  const [counter, setCounter] = useState(0);
+export function EnvConsole({ runtime }: { runtime: Runtime }) {
+  const [, setCounter] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
