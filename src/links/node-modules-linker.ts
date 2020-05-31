@@ -179,13 +179,18 @@ export default class NodeModuleLinker {
       const dest = path.join(linkPath, file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
-      if (fileContent) {
+      // if component.compiler is set, this component is working with the old compiler (< v15)
+      // and not with compile extension. as such, the dists for author are in the root, not in the
+      // component directory. Having symlinks here instead of links causes import of module-paths to
+      // break. try e2e-test: 'as author, move individual component files to dedicated directory with bit move --component'
+      if (fileContent && component.compiler) {
         const linkFile = LinkFile.load({
           filePath: dest,
           content: fileContent,
           srcPath: file,
           componentId,
-          override: true
+          override: true,
+          ignorePreviousSymlink: true // in case the component didn't have a compiler before, this file was a symlink
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);

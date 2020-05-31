@@ -9,6 +9,8 @@ export const PackageMarker = '@';
 
 export const TASK_SEPARATOR = ':'; // separate between the package-name and the task file
 
+export const SCRIPT_FILENAME = '__bit_container.js';
+
 export function executeTask(task: string, capsule: Capsule): Subject<any> {
   const isExtension = (taskString: string) => (taskString || '').trim().startsWith(PackageMarker);
 
@@ -36,10 +38,9 @@ function createHostScript(capsule: Capsule, task: string) {
     .trim()
     // .slice(1)
     .split(':');
-  const host = '__bit_container.js';
   const containerScript = getContainerScript();
-  capsule.fs.writeFileSync(host, containerScript, { encoding: 'utf8' });
-  return { host, pathToScript: join(...parts) };
+  capsule.fs.writeFileSync(SCRIPT_FILENAME, containerScript, { encoding: 'utf8' });
+  return { host: SCRIPT_FILENAME, pathToScript: join(...parts) };
 }
 
 function getContainerScript() {

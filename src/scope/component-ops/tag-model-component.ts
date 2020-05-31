@@ -214,7 +214,8 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-  await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+  const buildOnCapsules = true;
+  await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose, undefined, buildOnCapsules);
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];

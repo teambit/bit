@@ -288,7 +288,8 @@ export default class Scope {
     noCache: boolean,
     verbose: boolean,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    dontPrintEnvMsg? = false
+    dontPrintEnvMsg? = false,
+    buildOnCapsules = false
   ): Promise<{ component: string; buildResults: Record<string, any> }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
@@ -300,7 +301,9 @@ export default class Scope {
     // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
     // for authored and will change the component files.
     if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
-      return R.flatten(await Promise.all(this.onBuild.map(func => func(ids, noCache, verbose, dontPrintEnvMsg))));
+      return R.flatten(
+        await Promise.all(this.onBuild.map(func => func(ids, noCache, verbose, dontPrintEnvMsg, buildOnCapsules)))
+      );
     }
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {
