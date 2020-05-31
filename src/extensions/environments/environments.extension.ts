@@ -59,6 +59,7 @@ export class Environments {
     return this.envSlot.register(env);
   }
 
+  // refactor here
   private createRuntime(components: Component[]): Runtime {
     return new Runtime(this.workspace, this.aggregateByDefs(components));
   }

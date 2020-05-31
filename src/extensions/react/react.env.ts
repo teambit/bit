@@ -42,7 +42,7 @@ export class ReactEnv implements Environment {
 
   lint() {}
 
-  test() {
+  defineTester() {
     return this.jest.createTester(require.resolve('./jest/jest.config'));
   }
 

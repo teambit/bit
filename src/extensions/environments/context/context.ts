@@ -6,7 +6,7 @@ export type ServiceMap<T> = {
   [env: string]: T;
 };
 
-export class EnvContext {
+export class ExecutionContext {
   constructor(
     /**
      * extension ID of the environment
@@ -34,7 +34,7 @@ export class EnvContext {
     readonly workspace: Workspace
   ) {}
 
-  applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
+  // applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
 
   apply<T>(name: string, args: any[]): T {
     if (!this.envInstance[name]) {
