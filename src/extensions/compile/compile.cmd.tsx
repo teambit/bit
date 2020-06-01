@@ -23,7 +23,8 @@ export class CompileCmd implements Command {
     const compileResults = await this.compile.compile(components, { verbose, noCache });
     // eslint-disable-next-line no-console
     console.log('compileResults', compileResults);
-    return <div>Compile has been completed successfully</div>;
+    const output = `${compileResults.length} components have been compiled successfully`;
+    return <div>{output}</div>;
   }
 
   async json([components]: CLIArgs, { verbose, noCache }: Flags) {
