@@ -176,7 +176,7 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    standAlone: boolean,
+    standAlone = false,
     workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<ILegacyWorkspaceConfig> {
     const ensureFunc = this.workspaceConfigEnsuringRegistry;
@@ -212,7 +212,10 @@ export default class WorkspaceConfig extends AbstractConfig {
       logger.info(`deleting the workspace configuration file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
-    if (resetHard) await deleteBitJsonFile();
+    if (resetHard) {
+      await deleteBitJsonFile();
+    }
+    await WorkspaceConfig.ensure(dirPath);
   }
 
   static fromPlainObject(object: Record<string, any>) {

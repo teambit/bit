@@ -245,7 +245,7 @@ export class WorkspaceConfig implements HostConfig {
       workspaceConfig = await this.create(workspaceConfigProps, dirPath, legacyInitProps);
       return workspaceConfig;
     } catch (err) {
-      if (err instanceof InvalidBitJson) {
+      if (err instanceof InvalidBitJson || err instanceof InvalidConfigFile) {
         const workspaceConfig = this.create(workspaceConfigProps, dirPath);
         return workspaceConfig;
       }

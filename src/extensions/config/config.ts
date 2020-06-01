@@ -8,6 +8,8 @@ import {
   ComponentConfigFn
 } from './workspace-config';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { InvalidBitJson } from '../../consumer/config/exceptions';
+import InvalidConfigFile from './exceptions/invalid-config-file';
 
 // export type ConfigProps = {
 //   workspaceConfig: WorkspaceConfig;
@@ -38,9 +40,16 @@ export class Config {
   }
 
   static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined | any> {
-    const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
-    if (workspaceConfig) {
-      return new Config(workspaceConfig);
+    try {
+      const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
+      if (workspaceConfig) {
+        return new Config(workspaceConfig);
+      }
+    } catch (err) {
+      // Do not handle invalid json here. it will be handled in other place
+      if (!(err instanceof InvalidBitJson) && !(err instanceof InvalidConfigFile)) {
+        throw err;
+      }
     }
     // TODO: try load scope config here
     // return undefined;

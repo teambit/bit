@@ -17,10 +17,10 @@ export type ConfigConfig = {};
 
 export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
   LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
+  LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
   const consumerInfo = await getConsumerInfo(process.cwd());
   const config: Config = await Config.loadIfExist(consumerInfo?.path || process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
-  LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
 
   // TODO: change once config become maybe
   if (config.extensions) {
@@ -54,7 +54,7 @@ function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
 function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
   const func: WorkspaceConfigEnsureFunction = async (
     dirPath: string,
-    standAlone: boolean,
+    standAlone = false,
     legacyWorkspaceConfigProps?: LegacyWorkspaceConfigProps
   ) => {
     let workspaceConfigProps;
