@@ -15,18 +15,15 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('workspace with a new compiler extension', () => {
+  describe('workspace with a new compile extension', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let scopeBeforeTag: string;
-    before(async () => {
-      helper.scopeHelper.initWorkspaceAndRemoteScope();
-
-      const sourceDir = path.join(helper.fixtures.getFixturesDir(), 'components');
-      const destination = path.join(helper.scopes.localPath, 'components');
-      fs.copySync(path.join(sourceDir, 'help'), path.join(destination, 'help'));
-      helper.command.addComponent('components/*');
-
-      helper.fixtures.addExtensionGulpTS();
-
+    let appOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope();
+      appOutput = helper.fixtures.populateComponentsTS();
+      helper.fixtures.addExtensionTS();
       const gulpExtensionKey = `${helper.scopes.remote}/extensions/gulp-ts`;
       const gulpExtensionVal = {};
       const compileExtensionKey = 'compile';
@@ -37,26 +34,45 @@ chai.use(require('chai-fs'));
       helper.extensions.addExtensionToVariant('help', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
-    describe('compile from the cmd', () => {
+    describe('compile from the cmd (compilation for development)', () => {
       before(() => {
         helper.command.runCmd('bit compile');
       });
-      it('should write dists files inside the capsule', () => {
-        const helpCapsule = helper.command.getCapsuleOfComponent('help');
-        expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
-        expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
+      it.only('should not write dists files inside the capsule as it is not needed for development', () => {
+        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        expect(path.join(capsule, 'dist')).to.not.be.a.path();
+      });
+      it('should write the dists files inside the node-modules of the component', () => {
+        const nmComponent = path.join(
+          helper.scopes.localPath,
+          'node_modules/@bit',
+          `${helper.scopes.remote}.comp1/dist`
+        );
+        expect(nmComponent).to.be.a.directory();
+        expect(path.join(nmComponent, 'index.js')).to.be.a.file();
+        expect(path.join(nmComponent, 'index.js.map')).to.be.a.file(); // should save source-map.
+      });
+      it('the app should work', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result).to.have.string(appOutput);
       });
     });
-    describe('tag the component', () => {
+    describe('tag the components (compilation for release)', () => {
       before(() => {
-        helper.command.tagComponent('help');
+        helper.command.tagAllComponents();
+      });
+      it('should write dists files inside the capsule as it is needed for release', () => {
+        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        expect(path.join(capsule, 'dist')).to.be.a.directory();
+        expect(path.join(capsule, 'dist/index.js')).to.be.a.file();
       });
       it('should save the dists in the objects', () => {
-        const catHelp = helper.command.catComponent('help@latest');
-        expect(catHelp).to.have.property('dists');
-        const dists = catHelp.dists;
+        const catComp2 = helper.command.catComponent('comp2@latest');
+        expect(catComp2).to.have.property('dists');
+        const dists = catComp2.dists;
         const files = dists.map(d => d.relativePath);
-        expect(files).to.include('help.js');
+        expect(files).to.include('index.js');
+        expect(files).to.include('index.d.ts'); // makes sure it saves declaration files
       });
       describe('export and import to another scope', () => {
         before(() => {
@@ -64,12 +80,12 @@ chai.use(require('chai-fs'));
 
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('help');
+          helper.command.importComponent('comp1');
         });
         it('should import the extensions as well into the scope', () => {
           const scopeList = helper.command.listLocalScopeParsed('--scope');
           const ids = scopeList.map(entry => entry.id);
-          expect(ids).to.include(`${helper.scopes.remote}/extensions/gulp-ts`);
+          expect(ids).to.include(`${helper.scopes.remote}/extensions/typescript`);
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
@@ -102,48 +118,19 @@ chai.use(require('chai-fs'));
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
+        helper.bitJsonc.addToVariant(undefined, 'bar', 'extensions', {});
         output = helper.command.tagAllComponents();
       });
       // a guard for Flows bug that exits unexpectedly
       it('should be able to tag', () => {
-        expect(output).to.have.string('2 component(s) tagged');
+        expect(output).to.have.string('4 component(s) tagged');
       });
       it('should still save the dists on the component with the compiler', () => {
-        const catHelp = helper.command.catComponent('help@latest');
-        expect(catHelp).to.have.property('dists');
-        const dists = catHelp.dists;
+        const catComp = helper.command.catComponent('comp3@latest');
+        expect(catComp).to.have.property('dists');
+        const dists = catComp.dists;
         const files = dists.map(d => d.relativePath);
-        expect(files).to.include('help.js');
-      });
-    });
-  });
-  describe('workspace with a new compile extension using typescript compiler', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let scopeBeforeTag: string;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-
-      helper.fixtures.populateComponentsTS();
-
-      helper.fixtures.addExtensionTS();
-      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
-      const tsExtensionVal = {};
-      const compileExtensionKey = 'compile';
-      const compileExtensionVal = {
-        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-      };
-      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
-      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
-      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
-    });
-    describe('compile from the cmd', () => {
-      before(() => {
-        helper.command.runCmd('bit compile');
-      });
-      it('should write dists files inside the capsule', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
-        expect(path.join(capsule, 'dist')).to.be.a.directory();
-        expect(path.join(capsule, 'dist/index.js')).to.be.a.file();
+        expect(files).to.include('index.js');
       });
     });
   });

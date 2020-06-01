@@ -87,6 +87,17 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
   }
 
+  static loadFromPathSync(workspaceDir: PathOsBasedAbsolute, pathToLoad: string) {
+    const filePath = composePath(pathToLoad);
+    const filePathAbsolute = path.join(workspaceDir, filePath);
+    const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
+    if (!packageJsonStr) {
+      return new PackageJsonFile({ filePath, fileExist: false, workspaceDir });
+    }
+    const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, pathToLoad);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir });
+  }
+
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,

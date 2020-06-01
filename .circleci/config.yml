@@ -635,6 +635,11 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  windows_approval_job:
+    <<: *windows_defaults
+    steps:
+      -
+        run: 'echo "starting windows build"'
   windows_checkout_code:
     <<: *windows_defaults
     environment:
@@ -870,12 +875,17 @@ workflows:
             - set_bitsrc_registry
   windows_e2e:
     jobs:
+      - windows_approval_job:
+          type: approval
       - windows_checkout_code:
-          type: approval
+          requires:
+            - windows_approval_job
       - windows_set_ssh_key:
-          type: approval
+          requires:
+            - windows_approval_job
       - windows_set_bitsrc_registry:
-          type: approval
+          requires:
+            - windows_approval_job
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code

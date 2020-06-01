@@ -59,8 +59,9 @@ export default class BitJsoncHelper {
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
-    bitJsonc.workspace[key] = val;
-    this.write(bitJsonc, bitJsoncDir);
+    const workspace = bitJsonc['@teambit/workspace'];
+    assign(workspace, { [key]: val });
+    this.addKeyVal(bitJsoncDir, '@teambit/workspace', workspace);
   }
 
   addDefaultScope(scope = this.scopes.remote) {
