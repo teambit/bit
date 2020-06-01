@@ -409,6 +409,7 @@ cd ${reportResult.result.value.capsule.wrkDir} && node ${SCRIPT_FILENAME} ${task
     return distsFiles.map(d => d.path);
   }
 
+  // @todo: this probably going to be changed to aggregate compilers, not watchers.
   public async aggregateWatchersByCompiler(): Promise<AggregatedWatcher[]> {
     const componentsAndCapsules = await getComponentsAndCapsules([], this.workspace);
     logger.debug(`compilerExt.getWatchProcesses, completed created of capsules`);
