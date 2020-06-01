@@ -37,9 +37,10 @@ chai.use(require('chai-fs'));
       before(() => {
         helper.command.runCmd('bit compile');
       });
-      it('should not write dists files inside the capsule as it is not needed for development', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
-        expect(path.join(capsule, 'dist')).to.not.be.a.path();
+      it('should not create a capsule as it is not needed for development', () => {
+        const capsulesJson = helper.command.runCmd('bit capsule-list -j');
+        const capsules = JSON.parse(capsulesJson);
+        capsules.capsules.forEach(c => expect(c).to.not.have.string('comp1'));
       });
       it('should write the dists files inside the node-modules of the component', () => {
         const nmComponent = path.join(
