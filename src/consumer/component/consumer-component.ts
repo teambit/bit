@@ -785,6 +785,14 @@ export default class Component {
             const testFilePath = testFile.path;
             try {
               const componentRootDir = component.componentMap?.getTrackDir();
+              let testFileRelative = testFile.relative;
+              if (
+                this.origin === COMPONENT_ORIGINS.AUTHORED &&
+                componentRootDir &&
+                testFileRelative.startsWith(componentRootDir)
+              ) {
+                testFileRelative = path.relative(componentRootDir, testFileRelative);
+              }
               const context: Record<string, any> = {
                 /**
                  * @deprecated
@@ -796,6 +804,7 @@ export default class Component {
                  * available only when is running inside the workspace and the component has either trackDir or rootDir
                  */
                 componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null,
+                specFileRelativePath: testFileRelative,
                 isolate: isolateFunc
               };
 

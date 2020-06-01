@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix importing compilers and testers for old node versions
 
+## [[14.7.7-dev.6] - 2020-06-01]
+
+- add specFileRelativePath to the tester API (context)
+
 ## [[14.7.7-dev.5] - 2020-05-27]
 
-- add componentRootDir to the tester API
+- add componentRootDir to the tester API (context)
 
 ## [[14.7.7-dev.4] - 2020-05-19]
 
