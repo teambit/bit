@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.7-dev.8] - 2020-06-01]
+
+## [[14.7.7-dev.7] - 2020-06-01]
+
 - fix importing compilers and testers for old node versions
 
 ## [[14.7.7-dev.6] - 2020-06-01]
