@@ -40,16 +40,9 @@ export class Config {
   }
 
   static async loadIfExist(dirPath: PathOsBased): Promise<Config | undefined | any> {
-    try {
-      const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
-      if (workspaceConfig) {
-        return new Config(workspaceConfig);
-      }
-    } catch (err) {
-      // Do not handle invalid json here. it will be handled in other place
-      if (!(err instanceof InvalidBitJson) && !(err instanceof InvalidConfigFile)) {
-        throw err;
-      }
+    const workspaceConfig = await WorkspaceConfig.loadIfExist(dirPath);
+    if (workspaceConfig) {
+      return new Config(workspaceConfig);
     }
     // TODO: try load scope config here
     // return undefined;
