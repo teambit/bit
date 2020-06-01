@@ -385,9 +385,9 @@ export default class ComponentConfig extends AbstractConfig {
     } catch (err) {
       // @todo: once we have a way to indicate this to the user, remove the next two lines
       logger.console('runOnLoadEvent failed loading a load event');
+      // TODO: this show an ugly error, we should somehow show a proper errors
       logger.console(err);
-      logger.warn('extension on load event throw an error');
-      logger.warn(err);
+      logger.warn('extension on load event throw an error', err);
     }
   }
 }
