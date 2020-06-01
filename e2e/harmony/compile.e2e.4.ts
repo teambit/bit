@@ -38,7 +38,7 @@ chai.use(require('chai-fs'));
       before(() => {
         helper.command.runCmd('bit compile');
       });
-      it.only('should not write dists files inside the capsule as it is not needed for development', () => {
+      it('should not write dists files inside the capsule as it is not needed for development', () => {
         const capsule = helper.command.getCapsuleOfComponent('comp1');
         expect(path.join(capsule, 'dist')).to.not.be.a.path();
       });
