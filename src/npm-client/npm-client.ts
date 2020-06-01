@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
 import logger from '../logger/logger';
-import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
+import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN, IS_WINDOWS } from '../constants';
 import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
@@ -170,14 +170,18 @@ const _getNpmList = async (
   return new Promise(resolve => {
     let stdout = '';
     let stderr = '';
-    const ls = spawn(packageManager, ['list', '-j'], { cwd: dir });
+    const shell = IS_WINDOWS;
+    const ls = spawn(packageManager, ['list', '-j'], { cwd: dir, shell });
     ls.stdout.on('data', data => {
-      // console.log(`stdout: ${data}`);
       stdout += data;
     });
 
     ls.stderr.on('data', data => {
       stderr += data;
+    });
+
+    ls.on('error', err => {
+      stderr += err;
     });
 
     ls.on('close', code => {
