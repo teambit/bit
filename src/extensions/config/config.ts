@@ -8,8 +8,6 @@ import {
   ComponentConfigFn
 } from './workspace-config';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
-import { InvalidBitJson } from '../../consumer/config/exceptions';
-import InvalidConfigFile from './exceptions/invalid-config-file';
 
 // export type ConfigProps = {
 //   workspaceConfig: WorkspaceConfig;
