@@ -32,7 +32,7 @@ export default class Watch {
   }
 
   async watchAll() {
-    await this.handleComponentsWithExternalWatchers();
+    // await this.handleComponentsWithExternalWatchers();
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const watcher = this._getWatcher();
     console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
@@ -106,7 +106,9 @@ export default class Watch {
   }
 
   async _handleChange(filePath: string, isNew = false) {
+    const start = new Date().getTime();
     const componentId = await this._getBitIdByPathAndReloadConsumer(filePath, isNew);
+    let resultMsg: string;
     if (componentId) {
       if (this.isComponentWatchedExternally(componentId)) {
         // update capsule, once done, it automatically triggers the external watcher
@@ -118,16 +120,20 @@ export default class Watch {
         const buildResults = await this.compile.compile([idStr], false, this.verbose);
         const buildPaths = buildResults[0].buildResults;
         if (buildPaths && buildPaths.length) {
-          console.log(`\t${chalk.cyan(buildPaths.join('\n\t'))}`);
+          resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;
         } else {
-          console.log(`${idStr} doesn't have a compiler, nothing to build`);
+          resultMsg = `${idStr} doesn't have a compiler, nothing to build`;
         }
       }
     } else {
-      console.log(`file ${filePath} is not part of any component, ignoring it`);
+      resultMsg = `file ${filePath} is not part of any component, ignoring it`;
     }
 
+    const duration = new Date().getTime() - start;
     loader.stop();
+    // @ts-ignore
+    console.log(resultMsg);
+    console.log(`took ${duration}ms`);
     console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 

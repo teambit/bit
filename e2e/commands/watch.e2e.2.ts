@@ -103,7 +103,9 @@ describe('bit watch command', function() {
       }
     });
   });
-  describe('watch using TS Project Reference', () => {
+  // @todo: once the project references is implemented for compile on capsules,
+  // use this as a template for a new e2e-test.
+  describe.skip('watch using TS Project Reference', () => {
     if (IS_WINDOWS) {
       // @todo: fix!
       // @ts-ignore
