@@ -58,7 +58,7 @@ function onLegacyWorkspaceConfigIsExist(): WorkspaceConfigIsExistFunction {
 
 function onLegacyWorkspaceLoad(config?: Config): WorkspaceConfigLoadFunction {
   return async (dirPath: PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> => {
-    if (config?.workspaceConfig && config.path && dirPath === path.dirname(config.path)) {
+    if (config?.workspaceConfig && config.path && path.normalize(dirPath) === path.dirname(config.path)) {
       return (config.config as WorkspaceConfig).toLegacy();
     }
     const newConfig = await Config.loadIfExist(dirPath);
