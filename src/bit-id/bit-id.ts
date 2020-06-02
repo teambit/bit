@@ -141,7 +141,15 @@ export default class BitId {
    * @return {string} id - id without version
    */
   static getStringWithoutVersion(id: string): string {
-    return id.split(VERSION_DELIMITER)[0];
+    const splitted = id.split(VERSION_DELIMITER);
+    let res = splitted[0];
+    // the delimiter is @. now with the new owner prefix
+    // many times the id starts with the @ sign as part of the @owner prefix
+    // do not treat this @ at the beginning as the version delimiter
+    if (id.startsWith(VERSION_DELIMITER)) {
+      res = `${VERSION_DELIMITER}${splitted[1]}`;
+    }
+    return res;
   }
 
   static getVersionOnlyFromString(id: string): string {

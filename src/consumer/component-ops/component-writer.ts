@@ -311,7 +311,7 @@ export default class ComponentWriter {
     const areEnvsChanged = async (): Promise<boolean> => {
       // $FlowFixMe this.component.componentMap is set
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const context = { componentDir: this.component.componentMap.getRootDir() };
+      const context = { componentDir: this.component?.componentMap?.getComponentDir() };
       const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : undefined;
       const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : undefined;
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : undefined;
@@ -328,7 +328,8 @@ export default class ComponentWriter {
       );
     };
     if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
-      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, await areEnvsChanged());
+      const envsChanged = await areEnvsChanged();
+      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
     }
   }
 
@@ -408,7 +409,7 @@ export default class ComponentWriter {
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config.workspaceSettings._bindingPrefix, this.component.id)
+          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
           : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath

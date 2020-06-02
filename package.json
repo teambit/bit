@@ -85,7 +85,7 @@
     "@teambit/any-fs": "0.0.5",
     "@teambit/capsule": "0.0.12",
     "@teambit/gitconfig": "^2.0.6",
-    "@teambit/harmony": "0.0.14",
+    "@teambit/harmony": "0.0.17",
     "@types/levelup": "^4.3.0",
     "@types/proper-lockfile": "^4.1.1",
     "@types/react": "^16.9.17",

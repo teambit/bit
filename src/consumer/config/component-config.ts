@@ -2,7 +2,7 @@ import pMapSeries from 'p-map-series';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
-import { PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
@@ -13,6 +13,7 @@ import { Consumer } from '..';
 import logger from '../../logger/logger';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 
 type ConfigProps = {
   lang?: string;
@@ -140,17 +141,23 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
     const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
-    let workspaceConfigToMerge;
+    let legacyWorkspaceConfigToMerge = {};
     if (plainWorkspaceConfig) {
-      workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
-    } else {
-      workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
-      const defaultOwner = workspaceConfig?.workspaceSettings.defaultOwner;
-      if (defaultOwner) {
-        workspaceConfigToMerge.bindingPrefix = `@${defaultOwner}`;
-      }
+      legacyWorkspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
     }
-    const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
+    const componentConfigFromWorkspaceToMerge = workspaceConfig?.getComponentConfig(componentId) || {};
+    const defaultOwner = workspaceConfig?.defaultOwner;
+
+    if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
+      componentConfigFromWorkspaceToMerge.bindingPrefix = defaultOwner.startsWith('@')
+        ? defaultOwner
+        : `@${defaultOwner}`;
+    }
+    const mergedObject = R.mergeAll([
+      legacyWorkspaceConfigToMerge,
+      componentConfigFromWorkspaceToMerge,
+      componentConfig
+    ]);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
     // Do not try to load extension for itself (usually happen when using '*' pattern)
     mergedObject.extensions = mergedObject.extensions.remove(componentId);
@@ -166,22 +173,17 @@ export default class ComponentConfig extends AbstractConfig {
    * in case a component is authored, leave this param empty to not load the project package.json
    * @param {*} workspaceConfig
    */
-  static async load({
-    consumer,
-    componentId,
+  static async loadConfigFromFolder({
     componentDir,
-    workspaceDir,
-    workspaceConfig
+    workspaceDir
   }: {
-    consumer: Consumer;
-    componentId: BitId;
-    componentDir: PathOsBasedRelative | undefined;
-    workspaceDir: PathOsBasedRelative;
-    workspaceConfig: ILegacyWorkspaceConfig;
-  }): Promise<ComponentConfig> {
+    componentDir: PathOsBasedAbsolute | undefined;
+    workspaceDir: PathOsBasedAbsolute;
+  }): Promise<{ componentHasWrittenConfig: boolean; config: any; packageJsonFile: any; bitJsonPath: string }> {
     let bitJsonPath;
     let componentHasWrittenConfig = false;
     let packageJsonFile;
+
     if (componentDir) {
       bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
     }
@@ -227,6 +229,40 @@ export default class ComponentConfig extends AbstractConfig {
     const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    return {
+      config,
+      bitJsonPath,
+      packageJsonFile,
+      componentHasWrittenConfig
+    };
+  }
+
+  /**
+   * component config is written by default to package.json inside "bit" property.
+   * in case "eject-conf" was running or the component was imported with "--conf" flag, the
+   * bit.json is written as well.
+   *
+   * @param {*} componentDir root component directory, needed for loading package.json file.
+   * in case a component is authored, leave this param empty to not load the project package.json
+   * @param {*} workspaceConfig
+   */
+  static async load({
+    consumer,
+    componentId,
+    componentDir,
+    workspaceDir,
+    workspaceConfig
+  }: {
+    consumer: Consumer;
+    componentId: BitId;
+    componentDir: PathOsBasedRelative | undefined;
+    workspaceDir: PathOsBasedRelative;
+    workspaceConfig: ILegacyWorkspaceConfig;
+  }): Promise<ComponentConfig> {
+    const { config, bitJsonPath, packageJsonFile, componentHasWrittenConfig } = await this.loadConfigFromFolder({
+      componentDir,
+      workspaceDir
+    });
     const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(
       consumer,
       componentId,
@@ -283,6 +319,7 @@ export default class ComponentConfig extends AbstractConfig {
     alreadyLoadedExtensions: string[] = [],
     accumulativeAddedConfig: any
   ): Promise<any> {
+    // Disabled for now, we will replace it with other mechanism
     await this.runOnLoadEvent(componentConfigLoadingRegistry, id, config);
     // We should only ask for new config from extension applied on the component
     // (added to the variant by the user or added by one of those extension)
@@ -348,9 +385,9 @@ export default class ComponentConfig extends AbstractConfig {
     } catch (err) {
       // @todo: once we have a way to indicate this to the user, remove the next two lines
       logger.console('runOnLoadEvent failed loading a load event');
+      // TODO: this show an ugly error, we should somehow show a proper errors
       logger.console(err);
-      logger.warn('extension on load event throw an error');
-      logger.warn(err);
+      logger.warn('extension on load event throw an error', err);
     }
   }
 }

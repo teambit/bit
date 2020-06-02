@@ -177,7 +177,7 @@ export default class AbstractConfig {
           tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
-        extensions: this.extensions.toConfigObject()
+        extensions: this.extensions.toObject()
       },
       isPropDefaultOrNull
     );

@@ -1,15 +1,11 @@
-import { Workspace } from '../../extensions/workspace';
-import { Scope } from '../../scope';
-import Bit from './bit';
+import { manifestsMap } from './manifests';
 
-export type BitDeps = [Workspace, Scope];
+export type BitDeps = [];
 
 export type BitConfig = {};
 
-export default async function provideBit([workspace, scope]: BitDeps) {
-  const bit = new Bit(scope, workspace);
-  if (workspace) {
-    await workspace.loadWorkspaceExtensions();
-  }
-  return bit;
+export async function provideBit() {
+  return {
+    manifestsMap
+  };
 }

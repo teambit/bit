@@ -1,42 +1,40 @@
-import { Harmony, ExtensionManifest } from '@teambit/harmony';
+import path from 'path';
+import { Harmony } from '@teambit/harmony';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { Scope } from '../scope';
-import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { LogPublisher } from '../logger';
 import ConsumerComponent from '../../consumer/component';
-import { ResolvedComponent } from './resolved-component';
+import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
-import { PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
-import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
-import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
-import legacyLogger from '../../logger/logger';
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
+import { IExtensionConfigList } from '../../consumer/config';
 import { DependencyResolver } from '../dependency-resolver';
+import { WorkspaceExtConfig } from './types';
+import { ComponentHost, LogPublisher } from '../types';
+import { loadResolvedExtensions } from '../utils/load-extensions';
+import { Variants } from '../variants';
+import LegacyComponentConfig from '../../consumer/config';
+import { ComponentScopeDirMap } from '../config/workspace-config';
+
 /**
  * API of the Bit Workspace
  */
-export default class Workspace {
+export default class Workspace implements ComponentHost {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
      */
     public consumer: Consumer,
-
-    /**
-     * Workspace's configuration
-     */
-    readonly config: WorkspaceConfig,
 
     /**
      * access to the Workspace's `Scope` instance
@@ -52,6 +50,8 @@ export default class Workspace {
 
     private dependencyResolver: DependencyResolver,
 
+    private variants: Variants,
+
     private logger: LogPublisher,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
@@ -61,9 +61,8 @@ export default class Workspace {
      */
     private harmony: Harmony
   ) {
-    const workspaceExtConfig = this.config.getExtensionConfig('workspace');
-    this.owner = workspaceExtConfig?.owner;
-    this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
+    this.owner = this.config?.defaultOwner;
+    this.componentsScopeDirsMap = this.config?.components || [];
   }
 
   /**
@@ -119,9 +118,9 @@ export default class Workspace {
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
-   * fully load components, inclduing dependency resuoltion and prepare them for runtime.
+   * fully load components, including dependency resolution and prepare them for runtime.
    */
-  async load(ids: Array<BitId | string>) {
+  async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const components = await this.getMany(ids);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
@@ -191,87 +190,75 @@ export default class Workspace {
     return addResults;
   }
 
-  async loadWorkspaceExtensions() {
-    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
-    const externalExtensionsWithoutLegacy = extensionsConfig._filterLegacy();
-    const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
-    await this.loadExtensions([...externalExtensionsManifests]);
+  /**
+   * Get the component root dir in the file system (relative to workspace or full)
+   * @param componentId
+   * @param relative return the path relative to the workspace or full path
+   */
+  componentDir(componentId: BitId, relative = false): PathOsBased | undefined {
+    const componentMap = this.consumer.bitMap.getComponent(componentId);
+    const relativeComponentDir = componentMap.getComponentDir();
+    if (relative) {
+      return relativeComponentDir;
+    }
+
+    if (relativeComponentDir) {
+      return path.join(this.path, relativeComponentDir);
+    }
+    return undefined;
   }
 
-  async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
-    const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
-    if (extensionsManifests && extensionsManifests.length) {
-      await this.loadExtensions(extensionsManifests);
-    }
+  // TODO: gilad - add return value
+  /**
+   * Calculate the component config based on the component.json file in the component folder and the matching
+   * pattern in the variants config
+   * @param componentId
+   */
+  // componentConfig(componentId: BitId) {
+  // TODO: read the component.json file and merge it inside
+  // const inlineConfig = this.inlineComponentConfig(componentId);
+  // const variantConfig = this.variants.getComponentConfig(componentId);
+  // For legacy configs it will be undefined.
+  // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
+  // under transformLegacyPropsToExtensions
+  // if (!variantConfig) {
+  // }
+  // }
+
+  // TODO: gilad - add return value
+  /**
+   * return the component config from its folder (bit.json / package.json / component.json)
+   * @param componentId
+   */
+  private inlineComponentConfig(componentId: BitId) {
+    // TODO: Load from component.json file
+    const legacyConfigProps = LegacyComponentConfig.loadConfigFromFolder({
+      workspaceDir: this.path,
+      componentDir: this.componentDir(componentId)
+    });
+    // TODO: make sure it's a new format
+    return legacyConfigProps;
   }
 
-  private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
-    try {
-      await this.harmony.set(extensionsManifests);
-    } catch (e) {
-      const ids = extensionsManifests.map(manifest => manifest.name);
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning);
-      legacyLogger.warn(`${warning} error: ${e.message}`);
-      legacyLogger.silly(e.stack);
-    }
-  }
+  // async loadComponentExtensions(componentId: BitId): Promise<void> {
+  //   const config = this.componentConfig(componentId);
+  //   const extensions = config.extensions
+  //     ? ExtensionConfigList.fromObject(config.extensions)
+  //     : ExtensionConfigList.fromArray([]);
+  //   return this.loadExtensions(extensions);
+  // }
 
   /**
-   * load all of bit's extensions.
-   * :TODO must be refactored by @gilad
+   * Load all unloaded extensions from a list
+   * @param extensions list of extensions with config to load
    */
-  private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
-    // const extensionsIds = extensionsConfig.ids;
-    if (!extensionsIds || !extensionsIds.length) {
-      return [];
-    }
-
-    legacyLogger.debug(`workspaceExt, resolveExtensions ${extensionsIds.join(', ')}`);
-    const allRegisteredExtensionIds = this.harmony.extensionsIds;
-    const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
-    let extensionsComponents;
-    // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
-    try {
-      extensionsComponents = await this.getMany(nonRegisteredExtensions);
-    } catch (e) {
-      let errorMessage = e.message;
-      if (e instanceof MissingBitMapComponent) {
-        errorMessage = `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`;
-      }
-
-      const ids = nonRegisteredExtensions;
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
-      this.logger.warn(warning);
-      legacyLogger.warn(warning);
-      legacyLogger.warn(`error: ${errorMessage}`);
-      legacyLogger.silly(e.stack);
-      throw e;
-    }
-
-    const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
-      extensionsComponents.map(c => c.id.toString()),
-      this.consumer,
-      { packageManager: 'yarn' }
-    );
-    const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
-      const extPath = value.wrkDir;
-      try {
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const mod = require(extPath);
-        mod.name = id.toString();
-        return mod;
-      } catch (e) {
-        const warning = UNABLE_TO_LOAD_EXTENSION(id.toString());
-        this.logger.warn(warning);
-        legacyLogger.warn(`${warning} error: ${e.message}`);
-        legacyLogger.silly(e.stack);
-      }
-      return undefined;
-    });
-
-    // Remove empty manifests as a result of loading issue
-    return manifests.filter(manifest => manifest);
+  async loadExtensions(extensions: IExtensionConfigList): Promise<void> {
+    const extensionsIds = extensions.ids;
+    const loadedExtensions = this.harmony.extensionsIds;
+    const extensionsToLoad = difference(extensionsIds, loadedExtensions);
+    let resolvedExtensions: ResolvedComponent[] = [];
+    resolvedExtensions = await this.load(extensionsToLoad);
+    return loadResolvedExtensions(this.harmony, resolvedExtensions, this.logger);
   }
 
   /**
@@ -280,5 +267,17 @@ export default class Workspace {
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+  }
+
+  // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
+  get defaultDirectory(): string {
+    return this.config.defaultDirectory;
+  }
+
+  get legacyDefaultDirectory(): string {
+    if (this.defaultDirectory && !this.defaultDirectory.includes('{name}')) {
+      return `${this.defaultDirectory}/{name}`;
+    }
+    return this.defaultDirectory;
   }
 }

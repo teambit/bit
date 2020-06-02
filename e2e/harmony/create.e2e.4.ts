@@ -25,7 +25,7 @@ describe('create extension', function() {
       helper.fixtures.copyFixtureExtensions('react-create-template');
       helper.command.addComponent('react-create-template');
       helper.extensions.addExtensionToWorkspace('react-create-template', {});
-      helper.extensions.addExtensionToWorkspace('create', { template: 'react-create-template' });
+      helper.extensions.addExtensionToWorkspace('@teambit/create', { template: 'react-create-template' });
       helper.command.create(COMPONENT_NAME);
       const compDir = path.join(helper.scopes.localPath, `components/${COMPONENT_NAME}`);
       implFilePath = path.join(compDir, `${COMPONENT_NAME}.js`);

@@ -24,13 +24,14 @@ chai.use(require('chai-fs'));
       helper.bitJsonc.addDefaultScope();
       appOutput = helper.fixtures.populateComponentsTS();
       helper.fixtures.addExtensionTS();
-      const extensions = {
-        [`${helper.scopes.remote}/extensions/typescript`]: {},
-        compile: {
-          compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-        }
+      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
+      const tsExtensionVal = {};
+      const compileExtensionKey = 'compile';
+      const compileExtensionVal = {
+        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
       };
-      helper.bitJsonc.addToVariant(undefined, '*', 'extensions', extensions);
+      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
+      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
