@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.7-dev.9] - 2020-06-02]
+
 - wait for the next event loop before exit child process in bit test
 
 ## [[14.7.7-dev.8] - 2020-06-01]
