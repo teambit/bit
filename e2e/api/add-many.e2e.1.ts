@@ -26,7 +26,9 @@ function sortComponentsArrayByComponentId(componentsArray) {
 
 describe('bit add many programmatically', function() {
   let helper: Helper;
+  this.timeout(0);
   before(() => {
+    this.timeout(0);
     helper = new Helper();
   });
   const components = [
@@ -81,7 +83,6 @@ describe('bit add many programmatically', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  this.timeout(0);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
