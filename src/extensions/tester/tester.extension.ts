@@ -19,7 +19,15 @@ export class TesterExtension {
 
   async test(components?: Component[]) {
     const envs = await this.envs.createEnvironment(components);
-    const results = await envs.run(this.testerService);
+    const results = await Promise.all(
+      envs.runtimeEnvs.map(runtimeEnv => {
+        const tester = runtimeEnv.env.defineTester();
+        return tester.test({
+          components: runtimeEnv.components,
+          workspace: this.workspace
+        });
+      })
+    );
     return results;
   }
 
