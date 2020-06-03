@@ -89,7 +89,7 @@ import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-e
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
+import { DEBUG_LOG, BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -100,7 +100,6 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
-import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -166,7 +165,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
-  [ComponentsPendingImport, () => importPendingMsg],
+  [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
     EjectNoDir,

@@ -7,7 +7,7 @@ import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -17,8 +17,6 @@ export const statusFailureMsg = 'issues found';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
-export const importPendingMsg =
-  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 
 export default class Status extends Command {
   name = 'status';
@@ -89,7 +87,7 @@ export default class Status extends Command {
       return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
     }
 
-    const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${importPendingMsg}.\n`) : '';
+    const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
 
     const splitByMissing = R.groupBy(component => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';

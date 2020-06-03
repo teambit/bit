@@ -419,3 +419,6 @@ export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/d
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
+
+export const IMPORT_PENDING_MSG =
+  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';

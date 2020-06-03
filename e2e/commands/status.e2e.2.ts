@@ -4,13 +4,9 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import {
-  statusInvalidComponentsMsg,
-  statusFailureMsg,
-  importPendingMsg
-} from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusInvalidComponentsMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE, IMPORT_PENDING_MSG } from '../../src/constants';
 import {
   MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
   componentIssuesLabels
@@ -327,7 +323,7 @@ describe('bit status command', function() {
       });
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(importPendingMsg);
+        expect(output).to.have.string(IMPORT_PENDING_MSG);
       });
     });
   });
