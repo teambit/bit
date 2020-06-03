@@ -21,6 +21,7 @@ import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import LegacyComponentConfig from '../../consumer/config';
 import { ComponentScopeDirMap } from '../config/workspace-config';
+import legacyLogger from '../../logger/logger';
 
 /**
  * API of the Bit Workspace
@@ -258,7 +259,7 @@ export default class Workspace implements ComponentHost {
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     let resolvedExtensions: ResolvedComponent[] = [];
     resolvedExtensions = await this.load(extensionsToLoad);
-    return loadResolvedExtensions(this.harmony, resolvedExtensions, this.logger);
+    return loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
   /**

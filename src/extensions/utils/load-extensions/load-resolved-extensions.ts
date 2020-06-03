@@ -3,12 +3,11 @@ import { UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { loadExtensionsByManifests } from './load-extensions-by-manifests';
 // TODO: change to module path once utils are tracked as components
 import { ResolvedComponent } from '../resolved-component';
-import { LogPublisher } from '../../types';
 
 export async function loadResolvedExtensions(
   harmony: Harmony,
   resolvedExtensions: ResolvedComponent[],
-  logger: LogPublisher
+  logger
 ): Promise<void> {
   const manifests = resolvedExtensions.map(resolvedExtension => {
     const compId = resolvedExtension.component.id.toString();
@@ -19,6 +18,9 @@ export async function loadResolvedExtensions(
     } catch (e) {
       const warning = UNABLE_TO_LOAD_EXTENSION(compId);
       logger.warn(warning);
+      // TODO: improve texts
+      logger.console(warning, 'warn', 'yellow');
+      logger.warn(warning, e);
       // legacyLogger.warn(`${warning} error: ${e.message}`);
       // legacyLogger.silly(e.stack);
     }
