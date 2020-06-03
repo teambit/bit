@@ -48,13 +48,13 @@ export const manifestsMap = {
   [PackExt.name]: PackExt,
   [PackageManagerExt.name]: PackageManagerExt,
   [PaperExt.name]: PaperExt,
-  // TODO: change name to follow convention
-  [React.constructor.name]: React,
+  // TODO: take from the extension itself & change name to follow convention
+  React: React,
   [ReporterExt.name]: ReporterExt,
   [ScopeExt.name]: ScopeExt,
   [TestExt.name]: TestExt,
-  // TODO: change name to follow convention
-  [TesterExtension.constructor.name]: TesterExtension,
+  // TODO: take from the extension itself & change name to follow convention
+  Tester: TesterExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt
