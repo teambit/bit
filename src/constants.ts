@@ -38,7 +38,7 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_JSONC = 'bit.jsonc';
+export const WORKSPACE_JSONC = 'workspace.jsonc';
 
 export const GIT_IGNORE = '.gitignore';
 
@@ -155,6 +155,7 @@ export const IGNORE_LIST = [
   '**/.bitmap',
   '**/.gitignore',
   '**/bit.json',
+  '**/component.json',
   '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
@@ -414,11 +415,6 @@ export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
 export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
-
-// Warnings
-export const UNABLE_TO_LOAD_EXTENSION = (id: string) => `couldn't load extension ${id}, see full error in the log file`;
-export const UNABLE_TO_LOAD_EXTENSION_FROM_LIST = (ids: string[]) =>
-  `couldn't load one of the following extensions ${ids.join(', ')}, see full error in the log file`;
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';

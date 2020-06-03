@@ -103,7 +103,9 @@ describe('bit watch command', function() {
       }
     });
   });
-  describe('watch using TS Project Reference', () => {
+  // @todo: once the project references is implemented for compile on capsules,
+  // use this as a template for a new e2e-test.
+  describe.skip('watch using TS Project Reference', () => {
     if (IS_WINDOWS) {
       // @todo: fix!
       // @ts-ignore
@@ -118,19 +120,12 @@ describe('bit watch command', function() {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
 
-        const bitjsonc = helper.bitJsonc.read();
-        bitjsonc.variants['*'] = {
-          extensions: {
-            [`${helper.scopes.remote}/extensions/typescript`]: {},
-            compile: {
-              compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-            }
-          }
+        const tsExtName = `${helper.scopes.remote}/extensions/typescript`;
+        helper.extensions.addExtensionToVariant('*', tsExtName, {});
+        const compileExtConfig = {
+          compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
         };
-        bitjsonc.variants['bar/foo'] = {
-          extensions: {}
-        };
-        helper.bitJsonc.write(bitjsonc);
+        helper.extensions.addExtensionToVariant('*', 'compile', compileExtConfig);
       });
       describe('run bit watch', () => {
         let watchRunner: WatchRunner;

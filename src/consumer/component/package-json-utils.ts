@@ -164,12 +164,12 @@ export async function updateAttribute(
  */
 export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: string | null | undefined) {
   if (
-    consumer.config.workspaceSettings._manageWorkspaces &&
-    consumer.config.workspaceSettings.packageManager === 'yarn' &&
-    consumer.config.workspaceSettings._useWorkspaces
+    consumer.config._manageWorkspaces &&
+    consumer.config.packageManager === 'yarn' &&
+    consumer.config._useWorkspaces
   ) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.config.workspaceSettings._dependenciesDirectory;
+    const dependenciesDirectory = consumer.config._dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
 
     await PackageJson.addWorkspacesToPackageJson(
@@ -185,9 +185,9 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   const rootDir = consumer.getPath();
 
   if (
-    consumer.config.workspaceSettings._manageWorkspaces &&
-    consumer.config.workspaceSettings.packageManager === 'yarn' &&
-    consumer.config.workspaceSettings._useWorkspaces
+    consumer.config._manageWorkspaces &&
+    consumer.config.packageManager === 'yarn' &&
+    consumer.config._useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     if (dirsToRemove && dirsToRemove.length) {
@@ -197,7 +197,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   }
   await PackageJson.removeComponentsFromDependencies(
     rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.
-    consumer.config.workspaceSettings._bindingPrefix || npmRegistryName(),
+    consumer.config._bindingPrefix || npmRegistryName(),
     componentIds.map(id => id.toStringWithoutVersion())
   );
   await removeComponentsFromNodeModules(consumer, componentIds);
@@ -212,7 +212,7 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
   logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
   // @todo: fix. the registryPrefix should be retrieved from the component.
-  const registryPrefix = consumer.config.workspaceSettings._bindingPrefix || npmRegistryName();
+  const registryPrefix = consumer.config._bindingPrefix || npmRegistryName();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map(id => {

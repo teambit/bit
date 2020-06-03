@@ -1107,9 +1107,20 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+
     const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isNotNested ? workspaceConfig?.componentsConfig?.getOverrideComponentData(id) : null;
+    let overridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(id) : null;
+    if (isAuthor) {
+      const plainLegacy = workspaceConfig?._legacyPlainObject();
+      if (plainLegacy && plainLegacy.env) {
+        overridesFromConsumer = overridesFromConsumer || {};
+        overridesFromConsumer.env = {};
+        overridesFromConsumer.env.compiler = plainLegacy.env.compiler || plainLegacy.env.compiler;
+        overridesFromConsumer.env.tester = plainLegacy.env.tester || plainLegacy.env.tester;
+      }
+    }
 
     const propsToLoadEnvs = {
       consumerPath,
@@ -1147,7 +1158,6 @@ export default class Component {
       : testerDynamicPackageDependencies;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
-    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     const overrides = ComponentOverrides.loadFromConsumer(
       overridesFromConsumer,
       overridesFromModel,
@@ -1166,7 +1176,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
-    const defaultScope = overrides.defaultScope || consumer.config.workspaceSettings.defaultScope || null;
+    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
 
     return new Component({
       name: id.name,

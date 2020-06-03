@@ -35,8 +35,11 @@ describe('set default owner and scope', function() {
       fullScope = `${defaultOwner}.${defaultScope}`;
       componentId = `${fullScope}/utils/is-type`;
       componentPackageName = `@${defaultOwner}/${defaultScope}.utils.is-type`;
-      helper.bitJsonc.addDefaultOwner(defaultOwner);
-      helper.bitJsonc.addDefaultScope(defaultScope);
+      const workspaceExtConfig = {
+        defaultOwner,
+        defaultScope
+      };
+      helper.extensions.addExtensionToWorkspace('@teambit/workspace', workspaceExtConfig);
       helper.fixtures.populateWorkspaceWithUtilsIsType();
       const rawLinkOutput = helper.command.link('-j');
       parsedLinkOutput = JSON.parse(rawLinkOutput);

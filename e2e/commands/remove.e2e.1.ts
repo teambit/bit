@@ -237,7 +237,7 @@ describe('bit remove command', function() {
       helper.command.importComponent('global/simple -p ./test');
       helper.command.removeComponent('global/simple -s');
     });
-    it('should  remove component from package.json that points to relative path', () => {
+    it('should remove component from package.json that points to relative path', () => {
       const pkgJson = helper.packageJson.read();
       expect(pkgJson.dependencies).to.not.have.property(`@bit/${helper.scopes.remote}.global.simple`);
     });

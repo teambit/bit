@@ -148,10 +148,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(
-        this.config.workspaceSettings.componentsDefaultDirectory,
-        this.config.workspaceSettings._dependenciesDirectory
-      );
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
     }
     return this._dirStructure;
   }
@@ -375,7 +372,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.workspaceSettings._saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -392,7 +389,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.workspaceSettings._distEntry && !this.config.workspaceSettings._distTarget;
+    return !this.config._distEntry && !this.config._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -682,7 +679,7 @@ export default class Consumer {
     ): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.workspaceSettings.defaultScope);
+        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
       }
       return componentMap.rootDir;
     };
@@ -793,10 +790,10 @@ export default class Consumer {
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const config = await WorkspaceConfig.ensure(consumerPath);
+    const config = await WorkspaceConfig._ensure(consumerPath);
     // isolated environments in the workspace rely on a physical node_modules folder
     // for this reason, we must use a package manager that supports one
-    config.workspaceSettings._setPackageManager('npm');
+    config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,
@@ -821,11 +818,12 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      const consumer = await Consumer.create(consumerInfo.path);
+    let consumer;
+    if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
+      consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await WorkspaceConfig.loadIfExist(consumerInfo.path);
     }
+    const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scope = await Scope.load(scopePath);
@@ -833,7 +831,7 @@ export default class Consumer {
     return new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      config: consumerInfo.consumerConfig,
+      config,
       scope
     });
   }

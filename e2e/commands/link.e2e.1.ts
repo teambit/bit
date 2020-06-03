@@ -149,25 +149,25 @@ console.log(isType());`;
     });
     describe('auto linking', () => {
       it('node_modules should contain custom dir name', () => {
-        expect(path.join(helper.scopes.localPath, 'node_modules', 'testLink')).to.be.a.path();
+        expect(path.join(helper.scopes.localPath, 'node_modules', '@testLink')).to.be.a.path();
       });
       it('should create symlink inside custom folder', () => {
         expect(
-          path.join(helper.scopes.localPath, 'node_modules', 'testLink', `${helper.scopes.remote}.bar.foo`)
+          path.join(helper.scopes.localPath, 'node_modules', '@testLink', `${helper.scopes.remote}.bar.foo`)
         ).to.be.a.path();
       });
     });
     describe('manual linking', () => {
       before(() => {
-        fs.removeSync(path.join(helper.scopes.localPath, 'node_modules', 'testLink'));
+        fs.removeSync(path.join(helper.scopes.localPath, 'node_modules', '@testLink'));
         helper.command.runCmd('bit link');
       });
       it('node_modules should contain custom dir name', () => {
-        expect(path.join(helper.scopes.localPath, 'node_modules', 'testLink')).to.be.a.path();
+        expect(path.join(helper.scopes.localPath, 'node_modules', '@testLink')).to.be.a.path();
       });
       it('should create symlink inside custom folder', () => {
         expect(
-          path.join(helper.scopes.localPath, 'node_modules', 'testLink', `${helper.scopes.remote}.bar.foo`)
+          path.join(helper.scopes.localPath, 'node_modules', '@testLink', `${helper.scopes.remote}.bar.foo`)
         ).to.be.a.path();
       });
     });
@@ -188,12 +188,12 @@ console.log(isType());`;
       helper.command.importComponent('bar2/foo2');
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.scopes.localPath, 'node_modules', 'test')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'node_modules', '@test')).to.be.a.path();
       expect(
-        path.join(helper.scopes.localPath, 'node_modules', 'test', `${helper.scopes.remote}.bar.foo`)
+        path.join(helper.scopes.localPath, 'node_modules', '@test', `${helper.scopes.remote}.bar.foo`)
       ).to.be.a.path();
       expect(
-        path.join(helper.scopes.localPath, 'node_modules', 'test', `${helper.scopes.remote}.bar2.foo2`)
+        path.join(helper.scopes.localPath, 'node_modules', '@test', `${helper.scopes.remote}.bar2.foo2`)
       ).to.be.a.path();
     });
   });
@@ -220,7 +220,7 @@ console.log(isType());`;
       helper.command.importComponent('utils/is-string');
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.scopes.localPath, 'node_modules', 'bitTest')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'node_modules', '@bitTest')).to.be.a.path();
     });
   });
   describe('component with dependency tree of 3', () => {

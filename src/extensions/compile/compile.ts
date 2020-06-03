@@ -4,8 +4,8 @@ import pMapSeries from 'p-map-series';
 import { Workspace } from '../workspace';
 import { DEFAULT_DIST_DIRNAME } from './../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { BitId } from '../../bit-id';
-import { ResolvedComponent } from '../workspace/resolved-component';
+import { BitId, BitIds } from '../../bit-id';
+import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { Capsule } from '../isolator';
@@ -84,46 +84,65 @@ export class Compile {
     dontPrintEnvMsg?: boolean,
     buildOnCapsules = false
   ): Promise<BuildResult[]> {
+    if (!buildOnCapsules) {
+      return this.compileOnWorkspace(componentsIds, noCache, verbose, dontPrintEnvMsg);
+    }
     const componentsAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
     logger.debug(`compilerExt, completed created of capsules for ${componentsIds.join(', ')}`);
     const idsAndFlows = new IdsAndFlows();
     const componentsWithLegacyCompilers: ComponentAndCapsule[] = [];
-    const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
     componentsAndCapsules.forEach(c => {
-      const compileCore = c.component.config.extensions.findCoreExtension('compile');
-      const compileComponent = c.component.config.extensions.findExtension('compile');
-      const compileComponentExported = c.component.config.extensions.findExtension('bit.core/compile', true);
-      const compileExtension = compileCore || compileComponent || compileComponentExported;
-      const compileConfig = compileExtension?.config;
+      const compileConfig = this.getCompilerConfig(c.consumerComponent);
       const taskName = this.getTaskNameFromCompiler(compileConfig, c.component.config.extensions);
       const value = taskName ? [taskName] : [];
-      if (buildOnCapsules) {
-        if (compileConfig) {
-          idsAndFlows.push({ id: c.consumerComponent.id, value });
-        } else {
-          componentsWithLegacyCompilers.push(c);
-        }
-        // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
-        // inside the component dir.
-      } else if (compileConfig && compileConfig.compiler && c.consumerComponent.componentMap?.getComponentDir()) {
-        const compilerInstance = this.getCompilerInstance(compileConfig.compiler, c.component.config.extensions);
-        const compilerId = this.getCompilerBitId(compileConfig.compiler, c.component.config.extensions);
-        componentsAndNewCompilers.push({ component: c.consumerComponent, compilerInstance, compilerId });
+      if (compileConfig) {
+        idsAndFlows.push({ id: c.consumerComponent.id, value });
       } else {
         componentsWithLegacyCompilers.push(c);
       }
     });
     let newCompilersResultOnCapsule: BuildResult[] = [];
-    let newCompilersResultOnWorkspace: BuildResult[] = [];
     let oldCompilersResult: BuildResult[] = [];
-    if (componentsAndNewCompilers.length) {
-      newCompilersResultOnWorkspace = await this.compileWithNewCompilersOnWorkspace(componentsAndNewCompilers);
-    }
     if (idsAndFlows.length) {
       newCompilersResultOnCapsule = await this.compileWithNewCompilersOnCapsules(
         idsAndFlows,
         componentsAndCapsules.map(c => c.consumerComponent)
       );
+    }
+    if (componentsWithLegacyCompilers.length) {
+      const components = componentsWithLegacyCompilers.map(c => c.consumerComponent);
+      oldCompilersResult = await this.compileWithLegacyCompilers(components, noCache, verbose, dontPrintEnvMsg);
+    }
+
+    return [...newCompilersResultOnCapsule, ...oldCompilersResult];
+  }
+
+  async compileOnWorkspace(
+    componentsIds: string[] | BitId[], // when empty, it compiles all
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    const bitIds = getBitIds(componentsIds, this.workspace);
+    const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
+    const componentsWithLegacyCompilers: ConsumerComponent[] = [];
+    const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
+    components.forEach(c => {
+      const compileConfig = this.getCompilerConfig(c);
+      // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
+      // inside the component dir.
+      if (compileConfig && compileConfig.compiler && c.componentMap?.getComponentDir()) {
+        const compilerInstance = this.getCompilerInstance(compileConfig.compiler, c.extensions);
+        const compilerId = this.getCompilerBitId(compileConfig.compiler, c.extensions);
+        componentsAndNewCompilers.push({ component: c, compilerInstance, compilerId });
+      } else {
+        componentsWithLegacyCompilers.push(c);
+      }
+    });
+    let newCompilersResultOnWorkspace: BuildResult[] = [];
+    let oldCompilersResult: BuildResult[] = [];
+    if (componentsAndNewCompilers.length) {
+      newCompilersResultOnWorkspace = await this.compileWithNewCompilersOnWorkspace(componentsAndNewCompilers);
     }
     if (componentsWithLegacyCompilers.length) {
       oldCompilersResult = await this.compileWithLegacyCompilers(
@@ -134,7 +153,16 @@ export class Compile {
       );
     }
 
-    return [...newCompilersResultOnWorkspace, ...newCompilersResultOnCapsule, ...oldCompilersResult];
+    return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
+  }
+
+  private getCompilerConfig(component: ConsumerComponent): Record<string, any> | undefined {
+    const extensions = component.extensions;
+    const compileCore = extensions.findCoreExtension('compile');
+    const compileComponent = extensions.findExtension('compile');
+    const compileComponentExported = extensions.findExtension('bit.core/compile', true);
+    const compileExtension = compileCore || compileComponent || compileComponentExported;
+    return compileExtension?.config;
   }
 
   private async compileWithNewCompilersOnWorkspace(
@@ -324,7 +352,7 @@ cd ${reportResult.result.value.capsule.wrkDir} && node ${SCRIPT_FILENAME} ${task
   }
 
   async compileWithLegacyCompilers(
-    componentsAndCapsules: ComponentAndCapsule[],
+    components: ConsumerComponent[],
     noCache?: boolean,
     verbose?: boolean,
     dontPrintEnvMsg?: boolean
@@ -354,11 +382,10 @@ cd ${reportResult.result.value.capsule.wrkDir} && node ${SCRIPT_FILENAME} ${task
     // };
     // const buildResults = await pMapSeries(componentsAndCapsules, build);
 
-    const components = componentsAndCapsules.map(c => c.consumerComponent);
+    // const components = componentsAndCapsules.map(c => c.consumerComponent);
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: ConsumerComponent) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
-      //
       await component.build({
         scope: this.workspace.consumer.scope,
         consumer: this.workspace.consumer,
@@ -405,6 +432,7 @@ cd ${reportResult.result.value.capsule.wrkDir} && node ${SCRIPT_FILENAME} ${task
     return distsFiles.map(d => d.path);
   }
 
+  // @todo: this probably going to be changed to aggregate compilers, not watchers.
   public async aggregateWatchersByCompiler(): Promise<AggregatedWatcher[]> {
     const componentsAndCapsules = await getComponentsAndCapsules([], this.workspace);
     logger.debug(`compilerExt.getWatchProcesses, completed created of capsules`);

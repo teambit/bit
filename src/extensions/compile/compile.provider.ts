@@ -8,12 +8,7 @@ import { Scope } from '../scope';
 
 export type CompileDeps = [BitCli, Workspace, Flows, Scope];
 
-export async function provideCompile(
-  [cli, workspace, flows, scope]: CompileDeps,
-  config: {},
-  slots: [],
-  harmony: Harmony
-) {
+export async function provideCompile([cli, workspace, flows, scope]: CompileDeps, _config, _slots, harmony: Harmony) {
   const compile = new Compile(workspace, flows, scope, harmony);
   // @ts-ignore
   cli.register(new CompileCmd(compile));

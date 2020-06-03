@@ -9,12 +9,13 @@ import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
+import { CreateExtConfig } from './types';
 
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
 type TemplateFunc = (...args: string[]) => TemplateFuncResult;
 export class Create {
-  constructor(private workspace: Workspace, private registry: Registry) {}
+  constructor(private config: CreateExtConfig, private workspace: Workspace, private registry: Registry) {}
 
   register(manifest: ExtensionManifest, template: TemplateFunc) {
     this.registry.set(manifest, template);
@@ -22,8 +23,7 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
-    const config = this.workspace.config.workspaceSettings.getExtensionConfig('create');
-    const templateExtName = config?.template;
+    const templateExtName = this.config?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
     }
@@ -38,10 +38,7 @@ export class Create {
   }
 
   private getComponentPath(name: string) {
-    return composeComponentPath(
-      new BitId({ name }),
-      this.workspace.config.workspaceSettings.componentsDefaultDirectory
-    );
+    return composeComponentPath(new BitId({ name }), this.workspace.legacyDefaultDirectory);
   }
 
   private getTemplateResults(templateFunc: Function, compName: string, templateExtName: string): TemplateFuncResult {
@@ -103,10 +100,12 @@ export class Registry {
    * set a script to the registry.
    */
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
-    const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new Error(manifest.name);
-    if (!this.templates[extension.name]) this.templates[extension.name] = {};
-    this.templates[extension.name] = templateFunc;
+    // TODO: is this really needed? maybe it's just a template name and not must be a real extension id / manifest?
+    // TODO: why we need to fetch it from harmony at all?
+    const extensionConfig = this.harmony.config.get(manifest.name);
+    if (!extensionConfig) throw new Error(manifest.name);
+    if (!this.templates[manifest.name]) this.templates[manifest.name] = {};
+    this.templates[manifest.name] = templateFunc;
     return this;
   }
 }
