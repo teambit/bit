@@ -1,6 +1,7 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 
+// TODO: change to use the new logger, see more info at loadExtensions function in the workspace
 export async function loadExtensionsByManifests(harmony: Harmony, extensionsManifests: ExtensionManifest[], logger) {
   try {
     await harmony.set(extensionsManifests);

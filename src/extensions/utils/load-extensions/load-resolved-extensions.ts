@@ -7,6 +7,7 @@ import { ResolvedComponent } from '../resolved-component';
 export async function loadResolvedExtensions(
   harmony: Harmony,
   resolvedExtensions: ResolvedComponent[],
+  // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   logger
 ): Promise<void> {
   const manifests = resolvedExtensions.map(resolvedExtension => {
