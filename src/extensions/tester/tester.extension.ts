@@ -21,7 +21,7 @@ export class TesterExtension {
     const envs = await this.envs.createEnvironment(components);
     const results = await Promise.all(
       envs.runtimeEnvs.map(runtimeEnv => {
-        const tester = runtimeEnv.env.defineTester();
+        const tester = runtimeEnv.env.getTester();
         return tester.test({
           components: runtimeEnv.components,
           workspace: this.workspace

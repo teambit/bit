@@ -6,6 +6,7 @@ import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
 import { Environment } from '../environments';
+import { Tester } from '../tester';
 import jestConfig from './jest/jest.config';
 import { Component } from '../component';
 import { Workspace } from '../workspace';
@@ -14,9 +15,11 @@ import { LogPublisher } from '../logger';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
+import { TypescriptExtension } from '../typescript';
+import { Compiler } from '../compile';
 
 export class ReactEnv implements Environment {
-  constructor(private logger: LogPublisher, private jest: JestExtension) {}
+  constructor(private logger: LogPublisher, private jest: JestExtension, private ts: TypescriptExtension) {}
 
   // this should happen on component load.
   patchComponents(components: Component[], workspace: Workspace) {
@@ -42,8 +45,14 @@ export class ReactEnv implements Environment {
 
   lint() {}
 
-  defineTester() {
+  getTester(): Tester {
     return this.jest.createTester(require.resolve('./jest/jest.config'));
+  }
+
+  getCompiler(): Compiler {
+    // eslint-disable-next-line global-require
+    const tsConfig = require('./typescript/tsconfig.json');
+    return this.ts.createCompiler(tsConfig);
   }
 
   e2e() {}

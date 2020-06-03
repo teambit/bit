@@ -1,5 +1,10 @@
+import { Tester } from './../tester';
+import { Compiler } from '../compile';
+
 export interface Environment {
-  test(): any;
+  getTester(): Tester;
+  getCompiler(): Compiler;
+  // test(): any;
   // release() : void;
   // lint(): void;
   // serve(): void;
