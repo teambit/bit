@@ -383,10 +383,11 @@ export default class ComponentConfig extends AbstractConfig {
         return func(id, config);
       });
     } catch (err) {
-      // @todo: once we have a way to indicate this to the user, remove the next two lines
-      logger.console('runOnLoadEvent failed loading a load event');
+      // TODO: improve texts
+      logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
       // TODO: this show an ugly error, we should somehow show a proper errors
-      logger.console(err);
+      logger.console(err, 'warn', 'yellow');
+      logger.console('the error has been ignored', 'warn', 'yellow');
       logger.warn('extension on load event throw an error', err);
     }
   }

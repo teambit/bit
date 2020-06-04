@@ -51,8 +51,7 @@ export default class BitJsoncHelper {
   setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
     const bitJsonc = this.read(bitJsoncDir);
     const variants = bitJsonc['@teambit/variants'];
-    const newVariant = variants[variant] ?? {};
-    assign(newVariant, config);
+    const newVariant = config;
     assign(variants, { [variant]: newVariant });
     this.addKeyVal(bitJsoncDir, '@teambit/variants', variants);
   }

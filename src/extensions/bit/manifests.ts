@@ -1,7 +1,7 @@
 import { BitCliExt } from '../cli';
 import { CompileExt } from '../compile';
 import { ComponentFactoryExt } from '../component';
-import { ComposerExt } from '../composer';
+// import { ComposerExt } from '../composer';
 import { ConfigExt } from '../config';
 import { CoreExt } from '../core';
 import { CreateExt } from '../create';
@@ -28,7 +28,7 @@ export const manifestsMap = {
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
   [ComponentFactoryExt.name]: ComponentFactoryExt,
-  [ComposerExt.name]: ComposerExt,
+  // [ComposerExt.name]: ComposerExt,
   [ConfigExt.name]: ConfigExt,
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,
