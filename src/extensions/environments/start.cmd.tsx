@@ -39,6 +39,7 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     const envRuntime = await this.envs.createEnvironment(pattern ? await this.workspace.byPattern(pattern) : undefined);
     this.clearConsole();
+    // @ts-ignore
     envRuntime.dev();
     this.clearConsole();
     return <EnvConsole runtime={envRuntime} />;

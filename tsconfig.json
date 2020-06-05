@@ -8,6 +8,7 @@
     "module": "commonjs",
     "target": "es2015",
     "noImplicitAny": false,
+    "typeRoots": ["custom-types", "node_modules/@types"],
     "removeComments": true,
     "preserveConstEnums": true,
     "strictPropertyInitialization": false,

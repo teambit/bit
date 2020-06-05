@@ -59,7 +59,7 @@ describe('bit tag command', function() {
       }
     });
     it('should not tag the component', () => {
-      expect(output).to.have.string('mainFile . is not in the files list');
+      expect(output).to.have.string('unable to find the mainFile');
     });
   });
   describe('semver flags', () => {
