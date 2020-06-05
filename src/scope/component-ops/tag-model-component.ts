@@ -216,15 +216,18 @@ export default (async function tagModelComponent({
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
 
-  // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
-  // for authored and will change the component files.
-  if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+  const legacyComps: Component[] = [];
+  const nonLegacyComps: Component[] = [];
+
+  componentsToBuildAndTest.forEach(c =>
+    c.extensions && c.extensions.length ? nonLegacyComps.push(c) : legacyComps.push(c)
+  );
+  if (legacyComps.length) {
+    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+  }
+  if (nonLegacyComps.length) {
     const ids = componentsToBuildAndTest.map(c => c.id);
     await Promise.all(scope.onTag.map(func => func(ids)));
-    // console.log(componentsToBuildAndTest[2].dists)
-  } else {
-    const buildOnCapsules = true;
-    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose, undefined, buildOnCapsules);
   }
 
   logger.debug('scope.putMany: sequentially test all components');
