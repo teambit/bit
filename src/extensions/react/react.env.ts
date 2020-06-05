@@ -6,7 +6,7 @@ import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
 import { Environment } from '../environments';
-import { Tester } from '../tester';
+import { Tester, TesterExtension } from '../tester';
 import { Component } from '../component';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
@@ -16,14 +16,15 @@ import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compiler, Compile } from '../compile';
-import { Release } from '../releaser/releaser';
+import { ReleasePipe } from '../releases';
 
 export class ReactEnv implements Environment {
   constructor(
     private logger: LogPublisher,
     private jest: JestExtension,
     private ts: TypescriptExtension,
-    private compile: Compile
+    private compile: Compile,
+    private tester: TesterExtension
   ) {}
 
   // this should happen on component load.
@@ -49,29 +50,33 @@ export class ReactEnv implements Environment {
     });
   }
 
+  /**
+   * returns the component linter.
+   */
   getLinter() {}
 
+  /**
+   * returns a component tester.
+   */
   getTester(): Tester {
     return this.jest.createTester(require.resolve('./jest/jest.config'));
   }
 
+  /**
+   * returns a component compiler.
+   */
   getCompiler(): Compiler {
     // eslint-disable-next-line global-require
     const tsConfig = require('./typescript/tsconfig.json');
     return this.ts.createCompiler(tsConfig);
   }
 
-  release(): Release[] {
-    return [this.compile];
+  /**
+   * returns a release pipeline.
+   */
+  getPipe(): ReleasePipe {
+    return ReleasePipe.from([this.tester.task]);
   }
-
-  e2e() {}
-
-  compile() {
-    // return this.ts.createCompiler(tsconfig);
-  }
-
-  featureFlag() {}
 
   dev(workspace: Workspace, components: Component[]) {
     // if (config.compiler.watch) {
@@ -130,10 +135,6 @@ export class ReactEnv implements Environment {
       }
     });
   }
-
-  build() {}
-
-  serve() {}
 
   private getEntries(components: Component[]) {
     const docs = docsTemplate(components);

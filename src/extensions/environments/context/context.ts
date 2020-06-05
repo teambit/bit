@@ -21,7 +21,7 @@ export class ExecutionContext {
     /**
      * instance of the env
      */
-    private envInstance: any,
+    readonly env: any,
 
     /**
      * components for the environment context
@@ -37,10 +37,10 @@ export class ExecutionContext {
   // applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
 
   apply<T>(name: string, args: any[]): T {
-    if (!this.envInstance[name]) {
+    if (!this.env[name]) {
       throw new Error(`method ${name} not implmented`);
     }
 
-    return this.envInstance[name].apply(this.envInstance, ...args);
+    return this.env[name].apply(this.env, ...args);
   }
 }

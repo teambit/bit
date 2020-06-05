@@ -22,7 +22,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments, Environment } from '../environments';
-import { Release } from '../releaser';
+import { Release } from '../releases';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 

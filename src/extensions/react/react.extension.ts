@@ -4,6 +4,7 @@ import { Logger, LoggerExt } from '../logger';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compile, CompileExt } from '../compile';
+import { TesterExtension } from '../tester';
 
 export type ReactConfig = {
   writeDist: boolean;
@@ -11,22 +12,23 @@ export type ReactConfig = {
 };
 
 export class React {
-  static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt];
+  static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt, TesterExtension];
 
   // createTsCompiler(tsconfig: {}) {}
 
   setTsConfig() {}
 
   // @typescript-eslint/no-unused-vars
-  static provider([envs, logger, jest, ts, compile]: [
+  static provider([envs, logger, jest, ts, compile, tester]: [
     Environments,
     Logger,
     JestExtension,
     TypescriptExtension,
-    Compile
+    Compile,
+    TesterExtension
   ]) {
     // support factories from harmony?
-    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.name), jest, ts, compile));
+    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.name), jest, ts, compile, tester));
     return {};
   }
 }

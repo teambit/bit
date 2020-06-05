@@ -19,10 +19,10 @@ import { PackageManagerExt } from '../package-manager';
 import { PaperExt } from '../paper';
 import { React } from '../react';
 import { ReporterExt } from '../reporter';
-import { ScopeExt } from '../scope';
+import { ScopeExtension } from '../scope';
 import { TestExt } from '../test';
 import { TesterExtension } from '../tester';
-import { ReleaserExt } from '../releaser';
+import { ReleasesExtension } from '../releases';
 import { VariantsExt } from '../variants';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
@@ -52,12 +52,12 @@ export const manifestsMap = {
   // TODO: take from the extension itself & change name to follow convention
   [React.name]: React,
   [ReporterExt.name]: ReporterExt,
-  [ScopeExt.name]: ScopeExt,
+  [ScopeExtension.name]: ScopeExtension,
   [TestExt.name]: TestExt,
   // TODO: take from the extension itself & change name to follow convention
   Tester: TesterExtension,
   // TODO: take from the extension itself & change name to follow convention
-  Releaser: ReleaserExt,
+  [ReleasesExtension.name]: ReleasesExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt

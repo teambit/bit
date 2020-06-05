@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Releaser } from './releaser';
+import { ReleasesExtension } from './releases.extension';
 
 export class ReleaserCmd implements Command {
   name = 'run-new [pattern]';
@@ -14,7 +14,7 @@ export class ReleaserCmd implements Command {
   shortDescription = '';
   options = [];
 
-  constructor(private releaser: Releaser, private workspace: Workspace) {}
+  constructor(private releaser: ReleasesExtension, private workspace: Workspace) {}
 
   async render([userPattern]: CLIArgs) {
     const pattern = userPattern && userPattern.toString();

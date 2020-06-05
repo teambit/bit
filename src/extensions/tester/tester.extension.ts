@@ -4,6 +4,7 @@ import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { TesterService } from './tester.service';
 import { Component } from '../component';
+import { TesterTask } from './tester.task';
 
 export type TesterExtensionConfig = {
   /**
@@ -15,11 +16,31 @@ export type TesterExtensionConfig = {
 export class TesterExtension {
   static dependencies = [CLIExtension, Environments, WorkspaceExt];
 
-  constructor(private envs: Environments, private workspace: Workspace, private testerService: TesterService) {}
+  constructor(
+    /**
+     * envs extension.
+     */
+    private envs: Environments,
+
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace,
+
+    /**
+     * tester service.
+     */
+    readonly service: TesterService,
+
+    /**
+     * release task.
+     */
+    readonly task: TesterTask
+  ) {}
 
   async test(components?: Component[]) {
     const envs = await this.envs.createEnvironment(components);
-    const results = await envs.run(this.testerService);
+    const results = await envs.run(this.service);
     return results;
   }
 
@@ -31,7 +52,7 @@ export class TesterExtension {
   };
 
   static provider([cli, envs, workspace]: [CLI, Environments, Workspace], config: TesterExtensionConfig) {
-    const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex));
+    const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex), new TesterTask());
     cli.register(new TestCmd(tester, workspace));
 
     return tester;
