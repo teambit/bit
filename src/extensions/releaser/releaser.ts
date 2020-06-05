@@ -16,7 +16,7 @@ type ReleaseContext = {
 export class Releaser {
   constructor(private envs: Environments, private workspace: Workspace) {
     const func = this.processDuringTag.bind(this);
-    if (this.workspace.scope?.onTag) this.workspace.scope.onTag.push(func);
+    if (this.workspace?.scope?.onTag) this.workspace.scope.onTag.push(func);
   }
 
   async processDuringTag(ids: BitId[]) {
