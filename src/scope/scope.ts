@@ -102,7 +102,7 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onBuild: Function[] = []; // enable extensions to hook during the build process
+  public onTag: Function[] = []; // enable extensions to hook during the tag process
 
   /**
    * import components to the `Scope.
@@ -288,22 +288,13 @@ export default class Scope {
     noCache: boolean,
     verbose: boolean,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    dontPrintEnvMsg? = false,
-    buildOnCapsules = false
+    dontPrintEnvMsg? = false
   ): Promise<{ component: string; buildResults: Record<string, any> }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_BUILD);
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
-    }
-    const ids = components.map(c => c.id);
-    // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
-    // for authored and will change the component files.
-    if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
-      return R.flatten(
-        await Promise.all(this.onBuild.map(func => func(ids, noCache, verbose, dontPrintEnvMsg, buildOnCapsules)))
-      );
     }
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {

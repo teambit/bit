@@ -21,7 +21,8 @@ import { ExtensionDataList } from '../../consumer/config/extension-data';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
-import { Environments } from '../environments';
+import { Environments, Environment } from '../environments';
+import { Release } from '../releaser';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -34,12 +35,15 @@ export type ComponentAndCapsule = {
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
 export interface Compiler {
-  defineCompiler: () => { taskFile: string };
-  watchMultiple?: (capsulePaths: string[]) => any;
   compileFile: (
     fileContent: string,
     options: { componentDir: string; filePath: string }
   ) => Array<{ outputText: string; outputPath: string }> | null;
+  compileOnCapsules(capsuleDirs: string[]): { resultCode: number; error: Error | null };
+  // @todo: it might not be needed if Flows doesn't help, needs to be discussed
+  defineCompiler?: () => { taskFile: string; name: string }; // @todo: remove the "name", it's a hack
+  // @todo: remove once we finalized the compilation on capsule
+  watchMultiple?: (capsulePaths: string[]) => any;
 }
 
 type AggregatedWatcher = {
@@ -55,18 +59,14 @@ type ComponentsAndNewCompilers = {
   compilerName: string;
 };
 
-export class Compile {
+export class Compile implements Release {
   constructor(
     private workspace: Workspace,
     private flows: Flows,
     private scope: Scope,
     private envs: Environments,
     private harmony: Harmony
-  ) {
-    // @todo: why the scope is undefined here?
-    const func = this.compileDuringBuild.bind(this);
-    if (this.scope?.onBuild) this.scope.onBuild.push(func);
-  }
+  ) {}
 
   async compileDuringBuild(
     ids: BitId[],
@@ -122,6 +122,57 @@ export class Compile {
     }
 
     return [...newCompilersResultOnCapsule, ...oldCompilersResult];
+  }
+
+  async onRelease({ components, env }: { components: Component[]; env: Environment }): Promise<BuildResult[]> {
+    const compilerInstance = env.getCompiler();
+    const componentsIds = components.map(c => c.id.legacyComponentId);
+    const componentsAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
+    const consumerComponents = componentsAndCapsules.map(c => c.consumerComponent);
+    logger.debug(`compilerExt, completed created of capsules for ${componentsIds.join(', ')}`);
+    const capsulesDir = componentsAndCapsules.map(c => c.capsule.wrkDir);
+    const results = compilerInstance.compileOnCapsules(capsulesDir);
+    if (results.error) {
+      if (!(results.error instanceof Error)) throw new Error(results.errors);
+      throw results.error;
+    }
+    const distDir = 'dist'; // @todo: get it from results.
+    const resultsP = componentsAndCapsules.map(async c => {
+      const distFiles = await getFilesFromCapsuleRecursive(c.capsule, distDir, path.join(c.capsule.wrkDir, distDir));
+      const distFilesObjects = distFiles.map(distFilePath => {
+        const distPath = path.join(distDir, distFilePath);
+        return {
+          path: distFilePath,
+          content: c.capsule.fs.readFileSync(distPath).toString()
+        };
+      });
+      return { id: c.consumerComponent.id, dists: distFilesObjects };
+    });
+    const extensionsResults: buildHookResult[] = await Promise.all(resultsP);
+    // @ts-ignore
+    const buildResults = consumerComponents
+      .map(component => {
+        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
+        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
+        const builtFiles = resultFromCompiler.dists;
+        builtFiles.forEach(file => {
+          if (!file.path || !('content' in file) || typeof file.content !== 'string') {
+            throw new GeneralError(
+              'compile interface expects to get files in a form of { path: string, content: string }'
+            );
+          }
+        });
+        const distsFiles = builtFiles.map(file => {
+          return new Dist({
+            path: file.path,
+            contents: Buffer.from(file.content)
+          });
+        });
+        component.setDists(distsFiles);
+        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
+      })
+      .filter(x => x);
+    return buildResults as BuildResult[];
   }
 
   async compileOnWorkspace(

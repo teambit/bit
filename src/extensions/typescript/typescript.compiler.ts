@@ -1,13 +1,10 @@
 import path from 'path';
+import fs from 'fs-extra';
 import ts from 'typescript';
 import { Compiler } from '../compile';
 
 export class TypescriptCompiler implements Compiler {
   constructor(readonly tsConfig: Record<string, any>) {}
-
-  defineCompiler() {
-    return { taskFile: 'transpile' };
-  }
   compileFile(
     fileContent: string,
     options: { componentDir: string; filePath: string }
@@ -50,5 +47,32 @@ export class TypescriptCompiler implements Compiler {
       });
     }
     return outputFiles;
+  }
+  compileOnCapsules(capsuleDirs: string[]) {
+    capsuleDirs.forEach(capsuleDir =>
+      fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2))
+    );
+    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
+    if (compilerOptionsFromTsconfig.errors.length) {
+      throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
+    }
+    const diagnostics: ts.Diagnostic[] = [];
+    const diagAccumulator = diag => diagnostics.push(diag);
+    const host = ts.createSolutionBuilderHost(undefined, undefined, diagAccumulator);
+    const solutionBuilder = ts.createSolutionBuilder(host, capsuleDirs, { dry: false, verbose: false });
+    solutionBuilder.clean();
+    const result = solutionBuilder.build();
+    let errorStr = '';
+    if (diagnostics.length) {
+      const formatHost = {
+        getCanonicalFileName: p => p,
+        // @todo: replace this with the capsule dir for better error message
+        getCurrentDirectory: ts.sys.getCurrentDirectory,
+        getNewLine: () => ts.sys.newLine
+      };
+      errorStr = ts.formatDiagnosticsWithColorAndContext(diagnostics, formatHost);
+    }
+
+    return { resultCode: result, error: errorStr ? new Error(errorStr) : null };
   }
 }

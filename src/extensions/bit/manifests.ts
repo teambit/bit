@@ -22,6 +22,7 @@ import { ReporterExt } from '../reporter';
 import { ScopeExt } from '../scope';
 import { TestExt } from '../test';
 import { TesterExtension } from '../tester';
+import { ReleaserExt } from '../releaser';
 import { VariantsExt } from '../variants';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
@@ -55,6 +56,8 @@ export const manifestsMap = {
   [TestExt.name]: TestExt,
   // TODO: take from the extension itself & change name to follow convention
   Tester: TesterExtension,
+  // TODO: take from the extension itself & change name to follow convention
+  Releaser: ReleaserExt,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt

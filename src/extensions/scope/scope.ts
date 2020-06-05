@@ -4,7 +4,7 @@ import { BitIds as ComponentsIds } from '../../bit-id';
 import { Component, ComponentID } from '../component';
 
 export class Scope {
-  public onBuild?: Function[];
+  public onTag?: Function[];
   constructor(
     /**
      * legacy scope
@@ -12,7 +12,7 @@ export class Scope {
     readonly legacyScope?: LegacyScope
   ) {
     this.legacyScope = legacyScope;
-    this.onBuild = legacyScope?.onBuild;
+    this.onTag = legacyScope?.onTag;
   }
 
   // TODO: support lanes / other kind of objects

@@ -16,10 +16,16 @@ import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compiler } from '../compile';
+import { Compiler, Compile } from '../compile';
+import { Release } from '../releaser/releaser';
 
 export class ReactEnv implements Environment {
-  constructor(private logger: LogPublisher, private jest: JestExtension, private ts: TypescriptExtension) {}
+  constructor(
+    private logger: LogPublisher,
+    private jest: JestExtension,
+    private ts: TypescriptExtension,
+    private compile: Compile
+  ) {}
 
   // this should happen on component load.
   patchComponents(components: Component[], workspace: Workspace) {
@@ -53,6 +59,10 @@ export class ReactEnv implements Environment {
     // eslint-disable-next-line global-require
     const tsConfig = require('./typescript/tsconfig.json');
     return this.ts.createCompiler(tsConfig);
+  }
+
+  release(): Release[] {
+    return [this.compile];
   }
 
   e2e() {}
