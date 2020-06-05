@@ -11,7 +11,7 @@ export type ReactConfig = {
 export class React {
   static dependencies = [Environments, LoggerExt, JestExtension];
 
-  createTsCompiler(tsconfig: {}) {}
+  // createTsCompiler(tsconfig: {}) {}
 
   setTsConfig() {}
 

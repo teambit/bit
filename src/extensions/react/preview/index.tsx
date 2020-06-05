@@ -1,6 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Preview } from './preview';
+// import React from 'react';
+// import ReactDOM from 'react-dom';
+// import { Preview } from './preview';
 
 // ReactDOM.render(
 //   <React.StrictMode>

@@ -3,7 +3,7 @@ import React from 'react';
 import { Color, Box, Text, render } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
 import { GraphBuilder, VersionSubgraph } from '../../graph';
-import NoDataForInsight from '../exceptions/no-data-for-insight';
+// import NoDataForInsight from '../exceptions/no-data-for-insight';
 
 export const INSIGHT_NAME = 'duplicate dependencies';
 
@@ -84,7 +84,7 @@ export default class DuplicateDependencies implements Insight {
               <Text>dependency: {mainDependency.dependencyId}</Text>
               <Text>latest version: {mainDependency.latestVersion}</Text>
               <div>
-                <Text>dependents that don't use latest version:</Text>
+                <Text>dependents that dont use latest version:</Text>
                 {mainDependency.dependents.map(function(dependent) {
                   return (
                     <div key={dependent.id}>

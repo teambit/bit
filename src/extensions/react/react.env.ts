@@ -5,8 +5,8 @@ import { resolve } from 'path';
 import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
-// import { Environment } from '../environments';
 import { Component } from '../component';
+import { Environment } from '../environments';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
 import { LogPublisher } from '../logger';
@@ -14,7 +14,7 @@ import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 
-export class ReactEnv {
+export class ReactEnv implements Environment {
   constructor(private logger: LogPublisher, private jest: JestExtension) {}
 
   // this should happen on component load.

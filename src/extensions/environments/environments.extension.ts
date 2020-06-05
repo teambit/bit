@@ -54,7 +54,7 @@ export class Environments {
   /**
    * register an environment.
    */
-  registerEnv(env: { [key: string]: string }) {
+  registerEnv(env: Environment) {
     // @ts-ignore
     return this.envSlot.register(env);
   }
