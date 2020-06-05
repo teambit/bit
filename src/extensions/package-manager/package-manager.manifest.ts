@@ -1,7 +1,7 @@
 import { LoggerExt } from '../logger';
 import { providePackageManager } from './package-manager.provider';
 
-const DEFAULT_PACKAGE_MANAGER = 'librarian';
+const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export default {
   name: '@teambit/package-manager',

@@ -51,7 +51,7 @@ export type WorkspaceExtensionProps = {
   components?: ComponentScopeDirMap;
 };
 
-export type PackageManagerClients = 'librarian' | 'npm' | 'yarn' | undefined;
+export type PackageManagerClients = 'npm' | 'yarn' | undefined;
 
 export interface DependencyResolverExtensionProps {
   packageManager: PackageManagerClients;

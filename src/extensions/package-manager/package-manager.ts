@@ -6,7 +6,6 @@ import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
-import librarian from 'librarian';
 import { Logger, LogPublisher } from '../logger';
 import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
@@ -87,19 +86,11 @@ export default class PackageManager {
     }
     await safeUnlink('yarn.lock');
     await safeUnlink('package-lock.json');
-    await safeUnlink('librarian-manifests.json');
   }
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
     this.emitter.emit('beforeInstallingCapsules', capsules.length);
-    if (packageManager === 'librarian') {
-      const ret = await librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
-      for (const capsule of capsules) {
-        this.emitter.emit('capsuleInstalled', capsule.component.id.toString());
-      }
-      return ret;
-    }
     if (packageManager === 'npm' || packageManager === 'yarn') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async capsule => {
@@ -131,20 +122,6 @@ export default class PackageManager {
     // TODO: remove this hack once harmony supports ownExtensionName
     const logPublisher: LogPublisher = this.logger.createLogPublisher('packageManager');
     const packageManager = opts.packageManager || this.packageManagerName;
-    if (packageManager === 'librarian') {
-      const child = librarian.runInstall(folder, { stdio: 'pipe' });
-      await new Promise((resolve, reject) => {
-        child.stdout.on('data', d => logPublisher.info(folder, d.toString()));
-        // @ts-ignore
-        child.stderr.on('data', d => logPublisher.warn(folder, d.toString()));
-        child.on('error', e => reject(e));
-        child.on('close', () => {
-          // TODO: exit status
-          resolve();
-        });
-      });
-      return null;
-    }
     if (packageManager === 'yarn') {
       const child = execa('yarn', [], { cwd: folder, stdio: 'pipe' });
       pipeOutput(child);

@@ -23,7 +23,7 @@ export class CapsuleList extends Command {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
     const logger = new Logger();
-    const packageManager = new PackageManager('librarian', logger);
+    const packageManager = new PackageManager('npm', logger);
     // const capsule = await Capsule.provide();
     const isolatorExt = await Isolator.provide([packageManager]);
     return isolatorExt.list(consumer);
