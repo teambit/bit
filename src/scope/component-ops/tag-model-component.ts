@@ -23,6 +23,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
+import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../api/consumer/lib/feature-toggle';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
@@ -214,8 +215,17 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-  const buildOnCapsules = true;
-  await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose, undefined, buildOnCapsules);
+
+  // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
+  // for authored and will change the component files.
+  if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+    const ids = componentsToBuildAndTest.map(c => c.id);
+    await Promise.all(scope.onTag.map(func => func(ids)));
+    // console.log(componentsToBuildAndTest[2].dists)
+  } else {
+    const buildOnCapsules = true;
+    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose, undefined, buildOnCapsules);
+  }
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
@@ -280,7 +290,6 @@ export default (async function tagModelComponent({
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateDirManipulation(taggedComponents);

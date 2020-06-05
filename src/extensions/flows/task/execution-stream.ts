@@ -21,7 +21,7 @@ export function listenToExecutionStream(exec: ContainerExec, id: string, time: D
   });
 
   exec.stderr.on('data', function(data) {
-    logger.debug(`flowsExt, createExecutionStream of ${id} got error: ${data.toString()}`);
+    logger.error(`flowsExt, createExecutionStream of ${id} got error: ${data.toString()}`);
     subscriber.next({
       type: 'task:stderr',
       id,
