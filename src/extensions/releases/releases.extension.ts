@@ -66,7 +66,7 @@ export class ReleasesExtension {
     const releasesService = new ReleasesService(isolator, workspace);
     const releases = new ReleasesExtension(envs, workspace, releasesService);
     const func = releases.tagListener.bind(this);
-    scope.onTag(func);
+    if (scope) scope.onTag(func);
 
     cli.register(new ReleaserCmd(releases, workspace));
     return releases;

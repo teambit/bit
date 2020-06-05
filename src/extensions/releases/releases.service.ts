@@ -1,5 +1,4 @@
 import { EnvService, ExecutionContext } from '../environments';
-import { ReleasePipe } from './release-pipe';
 import { Isolator } from '../isolator';
 import { Workspace } from '../workspace';
 

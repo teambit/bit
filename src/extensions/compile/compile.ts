@@ -10,7 +10,7 @@ import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { Capsule } from '../isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import { Flows, IdsAndFlows, TASK_SEPARATOR, SCRIPT_FILENAME } from '../flows';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
@@ -22,7 +22,6 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments, Environment } from '../environments';
-import { Release } from '../releases';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -59,11 +58,11 @@ type ComponentsAndNewCompilers = {
   compilerName: string;
 };
 
-export class Compile implements Release {
+export class Compile {
   constructor(
     private workspace: Workspace,
     private flows: Flows,
-    private scope: Scope,
+    private scope: ScopeExtension,
     private envs: Environments,
     private harmony: Harmony
   ) {}
