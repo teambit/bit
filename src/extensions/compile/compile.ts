@@ -21,6 +21,7 @@ import { ExtensionDataList } from '../../consumer/config/extension-data';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
+import { Environments } from '../environments';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -32,30 +33,36 @@ export type ComponentAndCapsule = {
 
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
-type CompilerInstance = {
+export interface Compiler {
   defineCompiler: () => { taskFile: string };
   watchMultiple?: (capsulePaths: string[]) => any;
   compileFile: (
     fileContent: string,
     options: { componentDir: string; filePath: string }
   ) => Array<{ outputText: string; outputPath: string }> | null;
-};
+}
 
 type AggregatedWatcher = {
   compilerId: BitId;
-  compilerInstance: CompilerInstance;
+  compilerInstance: Compiler;
   componentIds: BitId[];
   capsulePaths: string[];
 };
 
 type ComponentsAndNewCompilers = {
   component: ConsumerComponent;
-  compilerInstance: CompilerInstance;
-  compilerId: BitId;
+  compilerInstance: Compiler;
+  compilerName: string;
 };
 
 export class Compile {
-  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope, private harmony: Harmony) {
+  constructor(
+    private workspace: Workspace,
+    private flows: Flows,
+    private scope: Scope,
+    private envs: Environments,
+    private harmony: Harmony
+  ) {
     // @todo: why the scope is undefined here?
     const func = this.compileDuringBuild.bind(this);
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
@@ -128,13 +135,13 @@ export class Compile {
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
     components.forEach(c => {
-      const compileConfig = this.getCompilerConfig(c);
+      const environment = this.envs.getEnvFromExtensions(c.extensions);
+      const compilerInstance = environment?.getCompiler();
       // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
       // inside the component dir.
-      if (compileConfig && compileConfig.compiler && c.componentMap?.getComponentDir()) {
-        const compilerInstance = this.getCompilerInstance(compileConfig.compiler, c.extensions);
-        const compilerId = this.getCompilerBitId(compileConfig.compiler, c.extensions);
-        componentsAndNewCompilers.push({ component: c, compilerInstance, compilerId });
+      if (compilerInstance && c.componentMap?.getComponentDir()) {
+        const compilerName = compilerInstance.constructor.name || 'compiler';
+        componentsAndNewCompilers.push({ component: c, compilerInstance, compilerName });
       } else {
         componentsWithLegacyCompilers.push(c);
       }
@@ -168,7 +175,7 @@ export class Compile {
   private async compileWithNewCompilersOnWorkspace(
     componentsAndNewCompilers: ComponentsAndNewCompilers[]
   ): Promise<BuildResult[]> {
-    const build = async ({ component, compilerId, compilerInstance }: ComponentsAndNewCompilers) => {
+    const build = async ({ component, compilerName: compilerId, compilerInstance }: ComponentsAndNewCompilers) => {
       if (!compilerInstance.compileFile) {
         throw new Error(`compiler ${compilerId.toString()} doesn't implement "compileFile" interface`);
       }
@@ -223,7 +230,7 @@ ${compileErrors.map(formatError).join('\n')}`);
       if (!found) throw new Error(`unable to find dist main file for ${component.id.toString()}`);
       const packageJson = PackageJsonFile.loadFromPathSync(this.workspace.path, packageDir);
       if (!packageJson.fileExist) {
-        throw new Error(`failed finding package.json file in ${packageDir}`);
+        throw new Error(`failed finding package.json file in ${packageDir}, please run "bit link"`);
       }
       packageJson.addOrUpdateProperty('main', pathJoinLinux(distDirName, found));
       dataToPersist.addFile(packageJson.toVinylFile());
@@ -237,9 +244,9 @@ ${compileErrors.map(formatError).join('\n')}`);
     return allBuildResults;
   }
 
-  private getCompilerInstance(compiler: string, extensions: ExtensionDataList): CompilerInstance {
+  private getCompilerInstance(compiler: string, extensions: ExtensionDataList): Compiler {
     const compilerBitId = this.getCompilerBitId(compiler, extensions);
-    const compilerExtension = this.harmony.get<CompilerInstance>(compilerBitId.toString());
+    const compilerExtension = this.harmony.get<Compiler>(compilerBitId.toString());
     if (!compilerExtension) {
       throw new Error(`failed to get "${compiler}" extension from Harmony.
 the following extensions are available: ${this.harmony.extensionsIds.join(', ')}`);

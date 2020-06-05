@@ -5,6 +5,7 @@ import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -49,6 +50,17 @@ export class Environments {
 
   async createEnvironment(components?: Component[]): Promise<Runtime> {
     return this.createRuntime(components || (await this.workspace.list()));
+  }
+
+  // @todo remove duplications from `aggregateByDefs`, it was copied and pasted
+  getEnvFromExtensions(extensions: ExtensionDataList): Environment | null {
+    const extension = extensions.findExtension(this.constructor.name);
+    if (!extension) return null;
+    const envId = extension.config.env;
+    // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
+    const env = this.envSlot.get(envId);
+    if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
+    return env;
   }
 
   /**

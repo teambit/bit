@@ -23,15 +23,11 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       appOutput = helper.fixtures.populateComponentsTS();
-      helper.fixtures.addExtensionTS();
-      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
-      const tsExtensionVal = {};
-      const compileExtensionKey = 'compile';
-      const compileExtensionVal = {
-        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
+      const environments = {
+        env: 'React',
+        config: {}
       };
-      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
-      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
+      helper.extensions.addExtensionToVariant('*', 'Environments', environments);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
