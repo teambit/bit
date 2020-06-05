@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-let docs = [];
+// let docs = [];
 
 export function addDocs(docs: any[]) {
   const Doc = docs[0];

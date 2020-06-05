@@ -1,12 +1,12 @@
 import { Component } from '../component';
 import { Workspace } from '../workspace';
-import { EnvContext } from '../environments';
+import { ExecutionContext } from '../environments';
 
 export type TestResults = {
   total: number;
 };
 
-export interface TesterContext extends EnvContext {
+export interface TesterContext extends ExecutionContext {
   components: Component[];
   workspace: Workspace;
   quite?: boolean;

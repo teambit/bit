@@ -49,7 +49,7 @@ export const manifestsMap = {
   [PackageManagerExt.name]: PackageManagerExt,
   [PaperExt.name]: PaperExt,
   // TODO: take from the extension itself & change name to follow convention
-  React: React,
+  [React.name]: React,
   [ReporterExt.name]: ReporterExt,
   [ScopeExt.name]: ScopeExt,
   [TestExt.name]: TestExt,

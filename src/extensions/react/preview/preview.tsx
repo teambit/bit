@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Component } from '../../composer/component';
+// import { Component } from '../../composer/component';
 
 export function Preview() {
   // const docsPath = currentComponent().docs;

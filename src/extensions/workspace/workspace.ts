@@ -154,7 +154,8 @@ export default class Workspace implements ComponentHost {
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
-  byPattern(pattern: string): Promise<Component[]> {}
+  // @gilad needs to implment on variants
+  // byPattern(pattern: string): Promise<Component[]> {}
 
   /**
    * @todo: remove the string option, use only BitId

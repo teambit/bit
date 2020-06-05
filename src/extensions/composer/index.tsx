@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Composer } from './composer';
+// import { Composer } from './composer';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Composer />
+    <div />
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -1,7 +1,7 @@
-import { Composition } from './compoisiton';
+// import { Composition } from './compoisiton';
 
 export class CompositionStore {
-  constructor(compositions: Composition[]) {}
+  // constructor(compositions: Composition[]) {}
 
   get() {}
 
