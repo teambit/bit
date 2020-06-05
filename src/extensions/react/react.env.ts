@@ -67,10 +67,6 @@ export class ReactEnv implements Environment {
 
   e2e() {}
 
-  compile() {
-    // return this.ts.createCompiler(tsconfig);
-  }
-
   featureFlag() {}
 
   dev(workspace: Workspace, components: Component[]) {
@@ -94,15 +90,13 @@ export class ReactEnv implements Environment {
           io.sockets.emit(
             'components',
             patchedComponent.map(component => {
-              // refactor to compoisitions
+              // refactor to compositions
               const docs = component.filesystem.readdirSync('/').filter(path => path.includes('.docs.'))[0];
-
+              const componentDir = component.state._consumer.componentMap?.getComponentDir();
+              if (!componentDir) throw new Error(`React.dev: component ${component.id.name} is missing componentMap`);
               return {
                 id: component.id.toString(),
-                docs: docs
-                  ? // @ts-ignore
-                    join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs)
-                  : null
+                docs: docs ? join(workspace.path, componentDir, docs) : null
               };
             })
           );

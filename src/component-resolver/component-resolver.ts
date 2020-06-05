@@ -16,6 +16,7 @@ function getLatestVersion(bitId: BitId, componentsDir: string): number {
   if (!versionsDirs || !versionsDirs.length) {
     throw new ComponentNotFound(bitId.toString());
   }
+  // @ts-ignore
   return Math.max(versionsDirs);
 }
 

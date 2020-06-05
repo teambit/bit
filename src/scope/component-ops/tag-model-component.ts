@@ -23,7 +23,6 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
-import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../api/consumer/lib/feature-toggle';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {

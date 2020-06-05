@@ -28,13 +28,7 @@ export default class ComponentFactory {
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */
   fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
-    return new Component(
-      ComponentID.fromLegacy(legacyComponent.id),
-      null,
-      State.fromLegacy(legacyComponent),
-      undefined,
-      this.isolateEnv
-    );
+    return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy(legacyComponent));
   }
 
   static dependencies = [IsolatorExt];
