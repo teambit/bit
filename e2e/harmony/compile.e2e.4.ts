@@ -24,22 +24,24 @@ chai.use(require('chai-fs'));
       helper.bitJsonc.addDefaultScope();
       appOutput = helper.fixtures.populateComponentsTS();
       helper.fixtures.addExtensionTS();
-      const extensions = {
-        [`${helper.scopes.remote}/extensions/typescript`]: {},
-        compile: {
-          compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-        }
+      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
+      const tsExtensionVal = {};
+      const compileExtensionKey = 'compile';
+      const compileExtensionVal = {
+        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
       };
-      helper.bitJsonc.addToVariant(undefined, '*', 'extensions', extensions);
+      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
+      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
       before(() => {
         helper.command.runCmd('bit compile');
       });
-      it('should not write dists files inside the capsule as it is not needed for development', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
-        expect(path.join(capsule, 'dist')).to.not.be.a.path();
+      it('should not create a capsule as it is not needed for development', () => {
+        const capsulesJson = helper.command.runCmd('bit capsule-list -j');
+        const capsules = JSON.parse(capsulesJson);
+        capsules.capsules.forEach(c => expect(c).to.not.have.string('comp1'));
       });
       it('should write the dists files inside the node-modules of the component', () => {
         const nmComponent = path.join(

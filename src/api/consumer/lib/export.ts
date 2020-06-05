@@ -176,8 +176,8 @@ async function getComponentsToExport(
 }
 
 function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
-  const workspaceDefaultScope = consumer.config.workspaceSettings.defaultScope;
-  let workspaceDefaultOwner = consumer.config.workspaceSettings.defaultOwner;
+  const workspaceDefaultScope = consumer.config.defaultScope;
+  let workspaceDefaultOwner = consumer.config.defaultOwner;
   // For backward computability don't treat the default binding prefix as real owner
   if (workspaceDefaultOwner === DEFAULT_BINDINGS_PREFIX) {
     workspaceDefaultOwner = undefined;
@@ -186,7 +186,7 @@ function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string 
   const idsArray = ids.map(id => {
     if (remote) return id.changeScope(remote);
     if (id.hasScope()) return id;
-    const overrides = consumer.config.componentsConfig?.getOverrideComponentData(id);
+    const overrides = consumer.config.getComponentConfig(id);
     const componentDefaultScope = overrides ? overrides.defaultScope : null;
     // TODO: handle separation of owner from default scope on component
     // TODO: handle owner of component

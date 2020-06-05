@@ -19,10 +19,12 @@ const rejectNils = R.reject(isNil);
 const defaultNpmArgs = [];
 const defaultYarnArgs = [];
 const defaultLibrarianArgs = [];
+const defaultPnpmArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
   yarn: defaultYarnArgs,
-  librarian: defaultLibrarianArgs
+  librarian: defaultLibrarianArgs,
+  pnpm: defaultPnpmArgs
 };
 const defaultPackageManagerProcessOptions = {
   cwd: process.cwd

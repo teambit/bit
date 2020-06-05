@@ -274,6 +274,18 @@ export default class EnvExtension extends BaseExtension {
       logger.silly(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
+    if (isAuthor && componentConfig && componentConfig[envType]) {
+      // load from component config.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (Object.keys(componentConfig[envType])[0] === MANUALLY_REMOVE_ENVIRONMENT) {
+        logger.debug(`env-extension, ${envType} was manually removed from the component config`);
+        return null;
+      }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const envConfig = { [envType]: componentConfig[envType] };
+      logger.silly(`env-extension loading ${envType} from component config in workspace config`);
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    }
     if (!componentHasWrittenConfig && !isAuthor && componentFromModel && componentFromModel[envType]) {
       // config was not written into component dir, load the config from the model
       logger.silly(`env-extension, loading ${envType} from the model`);

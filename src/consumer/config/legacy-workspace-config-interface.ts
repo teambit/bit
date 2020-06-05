@@ -22,11 +22,12 @@ interface DependencyResolverExtensionProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface ILegacyWorkspaceSettings {
+export interface ILegacyWorkspaceConfig {
+  lang: string;
   defaultScope?: string;
   _useWorkspaces?: boolean;
-  dependencyResolver: DependencyResolverExtensionProps;
-  packageManager: PackageManagerClients;
+  dependencyResolver?: DependencyResolverExtensionProps;
+  packageManager?: PackageManagerClients;
   _bindingPrefix?: string;
   _distEntry?: string;
   _distTarget?: string;
@@ -36,17 +37,16 @@ export interface ILegacyWorkspaceSettings {
   _resolveModules?: ResolveModulesConfig;
   _manageWorkspaces?: boolean;
   defaultOwner?: string;
-}
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface ILegacyWorkspaceConfig {
-  workspaceSettings: ILegacyWorkspaceSettings;
   path: string;
+  extensions: { [extensionId: string]: any };
   _getEnvsByType: (type: EnvType) => Compilers | Testers | undefined;
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;
   toVinyl: (workspaceDir: PathOsBasedAbsolute) => Promise<AbstractVinyl[] | undefined>;
   componentsConfig: ConsumerOverrides | undefined;
-  getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent;
+  getComponentConfig: (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
   _legacyPlainObject: () => { [prop: string]: any } | undefined;
+  _compiler?: Compilers;
   _setCompiler: (compiler) => void;
   _setTester: (tester) => void;
+  _tester?: Testers;
 }

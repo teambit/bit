@@ -3,6 +3,7 @@ import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
+import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
 import { PaperError } from './extensions/paper';
 
@@ -18,14 +19,14 @@ Bluebird.config({
 HooksManager.init();
 try {
   harmony
-    .run(BitExt)
+    .run(ConfigExt)
     .then(() => {
-      // harmony.set([BitCliExt]);
+      return harmony.set([BitExt]);
     })
     .then(() => {
-      const cli = harmony.get('BitCli');
-      // @ts-ignore :TODO until refactoring cli extension to dynamiclly load extensions
-      return cli.run();
+      const cli = harmony.get('cli');
+      // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
+      return cli?.run();
     })
     .catch(err => {
       const originalError = err.originalError || err;

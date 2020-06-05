@@ -69,7 +69,9 @@ export class Environments {
     const map = {};
     components.forEach((current: Component) => {
       // :TODO fix this api. replace with `this.id` and improve naming.
-      const extension = current.config.extensions.findExtension(this.id);
+      // const extension = current.config.extensions.findExtension(this.id);
+      // TODO: replace this.constructor.name with this.id once we fix it in harmony
+      const extension = current.config.extensions.findExtension(this.constructor.name);
       // this can also be handled better
       if (!extension) return;
       const envId = extension.config.env;

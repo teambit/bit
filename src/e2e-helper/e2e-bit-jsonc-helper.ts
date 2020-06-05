@@ -2,6 +2,7 @@ import { parse, stringify, assign } from 'comment-json';
 import * as path from 'path';
 import fs from 'fs-extra';
 import ScopesData from './e2e-scopes';
+import { WORKSPACE_JSONC } from '../constants';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class BitJsoncHelper {
@@ -34,19 +35,33 @@ export default class BitJsoncHelper {
 
   addToVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, key: string, val: any) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc.variants;
+    const variants = bitJsonc['@teambit/variants'];
     const newVariant = variants[variant] ?? {};
     assign(newVariant, { [key]: val });
-    // console.log('currentVariants', currentVariants)
-    assign(variants, { [variant]: newVariant });
+    this.setVariant(bitJsoncDir, variant, newVariant);
+  }
 
-    this.addKeyVal(bitJsoncDir, 'variants', variants);
+  /**
+   * Replace the entire variant config with the provided config.
+   * In case you only want to add new extension to variant you probably want to use addToVariant
+   * @param bitJsoncDir
+   * @param variant
+   * @param config
+   */
+  setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
+    const bitJsonc = this.read(bitJsoncDir);
+    const variants = bitJsonc['@teambit/variants'];
+    const newVariant = variants[variant] ?? {};
+    assign(newVariant, config);
+    assign(variants, { [variant]: newVariant });
+    this.addKeyVal(bitJsoncDir, '@teambit/variants', variants);
   }
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
-    bitJsonc.workspace[key] = val;
-    this.write(bitJsonc, bitJsoncDir);
+    const workspace = bitJsonc['@teambit/workspace'];
+    assign(workspace, { [key]: val });
+    this.addKeyVal(bitJsoncDir, '@teambit/workspace', workspace);
   }
 
   addDefaultScope(scope = this.scopes.remote) {
@@ -59,5 +74,5 @@ export default class BitJsoncHelper {
 }
 
 function composePath(dir: string): string {
-  return path.join(dir, 'bit.jsonc');
+  return path.join(dir, WORKSPACE_JSONC);
 }

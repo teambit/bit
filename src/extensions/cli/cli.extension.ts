@@ -3,7 +3,7 @@ import { CLIProvider } from './cli.provider';
 import { PaperExt } from '../paper';
 
 export const BitCliExt: ExtensionManifest = {
-  name: 'BitCli',
+  name: 'cli',
   dependencies: [PaperExt],
   provider: CLIProvider
 };

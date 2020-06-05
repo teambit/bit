@@ -5,11 +5,13 @@ import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
-import { WorkspaceConfig } from '../workspace-config';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolver } from '../dependency-resolver';
+import { Variants } from '../variants';
+import { WorkspaceExtConfig } from './types';
+import ComponentConfig from '../../consumer/config';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
+export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -27,9 +29,9 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
-  config: {},
-  slots: [],
+  [scope, component, isolator, dependencyResolver, variants, logger]: WorkspaceDeps,
+  config: WorkspaceExtConfig,
+  _slots,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -41,28 +43,28 @@ export default async function provideWorkspace(
   // we'll have to fix this asap.
   try {
     const consumer = await loadConsumerIfExist();
+
     if (consumer) {
       const workspace = new Workspace(
+        config,
         consumer,
-        workspaceConfig,
         scope,
         component,
         isolator,
         dependencyResolver,
+        variants,
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
-        const extensionsConfig = componentConfig.allExtensions().toExtensionConfigList();
-        const res = await workspace.loadExtensionsByConfig(extensionsConfig);
-        return res;
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
+        return workspace.loadExtensions(componentConfig.allExtensions());
       });
       return workspace;
     }
 
     return undefined;
-  } catch {
+  } catch (err) {
     return undefined;
   }
 }

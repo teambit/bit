@@ -1,4 +1,6 @@
 import { EventEmitter } from 'events';
+// TODO: change to module path once types become a component
+import { LogPublisher } from '../types';
 
 export enum LogLevel {
   INFO = 'info',
@@ -10,13 +12,6 @@ export type LogEntry = {
   componentId: string; // TODO: actual ComponentID
   messages: [any];
   logLevel: LogLevel;
-};
-
-export type LogPublisher = {
-  info: (...any) => void;
-  warn: (...any) => void;
-  error: (...any) => void;
-  debug: (...any) => void;
 };
 
 export default class Logger {

@@ -166,7 +166,7 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
-      resolveModulesConfig: this.consumer.config.workspaceSettings._resolveModules,
+      resolveModulesConfig: this.consumer.config._resolveModules,
       cacheResolvedDependencies,
       cacheProjectAst
     });
@@ -443,7 +443,7 @@ export default class DependencyResolver {
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.config.workspaceSettings._resolveModules;
+    const resolveModules = this.consumer.config._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const aliases = resolveModules.aliases;
     const foundAlias = Object.keys(aliases).find(alias => depFile.startsWith(aliases[alias]));
