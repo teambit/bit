@@ -13,9 +13,9 @@ import { Isolator, IsolatorExt } from '../isolator';
  */
 export type ReleasesConfig = {
   /**
-   * number of components to build in parralel.
+   * number of components to build in parallel.
    */
-  parrallel: 10;
+  parallel: 10;
 };
 
 export class ReleasesExtension {

@@ -20,8 +20,8 @@ export class ReleasesService implements EnvService {
    * runs a pipeline of tasks on all components in the execution context.
    */
   async run(context: ExecutionContext) {
-    // make release pipe accissable throughout the context.
-    const releasePipe = context.apply<ReleasePipe>('getPipe', [context]);
+    // make release pipe accessible throughout the context.
+    const releasePipe = context.env.getPipe(context);
     if (!releasePipe) {
       throw new Error('releaser.runRelease expects concreteReleaser to implement onRelease()');
     }
