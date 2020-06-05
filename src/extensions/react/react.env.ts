@@ -5,8 +5,7 @@ import { resolve } from 'path';
 import socketIO from 'socket.io';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
-import { Environment } from '../environments';
-import jestConfig from './jest/jest.config';
+// import { Environment } from '../environments';
 import { Component } from '../component';
 import { Workspace } from '../workspace';
 import createWebpackConfig from './webpack.config';
@@ -15,7 +14,7 @@ import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 
-export class ReactEnv implements Environment {
+export class ReactEnv {
   constructor(private logger: LogPublisher, private jest: JestExtension) {}
 
   // this should happen on component load.
@@ -23,6 +22,7 @@ export class ReactEnv implements Environment {
     return components.map(component => {
       const docs = component.filesystem.readdirSync('/').filter(path => path.includes('.docs.'))[0];
       if (!docs) return component;
+      // @ts-ignore
       const filepath = join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs);
       component.state.store.push(
         new ExtensionDataEntry(
@@ -54,7 +54,7 @@ export class ReactEnv implements Environment {
 
   featureFlag() {}
 
-  dev(workspace: Workspace, components: Component[], options: any) {
+  dev(workspace: Workspace, components: Component[]) {
     // if (config.compiler.watch) {
     //   this.typescript.watch();
     // }
@@ -81,7 +81,8 @@ export class ReactEnv implements Environment {
               return {
                 id: component.id.toString(),
                 docs: docs
-                  ? join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs)
+                  ? // @ts-ignore
+                    join(workspace.path, component.state._consumer.componentMap?.getComponentDir(), docs)
                   : null
               };
             })
@@ -123,6 +124,7 @@ export class ReactEnv implements Environment {
     const paths = components.map(component => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
+        // @ts-ignore
         component.state._consumer.componentMap?.getComponentDir(),
         // @ts-ignore
         component.config.main
