@@ -10,7 +10,7 @@ export class TesterService implements EnvService {
   ) {}
 
   async run(context: ExecutionContext): Promise<TestResults> {
-    const tester = context.apply<Tester>('defineTester', [context]);
+    const tester = context.apply<Tester>('getTester', [context]);
     return tester.test(context);
   }
 }

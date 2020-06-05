@@ -38,7 +38,7 @@ export class ExecutionContext {
 
   apply<T>(name: string, args: any[]): T {
     if (!this.envInstance[name]) {
-      throw new Error('method not implmented');
+      throw new Error(`method ${name} not implmented`);
     }
 
     return this.envInstance[name].apply(this.envInstance, ...args);

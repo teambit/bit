@@ -155,7 +155,10 @@ export default class Workspace implements ComponentHost {
   }
 
   // @gilad needs to implment on variants
-  // byPattern(pattern: string): Promise<Component[]> {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async byPattern(pattern: string): Promise<Component[]> {
+    return [];
+  }
 
   /**
    * @todo: remove the string option, use only BitId
