@@ -1,4 +1,4 @@
-import { runCLI, run } from 'jest';
+import { runCLI } from 'jest';
 import { join } from 'path';
 import { Tester, TestResults, TesterContext } from '../tester';
 
@@ -21,6 +21,7 @@ export class JestTester implements Tester {
           return path.match(testerConfig?.testRegex || '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$');
         })
         .map(path => {
+          // @ts-ignore
           return join(context.workspace.path, current.state._consumer.componentMap?.getComponentDir(), path);
         });
 
@@ -35,8 +36,8 @@ export class JestTester implements Tester {
     });
 
     Object.assign(config, jestConfig);
-    // :TODO he we should match results to components and format them accordingly.
-    const res = await runCLI(config, [this.jestConfig]);
+    // :TODO he we should match results to components and format them accordingly. (e.g. const results = runCLI(...))
+    await runCLI(config, [this.jestConfig]);
     return {
       total: 50
     };

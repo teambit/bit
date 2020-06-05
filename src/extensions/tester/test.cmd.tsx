@@ -9,7 +9,7 @@ import { Workspace } from '../workspace';
 export class TestCmd implements Command {
   name = 'test-new [pattern]';
   description = 'test set of components in your workspace';
-  alias = 't';
+  alias = 'at';
   group = 'development';
   shortDescription = '';
   options = [];
@@ -23,7 +23,7 @@ export class TestCmd implements Command {
   }
 }
 
-function Envs({ envs }) {
+function Envs({ envs }: any) {
   return (
     <Box>
       {envs.map((env, key) => {
@@ -33,8 +33,8 @@ function Envs({ envs }) {
   );
 }
 
-function Env({ env, results }) {
+function Env({ env }: any) {
   return <Color cyan>{env}</Color>;
 }
 
-function TestResults() {}
+// function TestResults() {}

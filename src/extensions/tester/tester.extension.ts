@@ -30,8 +30,8 @@ export class TesterExtension {
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}'
   };
 
-  static provider([cli, envs, workspace]: [CLI, Environments, Workspace]) {
-    const tester = new TesterExtension(envs, workspace, new TesterService());
+  static provider([cli, envs, workspace]: [CLI, Environments, Workspace], config: TesterExtensionConfig) {
+    const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex));
     cli.register(new TestCmd(tester, workspace));
 
     return tester;
