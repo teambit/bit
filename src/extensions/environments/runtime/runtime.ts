@@ -17,12 +17,15 @@ export class Runtime {
   ) {}
 
   async run(service: EnvService) {
-    const contexts = this.runtimeEnvs.map(env => {
-      return {
-        env: env.id,
-        res: service.run(new ExecutionContext(env.id, this, env.env, env.components, this.workspace))
-      };
-    });
+    const contexts = await Promise.all(
+      this.runtimeEnvs.map(async env => {
+        const res = await service.run(new ExecutionContext(env.id, this, env.env, env.components, this.workspace));
+        return {
+          env: env.id,
+          res
+        };
+      })
+    );
 
     return contexts;
   }

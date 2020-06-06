@@ -38,8 +38,8 @@ export class ReleasePipe {
   /**
    * execute a pipeline of release tasks.
    */
-  execute(releaseContext: ReleaseContext) {
-    return this.tasks.map(task => task.execute(releaseContext));
+  async execute(releaseContext: ReleaseContext) {
+    return Promise.all(this.tasks.map(task => task.execute(releaseContext)));
   }
 
   /**

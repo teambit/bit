@@ -74,7 +74,7 @@ export default class Watch {
    * watcher and re-create it.
    */
   async handleComponentsWithExternalWatchers() {
-    await this.populateWatcherProcesses();
+    // await this.populateWatcherProcesses();
     this.multipleWatchers.forEach(watchProcessData => {
       const watchProcess = watchProcessData.watchProcess;
       const compilerIdStr = watchProcessData.compilerId.toString();
@@ -86,22 +86,6 @@ export default class Watch {
       watchProcess.stdout.on('data', data => {
         console.log(chalk.bold(`Data from ${compilerIdStr}\n`), data.toString());
       });
-    });
-  }
-
-  async populateWatcherProcesses() {
-    const watchers = await this.compile.aggregateWatchersByCompiler();
-    const allIds = watchers.map(w => w.componentIds);
-    const flattenedIds = R.flatten(allIds);
-    if (!flattenedIds.length) return;
-    await this.compile.compile(flattenedIds, false);
-    this.multipleWatchers = watchers.map(watcher => {
-      if (!watcher.compilerInstance.watchMultiple) {
-        throw new Error(`compiler ${watcher.compilerId.toString()} doesn't implement watchMultiple`);
-      }
-      const watchProcess = watcher.compilerInstance.watchMultiple(watcher.capsulePaths);
-      watcher.compilerId;
-      return { watchProcess, compilerId: watcher.compilerId, componentIds: watcher.componentIds };
     });
   }
 
@@ -117,7 +101,7 @@ export default class Watch {
         const idStr = componentId.toString();
         console.log(`running build for ${chalk.bold(idStr)}`);
         // TODO: Make sure the log for build is printed to console
-        const buildResults = await this.compile.compile([idStr], false, this.verbose);
+        const buildResults = await this.compile.compileOnWorkspace([idStr], false, this.verbose);
         const buildPaths = buildResults[0].buildResults;
         if (buildPaths && buildPaths.length) {
           resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;

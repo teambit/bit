@@ -1,21 +1,15 @@
-import { Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
 import { CompileCmd } from './compile.cmd';
 import { Compile } from './compile';
-import { Flows } from '../flows';
-import { ScopeExtension } from '../scope';
 import { Environments } from '../environments';
+import { CompileTask } from './compile.task';
 
-export type CompileDeps = [BitCli, Workspace, Flows, ScopeExtension, Environments];
+export type CompileDeps = [BitCli, Workspace, Environments];
 
-export async function provideCompile(
-  [cli, workspace, flows, scope, envs]: CompileDeps,
-  _config,
-  _slots,
-  harmony: Harmony
-) {
-  const compile = new Compile(workspace, flows, scope, envs, harmony);
+export async function provideCompile([cli, workspace, envs]: CompileDeps) {
+  const compilerTask = new CompileTask(workspace);
+  const compile = new Compile(workspace, envs, compilerTask);
   // @ts-ignore
   cli.register(new CompileCmd(compile));
   return compile;

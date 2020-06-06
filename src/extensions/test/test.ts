@@ -3,7 +3,6 @@ import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
 import { Component } from '../component';
 import { Capsule } from '../isolator';
-import { Compile } from '../compile/compile';
 import ComponentsList from '../../consumer/component/components-list';
 
 export type ComponentsAndCapsules = {
@@ -13,7 +12,7 @@ export type ComponentsAndCapsules = {
 };
 
 export class Test {
-  constructor(private compile: Compile, private workspace: Workspace) {}
+  constructor(private compile: any, private workspace: Workspace) {}
 
   async test(componentsIds: string[], { all, verbose }: { all: boolean; verbose: boolean }) {
     const bitIds = await this.getBitIds(componentsIds, all);

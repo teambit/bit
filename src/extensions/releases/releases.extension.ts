@@ -52,7 +52,7 @@ export class ReleasesExtension {
    */
   async release(components?: Component[]) {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = envs.run(this.service);
+    const buildResult = await envs.run(this.service);
     return buildResult;
   }
 
@@ -65,7 +65,7 @@ export class ReleasesExtension {
   ]) {
     const releasesService = new ReleasesService(isolator, workspace);
     const releases = new ReleasesExtension(envs, workspace, releasesService);
-    const func = releases.tagListener.bind(this);
+    const func = releases.tagListener.bind(releases);
     if (scope) scope.onTag(func);
 
     cli.register(new ReleaserCmd(releases, workspace));

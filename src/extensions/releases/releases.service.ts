@@ -1,6 +1,7 @@
 import { EnvService, ExecutionContext } from '../environments';
 import { Isolator } from '../isolator';
 import { Workspace } from '../workspace';
+import { ReleasePipe } from './release-pipe';
 
 export class ReleasesService implements EnvService {
   constructor(
@@ -20,9 +21,9 @@ export class ReleasesService implements EnvService {
    */
   async run(context: ExecutionContext) {
     // make release pipe accessible throughout the context.
-    const releasePipe = context.env.getPipe(context);
+    const releasePipe: ReleasePipe = context.env.getPipe(context);
     if (!releasePipe) {
-      throw new Error('releaser.runRelease expects concreteReleaser to implement onRelease()');
+      throw new Error(`releaser service expects ${context.id} to implement getPipe()`);
     }
 
     const releaseContext = Object.assign(context, {
@@ -32,8 +33,8 @@ export class ReleasesService implements EnvService {
       )
     });
 
-    const resultsP = releasePipe.execute(releaseContext);
+    const results = await releasePipe.execute(releaseContext);
 
-    return { id: context.id, results: await Promise.all(resultsP) };
+    return { id: context.id, results };
   }
 }
