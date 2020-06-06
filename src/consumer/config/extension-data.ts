@@ -9,8 +9,8 @@ export class ExtensionDataEntry {
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public config?: { [key: string]: any },
-    public data?: { [key: string]: any }
+    public config: { [key: string]: any } = {},
+    public data: { [key: string]: any } = {}
   ) {}
 
   get id(): string | BitId {

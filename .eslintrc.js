@@ -8,7 +8,10 @@ module.exports = {
     }
   },
   parserOptions: {
-    project: './tsconfig.json'
+    project: './tsconfig.json',
+    ecmaFeatures: {
+      jsx: true // Allows for the parsing of JSX
+    }
   },
   extends: [
     'airbnb-typescript/base',
@@ -16,6 +19,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
+    'plugin:react/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
@@ -89,6 +93,7 @@ module.exports = {
     }
   ],
   env: {
+    browser: true,
     node: true,
     mocha: true
   }

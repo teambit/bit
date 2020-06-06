@@ -1,5 +1,5 @@
 import { Harmony } from '@teambit/harmony';
-import { Scope } from '../scope/';
+import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
@@ -11,7 +11,7 @@ import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
+export type WorkspaceDeps = [ScopeExtension, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
 
 export type WorkspaceCoreConfig = {
   /**

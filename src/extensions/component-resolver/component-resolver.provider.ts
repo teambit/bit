@@ -1,8 +1,8 @@
 import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import ComponentResolver from './component-resolver';
 
-export type ComponentResolverDeps = [Workspace, Scope];
+export type ComponentResolverDeps = [Workspace, ScopeExtension];
 
 export default async function provideComponentResolver([workspace, scope]: ComponentResolverDeps) {
   const componentResolver = new ComponentResolver(scope, workspace);

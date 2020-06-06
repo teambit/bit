@@ -20,7 +20,7 @@ export class CompileCmd implements Command {
 
   async render([components]: CLIArgs, { verbose, noCache }: Flags) {
     // @ts-ignore
-    const compileResults = await this.compile.compile(components, { verbose, noCache });
+    const compileResults = await this.compile.compileOnWorkspace(components, { verbose, noCache });
     // eslint-disable-next-line no-console
     console.log('compileResults', compileResults);
     const output = `${compileResults.length} components have been compiled successfully`;
@@ -29,7 +29,7 @@ export class CompileCmd implements Command {
 
   async json([components]: CLIArgs, { verbose, noCache }: Flags) {
     // @ts-ignore
-    const compileResults = await this.compile.compile(components, { verbose, noCache });
+    const compileResults = await this.compile.compileOnWorkspace(components, { verbose, noCache });
     return {
       data: compileResults,
       // @todo: fix the code once compile is ready.

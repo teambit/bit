@@ -1,12 +1,12 @@
 import { Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import { Config } from '../config';
 import { Logger } from '../logger';
 
 import Core from './core';
 
-export type CoreDeps = [Config, Logger, Workspace, Scope];
+export type CoreDeps = [Config, Logger, Workspace, ScopeExtension];
 
 export type CoreConfig = {};
 

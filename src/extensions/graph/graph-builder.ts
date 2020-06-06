@@ -1,5 +1,5 @@
 import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import { ComponentGraph } from './component-graph';
 import { ComponentFactory } from '../component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
@@ -7,7 +7,11 @@ import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 export class GraphBuilder {
   _graph?: ComponentGraph;
   _initialized = false;
-  constructor(private componentFactory: ComponentFactory, private workspace?: Workspace, private scope?: Scope) {}
+  constructor(
+    private componentFactory: ComponentFactory,
+    private workspace?: Workspace,
+    private scope?: ScopeExtension
+  ) {}
 
   async getGraph(): Promise<ComponentGraph | undefined> {
     if (this._graph || this._initialized) {

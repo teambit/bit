@@ -1,5 +1,5 @@
 import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import { BitId as ComponentId } from '../../bit-id';
 import { Component } from '../component';
 
@@ -14,7 +14,7 @@ export default class ComponentResolver {
     /**
      * Scope
      */
-    readonly scope: Scope,
+    readonly scope: ScopeExtension,
 
     /**
      * Workspace

@@ -214,7 +214,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @todo: is this the best way to find out whether a compiler is set?
     const isCompileSet = Boolean(
       consumerComponent.compiler ||
-        clonedComponent.extensions.some(e => e.name === 'compile' || e.name === 'bit.core/compile')
+        clonedComponent.extensions.some(
+          e => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === 'Environments'
+        )
     );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
       consumer,
