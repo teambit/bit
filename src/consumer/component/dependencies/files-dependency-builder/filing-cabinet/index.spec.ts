@@ -20,7 +20,21 @@ require('resolve-dependency-path');
 require('sass-lookup');
 require('app-module-path');
 require('module-definition');
-require('module-lookup-amd');
+
+try {
+  // eslint-disable-next-line global-require
+  require('module-lookup-amd');
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.log(`mocha suppresses the error, so console.error is needed to show the error on the screen.
+the problem is with module-lookup-amd that calls requirejs package and uses rewire package.
+see https://github.com/jhnns/rewire/issues/178 for more details.
+the error occurs since node v12.16.0. for the time being, to run the tests, use an earlier version.
+`);
+  // eslint-disable-next-line no-console
+  console.error(err);
+  throw err;
+}
 
 describe('filing-cabinet', () => {
   describe('JavaScript', () => {
