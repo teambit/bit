@@ -6,6 +6,11 @@ import IsolatedEnvironment from '../../environment';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 
+export type PackResult = {
+  pkgJson: Record<any, string>;
+  tarPath: string;
+};
+
 export class Packer {
   constructor(private scope?: LegacyScope) {}
 
@@ -16,7 +21,7 @@ export class Packer {
     prefix = false,
     override = false,
     keep = false
-  ) {
+  ): Promise<PackResult> {
     const scope = scopePath ? await LegacyScope.load(scopePath) : this.scope;
     if (!scope) {
       throw new ScopeNotFound(scopePath);

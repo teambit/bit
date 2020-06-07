@@ -115,7 +115,7 @@ export type ComponentProps = {
 
 export default class Component {
   // Just a proxy to the component config so extension won't need to access the old config directly
-  static registerAddConfigAction(extId, func: () => any) {
+  static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     ComponentConfig.registerAddConfigAction(extId, func);
   }
   static registerOnComponentConfigLoading(extId, func: (id, config) => any) {

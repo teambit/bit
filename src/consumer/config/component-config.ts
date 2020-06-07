@@ -38,7 +38,7 @@ export default class ComponentConfig extends AbstractConfig {
     this.componentConfigLoadingRegistry[extId] = func;
   }
   static addConfigRegistry: AddConfigRegistry = {};
-  static registerAddConfigAction(extId, func: () => any) {
+  static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     this.addConfigRegistry[extId] = func;
   }
 
@@ -333,7 +333,8 @@ export default class ComponentConfig extends AbstractConfig {
     );
     const extensionsAddedConfig = await getConfigFromExtensions(
       // Taking it from the class itself since extensions that added by extension might change it
-      AddConfigRegistryWithoutAlreadyLoadedAndSelf
+      AddConfigRegistryWithoutAlreadyLoadedAndSelf,
+      config.allExtensions()
     );
     const addedExtension = extensionsAddedConfig.extensions ? Object.keys(extensionsAddedConfig.extensions) : [];
     const newExtensions = R.difference(addedExtension, alreadyLoadedExtensions);
@@ -399,11 +400,14 @@ export default class ComponentConfig extends AbstractConfig {
  * @param {AddConfigRegistry} configsRegistry
  * @returns {Promise<any>} A merge results of the added config by all the extensions
  */
-async function getConfigFromExtensions(configsRegistry: AddConfigRegistry): Promise<any> {
+async function getConfigFromExtensions(
+  configsRegistry: AddConfigRegistry,
+  extensions: ExtensionDataList
+): Promise<any> {
   const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
-    return func();
+    return func(extensions);
   });
   const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
   const extensionsConfigModificationsObject = mergeExtensionsConfig(extensionsConfigModifications);
