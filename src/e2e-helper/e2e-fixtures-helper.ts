@@ -227,36 +227,6 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     this.addComponentBarFoo();
   }
 
-  addExtensionGulpTS() {
-    const extensionsDir = path.join(this.getFixturesDir(), 'extensions');
-    const extDestination = path.join(this.scopes.localPath, 'extensions');
-    fs.copySync(path.join(extensionsDir, 'gulp-ts'), path.join(extDestination, 'gulp-ts'));
-
-    this.command.addComponent('extensions/gulp-ts', { i: 'extensions/gulp-ts' });
-
-    this.npm.initNpm();
-    const dependencies = {
-      gulp: '^4.0.2',
-      'gulp-typescript': '^6.0.0-alpha.1',
-      merge2: '^1.3.0',
-      react: '^16.12.0',
-      typescript: '^3.7.5'
-    };
-    const devDependencies = {
-      '@types/react': '^16.9.17'
-    };
-
-    this.packageJson.addKeyValue({ dependencies, devDependencies });
-    this.command.runCmd('npm i');
-    this.command.link();
-
-    // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
-    // first, the full-id won't be recognized when loading the extension.
-    // once defaultScope is mandatory, make sure this is working without the next two lines
-    this.command.tagComponent('extensions/gulp-ts');
-    this.command.exportComponent('extensions/gulp-ts');
-  }
-
   addExtensionTS() {
     const extensionsDir = path.join(__dirname, '..', 'extensions');
     const extDestination = path.join(this.scopes.localPath, 'extensions');

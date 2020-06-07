@@ -32,7 +32,6 @@ export default class Watch {
   }
 
   async watchAll() {
-    // await this.handleComponentsWithExternalWatchers();
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const watcher = this._getWatcher();
     console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
@@ -64,27 +63,6 @@ export default class Watch {
       watcher.on('error', err => {
         log(`Watcher error ${err}`);
         reject(err);
-      });
-    });
-  }
-
-  /**
-   * some compiler work way faster with their watchers, such as `tsc -w`
-   * @todo: recognize when after loading the component the capsule-path changed and then, kill the
-   * watcher and re-create it.
-   */
-  async handleComponentsWithExternalWatchers() {
-    // await this.populateWatcherProcesses();
-    this.multipleWatchers.forEach(watchProcessData => {
-      const watchProcess = watchProcessData.watchProcess;
-      const compilerIdStr = watchProcessData.compilerId.toString();
-      // @ts-ignore
-      watchProcess.stderr.on('data', data => {
-        console.log(`Error from ${compilerIdStr}`, data);
-      });
-      // @ts-ignore
-      watchProcess.stdout.on('data', data => {
-        console.log(chalk.bold(`Data from ${compilerIdStr}\n`), data.toString());
       });
     });
   }
