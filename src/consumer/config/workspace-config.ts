@@ -18,7 +18,7 @@ import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
-import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -46,7 +46,7 @@ export type WorkspaceConfigProps = {
   dependenciesDirectory?: string;
   bindingPrefix?: string;
   extensions?: ExtensionDataList;
-  packageManager?: 'npm' | 'yarn';
+  packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
   useWorkspaces?: boolean;
@@ -64,7 +64,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
-  packageManager: 'npm' | 'yarn'; // package manager client to use
+  packageManager: PackageManagerClients;
   packageManagerArgs: string[] | undefined; // package manager client to use
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
