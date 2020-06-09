@@ -3,7 +3,7 @@ import { Harmony } from '@teambit/harmony';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
-import { Scope } from '../scope';
+import { ScopeExtension } from '../scope';
 import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
@@ -40,7 +40,7 @@ export default class Workspace implements ComponentHost {
     /**
      * access to the Workspace's `Scope` instance
      */
-    readonly scope: Scope,
+    readonly scope: ScopeExtension,
 
     /**
      * access to the `ComponentProvider` instance
@@ -153,6 +153,12 @@ export default class Workspace implements ComponentHost {
     if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
+  }
+
+  // @gilad needs to implment on variants
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async byPattern(pattern: string): Promise<Component[]> {
+    return [];
   }
 
   /**

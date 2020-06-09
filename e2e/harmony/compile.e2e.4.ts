@@ -23,15 +23,11 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
       appOutput = helper.fixtures.populateComponentsTS();
-      helper.fixtures.addExtensionTS();
-      const tsExtensionKey = `${helper.scopes.remote}/extensions/typescript`;
-      const tsExtensionVal = {};
-      const compileExtensionKey = 'compile';
-      const compileExtensionVal = {
-        compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
+      const environments = {
+        env: 'React',
+        config: {}
       };
-      helper.extensions.addExtensionToVariant('*', tsExtensionKey, tsExtensionVal);
-      helper.extensions.addExtensionToVariant('*', compileExtensionKey, compileExtensionVal);
+      helper.extensions.addExtensionToVariant('*', 'Environments', environments);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -83,32 +79,21 @@ chai.use(require('chai-fs'));
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp1');
         });
-        it('should import the extensions as well into the scope', () => {
-          const scopeList = helper.command.listLocalScopeParsed('--scope');
-          const ids = scopeList.map(entry => entry.id);
-          expect(ids).to.include(`${helper.scopes.remote}/extensions/typescript`);
-        });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
         });
-        // @todo: fix!
-        // it started breaking once the compiler extension instance was needed.
-        // for imported components, the extension config is there but not the instance.
-        describe.skip('running compile on the imported component', () => {
-          before(() => {
-            helper.command.runCmd('bit compile help');
-          });
-          it('should generate dists on the capsule', () => {
-            const capsulePath = helper.command.getCapsuleOfComponent('help@0.0.1');
-            expect(path.join(capsulePath, 'dist')).to.be.a.directory();
-            expect(path.join(capsulePath, 'dist/help.js')).to.be.a.file();
-          });
-          it('should generate dists also after deleting the dists from the capsule', () => {
-            const capsulePath = helper.command.getCapsuleOfComponent('help@0.0.1');
-            fs.removeSync(path.join(capsulePath, 'dist'));
-            helper.command.runCmd('bit compile help');
-            expect(path.join(capsulePath, 'dist')).to.be.a.directory();
-            expect(path.join(capsulePath, 'dist/help.js')).to.be.a.file();
+        describe('running compile on the imported component', () => {
+          it('should generate dists also after deleting the dists from the workspace', () => {
+            const distPath = path.join(
+              helper.scopes.localPath,
+              'node_modules/@bit',
+              `${helper.scopes.remote}.comp1`,
+              'dist'
+            );
+            fs.removeSync(distPath);
+            helper.command.runCmd('bit compile');
+            expect(distPath).to.be.a.directory();
+            expect(path.join(distPath, 'index.js')).to.be.a.file();
           });
         });
       });

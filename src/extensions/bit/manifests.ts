@@ -6,6 +6,7 @@ import { ConfigExt } from '../config';
 import { CoreExt } from '../core';
 import { CreateExt } from '../create';
 // import { DependencyResolverExt } from '../dependency-resolver';
+import { Environments } from '../environments';
 import { FlowsExt } from '../flows';
 // import { GitExt } from '../git';
 import { ComponentGraphExt } from '../graph';
@@ -16,9 +17,11 @@ import { LoggerExt } from '../logger';
 import { PackExt } from '../pack';
 import { PackageManagerExt } from '../package-manager';
 import { PaperExt } from '../paper';
+import { React } from '../react';
 import { ReporterExt } from '../reporter';
-import { ScopeExt } from '../scope';
-import { TestExt } from '../test';
+import { ScopeExtension } from '../scope';
+import { TesterExtension } from '../tester';
+import { ReleasesExtension } from '../releases';
 import { VariantsExt } from '../variants';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
@@ -33,6 +36,8 @@ export const manifestsMap = {
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,
   // [DependencyResolverExt.name]: DependencyResolverExt,
+  // TODO: take from the extension itself
+  '@teambit/envs': Environments,
   [FlowsExt.name]: FlowsExt,
   // [GitExt.name]: GitExt,
   [ComponentGraphExt.name]: ComponentGraphExt,
@@ -43,9 +48,14 @@ export const manifestsMap = {
   [PackExt.name]: PackExt,
   [PackageManagerExt.name]: PackageManagerExt,
   [PaperExt.name]: PaperExt,
+  // TODO: take from the extension itself & change name to follow convention
+  [React.name]: React,
   [ReporterExt.name]: ReporterExt,
-  [ScopeExt.name]: ScopeExt,
-  [TestExt.name]: TestExt,
+  [ScopeExtension.name]: ScopeExtension,
+  // TODO: take from the extension itself & change name to follow convention
+  Tester: TesterExtension,
+  // TODO: take from the extension itself & change name to follow convention
+  [ReleasesExtension.name]: ReleasesExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt

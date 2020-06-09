@@ -32,7 +32,6 @@ export default class Watch {
   }
 
   async watchAll() {
-    // await this.handleComponentsWithExternalWatchers();
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const watcher = this._getWatcher();
     console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
@@ -68,43 +67,6 @@ export default class Watch {
     });
   }
 
-  /**
-   * some compiler work way faster with their watchers, such as `tsc -w`
-   * @todo: recognize when after loading the component the capsule-path changed and then, kill the
-   * watcher and re-create it.
-   */
-  async handleComponentsWithExternalWatchers() {
-    await this.populateWatcherProcesses();
-    this.multipleWatchers.forEach(watchProcessData => {
-      const watchProcess = watchProcessData.watchProcess;
-      const compilerIdStr = watchProcessData.compilerId.toString();
-      // @ts-ignore
-      watchProcess.stderr.on('data', data => {
-        console.log(`Error from ${compilerIdStr}`, data);
-      });
-      // @ts-ignore
-      watchProcess.stdout.on('data', data => {
-        console.log(chalk.bold(`Data from ${compilerIdStr}\n`), data.toString());
-      });
-    });
-  }
-
-  async populateWatcherProcesses() {
-    const watchers = await this.compile.aggregateWatchersByCompiler();
-    const allIds = watchers.map(w => w.componentIds);
-    const flattenedIds = R.flatten(allIds);
-    if (!flattenedIds.length) return;
-    await this.compile.compile(flattenedIds, false);
-    this.multipleWatchers = watchers.map(watcher => {
-      if (!watcher.compilerInstance.watchMultiple) {
-        throw new Error(`compiler ${watcher.compilerId.toString()} doesn't implement watchMultiple`);
-      }
-      const watchProcess = watcher.compilerInstance.watchMultiple(watcher.capsulePaths);
-      watcher.compilerId;
-      return { watchProcess, compilerId: watcher.compilerId, componentIds: watcher.componentIds };
-    });
-  }
-
   async _handleChange(filePath: string, isNew = false) {
     const start = new Date().getTime();
     const componentId = await this._getBitIdByPathAndReloadConsumer(filePath, isNew);
@@ -117,7 +79,7 @@ export default class Watch {
         const idStr = componentId.toString();
         console.log(`running build for ${chalk.bold(idStr)}`);
         // TODO: Make sure the log for build is printed to console
-        const buildResults = await this.compile.compile([idStr], false, this.verbose);
+        const buildResults = await this.compile.compileOnWorkspace([idStr], false, this.verbose);
         const buildPaths = buildResults[0].buildResults;
         if (buildPaths && buildPaths.length) {
           resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;

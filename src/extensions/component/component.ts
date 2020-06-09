@@ -9,8 +9,6 @@ import ComponentID from './id';
 import State from './state';
 // eslint-disable-next-line import/no-cycle
 import Snap, { Author } from './snap';
-import { Isolator } from '../isolator';
-import { loadConsumerIfExist } from '../../consumer';
 
 /**
  * in-memory representation of a component.
@@ -35,9 +33,7 @@ export default class Component {
     /**
      * list of all component tags
      */
-    readonly tags: TagMap = new TagMap(),
-
-    private isolator: Isolator
+    readonly tags: TagMap = new TagMap()
   ) {}
 
   /**
@@ -70,18 +66,6 @@ export default class Component {
     return this.state.dependencyGraph();
   }
 
-  /*
-   * isolates the component in a capsule.
-   */
-  async isolate() {
-    const id = this.id.toString();
-    const consumer = await loadConsumerIfExist();
-    const isolatedEnvironment = consumer
-      ? await this.isolator.createNetworkFromConsumer([id], consumer)
-      : await this.isolator.createNetworkFromScope([id]);
-    return isolatedEnvironment.capsules[id];
-  }
-
   capsule() {}
 
   /**
@@ -91,7 +75,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags, this.isolator);
+    return new Component(this.id, snap, snap.state, this.tags);
   }
 
   /**
@@ -145,15 +129,10 @@ export default class Component {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   write(path: string, fs?: AnyFS) {}
 
-  /**
-   * transforms the component to a legacy `ComponentObjects` object. please do not use this method.
-   */
-  toLegacyComponentObjects() {}
-
-  /**
-   * transforms the component to a legacy `ConsumerComponent` object. please do not use this method.
-   */
-  toLegacyConsumerComponent() {}
+  fromString(str: string) {
+    const object = JSON.parse(str);
+    return new Component(object.name, null, object.state, object.tags);
+  }
 
   /**
    *

@@ -81,7 +81,7 @@ nodeBin
 _book
 
 # pkg releases
-releases/
+/releases/
 bin/bit
 
 # sonarcloud dir
