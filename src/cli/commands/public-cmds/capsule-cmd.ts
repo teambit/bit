@@ -9,6 +9,7 @@ import { PackageManager } from '../../../extensions/package-manager';
 import { Isolator } from '../../../extensions/isolator';
 import { ListResults } from '../../../extensions/isolator/isolator';
 import { render } from '../../../utils';
+import { DEFAULT_PACKAGE_MANAGER } from '../../../constants';
 
 export class CapsuleList extends Command {
   // first command is supposed to be the action and the rest is the bitIds
@@ -23,7 +24,7 @@ export class CapsuleList extends Command {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
     const logger = new Logger();
-    const packageManager = new PackageManager('librarian', logger);
+    const packageManager = new PackageManager(DEFAULT_PACKAGE_MANAGER, logger);
     // const capsule = await Capsule.provide();
     const isolatorExt = await Isolator.provide([packageManager]);
     return isolatorExt.list(consumer);

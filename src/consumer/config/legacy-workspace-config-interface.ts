@@ -10,7 +10,7 @@ import ConsumerOverrides, { ConsumerOverridesOfComponent } from './consumer-over
 import { BitId } from '../../bit-id';
 
 // to make sure all the legacy code can work without need to change
-type PackageManagerClients = 'librarian' | 'npm' | 'yarn' | undefined;
+export type PackageManagerClients = 'npm' | 'yarn' | undefined;
 
 interface DependencyResolverExtensionProps {
   packageManager: PackageManagerClients;
