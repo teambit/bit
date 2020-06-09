@@ -45,6 +45,8 @@ describe('pkg extension', function() {
       expect(packageJson).to.not.have.property('some-key');
     });
   });
+  // TODO: implement once we can extend a specific env with new methods (to apply config changes)
+  // and maybe to also apply custom compiler which change props
   describe.skip('config added by an env', function() {});
   describe('config added by extension', function() {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';

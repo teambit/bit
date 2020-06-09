@@ -3,7 +3,8 @@
 An extension that:
 1. allows users to change (add) properties in the component's package.json
 2. allow other extensions to add new properties to the component's package.json
-3. expose a pack command to pack a component into a tar suitable for an npm registry
+3. allow an env to add new properties to the component's package.json
+4. expose a pack command to pack a component into a tar suitable for an npm registry
 
 ## Usage
 
@@ -58,4 +59,17 @@ async packComponent(
     override = false,
     keep = false
   ): Promise<PackResult>
+
+  /**
+   * Merge the configs provided by:
+   * 1. envs configured in the component - via getPackageJsonProps method
+   * 2. extensions that registered to the registerPackageJsonNewProps slot (and configured for the component)
+   * 3. props defined by the user (they are the strongest one)
+   * @param configuredExtensions
+   */
+  mergePackageJsonProps(configuredExtensions: ExtensionDataList): PackageJsonProps
 ```
+
+## Internal
+This extension is register to the AddConfigAction exposed by the consumer component to provide the package.json new props to the legacy code.
+During this process it will use the the `mergePackageJsonProps` function to calculate the final properties to add.

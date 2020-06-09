@@ -5,6 +5,7 @@ import { PackCmd } from './pack.cmd';
 import { Packer, PackResult } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
+import { Environments } from '../environments';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -25,7 +26,7 @@ export type ComponentPkgExtensionConfig = {
 };
 
 export class PkgExtension {
-  static dependencies = [CLIExtension, ScopeExtension];
+  static dependencies = [CLIExtension, ScopeExtension, Environments];
   /**
    *Creates an instance of PkgExtension.
    * @param {PkgExtensionConfig} config
@@ -47,7 +48,12 @@ export class PkgExtension {
     /**
      * A utils class to packing components into tarball
      */
-    private packer: Packer
+    private packer: Packer,
+
+    /**
+     * envs extension.
+     */
+    private envs: Environments
   ) {}
 
   /**
@@ -81,12 +87,19 @@ export class PkgExtension {
   }
 
   /**
-   * Merge the configs provided by extensions configured on the component and that registered to the registerPackageJsonNewProps slot
-   * This will also merge the propes defined by the user (they are the strongest one)
+   * Merge the configs provided by:
+   * 1. envs configured in the component - via getPackageJsonProps method
+   * 2. extensions that registered to the registerPackageJsonNewProps slot (and configured for the component)
+   * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
   mergePackageJsonProps(configuredExtensions: ExtensionDataList): PackageJsonProps {
     let newProps = {};
+    const env = this.envs.getEnvFromExtensions(configuredExtensions);
+    if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
+      const propsFromEnv = env.getPackageJsonProps();
+      newProps = Object.assign(newProps, propsFromEnv);
+    }
     const configuredIds = configuredExtensions.ids;
     configuredIds.forEach(extId => {
       // Only get props from configured extensions on this specific component
@@ -108,12 +121,12 @@ export class PkgExtension {
   static defaultConfig = {};
 
   static provider(
-    [cli, scope]: [CLI, ScopeExtension],
+    [cli, scope, envs]: [CLI, ScopeExtension, Environments],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const packer = new Packer(scope?.legacyScope);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
