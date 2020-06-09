@@ -14,7 +14,7 @@ import { InsightsExt } from '../insights';
 import { InstallExt } from '../install';
 import { IsolatorExt } from '../isolator';
 import { LoggerExt } from '../logger';
-import { PackExt } from '../pack';
+import { PkgExtension } from '../pkg';
 import { PackageManagerExt } from '../package-manager';
 import { PaperExt } from '../paper';
 import { React } from '../react';
@@ -45,7 +45,7 @@ export const manifestsMap = {
   [InstallExt.name]: InstallExt,
   [IsolatorExt.name]: IsolatorExt,
   [LoggerExt.name]: LoggerExt,
-  [PackExt.name]: PackExt,
+  Pkg: PkgExtension,
   [PackageManagerExt.name]: PackageManagerExt,
   [PaperExt.name]: PaperExt,
   // TODO: take from the extension itself & change name to follow convention

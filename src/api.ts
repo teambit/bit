@@ -6,6 +6,7 @@ import HooksManager from './hooks';
 import { BaseLoadArgsProps } from './legacy-extensions/base-extension';
 
 export { ComponentFactoryExt, ComponentFactory } from './extensions/component';
+export { PkgExtension } from './extensions/pkg';
 
 HooksManager.init();
 
