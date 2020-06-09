@@ -15,13 +15,6 @@ export default class ComponentFactory {
     private isolateEnv: Isolator // private configsRegistry: Registry
   ) {}
 
-  /**
-   * registry for config modifications function
-   */
-  registerAddConfig(extensionId, configFunc: ConfigFunc) {
-    ConsumerComponent.registerAddConfigAction(extensionId, configFunc);
-  }
-
   create() {}
 
   /**

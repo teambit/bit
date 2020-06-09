@@ -1,4 +1,4 @@
-import { SlotRegistry } from '@teambit/harmony';
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
@@ -95,14 +95,15 @@ export class PkgExtension {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentConfig = (configuredExtensions.findExtension(
-      this.constructor.name
-    ) as unknown) as ComponentPkgExtensionConfig;
+    const currentExtension = configuredExtensions.findExtension(this.constructor.name);
+    const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
     return newProps;
   }
+
+  static slots = [Slot.withType<PackageJsonProps>()];
 
   static defaultConfig = {};
 
@@ -114,8 +115,8 @@ export class PkgExtension {
     const packer = new Packer(scope?.legacyScope);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer);
     // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps);
-    // TODO: consider moving to the packer itself
+    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
+    // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
 
     return pkg;
