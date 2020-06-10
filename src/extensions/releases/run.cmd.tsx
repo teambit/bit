@@ -20,8 +20,9 @@ export class ReleaserCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     const results = await this.releaser.release(pattern ? await this.workspace.byPattern(pattern) : undefined);
     // @todo: decide about the output
-    // eslint-disable-next-line no-console
-    console.log('ReleaserCmd -> render -> results', results);
+    results.forEach((
+      result // eslint-disable-next-line no-console
+    ) => console.log('result', `Env: ${result.env}\nResult: ${JSON.stringify(result.res, undefined, 2)}`));
     return <Color cyan>compiled {results.length} components successfully</Color>;
   }
 }
