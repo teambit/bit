@@ -8,13 +8,17 @@ import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 import { LegacyCommand } from './legacy-command';
 import { buildRegistry } from '../../cli';
+// eslint-disable-next-line import/no-named-default
+import { default as LegacyLoadExtensions } from '../../legacy-extensions/extensions-loader';
 
 export class PaperExtension {
   readonly groups: { [k: string]: string } = {};
   static dependencies = [ReporterExt];
 
   static provider([reporter]: [Reporter]) {
-    return new PaperExtension(new CommandRegistry({}), reporter);
+    const paper = new PaperExtension(new CommandRegistry({}), reporter);
+    CLIProvider([paper]);
+    return paper;
   }
 
   constructor(
@@ -97,8 +101,8 @@ export class PaperExtension {
   }
 }
 
-export async function CLIProvider([paper]: BitCLIDeps) {
-  const legacyExtensions = await legacyLoadExtensions();
+export async function CLIProvider([paper]: [PaperExtension]) {
+  const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
@@ -119,6 +123,4 @@ export async function CLIProvider([paper]: BitCLIDeps) {
     p.register(legacyCommand);
     return p;
   }, paper);
-
-  return bitCLI;
 }

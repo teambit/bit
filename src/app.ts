@@ -24,9 +24,10 @@ try {
       return harmony.set([BitExt]);
     })
     .then(() => {
-      const cli = harmony.get('cli');
+      const cli = harmony.get('Paper');
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
-      return cli?.run();
+      // eslint-disable-next-line no-console
+      return cli ? cli.run() : console.log('WTF! :)');
     })
     .catch(err => {
       const originalError = err.originalError || err;
