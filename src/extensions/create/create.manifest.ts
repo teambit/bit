@@ -1,10 +1,10 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { provideCreate } from './create.provider';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 export default {
   name: '@teambit/create',
-  dependencies: [PaperExtension, WorkspaceExt],
+  dependencies: [CLIExtension, WorkspaceExt],
   provider: provideCreate
 } as ExtensionManifest;

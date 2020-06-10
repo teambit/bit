@@ -5,7 +5,7 @@ import { Command, PaperOptions, GenericObject } from '.';
 import LegacyInterface from '../../cli/command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
-import { PaperExtension } from '.';
+import { CLIExtension } from './cli.extension';
 
 export class LegacyCommand implements Command {
   alias: string;
@@ -18,7 +18,7 @@ export class LegacyCommand implements Command {
   commands: Command[];
   private?: boolean;
   migration?: boolean;
-  constructor(private cmd: LegacyInterface, p: PaperExtension) {
+  constructor(private cmd: LegacyInterface, p: CLIExtension) {
     this.name = cmd.name;
     this.description = cmd.description;
     this.options = cmd.opts;
@@ -66,7 +66,7 @@ export class LegacyCommand implements Command {
 }
 
 // TODO: remove all help and move information to commands
-export function findLegacyDetails(name: string, p: PaperExtension) {
+export function findLegacyDetails(name: string, p: CLIExtension) {
   let group = '';
   let summery = '';
   for (let i = 0; i < allHelp.length; i += 1) {

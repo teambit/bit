@@ -3,7 +3,7 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import chalk from 'chalk';
-import { PaperError } from '../../paper';
+import { PaperError } from '../../cli';
 
 export default class InvalidConfigFile extends PaperError {
   showDoctorMessage: boolean;

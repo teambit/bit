@@ -6,7 +6,7 @@ import { Packer, PackResult } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -27,7 +27,7 @@ export type ComponentPkgExtensionConfig = {
 };
 
 export class PkgExtension {
-  static dependencies = [PaperExtension, ScopeExtension, Environments];
+  static dependencies = [CLIExtension, ScopeExtension, Environments];
   /**
    *Creates an instance of PkgExtension.
    * @param {PkgExtensionConfig} config
@@ -122,7 +122,7 @@ export class PkgExtension {
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs]: [PaperExtension, ScopeExtension, Environments],
+    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {

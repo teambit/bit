@@ -2,7 +2,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, CLIArgs, PaperOptions } from '../paper';
+import { Command, CLIArgs, PaperOptions } from '../cli';
 import { Watch } from '.';
 
 export class WatchCommand implements Command {

@@ -1,10 +1,10 @@
 import { WorkspaceExt } from '../workspace';
 import { CompileExt } from '../compile';
 import { provideWatch } from './watch.provider';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 export default {
   name: 'Watch',
-  dependencies: [PaperExtension, CompileExt, WorkspaceExt],
+  dependencies: [CLIExtension, CompileExt, WorkspaceExt],
   provider: provideWatch
 };

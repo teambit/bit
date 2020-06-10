@@ -5,7 +5,7 @@ import { Component } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -17,7 +17,7 @@ export type EnvsConfig = {
 export type EnvOptions = {};
 
 export class Environments {
-  static dependencies = [PaperExtension, WorkspaceExt];
+  static dependencies = [CLIExtension, WorkspaceExt];
 
   constructor(
     /**
@@ -109,7 +109,7 @@ export class Environments {
 
   static defaultConfig = {};
 
-  static async provider([cli, workspace]: [PaperExtension, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+  static async provider([cli, workspace]: [CLIExtension, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
     const envs = new Environments(config, workspace, envSlot);
     cli.register(new StartCmd(envs, workspace));
     return envs;

@@ -15,7 +15,7 @@ import { IsolatorExt } from '../isolator';
 import { LoggerExt } from '../logger';
 import { PkgExtension } from '../pkg';
 import { PackageManagerExt } from '../package-manager';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 import { React } from '../react';
 import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
@@ -26,7 +26,7 @@ import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
 
 export const manifestsMap = {
-  [PaperExtension.name]: PaperExtension,
+  [CLIExtension.name]: CLIExtension,
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
   [ComponentFactoryExt.name]: ComponentFactoryExt,

@@ -3,7 +3,7 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Packer } from './pack';
-import { Flags, PaperOptions, Command, CLIArgs } from '../paper';
+import { Flags, PaperOptions, Command, CLIArgs } from '../cli';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';

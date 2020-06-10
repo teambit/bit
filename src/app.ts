@@ -5,7 +5,7 @@ import defaultHandleError, { findErrorDefinition } from './cli/default-error-han
 import { logErrAndExit } from './cli/command-registry';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
-import { PaperError } from './extensions/paper';
+import { PaperError } from './extensions/cli';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 

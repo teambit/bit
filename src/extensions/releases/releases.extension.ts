@@ -6,7 +6,7 @@ import { ReleasesService } from './releases.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { Isolator, IsolatorExt } from '../isolator';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 /**
  * extension config type.
@@ -22,7 +22,7 @@ export class ReleasesExtension {
   /**
    * extension dependencies
    */
-  static dependencies = [PaperExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExt];
+  static dependencies = [CLIExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExt];
 
   constructor(
     /**
@@ -57,7 +57,7 @@ export class ReleasesExtension {
   }
 
   static async provider([cli, envs, workspace, scope, isolator]: [
-    PaperExtension,
+    CLIExtension,
     Environments,
     Workspace,
     ScopeExtension,

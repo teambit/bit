@@ -4,13 +4,13 @@ import { WorkspaceExt, Workspace } from '../workspace';
 import { RunCmd } from './run';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
-type ScriptDeps = [PaperExtension, Workspace, Reporter, Logger];
+type ScriptDeps = [CLIExtension, Workspace, Reporter, Logger];
 
 export default {
   name: 'flows',
-  dependencies: [PaperExtension, WorkspaceExt, ReporterExt, LoggerExt],
+  dependencies: [CLIExtension, WorkspaceExt, ReporterExt, LoggerExt],
   async provider([cli, workspace, reporter, logger]: ScriptDeps) {
     const flows = new Flows(workspace);
     const runCMD = new RunCmd(flows, reporter, logger);

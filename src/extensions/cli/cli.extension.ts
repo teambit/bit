@@ -11,12 +11,12 @@ import { buildRegistry } from '../../cli';
 // eslint-disable-next-line import/no-named-default
 import { default as LegacyLoadExtensions } from '../../legacy-extensions/extensions-loader';
 
-export class PaperExtension {
+export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
   static dependencies = [ReporterExt];
 
   static provider([reporter]: [Reporter]) {
-    const paper = new PaperExtension(new CommandRegistry({}), reporter);
+    const paper = new CLIExtension(new CommandRegistry({}), reporter);
     CLIProvider([paper]);
     return paper;
   }
@@ -101,7 +101,7 @@ export class PaperExtension {
   }
 }
 
-export async function CLIProvider([paper]: [PaperExtension]) {
+export async function CLIProvider([paper]: [CLIExtension]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {

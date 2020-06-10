@@ -3,10 +3,10 @@ import { provideInstaller } from './install.provider';
 import { WorkspaceExt } from '../workspace';
 import { PackageManagerExt } from '../package-manager';
 import { ReporterExt } from '../reporter';
-import { PaperExtension } from '../paper';
+import { CLIExtension } from '../cli';
 
 export default {
   name: 'Install',
-  dependencies: [PaperExtension, WorkspaceExt, PackageManagerExt, ReporterExt],
+  dependencies: [CLIExtension, WorkspaceExt, PackageManagerExt, ReporterExt],
   provider: provideInstaller
 } as ExtensionManifest;
