@@ -17,8 +17,7 @@ export class CLIExtension {
 
   static provider([reporter]: [Reporter]) {
     const paper = new CLIExtension(new CommandRegistry({}), reporter);
-    CLIProvider([paper]);
-    return paper;
+    return CLIProvider([paper]);
   }
 
   constructor(
@@ -123,4 +122,5 @@ export async function CLIProvider([paper]: [CLIExtension]) {
     p.register(legacyCommand);
     return p;
   }, paper);
+  return paper;
 }

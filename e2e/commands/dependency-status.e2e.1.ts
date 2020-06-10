@@ -27,7 +27,7 @@ describe('bit dependency status', function() {
         i: 'dependency-status-test-files/c'
       });
     });
-    it('Should print no missing files as all files are mapped', () => {
+    it.only('c print no missing files as all files are mapped', () => {
       const output = helper.command.runCmd('bit dependency-status dependency-status-test-files/b.js');
       expect(output).to.have.string('All files in dependency tree are marked as components');
     });
