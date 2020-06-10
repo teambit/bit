@@ -24,7 +24,7 @@ try {
       return harmony.set([BitExt]);
     })
     .then(() => {
-      const cli = harmony.get('PaperExtension');
+      const cli = harmony.get('CLIExtension');
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
       // eslint-disable-next-line no-console
       return cli ? cli.run() : console.log('WTF! :)');
