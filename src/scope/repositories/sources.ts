@@ -15,6 +15,7 @@ import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
+import { Artifact } from '../../consumer/component/sources/artifact';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -188,7 +189,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
-  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
+  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any; artifacts: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return null;
@@ -223,6 +224,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       consumerComponent.originallySharedDir,
       isCompileSet
     );
+    const artifacts: any[] = [];
+    const extensions = clonedComponent.extensions.clone();
+    extensions.forEach(extensionDataEntry => {
+      const artifactsSource = extensionDataEntry.artifacts.map(artifact => {
+        if (!(artifact instanceof Artifact))
+          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
+        return {
+          relativePath: artifact.relative,
+          file: artifact.toSourceAsLinuxEOL()
+        };
+      });
+      artifacts.push(...artifactsSource);
+      extensionDataEntry.artifacts = artifactsSource;
+    });
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
@@ -265,6 +280,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
       specsResults,
+      extensions,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       message,
       username,
@@ -273,7 +289,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles };
+    return { version, files, dists, compilerFiles, testerFiles, artifacts };
   }
 
   async addSource({
@@ -298,7 +314,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const component = await this.findOrAddComponent(source);
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const { version, files, dists, compilerFiles, testerFiles, artifacts } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
       message,
@@ -315,6 +331,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
     if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach(file => objectRepo.add(file.file));
 
     return component;
   }

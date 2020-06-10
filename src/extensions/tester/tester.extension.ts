@@ -52,6 +52,8 @@ export class TesterExtension {
   };
 
   static provider([cli, envs, workspace]: [CLI, Environments, Workspace], config: TesterExtensionConfig) {
+    // @todo: Ran to fix.
+    // @ts-ignore
     const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex), new TesterTask());
     cli.register(new TestCmd(tester, workspace));
 

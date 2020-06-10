@@ -13,8 +13,10 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments } from '../environments';
-import { CompileTask, ComponentAndCapsule } from './compile.task';
+import { CompileTask } from './compile.task';
 import { Compiler } from './compiler';
+import { Component } from '../component';
+import { Capsule } from '../isolator';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -193,3 +195,9 @@ function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): 
   }
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }
+
+export type ComponentAndCapsule = {
+  consumerComponent: ConsumerComponent;
+  component: Component;
+  capsule: Capsule;
+};

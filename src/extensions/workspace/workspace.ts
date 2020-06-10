@@ -131,7 +131,7 @@ export default class Workspace implements ComponentHost {
       }
     );
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
-      accum[curr.id.toString()] = curr.value;
+      accum[curr.id.toString()] = curr.capsule;
       return accum;
     }, {});
     const ret = components.map(component => new ResolvedComponent(component, capsulesMap[component.id.toString()]));

@@ -1,32 +1,6 @@
 import pMapSeries from 'p-map-series';
-import { Component } from '../component';
-import { Network } from '../isolator/isolator';
-import { ExecutionContext } from '../environments';
-
-/**
- * Context of a release
- */
-export interface ReleaseContext extends ExecutionContext {
-  /**
-   * all components about to be released/tagged.
-   */
-  components: Component[];
-
-  /**
-   * graph of capsules ready to be built.
-   */
-  capsuleGraph: Network;
-}
-
-/**
- * release task.
- */
-export interface ReleaseTask {
-  /**
-   * execute a task in a release context
-   */
-  execute(context: ReleaseContext): Promise<any>;
-}
+import { TaskProcess } from './task-process';
+import { ReleaseTask, ReleaseContext } from './types';
 
 export class ReleasePipe {
   constructor(
@@ -40,7 +14,13 @@ export class ReleasePipe {
    * execute a pipeline of release tasks.
    */
   async execute(releaseContext: ReleaseContext) {
-    return pMapSeries(this.tasks, (task: ReleaseTask) => task.execute(releaseContext));
+    return pMapSeries(this.tasks, async (task: ReleaseTask) => {
+      const taskResult = await task.execute(releaseContext);
+      const taskProcess = new TaskProcess(task, taskResult, releaseContext);
+      taskProcess.throwIfErrorsFound();
+      await taskProcess.saveTaskResults();
+      // @todo: return summery results?
+    });
   }
 
   /**
