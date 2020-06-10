@@ -1,11 +1,11 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
-import { BitCliExt } from '../cli';
+import { PaperExtension } from '../paper';
 
 export default {
   name: 'insights',
-  dependencies: [ComponentGraphExt, BitCliExt],
+  dependencies: [ComponentGraphExt, PaperExtension],
   config: {
     silence: false
   },

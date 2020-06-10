@@ -3,7 +3,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
 import { ReplaySubject } from 'rxjs';
-import { Command, CLIArgs } from '../../cli';
+import { Command, CLIArgs } from '../../paper';
 import { Flags, PaperOptions } from '../../paper';
 import { Flows } from '../flows';
 import { reportRunStream } from './report-run-stream';

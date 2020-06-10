@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color, Box, Text } from 'ink';
-import { Command, CLIArgs } from '../cli';
+import { Command, CLIArgs } from '../paper';
 import { Flags } from '../paper';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';

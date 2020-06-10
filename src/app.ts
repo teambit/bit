@@ -24,7 +24,7 @@ try {
       return harmony.set([BitExt]);
     })
     .then(() => {
-      const cli = harmony.get('Paper');
+      const cli = harmony.get('PaperExtension');
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
       // eslint-disable-next-line no-console
       return cli ? cli.run() : console.log('WTF! :)');
@@ -34,8 +34,7 @@ try {
       const errorHandlerExist = findErrorDefinition(originalError);
       let handledError;
       if (originalError instanceof PaperError) {
-        // at this point CLI or Harmony might be broken.
-        // handling by paper
+        // at this point CLI or Harmony might be broken. handling by paper
         PaperError.handleError(err);
       } else if (errorHandlerExist) {
         handledError = defaultHandleError(originalError);

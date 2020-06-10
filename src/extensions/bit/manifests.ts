@@ -1,4 +1,3 @@
-import { BitCliExt } from '../cli';
 import { CompileExt } from '../compile';
 import { ComponentFactoryExt } from '../component';
 // import { ComposerExt } from '../composer';
@@ -16,7 +15,7 @@ import { IsolatorExt } from '../isolator';
 import { LoggerExt } from '../logger';
 import { PkgExtension } from '../pkg';
 import { PackageManagerExt } from '../package-manager';
-import { PaperExt } from '../paper';
+import { PaperExtension } from '../paper';
 import { React } from '../react';
 import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
@@ -27,7 +26,7 @@ import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
 
 export const manifestsMap = {
-  [BitCliExt.name]: BitCliExt,
+  [PaperExtension.name]: PaperExtension,
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
   [ComponentFactoryExt.name]: ComponentFactoryExt,
@@ -47,7 +46,6 @@ export const manifestsMap = {
   [LoggerExt.name]: LoggerExt,
   Pkg: PkgExtension,
   [PackageManagerExt.name]: PackageManagerExt,
-  [PaperExt.name]: PaperExt,
   // TODO: take from the extension itself & change name to follow convention
   [React.name]: React,
   [ReporterExt.name]: ReporterExt,

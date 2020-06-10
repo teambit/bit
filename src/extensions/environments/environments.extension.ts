@@ -1,11 +1,11 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { StartCmd } from './start.cmd';
-import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { PaperExtension } from '../paper';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -17,7 +17,7 @@ export type EnvsConfig = {
 export type EnvOptions = {};
 
 export class Environments {
-  static dependencies = [BitCliExt, WorkspaceExt];
+  static dependencies = [PaperExtension, WorkspaceExt];
 
   constructor(
     /**
@@ -109,7 +109,7 @@ export class Environments {
 
   static defaultConfig = {};
 
-  static async provider([cli, workspace]: [BitCli, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+  static async provider([cli, workspace]: [PaperExtension, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
     const envs = new Environments(config, workspace, envSlot);
     cli.register(new StartCmd(envs, workspace));
     return envs;

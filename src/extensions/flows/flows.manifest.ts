@@ -1,16 +1,16 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { Flows } from './flows';
-import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { RunCmd } from './run';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
+import { PaperExtension } from '../paper';
 
-type ScriptDeps = [BitCli, Workspace, Reporter, Logger];
+type ScriptDeps = [PaperExtension, Workspace, Reporter, Logger];
 
 export default {
   name: 'flows',
-  dependencies: [BitCliExt, WorkspaceExt, ReporterExt, LoggerExt],
+  dependencies: [PaperExtension, WorkspaceExt, ReporterExt, LoggerExt],
   async provider([cli, workspace, reporter, logger]: ScriptDeps) {
     const flows = new Flows(workspace);
     const runCMD = new RunCmd(flows, reporter, logger);

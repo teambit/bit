@@ -1,4 +1,3 @@
-import { BitCliExt, BitCli } from '../cli';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { ReleaserCmd } from './run.cmd';
@@ -7,6 +6,7 @@ import { ReleasesService } from './releases.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { Isolator, IsolatorExt } from '../isolator';
+import { PaperExtension } from '../paper';
 
 /**
  * extension config type.
@@ -22,7 +22,7 @@ export class ReleasesExtension {
   /**
    * extension dependencies
    */
-  static dependencies = [BitCliExt, Environments, WorkspaceExt, ScopeExtension, IsolatorExt];
+  static dependencies = [PaperExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExt];
 
   constructor(
     /**
@@ -57,7 +57,7 @@ export class ReleasesExtension {
   }
 
   static async provider([cli, envs, workspace, scope, isolator]: [
-    BitCli,
+    PaperExtension,
     Environments,
     Workspace,
     ScopeExtension,
