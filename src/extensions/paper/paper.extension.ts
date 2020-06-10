@@ -6,6 +6,8 @@ import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
+import { LegacyCommand } from './legacy-command';
+import { buildRegistry } from '../../cli';
 
 export class PaperExtension {
   readonly groups: { [k: string]: string } = {};
@@ -93,4 +95,30 @@ export class PaperExtension {
     }
     this.groups[name] = description;
   }
+}
+
+export async function CLIProvider([paper]: BitCLIDeps) {
+  const legacyExtensions = await legacyLoadExtensions();
+  // Make sure to register all the hooks actions in the global hooks manager
+  legacyExtensions.forEach(extension => {
+    extension.registerHookActionsOnHooksManager();
+  });
+  const extensionsCommands = legacyExtensions.reduce((acc, curr) => {
+    if (curr.commands && curr.commands.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      acc = acc.concat(curr.commands);
+    }
+    return acc;
+  }, []);
+
+  const legacyRegistry = buildRegistry(extensionsCommands);
+  // const bitCLI = new BitCli(paper);
+  const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
+  allCommands.reduce((p, command) => {
+    const legacyCommand = new LegacyCommand(command, p);
+    p.register(legacyCommand);
+    return p;
+  }, paper);
+
+  return bitCLI;
 }
