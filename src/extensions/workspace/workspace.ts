@@ -81,7 +81,7 @@ export default class Workspace implements ComponentHost {
   /**
    * list all workspace components.
    */
-  async list() {
+  async list(): Promise<Component[]> {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
     return this.transformLegacyComponents(consumerComponents);
   }
@@ -158,7 +158,9 @@ export default class Workspace implements ComponentHost {
   // @gilad needs to implment on variants
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async byPattern(pattern: string): Promise<Component[]> {
-    return [];
+    // @todo: this is a naive implementation, replace it with a real one.
+    const all = await this.list();
+    return all.filter(c => c.id.toString() === pattern);
   }
 
   /**
