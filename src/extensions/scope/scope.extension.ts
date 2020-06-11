@@ -10,7 +10,7 @@ type TagRegistry = SlotRegistry<OnTag>;
 export type OnTag = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension {
-  static id: '@teambit/scope';
+  static id = '@teambit/scope';
 
   constructor(
     /**
