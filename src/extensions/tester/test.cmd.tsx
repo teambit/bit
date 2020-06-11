@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Box, Color } from 'ink';
-import { Command, CLIArgs } from '../paper';
+import { Command, CLIArgs } from '../cli';
 import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
 

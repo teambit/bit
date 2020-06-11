@@ -5,7 +5,7 @@ import { Box, Color, Text } from 'ink';
 import { Runtime } from './runtime';
 // import { EnvConsole } from './components';
 // make sure to update eslint to read JSX.
-import { Command, CLIArgs } from '../paper';
+import { Command, CLIArgs } from '../cli';
 import { Workspace } from '../workspace';
 import { Environments } from './environments.extension';
 
