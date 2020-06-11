@@ -36,6 +36,6 @@ This compilation takes place on the isolated capsule.
 The provider should implement `compileOnCapsules` function which returns the exit-code and the dist dir.
 From Compiler interface:
 ```
-compileOnCapsules(capsuleDirs: string[]): { resultCode: number; error: Error | null };
+compileOnCapsules(context: ReleaseContext): Promise<ReleaseResults>
 ```
 FYI, this api is going to be changed very soon. It should get components and capsules graph.

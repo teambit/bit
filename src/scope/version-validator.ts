@@ -98,17 +98,16 @@ export default function validateVersionInstance(version: Version): void {
       });
     });
   };
-  const validateFile = (file, isDist = false) => {
-    const field = isDist ? 'dist-file' : 'file';
+  const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
     if (!isValidPath(file.relativePath)) {
       throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is invalid`);
     }
-    if (!file.name) {
+    if (!file.name && field !== 'artifact') {
       throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the name attribute`);
     }
     if (!file.file) throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the hash`);
-    validateType(message, file.name, `${field}.name`, 'string');
+    if (file.name) validateType(message, file.name, `${field}.name`, 'string');
     validateType(message, file.file, `${field}.file`, 'object');
     validateType(message, file.file.hash, `${field}.file.hash`, 'string');
   };
@@ -117,6 +116,7 @@ export default function validateVersionInstance(version: Version): void {
     if (extension.extensionId) {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
+    extension.artifacts.map(artifact => validateFile(artifact, 'artifact'));
   };
 
   const _validateExtensions = (extensions: ExtensionDataList) => {
@@ -134,7 +134,7 @@ export default function validateVersionInstance(version: Version): void {
   validateType(message, version.files, 'files', 'array');
   const filesPaths: PathLinux[] = [];
   version.files.forEach(file => {
-    validateFile(file);
+    validateFile(file, 'file');
     filesPaths.push(file.relativePath);
     if (file.relativePath === version.mainFile) foundMainFile = true;
   });
@@ -162,7 +162,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
     version.dists.forEach(file => {
-      validateFile(file, true);
+      validateFile(file, 'dist-file');
     });
   } else if (version.mainDistFile) {
     throw new VersionInvalid(`${message} the mainDistFile cannot be set when the dists are empty`);
