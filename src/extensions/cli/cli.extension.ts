@@ -102,6 +102,7 @@ export async function CLIProvider([paper]: [CLIExtension]) {
   legacyExtensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
   });
+
   const extensionsCommands = legacyExtensions.reduce((acc, curr) => {
     if (curr.commands && curr.commands.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
