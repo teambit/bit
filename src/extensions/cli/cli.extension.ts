@@ -16,8 +16,8 @@ export class CLIExtension {
   static dependencies = [ReporterExt];
 
   static provider([reporter]: [Reporter]) {
-    const paper = new CLIExtension(new CommandRegistry({}), reporter);
-    return CLIProvider([paper]);
+    const cli = new CLIExtension(new CommandRegistry({}), reporter);
+    return CLIProvider([cli]);
   }
 
   constructor(
