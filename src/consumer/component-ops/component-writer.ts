@@ -19,6 +19,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { Artifact } from '../component/sources/artifact';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -121,6 +122,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
+    this.populateArtifacts();
     return this.component;
   }
 
@@ -189,6 +191,22 @@ export default class ComponentWriter {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
     }
+  }
+
+  /**
+   * currently, it writes all artifacts.
+   * later, this responsibility might move to pkg extension, which could write only artifacts
+   * that are set in package.json.files[], to have a similar structure of a package.
+   */
+  populateArtifacts() {
+    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
+    const relativeLinkPath = this.consumer
+      ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
+      : null;
+    if (relativeLinkPath) {
+      artifactsVinyl.forEach(a => a.updatePaths({ newBase: relativeLinkPath }));
+    }
+    this.component.dataToPersist.addManyFiles(artifactsVinyl);
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {

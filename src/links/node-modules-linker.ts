@@ -103,6 +103,10 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
+    if (this.consumer && !this.consumer.config.isLegacy) {
+      this._populateAuthoredComponentsLinks(component);
+      return;
+    }
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
