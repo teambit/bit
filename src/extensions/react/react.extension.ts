@@ -29,7 +29,7 @@ export class React {
     TesterExtension
   ]) {
     // support factories from harmony?
-    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.name), jest, ts, compile, tester));
+    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.id), jest, ts, compile, tester));
     return {};
   }
 }
