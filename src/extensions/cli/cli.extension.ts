@@ -86,11 +86,7 @@ export class CLIExtension {
   }
   private shouldOutputJson() {
     const showCommand = commander.commands.find(c => c._name === 'show');
-    if (showCommand.versions) {
-      return true;
-    } else {
-      return false;
-    }
+    return showCommand.versions
   }
   registerGroup(name: string, description: string) {
     if (this.groups[name]) {
