@@ -19,6 +19,7 @@ export type ReleasesConfig = {
 };
 
 export class ReleasesExtension {
+  static id = '@teambit/releases';
   /**
    * extension dependencies
    */

@@ -26,6 +26,7 @@ export type ComponentPkgExtensionConfig = {
 };
 
 export class PkgExtension {
+  static id = '@teambit/pkg';
   static dependencies = [CLIExtension, ScopeExtension, Environments];
   /**
    *Creates an instance of PkgExtension.
@@ -108,7 +109,7 @@ export class PkgExtension {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(this.constructor.name);
+    const currentExtension = configuredExtensions.findExtension(PkgExtension.id);
     const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);

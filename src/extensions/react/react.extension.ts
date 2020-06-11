@@ -12,6 +12,7 @@ export type ReactConfig = {
 };
 
 export class React {
+  static id = '@teambit/react';
   static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt, TesterExtension];
 
   // createTsCompiler(tsconfig: {}) {}

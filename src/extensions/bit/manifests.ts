@@ -36,8 +36,7 @@ export const manifestsMap = {
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,
   // [DependencyResolverExt.name]: DependencyResolverExt,
-  // TODO: take from the extension itself
-  '@teambit/envs': Environments,
+  [Environments.id]: Environments,
   [FlowsExt.name]: FlowsExt,
   // [GitExt.name]: GitExt,
   [ComponentGraphExt.name]: ComponentGraphExt,
@@ -45,17 +44,17 @@ export const manifestsMap = {
   [InstallExt.name]: InstallExt,
   [IsolatorExt.name]: IsolatorExt,
   [LoggerExt.name]: LoggerExt,
-  Pkg: PkgExtension,
+  [PkgExtension.id]: PkgExtension,
   [PackageManagerExt.name]: PackageManagerExt,
   [PaperExt.name]: PaperExt,
   // TODO: take from the extension itself & change name to follow convention
   [React.name]: React,
   [ReporterExt.name]: ReporterExt,
-  [ScopeExtension.name]: ScopeExtension,
+  [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
-  Tester: TesterExtension,
+  [TesterExtension.id]: TesterExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [ReleasesExtension.name]: ReleasesExtension,
+  [ReleasesExtension.id]: ReleasesExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt
