@@ -216,7 +216,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const isCompileSet = Boolean(
       consumerComponent.compiler ||
         clonedComponent.extensions.some(
-          e => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === 'Environments'
+          e => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === '@teambit/envs'
         )
     );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(

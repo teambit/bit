@@ -12,6 +12,7 @@ export type ReactConfig = {
 };
 
 export class React {
+  static id = '@teambit/react';
   static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt, TesterExtension];
 
   // createTsCompiler(tsconfig: {}) {}
@@ -28,7 +29,7 @@ export class React {
     TesterExtension
   ]) {
     // support factories from harmony?
-    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.name), jest, ts, compile, tester));
+    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.id), jest, ts, compile, tester));
     return {};
   }
 }

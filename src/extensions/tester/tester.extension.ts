@@ -14,6 +14,7 @@ export type TesterExtensionConfig = {
 };
 
 export class TesterExtension {
+  static id = '@teambit/tester';
   static dependencies = [CLIExtension, Environments, WorkspaceExt];
 
   constructor(

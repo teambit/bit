@@ -58,6 +58,7 @@ dist/*
 dist-legacy/
 flow-typed/
 eslint-report.html
+types/*
 
 #distrubution
 distribution/
