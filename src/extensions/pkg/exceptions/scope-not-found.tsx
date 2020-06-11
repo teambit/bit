@@ -2,7 +2,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { PaperError } from '../../paper';
+import { PaperError } from '../../cli';
 
 export class ScopeNotFound extends PaperError {
   constructor(readonly scopePath?: string) {

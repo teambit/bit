@@ -1,11 +1,12 @@
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
+// import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
 import { Packer, PackResult } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
+import { CLIExtension } from '../cli';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -121,7 +122,7 @@ export class PkgExtension {
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs]: [CLI, ScopeExtension, Environments],
+    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
