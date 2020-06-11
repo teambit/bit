@@ -1,6 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -10,8 +11,11 @@ chai.use(assertArrays);
 
 describe('pkg extension', function() {
   this.timeout(0);
-  const helper = new Helper();
-
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -10,6 +11,7 @@ describe('create extension', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
