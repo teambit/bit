@@ -201,7 +201,12 @@ export default class ComponentWriter {
   populateArtifacts() {
     const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
     const relativeLinkPath = this.consumer
-      ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
+      ? getNodeModulesPathOfComponent(
+          this.consumer.config._bindingPrefix,
+          this.component.id,
+          true,
+          this.component.defaultScope
+        )
       : null;
     if (relativeLinkPath) {
       artifactsVinyl.forEach(a => a.updatePaths({ newBase: relativeLinkPath }));
