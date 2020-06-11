@@ -1,53 +1,73 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
-import BitJsonHelper from './e2e-bit-json-helper';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
 import ScopesData from './e2e-scopes';
 import FixtureHelper from './e2e-fixtures-helper';
 import ScopeHelper from './e2e-scope-helper';
+import FsHelper from './e2e-fs-helper';
 
 export default class ExtensionsHelper {
   scopes: ScopesData;
   command: CommandHelper;
-  bitJson: BitJsonHelper;
+  bitJsonc: BitJsoncHelper;
   scopeHelper: ScopeHelper;
   fixtures: FixtureHelper;
+  fs: FsHelper;
   constructor(
     scopes: ScopesData,
     command: CommandHelper,
-    bitJson: BitJsonHelper,
+    bitJsonc: BitJsoncHelper,
     scopeHelper: ScopeHelper,
-    fixtures: FixtureHelper
+    fixtures: FixtureHelper,
+    fsHelper: FsHelper
   ) {
     this.scopes = scopes;
     this.command = command;
-    this.bitJson = bitJson;
+    this.bitJsonc = bitJsonc;
     this.scopeHelper = scopeHelper;
     this.fixtures = fixtures;
+    this.fs = fsHelper;
   }
 
-  importAndConfigureExtension(id: string) {
-    this.command.importExtension(id);
-    const bitJson = this.bitJson.read();
-    bitJson.extensions = { [id]: {} };
-    this.bitJson.write(bitJson);
+  addExtensionToWorkspace(extName: string, extConfig = {}) {
+    this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
   }
 
-  importNpmPackExtension(id = 'global-remote/npm/pack@2.0.1') {
-    this.fixtures.ensureGlobalRemoteScope();
-    this.scopeHelper.addGlobalRemoteScope();
-    this.importAndConfigureExtension(id);
-    // workaround to get the registry into the package.json file
-    const extensionFilePath = path.join(this.scopes.localPath, '.bit/components/npm/pack/global-remote/2.0.1/index.js');
-    const extensionFile = fs.readFileSync(extensionFilePath).toString();
-    const extensionFileIncludeRegistry = extensionFile.replace(
-      'excludeRegistryPrefix: true',
-      'excludeRegistryPrefix: false'
-    );
-    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
-      'return result;',
-      'return JSON.stringify(result, null, 2);'
-    );
-    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
+  addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
+    this.bitJsonc.addToVariant(this.scopes.localPath, variant, extName, extConfig);
+  }
+
+  removeAllExtensionsFromVariant(variant: string) {
+    this.bitJsonc.setVariant(this.scopes.localPath, variant, {});
+  }
+
+  /**
+   * This will set the extension as the only extension of the variant
+   * If you want to add new one, use addExtensionToVariant
+   *
+   * @param {string} variant
+   * @param {string} extName
+   * @param {*} [extConfig={}]
+   * @memberof ExtensionsHelper
+   */
+  setExtensionToVariant(variant: string, extName: string, extConfig = {}) {
+    this.removeAllExtensionsFromVariant(variant);
+    this.addExtensionToVariant(variant, extName, extConfig);
+  }
+
+  createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
+    if (!content) {
+      content = `
+      module.exports = {
+        name: 'eslint',
+        dependencies: [],
+        provider: async () => {
+          console.log(\`hi there from an extension\`)
+        }
+      };
+      `;
+    }
+    this.fs.outputFile('foo-ext.js', content);
+    this.command.addComponent('foo-ext.js', { i: name });
+    this.addExtensionToWorkspace(name, config);
   }
 }

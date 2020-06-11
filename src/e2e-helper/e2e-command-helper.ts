@@ -1,5 +1,6 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
+import tar from 'tar';
 import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
@@ -33,6 +34,9 @@ export default class CommandHelper {
 
   setFeatures(featuresToggle: string) {
     this.featuresToggle = featuresToggle;
+  }
+  resetFeatures() {
+    this.featuresToggle = undefined;
   }
 
   runCmd(
@@ -94,9 +98,9 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string, cwd?: string): Record<string, any> {
+  catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
-    return JSON.parse(result);
+    return parse ? JSON.parse(result) : result;
   }
   /**
    * add component as legacy-mode.
@@ -199,8 +203,8 @@ export default class CommandHelper {
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
-  exportComponent(id: string, scope: string = this.scopes.remote, assert = true) {
-    const result = this.runCmd(`bit export ${scope} ${id} --force`);
+  exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
+    const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
@@ -257,6 +261,14 @@ export default class CommandHelper {
     return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
+  getCapsuleOfComponent(id: string) {
+    const capsulesJson = this.runCmd('bit capsule-list -j');
+    const capsules = JSON.parse(capsulesJson);
+    const capsulePath = capsules.capsules.find(c => c.endsWith(id));
+    if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
+    return capsulePath;
+  }
+
   importExtension(id: string) {
     return this.runCmd(`bit import ${id} --extension`);
   }
@@ -291,6 +303,13 @@ export default class CommandHelper {
   statusJson() {
     const status = this.runCmd('bit status --json');
     return JSON.parse(status);
+  }
+
+  expectStatusToBeClean() {
+    const statusJson = this.statusJson();
+    Object.keys(statusJson).forEach(key => {
+      expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
+    });
   }
 
   statusComponentIsStaged(id: string): boolean {
@@ -342,16 +361,52 @@ export default class CommandHelper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
+  runTask(taskName: string) {
+    return this.runCmd(`bit run ${taskName}`);
+  }
+  create(name: string) {
+    return this.runCmd(`bit create ${name}`);
+  }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
   }
-  link() {
-    return this.runCmd('bit link');
+  link(flags?: string) {
+    return this.runCmd(`bit link ${flags || ''}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
   }
-  ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
+
+  packComponent(id: string, options: Record<string, any>, extract = false) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    const result = this.runCmd(`bit pack ${id} ${value}`);
+    if (extract) {
+      if (
+        !options ||
+        // We don't just check that it's falsy because usually it's an empty string.
+        // eslint-disable-next-line no-prototype-builtins
+        (!options.hasOwnProperty('-json') && !options.hasOwnProperty('j')) ||
+        (!options['-out-dir'] && !options.d)
+      ) {
+        throw new Error('extracting supporting only when packing with json and out-dir');
+      }
+      const resultParsed = JSON.parse(result);
+      if (!resultParsed || !resultParsed.tarPath) {
+        throw new Error('npm pack results are invalid');
+      }
+      const tarballFilePath = resultParsed.tarPath;
+      const dir = options.d || options['-out-dir'];
+      if (this.debugMode) {
+        console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
+      }
+      tar.x({ file: tarballFilePath, C: dir, sync: true });
+    }
+    return result;
+  }
+
+  ejectConf(id = 'bar/foo', options?: Record<string, any>) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
           .map(key => `-${key} ${options[key]}`)

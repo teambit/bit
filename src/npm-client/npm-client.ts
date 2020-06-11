@@ -10,6 +10,7 @@ import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
+import { PackageManagerClients } from '../consumer/config/legacy-workspace-config-interface';
 
 export type PackageManagerResults = { stdout: string; stderr: string };
 
@@ -18,9 +19,11 @@ const rejectNils = R.reject(isNil);
 
 const defaultNpmArgs = [];
 const defaultYarnArgs = [];
+const defaultPnpmArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
-  yarn: defaultYarnArgs
+  yarn: defaultYarnArgs,
+  pnpm: defaultPnpmArgs
 };
 const defaultPackageManagerProcessOptions = {
   cwd: process.cwd
@@ -65,12 +68,11 @@ const getAllowdPackageManagerProcessOptions = userOptions => {
 
 type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'npm' | 'yarn';
-  packageManagerArgs: string[];
-  packageManagerProcessOptions: Record<string, any>;
-  useWorkspaces: boolean;
+  packageManager?: PackageManagerClients;
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Record<string, any>;
+  useWorkspaces?: boolean;
   dirs: string[];
   rootDir: string | null | undefined; // Used for yarn workspace
   installRootPackageJson: boolean;
@@ -161,7 +163,7 @@ const _installInOneDirectory = ({
  * internally it uses npm list -j
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
-  const packageManager = DEFAULT_PACKAGE_MANAGER;
+  const packageManager = 'npm';
   let npmList;
   try {
     npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });

@@ -27,6 +27,7 @@ describe('bit test command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   let clonedScopePath;
   before(() => {
@@ -327,12 +328,19 @@ describe('bit test command', function() {
         statusCode = err.status;
       }
       expect(statusCode).to.not.equal(0);
-      expect(output).to.have.string('Unexpected token');
+      expect(output).to.have.string('import {expect} from');
     });
     it('Should be able to test after building', () => {
       helper.env.importCompiler();
       helper.command.build();
       const output = helper.command.testComponent('utils/is-type');
+      expect(output).to.have.string('tests passed');
+    });
+    // @todo: make it work once test extension is ready
+    it.skip('should be able to test using the test extension', () => {
+      helper.fs.deletePath('dist');
+      helper.env.importCompiler();
+      const output = helper.command.runCmd('bit run-test utils/is-type');
       expect(output).to.have.string('tests passed');
     });
   });

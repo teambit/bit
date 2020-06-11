@@ -14,7 +14,6 @@ import {
   NewerVersionFound,
   LoginFailed
 } from '../consumer/exceptions';
-import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -50,6 +49,7 @@ import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-js
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
+import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -77,23 +77,21 @@ import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
-import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
-import ExtensionNameNotValid from '../extensions/exceptions/extension-name-not-valid';
+import ExtensionFileNotFound from '../legacy-extensions/exceptions/extension-file-not-found';
+import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
 import GeneralError from '../error/general-error';
 import ValidationError from '../error/validation-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
-import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
-import ExtensionGetDynamicConfigError from '../extensions/exceptions/extension-get-dynamic-config-error';
-import ExtensionInitError from '../extensions/exceptions/extension-init-error';
+import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
+import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
+import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
+import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
-import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir';
-import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
+import { DEBUG_LOG, BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
-import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
+import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
@@ -102,7 +100,6 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
-import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -163,20 +160,16 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],
-  [InvalidConfigDir, err => `error: the eject path is already part of "${chalk.bold(err.compId)}" path`],
-  [EjectToWorkspace, () => 'error: could not eject config to the workspace root please provide a valid path'],
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
-  [ComponentsPendingImport, () => importPendingMsg],
+  [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
+  // TODO: improve error
   [
     EjectNoDir,
-    err =>
-      `error: could not eject config for ${chalk.bold(
-        err.compId
-      )}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+    err => `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`
   ],
   [
     ComponentNotFound,
@@ -355,13 +348,6 @@ please fix the file in order to run bit commands`
 please make sure it's not absolute and doesn't contain invalid characters`
   ],
   [
-    DriverNotFound,
-    err =>
-      `error: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(
-        err.lang
-      )} set in your bit.json file.`
-  ],
-  [
     MissingMainFile,
     err =>
       `error: the component ${chalk.bold(
@@ -423,6 +409,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     PathOutsideConsumer,
     err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
   ],
+  [ConfigKeyNotFound, err => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
@@ -560,9 +547,9 @@ function formatComponentSpecsFailed(id, specsResults) {
   return res;
 }
 
-function findErrorDefinition(err: Error) {
+export function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
-    return err instanceof ErrorType || err.name === ErrorType.name; // in some cases, such as forked process, the received err is serialized.
+    return err instanceof ErrorType || (err && err.name === ErrorType.name); // in some cases, such as forked process, the received err is serialized.
   });
   return error;
 }
@@ -642,7 +629,7 @@ function handleNonBitCustomErrors(err: Error): string {
   return chalk.red(err.message || err);
 }
 
-export default (err: Error): string | null | undefined => {
+export default (err: Error): string | undefined => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {
@@ -651,6 +638,7 @@ export default (err: Error): string | null | undefined => {
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
   err.message = errorMessage;
-  logger.error(`User gets the following error: ${errorMessage}`);
-  return chalk.red(errorMessage);
+  logger.error(`user gets the following error: ${errorMessage}`);
+  logger.silly(err.stack);
+  return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
 };

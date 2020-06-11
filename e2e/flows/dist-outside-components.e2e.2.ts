@@ -14,6 +14,7 @@ describe('dists file are written outside the components dir', function() {
   let scopeWithCompiler;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
     appJsFixture = `const barFoo = require('${helper.general.getRequireBitPath(
       'bar',
       'foo'
@@ -489,6 +490,7 @@ describe('dist-outside-components when no compiler has been set up', function() 
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- upgrade typescript to 3.8.3
+- [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
+- [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
 - [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
 - support running `bit link` for specific components
 - fix capsule to not hang forever when running build/tag/isolate and npm emits errors
@@ -21,6 +24,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - introduce `bit link --rewire` to change relative paths in the source code to module paths
 - prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
 - prevent exporting components when import/require uses a module path with no scope-name
+
+## [[14.7.7-dev.3] - 2020-03-31]
+
+- support react-docs of multiple exports
+
+## [[14.7.7-dev.2] - 2020-03-31]
+
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+
+## [[14.7.7-dev.1] - 2020-03-24]
+
+- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
+- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
 - fix components dependencies detection to resolve from package.json if not exist on the fs
 
 ## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)

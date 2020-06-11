@@ -12,6 +12,7 @@ describe('bit remove command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -236,7 +237,7 @@ describe('bit remove command', function() {
       helper.command.importComponent('global/simple -p ./test');
       helper.command.removeComponent('global/simple -s');
     });
-    it('should  remove component from package.json that points to relative path', () => {
+    it('should remove component from package.json that points to relative path', () => {
       const pkgJson = helper.packageJson.read();
       expect(pkgJson.dependencies).to.not.have.property(`@bit/${helper.scopes.remote}.global.simple`);
     });
@@ -340,6 +341,7 @@ describe('bit remove command', function() {
     let helper2;
     before(() => {
       helper2 = new Helper();
+      helper2.command.setFeatures('legacy-workspace-config');
       helper2.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.remotePath);

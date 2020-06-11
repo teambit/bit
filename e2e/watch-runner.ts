@@ -4,7 +4,8 @@ import chalk from 'chalk';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { ChildProcess } from 'child_process';
 import Helper from '../src/e2e-helper/e2e-helper';
-import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/consumer/component-ops/watch-components';
+// @todo: move this file to the watch extension and then move the following constants to the extension
+import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/constants';
 
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
 

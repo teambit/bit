@@ -8,16 +8,16 @@ export default class Cmd {
   description: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts: CommandOptions;
+  opts: CommandOptions = [];
   commands: Cmd[] = [];
   private?: boolean;
   loader?: boolean;
   skipWorkspace?: boolean;
+  migration?: boolean;
   remoteOp?: boolean; // Used for adding the token option globally
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
+  action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any> {
     console.log('"action" method not implemented on this command'); // eslint-disable-line no-console
     return new Promise(resolve => resolve({}));
   }

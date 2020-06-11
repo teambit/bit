@@ -2,8 +2,7 @@ import R from 'ramda';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import { runModule } from 'librarian';
-import Capsule from '../../components/core/capsule';
+import { Capsule } from '../extensions/isolator/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
@@ -15,7 +14,7 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
 import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
@@ -43,6 +42,7 @@ export interface IsolateOptions {
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
   silentPackageManagerResult?: boolean; // Print environment install result
+  applyExtensionsAddedConfig?: boolean; // apply configs added by extension in the package.json
 }
 
 export default class Isolator {
@@ -60,7 +60,9 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dir?: string;
+
   constructor(capsule: Capsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
@@ -77,13 +79,6 @@ export default class Isolator {
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const loaderPrefix = `isolating component - ${componentId.name}`;
     loader.setText(loaderPrefix);
-    const log = message => loader.setText(`${loaderPrefix}: ${message}`);
-    // @ts-ignore TODO: this should be part of the capsule interface
-    this.capsule.execNode = async (executable, args) => {
-      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`);
-      // TODO: do this from the compiler/tester so that the isolator doesn't need to know if it's a builder/tester/*...
-      await runModule(executable, { args, cwd: this.dir, log, onScriptRun });
-    };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
@@ -117,6 +112,7 @@ export default class Isolator {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
+      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig,
       isolated: true
     };
     this.componentWithDependencies = componentWithDependencies;
@@ -134,6 +130,7 @@ export default class Isolator {
   async writeComponentsAndDependencies(opts = { keepExistingCapsule: false }) {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
+
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
     await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
@@ -206,6 +203,7 @@ export default class Isolator {
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
+  // amit - here we need to add a map of all the capsules so we can link the components
   async _addComponentsToRoot(opts = { keepExistingCapsule: false }): Promise<void> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -267,7 +265,7 @@ export default class Isolator {
 
   async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<PackageManagerResults> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const execResults = await this.capsule.exec(cmd, options);
+    const execResults = await this.capsule.exec({ command: cmd.split(' '), options });
     let stdout = '';
     let stderr = '';
     return new Promise((resolve, reject) => {
@@ -314,7 +312,7 @@ export default class Isolator {
   }
 
   async _getPeerDependencies(): Promise<Record<string, any>> {
-    const packageManager = DEFAULT_PACKAGE_MANAGER;
+    const packageManager = 'npm';
     let npmList;
     try {
       npmList = await this._getNpmListOutput(packageManager);

@@ -4,15 +4,13 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import {
-  statusInvalidComponentsMsg,
-  statusWorkspaceIsCleanMsg,
-  statusFailureMsg,
-  importPendingMsg
-} from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusInvalidComponentsMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE, IMPORT_PENDING_MSG } from '../../src/constants';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 const assertArrays = require('chai-arrays');
 
@@ -23,6 +21,7 @@ describe('bit status command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -41,8 +40,7 @@ describe('bit status command', function() {
       helper.scopeHelper.initWorkspace();
     });
     it('should indicate that there are no components', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
 
@@ -53,8 +51,7 @@ describe('bit status command', function() {
       helper.fs.createFile(path.join('components', 'bar'), 'foo.js');
     });
     it('should indicate that there are no components and should not throw an error', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('when a component is created and added but not tagged', () => {
@@ -127,8 +124,8 @@ describe('bit status command', function() {
         helper.bitJson.addOverrides(overrides);
       });
       it('Should show missing package dependencies', () => {
-        output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing packages dependencies');
+        output = helper.command.runCmd('bit status').replace(/\n/g, '');
+        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
         expect(output).to.have.string('bar/foo.js -> react');
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
@@ -148,8 +145,8 @@ describe('bit status command', function() {
         helper.bitJson.addOverrides(overrides);
       });
       it('Should show missing package dependencies', () => {
-        output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing packages dependencies');
+        output = helper.command.runCmd('bit status').replace(/\n/g, '');
+        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
     });
@@ -326,7 +323,7 @@ describe('bit status command', function() {
       });
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(importPendingMsg);
+        expect(output).to.have.string(IMPORT_PENDING_MSG);
       });
     });
   });
@@ -611,7 +608,7 @@ describe('bit status command', function() {
       helper.fixtures.createComponentBarFoo(fooFixture);
       helper.fixtures.addComponentBarFoo();
       helper.npm.initNpm();
-      helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': 'v1.0.0' } });
+      helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': '1.0.0' } });
       output = helper.command.runCmd('bit status');
     });
     it('should not show the bit package as missing', () => {

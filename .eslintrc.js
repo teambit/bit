@@ -1,7 +1,17 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
+  settings: {
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
+      }
+    }
+  },
   parserOptions: {
-    project: './tsconfig.json'
+    project: './tsconfig.json',
+    ecmaFeatures: {
+      jsx: true // Allows for the parsing of JSX
+    }
   },
   extends: [
     'airbnb-typescript/base',
@@ -9,6 +19,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
+    'plugin:react/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
@@ -22,6 +33,9 @@ module.exports = {
     // 'unicorn'
   ],
   rules: {
+    complexity: ['error', { max: 25 }],
+    'no-console': ['error'],
+    '@typescript-eslint/no-unused-vars': ['error', { args: 'after-used' }],
     '@typescript-eslint/no-use-before-define': [
       'error',
       { functions: false, classes: true, variables: true, typedefs: true }
@@ -70,7 +84,16 @@ module.exports = {
     'max-lines': [2, 1800],
     'func-names': [0]
   },
+  overrides: [
+    {
+      files: ['src/extensions/**/*.ts'],
+      rules: {
+        'import/no-cycle': ['error']
+      }
+    }
+  ],
   env: {
+    browser: true,
     node: true,
     mocha: true
   }

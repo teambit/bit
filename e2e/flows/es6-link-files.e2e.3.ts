@@ -10,6 +10,7 @@ describe('es6 components with link files', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -110,7 +111,6 @@ export { isString };`
           before(async () => {
             await npmCiRegistry.init();
             helper.command.importComponent('is-string/is-string');
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('is-string/is-string');
             npmCiRegistry.publishComponent('bar/foo');

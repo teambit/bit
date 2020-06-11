@@ -16,20 +16,18 @@ import { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
-import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
-import Capsule from '../../../components/core/capsule';
+import { Capsule } from '../../extensions/isolator/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-import { CompilerResults } from '../../extensions/compiler-api';
+import { CompilerResults } from '../../legacy-extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
 import Component from '../component/consumer-component';
-import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
+import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 
 type BuildResults = {
   builtFiles: Vinyl[];
   mainDist?: string;
   packageJson?: Record<string, any>;
-  shouldBuildUponDependenciesChanges?: boolean;
 };
 
 export default (async function buildComponent({
@@ -102,23 +100,24 @@ export default (async function buildComponent({
     directory,
     verbose: !!verbose
   });
-  const { builtFiles, mainDist, packageJson, shouldBuildUponDependenciesChanges } = compilerResults;
+  const { builtFiles, mainDist, packageJson } = compilerResults;
   builtFiles.forEach(file => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  component.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+  component.setDists(
+    // @ts-ignore
+    builtFiles.map(file => new Dist(file)),
+    mainDist
+  );
   if (save) {
     await scope.sources.updateDist({ source: component });
   }
   if (packageJson && !R.isEmpty(packageJson)) {
     await _updateComponentPackageJson(component, packageJson);
     component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
-  }
-  if (shouldBuildUponDependenciesChanges) {
-    component.addExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges', true);
   }
   return component.dists;
 });
@@ -249,12 +248,6 @@ async function _isNeededToReBuild(
   if (!consumer) return false;
   const componentStatus = await consumer.getComponentStatusById(component.id);
   if (componentStatus.modified) return true;
-  const shouldBuildUponDependenciesChanges = component.getExtensionValue(
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    component.compiler.name,
-    'shouldBuildUponDependenciesChanges'
-  );
-  if (!shouldBuildUponDependenciesChanges) return false;
   const areDependenciesChangedP = component.dependencies.getAllIds().map(async dependencyId => {
     const dependencyStatus = await consumer.getComponentStatusById(dependencyId);
     return dependencyStatus.modified;
@@ -333,29 +326,10 @@ async function _runBuild({
         process.chdir(componentRoot);
       }
       if (compiler.action) {
-        const isCompilerDetached = await component.getDetachedCompiler(consumer);
-        const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;
-        // Write config files to tmp folder
-        if (shouldWriteConfig) {
-          tmpFolderFullPath = component.getTmpFolder(consumerPath);
-          if (verbose) {
-            console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
-          }
-          await writeEnvFiles({
-            configDir: component.getTmpFolder(),
-            env: compiler,
-            consumer,
-            component,
-            deleteOldFiles: false,
-            verbose
-          });
-        }
-
         const actionParams = {
           files,
           rawConfig: compiler.rawConfig,
           dynamicConfig: compiler.dynamicConfig,
-          configFiles: compiler.files,
           api: compiler.api,
           context
         };

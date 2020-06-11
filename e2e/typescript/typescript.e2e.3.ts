@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { AUTO_GENERATED_STAMP, IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -15,6 +15,7 @@ describe('typescript', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -28,7 +29,7 @@ describe('typescript', function() {
     });
     describe('components with auto-resolve dependencies - with ts compiler', () => {
       // Skipping this test on appveyor because it's fail due to madge issues
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // @ts-ignore
         this.skip;
       } else {
@@ -163,7 +164,7 @@ describe('typescript', function() {
       }
     });
     describe('with default and non default export', () => {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
         // @ts-ignore
         this.skip;
@@ -401,7 +402,7 @@ describe('typescript', function() {
         helper.command.importComponent('bar/foo');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
+        const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
@@ -412,7 +413,6 @@ describe('typescript', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.unpublishComponent('bar.foo');
           npmCiRegistry.unpublishComponent('utils.is-string');
@@ -589,7 +589,7 @@ describe('typescript', function() {
     });
   });
   describe('react style => .tsx extension', () => {
-    if (process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // @ts-ignore
       this.skip;
     } else {

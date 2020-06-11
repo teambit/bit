@@ -23,6 +23,7 @@ import { composeComponentPath, composeDependencyPathForIsolated } from '../../ut
 import { BitId } from '../../bit-id';
 
 export interface ManyComponentsWriterParams {
+  packageManager?: string;
   consumer?: Consumer;
   silentPackageManagerResult?: boolean;
   componentsWithDependencies: ComponentWithDependencies[];
@@ -32,7 +33,6 @@ export interface ManyComponentsWriterParams {
   writePackageJson?: boolean;
   saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
-  configDir?: string;
   writeBitDependencies?: boolean;
   createNpmLinkFiles?: boolean;
   writeDists?: boolean;
@@ -42,6 +42,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
+  applyExtensionsAddedConfig?: boolean;
 }
 
 /**
@@ -62,7 +63,6 @@ export default class ManyComponentsWriter {
   override: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
-  configDir?: string;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
@@ -80,6 +80,10 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
+  packageManager?: string;
+  // Apply config added by extensions
+  applyExtensionsAddedConfig?: boolean;
+
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -89,7 +93,6 @@ export default class ManyComponentsWriter {
     this.isolated = this._setBooleanDefault(params.isolated, false);
     this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
     this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
-    this.configDir = params.configDir;
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
@@ -102,6 +105,8 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
+    this.packageManager = params.packageManager;
+    this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -144,25 +149,28 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer && this.consumer.config.overrides.hasChanged) {
-      const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
-      dataToPersist.addManyFiles(jsonFiles);
+    if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
+      const jsonFiles = await this.consumer.config.toVinyl(this.consumer.getPath());
+      if (jsonFiles) {
+        dataToPersist.addManyFiles(jsonFiles);
+      }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addBasePath(this.basePath);
     await dataToPersist.persistAllToFS();
   }
+
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
     const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach(componentWriter => {
+    componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
-    this.writtenComponents = await pMapSeries(componentWriterInstances, componentWriter =>
-      componentWriter.populateComponentsFilesToWrite()
+    this.writtenComponents = await pMapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
+      componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {
@@ -189,14 +197,12 @@ export default class ManyComponentsWriter {
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
-      const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component when a user used `--ignore-dist` flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
-        configDir: this.configDir || configDirFromComponentMap,
         origin,
         existingComponentMap: componentMap
       };
@@ -206,17 +212,18 @@ export default class ManyComponentsWriter {
       ...this._getDefaultWriteParams(),
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
+      writeConfig: this.writeConfig,
       writeBitDependencies: this.writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
       ...getParams()
     };
   }
   _getDefaultWriteParams(): Record<string, any> {
     return {
-      writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
       bitMap: this.bitMap,
       isolated: this.isolated,
+      applyExtensionsAddedConfig: this.applyExtensionsAddedConfig,
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
   }
@@ -274,7 +281,7 @@ export default class ManyComponentsWriter {
         // When a component is NESTED we do interested in the exact version, because multiple
         // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
           writeConfig: false,

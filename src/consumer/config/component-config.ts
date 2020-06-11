@@ -1,34 +1,53 @@
+import pMapSeries from 'p-map-series';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
-import WorkspaceConfig from './workspace-config';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import logger from '../../logger/logger';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { BitId } from '../../bit-id';
+import { Consumer } from '..';
+import { ExtensionDataList } from './extension-data';
+import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 
 type ConfigProps = {
   lang?: string;
   compiler?: string | Compilers;
   tester?: string | Testers;
   bindingPrefix: string;
-  extensions?: Record<string, any>;
+  extensions?: ExtensionDataList;
   overrides?: ComponentOverridesData;
 };
+
+type ConfigLoadRegistry = { [extId: string]: Function };
+type AddConfigRegistry = { [extId: string]: Function };
 
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
+  extensionsAddedConfig: { [prop: string]: any } | undefined;
+
+  static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
+  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+    this.componentConfigLoadingRegistry[extId] = func;
+  }
+  static addConfigRegistry: AddConfigRegistry = {};
+  static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
+    this.addConfigRegistry[extId] = func;
+  }
+
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
       tester,
       lang,
       bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extensions
     });
     this.overrides = overrides;
@@ -61,22 +80,29 @@ export default class ComponentConfig extends AbstractConfig {
     }
   }
 
+  /**
+   * Return the extensions as ExtensionDataList
+   *
+   * @returns {ExtensionDataList}
+   * @memberof ComponentConfig
+   */
+  parseExtensions(): ExtensionDataList {
+    return ExtensionDataList.fromArray(this.extensions);
+  }
+
   static fromPlainObject(object: Record<string, any>): ComponentConfig {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentConfig({
-      compiler: R.prop('compiler', env),
-      tester: R.prop('tester', env),
+      compiler: env ? R.prop('compiler', env) : undefined,
+      tester: env ? R.prop('tester', env) : undefined,
       extensions,
       lang,
       bindingPrefix,
       overrides
     });
+
+    // TODO: run runOnLoadEvent
   }
 
   static fromComponent(component: Component): ComponentConfig {
@@ -91,23 +117,47 @@ export default class ComponentConfig extends AbstractConfig {
       tester: component.tester || {},
       overrides: component.overrides.componentOverridesData
     });
+
+    // TODO: run runOnLoadEvent
   }
 
   mergeWithComponentData(component: Component) {
     this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
     this.lang = this.lang || component.lang;
+    this.extensions = this.extensions.length ? this.extensions : component.extensions;
   }
 
   /**
    * Use the workspaceConfig as a base. Override values if exist in componentConfig
+   * This only used for legacy props that were defined in the root like compiler / tester
    */
-  static mergeWithWorkspaceConfig(
+  static mergeWithWorkspaceRootConfigs(
+    consumer: Consumer,
+    componentId: BitId,
     componentConfig: Record<string, any>,
-    consumerConfig: WorkspaceConfig | null | undefined
+    workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
-    const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
-    const consumerConfigWithoutConsumerSpecifics = filterObject(plainConsumerConfig, (val, key) => key !== 'overrides');
-    const mergedObject = R.merge(consumerConfigWithoutConsumerSpecifics, componentConfig);
+    const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
+    let legacyWorkspaceConfigToMerge = {};
+    if (plainWorkspaceConfig) {
+      legacyWorkspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
+    }
+    const componentConfigFromWorkspaceToMerge = workspaceConfig?.getComponentConfig(componentId) || {};
+    const defaultOwner = workspaceConfig?.defaultOwner;
+
+    if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
+      componentConfigFromWorkspaceToMerge.bindingPrefix = defaultOwner.startsWith('@')
+        ? defaultOwner
+        : `@${defaultOwner}`;
+    }
+    const mergedObject = R.mergeAll([
+      legacyWorkspaceConfigToMerge,
+      componentConfigFromWorkspaceToMerge,
+      componentConfig
+    ]);
+    mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
+    // Do not try to load extension for itself (usually happen when using '*' pattern)
+    mergedObject.extensions = mergedObject.extensions.remove(componentId);
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 
@@ -118,38 +168,52 @@ export default class ComponentConfig extends AbstractConfig {
    *
    * @param {*} componentDir root component directory, needed for loading package.json file.
    * in case a component is authored, leave this param empty to not load the project package.json
-   * @param {*} configDir dir where bit.json and other envs files are written (by eject-conf or import --conf)
    * @param {*} workspaceConfig
    */
-  static async load({
+  static async loadConfigFromFolder({
     componentDir,
-    workspaceDir,
-    configDir,
-    workspaceConfig
+    workspaceDir
   }: {
-    componentDir: PathOsBasedRelative | null | undefined;
-    workspaceDir: PathOsBasedRelative;
-    configDir: PathOsBasedAbsolute;
-    workspaceConfig: WorkspaceConfig;
-  }): Promise<ComponentConfig> {
-    if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
-    const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
+    componentDir: PathOsBasedAbsolute | undefined;
+    workspaceDir: PathOsBasedAbsolute;
+  }): Promise<{ componentHasWrittenConfig: boolean; config: any; packageJsonFile: any; bitJsonPath: string }> {
+    let bitJsonPath;
+    let componentHasWrittenConfig = false;
+    let packageJsonFile;
+
+    if (componentDir) {
+      bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+    }
     const loadBitJson = async () => {
+      if (!bitJsonPath) {
+        return {};
+      }
       try {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
-        return file;
+        if (file) {
+          componentHasWrittenConfig = true;
+          return file;
+        }
+        return {};
       } catch (e) {
         throw new ShowDoctorError(
           `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
         );
       }
     };
-    const loadPackageJson = async (): Promise<PackageJsonFile | null | undefined> => {
-      if (!componentDir) return null;
+    const loadPackageJson = async (): Promise<PackageJsonFile | {}> => {
+      if (!componentDir) return {};
       try {
         const file = await PackageJsonFile.load(workspaceDir, componentDir);
-        if (!file.fileExist) return null;
-        return file;
+        packageJsonFile = file;
+        const packageJsonObject = file.fileExist ? file.packageJsonObject : undefined;
+        const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
+        if (packageJsonHasConfig) {
+          const packageJsonConfig = packageJsonObject?.bit;
+          componentHasWrittenConfig = true;
+          return packageJsonConfig;
+        }
+        return {};
       } catch (e) {
         throw new ShowDoctorError(
           `package.json at ${AbstractConfig.composePackageJsonPath(
@@ -158,20 +222,115 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
-    const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
-    const bitJsonConfig = bitJsonFile || {};
-    const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageJsonConfig = packageJsonHasConfig ? packageJsonObject.bit : {};
+
+    const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, workspaceConfig);
+    return {
+      config,
+      bitJsonPath,
+      packageJsonFile,
+      componentHasWrittenConfig
+    };
+  }
+
+  /**
+   * component config is written by default to package.json inside "bit" property.
+   * in case "eject-conf" was running or the component was imported with "--conf" flag, the
+   * bit.json is written as well.
+   *
+   * @param {*} componentDir root component directory, needed for loading package.json file.
+   * in case a component is authored, leave this param empty to not load the project package.json
+   * @param {*} workspaceConfig
+   */
+  static async load({
+    consumer,
+    componentId,
+    componentDir,
+    workspaceDir,
+    workspaceConfig
+  }: {
+    consumer: Consumer;
+    componentId: BitId;
+    componentDir: PathOsBasedRelative | undefined;
+    workspaceDir: PathOsBasedRelative;
+    workspaceConfig: ILegacyWorkspaceConfig;
+  }): Promise<ComponentConfig> {
+    const { config, bitJsonPath, packageJsonFile, componentHasWrittenConfig } = await this.loadConfigFromFolder({
+      componentDir,
+      workspaceDir
+    });
+    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(
+      consumer,
+      componentId,
+      config,
+      workspaceConfig
+    );
+
     componentConfig.path = bitJsonPath;
-    componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
+
+    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
+    const extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
+
+    componentConfig.extensionsAddedConfig = extensionsAddedConfig;
+
+    componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
+
+  /**
+   * Run all subscribers to the component config load event
+   *
+   * @static
+   * @param {ConfigLoadRegistry} componentConfigLoadingRegistry
+   * @param {BitId} id
+   * @param {*} config
+   * @memberof ComponentConfig
+   */
+  static async runOnLoadEvent(componentConfigLoadingRegistry: ConfigLoadRegistry, id: BitId, config: any) {
+    try {
+      await pMapSeries(Object.keys(componentConfigLoadingRegistry), async (extId: string) => {
+        const func = componentConfigLoadingRegistry[extId];
+        return func(id, config);
+      });
+    } catch (err) {
+      // TODO: improve texts
+      logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
+      // TODO: this show an ugly error, we should somehow show a proper errors
+      logger.console(err, 'warn', 'yellow');
+      logger.console('the error has been ignored', 'warn', 'yellow');
+      logger.warn('extension on load event throw an error', err);
+    }
+  }
+}
+
+/**
+ * Runs all the functions from the registry and merged their results
+ *
+ * @param {AddConfigRegistry} configsRegistry
+ * @returns {Promise<any>} A merge results of the added config by all the extensions
+ */
+async function runOnAddConfigEvent(configsRegistry: AddConfigRegistry, extensions: ExtensionDataList): Promise<any> {
+  const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
+    // TODO: only running func for relevant extensions
+    const func = configsRegistry[extId];
+    return func(extensions);
+  });
+  const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
+  const extensionsConfigModificationsObject = mergeExtensionsConfig(extensionsConfigModifications);
+  return extensionsConfigModificationsObject;
+}
+
+/**
+ * Merge added configs from many extensions
+ *
+ * @param {any[]} configs
+ * @returns A merge results of all config
+ */
+function mergeExtensionsConfig(configs: any[]): any {
+  return configs.reduce((prev, curr) => {
+    return R.mergeDeepLeft(prev, curr);
+  }, {});
 }

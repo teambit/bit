@@ -48,7 +48,7 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
-  searchWithoutScopeAndVersion(bitId: BitId): BitId | null | undefined {
+  searchWithoutScopeAndVersion(bitId: BitId): BitId | undefined {
     return this.find(id => id.hasSameName(bitId));
   }
 
@@ -79,6 +79,9 @@ export default class BitIds extends Array<BitId> {
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
     return BitIds.fromArray(this.filter(id => !id.isEqualWithoutVersion(bitId)));
   }
+  removeMultipleIfExistWithoutVersion(bitIds: BitIds): BitIds {
+    return BitIds.fromArray(this.filter(id => !bitIds.hasWithoutVersion(id)));
+  }
 
   /**
    * make sure to pass only bit ids you know they have scope, otherwise, you'll get invalid bit ids.
@@ -87,6 +90,11 @@ export default class BitIds extends Array<BitId> {
   static deserialize(array: string[] = []): BitIds {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...array.map(id => BitId.parse(id, true)));
+  }
+
+  static deserializeObsolete(array: string[] = []): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return new BitIds(...array.map(id => BitId.parseObsolete(id)));
   }
 
   toString(): string {

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { merge } from '../../../api/consumer';
 import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
@@ -29,12 +29,11 @@ export default class Merge extends Command {
   description = `merge changes of different component versions
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later']
-  ];
+  ] as CommandOptions;
   loader = true;
 
   action(

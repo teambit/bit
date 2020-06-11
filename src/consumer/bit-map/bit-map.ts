@@ -1,47 +1,20 @@
 import * as path from 'path';
-import format from 'string-format';
 import fs from 'fs-extra';
 import R from 'ramda';
 import json from 'comment-json';
 import logger from '../../logger/logger';
-import {
-  BIT_MAP,
-  OLD_BIT_MAP,
-  COMPONENT_ORIGINS,
-  BIT_VERSION,
-  VERSION_DELIMITER,
-  COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  COMPONENT_DIR
-} from '../../constants';
+import { BIT_MAP, OLD_BIT_MAP, COMPONENT_ORIGINS, BIT_VERSION, VERSION_DELIMITER } from '../../constants';
 import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import {
-  outputFile,
-  pathNormalizeToLinux,
-  pathJoinLinux,
-  isDir,
-  pathIsInside,
-  stripTrailingChar,
-  sortObject
-} from '../../utils';
+import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, sortObject } from '../../utils';
 import ComponentMap from './component-map';
 import { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import { BitIdStr } from '../../bit-id/bit-id';
-import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentConfig from '../config';
-import ConfigDir from './config-dir';
-import WorkspaceConfig from '../config/workspace-config';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
-
-export type ResolvedConfigDir = {
-  compiler: string;
-  tester: string;
-};
 
 export default class BitMap {
   projectRoot: string;
@@ -52,9 +25,9 @@ export default class BitMap {
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
-  _cacheIds: { [origin: string]: BitIds | null | undefined };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
+  _cacheIds: { [origin: string]: BitIds | undefined };
+  // trackDir key is PathLinux. (ts doesn't allow keys other than string and numbers)
+  allTrackDirs: { [trackDir: string]: BitId } | undefined;
 
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
@@ -135,7 +108,7 @@ export default class BitMap {
     return bitMap;
   }
 
-  static loadRawSync(dirPath: PathOsBasedAbsolute): Buffer | null | undefined {
+  static loadRawSync(dirPath: PathOsBasedAbsolute): Buffer | undefined {
     const { currentLocation } = BitMap.getBitMapLocation(dirPath);
     if (!currentLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
@@ -148,10 +121,10 @@ export default class BitMap {
   static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
     const defaultLocation = path.join(dirPath, BIT_MAP);
     const oldLocation = path.join(dirPath, OLD_BIT_MAP);
-    const getCurrentLocation = (): PathOsBased | null | undefined => {
+    const getCurrentLocation = (): PathOsBased | undefined => {
       if (fs.existsSync(defaultLocation)) return defaultLocation;
       if (fs.existsSync(oldLocation)) return oldLocation;
-      return null;
+      return undefined;
     };
     const currentLocation = getCurrentLocation();
     return { currentLocation, defaultLocation };
@@ -182,75 +155,6 @@ export default class BitMap {
     }
   }
 
-  /**
-   * Return files and dirs which need to be ignored since they are config files / dirs
-   * @param {*} configDir
-   * @param {*} rootDir
-   * @param {*} compilerFilesPaths
-   * @param {*} testerFilesPaths
-   */
-  static resolveIgnoreFilesAndDirs(
-    configDir?: PathLinux,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    rootDir: PathLinux,
-    compilerFilesPaths: PathLinux[] = [],
-    testerFilesPaths: PathLinux[] = []
-  ) {
-    const ignoreList = {
-      files: [],
-      dirs: []
-    };
-    if (!configDir) return ignoreList;
-    if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
-      const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
-      const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
-      allEnvFilesPaths.forEach(file => {
-        const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ignoreList.files.push(ignoreFile);
-      });
-      const configDirWithoutCompDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '{ENV_TYPE}' });
-      // There is nested folders to ignore
-      if (configDirWithoutCompDir !== '' && configDirWithoutCompDir !== '/') {
-        const configDirWithoutCompAndEnvsDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '' });
-        // There is nested folder which is not the env folders - ignore it completely
-        if (configDirWithoutCompAndEnvsDir !== '' && configDirWithoutCompAndEnvsDir !== '/') {
-          const resolvedDirWithoutEnvType = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          ignoreList.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
-        } else {
-          const resolvedCompilerConfigDir = format(configDir, {
-            [COMPONENT_DIR]: rootDir,
-            ENV_TYPE: COMPILER_ENV_TYPE
-          });
-          const resolvedTesterConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          ignoreList.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
-        }
-      }
-    } else {
-      // Ignore the whole dir since this dir is only for config files
-      const dirToIgnore = format(configDir, { ENV_TYPE: '' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      ignoreList.dirs.push(dirToIgnore);
-    }
-    return ignoreList;
-  }
-
-  /**
-   * this is a temporarily method until ConfigDir class is merged into master
-   */
-  static parseConfigDir(configDir: ConfigDir, rootDir: string): ResolvedConfigDir {
-    const configDirResolved: ResolvedConfigDir = {
-      compiler: configDir.getResolved({
-        componentDir: rootDir,
-        envType: COMPILER_ENV_TYPE
-      }).linuxDirPath,
-      tester: configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath
-    };
-    return configDirResolved;
-  }
-
   loadComponents(componentsJson: Record<string, any>) {
     Object.keys(componentsJson).forEach(componentId => {
       const componentFromJson = componentsJson[componentId];
@@ -276,55 +180,6 @@ export default class BitMap {
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
-  }
-
-  /**
-   * We should ignore ejected config files and dirs
-   * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
-   * They might be in internal dirs then we need to ignore the dir completely
-   */
-  async getConfigDirsAndFilesToIgnore(
-    consumerPath: PathLinux,
-    workspaceConfig: WorkspaceConfig
-  ): Promise<IgnoreFilesDirs> {
-    const ignoreList = {
-      files: [],
-      dirs: []
-    };
-    const populateIgnoreListP = this.components.map(async (component: ComponentMap) => {
-      const configDir = component.configDir;
-      const componentDir = component.getComponentDir();
-      if (configDir && componentDir) {
-        const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
-        const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentConfig = await ComponentConfig.load({
-          componentDir: component.rootDir,
-          workspaceDir: consumerPath,
-          configDir: fullConfigDir,
-          workspaceConfig
-        });
-        const compilerObj = R.values(componentConfig.compiler)[0];
-        const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = R.values(componentConfig.tester)[0];
-        const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
-        const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
-        const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
-        // R.values above might return array of something which is not string
-        // Which will not be ok with the input of resolveIgnoreFilesAndDirs
-        const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
-          configDir.linuxDirPath,
-          componentDir,
-          // $FlowFixMe - see comment above
-          compilerFiles,
-          // $FlowFixMe - see comment above
-          testerFiles
-        );
-        ignoreList.files = ignoreList.files.concat(toIgnore.files);
-        ignoreList.dirs = ignoreList.dirs.concat(toIgnore.dirs);
-      }
-    });
-    await Promise.all(populateIgnoreListP);
-    return ignoreList;
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
@@ -390,12 +245,12 @@ export default class BitMap {
       ignoreVersion?: boolean;
       ignoreScopeAndVersion?: boolean;
     } = {}
-  ): BitId | null | undefined {
+  ): BitId | undefined {
     try {
       const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return existingBitId;
     } catch (err) {
-      if (err instanceof MissingBitMapComponent) return null;
+      if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
   }
@@ -433,24 +288,24 @@ export default class BitMap {
       ignoreVersion?: boolean;
       ignoreScopeAndVersion?: boolean;
     } = {}
-  ): ComponentMap | null | undefined {
+  ): ComponentMap | undefined {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return componentMap;
     } catch (err) {
-      if (err instanceof MissingBitMapComponent) return null;
+      if (err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
   }
 
-  getNonNestedComponentIfExist(bitId: BitId): ComponentMap | null | undefined {
+  getNonNestedComponentIfExist(bitId: BitId): ComponentMap | undefined {
     const nonNestedIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-    const id: BitId | null | undefined = nonNestedIds.searchWithoutScopeAndVersion(bitId);
-    if (!id) return null;
+    const id: BitId | undefined = nonNestedIds.searchWithoutScopeAndVersion(bitId);
+    if (!id) return undefined;
     return this.getComponent(id);
   }
 
-  getComponentPreferNonNested(bitId: BitId): ComponentMap | null | undefined {
+  getComponentPreferNonNested(bitId: BitId): ComponentMap | undefined {
     return this.getNonNestedComponentIfExist(bitId) || this.getComponentIfExist(bitId, { ignoreVersion: true });
   }
 
@@ -461,35 +316,6 @@ export default class BitMap {
   getAuthoredExportedComponents(): BitId[] {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());
-  }
-
-  validateConfigDir(compId: string, configDir: PathLinux): boolean {
-    const components = this.getAllComponents();
-    if (configDir.startsWith('./')) {
-      configDir = configDir.replace('./', '');
-    }
-    const comps = components.filter(component => {
-      const compDir = component.getComponentDir();
-      if (compDir && pathIsInside(configDir, compDir)) {
-        return true;
-      }
-      const compConfigDir =
-        component.configDir && component.configDir instanceof ConfigDir
-          ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
-          : null;
-      if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
-        return true;
-      }
-      return false;
-    });
-    if (!R.isEmpty(comps)) {
-      const id = comps[0].id;
-      const stringId = id.toStringWithoutVersion();
-      if (compId !== stringId) {
-        throw new InvalidConfigDir(stringId);
-      }
-    }
-    return true;
   }
 
   _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
@@ -531,7 +357,7 @@ export default class BitMap {
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
-  getExistingBitId(id: BitIdStr, shouldThrow = true): BitId | null | undefined {
+  getExistingBitId(id: BitIdStr, shouldThrow = true): BitId | undefined {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
@@ -554,7 +380,7 @@ export default class BitMap {
     if (shouldThrow) {
       throw new MissingBitMapComponent(id);
     }
-    return null;
+    return undefined;
   }
 
   /**
@@ -581,7 +407,6 @@ export default class BitMap {
     mainFile,
     origin,
     rootDir,
-    configDir,
     trackDir,
     originallySharedDir,
     wrapDir
@@ -591,10 +416,9 @@ export default class BitMap {
     mainFile: PathLinux;
     origin: ComponentOrigin;
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
-    configDir?: ConfigDir | null | undefined;
-    trackDir?: PathOsBased | null | undefined;
-    originallySharedDir?: PathLinux | null | undefined;
-    wrapDir?: PathLinux | null | undefined;
+    trackDir?: PathOsBased;
+    originallySharedDir?: PathLinux;
+    wrapDir?: PathLinux;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -620,9 +444,6 @@ export default class BitMap {
     componentMap.mainFile = mainFile;
     if (rootDir) {
       componentMap.rootDir = pathNormalizeToLinux(rootDir);
-    }
-    if (configDir) {
-      componentMap.configDir = configDir;
     }
     if (trackDir) {
       componentMap.trackDir = pathNormalizeToLinux(trackDir);
@@ -805,7 +626,7 @@ export default class BitMap {
    * may result in a damaged file
    */
   async write(): Promise<any> {
-    if (!this.hasChanged) return null;
+    if (!this.hasChanged) return undefined;
     logger.debug('writing to bit.map');
     const bitMapContent = this.getContent();
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });

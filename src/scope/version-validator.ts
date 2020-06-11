@@ -14,13 +14,22 @@ import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependenc
 import { DEPENDENCIES_FIELDS } from '../constants';
 import GeneralError from '../error/general-error';
 import { PathLinux } from '../utils/path';
+import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
  */
 export default function validateVersionInstance(version: Version): void {
   const message = 'unable to save Version object';
-  const validateBitIdStr = (bitIdStr: string, field: string, validateVersion = true) => {
+  const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
+    if (validateVersion && !bitId.hasVersion()) {
+      throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a version`);
+    }
+    if (validateScope && !bitId.scope) {
+      throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a scope`);
+    }
+  };
+  const validateBitIdStr = (bitIdStr: string, field: string, validateVersion = true, validateScope = true) => {
     validateType(message, bitIdStr, field, 'string');
     let bitId;
     try {
@@ -28,10 +37,7 @@ export default function validateVersionInstance(version: Version): void {
     } catch (err) {
       throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
     }
-    if (validateVersion && !bitId.hasVersion()) {
-      throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
-    }
-    if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
+    validateBitId(bitId, field, validateVersion, validateScope);
   };
   const _validateEnv = env => {
     if (!env) return;
@@ -107,6 +113,18 @@ export default function validateVersionInstance(version: Version): void {
     validateType(message, file.file.hash, `${field}.file.hash`, 'string');
   };
 
+  const _validateExtension = (extension: ExtensionDataEntry) => {
+    if (extension.extensionId) {
+      validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
+    }
+  };
+
+  const _validateExtensions = (extensions: ExtensionDataList) => {
+    if (extensions) {
+      extensions.map(_validateExtension);
+    }
+  };
+
   if (!version.mainFile) throw new VersionInvalid(`${message}, the mainFile is missing`);
   if (!isValidPath(version.mainFile)) {
     throw new VersionInvalid(`${message}, the mainFile ${version.mainFile} is invalid`);
@@ -140,6 +158,7 @@ export default function validateVersionInstance(version: Version): void {
   _validatePackageDependencies(version.peerPackageDependencies);
   _validateEnvPackages(version.compilerPackageDependencies, 'compilerPackageDependencies');
   _validateEnvPackages(version.testerPackageDependencies, 'testerPackageDependencies');
+  _validateExtensions(version.extensions);
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
     version.dists.forEach(file => {
@@ -160,19 +179,11 @@ export default function validateVersionInstance(version: Version): void {
   });
   version.dependencies.validate();
   version.devDependencies.validate();
-  version.compilerDependencies.validate();
-  version.testerDependencies.validate();
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
   if (!version.devDependencies.isEmpty() && !version.flattenedDevDependencies.length) {
     throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
-  }
-  if (!version.compilerDependencies.isEmpty() && !version.flattenedCompilerDependencies.length) {
-    throw new VersionInvalid(`${message}, it has compilerDependencies but its flattenedCompilerDependencies is empty`);
-  }
-  if (!version.testerDependencies.isEmpty() && !version.flattenedTesterDependencies.length) {
-    throw new VersionInvalid(`${message}, it has testerDependencies but its flattenedTesterDependencies is empty`);
   }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
@@ -189,9 +200,10 @@ export default function validateVersionInstance(version: Version): void {
   };
   validateFlattenedDependencies(version.flattenedDependencies);
   validateFlattenedDependencies(version.flattenedDevDependencies);
-  validateFlattenedDependencies(version.flattenedCompilerDependencies);
-  validateFlattenedDependencies(version.flattenedTesterDependencies);
-  const allDependenciesIds = version.getAllDependenciesIds();
+  // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a
+  // dependency and extensionDependency. we can't remove it from extDep, otherwise, the ext won't
+  // be running
+  const allDependenciesIds = version.getDependenciesIdsExcludeExtensions();
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
   if (!R.isEmpty(depsDuplications)) {
     const duplicationStr = Object.keys(depsDuplications)

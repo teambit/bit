@@ -8,7 +8,7 @@ import { ComponentWithDependencies } from '../scope';
 import Consumer from '../consumer/consumer';
 import { PathOsBasedRelative, PathAbsolute } from '../utils/path';
 import filterAsync from '../utils/array/filter-async';
-import { PACKAGE_JSON } from '../constants';
+import { PACKAGE_JSON, DEFAULT_PACKAGE_MANAGER } from '../constants';
 
 export async function installPackages(
   consumer: Consumer,
@@ -20,12 +20,12 @@ export async function installPackages(
   installProdPackagesOnly = false
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.config.packageManager;
+  const packageManager = consumer.config.packageManager || DEFAULT_PACKAGE_MANAGER;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.config.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.config.packageManagerProcessOptions;
-  const useWorkspaces = consumer.config.useWorkspaces;
+    : consumer.config.dependencyResolver?.extraArgs || [];
+  const packageManagerProcessOptions = consumer.config.dependencyResolver?.packageManagerProcessOptions || {};
+  const useWorkspaces = consumer.config._useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
@@ -36,11 +36,9 @@ export async function installPackages(
   let results = await npmClient.install({
     modules: [],
     packageManager,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerArgs,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerProcessOptions,
-    useWorkspaces,
+    useWorkspaces: !!useWorkspaces,
     dirs: dirsWithPkgJson,
     rootDir: consumer.getPath(),
     installRootPackageJson,

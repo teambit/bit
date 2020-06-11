@@ -1,16 +1,15 @@
 import AbstractVinyl from './abstract-vinyl';
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class Dist extends AbstractVinyl {
-  static loadFromParsedString(parsedString: Record<string, any>) {
+  static loadFromParsedString(parsedString: Record<string, any>): Dist | null {
     if (!parsedString) return null;
-    const opts = super.loadFromParsedString(parsedString);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const opts = super.loadFromParsedStringBase(parsedString);
     return new Dist(opts);
   }
 
-  static loadFromParsedStringArray(arr: Record<string, any>[]) {
+  static loadFromParsedStringArray(arr: Record<string, any>[]): Dist[] | null | undefined {
     if (!arr) return null;
+    // @ts-ignore
     return arr.map(this.loadFromParsedString);
   }
 

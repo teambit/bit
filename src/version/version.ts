@@ -1,6 +1,6 @@
 import semver from 'semver';
 import { InvalidVersionChange, InvalidVersion } from './exceptions';
-import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
+import { DEFAULT_BIT_RELEASE_TYPE, LATEST } from '../constants';
 
 export default class Version {
   versionNum: string | null | undefined;
@@ -29,5 +29,12 @@ export default class Version {
     if (this.versionNum && this.latest) return `*${this.versionNum}`;
     if (this.versionNum && !this.latest) return this.versionNum.toString();
     throw new InvalidVersion(this.versionNum);
+  }
+
+  isLaterThan(otherVersion: Version): boolean {
+    if (!this.versionNum || this.versionNum === LATEST) {
+      return true;
+    }
+    return semver.gt(this.versionNum, otherVersion.versionNum);
   }
 }

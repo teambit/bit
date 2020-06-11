@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId, BitIds } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
-import { mkdirp, outputFile } from '../utils';
+import { outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import { PathOsBased } from '../utils/path';
@@ -25,7 +25,7 @@ export default class Environment {
   }
 
   async create(): Promise<void> {
-    await mkdirp(this.path);
+    await fs.ensureDir(this.path);
     this.consumer = await Consumer.createIsolatedWithExistingScope(this.path, this.scope);
   }
 
@@ -71,7 +71,8 @@ export default class Environment {
       installProdPackagesOnly: opts.installProdPackagesOnly,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
-      silentPackageManagerResult: opts.silentPackageManagerResult
+      silentPackageManagerResult: opts.silentPackageManagerResult,
+      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig
     };
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter.writeAll();

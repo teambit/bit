@@ -17,22 +17,28 @@ export default class ComponentLoader {
   _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
-  cacheProjectAst: Record<string, any> | null | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
+      id: id.toString()
+    });
     const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
     const idStr = idWithVersion.toString();
-    if (this._componentsCacheForCapsule[idStr]) {
-      return this._componentsCacheForCapsule[idStr];
+    if (!this._componentsCacheForCapsule[idStr]) {
+      const { components } = await this.loadMany(BitIds.fromArray([id]));
+      const component = components[0].clone();
+      this._componentsCacheForCapsule[idStr] = component;
     }
-    const { components } = await this.loadMany(BitIds.fromArray([id]));
-    const component = components[0].clone();
-    this._componentsCacheForCapsule[idStr] = component;
-    return component;
+
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
+      id: id.toString()
+    });
+    return this._componentsCacheForCapsule[idStr];
   }
 
   async loadMany(
@@ -65,13 +71,9 @@ export default class ComponentLoader {
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
-    const driverExists = this.consumer.warnForMissingDriver(
-      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
-    );
-
     const allComponents = [];
     await pMapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -85,7 +87,7 @@ export default class ComponentLoader {
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
-  async loadOne(id: BitId, throwOnFailure: boolean, driverExists: boolean, invalidComponents: InvalidComponent[]) {
+  async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
@@ -115,16 +117,12 @@ export default class ComponentLoader {
       return handleError(err);
     }
     component.loadedFromFileSystem = true;
-    component.originallySharedDir = componentMap.originallySharedDir || null;
-    component.wrapDir = componentMap.wrapDir || null;
+    component.originallySharedDir = componentMap.originallySharedDir || undefined;
+    component.wrapDir = componentMap.wrapDir || undefined;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
 
-    if (!driverExists) {
-      // no need to resolve dependencies
-      return component;
-    }
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(
@@ -160,7 +158,7 @@ export default class ComponentLoader {
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
@@ -169,7 +167,7 @@ export default class ComponentLoader {
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
-        newId = currentId.changeVersion(null);
+        newId = currentId.changeVersion(undefined);
       }
     }
 
@@ -213,11 +211,11 @@ export default class ComponentLoader {
 
   _isAngularProject(): boolean {
     return Boolean(
-      this.consumer.config.packageJsonObject &&
+      this.consumer.packageJson &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies &&
+        this.consumer.packageJson.dependencies &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
+        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }
 

@@ -2,6 +2,7 @@ import { BASE_WEB_DOMAIN } from '../../constants';
 
 const allCommands = [
   {
+    group: 'start',
     title: 'start a working area',
     commands: [
       {
@@ -11,6 +12,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'component',
     title: 'Develop components',
     commands: [
       {
@@ -52,6 +54,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'collaborate',
     title: 'Collaborate on components',
     commands: [
       {
@@ -93,6 +96,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'discover',
     title: 'Explore components',
     commands: [
       {
@@ -106,6 +110,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'info',
     title: 'View components',
     commands: [
       {
@@ -119,6 +124,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'env',
     title: 'component environment operations',
     commands: [
       {
@@ -133,6 +139,10 @@ const allCommands = [
       {
         name: 'watch',
         description: 'watch components and perform `build` on changes'
+      },
+      {
+        name: 'run',
+        description: 'run an activity in the capsule'
       }
       // {
       //   name: 'eject-conf',
@@ -145,6 +155,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'general',
     title: 'Workspace commands',
     commands: [
       {

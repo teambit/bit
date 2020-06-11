@@ -3,8 +3,7 @@ import { LICENSE_FILENAME } from '../../../constants';
 import { AbstractVinyl } from '.';
 
 export default class License extends AbstractVinyl {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  override: boolean | null | undefined = true;
+  override = true;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   src: string;
 
@@ -23,6 +22,6 @@ export default class License extends AbstractVinyl {
 
   static deserialize(str: string) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new License({ path: LICENSE_FILENAME, contents: str ? Buffer.from(str) : null });
+    return new License({ path: LICENSE_FILENAME, contents: str ? Buffer.from(str) : undefined });
   }
 }

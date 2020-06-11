@@ -94,10 +94,13 @@ describe('packageNameToComponentId', function() {
     expect(result.name).to.equal('comp2/comp3');
   });
   describe('with defaultScope', () => {
+    // @ts-ignore
+    const addDefaultScope = (defaultScope: string) => (consumer.config = { workspaceSettings: { defaultScope } });
     describe('when the defaultScope has dot', () => {
       it('should return bitId without scope when the component is in .bitmap without scope', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'bar/foo' })) };
+        addDefaultScope('bit.utils');
         consumer.config.defaultScope = 'bit.utils';
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.be.null;
@@ -106,7 +109,7 @@ describe('packageNameToComponentId', function() {
       it('should return bitId with scope when the component is in .bitmap with scope', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ scope: 'bit.utils', name: 'bar/foo' })) };
-        consumer.config.defaultScope = 'bit.utils';
+        addDefaultScope('bit.utils');
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.equal('bit.utils');
         expect(result.name).to.equal('bar/foo');
@@ -114,7 +117,7 @@ describe('packageNameToComponentId', function() {
       it('should return bitId with scope when the component is not .bitmap at all', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds() };
-        consumer.config.defaultScope = 'bit.utils';
+        addDefaultScope('bit.utils');
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.equal('bit.utils');
         expect(result.name).to.equal('bar/foo');

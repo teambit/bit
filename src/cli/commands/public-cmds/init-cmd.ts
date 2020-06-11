@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
@@ -9,13 +9,13 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
+import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 
 export default class Init extends Command {
   name = 'init [path]';
   skipWorkspace = true;
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
@@ -30,13 +30,14 @@ export default class Init extends Command {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
     ],
-    ['c', 'compiler <compiler>', 'set up compiler'],
-    ['t', 'tester <tester>', 'set up tester'],
+    // Disabled until supported by the new config
+    // ['c', 'compiler <compiler>', 'set up compiler'],
+    // ['t', 'tester <tester>', 'set up tester'],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
-  ];
+  ] as CommandOptions;
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -44,25 +45,17 @@ export default class Init extends Command {
       return initInteractive();
     }
     const {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bare,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       shared,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       standalone,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       reset,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       resetHard,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       force,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       compiler,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       tester,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultDirectory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManager
     } = flags;
     if (path) path = pathlib.resolve(path);
@@ -78,8 +71,11 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    const workspaceConfigProps = { compiler, tester, componentsDefaultDirectory: defaultDirectory, packageManager };
-    return init(path, standalone, reset, resetHard, force, workspaceConfigProps).then(
+    const workspaceConfigFileProps: WorkspaceConfigProps = {
+      componentsDefaultDirectory: defaultDirectory,
+      packageManager
+    };
+    return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,

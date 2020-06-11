@@ -104,7 +104,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
     return idWithScopeWithDot;
   }
 
-  function _idConsiderDefaultScope(): BitId | null {
+  function _idConsiderDefaultScope(): BitId | undefined {
     const defaultScope = consumer.config.defaultScope;
     if (defaultScope && componentName.startsWith(`${defaultScope}.`)) {
       const idWithDefaultScope = createBitIdAssumeDefaultScope(defaultScope, nameSplit);
@@ -114,7 +114,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
       if (idWithRemovedScope) return idWithRemovedScope;
       // otherwise, the component is not in .bitmap, continue with other strategies.
     }
-    return null;
+    return undefined;
   }
 }
 

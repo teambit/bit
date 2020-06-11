@@ -3,7 +3,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
-import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Component from '../../consumer/component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import Consumer from '../../consumer/consumer';
@@ -108,7 +108,7 @@ export default class DependencyGraph {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false): Promise<Graph> {
+  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
@@ -126,15 +126,14 @@ export default class DependencyGraph {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;
         }
-        this._addDependenciesToGraph(id, graph, version);
+        this._addDependenciesToGraph(id, graph, version, reverse);
       });
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
-
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
-      this._addDependenciesToGraph(id, graph, component);
+      this._addDependenciesToGraph(id, graph, component, reverse);
     });
     return graph;
   }
@@ -156,15 +155,19 @@ export default class DependencyGraph {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
+  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component, reverse = false): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    DEPENDENCIES_TYPES.forEach(depType => {
-      component[depType].get().forEach(dependency => {
-        const depIdStr = dependency.id.toString();
-        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
-        graph.setEdge(idStr, depIdStr, depType);
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+      depIds.forEach(dependencyId => {
+        const depIdStr = dependencyId.toString();
+        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
+        if (reverse) {
+          graph.setEdge(depIdStr, idStr, depType);
+        } else {
+          graph.setEdge(idStr, depIdStr, depType);
+        }
       });
     });
   }

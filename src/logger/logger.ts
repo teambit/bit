@@ -8,6 +8,7 @@ import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
+import defaultHandleError from '../cli/default-error-handler';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -98,12 +99,24 @@ class BitLogger {
     this.logger.error(...args);
   }
 
-  console(msg: string, level = 'info') {
+  console(msg: string | Error, level = 'info', color?: string) {
+    let actualMessage = msg;
+    if (msg instanceof Error) {
+      actualMessage = defaultHandleError(msg) || msg;
+    }
     if (!this.shouldWriteToConsole) {
-      this[level](msg);
+      this[level](actualMessage);
       return;
     }
-    winston.loggers.get('consoleOnly')[level](msg);
+    if (color) {
+      try {
+        // @ts-ignore
+        actualMessage = chalk.keyword(color)(actualMessage);
+      } catch (e) {
+        this.silly('a wrong color provided to logger.console method');
+      }
+    }
+    winston.loggers.get('consoleOnly')[level](actualMessage);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {

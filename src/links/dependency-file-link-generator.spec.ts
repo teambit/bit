@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as path from 'path';
 import { expect } from 'chai';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
@@ -39,8 +40,13 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
     toAbsolutePath: str => `/root/${str}`
   };
   if (!distIsInsideTheComponent) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    consumer.config = { distEntry: 'src', distTarget: 'dist' };
+    // @ts-ignore
+    consumer.config = {
+      workspaceSettings: {
+        _distTarget: 'dist',
+        _distEntry: 'src'
+      }
+    };
     consumer.shouldDistsBeInsideTheComponent = () => false;
   }
 
@@ -50,6 +56,15 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
 const mockGetSync = () => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   globalConfig.getSync = () => '@bit';
+};
+
+const getComponentMap = () => {
+  return {
+    rootDir: 'components/bar/foo',
+    getRootDir(): string {
+      return this.rootDir as string;
+    }
+  };
 };
 
 describe('DependencyFileLinkGenerator', () => {
@@ -63,12 +78,7 @@ describe('DependencyFileLinkGenerator', () => {
       before(async () => {
         const component = await Component.fromString(JSON.stringify(barFoo));
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.componentMap = {
-          rootDir: 'components/bar/foo',
-          getRootDir() {
-            return this.rootDir;
-          }
-        };
+        component.componentMap = getComponentMap();
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -101,12 +111,7 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.componentMap = {
-            rootDir: 'components/bar/foo',
-            getRootDir() {
-              return this.rootDir;
-            }
-          };
+          component.componentMap = getComponentMap();
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -161,12 +166,7 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.componentMap = {
-            rootDir: 'components/bar/foo',
-            getRootDir() {
-              return this.rootDir;
-            }
-          };
+          component.componentMap = getComponentMap();
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -224,12 +224,7 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.componentMap = {
-            rootDir: 'components/bar/foo',
-            getRootDir() {
-              return this.rootDir;
-            }
-          };
+          component.componentMap = getComponentMap();
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -282,12 +277,7 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.componentMap = {
-            rootDir: 'components/bar/foo',
-            getRootDir() {
-              return this.rootDir;
-            }
-          };
+          component.componentMap = getComponentMap();
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -344,12 +334,7 @@ describe('DependencyFileLinkGenerator', () => {
       before(async () => {
         const component = await Component.fromString(JSON.stringify(barFooSass));
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.componentMap = {
-          rootDir: 'components/bar/foo',
-          getRootDir() {
-            return this.rootDir;
-          }
-        };
+        component.componentMap = getComponentMap();
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringSass));
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

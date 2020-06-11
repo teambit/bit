@@ -1,12 +1,12 @@
 import R from 'ramda';
 import fs from 'fs-extra';
+import { compact } from 'ramda-adjunct';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
 import Consumer from '../consumer';
-import { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
@@ -19,6 +19,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
+import PackageJson from './package-json';
 
 /**
  * Add components as dependencies to root package.json
@@ -58,37 +59,36 @@ export async function changeDependenciesToRelativeSyntax(
   dependencies: Component[]
 ): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
-  const updateComponentPackageJson = async (component): Promise<JSONFile | null | undefined> => {
+  const updateComponentPackageJson = async (component: Component): Promise<JSONFile | null | undefined> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
     const componentRootDir = componentMap.rootDir;
     if (!componentRootDir) return null;
     const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentRootDir);
     if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
-    const devDeps = getPackages(component.devDependencies, componentMap);
-    const compilerDeps = getPackages(component.compilerDependencies, componentMap);
-    const testerDeps = getPackages(component.testerDependencies, componentMap);
-    packageJsonFile.addDependencies(getPackages(component.dependencies, componentMap));
-    packageJsonFile.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps });
+    const devDeps = getPackages(component.devDependencies.getAllIds(), componentMap);
+    const extensionDeps = getPackages(component.extensions.extensionsBitIds, componentMap);
+    packageJsonFile.addDependencies(getPackages(component.dependencies.getAllIds(), componentMap));
+    packageJsonFile.addDevDependencies({ ...devDeps, ...extensionDeps });
     return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return packageJsonFiles.filter(file => file);
 
-  function getPackages(deps: Dependencies, componentMap: ComponentMap) {
-    return deps.get().reduce((acc, dependency) => {
-      const dependencyId = dependency.id.toStringWithoutVersion();
-      if (dependenciesIds.searchWithoutVersion(dependency.id)) {
-        const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependency.id));
+  function getPackages(deps: BitIds, componentMap: ComponentMap) {
+    return deps.reduce((acc, dependencyId: BitId) => {
+      const dependencyIdStr = dependencyId.toStringWithoutVersion();
+      if (dependenciesIds.searchWithoutVersion(dependencyId)) {
+        const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependencyId));
         if (!dependencyComponent) {
           throw new Error('getDependenciesAsPackages, dependencyComponent is missing');
         }
         const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
+        const dependencyPackageValue = getPackageDependencyValue(dependencyIdStr, componentMap, dependencyComponentMap);
         if (dependencyPackageValue) {
           const packageName = componentIdToPackageName(
-            dependency.id,
+            dependencyId,
             dependencyComponent.bindingPrefix,
             dependencyComponent.defaultScope
           );
@@ -104,32 +104,35 @@ export function preparePackageJsonToWrite(
   bitMap: BitMap,
   component: Component,
   bitDir: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  override? = true,
-  writeBitDependencies? = false,
-  excludeRegistryPrefix?: boolean
+  override = true,
+  writeBitDependencies = false, // e.g. when it's a capsule
+  excludeRegistryPrefix?: boolean,
+  packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
-  const getBitDependencies = (dependencies: Dependencies) => {
+  const getBitDependencies = (dependencies: BitIds) => {
     if (!writeBitDependencies) return {};
-    return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
-      const packageName = componentIdToPackageName(dep.id, component.bindingPrefix, component.defaultScope);
+    return dependencies.reduce((acc, depId: BitId) => {
+      const packageDependency = getPackageDependency(bitMap, depId, component.id);
+      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
       return acc;
     }, {});
   };
-  const bitDependencies = getBitDependencies(component.dependencies);
-  const bitDevDependencies = getBitDependencies(component.devDependencies);
-  const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
-  const bitTesterDependencies = getBitDependencies(component.testerDependencies);
+  const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
+  const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
+  const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
   const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   packageJson.addOrUpdateProperty('main', main);
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
     packageJsonFile.addDependencies(bitDependencies);
-    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
+    packageJsonFile.addDevDependencies({
+      ...bitDevDependencies,
+      ...bitExtensionDependencies
+    });
   };
+  packageJson.setPackageManager(packageManager);
   addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
@@ -160,13 +163,14 @@ export async function updateAttribute(
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
  */
 export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: string | null | undefined) {
-  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
+  if (
+    consumer.config._manageWorkspaces &&
+    consumer.config.packageManager === 'yarn' &&
+    consumer.config._useWorkspaces
+  ) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.config.dependenciesDirectory;
+    const dependenciesDirectory = consumer.config._dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
-    const driver = consumer.driver.getDriver(false);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
@@ -179,16 +183,21 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
 
 export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
   const rootDir = consumer.getPath();
-  const driver = consumer.driver.getDriver(false);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const PackageJson = driver.PackageJson;
-  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
+
+  if (
+    consumer.config._manageWorkspaces &&
+    consumer.config.packageManager === 'yarn' &&
+    consumer.config._useWorkspaces
+  ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
-    await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
+    if (dirsToRemove && dirsToRemove.length) {
+      const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
+      await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
+    }
   }
   await PackageJson.removeComponentsFromDependencies(
     rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.
-    consumer.config.bindingPrefix || npmRegistryName(),
+    consumer.config._bindingPrefix || npmRegistryName(),
     componentIds.map(id => id.toStringWithoutVersion())
   );
   await removeComponentsFromNodeModules(consumer, componentIds);
@@ -203,7 +212,7 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
   logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
   // @todo: fix. the registryPrefix should be retrieved from the component.
-  const registryPrefix = consumer.config.bindingPrefix || npmRegistryName();
+  const registryPrefix = consumer.config._bindingPrefix || npmRegistryName();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map(id => {
@@ -231,8 +240,12 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap | null | undefined
+  dependencyComponentMap?: ComponentMap | null | undefined,
+  capsuleMap?: any
 ): string | null | undefined {
+  if (capsuleMap && capsuleMap[dependencyId.toString()]) {
+    return capsuleMap[dependencyId.toString()].wrkdir;
+  }
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }

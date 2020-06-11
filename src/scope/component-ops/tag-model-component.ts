@@ -21,16 +21,34 @@ import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { ExtensionDataEntry } from '../../consumer/config/extension-data';
+import GeneralError from '../../error/general-error';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency: Dependency) => {
-    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
+  const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
+    const foundDependency = componentsToTag.find(component =>
+      component.id.isEqualWithoutVersion(dependency[idFieldName])
+    );
     if (foundDependency) {
-      dependency.id = dependency.id.changeVersion(foundDependency.version);
+      dependency[idFieldName] = dependency[idFieldName].changeVersion(foundDependency.version);
+      return true;
     }
+    return false;
   };
   componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
+    // TODO: in case there are core extensions they should be excluded here
+    oneComponentToTag.extensions.forEach(extension => {
+      // For core extensions there won't be an extensionId but name
+      // We only want to add version to external extensions not core extensions
+      if (extension.extensionId) {
+        const wasDependencyFound = updateDependencyVersion(extension, 'extensionId');
+        if (!wasDependencyFound && !extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
+          throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
+this extension was not included in the tag command.`);
+        }
+      }
+    });
   });
 }
 
@@ -153,7 +171,7 @@ export default (async function tagModelComponent({
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
-  const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
+  const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
   const autoTagCandidates = skipAutoTag
@@ -196,7 +214,20 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-  await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+
+  const legacyComps: Component[] = [];
+  const nonLegacyComps: Component[] = [];
+
+  componentsToBuildAndTest.forEach(c =>
+    c.extensions && c.extensions.length ? nonLegacyComps.push(c) : legacyComps.push(c)
+  );
+  if (legacyComps.length) {
+    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+  }
+  if (nonLegacyComps.length) {
+    const ids = componentsToBuildAndTest.map(c => c.id);
+    await Promise.all(scope.onTag.map(func => func(ids)));
+  }
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
@@ -240,12 +271,7 @@ export default (async function tagModelComponent({
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }
-    const {
-      flattenedDependencies,
-      flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies
-    } = await getAllFlattenedDependencies(
+    const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
       scope,
       consumerComponent.id,
       allDependenciesGraphs,
@@ -258,8 +284,6 @@ export default (async function tagModelComponent({
       consumer,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       message,
       specsResults: testResult ? testResult.specs : undefined
     });
@@ -268,7 +292,6 @@ export default (async function tagModelComponent({
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateDirManipulation(taggedComponents);

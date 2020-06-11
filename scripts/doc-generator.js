@@ -4,13 +4,15 @@
  */
 
 const fs = require('fs-extra');
+const harmony = require('@teambit/harmony');
+const BitExt = require('../dist/extensions/bit');
 
-const cli = require('../dist/cli').default;
+const cli = require('../dist/cli');
 const allCommands = require('../dist/cli/templates/all-help').default;
 
 const formatDescription = description => `${description.split('\n').join('  \n')}  \n\n`;
 
-const genreateOptions = options => {
+const generateOptions = options => {
   if (!options || options.length <= 0) return '';
   let ret = `| **Option** | **Option alias** | **Description**|  \n`;
   ret += `|---|:-----:|---|\n`;
@@ -33,7 +35,7 @@ generateSubCommands = subCommands => {
     ret += `**Description**: ${formatDescription(s.description)}`;
 
     ret += '\n';
-    ret += genreateOptions(s.options);
+    ret += generateOptions(s.options);
   });
   return ret;
 };
@@ -50,31 +52,40 @@ const generateCommand = c => {
   if (c.commands && c.commands.length > 0) {
     result += generateSubCommands(c.commands);
   }
-  result += genreateOptions(c.opts);
+  result += generateOptions(c.opts);
   result += `---  \n`;
 
   return result;
 };
 
-let br = new cli.buildRegistrar();
+harmony.default
+  .run(BitExt.BitExt)
+  .then(() => {
+    const cli = harmony.default.get('BitCli');
+    const commandRegistry = cli.instance.paper.registry;
 
-let commands = allCommands.reduce((acc, i) => [...acc, ...i.commands], []);
-commands = commands.sort((a, b) => a.name.localeCompare(b.name));
-commands = commands.map(i => {
-  let c = br.commands.find(j => j.name.startsWith(i.name));
-  return {
-    ...c,
-    _name: i.name,
-    _description: i.description
-  };
-});
+    let commands = allCommands.reduce((acc, i) => [...acc, ...i.commands], []);
+    commands = commands.sort((a, b) => a.name.localeCompare(b.name));
+    commands = commands.map(i => {
+      const cName = Object.keys(commandRegistry.commands).find(j => j.startsWith(i.name));
+      if (!cName) throw new Error(`unable to find ${i.name} in the commands list`);
+      let c = commandRegistry.commands[cName];
+      return {
+        ...c,
+        _name: i.name,
+        _description: i.description
+      };
+    });
 
-let output = `---
-id: cli-all  
-title: CLI Commands   
----
+    let output = `---
+  id: cli-all
+  title: CLI Commands
+  ---
 
-Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.  
-`;
-output += commands.map(generateCommand).join('\n');
-fs.writeFileSync('dist/cli.md', output);
+  Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.
+  `;
+    output += commands.map(generateCommand).join('\n');
+    fs.writeFileSync('dist/cli.md', output);
+    console.log('the docs have been generated successfully');
+  })
+  .catch(err => console.log(err));

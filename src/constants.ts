@@ -38,6 +38,8 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
+export const WORKSPACE_JSONC = 'workspace.jsonc';
+
 export const GIT_IGNORE = '.gitignore';
 
 export const BIT_MAP = '.bitmap';
@@ -56,9 +58,11 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
+export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+
+export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -68,14 +72,7 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
-export const DEFAULT_EXTENSIONS = {
-  'ext-docs-parser': {
-    rawConfig: {},
-    options: {
-      core: true
-    }
-  }
-};
+export const DEFAULT_EXTENSIONS = {};
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
 
@@ -99,7 +96,7 @@ export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPE
 
 export const COMPONENT_DIR = 'COMPONENT_DIR';
 
-export const DEFAULT_EJECTED_ENVS_DIR_PATH = `{${COMPONENT_DIR}}`;
+export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -158,6 +155,7 @@ export const IGNORE_LIST = [
   '**/.bitmap',
   '**/.gitignore',
   '**/bit.json',
+  '**/component.json',
   '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
@@ -307,6 +305,9 @@ export const HOOKS_NAMES = [
  */
 export const CACHE_ROOT = getCacheDirectory();
 
+export const CFG_GLOBAL_REPOSITORY = 'global_repository';
+export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
+
 /**
  * app cache directory
  */
@@ -413,3 +414,10 @@ export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
 export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
+
+// todo: move the following two lines to the watch extension once its e2e moved to the extension dir
+export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
+export const WATCHER_COMPLETED_MSG = 'watching for changes';
+
+export const IMPORT_PENDING_MSG =
+  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';

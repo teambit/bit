@@ -2,7 +2,6 @@
 logs
 *.log
 npm-debug.log*
-types
 # Runtime data
 pids
 *.pid
@@ -30,6 +29,7 @@ build/Release
 # Dependency directories
 node_modules
 jspm_packages
+!fixtures/filing-cabinet/node_modules
 
 # Optional npm cache directory
 .npm
@@ -81,7 +81,7 @@ nodeBin
 _book
 
 # pkg releases
-releases/
+/releases/
 bin/bit
 
 # sonarcloud dir

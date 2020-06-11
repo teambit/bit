@@ -3,6 +3,7 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import WatchRunner from '../watch-runner';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -11,6 +12,7 @@ describe('bit watch command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -55,7 +57,7 @@ describe('bit watch command', function() {
       });
     });
     describe('as imported', function() {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
         // @ts-ignore
         this.skip;
@@ -100,5 +102,51 @@ describe('bit watch command', function() {
         });
       }
     });
+  });
+  // @todo: once the project references is implemented for compile on capsules,
+  // use this as a template for a new e2e-test.
+  describe.skip('watch using TS Project Reference', () => {
+    if (IS_WINDOWS) {
+      // @todo: fix!
+      // @ts-ignore
+      this.skip;
+    } else {
+      before(() => {
+        helper.command.resetFeatures();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateComponentsTS();
+        helper.fixtures.addExtensionTS();
+        helper.fs.outputFile('bar/foo.js');
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFoo();
+
+        const tsExtName = `${helper.scopes.remote}/extensions/typescript`;
+        helper.extensions.addExtensionToVariant('*', tsExtName, {});
+        const compileExtConfig = {
+          compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
+        };
+        helper.extensions.addExtensionToVariant('*', 'compile', compileExtConfig);
+      });
+      describe('run bit watch', () => {
+        let watchRunner: WatchRunner;
+        before(async () => {
+          watchRunner = new WatchRunner(helper);
+          await watchRunner.watch();
+        });
+        after(() => {
+          watchRunner.killWatcher();
+        });
+        describe('changing a file', () => {
+          before(() => {
+            helper.fs.outputFile('comp1/index.ts', 'console.log("hello")');
+          });
+          it('should show results from tsc -w', async () => {
+            const tscMsg = 'Starting compilation in watch mode...';
+            const dataFromWatcher = await watchRunner.waitForWatchToPrintMsg(tscMsg);
+            expect(dataFromWatcher).to.have.string(tscMsg);
+          });
+        });
+      });
+    }
   });
 });

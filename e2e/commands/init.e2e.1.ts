@@ -5,10 +5,8 @@ import detectIndent from 'detect-indent';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON, CURRENT_UPSTREAM } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
-import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
 import { InvalidBitJson } from '../../src/consumer/config/exceptions';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InvalidPackageJson from '../../src/consumer/config/exceptions/invalid-package-json';
 
 const assertArrays = require('chai-arrays');
@@ -21,6 +19,7 @@ describe('run bit init', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -85,9 +84,9 @@ describe('run bit init', function() {
       helper.scopeHelper.cleanLocalScope();
       helper.scopeHelper.initLocalScopeWithOptions({
         '-default-directory': 'my-comps',
-        '-package-manager': 'yarn',
-        '-compiler': 'my-compiler',
-        '-tester': 'my-tester'
+        '-package-manager': 'yarn'
+        // '-compiler': 'my-compiler',
+        // '-tester': 'my-tester'
       });
       bitJson = helper.bitJson.read();
     });
@@ -97,10 +96,12 @@ describe('run bit init', function() {
     it('should set the package manager to yarn', () => {
       expect(bitJson.packageManager).to.equal('yarn');
     });
-    it('should set the compiler to my-compiler', () => {
+    // Disabled until supported by the new config
+    it.skip('should set the compiler to my-compiler', () => {
       expect(bitJson.env.compiler).to.equal('my-compiler');
     });
-    it('should set the tester to my-tester', () => {
+    // Disabled until supported by the new config
+    it.skip('should set the tester to my-tester', () => {
       expect(bitJson.env.tester).to.equal('my-tester');
     });
   });
@@ -182,13 +183,6 @@ describe('run bit init', function() {
       helper.scopeHelper.reInitLocalScope();
       scopeJsonPath = path.join(helper.scopes.localPath, '.bit/scope.json');
       fs.removeSync(scopeJsonPath);
-    });
-    describe('running any command other than bit init', () => {
-      it('should throw an exception ScopeJsonNotFound', () => {
-        const func = () => helper.command.runCmd('bit ls');
-        const error = new ScopeJsonNotFound(scopeJsonPath);
-        helper.general.expectToThrow(func, error);
-      });
     });
     describe('running bit init', () => {
       let output;
@@ -328,8 +322,7 @@ describe('run bit init', function() {
         expect(path.join(helper.scopes.localPath, 'bar/foo.js')).to.be.a.file();
       });
       it('bit status should show nothing-to-tag', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });

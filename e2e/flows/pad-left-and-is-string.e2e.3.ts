@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -13,6 +12,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -144,7 +144,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
           exportOutput = helper.command.exportAllComponents();
 
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('string/is-string', '2.0.0');
           npmCiRegistry.publishComponent('string/pad-left', '2.0.0');
@@ -466,8 +465,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.command.importComponent('string/pad-left');
         });
         it('should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         describe('re-import for author after changing the overrides of the imported', () => {
           before(() => {

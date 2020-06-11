@@ -165,7 +165,7 @@ export async function exportMany({
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(undefined));
     const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
       exported: idsWithRemoteScopeUniq,
@@ -346,6 +346,7 @@ async function convertToCorrectScope(
       const hashBefore = objectVersion.hash().toString();
       const didCodeMod = await _replaceSrcOfVersionIfNeeded(objectVersion);
       const didDependencyChange = changeDependencyScope(objectVersion);
+      changeExtensionsScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
         if (!didCodeMod && !didDependencyChange) {
@@ -381,18 +382,27 @@ async function convertToCorrectScope(
         dependency.id = updatedScope;
       }
     });
-    const flattenedFields = [
-      'flattenedDependencies',
-      'flattenedDevDependencies',
-      'flattenedCompilerDependencies',
-      'flattenedTesterDependencies'
-    ];
+    const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
     flattenedFields.forEach(flattenedField => {
       const ids: BitIds = version[flattenedField];
       const needsChange = ids.some(id => id.scope !== remoteScope);
       if (needsChange) {
         version[flattenedField] = getBitIdsWithUpdatedScope(ids);
         hasChanged = true;
+      }
+    });
+    return hasChanged;
+  }
+
+  function changeExtensionsScope(version: Version): boolean {
+    let hasChanged = false;
+    version.extensions.forEach(ext => {
+      if (ext.extensionId) {
+        const updatedScope = getIdWithUpdatedScope(ext.extensionId);
+        if (!updatedScope.isEqual(ext.extensionId)) {
+          hasChanged = true;
+          ext.extensionId = updatedScope;
+        }
       }
     });
     return hasChanged;

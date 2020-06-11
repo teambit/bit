@@ -7,6 +7,7 @@ import CommandHelper from './e2e-command-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData from './e2e-scopes';
+import PackageJsonHelper from './e2e-package-json-helper';
 
 export default class FixtureHelper {
   fs: FsHelper;
@@ -14,18 +15,21 @@ export default class FixtureHelper {
   scopes: ScopesData;
   debugMode: boolean;
   npm: NpmHelper;
+  packageJson: PackageJsonHelper;
   constructor(
     fsHelper: FsHelper,
     commandHelper: CommandHelper,
     npmHelper: NpmHelper,
     scopes: ScopesData,
-    debugMode: boolean
+    debugMode: boolean,
+    packageJson: PackageJsonHelper
   ) {
     this.fs = fsHelper;
     this.command = commandHelper;
     this.npm = npmHelper;
     this.scopes = scopes;
     this.debugMode = debugMode;
+    this.packageJson = packageJson;
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   createComponentBarFoo(impl?: string = fixtures.fooFixture) {
@@ -76,6 +80,12 @@ export default class FixtureHelper {
   copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
+  }
+
+  copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath) {
+    const sourceDir = path.join(this.getFixturesDir(), 'extensions', dir);
+    const target = path.join(cwd, dir);
+    fs.copySync(sourceDir, target);
   }
 
   copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
@@ -156,6 +166,28 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
+  populateComponentsTS(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `export default () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `import ${nextComp} from '@bit/${this.scopes.remote}.${nextComp}';
+export default () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
+      this.command.addComponent(`comp${i}`);
+    }
+    this.command.link();
+    this.fs.outputFile(
+      'app.js',
+      `const comp1 = require('@bit/${this.scopes.remote}.comp1').default;\nconsole.log(comp1())`
+    );
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
   /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component
@@ -193,6 +225,28 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
+  }
+
+  addExtensionTS() {
+    const extensionsDir = path.join(__dirname, '..', 'extensions');
+    const extDestination = path.join(this.scopes.localPath, 'extensions');
+    fs.copySync(path.join(extensionsDir, 'typescript'), path.join(extDestination, 'typescript'));
+
+    this.command.addComponent('extensions/typescript', { i: 'extensions/typescript' });
+
+    this.npm.initNpm();
+    const dependencies = {
+      typescript: '^3.8'
+    };
+
+    this.packageJson.addKeyValue({ dependencies });
+    this.command.link();
+
+    // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
+    // first, the full-id won't be recognized when loading the extension.
+    // once defaultScope is mandatory, make sure this is working without the next two lines
+    this.command.tagComponent('extensions/typescript');
+    this.command.exportComponent('extensions/typescript');
   }
 
   /**

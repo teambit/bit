@@ -1,7 +1,7 @@
 import * as path from 'path';
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
-import Capsule from '../../../../components/core/capsule';
+import { Capsule } from '../../../extensions/isolator/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -73,7 +73,7 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
+  async persistAllToCapsule(capsule: any, opts = { keepExistingCapsule: false }) {
     this._log();
     this._validateRelative();
     if (!opts.keepExistingCapsule) {

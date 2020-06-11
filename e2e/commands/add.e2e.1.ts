@@ -31,6 +31,7 @@ describe('bit add command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -57,7 +58,7 @@ describe('bit add command', function() {
       helper.fs.deletePath('.bit');
       helper.fs.deletePath('bit.json');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.scopeHelper.initLocalScope('bit init');
+      helper.scopeHelper.initLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       const addCmd = () => helper.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo ' });
       expect(addCmd).to.not.throw('fatal: scope not found. to create a new scope, please use `bit init`');

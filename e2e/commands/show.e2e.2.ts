@@ -3,6 +3,7 @@ import * as path from 'path';
 import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import NothingToCompareTo from '../../src/api/consumer/lib/exceptions/nothing-to-compare-to';
 
 const assertArrays = require('chai-arrays');
 
@@ -13,6 +14,7 @@ describe('bit show command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -409,7 +411,8 @@ describe('bit show command', function() {
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
-        expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
+        const error = new NothingToCompareTo('bar/foo');
+        helper.general.expectToThrow(showCmd, error);
       });
     });
     describe('when the component is AUTHORED', () => {
@@ -556,7 +559,7 @@ describe('bit show command', function() {
       helper.command.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {
-      output = helper.command.runCmd('bit show bar/foo -v');
+      output = helper.command.runCmd('bit show bar/foo -v --json');
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({

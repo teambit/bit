@@ -4,7 +4,6 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
@@ -17,6 +16,7 @@ chai.use(require('chai-fs'));
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -48,7 +48,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('fixtures');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -109,8 +108,7 @@ chai.use(require('chai-fs'));
           expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type/utils`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -132,7 +130,8 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string('pending updates');
+            const outputWithoutLinebreaks = output.replace(/\n/, '');
+            expect(outputWithoutLinebreaks).to.have.string('pending updates');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -155,8 +154,7 @@ chai.use(require('chai-fs'));
             expect(packages).to.include(`@ci/${helper.scopes.remote}.utils.is-type`);
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('bit checkout all components to an older version', () => {
             let checkoutOutput;
@@ -218,7 +216,8 @@ chai.use(require('chai-fs'));
               });
               it('bit status should not show the component as modified', () => {
                 const status = helper.command.status();
-                expect(status).to.not.have.string('modified');
+                const statusWithoutLinebreaks = status.replace(/\n/, '');
+                expect(statusWithoutLinebreaks).to.not.have.string('modified');
               });
             });
           });
@@ -305,7 +304,7 @@ chai.use(require('chai-fs'));
             expect(show.devDependencies).to.have.lengthOf(1);
           });
           it('bit tag should tag them successfully', () => {
-            const tag = helper.command.tagAllComponents();
+            const tag = helper.command.tagAllComponentsLegacy();
             expect(tag).to.have.string('1 component(s) tagged');
           });
         });
@@ -314,6 +313,7 @@ chai.use(require('chai-fs'));
     describe('components with nested dependencies and compiler', () => {
       before(async () => {
         helper = new Helper();
+        helper.command.setFeatures('legacy-workspace-config');
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -333,7 +333,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-type');
         helper.command.importComponent('utils/is-string');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -365,8 +364,7 @@ chai.use(require('chai-fs'));
           helper.command.importComponent('bar/foo');
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -383,7 +381,8 @@ chai.use(require('chai-fs'));
             expect(statusJson.invalidComponents).to.have.lengthOf(0);
             expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(0);
             const status = helper.command.status();
-            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+            const statusWithoutLinebreaks = status.replace(/\n/g, '');
+            expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);
           });
         });
         describe('import with dist outside the component directory', () => {
@@ -394,8 +393,7 @@ chai.use(require('chai-fs'));
             helper.command.importComponent('bar/foo');
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('running bit link after deleting the symlink from dist directory', () => {
             let symlinkPath;

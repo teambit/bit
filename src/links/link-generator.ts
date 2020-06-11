@@ -49,7 +49,7 @@ function getComponentLinks({
   createNpmLinkFiles,
   bitMap
 }: {
-  consumer: Consumer | null | undefined;
+  consumer?: Consumer | null | undefined;
   component: Component;
   dependencies: Component[]; // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean;
@@ -514,6 +514,7 @@ async function getLinksByDependencies(
 }
 
 export {
+  getComponentLinks,
   getEntryPointsForComponent,
   getComponentsDependenciesLinks,
   getIndexFileName,

@@ -19,6 +19,7 @@ chai.use(require('chai-fs'));
   let scopeAfterExport;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
     bitsrcTester = new BitsrcTester();
     barFooDir = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
     return bitsrcTester

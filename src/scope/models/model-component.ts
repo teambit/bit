@@ -26,7 +26,7 @@ import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import { makeEnvFromModel } from '../../extensions/env-factory';
+import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 
@@ -66,6 +66,8 @@ const VERSION_ZERO = '0.0.0';
  * we can't rename the class as ModelComponent because old components are already saved in the model
  * with 'Component' in their headers. see object-registrar.types()
  */
+// TODO: FIX me .parser
+// @ts-ignore
 export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;
@@ -160,7 +162,8 @@ export default class Component extends BitObject {
 
   latest(): string {
     if (empty(this.versions)) return VERSION_ZERO;
-    return semver.maxSatisfying(this.listVersions(), '*');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return semver.maxSatisfying(this.listVersions(), '*')!;
   }
 
   /**
@@ -229,9 +232,10 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
     const latest = this.latest();
-    if (latest) return semver.inc(latest, releaseType);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (latest) return semver.inc(latest, releaseType)!;
     return DEFAULT_BIT_VERSION;
   }
 
@@ -249,7 +253,7 @@ export default class Component extends BitObject {
 
   toBitIdWithLatestVersionAllowNull(): BitId {
     const id = this.toBitIdWithLatestVersion();
-    return id.version === VERSION_ZERO ? id.changeVersion(null) : id;
+    return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
   }
 
   toObject() {
@@ -339,12 +343,14 @@ export default class Component extends BitObject {
   toComponentVersion(versionStr: string): ComponentVersion {
     const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
-    if (!this.versions[versionNum]) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (!this.versions[versionNum!]) {
       throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
     }
-    return new ComponentVersion(this, versionNum);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return new ComponentVersion(this, versionNum!);
   }
 
   /**
@@ -406,12 +412,8 @@ export default class Component extends BitObject {
       tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
-      compilerDependencies: version.compilerDependencies.getClone(),
-      testerDependencies: version.testerDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       flattenedDevDependencies: version.flattenedDevDependencies.clone(),
-      flattenedCompilerDependencies: version.flattenedCompilerDependencies.clone(),
-      flattenedTesterDependencies: version.flattenedTesterDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -421,7 +423,7 @@ export default class Component extends BitObject {
       dists,
       mainDistFile: version.mainDistFile,
       docs: version.docs,
-      license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
@@ -430,7 +432,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
-      extensions: clone(version.extensions)
+      extensions: version.extensions.clone()
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

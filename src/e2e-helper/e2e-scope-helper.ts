@@ -20,6 +20,7 @@ export default class ScopeHelper {
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
+  packageManager = 'npm';
   constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
@@ -51,6 +52,10 @@ export default class ScopeHelper {
     fs.emptyDirSync(this.scopes.localPath);
   }
 
+  usePackageManager(packageManager: string) {
+    this.packageManager = packageManager;
+  }
+
   reInitLocalScope() {
     this.cleanLocalScope();
     this.initLocalScope();
@@ -62,7 +67,13 @@ export default class ScopeHelper {
 
   initWorkspace(workspacePath?: string) {
     // return this.command.runCmd('bit init -N', workspacePath);
-    return this.command.runCmd('bit init', workspacePath);
+    return this.command.runCmd(`bit init -p ${this.packageManager}`, workspacePath);
+  }
+
+  initWorkspaceAndRemoteScope(workspacePath?: string) {
+    this.initWorkspace(workspacePath);
+    this.reInitRemoteScope();
+    this.addRemoteScope();
   }
 
   async initInteractive(inputs: InteractiveInputs) {
@@ -158,11 +169,11 @@ export default class ScopeHelper {
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
    * cloned scope.
    */
-  cloneLocalScope() {
+  cloneLocalScope(dereferenceSymlinks = true) {
     const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
-    fs.copySync(this.scopes.localPath, clonedScopePath);
+    fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: dereferenceSymlinks });
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }

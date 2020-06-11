@@ -51,30 +51,30 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | null | undefined> {
+  async get(bitId: BitId): Promise<ModelComponent | undefined> {
     const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
+    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
-        return null;
+        return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-        return null;
+        return undefined;
       }
     }
 
     return foundComponent;
   }
 
-  async _findComponent(component: ModelComponent): Promise<ModelComponent | null | undefined> {
+  async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
@@ -86,10 +86,10 @@ export default class SourceRepository {
       logger.error(`findComponent got an error ${err}`);
     }
     logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
+    return undefined;
   }
 
-  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | null | undefined> {
+  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | undefined> {
     const realComponentId: BitId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
     const foundComponent = await this.objects().load(realModelComponent.hash());
@@ -153,7 +153,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : undefined;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
         return objectRepo.persist();
@@ -178,8 +178,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     specsResults
   }: {
     readonly consumerComponent: ConsumerComponent;
@@ -187,8 +185,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message?: string;
     flattenedDependencies?: Record<string, any>;
     flattenedDevDependencies?: Record<string, any>;
-    flattenedCompilerDependencies?: Record<string, any>;
-    flattenedTesterDependencies?: Record<string, any>;
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
@@ -215,10 +211,17 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test
       };
     });
+    // @todo: is this the best way to find out whether a compiler is set?
+    const isCompileSet = Boolean(
+      consumerComponent.compiler ||
+        clonedComponent.extensions.some(
+          e => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === 'Environments'
+        )
+    );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
       consumer,
       consumerComponent.originallySharedDir,
-      consumerComponent.compiler
+      isCompileSet
     );
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
@@ -261,10 +264,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedDependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedCompilerDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedTesterDependencies,
       specsResults,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       message,
@@ -282,8 +281,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     message,
     specsResults
   }: {
@@ -291,8 +288,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer: Consumer;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    flattenedCompilerDependencies: BitIds;
-    flattenedTesterDependencies: BitIds;
     message: string;
     specsResults?: any;
   }): Promise<ModelComponent> {
@@ -309,11 +304,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       message,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       specsResults
     });
-    component.addVersion(version, source.version);
+    if (source.version) {
+      component.addVersion(version, source.version);
+    }
     objectRepo.add(version).add(component);
 
     files.forEach(file => objectRepo.add(file.file));

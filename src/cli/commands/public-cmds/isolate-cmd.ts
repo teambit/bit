@@ -1,4 +1,4 @@
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { isolate } from '../../../api/consumer';
 import { WorkspaceIsolateOptions } from '../../../api/consumer/lib/isolate';
 
@@ -6,7 +6,6 @@ export default class Isolate extends Command {
   name = 'isolate <id> [scopePath]';
   description = 'isolate component';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['d', 'directory [directory] ', 'path to store isolated component'],
     ['w', 'write-bit-dependencies [boolean] ', 'write bit components dependencies to package.json file'],
@@ -30,9 +29,10 @@ export default class Isolate extends Command {
     ['v', 'verbose [boolean]', 'print more logs'],
     ['', 'silent-client-result [boolean]', 'print environment install result'],
     ['', 'use-capsule [boolean]', 'use capsule with fs-container']
-  ];
+  ] as CommandOptions;
   loader = true;
   remoteOp = true;
+  private = true;
 
   action(
     [id, scopePath]: [string, string | null | undefined],
@@ -72,7 +72,10 @@ export default class Isolate extends Command {
     return isolate(id, scopePath || process.cwd(), concreteOpts);
   }
 
-  report(directory: string): string {
+  report(directory: string, _params, options): string {
+    if (options.directory) {
+      return `capsule created at: ${options.directory}`;
+    }
     return directory;
   }
 }

@@ -2,7 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { customResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
+import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
@@ -10,16 +10,16 @@ import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS }
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
-import { CompilerExtensionModel } from '../../extensions/compiler-extension';
-import { TesterExtensionModel } from '../../extensions/tester-extension';
-import ExtensionFile from '../../extensions/extension-file';
+import { CompilerExtensionModel } from '../../legacy-extensions/compiler-extension';
+import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import { EnvPackages } from '../../extensions/env-extension';
+import { EnvPackages } from '../../legacy-extensions/env-extension';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 
 type CiProps = {
   error: Record<string, any>;
@@ -39,29 +39,25 @@ export type DistFileModel = SourceFileModel;
 export type Log = {
   message: string;
   date: string;
-  username: string | null | undefined;
-  email: string | null | undefined;
+  username: string | undefined;
+  email: string | undefined;
 };
 
 export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists?: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinux | null | undefined;
-  compiler?: CompilerExtensionModel | null | undefined;
-  tester?: TesterExtensionModel | null | undefined;
+  dists?: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinux | undefined;
+  compiler?: CompilerExtensionModel | undefined;
+  tester?: TesterExtensionModel | undefined;
   log: Log;
   ci?: CiProps;
-  specsResults?: Results | null | undefined;
+  specsResults?: Results | undefined;
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  compilerDependencies?: Dependency[];
-  testerDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
   flattenedDevDependencies?: BitIds;
-  flattenedCompilerDependencies?: BitIds;
-  flattenedTesterDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
@@ -75,10 +71,10 @@ export type VersionProps = {
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
   ignoreSharedDir?: boolean;
-  customResolvedPaths?: customResolvedPath[];
+  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
-  extensions?: ExtensionData[];
+  extensions?: ExtensionDataList;
 };
 
 /**
@@ -87,22 +83,18 @@ export type VersionProps = {
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinuxRelative | null | undefined;
-  compiler: CompilerExtensionModel | null | undefined;
-  tester: TesterExtensionModel | null | undefined;
+  dists: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinuxRelative | undefined;
+  compiler: CompilerExtensionModel | undefined;
+  tester: TesterExtensionModel | undefined;
   log: Log;
   ci: CiProps | {};
-  specsResults: Results | null | undefined;
-  docs: Doclet[] | null | undefined;
+  specsResults: Results | undefined;
+  docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  compilerDependencies: Dependencies;
-  testerDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
-  flattenedCompilerDependencies: BitIds;
-  flattenedTesterDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
@@ -114,12 +106,12 @@ export default class Version extends BitObject {
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
-  bindingPrefix: string | null | undefined;
+  bindingPrefix: string | undefined;
   ignoreSharedDir: boolean | undefined;
-  customResolvedPaths: customResolvedPath[] | null | undefined;
+  customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
-  extensions: ExtensionData[];
+  extensions: ExtensionDataList;
 
   constructor(props: VersionProps) {
     super();
@@ -132,15 +124,11 @@ export default class Version extends BitObject {
     this.log = props.log;
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
-    this.compilerDependencies = new Dependencies(props.compilerDependencies);
-    this.testerDependencies = new Dependencies(props.testerDependencies);
     this.docs = props.docs;
     this.ci = props.ci || {};
     this.specsResults = props.specsResults;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = props.flattenedDevDependencies || new BitIds();
-    this.flattenedCompilerDependencies = props.flattenedCompilerDependencies || new BitIds();
-    this.flattenedTesterDependencies = props.flattenedTesterDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -151,7 +139,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
-    this.extensions = props.extensions || [];
+    this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.validateVersion();
   }
 
@@ -187,8 +175,6 @@ export default class Version extends BitObject {
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
-        key === 'compilerDependencies' ||
-        key === 'testerDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
         key === 'overrides'
@@ -213,8 +199,6 @@ export default class Version extends BitObject {
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
-          compilerDependencies: getDependencies(this.compilerDependencies),
-          testerDependencies: getDependencies(this.testerDependencies),
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           packageDependencies: obj.packageDependencies,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -231,37 +215,42 @@ export default class Version extends BitObject {
     );
   }
 
+  get extensionDependencies() {
+    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+  }
+
   getAllFlattenedDependencies(): BitIds {
-    return BitIds.fromArray([
-      ...this.flattenedDependencies,
-      ...this.flattenedDevDependencies,
-      ...this.flattenedCompilerDependencies,
-      ...this.flattenedTesterDependencies
-    ]);
+    return BitIds.fromArray([...this.flattenedDependencies, ...this.flattenedDevDependencies]);
   }
 
   getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
-      ...this.compilerDependencies.dependencies,
-      ...this.testerDependencies.dependencies
+      ...this.extensionDependencies.dependencies
     ];
   }
 
+  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+    return {
+      dependencies: this.dependencies.getAllIds(),
+      devDependencies: this.devDependencies.getAllIds(),
+      extensionDependencies: this.extensions.extensionsBitIds
+    };
+  }
+
   getAllDependenciesCloned(): Dependencies {
-    const dependencies = [
-      ...this.dependencies.getClone(),
-      ...this.devDependencies.getClone(),
-      ...this.compilerDependencies.getClone(),
-      ...this.testerDependencies.getClone()
-    ];
+    const dependencies = [...this.dependencies.getClone(), ...this.devDependencies.getClone()];
     return new Dependencies(dependencies);
   }
 
   getAllDependenciesIds(): BitIds {
-    const allDependencies = this.getAllDependencies();
-    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    return BitIds.fromArray(allDependencies);
+  }
+
+  getDependenciesIdsExcludeExtensions(): BitIds {
+    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
@@ -274,8 +263,6 @@ export default class Version extends BitObject {
     };
     this.flattenedDependencies = getUpdated(this.flattenedDependencies);
     this.flattenedDevDependencies = getUpdated(this.flattenedDevDependencies);
-    this.flattenedCompilerDependencies = getUpdated(this.flattenedCompilerDependencies);
-    this.flattenedTesterDependencies = getUpdated(this.flattenedTesterDependencies);
   }
 
   refs(): Ref[] {
@@ -285,9 +272,7 @@ export default class Version extends BitObject {
     };
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
-    const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
-    const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [...dists, ...files].filter(ref => ref);
   }
 
   toObject() {
@@ -313,9 +298,6 @@ export default class Version extends BitObject {
         config: env.config,
         files: []
       };
-      if (env.files && !R.isEmpty(env.files)) {
-        result.files = env.files.map(ExtensionFile.fromModelObjectToObject);
-      }
       return result;
     };
 
@@ -349,12 +331,17 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        compilerDependencies: this.compilerDependencies.cloneAsObject(),
-        testerDependencies: this.testerDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
-        flattenedCompilerDependencies: this.flattenedCompilerDependencies.map(dep => dep.serialize()),
-        flattenedTesterDependencies: this.flattenedTesterDependencies.map(dep => dep.serialize()),
+        extensions: this.extensions.map(ext => {
+          const extensionClone = R.clone(ext);
+          if (extensionClone.extensionId) {
+            // TODO: fix the types of extensions. after this it should be an object not an object id
+            // @ts-ignore
+            extensionClone.extensionId = ext.extensionId.serialize();
+          }
+          return extensionClone;
+        }),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -362,8 +349,7 @@ export default class Version extends BitObject {
         testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
-        packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions
+        packageJsonChangedProps: this.packageJsonChangedProps
       },
       val => !!val
     );
@@ -402,12 +388,8 @@ export default class Version extends BitObject {
       specsResults,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       devPackageDependencies,
       peerPackageDependencies,
       compilerPackageDependencies,
@@ -461,6 +443,28 @@ export default class Version extends BitObject {
         test: file.test
       };
     };
+    // @ts-ignore
+    const _getExtensions = (exts = []): ExtensionDataList => {
+      if (exts.length) {
+        const newExts = exts.map((extension: any) => {
+          if (extension.extensionId) {
+            const extensionId = new BitId(extension.extensionId);
+            const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
+            return entry;
+          }
+          const entry = new ExtensionDataEntry(
+            extension.id,
+            undefined,
+            extension.name,
+            extension.config,
+            extension.data
+          );
+          return entry;
+        });
+        return ExtensionDataList.fromArray(newExts);
+      }
+      return new ExtensionDataList();
+    };
 
     return new Version({
       mainFile,
@@ -482,12 +486,8 @@ export default class Version extends BitObject {
       docs,
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
-      compilerDependencies: _getDependencies(compilerDependencies),
-      testerDependencies: _getDependencies(testerDependencies),
       flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
-      flattenedCompilerDependencies: _getFlattenedDependencies(flattenedCompilerDependencies),
-      flattenedTesterDependencies: _getFlattenedDependencies(flattenedTesterDependencies),
       devPackageDependencies,
       peerPackageDependencies,
       compilerPackageDependencies,
@@ -496,7 +496,7 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions: _getExtensions(extensions)
     });
   }
 
@@ -518,8 +518,6 @@ export default class Version extends BitObject {
     mainDistFile,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     message,
     specsResults,
     username,
@@ -529,14 +527,12 @@ export default class Version extends BitObject {
     files: Array<SourceFileModel>;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    flattenedCompilerDependencies: BitIds;
-    flattenedTesterDependencies: BitIds;
     message: string;
-    dists: Array<DistFileModel> | null | undefined;
+    dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
-    specsResults: Results | null | undefined;
-    username: string | null | undefined;
-    email: string | null | undefined;
+    specsResults: Results | undefined;
+    username: string | undefined;
+    email: string | undefined;
   }) {
     const parseFile = file => {
       return {
@@ -557,7 +553,7 @@ export default class Version extends BitObject {
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
-      dists: dists ? dists.map(parseFile) : null,
+      dists: dists ? dists.map(parseFile) : undefined,
       mainDistFile,
       compiler,
       bindingPrefix: component.bindingPrefix,
@@ -573,8 +569,6 @@ export default class Version extends BitObject {
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
-      compilerDependencies: component.compilerDependencies.get(),
-      testerDependencies: component.testerDependencies.get(),
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
@@ -588,8 +582,6 @@ export default class Version extends BitObject {
       ),
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       ignoreSharedDir: component.ignoreSharedDir,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
@@ -599,11 +591,11 @@ export default class Version extends BitObject {
     });
   }
 
-  setSpecsResults(specsResults: Results | null | undefined) {
+  setSpecsResults(specsResults: Results | undefined) {
     this.specsResults = specsResults;
   }
 
-  setDist(dist: Source | null | undefined) {
+  setDist(dist: Source | undefined) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {
@@ -639,8 +631,7 @@ function parseEnv(env) {
   }
   return {
     name: env.name,
-    config: env.config,
-    files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
+    config: env.config
   };
 }
 

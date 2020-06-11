@@ -7,6 +7,8 @@ type ScopeMetaProps = {
   license: string;
 };
 
+// TODO: fix parse
+// @ts-ignore
 export default class ScopeMeta extends BitObject {
   license: string | null | undefined;
   name: string;
