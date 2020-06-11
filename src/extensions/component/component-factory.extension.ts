@@ -8,6 +8,9 @@ import ComponentID from './id';
 export type ConfigFunc = () => any;
 
 export default class ComponentFactory {
+  static id = '@teambit/component';
+  static dependencies = [IsolatorExt];
+
   constructor(
     /**
      * instance of the capsule orchestrator
@@ -23,8 +26,6 @@ export default class ComponentFactory {
   fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
     return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy(legacyComponent));
   }
-
-  static dependencies = [IsolatorExt];
 
   static async provider([isolator]: [Isolator]) {
     return new ComponentFactory(isolator);

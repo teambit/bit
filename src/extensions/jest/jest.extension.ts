@@ -1,6 +1,7 @@
 import { JestTester } from './jest.tester';
 
 export class JestExtension {
+  static id = '@teambit/jest';
   static dependencies = [];
 
   createTester(jestConfig: any) {
