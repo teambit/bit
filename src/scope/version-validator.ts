@@ -98,7 +98,7 @@ export default function validateVersionInstance(version: Version): void {
       });
     });
   };
-  const validateFile = (file, field: 'file' | 'dist' | 'artifact') => {
+  const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
     if (!isValidPath(file.relativePath)) {
       throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is invalid`);
@@ -162,7 +162,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
     version.dists.forEach(file => {
-      validateFile(file, 'dist');
+      validateFile(file, 'dist-file');
     });
   } else if (version.mainDistFile) {
     throw new VersionInvalid(`${message} the mainDistFile cannot be set when the dists are empty`);
