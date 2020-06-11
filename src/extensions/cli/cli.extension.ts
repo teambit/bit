@@ -16,8 +16,8 @@ export class CLIExtension {
   static dependencies = [ReporterExt];
 
   static provider([reporter]: [Reporter]) {
-    const paper = new CLIExtension(new CommandRegistry({}), reporter);
-    return CLIProvider([paper]);
+    const cli = new CLIExtension(new CommandRegistry({}), reporter);
+    return CLIProvider([cli]);
   }
 
   constructor(
@@ -86,7 +86,7 @@ export class CLIExtension {
   }
   private shouldOutputJson() {
     const showCommand = commander.commands.find(c => c._name === 'show');
-    return showCommand.versions
+    return showCommand.versions;
   }
   registerGroup(name: string, description: string) {
     if (this.groups[name]) {
