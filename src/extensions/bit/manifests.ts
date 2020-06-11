@@ -30,7 +30,7 @@ export const manifestsMap = {
   [BitCliExt.name]: BitCliExt,
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
-  [ComponentFactoryExt.name]: ComponentFactoryExt,
+  [ComponentFactoryExt.id]: ComponentFactoryExt,
   // [ComposerExt.name]: ComposerExt,
   [ConfigExt.name]: ConfigExt,
   [CoreExt.name]: CoreExt,
