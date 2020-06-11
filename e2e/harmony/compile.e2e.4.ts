@@ -65,11 +65,11 @@ chai.use(require('chai-fs'));
       });
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
-        expect(catComp2).to.have.property('dists');
-        const dists = catComp2.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
-        expect(files).to.include('index.d.ts'); // makes sure it saves declaration files
+        expect(catComp2).to.have.property('extensions');
+        const compileExt = catComp2.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
+        expect(files).to.include('dist/index.d.ts'); // makes sure it saves declaration files
       });
       describe('export and import to another scope', () => {
         before(() => {
