@@ -37,7 +37,6 @@ export class TaskProcess {
       await this.saveArtifactsToComponent(component);
     });
     await Promise.all(resultsP);
-    // components.forEach(c => console.log('c', c.id, c.config.extensions));
   }
 
   private saveDataToComponent(component: Component) {

@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
-import { PathOsBased, PathLinux } from '../../utils/path';
+import { PathOsBased, PathLinux, pathNormalizeToLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import { Artifact } from '../../consumer/component/sources/artifact';
 
@@ -233,7 +233,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
 
         return {
-          relativePath: artifact.relative,
+          relativePath: pathNormalizeToLinux(artifact.relative),
           file: artifact.toSourceAsLinuxEOL()
         };
       });
