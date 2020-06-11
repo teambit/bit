@@ -10,6 +10,7 @@ import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 import { Dependencies } from '../../consumer/component/dependencies';
+import { ComponentID } from '../component';
 
 export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
@@ -76,7 +77,7 @@ export default async function writeComponentsToCapsules(
   // write data to capsule
   await Promise.all(
     manyComponentsWriter.writtenComponents.map(async componentToWrite => {
-      const capsule = capsuleList.getCapsule(componentToWrite.id);
+      const capsule = capsuleList.getCapsule(new ComponentID(componentToWrite.id));
       if (!capsule) return;
       await componentToWrite.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
     })

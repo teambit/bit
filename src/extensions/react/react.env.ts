@@ -75,7 +75,9 @@ export class ReactEnv implements Environment {
    * returns a release pipeline.
    */
   getPipe(): ReleasePipe {
-    return ReleasePipe.from([this.compile.task, this.tester.task]);
+    // return ReleasePipe.from([this.compile.task, this.tester.task]);
+    // return ReleasePipe.from([this.tester.task]);
+    return ReleasePipe.from([this.compile.task]);
   }
 
   dev(workspace: Workspace, components: Component[]) {

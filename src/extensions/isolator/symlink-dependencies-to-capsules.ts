@@ -5,6 +5,7 @@ import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Symlink from '../../links/symlink';
+import { ComponentID } from '../component';
 
 export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsuleList: CapsuleList) {
   await Promise.all(
@@ -16,12 +17,12 @@ export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsule
 }
 
 async function symlinkComponent(component: ConsumerComponent, capsuleList: CapsuleList) {
-  const componentCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(component.id);
+  const componentCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(component.id));
   if (!componentCapsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
   const allDeps = component.getAllDependenciesIds();
   const symlinks = allDeps.map((depId: BitId) => {
     const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
-    const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(depId);
+    const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(depId));
     if (!devCapsule) throw new Error(`unable to find the capsule for ${depId.toStringWithoutVersion()}`);
     const devCapsulePath = devCapsule.wrkDir;
     // @todo: this is a hack, the capsule should be the one responsible to symlink, this works only for FS capsules.

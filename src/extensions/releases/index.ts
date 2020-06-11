@@ -1,2 +1,3 @@
 export { ReleasesExtension } from './releases.extension';
-export { ReleaseTask, ReleasePipe, ReleaseContext } from './release-pipe';
+export { ReleasePipe } from './release-pipe';
+export { ReleaseTask, ReleaseContext, ReleaseResults } from './types';

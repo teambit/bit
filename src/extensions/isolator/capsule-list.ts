@@ -1,17 +1,26 @@
 import { Capsule } from './capsule';
-import { BitId } from '../../bit-id';
+import { ComponentID } from '../component';
 
-export default class CapsuleList extends Array<{ id: BitId; value: Capsule }> {
-  getCapsule(id: BitId): Capsule | null {
-    const found = this.find(item => item.id.isEqual(id));
-    return found ? found.value : null;
+// @todo: it can be improved by extending only Array<Capsule> and the Capsule should have
+// ComponentId member
+export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsule }> {
+  getCapsule(id: ComponentID): Capsule | null {
+    const found = this.find(item => item.id._legacy.isEqual(id._legacy));
+    return found ? found.capsule : null;
   }
-  getCapsuleIgnoreVersion(id: BitId): Capsule | null {
-    const found = this.find(item => item.id.isEqualWithoutVersion(id));
-    return found ? found.value : null;
+  getCapsuleIgnoreVersion(id: ComponentID): Capsule | null {
+    const found = this.find(item => item.id._legacy.isEqualWithoutVersion(id._legacy));
+    return found ? found.capsule : null;
   }
-  getCapsuleIgnoreScopeAndVersion(id: BitId): Capsule | null {
-    const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
-    return found ? found.value : null;
+  getCapsuleIgnoreScopeAndVersion(id: ComponentID): Capsule | null {
+    const found = this.find(item => item.id._legacy.isEqualWithoutScopeAndVersion(id._legacy));
+    return found ? found.capsule : null;
+  }
+  getAllCapsuleDirs(): string[] {
+    return this.map(capsule => capsule.capsule.wrkDir);
+  }
+  getIdByPathInCapsule(pathInCapsule: string): ComponentID | null {
+    const found = this.find(item => pathInCapsule.startsWith(item.capsule.wrkDir));
+    return found ? found.id : null;
   }
 }

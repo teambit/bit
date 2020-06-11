@@ -2,12 +2,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { IS_WINDOWS } from '../../src/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
-(IS_WINDOWS ? describe.skip : describe)('compile extension', function() {
+describe('compile extension', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -67,11 +66,11 @@ chai.use(require('chai-fs'));
       });
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
-        expect(catComp2).to.have.property('dists');
-        const dists = catComp2.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
-        expect(files).to.include('index.d.ts'); // makes sure it saves declaration files
+        expect(catComp2).to.have.property('extensions');
+        const compileExt = catComp2.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
+        expect(files).to.include('dist/index.d.ts'); // makes sure it saves declaration files
       });
       describe('export and import to another scope', () => {
         before(() => {
@@ -115,10 +114,10 @@ chai.use(require('chai-fs'));
       });
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
-        expect(catComp).to.have.property('dists');
-        const dists = catComp.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
+        expect(catComp).to.have.property('extensions');
+        const compileExt = catComp.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
       });
     });
   });
