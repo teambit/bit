@@ -3,7 +3,7 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component } from '../component';
+import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { PackageManager } from '../package-manager';
 import { Capsule } from './capsule';
@@ -83,8 +83,8 @@ export default class Isolator {
 
     const capsuleList = new CapsuleList(
       ...capsules.map(c => {
-        const id = c.component.id instanceof BitId ? c.component.id : c.component.id.legacyComponentId;
-        return { id, value: c };
+        const id = c.component.id instanceof BitId ? new ComponentID(c.component.id) : c.component.id;
+        return { id, capsule: c };
       })
     );
     const capsulesWithPackagesData = await getCapsulesPackageJsonData(capsules);
