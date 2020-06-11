@@ -52,7 +52,9 @@
     "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts",
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
-    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
+    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "pkg": {
     "assets": [
@@ -230,7 +232,8 @@
     "webpack": "^4.43.0",
     "webpack-dev-server": "^3.11.0",
     "winston": "^3.2.1",
-    "yn": "^2.0.0"
+    "yn": "^2.0.0",
+    "snyk": "^1.339.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -304,5 +307,6 @@
       "prettier --write",
       "git add"
     ]
-  }
+  },
+  "snyk": true
 }
