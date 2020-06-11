@@ -1,11 +1,11 @@
 import { ExtensionManifest } from '@teambit/harmony';
-import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
 import { provideCompile } from './compile.provider';
 import { Environments } from '../environments';
+import { CLIExtension } from '../cli';
 
 export default {
   name: 'compile',
-  dependencies: [BitCliExt, WorkspaceExt, Environments],
+  dependencies: [CLIExtension, WorkspaceExt, Environments],
   provider: provideCompile
 } as ExtensionManifest;

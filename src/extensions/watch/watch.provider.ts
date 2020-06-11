@@ -1,10 +1,11 @@
 import { Workspace } from '../workspace';
-import { BitCli } from '../cli';
+// import { BitCli } from '../cli';
 import { WatchCommand } from './watch.cmd';
 import { Compile } from '../compile/compile';
 import Watch from './watch';
+import { CLIExtension } from '../cli';
 
-export type watchDeps = [BitCli, Compile, Workspace];
+export type watchDeps = [CLIExtension, Compile, Workspace];
 
 export function provideWatch([cli, compile, workspace]: watchDeps) {
   const watch = new Watch(compile, workspace);
