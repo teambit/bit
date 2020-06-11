@@ -113,10 +113,10 @@ chai.use(require('chai-fs'));
       });
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
-        expect(catComp).to.have.property('dists');
-        const dists = catComp.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
+        expect(catComp).to.have.property('extensions');
+        const compileExt = catComp.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
       });
     });
   });

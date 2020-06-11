@@ -228,8 +228,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const extensions = clonedComponent.extensions.clone();
     extensions.forEach(extensionDataEntry => {
       const artifactsSource = extensionDataEntry.artifacts.map(artifact => {
-        if (!(artifact instanceof Artifact))
+        if (!(artifact instanceof Artifact)) {
           throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
+        }
+
         return {
           relativePath: artifact.relative,
           file: artifact.toSourceAsLinuxEOL()

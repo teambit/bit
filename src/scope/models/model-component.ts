@@ -29,6 +29,7 @@ import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
+import { Artifact } from '../../consumer/component/sources/artifact';
 
 type State = {
   versions?: {
@@ -393,6 +394,13 @@ export default class Component extends BitObject {
       testerP
     ]);
 
+    const extensions = version.extensions.clone();
+    await Promise.all(
+      extensions.map(async extension => {
+        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(Artifact)));
+      })
+    );
+
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
@@ -432,7 +440,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
-      extensions: version.extensions.clone()
+      extensions
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
