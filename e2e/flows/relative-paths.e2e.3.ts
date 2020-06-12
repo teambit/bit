@@ -91,7 +91,7 @@ describe('relative paths flow (components requiring each other by relative paths
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeFix);
         helper.scopeHelper.reInitRemoteScope();
-        helper.command.addComponent('comp1', '--id comp1 --allow-relative-paths');
+        helper.command.addComponent('comp1', '--id comp1');
       });
       it('bitmap record should be reverted to be relative to the workspace', () => {
         const bitMap = helper.bitMap.read();

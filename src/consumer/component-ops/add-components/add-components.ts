@@ -86,8 +86,6 @@ export type AddProps = {
   exclude?: PathOrDSL[];
   override: boolean;
   trackDirFeature?: boolean;
-  allowFiles: boolean;
-  allowRelativePaths: boolean;
   origin?: ComponentOrigin;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
@@ -118,8 +116,6 @@ export default class AddComponents {
   origin: ComponentOrigin;
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
-  allowFiles: boolean;
-  allowRelativePaths: boolean;
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -129,8 +125,6 @@ export default class AddComponents {
     this.main = addProps.main;
     this.namespace = addProps.namespace;
     this.tests = addProps.tests ? this.joinConsumerPathIfNeeded(addProps.tests) : [];
-    this.allowFiles = addProps.allowFiles;
-    this.allowRelativePaths = addProps.allowRelativePaths;
     this.exclude = addProps.exclude ? this.joinConsumerPathIfNeeded(addProps.exclude) : [];
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
@@ -331,26 +325,16 @@ export default class AddComponents {
     const mainFile = determineMainFile(component, foundComponentFromBitMap);
     const getRootDir = (): PathLinuxRelative | undefined => {
       if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
-      if (this.allowRelativePaths) {
-        if (foundComponentFromBitMap) {
-          if (foundComponentFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-            throw new GeneralError('unable to use "--allow-relative-paths" with imported components');
-          }
-        }
-        return '.';
-      }
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
-      if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) return '';
-      // this is a new component created > v14.8.0
-      if (!trackDir) return '.'; // user didn't add a directory only
+      if (this.consumer.isLegacy) return '';
+      if (!trackDir) throw new Error(`addOrUpdateComponentInBitMap expect to have trackDir for non-legacy workspace`);
       const fileNotInsideTrackDir = componentFiles.find(
         file => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
       );
       if (fileNotInsideTrackDir) {
         // we check for this error before. however, it's possible that a user have one trackDir
         // and another dir for the tests.
-        if (!this.allowFiles) throw new AddingIndividualFiles(fileNotInsideTrackDir.relativePath);
-        return '.';
+        throw new AddingIndividualFiles(fileNotInsideTrackDir.relativePath);
       }
       return pathNormalizeToLinux(trackDir);
     };
@@ -645,10 +629,9 @@ you can add the directory these files are located at and it'll change the root d
             if (!this.exclude.length) {
               return relativeComponentPath;
             }
-            if (!this.allowFiles) {
+            if (!this.consumer.isLegacy) {
               throw new GeneralError(`unable to exclude files when tracking a directory, as Bit won't be able to auto-track changes in this directory.
-try to avoid excluding files and maybe put them in your .gitignore if it makes sense.
-to skip this error (not recommended) use "--allow-files" flag, this dir will not be auto-tracked anymore`);
+try to avoid excluding files and maybe put them in your .gitignore if it makes sense.`);
             }
           }
           return undefined;
@@ -775,7 +758,7 @@ to skip this error (not recommended) use "--allow-files" flag, this dir will not
         throw new NoFiles(diff);
       }
     }
-    if (!this.allowFiles) {
+    if (!this.consumer.isLegacy) {
       Object.keys(componentPathsStats).forEach(compPath => {
         if (!componentPathsStats[compPath].isDir) {
           throw new AddingIndividualFiles(compPath);

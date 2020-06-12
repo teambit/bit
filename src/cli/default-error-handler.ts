@@ -145,8 +145,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     AddingIndividualFiles,
-    err =>
-      `error: adding individual files is blocked ("${err.file}"), and only directories can be added. To force adding files use --allow-files flag`
+    err => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`
   ],
   [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
@@ -276,8 +275,7 @@ Original Error: ${err.message}`
   [
     IncorrectRootDir,
     err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
-please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.
-an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths`
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.`
   ],
   [
     ScopeJsonNotFound,

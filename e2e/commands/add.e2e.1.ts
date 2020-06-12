@@ -451,7 +451,7 @@ describe('bit add command', function() {
       helper.fs.createFile('bar', 'foo3.js');
       helper.fs.createFile('test', 'foo.spec.js');
       helper.fs.createFile('test', 'foo2.spec.js');
-      helper.command.addComponent('bar --allow-files', {
+      helper.command.addComponent('bar', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
         t: path.normalize('test/{FILE_NAME}.spec.js')
@@ -1285,9 +1285,9 @@ describe('bit add command', function() {
       expect(files[3].relativePath).to.equal('ddd.js');
     });
   });
-  describe('adding files when not using --allow-files flag', () => {
+  describe('adding files when workspace is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopeHarmony();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an error AddingIndividualFiles', () => {

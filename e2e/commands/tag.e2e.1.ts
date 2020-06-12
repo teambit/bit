@@ -947,7 +947,7 @@ describe('bit tag command', function() {
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.command.addComponentAllowFiles('utils/is-type.js');
       helper.command.addComponentAllowFiles('utils/is-string.js');
-      output = helper.general.runWithTryCatch('bit tag is-string --allow-relative-paths');
+      output = helper.general.runWithTryCatch('bit tag is-string');
     });
     it('should show a descriptive error message', () => {
       expect(output).to.have.string('this dependency was not included in the tag command');

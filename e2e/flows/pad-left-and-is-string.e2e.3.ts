@@ -512,7 +512,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       });
       it('should show a descriptive error when tagging the component', () => {
-        const error = helper.general.runWithTryCatch('bit tag -a -s 2.0.0 --allow-relative-paths');
+        const error = helper.general.runWithTryCatch('bit tag -a -s 2.0.0');
         expect(error).to.have.string(
           'to rebuild the "dist" directory for all components, please run "bit import --merge"'
         );

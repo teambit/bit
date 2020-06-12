@@ -29,8 +29,6 @@ export default class Add extends Command {
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
-    ['', 'allow-files', 'allow adding individual files to component (not recommended)'],
-    ['', 'allow-relative-paths', 'allow import statements between components with relative paths (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ] as CommandOptions;
   loader = true;
@@ -44,8 +42,6 @@ export default class Add extends Command {
       tests,
       namespace,
       exclude,
-      allowFiles = false,
-      allowRelativePaths = false,
       override = false
     }: {
       id: string | null | undefined;
@@ -53,8 +49,6 @@ export default class Add extends Command {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
-      allowFiles: boolean;
-      allowRelativePaths: boolean;
       override: boolean;
     }
   ): Promise<any> {
@@ -82,8 +76,6 @@ export default class Add extends Command {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
-      allowFiles,
-      allowRelativePaths,
       override
     });
   }

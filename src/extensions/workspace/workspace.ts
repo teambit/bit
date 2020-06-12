@@ -188,10 +188,7 @@ export default class Workspace implements ComponentHost {
     main?: string,
     override = false
   ): Promise<AddActionResults> {
-    const addComponent = new AddComponents(
-      { consumer: this.consumer },
-      { componentPaths, id, main, override, allowFiles: false, allowRelativePaths: false }
-    );
+    const addComponent = new AddComponents({ consumer: this.consumer }, { componentPaths, id, main, override });
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
