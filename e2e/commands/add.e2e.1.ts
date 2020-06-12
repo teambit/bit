@@ -100,7 +100,7 @@ describe('bit add command', function() {
       const error = new IncorrectIdForImportedComponent(
         `${helper.scopes.remote}/bar/foo`,
         'test/test',
-        'components/bar/foo/bar/foo.js'
+        'components/bar/foo/foo.js'
       );
       helper.general.expectToThrow(addCmd, error);
     });
@@ -115,13 +115,13 @@ describe('bit add command', function() {
         { i: 'bar/foo' },
         path.join(helper.scopes.localPath, 'components', 'bar', 'foo')
       );
-      const expectedFile = { relativePath: 'bar/foo.js', test: false, name: 'foo.js' };
+      const expectTestFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
       const component = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
       const files = component.files;
       expect(files).to.be.array();
-      expect(files).to.deep.include(expectedFile);
+      expect(files).to.deep.include(expectTestFile);
       expect(files, helper.bitMap.printFilesInCaseOfError(files)).to.be.ofSize(1);
     });
     it('Should only add new files to imported component', () => {
@@ -137,7 +137,7 @@ describe('bit add command', function() {
       const files = component.files;
       expect(files).to.be.array();
       expect(files, helper.bitMap.printFilesInCaseOfError(files)).to.be.ofSize(2);
-      expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
+      expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
       expect(files).to.deep.include({ relativePath: 'testDir/newFile.js', test: false, name: 'newFile.js' });
     });
     it('Should not add dist files to imported component when distTarget is not specified', () => {
@@ -177,7 +177,7 @@ describe('bit add command', function() {
     it('should not throw an error when specifying a mainFile with path relative to consumer', () => {
       const output = helper.command.addComponent('components/bar/foo', {
         i: 'bar/foo',
-        m: 'components/bar/foo/bar/foo.js'
+        m: 'components/bar/foo/foo.js'
       });
       expect(output).to.have.string('added');
     });
@@ -220,8 +220,8 @@ describe('bit add command', function() {
       helper.command.addComponent(' -t bar/foo.spec.js --id bar/foo');
       const bitMap = helper.bitMap.read();
       const files = bitMap['bar/foo'].files;
-      const expectImplFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
-      const expectTestFile = { relativePath: 'foo.spec.js', test: true, name: 'foo.spec.js' };
+      const expectImplFile = { relativePath: 'bar/foo.js', test: false, name: 'foo.js' };
+      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.include(expectTestFile);
       expect(files).to.deep.include(expectImplFile);
@@ -352,7 +352,7 @@ describe('bit add command', function() {
       helper.command.addComponent('bar', { t: 'bar/foo.spec.js', m: 'bar/foo.js' });
       helper.command.addComponent('bar', { o: true, m: 'bar/foo.js', i: 'bar' });
       const bitMap = helper.bitMap.read();
-      const specFile = bitMap.bar.files.find(f => f.relativePath === 'foo.spec.js');
+      const specFile = bitMap.bar.files.find(f => f.relativePath === 'bar/foo.spec.js');
       expect(specFile.test).to.be.false;
     });
     it('Should throw error when no index file is found', () => {
@@ -394,15 +394,15 @@ describe('bit add command', function() {
       const addFunc = () => helper.command.addComponent('bar/foo.js', { i: 'bar/fo.o' });
       helper.general.expectToThrow(addFunc, error);
     });
-    it('Define dynamic main file', () => {
+    it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');
       helper.fs.createFile('bar', 'bar.js');
       helper.fs.createFile('bar', 'foo1.js');
       helper.command.addComponent('bar', { m: mainFileOs, n: 'test' });
       const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('test/bar');
       const mainFile = bitMap['test/bar'].mainFile;
-      expect(mainFile).to.equal('bar.js');
+      expect(bitMap).to.have.property('test/bar');
+      expect(mainFile).to.equal('bar/bar.js');
     });
     it('Should add component with spec file from another dir according to dsl', () => {
       const dslOs = path.normalize('test/{FILE_NAME}.spec.js');
@@ -486,12 +486,12 @@ describe('bit add command', function() {
         t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/{FILE_NAME}.spec.js'
       });
       const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
       expect(files).to.be.ofSize(6);
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
     });
     it('Should add dir files with spec from multiple dsls when test files are placed in same structure but bit add is with glob', () => {
       helper.fs.createFile('bar', 'foo.js');
@@ -527,11 +527,11 @@ describe('bit add command', function() {
         t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/*.spec.js'
       });
       const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
       expect(files).to.be.ofSize(6);
       expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
+      expect(bitMap).to.have.property('bar/foo');
     });
     // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
     it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
@@ -819,12 +819,6 @@ describe('bit add command', function() {
       const bitMap = helper.bitMap.read();
       expect(bitMap).not.to.have.property('bar/foo1');
     });
-    it('when adding a dir and excluding a file, the rootDir should not be that dir', () => {
-      helper.fs.outputFile('src/index.js');
-      helper.fs.outputFile('src/foo.js');
-      const cmd = () => helper.command.addComponent('src', { e: 'src/foo.js' });
-      expect(cmd).to.throw('unable to exclude files when tracking a directory');
-    });
   });
   describe('with multiple index files', () => {
     before(() => {
@@ -837,7 +831,7 @@ describe('bit add command', function() {
     });
     it('should identify the closest index file as the main file', () => {
       const bitMap = helper.bitMap.read();
-      expect(bitMap['bar/foo'].mainFile).to.equal('index.js');
+      expect(bitMap['bar/foo'].mainFile).to.equal('bar/index.js');
     });
   });
   describe('adding files to an imported component', () => {
@@ -958,8 +952,8 @@ describe('bit add command', function() {
     it('Should contain inside bitmap only files that are not inside gitignore', () => {
       const bitMap = helper.bitMap.read();
       const expectedArray = [
-        { relativePath: 'boo.js', test: false, name: 'boo.js' },
-        { relativePath: 'index.js', test: false, name: 'index.js' }
+        { relativePath: 'bar/boo.js', test: false, name: 'boo.js' },
+        { relativePath: 'bar/index.js', test: false, name: 'index.js' }
       ];
       expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
@@ -1122,7 +1116,7 @@ describe('bit add command', function() {
       output = helper.command.addComponent('bar/foo-main2.js', { m: 'bar/foo-main2.js', i: 'bar/foo' });
     });
     it('should add the main file successfully', () => {
-      expect(output).to.have.string('added foo-main2.js');
+      expect(output).to.have.string('added bar/foo-main2.js');
     });
   });
   describe('directory is with upper case and test/main flags are written with lower case', () => {
@@ -1142,13 +1136,13 @@ describe('bit add command', function() {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar');
         const files = bitMap.bar.files.map(file => file.relativePath);
-        expect(files).to.include('foo.js');
-        expect(files).to.include('foo.spec.js');
-        expect(bitMap.bar.rootDir).to.equal('Bar');
+        expect(files).to.include('Bar/foo.js');
+        expect(files).to.include('Bar/foo.spec.js');
+        expect(files).not.to.include('bar/foo.js');
+        expect(files).not.to.include('bar/foo.js');
       }
     });
   });
-
   describe('adding a file outside the consumer dir', () => {
     let consumerDir;
     before(() => {
@@ -1236,7 +1230,7 @@ describe('bit add command', function() {
     it('should resolve the mainFile as the file with the same name as the directory', () => {
       const bitMap = helper.bitMap.read();
       const bar = bitMap.bar;
-      expect(bar.mainFile).to.equal('bar.js');
+      expect(bar.mainFile).to.equal('bar/bar.js');
     });
   });
   describe('sort .bitmap components', () => {
@@ -1290,6 +1284,11 @@ describe('bit add command', function() {
       const addFunc = () => helper.command.addComponent('bar/foo.js');
       const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
+    });
+    it('when excluding a file, should throw an error', () => {
+      helper.fs.outputFile('bar/foo1.js');
+      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
+      expect(cmd).to.throw('unable to exclude files when tracking a directory');
     });
   });
 });
