@@ -837,6 +837,19 @@ export default class Consumer {
   }
 
   /**
+   * legacy is a workspace uses the old bit.json or "bit" prop of package.json.
+   * new workspaces use workspace.jsonc file
+   */
+  get isLegacy(): boolean {
+    if (!('isLegacy' in this.config)) {
+      // this happens for example when running `bit import --compiler`. the environment dir has its
+      // own consumer and the config is not ILegacyWorkspaceConfig but WorkspaceConfig
+      return true;
+    }
+    return this.config.isLegacy;
+  }
+
+  /**
    * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    * @param {BitIds} removedDependencies - delete component that are used by other components.

@@ -209,7 +209,7 @@ export default class ComponentWriter {
   }
 
   private getArtifactsDir() {
-    if (!this.consumer) return null;
+    if (!this.consumer || this.consumer.isLegacy) return null;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
     return getNodeModulesPathOfComponent(
       this.consumer.config._bindingPrefix,
