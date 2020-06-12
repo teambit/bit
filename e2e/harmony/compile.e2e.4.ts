@@ -83,6 +83,25 @@ describe('compile extension', function() {
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
         });
+        it('should save the artifacts and package.json on node_modules', () => {
+          const artifactsPath = path.join(
+            helper.scopes.localPath,
+            'node_modules/@bit',
+            `${helper.scopes.remote}.comp1`
+          );
+          expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
+          expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
+        });
+        it('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
+          const nestedPath = path.join(
+            helper.scopes.localPath,
+            'components/.dependencies/comp2',
+            helper.scopes.remote,
+            '0.0.1'
+          );
+          expect(path.join(nestedPath, 'dist/index.js')).to.be.a.file();
+          expect(path.join(nestedPath, 'package.json')).to.be.a.file();
+        });
         describe('running compile on the imported component', () => {
           it('should generate dists also after deleting the dists from the workspace', () => {
             const distPath = path.join(
