@@ -92,7 +92,7 @@ describe('auto tagging functionality', function() {
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
-        helper.fs.createFile('components/utils/is-type/utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         tagOutput = helper.command.tagComponent('utils/is-type');
@@ -126,10 +126,7 @@ describe('auto tagging functionality', function() {
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
         helper.fs.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
-        helper.command.addComponent('utils/is-string.js', {
-          t: 'utils/is-string.spec.js',
-          i: 'utils/is-string'
-        });
+        helper.command.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
         helper.command.tagAllComponents(); // tests are passing at this point
         helper.command.exportAllComponents();
 
@@ -140,7 +137,7 @@ describe('auto tagging functionality', function() {
         helper.command.importComponent('utils/is-type');
 
         const isTypeFixtureChanged = "module.exports = function isType() { return 'got is-type!'; }"; // notice the addition of "!" which will break the the tests.
-        helper.fs.createFile(path.join('components', 'utils', 'is-type', 'utils'), 'is-type.js', isTypeFixtureChanged); // modify is-type
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureChanged); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
       });
@@ -294,7 +291,7 @@ describe('auto tagging functionality', function() {
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
-        helper.fs.createFile(path.join('components', 'utils', 'is-type', 'utils'), 'is-type.js', fixtures.isTypeV2); // modify is-type
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         tagOutput = helper.command.tagComponent('utils/is-type');

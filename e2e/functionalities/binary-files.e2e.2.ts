@@ -126,7 +126,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -229,7 +229,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -263,7 +263,7 @@ describe('binary files', function() {
           expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -279,7 +279,7 @@ describe('binary files', function() {
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const expectedDest = path.join(barFooDir, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -315,7 +315,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -350,7 +350,7 @@ describe('binary files', function() {
           expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -366,7 +366,7 @@ describe('binary files', function() {
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const expectedDest = path.join(barFooDir, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -376,7 +376,7 @@ describe('binary files', function() {
         });
         it('should create a symlink in dist dir pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const expectedDest = path.join(barFooDir, 'dist/src/bar/png_fixture.png');
+          const expectedDest = path.join(barFooDir, 'dist/bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -413,7 +413,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -448,7 +448,7 @@ describe('binary files', function() {
           expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -464,7 +464,7 @@ describe('binary files', function() {
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const expectedDest = path.join(barFooDir, 'src/bar/png_fixture.png');
+          const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -474,7 +474,7 @@ describe('binary files', function() {
         });
         it('should create a symlink in dist dir pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const expectedDest = path.join(barFooDir, 'dist/src/bar/png_fixture.png');
+          const expectedDest = path.join(barFooDir, 'dist/bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);

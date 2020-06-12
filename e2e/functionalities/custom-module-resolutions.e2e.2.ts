@@ -243,12 +243,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'utils/is-string.js',
+          destinationPath: 'src/utils/is-string.js',
           importSource: 'utils/is-string'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'utils/is-type.js',
+          destinationPath: 'src/utils/is-type.js',
           importSource: 'utils/is-type'
         });
       });
@@ -347,12 +347,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'utils/index.js',
+          destinationPath: 'src/utils/index.js',
           importSource: '@/utils'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'utils/is-type.js',
+          destinationPath: 'src/utils/is-type.js',
           importSource: '@/utils/is-type'
         });
       });
@@ -554,7 +554,7 @@ describe('custom module resolutions', function() {
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
-        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/src/assets/png_fixture.png'));
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
       });
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {
