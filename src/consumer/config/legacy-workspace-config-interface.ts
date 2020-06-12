@@ -38,6 +38,7 @@ export interface ILegacyWorkspaceConfig {
   _manageWorkspaces?: boolean;
   defaultOwner?: string;
   path: string;
+  isLegacy: boolean;
   extensions: { [extensionId: string]: any };
   _getEnvsByType: (type: EnvType) => Compilers | Testers | undefined;
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;

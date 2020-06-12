@@ -5,6 +5,7 @@ import {
   UNABLE_TO_LOAD_EXTENSION,
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST
 } from '../../src/extensions/utils/load-extensions/constants';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -15,8 +16,11 @@ chai.use(assertArrays);
 // Skipped until we implement the loading extensions from variants
 describe('load extensions', function() {
   this.timeout(0);
-  const helper = new Helper();
-
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

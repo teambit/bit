@@ -103,6 +103,11 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
+    if (this.consumer && this.consumer.config.isLegacy === false) {
+      this._populateImportedNonLegacyComponentsLinks(component);
+      await this._populateDependenciesAndMissingLinks(component);
+      return;
+    }
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
@@ -146,6 +151,27 @@ export default class NodeModuleLinker {
       return component.defaultScope;
     }
     return this.consumer ? this.consumer.config.defaultScope : null;
+  }
+
+  _populateImportedNonLegacyComponentsLinks(component: Component): void {
+    const componentId = component.id;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    filesToBind.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+      const dest = path.join(linkPath, file);
+
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+    });
+    this._createPackageJsonForAuthor(component);
   }
 
   /**
