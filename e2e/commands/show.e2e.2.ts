@@ -429,8 +429,8 @@ describe('bit show command', function() {
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
 
-        // files should NOT contain the originallySharedDir (because it was added as a directory)
-        expect(componentFromModel.mainFile).to.not.have.string('bar');
+        // files should contain the originallySharedDir
+        expect(componentFromModel.mainFile).to.have.string('bar');
       });
     });
     describe('when importing a component', () => {

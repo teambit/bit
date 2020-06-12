@@ -497,7 +497,7 @@ describe('bit status command', function() {
         helper.fs.deletePath('bar/foo1.js');
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
-        expect(output).to.have.string('foo2.js -> ./foo1.js');
+        expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
       });
       describe('when mainFile is deleted', () => {
         before(() => {
