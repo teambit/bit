@@ -168,7 +168,7 @@ describe('component that requires another component internal (not main) file', f
       helper.command.importComponent('utils/is-string');
     });
     it('should not try to generate the link to the non-exist internal file but to the main package', () => {
-      const linkFile = helper.fs.readFile('components/utils/is-string/src/utils/is-type-internal.js');
+      const linkFile = helper.fs.readFile('components/utils/is-string/is-type-internal.js');
       expect(linkFile).to.not.have.string('is-type-internal');
       expect(linkFile).to.not.have.string('dist');
     });

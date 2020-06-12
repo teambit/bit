@@ -71,7 +71,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from '${helper.general.getRequireBitPath('utils', 'is-string')}';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.fs.createFile('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
+        helper.fs.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.build();
       });
@@ -393,7 +393,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from 'utils/is-string';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.fs.createFile('components/bar/foo/src/bar', 'foo.js', fooBarFixtureV2); // update component
+        helper.fs.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.build();
       });
