@@ -1,6 +1,7 @@
 // import { Component } from '../component';
 
 export class Compositions {
+  static id = '@teambit/compositions';
   static dependencies = [];
 
   // parse(component: Component) {

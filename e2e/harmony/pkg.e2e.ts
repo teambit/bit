@@ -30,7 +30,7 @@ describe('pkg extension', function() {
           'some-key': 'some-val'
         }
       };
-      helper.extensions.addExtensionToVariant('bar/foo', 'PkgExtension', pkgConfig);
+      helper.extensions.addExtensionToVariant('bar/foo', '@teambit/pkg', pkgConfig);
       barFooCapsuleDir = helper.general.generateRandomTmpDirName();
       isTypeCapsuleDir = helper.general.generateRandomTmpDirName();
       helper.command.isolateComponentWithCapsule('bar/foo', barFooCapsuleDir);
