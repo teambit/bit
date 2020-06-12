@@ -90,7 +90,7 @@ export function execAction(command, concrete, args): Promise<any> {
         // this is a hack in the legacy code to make paper work
         // it should be removed upon major refactoring process
         // eslint-disable-next-line no-nested-ternary
-        const commandMain = flags.json ? 'json' : process.stdout.isTTY ? 'report' : 'render';
+        const commandMain = flags.json ? 'json' : process.stdout.isTTY && command.report ? 'report' : 'render';
         command.packageManagerArgs = packageManagerArgs;
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })
