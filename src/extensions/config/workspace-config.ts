@@ -424,6 +424,7 @@ export class WorkspaceConfig implements HostConfig {
       // @ts-ignore
       path: this.path,
       _getEnvsByType,
+      isLegacy: this.isLegacy,
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.getVariantsConfig(),
