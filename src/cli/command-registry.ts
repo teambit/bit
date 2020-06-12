@@ -87,7 +87,10 @@ export function execAction(command, concrete, args): Promise<any> {
     migrateWrapper(command.migration)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
-        const commandMain = flags.json ? 'json' : 'render';
+        // this is a hack in the legacy code to make paper work
+        // it should be removed upon major refactoring process
+        // eslint-disable-next-line no-nested-ternary
+        const commandMain = flags.json ? 'json' : process.stdout.isTTY ? 'report' : 'render';
         command.packageManagerArgs = packageManagerArgs;
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })

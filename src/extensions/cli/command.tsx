@@ -67,6 +67,14 @@ export interface Command {
   render: (args: CLIArgs, flags: Flags) => Promise<React.ReactElement>;
 
   /**
+   * Command handler which is called when process.isTTY is true
+   * @param args  - arguments object as defined in name.
+   * @param flags - command flags as described in options.
+   * @return - JSX element which is rendered with ink
+   */
+  report?: (args: CLIArgs, flags: Flags) => Promise<string>;
+
+  /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j' option is provided by user.
    * @param args  - arguments object as defined in name.
