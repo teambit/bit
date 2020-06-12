@@ -145,10 +145,11 @@ export default class ComponentWriter {
       this.writePackageJson &&
       (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
     ) {
+      const artifactsDir = this.getArtifactsDir();
       const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.bitMap,
         this.component,
-        this.writeToPath,
+        artifactsDir || this.writeToPath,
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
@@ -198,23 +199,24 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  populateArtifacts() {
+  private populateArtifacts() {
     const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
-    const getArtifactsDir = () => {
-      if (!this.consumer) return null;
-      if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
-      return getNodeModulesPathOfComponent(
-        this.consumer.config._bindingPrefix,
-        this.component.id,
-        true,
-        this.component.defaultScope
-      );
-    };
-    const artifactsDir = getArtifactsDir();
+    const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
       artifactsVinyl.forEach(a => a.updatePaths({ newBase: artifactsDir }));
     }
     this.component.dataToPersist.addManyFiles(artifactsVinyl);
+  }
+
+  private getArtifactsDir() {
+    if (!this.consumer || this.consumer.isLegacy) return null;
+    if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
+    return getNodeModulesPathOfComponent(
+      this.consumer.config._bindingPrefix,
+      this.component.id,
+      true,
+      this.component.defaultScope
+    );
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
