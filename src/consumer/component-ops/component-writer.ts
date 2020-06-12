@@ -200,16 +200,19 @@ export default class ComponentWriter {
    */
   populateArtifacts() {
     const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
-    const relativeLinkPath = this.consumer
-      ? getNodeModulesPathOfComponent(
-          this.consumer.config._bindingPrefix,
-          this.component.id,
-          true,
-          this.component.defaultScope
-        )
-      : null;
-    if (relativeLinkPath) {
-      artifactsVinyl.forEach(a => a.updatePaths({ newBase: relativeLinkPath }));
+    const getArtifactsDir = () => {
+      if (!this.consumer) return null;
+      if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
+      return getNodeModulesPathOfComponent(
+        this.consumer.config._bindingPrefix,
+        this.component.id,
+        true,
+        this.component.defaultScope
+      );
+    };
+    const artifactsDir = getArtifactsDir();
+    if (artifactsDir) {
+      artifactsVinyl.forEach(a => a.updatePaths({ newBase: artifactsDir }));
     }
     this.component.dataToPersist.addManyFiles(artifactsVinyl);
   }
