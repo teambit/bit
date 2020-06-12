@@ -42,19 +42,19 @@ chai.use(require('chai-fs'));
         helper.scopeHelper.reInitLocalScope();
         helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
         helper.fs.createFile('utils', 'is-type-es6.js', fixtures.isTypeES6);
-        helper.command.addComponentAllowFiles('utils/is-type-es6.js', { i: 'utils/is-type-es6' });
+        helper.command.addComponent('utils/is-type-es6.js', { i: 'utils/is-type-es6' });
         helper.fs.createFile(
           'utils',
           'is-string-es6.js',
           "import isType from './is-type-es6.js'; export default function isString() { return isType() +  ' and got is-string'; };"
         );
-        helper.command.addComponentAllowFiles('utils/is-string-es6.js', { i: 'utils/is-string-es6' });
+        helper.command.addComponent('utils/is-string-es6.js', { i: 'utils/is-string-es6' });
         helper.fs.createFile(
           'bar',
           'foo-es6.js',
           "import isString from '../utils/is-string-es6.js'; export default function foo() { return isString() + ' and got foo'; };"
         );
-        helper.command.addComponentAllowFiles('bar/foo-es6.js', { i: 'bar/foo-es6' });
+        helper.command.addComponent('bar/foo-es6.js', { i: 'bar/foo-es6' });
 
         helper.command.tagAllComponents();
         helper.command.exportAllComponents(scopeId);

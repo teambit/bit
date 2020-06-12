@@ -24,7 +24,7 @@ describe('dynamic namespaces', function() {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('bar', 'foo.js');
-        const addOutput = helper.command.addComponentAllowFiles('bar/foo.js', { i: componentName });
+        const addOutput = helper.command.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
         tagOutput = helper.command.tagAllComponents();
         catComp = helper.command.catComponent(componentName);
@@ -75,14 +75,14 @@ describe('dynamic namespaces', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'foo.js');
-      helper.command.addComponentAllowFiles('foo.js', { i: 'foo' });
+      helper.command.addComponent('foo.js', { i: 'foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
+      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
     });
     it('should throw an error and not allow the import', () => {
       const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);

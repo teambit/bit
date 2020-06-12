@@ -61,8 +61,8 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponentLegacy('bar', { m: 'png_fixture.png', i: 'bar/foo' });
-      helper.command.tagAllComponentsLegacy();
+      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
     it('should export it with no errors', () => {
@@ -117,7 +117,7 @@ describe('binary files', function() {
       helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
-      helper.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -152,10 +152,10 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.addComponentAllowFiles('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
-      helper.command.addComponentAllowFiles('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -217,10 +217,10 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.addComponentAllowFiles('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
-      helper.command.addComponentAllowFiles('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -302,10 +302,10 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.addComponentAllowFiles('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
-      helper.command.addComponentAllowFiles('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.env.importDummyCompiler();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -400,10 +400,10 @@ describe('binary files', function() {
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.fs.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
-      helper.command.addComponentAllowFiles('src/bar', { m: 'index.js', i: 'bar/png' });
+      helper.command.addComponent('src/bar', { m: 'index.js', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
-      helper.command.addComponentAllowFiles('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
       helper.env.importDummyCompiler();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

@@ -160,7 +160,7 @@ describe('bit eject command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
+          helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
           ejectOutput = helper.command.ejectComponentsParsed('bar/foo bar/foo2');
         });
@@ -174,7 +174,7 @@ describe('bit eject command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
+          helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
           helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();

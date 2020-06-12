@@ -24,7 +24,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooLegacy();
-      helper.command.tagAllComponentsLegacy();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       const authorScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
@@ -34,7 +34,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
       expect(fs.existsSync(path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'foo.js'))).to.be.true;
       helper.fs.createFile(path.join('components', 'bar', 'foo'), 'foo.js', barFooV2); // update component
-      helper.command.tagAllComponentsLegacy();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       const importedScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.getClonedLocalScope(authorScope);
@@ -44,8 +44,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       expect(fs.existsSync(authorLocation)).to.be.true;
       expect(fs.readFileSync(authorLocation).toString()).to.equal(barFooV2);
       helper.fs.createFile('', 'foo2.js');
-      helper.command.addComponentLegacy('foo2.js', { i: 'bar/foo' });
-      helper.command.tagAllComponentsLegacy();
+      helper.command.addComponent('foo2.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.getClonedLocalScope(importedScope);
       // Imported user update the component with the recent changes done by Authored user
@@ -85,7 +85,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js');
-        helper.command.addComponentLegacy('src', { i: 'foo' });
+        helper.command.addComponent('src', { i: 'foo' });
         output = helper.command.tagAllComponentsNew();
       });
       it('should tag successfully without errors', () => {
@@ -105,8 +105,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo/foo.js', 'require("../bar/bar");');
         helper.fs.outputFile('src/bar/bar.js');
-        helper.command.addComponentLegacy('src/foo', { i: 'foo' });
-        helper.command.addComponentLegacy('src/bar', { i: 'bar' });
+        helper.command.addComponent('src/foo', { i: 'foo' });
+        helper.command.addComponent('src/bar', { i: 'bar' });
       });
       it('should throw an error when --allow-relative-paths was not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
@@ -134,7 +134,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.js');
-        helper.command.addComponentLegacy('foo.js');
+        helper.command.addComponent('foo.js');
       });
       it('should throw an error when --allow-files was not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
@@ -163,8 +163,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js', 'require("./bar");');
         helper.fs.outputFile('src/bar.js');
-        helper.command.addComponentLegacy('src/foo.js', { i: 'foo' });
-        helper.command.addComponentLegacy('src/bar.js', { i: 'bar' });
+        helper.command.addComponent('src/foo.js', { i: 'foo' });
+        helper.command.addComponent('src/bar.js', { i: 'bar' });
       });
       it('should throw an error when --allow-relative-paths and --allow-files were not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
@@ -216,11 +216,11 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
           }
         });
         helper.fs.createFile('utils', 'is-type.ts', fixtures.isTypeTS);
-        helper.command.addComponentLegacy('utils/is-type.ts', { i: 'utils/is-type' });
+        helper.command.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
         helper.fs.createFile('utils', 'is-string.ts', fixtures.isStringTS);
-        helper.command.addComponentLegacy('utils/is-string.ts', { i: 'utils/is-string' });
+        helper.command.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
         helper.fs.createFile('bar', 'foo.ts', fixtures.barFooTS);
-        helper.command.addComponentLegacy('bar/foo.ts', { i: 'bar/foo' });
+        helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
         helper.command.build();
         helper.fs.outputFile('app.js', "const barFoo = require('./dist/bar/foo'); console.log(barFoo.default());");
       });
@@ -237,7 +237,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       let importedScope;
       describe('as imported legacy', () => {
         before(() => {
-          helper.command.tagAllComponentsLegacy();
+          helper.command.tagAllComponents();
           helper.command.exportAllComponents();
           authorLegacyScope = helper.scopeHelper.cloneLocalScope();
           helper.scopeHelper.reInitLocalScope();

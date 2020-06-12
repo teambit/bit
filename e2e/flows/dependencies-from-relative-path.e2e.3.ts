@@ -18,11 +18,11 @@ describe('component that requires another component file by relative path', func
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('import-relative-path');
-      helper.command.addComponentAllowFiles('import-by-2-files/a1.js import-by-2-files/a2.js', {
+      helper.command.addComponent('import-by-2-files/a1.js import-by-2-files/a2.js', {
         i: 'comp-a',
         m: 'import-by-2-files/a1.js'
       });
-      helper.command.addComponentAllowFiles('import-by-2-files/b.js', { i: 'comp-b' });
+      helper.command.addComponent('import-by-2-files/b.js', { i: 'comp-b' });
       output = helper.command.showComponentParsed('comp-a');
       const specifiers = output.dependencies[0].relativePaths[0].importSpecifiers;
       specifiersNames = specifiers.map(specifier => specifier.mainFile.name);
@@ -35,7 +35,7 @@ describe('component that requires another component file by relative path', func
     });
     describe('adding another file that require that another component without any import specifiers', () => {
       before(() => {
-        helper.command.addComponentAllowFiles('import-by-2-files/a3.js', { i: 'comp-a' });
+        helper.command.addComponent('import-by-2-files/a3.js', { i: 'comp-a' });
       });
       describe('when the file without importSpecifier is the last file', () => {
         it('bit status should not throw an error', () => {

@@ -93,7 +93,7 @@ describe('bit list command', function() {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('bar', 'baz.js');
-        helper.command.addComponentAllowFiles('bar/baz.js', { i: 'bar/baz' });
+        helper.command.addComponent('bar/baz.js', { i: 'bar/baz' });
         helper.command.tagComponent('bar/baz');
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
@@ -111,7 +111,7 @@ describe('bit list command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('bar', 'local');
-        helper.command.addComponentAllowFiles('bar/local', { i: 'bar/local' });
+        helper.command.addComponent('bar/local', { i: 'bar/local' });
         helper.command.tagComponent('bar/local');
         output = helper.command.listLocalScopeParsed('-o');
       });

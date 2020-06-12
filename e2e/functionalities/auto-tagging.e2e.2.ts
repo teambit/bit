@@ -126,7 +126,7 @@ describe('auto tagging functionality', function() {
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
         helper.fs.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
-        helper.command.addComponentAllowFiles('utils/is-string.js', {
+        helper.command.addComponent('utils/is-string.js', {
           t: 'utils/is-string.spec.js',
           i: 'utils/is-string'
         });
@@ -326,8 +326,8 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'c.js', 'require("./d")');
       helper.fs.createFile('bar', 'd.js', 'require("./e")');
       helper.fs.createFile('bar', 'e.js', 'console.log("I am E v1")');
-      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
-      helper.command.tagAllComponentsLegacy();
+      helper.command.addComponent('bar/*.js', { n: 'bar' });
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
@@ -406,8 +406,8 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
-      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
-      helper.command.tagAllComponentsLegacy();
+      helper.command.addComponent('bar/*.js', { n: 'bar' });
+      helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
@@ -419,7 +419,7 @@ describe('auto tagging functionality', function() {
     describe('tagging the components with auto-version-bump', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.command.tagAllComponentsLegacy();
+        tagOutput = helper.command.tagAllComponents();
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -470,7 +470,7 @@ describe('auto tagging functionality', function() {
       let tagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-        tagOutput = helper.command.tagAllComponentsLegacy(undefined, '2.0.0');
+        tagOutput = helper.command.tagAllComponents(undefined, '2.0.0');
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -533,7 +533,7 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'a.js', 'require("./b"); require("./c");');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'console.log("I am C v1")');
-      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
+      helper.command.addComponent('bar/*.js', { n: 'bar' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 

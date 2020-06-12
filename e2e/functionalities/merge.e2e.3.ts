@@ -21,7 +21,7 @@ describe('merge functionality', function() {
       helper.fixtures.tagComponentBarFoo();
 
       helper.fs.createFile('bar2', 'foo2.js');
-      helper.command.addComponentAllowFiles('bar2/foo2.js', { i: 'bar2/foo2' });
+      helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.command.tagComponent('bar2/foo2');
 
       helper.command.exportAllComponents();

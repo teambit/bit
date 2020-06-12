@@ -102,17 +102,6 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return parse ? JSON.parse(result) : result;
   }
-  /**
-   * add component as legacy-mode.
-   * rootDir is not set for authored. same as it was on versions < 14.8.0.
-   * useful for tests that involve originallySharedDir logic. that's the only way to test them.
-   */
-  addComponentLegacy(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    return this.addComponent(filePaths, options, cwd);
-  }
-  addComponentAllowFiles(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    return this.addComponent(filePaths, options, cwd);
-  }
   addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
       typeof options === 'string'
@@ -146,14 +135,8 @@ export default class CommandHelper {
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
-  tagComponentLegacy(id: string, tagMsg = 'tag-message', options = '') {
-    return this.tagComponent(id, tagMsg, options);
-  }
   tagWithoutMessage(id: string, version = '', options = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options}`);
-  }
-  tagAllComponentsLegacy(options = '', version = '', assertTagged = true) {
-    return this.tagAllComponents(options, version, assertTagged);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options}`);
@@ -172,9 +155,6 @@ export default class CommandHelper {
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
-  }
-  tagScopeLegacy(version: string, message = 'tag-message', options = '') {
-    return this.tagScope(version, message, options);
   }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
