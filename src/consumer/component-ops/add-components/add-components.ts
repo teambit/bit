@@ -368,7 +368,7 @@ export default class AddComponents {
     component: AddedComponent
   ) {
     const existingRootDir = foundComponentFromBitMap.rootDir;
-    if (!existingRootDir || existingRootDir === '.') return; // nothing to do.
+    if (!existingRootDir) return; // nothing to do.
     const areFilesInsideExistingRootDir = componentFiles.every(file =>
       pathNormalizeToLinux(file.relativePath).startsWith(`${existingRootDir}/`)
     );
@@ -714,7 +714,8 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
       pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) ignoreList.push(PACKAGE_JSON);
+    // the ability to track package.json is deprecated since Harmony
+    if (!this.consumer.isLegacy) ignoreList.push(PACKAGE_JSON);
     return ignoreList;
   }
 
