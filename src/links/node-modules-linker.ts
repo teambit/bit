@@ -103,7 +103,7 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
-    if (this.consumer && !this.consumer.config.isLegacy) {
+    if (this.consumer && this.consumer.config.isLegacy === false) {
       this._populateAuthoredComponentsLinks(component);
       return;
     }
