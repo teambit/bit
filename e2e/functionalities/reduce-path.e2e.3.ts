@@ -23,7 +23,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       // Author creates a component in bar/foo.js
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       const authorScope = helper.scopeHelper.cloneLocalScope();

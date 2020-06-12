@@ -622,7 +622,7 @@ describe('bit checkout command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.tagScope('0.0.5');
       helper.command.exportAllComponents();

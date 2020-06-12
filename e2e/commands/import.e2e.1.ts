@@ -566,7 +566,7 @@ describe('bit import', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportComponent('bar/foo');
       const bitMap = helper.bitMap.read();
@@ -838,11 +838,11 @@ describe('bit import', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1034,7 +1034,7 @@ describe('bit import', function() {
       helper.command.addComponent('style/style.css', { i: 'style/style' });
       const fooBarFixture = "const style = require('../style/style.css');";
       helper.fs.createFile('bar', 'foo.js', fooBarFixture);
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1115,11 +1115,11 @@ describe('bit import', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooES6);
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1281,9 +1281,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
@@ -1312,7 +1312,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -1338,7 +1338,7 @@ console.log(barFoo.default());`;
 
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV1);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
       helper.command.tagComponent('utils/is-type');
@@ -1381,7 +1381,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isStringWithNoDepsFixture = "module.exports = function isString() { return 'got is-string'; };";
       helper.fs.createFile('utils', 'is-string.js', isStringWithNoDepsFixture);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1389,7 +1389,7 @@ console.log(barFoo.default());`;
       helper.command.importComponent('utils/is-string');
 
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       const isStringWithDepsFixture =
         "const isType = require('../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('components/utils/is-string', 'is-string.js', isStringWithDepsFixture); // modify utils/is-string
@@ -1416,7 +1416,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1425,7 +1425,7 @@ console.log(barFoo.default());`;
       const isStringWithDepsFixture =
         "const isType = require('../components/utils/is-type/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('utils', 'is-string.js', isStringWithDepsFixture);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       try {
         output = helper.command.tagAllComponents();
       } catch (err) {
@@ -1442,9 +1442,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -1485,9 +1485,9 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV1);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // update component
@@ -1521,9 +1521,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       scopeAfterExport = helper.scopeHelper.cloneLocalScope();
@@ -1660,9 +1660,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       // export to scope A
       helper.command.exportAllComponents();
@@ -1702,9 +1702,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       const authorScope = helper.scopes.local;
@@ -1743,7 +1743,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -2050,7 +2050,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -2123,8 +2123,8 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
-      helper.fixtures.addComponentUtilsIsStringLegacy();
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       const exportOutput = helper.command.exportAllComponents();
 
@@ -2148,7 +2148,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -2226,9 +2226,9 @@ console.log(barFoo.default());`;
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('utils', 'is-string.js');
       helper.fs.createFile('utils', 'is-type.js');
-      helper.fixtures.addComponentBarFooLegacy();
-      helper.fixtures.addComponentUtilsIsStringLegacy();
-      helper.fixtures.addComponentUtilsIsTypeLegacy();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
