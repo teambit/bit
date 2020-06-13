@@ -48,7 +48,6 @@ import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
-import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
