@@ -10,6 +10,7 @@ import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
+import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -36,6 +37,7 @@ export default class Init extends Command {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
+    ['', 'harmony', 'EXPERIMENTAL. create a new workspace using the experimental Harmony version'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
   ] as CommandOptions;
 
@@ -56,8 +58,10 @@ export default class Init extends Command {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       tester,
       defaultDirectory,
+      harmony,
       packageManager
     } = flags;
+    if (harmony) addFeature(HARMONY_FEATURE);
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
