@@ -113,7 +113,7 @@ describe('typescript', function() {
           expect(packageJsonContent).to.deep.include({
             name: `@bit/${helper.scopes.remote}.utils.is-string`,
             version: '0.0.1',
-            main: 'dist/utils/is-string.js'
+            main: 'dist/is-string.js'
           });
         });
         it('should point the main file key in the is-type dependency package.json to the dist main file', () => {
@@ -122,20 +122,20 @@ describe('typescript', function() {
           expect(packageJsonContent).to.deep.include({
             name: `@bit/${helper.scopes.remote}.utils.is-type`,
             version: '0.0.1',
-            main: 'dist/utils/is-type.js'
+            main: 'dist/is-type.js'
           });
         });
         it('should save the direct dependency nested to the main component', () => {
-          const expectedLocation = path.join(isStringPath, 'utils/is-string.ts');
+          const expectedLocation = path.join(isStringPath, 'is-string.ts');
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
-          const expectedLocation = path.join(isTypePath, 'utils/is-type.ts');
+          const expectedLocation = path.join(isTypePath, 'is-type.ts');
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should add dependencies dists files to file system', () => {
-          const expectedIsTypeDistLocation = path.join(isTypePath, 'dist', 'utils/is-type.js');
-          const expectedIsStringDistLocation = path.join(isStringPath, 'dist', 'utils/is-string.js');
+          const expectedIsTypeDistLocation = path.join(isTypePath, 'dist', 'is-type.js');
+          const expectedIsStringDistLocation = path.join(isStringPath, 'dist', 'is-string.js');
           expect(localConsumerFiles).to.include(expectedIsTypeDistLocation);
           expect(localConsumerFiles).to.include(expectedIsStringDistLocation);
         });
@@ -148,11 +148,11 @@ describe('typescript', function() {
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should link the indirect dependency from dependent component source folder to its source file in the dependency directory', () => {
-          const expectedLocation = path.join(isStringPath, 'utils/is-type.ts');
+          const expectedLocation = path.join(isStringPath, 'is-type.ts');
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
-          const expectedLocation = path.join(isStringPath, 'dist', 'utils/is-type.js');
+          const expectedLocation = path.join(isStringPath, 'dist', 'is-type.js');
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
