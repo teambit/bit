@@ -4,7 +4,8 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
-import { AUTO_GENERATED_STAMP, COMPILER_ENV_TYPE } from '../../src/constants';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -13,6 +14,7 @@ describe('capsule', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -179,12 +181,14 @@ describe('capsule', function() {
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('using the new compiler API', () => {
+    // Skip for now, until talking with @david about it, the add files to envs are deleted so this test
+    // need to be changed or deleted.
+    describe.skip('using the new compiler API', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
         const babelrcFixture = path.join('compilers', 'new-babel', '.babelrc');
         helper.fixtures.copyFixtureFile(babelrcFixture);
-        helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
+        // helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
         helper.env.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
         const output = helper.command.build();
         expect(output).to.have.string('using the new compiler API');
@@ -340,7 +344,7 @@ describe('capsule', function() {
           helper.command.addComponent('circle/comp-b.js');
           helper.command.addComponent('circle/comp-c.js');
           helper.command.addComponent('circle/comp-d.js'); // comp-d has no deps, so is not part of the circle
-          buildOutput = helper.general.runWithTryCatch('bit build comp-a');
+          buildOutput = helper.general.runWithTryCatch('bit build comp-a', undefined, LEGACY_SHARED_DIR_FEATURE);
         });
         it('should throw an error saying there is cyclic dependencies', () => {
           expect(buildOutput).to.have.string('cyclic dependencies');
