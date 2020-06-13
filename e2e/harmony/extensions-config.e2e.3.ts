@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('harmony extension config', function() {
+describe('harmony extension config', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
