@@ -1277,7 +1277,7 @@ describe('bit add command', function() {
   });
   describe('adding files when workspace is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopeHarmony();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an error AddingIndividualFiles', () => {

@@ -15,12 +15,10 @@ describe('relative paths flow (components requiring each other by relative paths
     helper.scopeHelper.destroy();
   });
   describe('adding directories and using relative-paths', () => {
-    let beforeFix;
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       appOutput = helper.fixtures.populateComponents(2);
-      beforeFix = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
@@ -83,63 +81,6 @@ describe('relative paths flow (components requiring each other by relative paths
             );
             const result = helper.command.runCmd('node app.js');
             expect(result).to.have.string(appOutput);
-          });
-        });
-      });
-    });
-    describe('staying with the relative paths', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeFix);
-        helper.scopeHelper.reInitRemoteScope();
-        helper.command.addComponent('comp1', '--id comp1');
-      });
-      it('bitmap record should be reverted to be relative to the workspace', () => {
-        const bitMap = helper.bitMap.read();
-        const componentMap = bitMap.comp1;
-        expect(componentMap.rootDir).to.equal('.');
-        expect(componentMap.mainFile).to.equal('comp1/index.js');
-      });
-      it('bit status should not show it as invalid but as missing-deps', () => {
-        const status = helper.command.statusJson();
-        expect(status.invalidComponents).to.have.lengthOf(0);
-        expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
-      });
-      it('bit tag should be blocked by default', () => {
-        const cmd = () => helper.command.tagAllComponentsNew();
-        expect(cmd).to.throw('error: issues found');
-      });
-      describe('bit tag with --allow-relative-paths', () => {
-        let tagOutput;
-        before(() => {
-          tagOutput = helper.command.tagAllComponents();
-        });
-        it('should tag successfully', () => {
-          expect(tagOutput).to.have.string('2 component(s) tagged');
-        });
-        it('app should work after the tag', () => {
-          const result = helper.command.runCmd('node app.js');
-          expect(result).to.have.string(appOutput);
-        });
-        describe('should work after importing to another workspace', () => {
-          before(() => {
-            helper.command.exportAllComponents();
-            helper.scopeHelper.reInitLocalScope();
-            helper.scopeHelper.addRemoteScope();
-            helper.command.importComponent('comp1');
-          });
-          it('app should work', () => {
-            helper.fs.outputFile(
-              'app.js',
-              `const comp1 = require('@bit/${helper.scopes.remote}.comp1');\nconsole.log(comp1())`
-            );
-            const result = helper.command.runCmd('node app.js');
-            expect(result).to.have.string(appOutput);
-          });
-          it('should write the component files with full paths include the shared-dir', () => {
-            expect(path.join(helper.scopes.localPath, 'components/comp1/comp1/index.js')).to.be.a.file();
-          });
-          it('should write link files', () => {
-            expect(path.join(helper.scopes.localPath, 'components/comp1/comp2/index.js')).to.be.a.file();
           });
         });
       });

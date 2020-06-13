@@ -97,7 +97,7 @@ export default class ScopeHelper {
     this.reInitRemoteScope();
     this.addRemoteScope();
   }
-  setNewLocalAndRemoteScopeHarmony() {
+  setNewLocalAndRemoteScopesHarmony() {
     this.reInitLocalScopeHarmony();
     this.reInitRemoteScope();
     this.addRemoteScope();
