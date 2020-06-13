@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('harmony extension config', function() {
+describe.only('harmony extension config', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -27,7 +27,7 @@ describe('harmony extension config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.extensions.addExtensionToVariant('*', '@teambit/scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
@@ -53,7 +53,7 @@ describe('harmony extension config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
         helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
