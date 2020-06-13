@@ -27,7 +27,7 @@ try {
       const cli = harmony.get('CLIExtension');
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
       // eslint-disable-next-line no-console
-      return cli ? cli.run() : console.log('WTF! :)');
+      return cli?.run();
     })
     .catch(err => {
       const originalError = err.originalError || err;
