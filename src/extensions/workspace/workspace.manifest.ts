@@ -7,10 +7,19 @@ import { LoggerExt } from '../logger';
 import { DependencyResolverExt } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
+import { GraphQLExtension } from '../graphql';
 
 export default {
   name: EXT_NAME,
-  dependencies: [ScopeExtension, ComponentFactoryExt, IsolatorExt, DependencyResolverExt, VariantsExt, LoggerExt],
+  dependencies: [
+    ScopeExtension,
+    ComponentFactoryExt,
+    IsolatorExt,
+    DependencyResolverExt,
+    VariantsExt,
+    LoggerExt,
+    GraphQLExtension
+  ],
   provider: workspaceProvider,
   defineRuntime: 'browser'
 } as ExtensionManifest;

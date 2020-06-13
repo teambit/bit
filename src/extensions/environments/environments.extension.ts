@@ -1,11 +1,9 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { StartCmd } from './start.cmd';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
-import { CLIExtension } from '../cli';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -18,7 +16,7 @@ export type EnvOptions = {};
 
 export class Environments {
   static id = '@teambit/envs';
-  static dependencies = [CLIExtension, WorkspaceExt];
+  static dependencies = [WorkspaceExt];
 
   constructor(
     /**
@@ -106,9 +104,8 @@ export class Environments {
 
   static defaultConfig = {};
 
-  static async provider([cli, workspace]: [CLIExtension, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+  static async provider([workspace]: [Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
     const envs = new Environments(config, workspace, envSlot);
-    cli.register(new StartCmd(envs, workspace));
     return envs;
   }
 }
