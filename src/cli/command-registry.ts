@@ -121,7 +121,7 @@ export function execAction(command, concrete, args): Promise<any> {
         const errorHandled = defaultHandleError(err) || command.handleError(err);
         if (command.private) return serializeErrAndExit(err, command.name);
         // uncomment this to see the entire error object on the console
-        // console.log(err);
+        console.log(err);
         if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
         return logErrAndExit(err, command.name);
       })
