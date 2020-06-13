@@ -62,7 +62,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   describe('with new functionality (save added path as rootDir, no reduce on import)', () => {
     describe('when rootDir is not the same as the sharedDir', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.fs.outputFile('src/bar/foo.js');
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();
@@ -295,7 +295,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
             expect(path.join(capsuleDir, 'utils/is-string.ts')).not.to.be.a.path();
           });
           let authorWithModulePaths;
-          describe('tagging the components, which convert them to the new system', () => {
+          describe('tagging the components', () => {
             before(() => {
               helper.command.tagAllComponents();
               helper.command.exportAllComponents();
@@ -304,14 +304,6 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
             it('should still work', () => {
               const output = helper.command.runCmd('node app.js');
               expect(output).to.have.string('got is-type and got is-string and got foo');
-            });
-            it('the capsule should write the files with the shared dir', () => {
-              // because they were transferred to the new system, their rootDir was replaced to "."
-              // and they were saved into the model with ignoreSharedDir
-              const capsuleDir = helper.general.generateRandomTmpDirName();
-              helper.command.isolateComponentWithCapsule('utils/is-string', capsuleDir);
-              expect(path.join(capsuleDir, 'utils/is-string.ts')).to.be.a.file();
-              expect(path.join(capsuleDir, 'is-string.ts')).not.to.be.a.path();
             });
             describe('importing the component ', () => {
               let importedWithRelative;
@@ -327,14 +319,6 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
                 );
                 const output = helper.command.runCmd('node app.js');
                 expect(output).to.have.string('got is-type and got is-string and got foo');
-              });
-              it('should write the files with the shared-dir', () => {
-                const expectedFile = path.join(
-                  helper.scopes.localPath,
-                  'components/utils/is-string/utils/is-string.ts'
-                );
-                // the sharedDir "utils" had not been removed
-                expect(expectedFile).to.be.a.file();
               });
               describe('as author, move individual component files to dedicated directory with bit move --component', () => {
                 before(() => {
