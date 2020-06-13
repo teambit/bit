@@ -79,8 +79,10 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
     });
   });
+  // most are skipped because we ended up not supporting this move from the old functionality to the new one
+  // we might support it in the future in a different way, so I'm leaving it them as skipped
   describe('moving from old-functionality to the new one', () => {
-    describe('when there is trackDir and not relative paths', () => {
+    describe.skip('when there is trackDir and not relative paths', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -100,7 +102,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         expect(componentMap.files[0].relativePath).to.equal('foo.js');
       });
     });
-    describe('when there is trackDir and relative paths', () => {
+    describe.skip('when there is trackDir and relative paths', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo/foo.js', 'require("../bar/bar");');
@@ -130,7 +132,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         });
       });
     });
-    describe('when there is no trackDir and no relative paths', () => {
+    describe.skip('when there is no trackDir and no relative paths', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.js');
@@ -158,7 +160,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         });
       });
     });
-    describe('when there is no trackDir and relative paths are used', () => {
+    describe.skip('when there is no trackDir and relative paths are used', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js', 'require("./bar");');
