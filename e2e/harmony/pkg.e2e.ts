@@ -26,7 +26,7 @@ describe('pkg extension', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
       helper.fixtures.addComponentUtilsIsType();
       const pkgConfig = {
@@ -58,7 +58,7 @@ describe('pkg extension', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
       helper.fixtures.addComponentUtilsIsType();
     });
