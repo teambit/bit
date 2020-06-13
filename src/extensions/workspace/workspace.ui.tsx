@@ -1,8 +1,9 @@
 import React from 'react';
+import { Workspace } from './ui';
 
 export class WorkspaceUI {
   render() {
-    return <div>hi from workspace extension</div>;
+    return <Workspace />;
   }
 
   static provider() {
