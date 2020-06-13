@@ -7,6 +7,7 @@ import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 import { generateRandomStr } from '../utils';
+import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -60,6 +61,10 @@ export default class ScopeHelper {
     this.cleanLocalScope();
     this.initLocalScope();
   }
+  reInitLocalScopeHarmony() {
+    this.cleanLocalScope();
+    this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
+  }
 
   initLocalScope() {
     return this.initWorkspace();
@@ -89,6 +94,11 @@ export default class ScopeHelper {
   }
   setNewLocalAndRemoteScopes() {
     this.reInitLocalScope();
+    this.reInitRemoteScope();
+    this.addRemoteScope();
+  }
+  setNewLocalAndRemoteScopesHarmony() {
+    this.reInitLocalScopeHarmony();
     this.reInitRemoteScope();
     this.addRemoteScope();
   }

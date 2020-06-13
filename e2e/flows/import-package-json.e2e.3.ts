@@ -27,7 +27,7 @@ describe('component with package.json as a file of the component', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
-      const addOutput = helper.command.addComponentLegacy('package.json', { i: 'foo/pkg' });
+      const addOutput = helper.command.addComponent('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -67,7 +67,7 @@ describe('component with package.json as a file of the component', function() {
         helper.command.expectStatusToBeClean();
       });
       it('should prevent users from deliberately adding them', () => {
-        const output = helper.command.addComponentLegacy('components/foo/pkg/bar.js', { i: 'foo/pkg' });
+        const output = helper.command.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
         expect(output).to.have.string('no files to track');
       });
     });
@@ -91,9 +91,9 @@ describe('component with package.json as a file of the component', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('bar/package.json', fixturePackageJson);
       helper.fs.createFile('bar', 'foo.js');
-      const addOutput = helper.command.addComponentLegacy('bar', { i: 'bar/foo', m: 'foo.js' });
+      const addOutput = helper.command.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
-      helper.command.tagAllComponentsLegacy();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
@@ -135,10 +135,10 @@ describe('component with package.json as a file of the component', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
-      helper.command.addComponentLegacy('package.json', { i: 'foo/pkg' });
+      helper.command.addComponent('package.json', { i: 'foo/pkg' });
       helper.fs.createFile('', 'foo.js', fooFixture);
-      helper.command.addComponentLegacy('foo.js', { i: 'bar/foo' });
-      helper.command.tagAllComponentsLegacy();
+      helper.command.addComponent('foo.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       afterExportScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
@@ -193,7 +193,7 @@ describe('component with package.json as a file of the component', function() {
 
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.fs.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
-        helper.command.tagAllComponentsLegacy();
+        helper.command.tagAllComponents();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
         const fooPkg = helper.command.catComponent(`${helper.scopes.remote}/foo/pkg@latest`);
@@ -260,7 +260,7 @@ describe('component with package.json as a file of the component', function() {
   });
   describe('bit version >= 14.8.0 should ignore package.json files altogether', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fs.outputFile('bar/package.json');
       helper.fs.outputFile('bar/foo.js');
       helper.command.addComponent('bar');

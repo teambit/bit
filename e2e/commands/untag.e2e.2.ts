@@ -167,9 +167,9 @@ describe('bit untag command', function() {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.fs.createFile('bar', 'foo3.js');
-      helper.command.addComponentAllowFiles('bar/foo3.js', { i: 'bar/foo3' });
+      helper.command.addComponent('bar/foo3.js', { i: 'bar/foo3' });
       helper.command.tagAllComponents();
       helper.command.exportComponent('bar/foo3');
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -353,7 +353,7 @@ describe('bit untag command', function() {
       describe('modify, tag and then untag all', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/utils/is-string.js'));
+          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js'));
           helper.command.tagAllComponents();
           helper.command.runCmd('bit untag --all');
         });

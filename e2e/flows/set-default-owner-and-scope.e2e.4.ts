@@ -2,6 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -40,14 +41,15 @@ describe('set default owner and scope', function() {
         defaultScope
       };
       helper.extensions.addExtensionToWorkspace('@teambit/workspace', workspaceExtConfig);
-      helper.fixtures.populateWorkspaceWithUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.command.addComponent('utils', { i: 'utils/is-type' });
       const rawLinkOutput = helper.command.link('-j');
       parsedLinkOutput = JSON.parse(rawLinkOutput);
       helper.command.tagAllComponents();
     });
     it('should create link with default owner as prefix', () => {
       const linkFolderPath = path.normalize(`node_modules/${componentPackageName}`);
-      const linkFullPath = path.join(linkFolderPath, '/utils/is-type.js');
+      const linkFullPath = path.join(linkFolderPath, 'is-type.js');
       const outputLinkPath = parsedLinkOutput.linksResults[0].bound[0].to;
       expect(outputLinkPath).to.equal(linkFullPath);
       expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();

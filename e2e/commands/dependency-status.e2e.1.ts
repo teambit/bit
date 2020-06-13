@@ -17,13 +17,13 @@ describe('bit dependency status', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
-      helper.command.addComponentAllowFiles('dependency-status-test-files/a.js', {
+      helper.command.addComponent('dependency-status-test-files/a.js', {
         i: 'dependency-status-test-files/a'
       });
-      helper.command.addComponentAllowFiles('dependency-status-test-files/b.js', {
+      helper.command.addComponent('dependency-status-test-files/b.js', {
         i: 'dependency-status-test-files/b'
       });
-      helper.command.addComponentAllowFiles('dependency-status-test-files/c.js', {
+      helper.command.addComponent('dependency-status-test-files/c.js', {
         i: 'dependency-status-test-files/c'
       });
     });
@@ -37,10 +37,10 @@ describe('bit dependency status', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
-      helper.command.addComponentAllowFiles('dependency-status-test-files/a.js', {
+      helper.command.addComponent('dependency-status-test-files/a.js', {
         i: 'dependency-status-test-files/a'
       });
-      helper.command.addComponentAllowFiles('dependency-status-test-files/b.js', {
+      helper.command.addComponent('dependency-status-test-files/b.js', {
         i: 'dependency-status-test-files/b'
       });
     });

@@ -2,6 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -26,9 +27,10 @@ describe('pkg extension', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.command.addComponent('utils', { i: 'utils/is-type' });
       const pkgConfig = {
         packageJson: {
           'some-key': 'some-val'
@@ -58,9 +60,10 @@ describe('pkg extension', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.command.addComponent('utils', { i: 'utils/is-type' });
     });
 
     describe('extension that add simple config', function() {

@@ -245,8 +245,7 @@ export default class ComponentMap {
    * directory to track for changes (such as files added/renamed)
    */
   getTrackDir(): PathLinux | undefined {
-    if (this.doesAuthorHaveRootDir()) return this.rootDir;
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
     }
@@ -268,15 +267,15 @@ export default class ComponentMap {
 
   /**
    * directory of the component (root / track)
+   * for legacy (bit.json) workspace, it can be undefined for authored when individual files were added
    */
   getComponentDir(): PathLinux | undefined {
-    if (this.doesAuthorHaveRootDir()) return this.rootDir;
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
     return this.rootDir;
   }
 
   doesAuthorHaveRootDir(): boolean {
-    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir && this.rootDir !== '.');
+    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir);
   }
 
   /**
@@ -294,8 +293,6 @@ export default class ComponentMap {
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
-        allowFiles: true,
-        allowRelativePaths: false,
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;

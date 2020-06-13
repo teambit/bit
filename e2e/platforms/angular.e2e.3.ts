@@ -37,7 +37,7 @@ export class AppModule {}
 
       `
       );
-      helper.command.addComponentAllowFiles('bar/foo.ts', { i: 'bar/foo' });
+      helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
     it('bit status should show an error about missing templates and style dependencies', () => {
       const output = helper.command.runCmd('bit status');
@@ -65,7 +65,7 @@ export class AppModule {}
       helper.command.runCmd('git checkout v4.8.1', path.join(helper.scopes.localPath, 'ng-lightning'));
       localWorkspace = path.join(helper.scopes.localPath, 'ng-lightning/projects/ng-lightning');
       helper.scopeHelper.initWorkspace(localWorkspace);
-      helper.command.addComponentAllowFiles('src/lib/badges', undefined, localWorkspace);
+      helper.command.addComponent('src/lib/badges', undefined, localWorkspace);
     });
     describe('isolating a component that has public_api.js on the root dir', () => {
       before(() => {

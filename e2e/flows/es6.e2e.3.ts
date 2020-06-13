@@ -16,7 +16,7 @@ describe('es6 components', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'index.js', 'export function isType() {}; export function isString() {};');
       helper.fs.createFile('bar', 'foo.js', 'import { isType, isString } from "../utils";');
-      helper.command.addComponentAllowFiles('utils/index.js');
+      helper.command.addComponent('utils/index.js');
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

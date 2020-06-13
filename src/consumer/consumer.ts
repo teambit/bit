@@ -68,7 +68,6 @@ import { packageNameToComponentId } from '../utils/bit/package-name-to-component
 import PackageJsonFile from './component/package-json-file';
 import ComponentMap from './bit-map/component-map';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
-import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
 import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
 import { ILegacyWorkspaceConfig } from './config';
 
@@ -582,19 +581,17 @@ export default class Consumer {
     ignoreUnresolvedDependencies: boolean | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
-    skipAutoTag: boolean,
-    allowRelativePaths: boolean,
-    allowFiles: boolean
+    skipAutoTag: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    const components = await this._loadComponentsForTag(ids, allowFiles, allowRelativePaths);
+    const components = await this._loadComponentsForTag(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     const componentsWithRelativeAuthored = components.filter(
       component => component.issues && component.issues.relativeComponentsAuthored
     );
-    if (!allowRelativePaths && !R.isEmpty(componentsWithRelativeAuthored)) {
+    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
     if (!ignoreUnresolvedDependencies) {
@@ -635,9 +632,9 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults };
   }
 
-  async _loadComponentsForTag(ids: BitIds, allowFiles: boolean, allowRelativePaths: boolean): Promise<Component[]> {
+  async _loadComponentsForTag(ids: BitIds): Promise<Component[]> {
     const { components } = await this.loadComponents(ids);
-    if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+    if (this.isLegacy) {
       return components;
     }
     let shouldReloadComponents;
@@ -647,19 +644,17 @@ export default class Consumer {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
       const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
+      // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
         shouldReloadComponents = true;
         return;
       }
-      if (hasRelativePaths && !allowRelativePaths) {
+      if (hasRelativePaths) {
         componentsWithRelativePaths.push(component.id.toStringWithoutVersion());
       }
-      if (!componentMap.trackDir && !allowFiles) {
+      if (!componentMap.trackDir) {
         componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
-      }
-      if ((hasRelativePaths && allowRelativePaths) || (!componentMap.trackDir && allowFiles)) {
-        componentMap.changeRootDirAndUpdateFilesAccordingly('.');
       }
     });
     if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {

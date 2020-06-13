@@ -157,7 +157,7 @@ describe('bit diff command', function() {
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
       helper.command.runCmd('bit status'); // to clean bitmap file
       output = helper.command.diff('bar/foo');
     });

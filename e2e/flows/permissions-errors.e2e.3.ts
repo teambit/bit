@@ -19,7 +19,7 @@ describe.skip('permissions', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      const output = helper.command.runCmd('sudo bit add bar/foo.js --allow-files');
+      const output = helper.command.runCmd('sudo bit add bar/foo.js');
       expect(output).to.have.string('Warning');
       expect(output).to.have.string('root');
     });

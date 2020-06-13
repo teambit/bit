@@ -51,8 +51,6 @@ export default class Tag extends Command {
       ignoreMissingDependencies = false,
       ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
-      allowRelativePaths = false,
-      allowFiles = false,
       skipTests = false,
       skipAutoTag = false,
       scope
@@ -67,8 +65,6 @@ export default class Tag extends Command {
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
       ignoreNewestVersion?: boolean;
-      allowRelativePaths: boolean;
-      allowFiles: boolean;
       skipTests?: boolean;
       skipAutoTag?: boolean;
       scope?: string;
@@ -113,8 +109,6 @@ export default class Tag extends Command {
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
-      allowRelativePaths,
-      allowFiles,
       skipTests,
       skipAutoTag
     };

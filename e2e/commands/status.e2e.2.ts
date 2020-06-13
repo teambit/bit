@@ -87,8 +87,8 @@ describe('bit status command', function() {
       helper.fs.createFile('', 'comp4.js', '');
       helper.fs.createFile('', 'comp5.js', 'require("./comp6");');
       helper.fs.createFile('', 'comp6.js', '');
-      helper.command.addComponentAllowFiles('comp1.js', { i: 'comp1' });
-      helper.command.addComponentAllowFiles('comp5.js', { i: 'comp5' });
+      helper.command.addComponent('comp1.js', { i: 'comp1' });
+      helper.command.addComponent('comp5.js', { i: 'comp5' });
     });
     it('Should show missing dependencies', () => {
       output = helper.command.runCmd('bit status');
@@ -332,7 +332,7 @@ describe('bit status command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'file.js');
-      helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp' });
+      helper.command.addComponent('file.js', { i: 'comp/comp' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -411,7 +411,7 @@ describe('bit status command', function() {
       helper.fs.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
       const isStringFixture = "import iString from './is-string-internal';";
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.command.addComponentAllowFiles('utils/is-string.js utils/is-string-internal.js', {
+      helper.command.addComponent('utils/is-string.js utils/is-string-internal.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string'
       });
@@ -497,7 +497,7 @@ describe('bit status command', function() {
         helper.fs.deletePath('bar/foo1.js');
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
-        expect(output).to.have.string('foo2.js -> ./foo1.js');
+        expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
       });
       describe('when mainFile is deleted', () => {
         before(() => {
@@ -580,7 +580,7 @@ describe('bit status command', function() {
       describe('running bit diff', () => {
         it('should throw an exception ComponentNotFoundInPath', () => {
           const diffFunc = () => helper.command.diff('bar/foo');
-          const error = new ComponentNotFoundInPath(path.join(helper.scopes.localPath, 'bar'));
+          const error = new ComponentNotFoundInPath('bar');
           helper.general.expectToThrow(diffFunc, error);
         });
       });
