@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import graphqlHTTP from 'express-graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GraphQLModule } from '@graphql-modules/core';
@@ -38,6 +39,7 @@ export class GraphQLExtension {
     const schema = this.createRootModule(modules);
 
     const app = express();
+    app.use(cors());
     app.use(
       '/graphql',
       graphqlHTTP({
