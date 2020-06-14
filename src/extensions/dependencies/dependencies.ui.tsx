@@ -1,20 +1,17 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 
-export class TesterUI {
+export class DependenciesUI {
   static dependencies = [WorkspaceUI];
 
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
-      label: 'Tests',
+      label: 'Dependencies',
       getContent: function getContent() {
-        // const componentId = useContext(ComponentContext);
-        const componentId = 'ui/text';
-
-        return <div>Tests! of {componentId}</div>;
+        return <div>Here are dependencies y'all</div>;
       }
     });
 
-    return new TesterUI();
+    return new DependenciesUI();
   }
 }

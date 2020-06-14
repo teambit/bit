@@ -1,0 +1,37 @@
+.explorer {
+	display: grid;
+	height: 100vh;
+
+	grid-template:
+		'scopeName header'
+		'navigation content';
+
+	grid-template-columns: 300px 1fr;
+	grid-template-rows: auto 1fr;
+
+	> :nth-child(1) {
+		grid-area: scopeName;
+	}
+	
+	> :nth-child(2) {
+		grid-area: header;
+	}
+
+	> :nth-child(3) {
+		grid-area: navigation;
+	}
+
+	> :nth-child(4) {
+		grid-area: content;
+	}
+}
+
+.scopeName {
+	border-bottom: 1px solid #babec9;
+	height: 40px;
+}
+
+.topbar {
+	border-bottom: 1px solid #babec9;
+	height: 40px;
+}

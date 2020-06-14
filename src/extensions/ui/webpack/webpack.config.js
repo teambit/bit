@@ -85,6 +85,39 @@ module.exports = function(workspaceDir, entryFiles) {
             ],
             plugins: [require.resolve('react-refresh/babel')]
           }
+        },
+        {
+          test: /\.module\.s(a|c)ss$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: true,
+                sourceMap: true
+              }
+            },
+            {
+              loader: require.resolve('sass-loader'),
+              options: {
+                sourceMap: true
+              }
+            }
+          ]
+        },
+        {
+          test: /\.s(a|c)ss$/,
+          exclude: /\.module.(s(a|c)ss)$/,
+          loader: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('sass-loader'),
+              options: {
+                sourceMap: true
+              }
+            }
+          ]
         }
       ]
     },

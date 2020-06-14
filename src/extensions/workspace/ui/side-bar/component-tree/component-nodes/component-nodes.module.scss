@@ -1,0 +1,32 @@
+$p20: #eceaff;
+$p30: #c9c3f6;
+
+.scope {
+	user-select: none;
+	font-size: 1.38em;
+}
+
+.namespace {
+	user-select: none;
+	font-size: 1.23em;
+	color: var(--text-muted);
+}
+
+.component {
+	width: fit-content;
+	padding: 11px 17px;
+	transition: all 300ms;
+	user-select: none;
+
+	cursor: pointer;
+	
+	&.active {
+		border-radius: 7px;
+		background: $p20;
+	}
+
+	&:hover {
+		border-radius: 7px;
+		background: $p30;
+	}
+}

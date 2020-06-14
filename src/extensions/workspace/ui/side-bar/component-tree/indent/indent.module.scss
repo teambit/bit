@@ -1,0 +1,10 @@
+$baseIndent: 4px;
+$multiplier: 20px;
+
+.indent {
+	padding-left: calc(var(--indent-depth) * #{$multiplier} + #{$baseIndent});
+}
+
+.indentMargin {
+	margin-left: calc(var(--indent-depth) * #{$multiplier} + #{$baseIndent});
+}
