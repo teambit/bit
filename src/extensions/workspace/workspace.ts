@@ -7,7 +7,7 @@ import { ScopeExtension } from '../scope';
 import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
-import { Isolator } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -47,7 +47,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly isolateEnv: Isolator,
+    readonly isolateEnv: IsolatorExtension,
 
     private dependencyResolver: DependencyResolverExtension,
 

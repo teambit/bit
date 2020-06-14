@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { Isolator, IsolatorExt } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
@@ -9,13 +9,13 @@ export type ConfigFunc = () => any;
 
 export default class ComponentFactory {
   static id = '@teambit/component';
-  static dependencies = [IsolatorExt];
+  static dependencies = [IsolatorExtension];
 
   constructor(
     /**
      * instance of the capsule orchestrator
      */
-    private isolateEnv: Isolator // private configsRegistry: Registry
+    private isolateEnv: IsolatorExtension // private configsRegistry: Registry
   ) {}
 
   create() {}
@@ -27,7 +27,7 @@ export default class ComponentFactory {
     return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy(legacyComponent));
   }
 
-  static async provider([isolator]: [Isolator]) {
+  static async provider([isolator]: [IsolatorExtension]) {
     return new ComponentFactory(isolator);
   }
 

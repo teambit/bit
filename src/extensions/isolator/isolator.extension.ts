@@ -5,12 +5,14 @@ import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
 import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';
-import { PackageManager } from '../package-manager';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
 import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
+import { CapsuleListCmd } from './capsule-list.cmd';
+import { CapsuleCreateCmd } from './capsule-create.cmd';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId, BitIds } from '../../bit-id';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
@@ -18,11 +20,12 @@ import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import logger from '../../logger/logger';
+import { CLIExtension } from '../cli';
 import { DEPENDENCIES_FIELDS } from '../../constants';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
-export type IsolatorDeps = [PackageManager];
+export type IsolatorDeps = [DependencyResolverExtension, CLIExtension];
 export type ListResults = {
   workspace: string;
   capsules: string[];
@@ -50,11 +53,19 @@ function findSuccessorsInGraph(graph, seeders) {
   return components;
 }
 
-export default class Isolator {
-  constructor(private packageManager: PackageManager) {}
-  static async provide([packageManager]: IsolatorDeps) {
-    return new Isolator(packageManager);
+export class IsolatorExtension {
+  static id = '@teambit/isolator';
+  static dependencies = [DependencyResolverExtension];
+  static defaultConfig = {};
+  static async provide([dependencyResolver, cli]: IsolatorDeps) {
+    const isolator = new IsolatorExtension(dependencyResolver);
+    const capsuleListCmd = new CapsuleListCmd(isolator);
+    const capsuleCreateCmd = new CapsuleCreateCmd(isolator);
+    cli.register(capsuleListCmd);
+    cli.register(capsuleCreateCmd);
+    return isolator;
   }
+  constructor(private dependencyResolver: DependencyResolverExtension) {}
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
     logger.debug(`isolatorExt, createNetworkFromConsumer ${seeders.join(', ')}`);
@@ -89,7 +100,13 @@ export default class Isolator {
     );
     const capsulesWithPackagesData = await getCapsulesPackageJsonData(capsules);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
+    await writeComponentsToCapsules(
+      components,
+      graph,
+      capsules,
+      capsuleList,
+      this.dependencyResolver.packageManagerName
+    );
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
         .filter(capsuleWithPackageData => {
@@ -99,7 +116,7 @@ export default class Isolator {
           return packageJsonHasChanged;
         })
         .map(capsuleWithPackageData => capsuleWithPackageData.capsule);
-      await this.packageManager.runInstall(capsulesToInstall, { packageManager: config.packageManager });
+      await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList);
     }
     // rewrite the package-json with the component dependencies in it. the original package.json
@@ -117,7 +134,7 @@ export default class Isolator {
       components: graph
     };
   }
-  async list(consumer: Consumer): Promise<ListResults[] | ListResults> {
+  async list(consumer: Consumer): Promise<ListResults> {
     const workspacePath = consumer.getPath();
     try {
       const workspaceCapsuleFolder = path.join(CAPSULES_BASE_DIR, hash(workspacePath));

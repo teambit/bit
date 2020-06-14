@@ -2,7 +2,7 @@ import { ExtensionManifest } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeExtension } from '../scope';
 import { ComponentFactoryExt } from '../component';
-import { IsolatorExt } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { LoggerExt } from '../logger';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
@@ -14,7 +14,7 @@ export default {
   dependencies: [
     ScopeExtension,
     ComponentFactoryExt,
-    IsolatorExt,
+    IsolatorExtension,
     DependencyResolverExtension,
     VariantsExt,
     LoggerExt,

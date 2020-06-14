@@ -5,7 +5,7 @@ import { Component } from '../component';
 import { ReleasesService } from './releases.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
-import { Isolator, IsolatorExt } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
 
 /**
@@ -23,7 +23,7 @@ export class ReleasesExtension {
   /**
    * extension dependencies
    */
-  static dependencies = [CLIExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExt];
+  static dependencies = [CLIExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExtension];
 
   constructor(
     /**
@@ -62,7 +62,7 @@ export class ReleasesExtension {
     Environments,
     Workspace,
     ScopeExtension,
-    Isolator
+    IsolatorExtension
   ]) {
     const releasesService = new ReleasesService(isolator, workspace);
     const releases = new ReleasesExtension(envs, workspace, releasesService);

@@ -1,5 +1,5 @@
 import { Component, ComponentID } from '../component';
-import { Network } from '../isolator/isolator';
+import { Network } from '../isolator/isolator.extension';
 import { ExecutionContext } from '../environments';
 
 /**

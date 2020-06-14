@@ -38,7 +38,7 @@ export class PkgExtension {
    */
   constructor(
     /**
-     * environments extension configuration.
+     * pkg extension configuration.
      */
     readonly config: PkgExtensionConfig,
 

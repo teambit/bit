@@ -3,7 +3,7 @@ import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Isolator } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
@@ -16,7 +16,7 @@ import workspaceSchema from './workspace.graphql';
 export type WorkspaceDeps = [
   ScopeExtension,
   ComponentFactory,
-  Isolator,
+  IsolatorExtension,
   DependencyResolverExtension,
   Variants,
   Logger,
