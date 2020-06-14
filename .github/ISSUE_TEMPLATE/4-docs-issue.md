@@ -9,6 +9,6 @@ assignees: ''
 
 <!--
 
-Please file any Docs issues at: https://github.com/https://github.com/teambit/bit-docs
+Please file any Docs issues at: https://github.com/teambit/bit-docs
 
 -->
