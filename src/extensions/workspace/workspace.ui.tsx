@@ -4,7 +4,7 @@ import { Workspace } from './ui';
 
 export type MenuItem = {
   label: string;
-  onClick: () => void;
+  getContent: () => JSX.Element;
 };
 
 export type TopBarSlotRegistry = SlotRegistry<MenuItem>;

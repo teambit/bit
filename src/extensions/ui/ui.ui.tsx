@@ -15,8 +15,6 @@ import { GraphQlUI } from '../graphql/graphql.ui';
 export class UIRuntimeExtension {
   static dependencies = [WorkspaceUI, GraphQlUI];
 
-  static slots = [Slot.withType()];
-
   constructor(
     /**
      * workspace UI extension.

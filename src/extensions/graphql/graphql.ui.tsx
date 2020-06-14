@@ -3,7 +3,12 @@ import ApolloClient from 'apollo-boost';
 import { GraphQLProvider } from './graphql-provider';
 
 export class GraphQlUI {
-  constructor(private client: ApolloClient<any>) {}
+  constructor(
+    /**
+     * apollo client.
+     */
+    private client: ApolloClient<any>
+  ) {}
 
   /**
    * get the graphQL provider

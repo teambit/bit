@@ -1,3 +1,4 @@
+import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 
 export class DocsUI {
@@ -6,7 +7,9 @@ export class DocsUI {
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
       label: 'Overview',
-      onClick: () => {}
+      getContent: function getContent() {
+        return <div>Overview!</div>;
+      }
     });
     return new DocsUI();
   }
