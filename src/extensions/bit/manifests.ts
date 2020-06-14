@@ -22,8 +22,10 @@ import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
 import { ReleasesExtension } from '../releases';
 import { VariantsExt } from '../variants';
+import { GraphQLExtension } from '../graphql';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
+import { UIExtension } from '../ui';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -32,6 +34,8 @@ export const manifestsMap = {
   [ComponentFactoryExt.id]: ComponentFactoryExt,
   // [ComposerExt.name]: ComposerExt,
   [ConfigExt.name]: ConfigExt,
+  [GraphQLExtension.name]: GraphQLExtension,
+  [UIExtension.name]: UIExtension,
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,
   // [DependencyResolverExt.name]: DependencyResolverExt,

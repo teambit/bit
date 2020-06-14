@@ -2,12 +2,11 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Box, Color, Text } from 'ink';
-import { Runtime } from './runtime';
 // import { EnvConsole } from './components';
 // make sure to update eslint to read JSX.
 import { Command, CLIArgs } from '../cli';
 import { Workspace } from '../workspace';
-import { Environments } from './environments.extension';
+import { UIExtension } from './ui.extension';
 
 export class StartCmd implements Command {
   name = 'start [pattern]';
@@ -21,7 +20,7 @@ export class StartCmd implements Command {
     /**
      * access to the extension instance.
      */
-    private envs: Environments,
+    private ui: UIExtension,
 
     /**
      * access to workspace.
@@ -37,18 +36,18 @@ export class StartCmd implements Command {
   async render([userPattern]: CLIArgs): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
-    const envRuntime = await this.envs.createEnvironment(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    const uiRuntime = await this.ui.createRuntime(pattern ? await this.workspace.byPattern(pattern) : undefined);
     this.clearConsole();
     // @ts-ignore
-    envRuntime.dev();
+    // uiRuntime.dev();
     this.clearConsole();
-    return <EnvConsole runtime={envRuntime} />;
+    return <EnvConsole runtime={uiRuntime} />;
   }
 }
 
-export function EnvConsole({ runtime }: { runtime: Runtime }) {
+export function EnvConsole(props: any) {
   const [, setCounter] = useState(0);
-
+  props;
   useEffect(() => {
     const timer = setInterval(() => {
       setCounter(previousCounter => previousCounter + 1);
@@ -61,11 +60,11 @@ export function EnvConsole({ runtime }: { runtime: Runtime }) {
 
   return (
     <Box>
-      {runtime.runtimeEnvs.map((def, key) => (
+      {/* {runtime.runtimeEnvs.map((def, key) => (
         <Box key={key}>
           <Color cyan>starting development environment: {def.id}...</Color>
         </Box>
-      ))}
+      ))} */}
     </Box>
   );
 }

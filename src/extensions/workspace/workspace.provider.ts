@@ -10,8 +10,18 @@ import { DependencyResolver } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
+import { GraphQLExtension } from '../graphql';
+import workspaceSchema from './workspace.graphql';
 
-export type WorkspaceDeps = [ScopeExtension, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
+export type WorkspaceDeps = [
+  ScopeExtension,
+  ComponentFactory,
+  Isolator,
+  DependencyResolver,
+  Variants,
+  Logger,
+  GraphQLExtension
+];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -29,7 +39,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [scope, component, isolator, dependencyResolver, variants, logger]: WorkspaceDeps,
+  [scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -60,6 +70,7 @@ export default async function provideWorkspace(
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
         return workspace.loadExtensions(componentConfig.parseExtensions());
       });
+      graphql.register(workspaceSchema(workspace));
       return workspace;
     }
 
