@@ -87,6 +87,17 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
   }
 
+  static loadFromPathSync(workspaceDir: PathOsBasedAbsolute, pathToLoad: string) {
+    const filePath = composePath(pathToLoad);
+    const filePathAbsolute = path.join(workspaceDir, filePath);
+    const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
+    if (!packageJsonStr) {
+      return new PackageJsonFile({ filePath, fileExist: false, workspaceDir });
+    }
+    const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, pathToLoad);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir });
+  }
+
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
@@ -105,6 +116,11 @@ export default class PackageJsonFile {
       version: component.version,
       homepage: component._getHomepage(),
       main: component.mainFile,
+      // Used for determine that a package is a component
+      // Used when resolve dependencies to identify that some package should be treated as component
+      // TODO: replace by better way to identify that something is a component for sure
+      // TODO: Maybe need to add the binding prefix here
+      componentId: component.id.serialize(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -128,6 +144,7 @@ export default class PackageJsonFile {
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     };
+    if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
   }
 
@@ -151,6 +168,10 @@ export default class PackageJsonFile {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
+  }
+
+  removeDependency(dependency: string) {
+    delete this.packageJsonObject.dependencies[dependency];
   }
 
   replaceDependencies(dependencies: Record<string, any>) {

@@ -1,4 +1,4 @@
-export { DependencyResolver } from './dependency-resolver.extension';
+export { DependencyResolverExtension } from './dependency-resolver.extension';
 export {
   DependenciesDefinition,
   SemverVersion,

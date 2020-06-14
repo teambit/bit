@@ -1,10 +1,10 @@
-import Watch from './watch';
-import WatchComponents from '../../consumer/component-ops/watch-components';
+import { WorkspaceExt } from '../workspace';
+import { CompileExt } from '../compile';
+import { provideWatch } from './watch.provider';
+import { CLIExtension } from '../cli';
 
 export default {
   name: 'Watch',
-  dependencies: [],
-  provider: async () => {
-    return new Watch(new WatchComponents(true));
-  }
+  dependencies: [CLIExtension, CompileExt, WorkspaceExt],
+  provider: provideWatch
 };

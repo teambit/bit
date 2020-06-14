@@ -2,15 +2,19 @@
 import R, { find, forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import Consumer from '../consumer';
-import { ExtensionConfigList } from './extension-config-list';
+import { ExtensionConfigList, IExtensionConfigList } from './extension-config-list';
+import { AbstractVinyl } from '../component/sources';
+import { Source } from '../../scope/models';
+import { Artifact } from '../component/sources/artifact';
 
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public config?: { [key: string]: any },
-    public data?: { [key: string]: any }
+    public config: { [key: string]: any } = {},
+    public data: { [key: string]: any } = {},
+    public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = []
   ) {}
 
   get id(): string | BitId {
@@ -33,17 +37,21 @@ export class ExtensionDataEntry {
   }
 
   clone(): ExtensionDataEntry {
+    const clonedArtifacts = this.artifacts.map(artifact => {
+      return artifact instanceof Artifact ? artifact.clone() : artifact;
+    });
     return new ExtensionDataEntry(
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
       R.clone(this.config),
-      R.clone(this.data)
+      R.clone(this.data),
+      clonedArtifacts
     );
   }
 }
 
-export class ExtensionDataList extends Array<ExtensionDataEntry> {
+export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExtensionConfigList {
   get ids(): string[] {
     const list = this.map(entry => entry.stringId);
     return list;
@@ -80,7 +88,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     );
   }
 
-  toConfigObject() {
+  toObject() {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
     return res;

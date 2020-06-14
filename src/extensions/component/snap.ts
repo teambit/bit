@@ -1,4 +1,5 @@
-import Component from './component';
+// eslint-disable-next-line import/no-cycle
+import Component from './component'; // todo: change to "import type" once babel supports it
 import State from './state';
 
 export type Hash = string;

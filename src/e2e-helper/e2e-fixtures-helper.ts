@@ -47,27 +47,19 @@ export default class FixtureHelper {
   }
 
   addComponentBarFoo() {
-    return this.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo' });
+    return this.command.addComponent('bar/foo.js', { i: 'bar/foo' });
   }
 
-  addComponentBarFooLegacy() {
-    return this.command.addComponentLegacy('bar/foo.js', { i: 'bar/foo' });
+  addComponentBarFooAsDir() {
+    return this.command.addComponent('bar', { i: 'bar/foo' });
   }
 
   addComponentUtilsIsType() {
-    return this.command.addComponentAllowFiles('utils/is-type.js', { i: 'utils/is-type' });
-  }
-
-  addComponentUtilsIsTypeLegacy() {
-    return this.command.addComponentLegacy('utils/is-type.js', { i: 'utils/is-type' });
+    return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
 
   addComponentUtilsIsString() {
-    return this.command.addComponentAllowFiles('utils/is-string.js', { i: 'utils/is-string' });
-  }
-
-  addComponentUtilsIsStringLegacy() {
-    return this.command.addComponentLegacy('utils/is-string.js', { i: 'utils/is-string' });
+    return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {
@@ -166,6 +158,28 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
+  populateComponentsTS(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `export default () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `import ${nextComp} from '@bit/${this.scopes.remote}.${nextComp}';
+export default () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
+      this.command.addComponent(`comp${i}`);
+    }
+    this.command.link();
+    this.fs.outputFile(
+      'app.js',
+      `const comp1 = require('@bit/${this.scopes.remote}.comp1').default;\nconsole.log(comp1())`
+    );
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
   /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component
@@ -205,34 +219,26 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     this.addComponentBarFoo();
   }
 
-  addExtensionGulpTS() {
-    const extensionsDir = path.join(this.getFixturesDir(), 'extensions');
+  addExtensionTS() {
+    const extensionsDir = path.join(__dirname, '..', 'extensions');
     const extDestination = path.join(this.scopes.localPath, 'extensions');
-    fs.copySync(path.join(extensionsDir, 'gulp-ts'), path.join(extDestination, 'gulp-ts'));
+    fs.copySync(path.join(extensionsDir, 'typescript'), path.join(extDestination, 'typescript'));
 
-    this.command.addComponent('extensions/gulp-ts', { i: 'extensions/gulp-ts' });
+    this.command.addComponent('extensions/typescript', { i: 'extensions/typescript' });
 
     this.npm.initNpm();
     const dependencies = {
-      gulp: '^4.0.2',
-      'gulp-typescript': '^6.0.0-alpha.1',
-      merge2: '^1.3.0',
-      react: '^16.12.0',
-      typescript: '^3.7.5'
-    };
-    const devDependencies = {
-      '@types/react': '^16.9.17'
+      typescript: '^3.8'
     };
 
-    this.packageJson.addKeyValue({ dependencies, devDependencies });
-    this.command.runCmd('npm i');
+    this.packageJson.addKeyValue({ dependencies });
     this.command.link();
 
     // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
     // first, the full-id won't be recognized when loading the extension.
     // once defaultScope is mandatory, make sure this is working without the next two lines
-    this.command.tagComponent('extensions/gulp-ts');
-    this.command.exportComponent('extensions/gulp-ts');
+    this.command.tagComponent('extensions/typescript');
+    this.command.exportComponent('extensions/typescript');
   }
 
   /**

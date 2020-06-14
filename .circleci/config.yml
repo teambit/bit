@@ -54,15 +54,10 @@ jobs:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
-        run:
-          name: 'clone bit-javascript'
-          command: ./scripts/clone-bit-javascript.sh
-      -
         persist_to_workspace:
           root: /home/circleci
           paths:
             - bit
-            - bit-javascript
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -138,21 +133,6 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
-  install_bit_javascript_npm_deps:
-    <<: *defaults
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        run:
-          name: 'Install npm dependencies'
-          command: 'cd bit-javascript && npm install'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - bit-javascript/node_modules
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -215,10 +195,6 @@ jobs:
         run:
           name: 'set pkg path'
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
-      # -
-      #   run:
-      #     name: 'npm link bit-javascript to bit'
-      #     command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'Pack bit'
@@ -366,25 +342,6 @@ jobs:
         run:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
-  build_bit_javascript:
-    <<: *defaults
-    steps:
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
-          at: ./
-      -
-        run:
-          name: 'Build bit javascript source code'
-          command: 'cd bit-javascript && npm run build'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - bit-javascript/dist
   unit_test:
     <<: *defaults
     steps:
@@ -513,10 +470,6 @@ jobs:
         run:
           name: 'npm link bit to global'
           command: cd bit && npm link
-      -
-        run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run: which bit
       -
@@ -682,23 +635,22 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  windows_approval_job:
+    <<: *windows_defaults
+    steps:
+      -
+        run: 'echo "starting windows build"'
   windows_checkout_code:
     <<: *windows_defaults
     environment:
       Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
       - checkout
-      #TODO: enable this after make it work for windows
-      # -
-      #   run:
-      #     name: 'clone bit-javascript'
-      #     command: ./scripts/clone-bit-javascript.sh
       -
         persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
             - bit
-            - bit-javascript
   windows_set_ssh_key:
     <<: *windows_defaults
     working_directory: C:\Users\circleci\.ssh
@@ -867,17 +819,9 @@ workflows:
           requires:
             - checkout_code
       -
-        install_bit_javascript_npm_deps:
-          requires:
-            - checkout_code
-      -
         build:
           requires:
             - install_npm_deps
-      -
-        build_bit_javascript:
-          requires:
-            - install_bit_javascript_npm_deps
       -
         unit_test:
           requires:
@@ -899,7 +843,6 @@ workflows:
       #   pack:
       #     requires:
       #       - build
-      #       - build_bit_javascript
       -
         e2e_test:
           filters:
@@ -911,7 +854,6 @@ workflows:
             - set_ssh_key
             - set_bitsrc_registry
             - build
-            - build_bit_javascript
             # - pack
       -
         performance_e2e_test:
@@ -933,9 +875,17 @@ workflows:
             - set_bitsrc_registry
   windows_e2e:
     jobs:
-      - windows_checkout_code
-      - windows_set_ssh_key
-      - windows_set_bitsrc_registry
+      - windows_approval_job:
+          type: approval
+      - windows_checkout_code:
+          requires:
+            - windows_approval_job
+      - windows_set_ssh_key:
+          requires:
+            - windows_approval_job
+      - windows_set_bitsrc_registry:
+          requires:
+            - windows_approval_job
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code

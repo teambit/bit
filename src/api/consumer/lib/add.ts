@@ -43,7 +43,6 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
       ? component.tests.map(testFile => path.normalize(testFile.trim()))
       : [];
     component.tests = normalizedTests;
-    component.allowFiles = true;
     component.exclude = component.exclude
       ? component.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
       : [];

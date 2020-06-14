@@ -3,13 +3,8 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import chalk from 'chalk';
-import format from 'string-format';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
-import { Driver } from '../driver';
-import DriverNotFound from '../driver/exceptions/driver-not-found';
-import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -22,8 +17,7 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS,
-  DEFAULT_LANGUAGE
+  DEPENDENCIES_FIELDS
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -70,16 +64,16 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
-import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import PackageJsonFile from './component/package-json-file';
 import ComponentMap from './bit-map/component-map';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
-import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
+import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import { ILegacyWorkspaceConfig } from './config';
 
 type ConsumerProps = {
   projectPath: string;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
@@ -104,14 +98,12 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  config: WorkspaceConfig;
+  config: ILegacyWorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
   addedGitHooks: string[] | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
@@ -137,7 +129,6 @@ export default class Consumer {
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
-    this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
@@ -154,20 +145,9 @@ export default class Consumer {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get driver(): Driver {
-    if (!this._driver) {
-      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
-    }
-    return this._driver;
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
-      this._dirStructure = new DirStructure(
-        this.config.workspaceSettings.componentsDefaultDirectory,
-        this.config.workspaceSettings._dependenciesDirectory
-      );
+      this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
     }
     return this._dirStructure;
   }
@@ -198,31 +178,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Check if the driver installed and print message if not
-   *
-   *
-   * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
-   * @returns {boolean} true if the driver exists, false otherwise
-   * @memberof Consumer
-   */
-  warnForMissingDriver(msg?: string): boolean {
-    try {
-      this.driver.getDriver(false);
-
-      return true;
-    } catch (err) {
-      msg = msg
-        ? format(msg, err)
-        : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
-      if (err instanceof DriverNotFound) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        console.log(chalk.yellow(msg)); // eslint-disable-line
-      }
-      throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
-    }
   }
 
   /**
@@ -366,17 +321,6 @@ export default class Consumer {
     return components[0];
   }
 
-  async loadComponentsForCapsule(ids: BitId[]): Promise<Component[]> {
-    const allComponents = await Promise.all(
-      ids.map(async id => {
-        const component = await this.loadComponentForCapsule(id);
-        const componenetWithDependencies = await loadFlattenedDependenciesForCapsule(this, component);
-        return R.concat([component], componenetWithDependencies.allDependencies);
-      })
-    );
-    return R.uniqBy((component: Component) => component.id.toString(), R.flatten(allComponents));
-  }
-
   loadComponentForCapsule(id: BitId): Promise<Component> {
     return this.componentLoader.loadForCapsule(id);
   }
@@ -388,8 +332,7 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
+  importEnvironment(bitId: BitId, verbose = false, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
@@ -428,7 +371,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.workspaceSettings._saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -445,7 +388,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.workspaceSettings._distEntry && !this.config.workspaceSettings._distTarget;
+    return !this.config._distEntry && !this.config._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -638,19 +581,17 @@ export default class Consumer {
     ignoreUnresolvedDependencies: boolean | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
-    skipAutoTag: boolean,
-    allowRelativePaths: boolean,
-    allowFiles: boolean
+    skipAutoTag: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    const components = await this._loadComponentsForTag(ids, allowFiles, allowRelativePaths);
+    const components = await this._loadComponentsForTag(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     const componentsWithRelativeAuthored = components.filter(
       component => component.issues && component.issues.relativeComponentsAuthored
     );
-    if (!allowRelativePaths && !R.isEmpty(componentsWithRelativeAuthored)) {
+    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
     if (!ignoreUnresolvedDependencies) {
@@ -691,9 +632,9 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults };
   }
 
-  async _loadComponentsForTag(ids: BitIds, allowFiles: boolean, allowRelativePaths: boolean): Promise<Component[]> {
+  async _loadComponentsForTag(ids: BitIds): Promise<Component[]> {
     const { components } = await this.loadComponents(ids);
-    if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+    if (this.isLegacy) {
       return components;
     }
     let shouldReloadComponents;
@@ -703,19 +644,17 @@ export default class Consumer {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
       const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
+      // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
         shouldReloadComponents = true;
         return;
       }
-      if (hasRelativePaths && !allowRelativePaths) {
+      if (hasRelativePaths) {
         componentsWithRelativePaths.push(component.id.toStringWithoutVersion());
       }
-      if (!componentMap.trackDir && !allowFiles) {
+      if (!componentMap.trackDir) {
         componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
-      }
-      if ((hasRelativePaths && allowRelativePaths) || (!componentMap.trackDir && allowFiles)) {
-        componentMap.changeRootDirAndUpdateFilesAccordingly('.');
       }
     });
     if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {
@@ -735,7 +674,7 @@ export default class Consumer {
     ): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.workspaceSettings.defaultScope);
+        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
       }
       return componentMap.rootDir;
     };
@@ -795,9 +734,9 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigFileProps);
+    return this.ensure(projectPath, noGit, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -812,14 +751,14 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
+    workspaceConfigProps?: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps, { standAlone });
+    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
@@ -846,10 +785,10 @@ export default class Consumer {
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const config = await WorkspaceConfig.ensure(consumerPath);
+    const config = await WorkspaceConfig._ensure(consumerPath);
     // isolated environments in the workspace rely on a physical node_modules folder
     // for this reason, we must use a package manager that supports one
-    config.workspaceSettings._setPackageManager('npm');
+    config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,
@@ -874,11 +813,12 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      const consumer = await Consumer.create(consumerInfo.path);
+    let consumer;
+    if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
+      consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await WorkspaceConfig.loadIfExist(consumerInfo.path);
     }
+    const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scope = await Scope.load(scopePath);
@@ -886,9 +826,22 @@ export default class Consumer {
     return new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      config: consumerInfo.consumerConfig,
+      config,
       scope
     });
+  }
+
+  /**
+   * legacy is a workspace uses the old bit.json or "bit" prop of package.json.
+   * new workspaces use workspace.jsonc file
+   */
+  get isLegacy(): boolean {
+    if (!('isLegacy' in this.config)) {
+      // this happens for example when running `bit import --compiler`. the environment dir has its
+      // own consumer and the config is not ILegacyWorkspaceConfig but WorkspaceConfig
+      return true;
+    }
+    return this.config.isLegacy;
   }
 
   /**

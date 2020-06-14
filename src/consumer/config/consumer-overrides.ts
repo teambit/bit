@@ -18,6 +18,7 @@ export type ConsumerOverridesOfComponent = {
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
   defaultScope?: string; // default scope to export to
+  defaultOwner?: string; // default scope to export to
   [key: string]: any; // can be any package.json field
 };
 

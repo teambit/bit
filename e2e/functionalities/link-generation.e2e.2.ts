@@ -19,13 +19,13 @@ describe('link generation', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles('foo1.js bar/foo2.js', { i: 'bar/foo', m: 'foo1.js' });
+      helper.command.addComponent('foo1.js bar/foo2.js', { i: 'bar/foo', m: 'foo1.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.fs.deletePath('bar');
       helper.command.status(); // removes the old directory 'bar' from .bitmap
       helper.fs.createFile('', 'bar');
-      helper.command.addComponentAllowFiles('bar', { i: 'bar/foo' });
+      helper.command.addComponent('bar', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       // a previous bug was throwing an error upon export "EISDIR: illegal operation on a directory, read"
       helper.command.exportAllComponents();

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
@@ -9,14 +9,14 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
-import { WorkspaceConfigFileInputProps } from '../../../extensions/workspace-config/workspace-config';
+import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
+import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Init extends Command {
   name = 'init [path]';
   skipWorkspace = true;
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
@@ -37,8 +37,9 @@ export default class Init extends Command {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
+    ['', 'harmony', 'EXPERIMENTAL. create a new workspace using the experimental Harmony version'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
-  ];
+  ] as CommandOptions;
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -57,8 +58,10 @@ export default class Init extends Command {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       tester,
       defaultDirectory,
+      harmony,
       packageManager
     } = flags;
+    if (harmony) addFeature(HARMONY_FEATURE);
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
@@ -72,15 +75,9 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    const workspaceConfigFileProps: WorkspaceConfigFileInputProps = {
-      workspace: {
-        workspace: {
-          defaultDirectory
-        },
-        dependencyResolver: {
-          packageManager
-        }
-      }
+    const workspaceConfigFileProps: WorkspaceConfigProps = {
+      componentsDefaultDirectory: defaultDirectory,
+      packageManager
     };
     return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {

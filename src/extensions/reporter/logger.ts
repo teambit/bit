@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 
 // we use this and not EventEmitter directly in order to be able
 // to provide tab completions for intellisense(-like) IDEs

@@ -1,6 +1,11 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../src/constants';
+// TODO: think about how to change this require or move this tests
+import {
+  UNABLE_TO_LOAD_EXTENSION,
+  UNABLE_TO_LOAD_EXTENSION_FROM_LIST
+} from '../../src/extensions/utils/load-extensions/constants';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -11,8 +16,11 @@ chai.use(assertArrays);
 // Skipped until we implement the loading extensions from variants
 describe('load extensions', function() {
   this.timeout(0);
-  const helper = new Helper();
-
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -42,13 +50,7 @@ describe('load extensions', function() {
       it('should show the workspace status without exception', () => {
         expect(output).to.have.string('new components');
       });
-      xit('should show a warning about the problematic extension', () => {
-        // TODO: this test is currently skipped because with the new reporter API, in order to implement this
-        // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-        //
-        // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-        // have each command query the logger for such messages and decide whether to display them or not (according to the versbosity
-        // level passed to it).
+      it('should show a warning about the problematic extension', () => {
         expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
       });
     });
@@ -63,16 +65,8 @@ describe('load extensions', function() {
       it('should show the workspace status without exception', () => {
         expect(output).to.have.string('new components');
       });
-      xit('should show a warning about the problematic extension', () => {
-        // TODO: this test is currently skipped because with the new reporter API, in order to implement this
-        // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-        //
-        // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-        // have each command query the logger for such messages and decide whether to display them or not (according to the versbosity
-        // level passed to it).
-        expect(output).to.have.string(
-          UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['packageManager', 'extension-provider-error'])
-        );
+      it('should show a warning about the problematic extension', () => {
+        expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['extension-provider-error']));
       });
     });
   });
@@ -119,13 +113,7 @@ describe('load extensions', function() {
         expect(output).to.have.string('Language');
         expect(output).to.have.string('Main File');
       });
-      xit('should show a warning about the problematic extension', () => {
-        // TODO: this test is currently skipped because with the new reporter API, in order to implement this
-        // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-        //
-        // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-        // have each command query the logger for such messages and decide whether to display them or not (according to the versbosity
-        // level passed to it).
+      it('should show a warning about the problematic extension', () => {
         expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
       });
     });
@@ -139,13 +127,7 @@ describe('load extensions', function() {
         expect(output).to.have.string('Language');
         expect(output).to.have.string('Main File');
       });
-      xit('should show a warning about the problematic extension', () => {
-        // TODO: this test is currently skipped because with the new reporter API, in order to implement this
-        // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-        //
-        // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-        // have each command query the logger for such messages and decide whether to display them or not (according to the versbosity
-        // level passed to it).
+      it('should show a warning about the problematic extension', () => {
         expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['extension-provider-error']));
       });
     });

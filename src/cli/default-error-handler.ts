@@ -1,8 +1,6 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-import { render } from 'ink';
-import { PaperError } from '../extensions/paper/exceptions';
 import { paintSpecsResults } from './chalk-box';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
@@ -16,7 +14,6 @@ import {
   NewerVersionFound,
   LoginFailed
 } from '../consumer/exceptions';
-import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -92,7 +89,7 @@ import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-e
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
+import { DEBUG_LOG, BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -103,7 +100,6 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
-import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -149,8 +145,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     AddingIndividualFiles,
-    err =>
-      `error: adding individual files is blocked ("${err.file}"), and only directories can be added. To force adding files use --allow-files flag`
+    err => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`
   ],
   [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
@@ -169,7 +164,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
-  [ComponentsPendingImport, () => importPendingMsg],
+  [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
     EjectNoDir,
@@ -280,8 +275,7 @@ Original Error: ${err.message}`
   [
     IncorrectRootDir,
     err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
-please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.
-an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths`
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.`
   ],
   [
     ScopeJsonNotFound,
@@ -350,13 +344,6 @@ please fix the file in order to run bit commands`
       err.fieldName
     )}" in your bit.json or package.json file is invalid.
 please make sure it's not absolute and doesn't contain invalid characters`
-  ],
-  [
-    DriverNotFound,
-    err =>
-      `error: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(
-        err.lang
-      )} set in your bit.json file.`
   ],
   [
     MissingMainFile,
@@ -641,12 +628,6 @@ function handleNonBitCustomErrors(err: Error): string {
 }
 
 export default (err: Error): string | undefined => {
-  if (err instanceof PaperError) {
-    const { unmount } = render(err.render());
-    unmount();
-    return undefined;
-  }
-
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {

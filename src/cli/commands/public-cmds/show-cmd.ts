@@ -1,4 +1,4 @@
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { show } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
@@ -10,7 +10,6 @@ export default class Show extends Command {
   name = 'show <id>';
   description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/view#show`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['r', 'remote', 'show a remote component'],
@@ -20,7 +19,7 @@ export default class Show extends Command {
     ['d', 'detailed', 'show more details'],
     ['', 'dependents', 'EXPERIMENTAL. show all dependents recursively'],
     ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   skipWorkspace = true;
@@ -94,8 +93,11 @@ export default class Show extends Command {
     detailed: boolean;
   }): string {
     if (versions) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return JSON.stringify(components.map(c => c.toObject()), null, '  ');
+      return JSON.stringify(
+        (components || []).map(c => c.toObject()),
+        null,
+        '  '
+      );
     }
     if (component.componentFromModel) {
       component.scopesList = component.componentFromModel.scopesList;

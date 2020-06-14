@@ -214,7 +214,20 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-  await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+
+  const legacyComps: Component[] = [];
+  const nonLegacyComps: Component[] = [];
+
+  componentsToBuildAndTest.forEach(c =>
+    c.extensions && c.extensions.length ? nonLegacyComps.push(c) : legacyComps.push(c)
+  );
+  if (legacyComps.length) {
+    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+  }
+  if (nonLegacyComps.length) {
+    const ids = componentsToBuildAndTest.map(c => c.id);
+    await Promise.all(scope.onTag.map(func => func(ids)));
+  }
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
@@ -279,7 +292,6 @@ export default (async function tagModelComponent({
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateDirManipulation(taggedComponents);

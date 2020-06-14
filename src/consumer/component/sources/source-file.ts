@@ -7,7 +7,6 @@ import { SourceFileModel } from '../../../scope/models/version';
 import { PathOsBased } from '../../../utils/path';
 import { Repository } from '../../../scope/objects';
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: string | null | undefined;
@@ -37,16 +36,15 @@ export default class SourceFile extends AbstractVinyl {
     }
   }
 
-  static loadFromParsedString(parsedString: Record<string, any>): SourceFile | null | undefined {
+  static loadFromParsedString(parsedString: Record<string, any>): SourceFile | null {
     if (!parsedString) return null;
-    const opts = super.loadFromParsedString(parsedString);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const opts = super.loadFromParsedStringBase(parsedString);
     return new SourceFile(opts);
   }
 
   static loadFromParsedStringArray(arr: Record<string, any>[]): SourceFile[] | null | undefined {
     if (!arr) return null;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore
     return arr.map(this.loadFromParsedString);
   }
 
@@ -56,8 +54,7 @@ export default class SourceFile extends AbstractVinyl {
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
-  // @ts-ignore
-  clone(): SourceFile {
+  clone(): this {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(this);
   }

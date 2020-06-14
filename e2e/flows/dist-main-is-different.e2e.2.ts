@@ -33,19 +33,19 @@ describe('mainFile of the dist is different than the source', function() {
       'is-type.js',
       "module.exports = function isType() { return 'got is-type from source'; };"
     );
-    helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
+    helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
     helper.fs.createFile(
       'src/utils',
       'is-string.js',
       "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string from source'; };"
     );
-    helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
+    helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
     helper.fs.createFile(
       'src/bar',
       'foo.js',
       "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo from source'; };"
     );
-    helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo' });
+    helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
     helper.env.importDummyCompiler('dist-main');
     afterImportingCompiler = helper.scopeHelper.cloneLocalScope();
   });

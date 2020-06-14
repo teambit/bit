@@ -2,7 +2,7 @@ import R from 'ramda';
 import Diagnosis from '../diagnosis';
 import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
-import { WorkspaceConfig } from '../../extensions/workspace-config';
+import WorkspaceConfig from '../../consumer/config/workspace-config';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   name = "validate workspace's bit config";

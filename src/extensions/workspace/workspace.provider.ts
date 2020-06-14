@@ -1,14 +1,27 @@
 import { Harmony } from '@teambit/harmony';
-import { Scope } from '../scope/';
+import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
-import { WorkspaceConfig } from '../workspace-config';
 import ConsumerComponent from '../../consumer/component';
+import { DependencyResolverExtension } from '../dependency-resolver';
+import { Variants } from '../variants';
+import { WorkspaceExtConfig } from './types';
+import ComponentConfig from '../../consumer/config';
+import { GraphQLExtension } from '../graphql';
+import workspaceSchema from './workspace.graphql';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Logger];
+export type WorkspaceDeps = [
+  ScopeExtension,
+  ComponentFactory,
+  Isolator,
+  DependencyResolverExtension,
+  Variants,
+  Logger,
+  GraphQLExtension
+];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -21,10 +34,14 @@ export type WorkspaceCoreConfig = {
    * will be generated accordingly.
    */
   defaultScope: string;
+
+  defaultOwner: string;
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, logger]: WorkspaceDeps,
+  [scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
+  config: WorkspaceExtConfig,
+  _slots,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -36,27 +53,29 @@ export default async function provideWorkspace(
   // we'll have to fix this asap.
   try {
     const consumer = await loadConsumerIfExist();
+
     if (consumer) {
       const workspace = new Workspace(
+        config,
         consumer,
-        workspaceConfig,
         scope,
         component,
         isolator,
+        dependencyResolver,
+        variants,
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
-        const extensionsConfig = componentConfig.allExtensions().toExtensionConfigList();
-        const res = await workspace.loadExtensionsByConfig(extensionsConfig);
-        return res;
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
+        return workspace.loadExtensions(componentConfig.parseExtensions());
       });
+      graphql.register(workspaceSchema(workspace));
       return workspace;
     }
 
     return undefined;
-  } catch {
+  } catch (err) {
     return undefined;
   }
 }

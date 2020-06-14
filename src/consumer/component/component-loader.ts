@@ -17,22 +17,28 @@ export default class ComponentLoader {
   _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
-  cacheProjectAst: Record<string, any> | null | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
+      id: id.toString()
+    });
     const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
     const idStr = idWithVersion.toString();
-    if (this._componentsCacheForCapsule[idStr]) {
-      return this._componentsCacheForCapsule[idStr];
+    if (!this._componentsCacheForCapsule[idStr]) {
+      const { components } = await this.loadMany(BitIds.fromArray([id]));
+      const component = components[0].clone();
+      this._componentsCacheForCapsule[idStr] = component;
     }
-    const { components } = await this.loadMany(BitIds.fromArray([id]));
-    const component = components[0].clone();
-    this._componentsCacheForCapsule[idStr] = component;
-    return component;
+
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
+      id: id.toString()
+    });
+    return this._componentsCacheForCapsule[idStr];
   }
 
   async loadMany(
@@ -65,13 +71,9 @@ export default class ComponentLoader {
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
-    const driverExists = this.consumer.warnForMissingDriver(
-      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
-    );
-
     const allComponents = [];
     await pMapSeries(idsToProcess, async (id: BitId) => {
-      const component = await this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
+      const component = await this.loadOne(id, throwOnFailure, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -85,7 +87,7 @@ export default class ComponentLoader {
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
-  async loadOne(id: BitId, throwOnFailure: boolean, driverExists: boolean, invalidComponents: InvalidComponent[]) {
+  async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
@@ -121,10 +123,6 @@ export default class ComponentLoader {
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
 
-    if (!driverExists) {
-      // no need to resolve dependencies
-      return component;
-    }
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(

@@ -36,6 +36,11 @@ export type SourceFileModel = {
 
 export type DistFileModel = SourceFileModel;
 
+export type ArtifactFileModel = {
+  relativePath: PathLinux;
+  file: Ref;
+};
+
 export type Log = {
   message: string;
   date: string;
@@ -80,7 +85,6 @@ export type VersionProps = {
 /**
  * Represent a version model in the scope
  */
-// @ts-ignore
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
@@ -250,6 +254,10 @@ export default class Version extends BitObject {
     return BitIds.fromArray(allDependencies);
   }
 
+  getDependenciesIdsExcludeExtensions(): BitIds {
+    return BitIds.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
+  }
+
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
     const getUpdated = (flattenedDependencies: BitIds): BitIds => {
       const updatedIds = flattenedDependencies.map(depId => {
@@ -269,7 +277,8 @@ export default class Version extends BitObject {
     };
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
-    return [...dists, ...files].filter(ref => ref);
+    const artifacts = extractRefsFromFiles(R.flatten(this.extensions.map(e => e.artifacts)));
+    return [...dists, ...files, ...artifacts].filter(ref => ref);
   }
 
   toObject() {
@@ -331,12 +340,16 @@ export default class Version extends BitObject {
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
         extensions: this.extensions.map(ext => {
-          const extensionClone = R.clone(ext);
+          const extensionClone = ext.clone();
           if (extensionClone.extensionId) {
             // TODO: fix the types of extensions. after this it should be an object not an object id
             // @ts-ignore
             extensionClone.extensionId = ext.extensionId.serialize();
           }
+          extensionClone.artifacts = extensionClone.artifacts.map(file => ({
+            file: file.file.toString(),
+            relativePath: file.relativePath
+          }));
           return extensionClone;
         }),
         packageDependencies: this.packageDependencies,
@@ -449,12 +462,17 @@ export default class Version extends BitObject {
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }
+          const artifacts = (extension.artifacts || []).map(a => ({
+            file: Ref.from(a.file),
+            relativePath: a.relativePath
+          }));
           const entry = new ExtensionDataEntry(
             extension.id,
             undefined,
             extension.name,
             extension.config,
-            extension.data
+            extension.data,
+            artifacts
           );
           return entry;
         });
@@ -517,6 +535,7 @@ export default class Version extends BitObject {
     flattenedDevDependencies,
     message,
     specsResults,
+    extensions,
     username,
     email
   }: {
@@ -528,6 +547,7 @@ export default class Version extends BitObject {
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
     specsResults: Results | undefined;
+    extensions: ExtensionDataList;
     username: string | undefined;
     email: string | undefined;
   }) {
@@ -542,6 +562,19 @@ export default class Version extends BitObject {
 
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
+
+    const parseComponentExtensions = () => {
+      const extensionsCloned = extensions;
+      extensionsCloned.forEach(extensionDataEntry => {
+        extensionDataEntry.artifacts = extensionDataEntry.artifacts.map(artifact => {
+          return {
+            file: artifact.file.hash(),
+            relativePath: artifact.relativePath
+          };
+        });
+      });
+      return extensionsCloned;
+    };
 
     const compilerDynamicPakageDependencies = component.compiler
       ? component.compiler.dynamicPackageDependencies
@@ -584,7 +617,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: component.extensions
+      extensions: parseComponentExtensions()
     });
   }
 

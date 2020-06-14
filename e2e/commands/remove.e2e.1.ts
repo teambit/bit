@@ -193,7 +193,7 @@ describe('bit remove command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
-      helper.command.addComponentAllowFiles('global/simple.js', { i: 'global/simple' });
+      helper.command.addComponent('global/simple.js', { i: 'global/simple' });
       helper.command.tagComponent('global/simple');
       helper.command.exportComponent('global/simple');
 
@@ -227,7 +227,7 @@ describe('bit remove command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.fs.createFile('global', 'simple.js');
-      helper.command.addComponentAllowFiles('global/simple.js', { i: 'global/simple' });
+      helper.command.addComponent('global/simple.js', { i: 'global/simple' });
       helper.command.tagComponent('global/simple');
       helper.command.exportComponent('global/simple');
 
@@ -237,7 +237,7 @@ describe('bit remove command', function() {
       helper.command.importComponent('global/simple -p ./test');
       helper.command.removeComponent('global/simple -s');
     });
-    it('should  remove component from package.json that points to relative path', () => {
+    it('should remove component from package.json that points to relative path', () => {
       const pkgJson = helper.packageJson.read();
       expect(pkgJson.dependencies).to.not.have.property(`@bit/${helper.scopes.remote}.global.simple`);
     });
@@ -298,7 +298,7 @@ describe('bit remove command', function() {
       helper.fixtures.populateWorkspaceWithUtilsIsType();
 
       helper.fs.createFile('copy', 'is-type.js', fixtures.isType);
-      helper.command.addComponentAllowFiles('copy/is-type.js', { i: 'copy/is-type' });
+      helper.command.addComponent('copy/is-type.js', { i: 'copy/is-type' });
 
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
@@ -353,7 +353,7 @@ describe('bit remove command', function() {
 
       const isString2Fixture = "const a = require('./is-type');";
       helper.fs.createFile('utils', 'is-string2.js', isString2Fixture);
-      helper.command.addComponentAllowFiles('utils/is-string2.js', { i: 'utils/is-string2' });
+      helper.command.addComponent('utils/is-string2.js', { i: 'utils/is-string2' });
 
       helper.command.tagAllComponents();
 
@@ -432,7 +432,7 @@ describe('bit remove command', function() {
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.fs.createFile('utils', 'is-type2.js', fixtures.isType);
-      helper.command.addComponentAllowFiles('utils/is-type2.js', { i: 'utils/is-type2' });
+      helper.command.addComponent('utils/is-type2.js', { i: 'utils/is-type2' });
       helper.command.tagAllComponents();
 
       // this additional is to prevent another bug, where nested are imported only with their

@@ -1,4 +1,5 @@
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
 import graphLib, { Graph as GraphLib } from 'graphlib';
 import Graph from './graph';
 import Component from '../../consumer/component/consumer-component';
@@ -70,8 +71,8 @@ export async function buildOneGraphForComponents(
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-  const componentsWithDeps = await Promise.all(
-    components.map(component => loadFlattenedDependenciesForCapsule(consumer, component))
+  const componentsWithDeps = await pMapSeries(components, (component: Component) =>
+    loadFlattenedDependenciesForCapsule(consumer, component)
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map(c => [c.component, ...c.allDependencies]));
 
@@ -117,7 +118,12 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   };
   components.forEach((component: Component) => {
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach(depId => setEdge(component.id, depId, depType));
+      depIds.forEach(depId => {
+        if (!graph.hasNode(depId.toString())) {
+          throw new Error(`buildGraphFromComponentsObjects: missing node of ${depId.toString()}`);
+        }
+        setEdge(component.id, depId, depType);
+      });
     });
   });
 

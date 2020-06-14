@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { importPendingMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
+import { IMPORT_PENDING_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -282,7 +282,7 @@ describe('components that are not synced between the scope and the consumer', fu
         output = helper.command.status();
       });
       it('should show a massage suggesting to import the components', () => {
-        expect(output).to.have.string(importPendingMsg);
+        expect(output).to.have.string(IMPORT_PENDING_MSG);
       });
     });
   });

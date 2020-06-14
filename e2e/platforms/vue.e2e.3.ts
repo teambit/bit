@@ -23,9 +23,9 @@ describe('support vue files', function() {
     });
     describe('add vue files', () => {
       before(() => {
-        helper.command.addComponentAllowFiles('directives/*.js');
-        helper.command.addComponentAllowFiles('styles/*');
-        helper.command.addComponentAllowFiles('UiAutocomplete.vue');
+        helper.command.addComponent('directives/*.js');
+        helper.command.addComponent('styles/*');
+        helper.command.addComponent('UiAutocomplete.vue');
         helper.command.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
@@ -36,8 +36,8 @@ describe('support vue files', function() {
       describe('after adding the missing files', () => {
         let output;
         before(() => {
-          helper.command.addComponentAllowFiles('UiAutocompleteSuggestion.vue');
-          helper.command.addComponentAllowFiles('UiIcon.vue');
+          helper.command.addComponent('UiAutocompleteSuggestion.vue');
+          helper.command.addComponent('UiIcon.vue');
           output = helper.command.status();
         });
         it('should say that all is resolved', () => {
@@ -58,7 +58,7 @@ describe('support vue files', function() {
     });
     describe('add vue files that import stylus files ', () => {
       before(() => {
-        helper.command.addComponentAllowFiles(path.normalize('StylusExample.vue'));
+        helper.command.addComponent(path.normalize('StylusExample.vue'));
       });
       it('should find missing vue dependencies', () => {
         const output = helper.command.runCmd('bit s');
@@ -66,13 +66,13 @@ describe('support vue files', function() {
         expect(output).to.have.string('StylusExample.vue -> stylus/main.styl');
       });
       it('should find missing vue dependencies', () => {
-        helper.command.addComponentAllowFiles(path.normalize('stylus/main.styl'));
+        helper.command.addComponent(path.normalize('stylus/main.styl'));
         const output = helper.command.runCmd('bit s');
         expect(output).to.have.string(' untracked file dependencies');
         expect(output).to.have.string('stylus/main.styl -> stylus/second.styl');
       });
       it('should say that all is resolved', () => {
-        helper.command.addComponentAllowFiles(path.normalize('stylus/second.styl'));
+        helper.command.addComponent(path.normalize('stylus/second.styl'));
         const output = helper.command.runCmd('bit s');
         expect(output.includes('no new components')).to.be.false;
       });
@@ -96,9 +96,9 @@ describe('support vue files', function() {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.copyFixtureComponents('vue');
-        helper.command.addComponentAllowFiles(path.normalize('directives/*.js'));
-        helper.command.addComponentAllowFiles(path.normalize('styles/*'));
-        helper.command.addComponentAllowFiles('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
+        helper.command.addComponent(path.normalize('directives/*.js'));
+        helper.command.addComponent(path.normalize('styles/*'));
+        helper.command.addComponent('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
         helper.command.runCmd('npm i fuzzysearch');
       });
 
@@ -132,8 +132,8 @@ import autofocus from '@/autofocus';
 </script>`;
       helper.fs.createFile('UI', 'Autocomplete.vue', autocompleteFixture);
       helper.fs.createFile('directives', 'autofocus.js', 'export default {}');
-      helper.command.addComponentAllowFiles('UI/Autocomplete.vue', { i: 'ui/autocomplete' });
-      helper.command.addComponentAllowFiles('directives/autofocus.js', { i: 'directives/autofocus' });
+      helper.command.addComponent('UI/Autocomplete.vue', { i: 'ui/autocomplete' });
+      helper.command.addComponent('directives/autofocus.js', { i: 'directives/autofocus' });
     });
     it('should recognize dependencies using "@" as an alias', () => {
       const output = helper.command.showComponentParsed('ui/autocomplete');

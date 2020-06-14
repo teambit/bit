@@ -39,8 +39,7 @@ export function getInvalidComponentLabel(error: Error) {
     case 'ComponentsPendingImport':
       return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
     case 'IncorrectRootDir':
-      return `component has relative import statements (replace to module paths or use "bit link --rewire" to replace.
-an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths)`;
+      return `component has relative import statements (replace to module paths or use "bit link --rewire" to replace.`;
     default:
       return error.name;
   }

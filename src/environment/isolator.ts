@@ -2,7 +2,6 @@ import R from 'ramda';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import { runModule } from 'librarian';
 import { Capsule } from '../extensions/isolator/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -80,13 +79,6 @@ export default class Isolator {
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const loaderPrefix = `isolating component - ${componentId.name}`;
     loader.setText(loaderPrefix);
-    const log = message => loader.setText(`${loaderPrefix}: ${message}`);
-    // @ts-ignore TODO: this should be part of the capsule interface
-    this.capsule.execNode = async (executable, args) => {
-      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`);
-      // TODO: do this from the compiler/tester so that the isolator doesn't need to know if it's a builder/tester/*...
-      await runModule(executable, { args, cwd: this.dir, log, onScriptRun });
-    };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);

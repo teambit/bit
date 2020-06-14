@@ -1,12 +1,12 @@
-import { Extension } from '@teambit/harmony';
 import { RawComponentState, DependenciesDefinition, DependencyResolverWorkspaceConfig } from './types';
 
 // TODO: add example of exposing a hook once its API is final by harmony
 // export const Dependencies = Hooks.create();
 // export const FileDependencies = Hooks.create();
 
-@Extension
-export class DependencyResolver {
+export class DependencyResolverExtension {
+  static id = '@teambit/dependency-resolver';
+
   /**
    * Will return the final dependencies of the component after all calculation
    * @param rawComponent
@@ -19,7 +19,7 @@ export class DependencyResolver {
     dependencyResolverWorkspaceConfig: DependencyResolverWorkspaceConfig
   ): DependenciesDefinition {
     // TODO: remove this rule upon implementation
-    // eslint-disable-next-line
+    //@ts-ignore eslint-disable-next-line
     return undefined;
   }
 }

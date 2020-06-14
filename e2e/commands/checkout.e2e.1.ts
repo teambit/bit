@@ -480,7 +480,7 @@ describe('bit checkout command', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('bar', 'foo2.js');
-        helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo' });
+        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
         scopeWithAddedFile = helper.scopeHelper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -622,9 +622,9 @@ describe('bit checkout command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooLegacy();
-      helper.command.tagAllComponentsLegacy();
-      helper.command.tagScopeLegacy('0.0.5');
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.tagScope('0.0.5');
       helper.command.exportAllComponents();
       authorScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
@@ -654,7 +654,7 @@ describe('bit checkout command', function() {
           }
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponentsLegacy();
+        helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
         helper.scopeHelper.getClonedLocalScope(importedScope);
@@ -681,7 +681,7 @@ describe('bit checkout command', function() {
       helper.fixtures.addComponentBarFoo();
 
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
       helper.command.tagAllComponents('-m v1 -s 0.0.1');
       helper.command.tagAllComponents('-m v2 -s 0.0.2');
@@ -816,7 +816,7 @@ describe('bit checkout command', function() {
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.fs.createFile('bar', `foo${index}.js`, barFooV1);
       }
-      helper.command.addComponentAllowFiles('bar/*');
+      helper.command.addComponent('bar/*');
       helper.command.tagAllComponents();
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.fs.createFile('bar', `foo${index}.js`, barFooV2);

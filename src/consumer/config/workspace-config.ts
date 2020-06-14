@@ -10,17 +10,30 @@ import {
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBasedAbsolute, PathOsBased } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
+import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
+
+export type WorkspaceConfigIsExistFunction = (dirPath: string | PathOsBased) => Promise<boolean | undefined>;
+
+export type WorkspaceConfigLoadFunction = (
+  dirPath: string | PathOsBased
+) => Promise<ILegacyWorkspaceConfig | undefined>;
+
+export type WorkspaceConfigEnsureFunction = (
+  dirPath: PathOsBasedAbsolute,
+  standAlone: boolean,
+  workspaceConfigProps: WorkspaceConfigProps
+) => Promise<ILegacyWorkspaceConfig>;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
@@ -33,7 +46,7 @@ export type WorkspaceConfigProps = {
   dependenciesDirectory?: string;
   bindingPrefix?: string;
   extensions?: ExtensionDataList;
-  packageManager?: 'librarian' | 'npm' | 'yarn';
+  packageManager?: PackageManagerClients;
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
   useWorkspaces?: boolean;
@@ -51,7 +64,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
-  packageManager: 'librarian' | 'npm' | 'yarn'; // package manager client to use
+  packageManager: PackageManagerClients;
   packageManagerArgs: string[] | undefined; // package manager client to use
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
@@ -60,6 +73,20 @@ export default class WorkspaceConfig extends AbstractConfig {
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | undefined; // default remote scope to export to
+
+  static workspaceConfigIsExistRegistry: WorkspaceConfigIsExistFunction;
+  static registerOnWorkspaceConfigIsExist(func: WorkspaceConfigIsExistFunction) {
+    this.workspaceConfigIsExistRegistry = func;
+  }
+
+  static workspaceConfigLoadingRegistry: WorkspaceConfigLoadFunction;
+  static registerOnWorkspaceConfigLoading(func: WorkspaceConfigLoadFunction) {
+    this.workspaceConfigLoadingRegistry = func;
+  }
+  static workspaceConfigEnsuringRegistry: WorkspaceConfigEnsureFunction;
+  static registerOnWorkspaceConfigEnsuring(func: WorkspaceConfigEnsureFunction) {
+    this.workspaceConfigEnsuringRegistry = func;
+  }
 
   constructor({
     compiler,
@@ -82,7 +109,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     overrides = ConsumerOverrides.load()
   }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
-    if (packageManager !== 'npm' && packageManager !== 'yarn' && packageManager !== 'librarian') {
+    if (packageManager !== 'npm' && packageManager !== 'yarn') {
       throw new InvalidPackageManager(packageManager);
     }
     this.distTarget = distTarget;
@@ -149,6 +176,15 @@ export default class WorkspaceConfig extends AbstractConfig {
 
   static async ensure(
     dirPath: PathOsBasedAbsolute,
+    standAlone = false,
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
+  ): Promise<ILegacyWorkspaceConfig> {
+    const ensureFunc = this.workspaceConfigEnsuringRegistry;
+    return ensureFunc(dirPath, standAlone, workspaceConfigProps);
+  }
+
+  static async _ensure(
+    dirPath: PathOsBasedAbsolute,
     standAlone: boolean,
     workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<WorkspaceConfig> {
@@ -173,14 +209,17 @@ export default class WorkspaceConfig extends AbstractConfig {
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
-      logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
+      logger.info(`deleting the workspace configuration file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
-    if (resetHard) await deleteBitJsonFile();
+    if (resetHard) {
+      await deleteBitJsonFile();
+    }
+    await WorkspaceConfig.ensure(dirPath);
   }
 
   static fromPlainObject(object: Record<string, any>) {
-    WorkspaceConfig.validate(object);
+    this.validate(object);
     const {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       env,
@@ -239,14 +278,44 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async load(dirPath: string): Promise<WorkspaceConfig> {
-    const res = await this.loadIfExist(dirPath);
+    const res = await this._loadIfExist(dirPath);
     if (!res) {
       throw new BitConfigNotFound();
     }
     return res;
   }
 
-  static async loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
+  static async loadIfExist(dirPath: string | PathOsBased): Promise<ILegacyWorkspaceConfig | undefined> {
+    const loadFunc = this.workspaceConfigLoadingRegistry;
+    if (loadFunc && typeof loadFunc === 'function') {
+      return loadFunc(dirPath);
+    }
+    return undefined;
+  }
+
+  static async isExist(dirPath: string): Promise<boolean | undefined> {
+    const isExistFunc = this.workspaceConfigIsExistRegistry;
+    if (isExistFunc && typeof isExistFunc === 'function') {
+      return isExistFunc(dirPath);
+    }
+    return undefined;
+  }
+
+  static async _isExist(dirPath: string): Promise<boolean> {
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
+    const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
+    const bitJsonExist = await fs.pathExists(bitJsonPath);
+    if (bitJsonExist) {
+      return true;
+    }
+    const packageJson = await this.loadPackageJson(packageJsonPath);
+    if (packageJson && packageJson.bit) {
+      return true;
+    }
+    return false;
+  }
+
+  static async _loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
     const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
     const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
 

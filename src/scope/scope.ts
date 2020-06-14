@@ -47,8 +47,6 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
-import { Dist } from '../consumer/component/sources';
-import { LEGACY_SHARED_DIR_FEATURE, isFeatureEnabled } from '../api/consumer/lib/feature-toggle';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -103,7 +101,7 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onBuild: Function[] = []; // enable extensions to hook during the build process
+  public onTag: Function[] = []; // enable extensions to hook during the tag process
 
   /**
    * import components to the `Scope.
@@ -297,19 +295,6 @@ export default class Scope {
       loader.start(BEFORE_RUNNING_BUILD);
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
-    const ids = components.map(c => c.id);
-    // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
-    // for authored and will change the component files.
-    if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
-      const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
-      // @todo: currently it makes sure that all components have results, it probably should split the work
-      if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
-        logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the new build mechanism (compile extension)');
-        // the compile extension is registered. forget the legacy build function and work only with the extension
-        // @ts-ignore
-        return this._buildResultsFromExtension(components, resultsFromCompileExt);
-      }
-    }
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
@@ -323,37 +308,6 @@ export default class Scope {
     const buildResults = await pMapSeries(components, build);
     await pMapSeries(components, writeLinks);
     return buildResults;
-  }
-
-  _buildResultsFromExtension(
-    components: Component[],
-    extensionsResults: Array<{ id: BitId; dists?: Array<{ path: string; content: string }> }>
-  ) {
-    return components
-      .map(component => {
-        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
-        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
-        const builtFiles = resultFromCompiler.dists;
-        builtFiles.forEach(file => {
-          if (!file.path || !file.content || typeof file.content !== 'string') {
-            throw new GeneralError(
-              'compile interface expects to get files in a form of { path: string, content: string }'
-            );
-          }
-        });
-        // @todo: once tag is working, check if anything is missing here. currently the path is a
-        // relative path with "dist", but can be easily changed from the compile extension
-        const distsFiles = builtFiles.map(file => {
-          return new Dist({
-            path: file.path,
-            contents: Buffer.from(file.content)
-          });
-        });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.setDists(distsFiles);
-        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
-      })
-      .filter(x => x);
   }
 
   /**
@@ -825,12 +779,15 @@ export default class Scope {
     return scopeJson;
   }
 
+  static scopeCache: { [path: string]: Scope } = {};
+
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     await Repository.reset(path);
     if (resetHard) {
       logger.info(`deleting the whole scope at ${path}`);
       await fs.emptyDir(path);
     }
+    Scope.scopeCache = {};
   }
 
   static async load(absPath: string): Promise<Scope> {
@@ -839,16 +796,19 @@ export default class Scope {
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-
-    const scopeJsonPath = getScopeJsonPath(scopePath);
-    const scopeJsonExist = fs.existsSync(scopeJsonPath);
-    let scopeJson;
-    if (scopeJsonExist) {
-      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
-    } else {
-      scopeJson = Scope.ensureScopeJson(scopePath);
+    if (!Scope.scopeCache[scopePath]) {
+      const scopeJsonPath = getScopeJsonPath(scopePath);
+      const scopeJsonExist = fs.existsSync(scopeJsonPath);
+      let scopeJson;
+      if (scopeJsonExist) {
+        scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+      } else {
+        scopeJson = Scope.ensureScopeJson(scopePath);
+      }
+      const objects = await Repository.load({ scopePath, scopeJson });
+      const scope = new Scope({ path: scopePath, scopeJson, objects });
+      Scope.scopeCache[scopePath] = scope;
     }
-    const objects = await Repository.load({ scopePath, scopeJson });
-    return new Scope({ path: scopePath, scopeJson, objects });
+    return Scope.scopeCache[scopePath];
   }
 }

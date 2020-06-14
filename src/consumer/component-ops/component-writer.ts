@@ -19,7 +19,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../extensions/isolator/capsule-paths';
+import { Artifact } from '../component/sources/artifact';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -35,7 +35,6 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
-  capsulePaths?: CapsulePaths;
   applyExtensionsAddedConfig?: boolean;
 };
 
@@ -53,7 +52,6 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
-  capsulePaths?: CapsulePaths;
   applyExtensionsAddedConfig?: boolean;
   constructor({
     component,
@@ -68,7 +66,6 @@ export default class ComponentWriter {
     writeBitDependencies = false,
     deleteBitDirContent,
     existingComponentMap,
-    capsulePaths,
     excludeRegistryPrefix = false,
     applyExtensionsAddedConfig = false
   }: ComponentWriterProps) {
@@ -85,7 +82,6 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
-    this.capsulePaths = capsulePaths;
     this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
   }
 
@@ -126,6 +122,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
+    this.populateArtifacts();
     return this.component;
   }
 
@@ -148,14 +145,14 @@ export default class ComponentWriter {
       this.writePackageJson &&
       (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
     ) {
+      const artifactsDir = this.getArtifactsDir();
       const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.bitMap,
         this.component,
-        this.writeToPath,
+        artifactsDir || this.writeToPath,
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsulePaths,
         packageManager
       );
 
@@ -168,9 +165,14 @@ export default class ComponentWriter {
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
+      if (!this.consumer || this.consumer.isolated) {
+        // bit-bin should not be installed in the capsule. it'll be symlinked later on.
+        // see package-manager.linkBitBinInCapsule();
+        packageJson.removeDependency('bit-bin');
+      }
 
-      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
-      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject() : {};
+      componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
+      componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       if (this.applyExtensionsAddedConfig) {
         this._mergePackageJsonPropsFromExtensions(packageJson);
@@ -190,6 +192,31 @@ export default class ComponentWriter {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
     }
+  }
+
+  /**
+   * currently, it writes all artifacts.
+   * later, this responsibility might move to pkg extension, which could write only artifacts
+   * that are set in package.json.files[], to have a similar structure of a package.
+   */
+  private populateArtifacts() {
+    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
+    const artifactsDir = this.getArtifactsDir();
+    if (artifactsDir) {
+      artifactsVinyl.forEach(a => a.updatePaths({ newBase: artifactsDir }));
+    }
+    this.component.dataToPersist.addManyFiles(artifactsVinyl);
+  }
+
+  private getArtifactsDir() {
+    if (!this.consumer || this.consumer.isLegacy) return null;
+    if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
+    return getNodeModulesPathOfComponent(
+      this.consumer.config._bindingPrefix,
+      this.component.id,
+      true,
+      this.component.defaultScope
+    );
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
@@ -312,7 +339,7 @@ export default class ComponentWriter {
     const areEnvsChanged = async (): Promise<boolean> => {
       // $FlowFixMe this.component.componentMap is set
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const context = { componentDir: this.component.componentMap.getRootDir() };
+      const context = { componentDir: this.component?.componentMap?.getComponentDir() };
       const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : undefined;
       const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : undefined;
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : undefined;
@@ -329,7 +356,8 @@ export default class ComponentWriter {
       );
     };
     if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
-      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, await areEnvsChanged());
+      const envsChanged = await areEnvsChanged();
+      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
     }
   }
 
@@ -409,7 +437,7 @@ export default class ComponentWriter {
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config.workspaceSettings._bindingPrefix, this.component.id)
+          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
           : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath

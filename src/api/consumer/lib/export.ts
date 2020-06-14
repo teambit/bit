@@ -19,7 +19,7 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK } from '../../../constants';
+import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_BINDINGS_PREFIX } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
@@ -176,13 +176,25 @@ async function getComponentsToExport(
 }
 
 function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
-  const workspaceDefaultScope = consumer.config.workspaceSettings.defaultScope;
+  const workspaceDefaultScope = consumer.config.defaultScope;
+  let workspaceDefaultOwner = consumer.config.defaultOwner;
+  // For backward computability don't treat the default binding prefix as real owner
+  if (workspaceDefaultOwner === DEFAULT_BINDINGS_PREFIX) {
+    workspaceDefaultOwner = undefined;
+  }
+
   const idsArray = ids.map(id => {
     if (remote) return id.changeScope(remote);
     if (id.hasScope()) return id;
-    const overrides = consumer.config.componentsConfig?.getOverrideComponentData(id);
+    const overrides = consumer.config.getComponentConfig(id);
     const componentDefaultScope = overrides ? overrides.defaultScope : null;
-    return id.changeScope(componentDefaultScope || workspaceDefaultScope || null);
+    // TODO: handle separation of owner from default scope on component
+    // TODO: handle owner of component
+    let finalScope = componentDefaultScope || workspaceDefaultScope;
+    if (workspaceDefaultScope && workspaceDefaultOwner && !componentDefaultScope) {
+      finalScope = `${workspaceDefaultOwner}.${workspaceDefaultScope}`;
+    }
+    return id.changeScope(finalScope);
   });
   return BitIds.fromArray(idsArray);
 }

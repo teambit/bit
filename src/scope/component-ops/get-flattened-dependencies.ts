@@ -43,9 +43,16 @@ export async function getAllFlattenedDependencies(
     prodGraph: graphDeps
   });
 
+  const getFlattenedDevDeps = () => {
+    // remove extensions dependencies that are also regular dependencies
+    // (no need to do the same for devDependencies, because their duplicated are removed previously)
+    const flattenedExt = flattenedExtensionDependencies.removeMultipleIfExistWithoutVersion(flattenedDependencies);
+    return BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExt]);
+  };
+
   return {
     flattenedDependencies,
-    flattenedDevDependencies: BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExtensionDependencies])
+    flattenedDevDependencies: getFlattenedDevDeps()
   };
 }
 

@@ -1,6 +1,6 @@
-import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -10,8 +10,11 @@ chai.use(assertArrays);
 
 describe('harmony extension config', function() {
   this.timeout(0);
-  const helper = new Helper();
-
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -24,8 +27,8 @@ describe('harmony extension config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
-        helper.extensions.setExtensionToVariant('*', 'Scope', config);
+        helper.fixtures.addComponentBarFooAsDir();
+        helper.extensions.addExtensionToVariant('*', '@teambit/scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
@@ -36,7 +39,7 @@ describe('harmony extension config', function() {
         expect(extensionData[0].config).to.deep.equal(config);
       });
       it('should not have version for core extension in the models', () => {
-        expect(extensionData[0].name).to.equal('Scope');
+        expect(extensionData[0].name).to.equal('@teambit/scope');
       });
       it('should not insert core extensions into the component dev deps', () => {
         expect(devDeps).to.be.length(0);
@@ -50,10 +53,10 @@ describe('harmony extension config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.setExtensionToVariant('*', 'dummy-extension', config);
+        helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
         localBeforeTag = helper.scopeHelper.cloneLocalScope();
       });
       describe('extension is new component on the workspace', () => {
@@ -158,7 +161,7 @@ describe('harmony extension config', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension');
           helper.command.exportComponent('dummy-extension');
-          helper.extensions.setExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
           helper.scopeHelper.reInitLocalScope();
@@ -172,64 +175,5 @@ describe('harmony extension config', function() {
         });
       });
     });
-  });
-  describe('config added by extension', function() {
-    const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
-    const config = { key: 'val' };
-    let output;
-    let localBeforeExtensions;
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      localBeforeExtensions = helper.scopeHelper.cloneLocalScope();
-    });
-
-    describe('extension that add simple config', function() {
-      before(() => {
-        const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
-        helper.fixtures.copyFixtureExtensions(extensionFolder);
-        helper.command.addComponent(extensionFolder);
-        helper.extensions.setExtensionToVariant('*', 'simple-config', config);
-      });
-      it('should run the add config hook', function() {
-        output = helper.command.showComponent();
-        expect(output).to.have.string('config registration hook is running');
-      });
-      it('should have the updated config in the package.json of the component in capsule', function() {
-        const capsuleDir = helper.general.generateRandomTmpDirName();
-        helper.command.isolateComponentWithCapsule('bar/foo', capsuleDir);
-        const packageJson = helper.packageJson.read(capsuleDir);
-        expect(packageJson).to.have.property('my-custom-key', 'my-custom-val');
-      });
-      it.skip('should have the updated config in another extension asks for the component', function() {});
-    });
-    describe.skip('conflict between few extensions on simple config', function() {});
-    describe.skip('conflict between extension and user overrides ', function() {});
-    describe('extensions that add another extensions', function() {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(localBeforeExtensions);
-        const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'nested-extensions');
-        helper.fixtures.copyFixtureExtensions(extensionFolder);
-        helper.command.addComponent(`${extensionFolder}/*`);
-        helper.extensions.setExtensionToVariant('bar/foo', 'nested-extension-level1', config);
-        output = helper.command.showComponent();
-      });
-      it('should runs all nested extensions', () => {
-        expect(output).to.have.string('nested-extension-level1 runs');
-        expect(output).to.have.string('nested-extension-level2 runs');
-        expect(output).to.have.string('nested-extension-level3 runs');
-      });
-      it('should runs add config hook for all nested extensions', () => {
-        expect(output).to.have.string('config registration hook is running for level 1');
-        expect(output).to.have.string('config registration hook is running for level 2');
-        expect(output).to.have.string('config registration hook is running for level 3');
-      });
-      it.skip('should only run add config event if the same extension added by many extensions', () => {});
-      // In case an extension added another extension with config. the added extension should have access to this config
-      it.skip('should have access for nested extension to the config set by a higher level', () => {});
-    });
-    describe.skip('extensions that add dependencies', function() {});
-    describe.skip('extensions that add dependencies overrides', function() {});
   });
 });

@@ -6,9 +6,9 @@ import replacePackageName from '../../utils/string/replace-package-name';
 import DataToPersist from '../component/sources/data-to-persist';
 import { BitId, BitIds } from '../../bit-id';
 import { pathNormalizeToLinux } from '../../utils';
-import { ImportSpecifier } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { Consumer } from '..';
 import IncorrectRootDir from '../component/exceptions/incorrect-root-dir';
+import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 
 export type CodemodResult = {
   id: BitId;

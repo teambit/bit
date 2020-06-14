@@ -1,101 +1,172 @@
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import { Workspace } from '../workspace';
+import { DEFAULT_DIST_DIRNAME } from './../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { BitId } from '../../bit-id';
-import { ResolvedComponent } from '../workspace/resolved-component';
+import { BitId, BitIds } from '../../bit-id';
 import buildComponent from '../../consumer/component-ops/build-component';
-import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scope } from '../scope';
-import { Flows } from '../flows';
-import { IdsAndFlows } from '../flows/flows';
+import logger from '../../logger/logger';
+import loader from '../../cli/loader';
+import { Dist } from '../../consumer/component/sources';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
+import PackageJsonFile from '../../consumer/component/package-json-file';
+import { Environments } from '../environments';
+import { CompileTask } from './compile.task';
+import { Compiler } from './compiler';
+import { Component } from '../component';
+import { Capsule } from '../isolator';
 
-export type ComponentAndCapsule = {
-  consumerComponent: ConsumerComponent;
-  component: Component;
-  capsule: Capsule;
+type BuildResult = { component: string; buildResults: string[] | null | undefined };
+
+type ComponentsAndNewCompilers = {
+  component: ConsumerComponent;
+  compilerInstance: Compiler;
+  compilerName: string;
 };
 
-type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
-
 export class Compile {
-  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
-    const func = this.compileDuringBuild.bind(this);
-    if (this.scope?.onBuild) this.scope.onBuild.push(func);
-  }
+  constructor(private workspace: Workspace, private envs: Environments, readonly task: CompileTask) {}
 
-  async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
-    const reportResults = await this.compile(ids.map(id => id.toString()));
-    /**
-     * {
-    result: {
-      type: 'flow:result',
-      id: [BitId],
-      capsule: [Capsule],
-      value: [],
-      endTime: 2020-04-01T19:48:13.041Z,
-      duration: 2
-    },
-    visited: true
-  },
-
-  value can be:
-result.value [
-  {
-    type: 'task:result',
-    id: 'help:#@bit/bit.evangalist.extensions.react-ts:transpile',
-    value: { dir: 'dist' },
-    endTime: 2020-04-01T19:48:18.830Z,
-    duration: 5785,
-    code: 0
-  }
-]
-     */
-    // @ts-ignore please fix once flows.run() get types
-    const resultsP: buildHookResult[] = Object.values(reportResults.value).map((reportResult: any) => {
-      const result = reportResult.result;
-      const id: BitId = result.id;
-      if (!result.value || !result.value.length) return { id };
-      // @todo: check why this is an array and values are needed
-      const distDir = result.value[0].value.dir;
-      if (!distDir) {
-        throw new Error(
-          `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
-        );
+  async compileOnWorkspace(
+    componentsIds: string[] | BitId[], // when empty, it compiles all
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    const bitIds = getBitIds(componentsIds, this.workspace);
+    const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
+    const componentsWithLegacyCompilers: ConsumerComponent[] = [];
+    const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
+    components.forEach(c => {
+      const environment = this.envs.getEnvFromExtensions(c.extensions);
+      const compilerInstance = environment?.getCompiler();
+      // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
+      // inside the component dir.
+      if (compilerInstance && c.componentMap?.getComponentDir()) {
+        const compilerName = compilerInstance.constructor.name || 'compiler';
+        componentsAndNewCompilers.push({ component: c, compilerInstance, compilerName });
+      } else {
+        componentsWithLegacyCompilers.push(c);
       }
-      const distFiles = result.capsule.fs.readdirSync(distDir);
-      const distFilesObjects = distFiles.map(distFilePath => {
-        const distPath = path.join(distDir, distFilePath);
-        return {
-          path: distFilePath,
-          content: result.capsule.fs.readFileSync(distPath).toString()
-        };
-      });
-      return { id, dists: distFilesObjects };
     });
-    return Promise.all(resultsP);
+    let newCompilersResultOnWorkspace: BuildResult[] = [];
+    let oldCompilersResult: BuildResult[] = [];
+    if (componentsAndNewCompilers.length) {
+      newCompilersResultOnWorkspace = await this.compileWithNewCompilersOnWorkspace(componentsAndNewCompilers);
+    }
+    if (componentsWithLegacyCompilers.length) {
+      oldCompilersResult = await this.compileWithLegacyCompilers(
+        componentsWithLegacyCompilers,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
+      );
+    }
+
+    return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
   }
 
-  // @todo: what is the return type here?
-  async compile(componentsIds: string[]) {
-    const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
-    const idsAndScriptsArr = componentAndCapsules
-      .map(c => {
-        const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
-        const compiler = compileConfig ? [compileConfig.compiler] : [];
-        return { id: c.consumerComponent.id, value: compiler };
-      })
-      .filter(i => i.value);
-    const idsAndFlows = new IdsAndFlows(...idsAndScriptsArr);
-    return this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
+  private async compileWithNewCompilersOnWorkspace(
+    componentsAndNewCompilers: ComponentsAndNewCompilers[]
+  ): Promise<BuildResult[]> {
+    const build = async ({ component, compilerName: compilerId, compilerInstance }: ComponentsAndNewCompilers) => {
+      if (!compilerInstance.compileFile) {
+        throw new Error(`compiler ${compilerId.toString()} doesn't implement "compileFile" interface`);
+      }
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+      const packageDir = path.join('node_modules', packageName);
+      const distDirName = DEFAULT_DIST_DIRNAME;
+      const distDir = path.join(packageDir, distDirName);
+      const dists: Dist[] = [];
+      const compileErrors: { path: string; error: Error }[] = [];
+      await Promise.all(
+        component.files.map(async file => {
+          const relativeComponentDir = component.componentMap?.getComponentDir();
+          if (!relativeComponentDir)
+            throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
+          const componentDir = path.join(this.workspace.path, relativeComponentDir);
+          const options = { componentDir, filePath: file.relative };
+          let compileResults;
+          try {
+            compileResults = compilerInstance.compileFile(file.contents.toString(), options);
+          } catch (error) {
+            compileErrors.push({ path: file.path, error });
+            return;
+          }
+          const base = distDir;
+          if (compileResults) {
+            dists.push(
+              ...compileResults.map(
+                result =>
+                  new Dist({
+                    base,
+                    path: path.join(base, result.outputPath),
+                    contents: Buffer.from(result.outputText)
+                  })
+              )
+            );
+          } else {
+            // compiler doesn't support this file type. copy the file as is to the dist dir.
+            dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
+          }
+        })
+      );
+      if (compileErrors.length) {
+        const formatError = errorItem => `${errorItem.path}\n${errorItem.error}`;
+        throw new Error(`compilation failed. see the following errors from the compiler
+${compileErrors.map(formatError).join('\n')}`);
+      }
+      // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
+      // as it uses other base-paths and doesn't respect the new node-modules base path.
+      const dataToPersist = new DataToPersist();
+      dataToPersist.addManyFiles(dists);
+      const found = searchFilesIgnoreExt(dists, component.mainFile, 'relative');
+      if (!found) throw new Error(`unable to find dist main file for ${component.id.toString()}`);
+      const packageJson = PackageJsonFile.loadFromPathSync(this.workspace.path, packageDir);
+      if (!packageJson.fileExist) {
+        throw new Error(`failed finding package.json file in ${packageDir}, please run "bit link"`);
+      }
+      packageJson.addOrUpdateProperty('main', pathJoinLinux(distDirName, found));
+      dataToPersist.addFile(packageJson.toVinylFile());
+      dataToPersist.addBasePath(this.workspace.path);
+      await dataToPersist.persistAllToFS();
+      const oneBuildResults = dists.map(distFile => distFile.path);
+      if (component.compiler) loader.succeed();
+      return { component: component.id.toString(), buildResults: oneBuildResults };
+    };
+    const allBuildResults = await pMapSeries(componentsAndNewCompilers, build);
+    return allBuildResults;
   }
 
-  async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
-    const populateDistTask = this.populateComponentDist.bind(this, params);
-    const writeDistTask = this.writeComponentDist.bind(this);
-    await pipeRunTask(componentsIds, populateDistTask, this.workspace);
-    return pipeRunTask(componentsIds, writeDistTask, this.workspace);
+  async compileWithLegacyCompilers(
+    components: ConsumerComponent[],
+    noCache?: boolean,
+    verbose?: boolean,
+    dontPrintEnvMsg?: boolean
+  ): Promise<BuildResult[]> {
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
+    const build = async (component: ConsumerComponent) => {
+      if (component.compiler) loader.start(`building component - ${component.id}`);
+      await component.build({
+        scope: this.workspace.consumer.scope,
+        consumer: this.workspace.consumer,
+        noCache,
+        verbose,
+        dontPrintEnvMsg
+      });
+      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
+      if (component.compiler) loader.succeed();
+      return { component: component.id.toString(), buildResults };
+    };
+    const writeLinks = async (component: ConsumerComponent) =>
+      component.dists.writeDistsLinks(component, this.workspace.consumer);
+
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+
+    return buildResults;
   }
 
   populateComponentDist(params: { verbose: boolean; noCache: boolean }, component: ComponentAndCapsule) {
@@ -118,35 +189,15 @@ result.value [
   }
 }
 
-function getBitIds(componentsIds: string[], workspace: Workspace): BitId[] {
+function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): BitId[] {
   if (componentsIds.length) {
-    return componentsIds.map(idStr => workspace.consumer.getParsedId(idStr));
+    return componentsIds.map(compId => (compId instanceof BitId ? compId : workspace.consumer.getParsedId(compId)));
   }
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }
 
-async function getResolvedComponents(componentsIds: string[], workspace: Workspace): Promise<ResolvedComponent[]> {
-  const bitIds = getBitIds(componentsIds, workspace);
-  return workspace.load(bitIds.map(id => id.toString()));
-}
-
-async function getComponentsAndCapsules(componentsIds: string[], workspace: Workspace): Promise<ComponentAndCapsule[]> {
-  const resolvedComponents = await getResolvedComponents(componentsIds, workspace);
-  return Promise.all(
-    resolvedComponents.map(async (resolvedComponent: ResolvedComponent) => {
-      // @todo: it says id._legacy "do not use this", do I have a better option to get the id?
-      const consumerComponent = await workspace.consumer.loadComponent(resolvedComponent.component.id._legacy);
-      return {
-        consumerComponent,
-        component: resolvedComponent.component,
-        capsule: resolvedComponent.capsule
-      };
-    })
-  );
-}
-
-async function pipeRunTask(ids: string[], task: Function, workspace: Workspace) {
-  const components = await getComponentsAndCapsules(ids, workspace);
-  const results = await Promise.all(components.map(component => task(component)));
-  return { results, components };
-}
+export type ComponentAndCapsule = {
+  consumerComponent: ConsumerComponent;
+  component: Component;
+  capsule: Capsule;
+};

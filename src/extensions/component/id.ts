@@ -33,6 +33,10 @@ export default class ComponentID {
     return this.legacyComponentId.name;
   }
 
+  isEqual(id: ComponentID): boolean {
+    return this._legacy.isEqual(id._legacy);
+  }
+
   /**
    * serialize the component ID.
    */

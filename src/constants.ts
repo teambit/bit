@@ -38,7 +38,7 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
-export const BIT_JSONC = 'bit.jsonc';
+export const WORKSPACE_JSONC = 'workspace.jsonc';
 
 export const GIT_IGNORE = '.gitignore';
 
@@ -58,9 +58,11 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
+export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+
+export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -68,7 +70,7 @@ export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
-export const DEFAULT_PACKAGE_MANAGER = 'librarian';
+export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_EXTENSIONS = {};
 
@@ -153,11 +155,11 @@ export const IGNORE_LIST = [
   '**/.bitmap',
   '**/.gitignore',
   '**/bit.json',
+  '**/component.json',
   '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
   '**/yarn.lock',
-  '**/librarian-manifests.json',
   '**/LICENSE'
 ];
 
@@ -413,7 +415,9 @@ export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2
 
 export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
 
-// Warnings
-export const UNABLE_TO_LOAD_EXTENSION = (id: string) => `couldn't load extension ${id}, see full error in the log file`;
-export const UNABLE_TO_LOAD_EXTENSION_FROM_LIST = (ids: string[]) =>
-  `couldn't load one of the following extensions ${ids.join(', ')}, see full error in the log file`;
+// todo: move the following two lines to the watch extension once its e2e moved to the extension dir
+export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
+export const WATCHER_COMPLETED_MSG = 'watching for changes';
+
+export const IMPORT_PENDING_MSG =
+  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
