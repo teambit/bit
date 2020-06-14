@@ -1,5 +1,5 @@
 import { GraphQLModule } from '@graphql-modules/core';
-import { Workspace } from '.';
+import Workspace from './workspace';
 
 export default (workspace: Workspace) => {
   return new GraphQLModule({
