@@ -41,10 +41,12 @@ export class UIExtension {
 
   async createRuntime(components?: Component[]) {
     const server = this.graphql.listen();
+    components;
     const config = createWebpackConfig(this.workspace.path, [require.resolve('./ui.runtime')]);
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler);
     devServer.listen(this.selectPort());
+    return server;
   }
 
   static async provider([cli, envs, workspace, graphql]: [CLIExtension, Environments, Workspace, GraphQLExtension]) {

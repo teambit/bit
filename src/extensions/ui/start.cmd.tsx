@@ -41,13 +41,13 @@ export class StartCmd implements Command {
     // @ts-ignore
     // uiRuntime.dev();
     this.clearConsole();
-    return <EnvConsole runtime={{}} />;
+    return <EnvConsole runtime={uiRuntime} />;
   }
 }
 
-export function EnvConsole({ runtime }: any) {
+export function EnvConsole(props: any) {
   const [, setCounter] = useState(0);
-
+  props;
   useEffect(() => {
     const timer = setInterval(() => {
       setCounter(previousCounter => previousCounter + 1);
