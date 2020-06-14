@@ -15,7 +15,7 @@ bitVersion();
 
 /* eslint-disable no-var */
 const semver = require('semver');
-const mkdirp = require('mkdirp');
+const fs = require('fs-extra');
 const chalk = require('chalk');
 // const bitUpdates = require('./bit-updates');
 
@@ -25,8 +25,8 @@ const compatibilityStatus = getCompatibilityStatus();
 warnIfRunningAsRoot();
 
 function ensureDirectories() {
-  mkdirp.sync(constants.GLOBAL_CONFIG);
-  mkdirp.sync(constants.GLOBAL_LOGS);
+  fs.ensureDirSync(constants.GLOBAL_CONFIG);
+  fs.ensureDirSync(constants.GLOBAL_LOGS);
 }
 
 function warnIfRunningAsRoot() {
