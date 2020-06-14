@@ -167,7 +167,7 @@ export class MyExtension {
 }
 ```
 
-#### file dependencies definitions
+#### file dependencies definitions - TBD
 The dependency resolver will provide a hook called @FileDependencies (name is open - see open question below) to enable 3rd party extension analyze a file and return a list of dependencies from it.
 here is an example:
 ```js

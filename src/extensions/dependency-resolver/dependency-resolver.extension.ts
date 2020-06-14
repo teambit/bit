@@ -15,11 +15,15 @@ export class DependencyResolverExtension {
   // TODO: remove this rule upon implementation
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDependencies(
+    // TODO: remove this rule upon implementation
+    // eslint-disable-next-line
     rawComponent: RawComponentState,
+    // TODO: remove this rule upon implementation
+    // eslint-disable-next-line
     dependencyResolverWorkspaceConfig: DependencyResolverWorkspaceConfig
   ): DependenciesDefinition {
     // TODO: remove this rule upon implementation
-    //@ts-ignore eslint-disable-next-line
+    // @ts-ignore eslint-disable-next-line
     return undefined;
   }
 }
