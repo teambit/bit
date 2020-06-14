@@ -6,7 +6,7 @@ import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
-import { DependencyResolver } from '../dependency-resolver';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
@@ -17,7 +17,7 @@ export type WorkspaceDeps = [
   ScopeExtension,
   ComponentFactory,
   Isolator,
-  DependencyResolver,
+  DependencyResolverExtension,
   Variants,
   Logger,
   GraphQLExtension

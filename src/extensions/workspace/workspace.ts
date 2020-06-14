@@ -14,7 +14,7 @@ import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { IExtensionConfigList } from '../../consumer/config';
-import { DependencyResolver } from '../dependency-resolver';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
@@ -49,7 +49,7 @@ export default class Workspace implements ComponentHost {
 
     readonly isolateEnv: Isolator,
 
-    private dependencyResolver: DependencyResolver,
+    private dependencyResolver: DependencyResolverExtension,
 
     private variants: Variants,
 
