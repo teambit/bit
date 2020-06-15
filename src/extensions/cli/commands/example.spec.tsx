@@ -11,7 +11,7 @@ describe('example', function() {
     unmount();
   });
 
-  it('should render funcitonal component', async () => {
+  it('should render functional component', async () => {
     const props: HelpProps = {
       someName: {
         commands: { someCommand: 'test command' },
