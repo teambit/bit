@@ -1,5 +1,5 @@
 import { CLIExtension } from '../cli';
-import { CompileExt } from '../compile';
+import { CompileExt } from '../compiler';
 import { ComponentFactoryExt } from '../component';
 import { ComponentGraphExt } from '../graph';
 import { ConfigExt } from '../config';

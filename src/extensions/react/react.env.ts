@@ -15,7 +15,7 @@ import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compiler, Compile } from '../compile';
+import { Compiler, Compile } from '../compiler';
 import { ReleasePipe } from '../releases';
 
 export class ReactEnv implements Environment {
