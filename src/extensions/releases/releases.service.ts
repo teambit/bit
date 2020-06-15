@@ -1,5 +1,5 @@
 import { EnvService, ExecutionContext } from '../environments';
-import { Isolator } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
 import { ReleasePipe } from './release-pipe';
 
@@ -8,7 +8,7 @@ export class ReleasesService implements EnvService {
     /**
      * isolator extension.
      */
-    private isolator: Isolator,
+    private isolator: IsolatorExtension,
 
     /**
      * workspace extension.

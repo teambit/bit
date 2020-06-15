@@ -10,38 +10,7 @@ import { Logger, LogPublisher } from '../logger';
 import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-
-export type installOpts = {
-  packageManager?: string;
-};
-
-function linkBitBinInCapsule(capsule) {
-  const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
-  const getLocalBitBinPath = () => {
-    const pathOutsideNodeModules = path.join(__dirname, '../..');
-    if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
-      return pathOutsideNodeModules;
-    }
-    if (__dirname.includes('build-harmony')) {
-      // for bit-bin development, the cli extension is installed as a package in build-harmony directory
-      return path.join(__dirname.split('build-harmony')[0], 'dist');
-    }
-    throw new Error('unable to link bit-bin to the capsule, the location of bit-bin is unknown');
-  };
-  const localBitBinPath = getLocalBitBinPath();
-  // if there are no deps, sometimes the node_modules folder is not created
-  // and we need it in order to perform the linking
-  try {
-    capsule.fs.mkdirSync('node_modules');
-  } catch (e) {
-    // fail silently - we only need to create it if it doesn't already exist
-  }
-  // we use fs directly here rather than the capsule.fs because there are some edge cases
-  // that the capusle fs does not deal with well (eg. identifying and deleting
-  // a symlink rather than the what the symlink links to)
-  fs.removeSync(bitBinPath);
-  createSymlinkOrCopy(localBitBinPath, bitBinPath);
-}
+import { installOpts } from './types';
 
 // TODO:
 // this is a hack in order to pass events from here to flows (and later install)
@@ -87,7 +56,7 @@ export default class PackageManager {
     await safeUnlink('yarn.lock');
     await safeUnlink('package-lock.json');
   }
-  async runInstall(capsules: Capsule[], opts: installOpts = {}) {
+  async capsulesInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
     this.emitter.emit('beforeInstallingCapsules', capsules.length);
@@ -152,4 +121,32 @@ export default class PackageManager {
     }
     throw new Error(`unsupported package manager ${packageManager}`);
   }
+}
+
+function linkBitBinInCapsule(capsule) {
+  const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
+  const getLocalBitBinPath = () => {
+    const pathOutsideNodeModules = path.join(__dirname, '../..');
+    if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
+      return pathOutsideNodeModules;
+    }
+    if (__dirname.includes('build-harmony')) {
+      // for bit-bin development, the cli extension is installed as a package in build-harmony directory
+      return path.join(__dirname.split('build-harmony')[0], 'dist');
+    }
+    throw new Error('unable to link bit-bin to the capsule, the location of bit-bin is unknown');
+  };
+  const localBitBinPath = getLocalBitBinPath();
+  // if there are no deps, sometimes the node_modules folder is not created
+  // and we need it in order to perform the linking
+  try {
+    capsule.fs.mkdirSync('node_modules');
+  } catch (e) {
+    // fail silently - we only need to create it if it doesn't already exist
+  }
+  // we use fs directly here rather than the capsule.fs because there are some edge cases
+  // that the capusle fs does not deal with well (eg. identifying and deleting
+  // a symlink rather than the what the symlink links to)
+  fs.removeSync(bitBinPath);
+  createSymlinkOrCopy(localBitBinPath, bitBinPath);
 }
