@@ -97,9 +97,10 @@ export function execAction(command, concrete, args): Promise<any> {
       .then(async res => {
         loader.off();
         if (flags.json) {
-          const code = res.code;
+          const code = res.code || 0;
+          const data = res.data || res;
           // eslint-disable-next-line no-console
-          console.log(JSON.stringify(res.data, null, 2));
+          console.log(JSON.stringify(data, null, 2));
           return code;
         }
         const { waitUntilExit } = render(res);
