@@ -13,7 +13,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments } from '../environments';
-import { CompileTask } from './compile.task';
+import { CompilerTask } from './compiler.task';
 import { Compiler } from './types';
 import { Component } from '../component';
 import { Capsule } from '../isolator';
@@ -27,7 +27,7 @@ type ComponentsAndNewCompilers = {
 };
 
 export class Compile {
-  constructor(private workspace: Workspace, private envs: Environments, readonly task: CompileTask) {}
+  constructor(private workspace: Workspace, private envs: Environments, readonly task: CompilerTask) {}
 
   async compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all

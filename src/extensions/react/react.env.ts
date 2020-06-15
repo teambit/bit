@@ -23,7 +23,7 @@ export class ReactEnv implements Environment {
     private logger: LogPublisher,
     private jest: JestExtension,
     private ts: TypescriptExtension,
-    private compile: Compile,
+    private compiler: Compile,
     private tester: TesterExtension
   ) {}
 
@@ -75,9 +75,9 @@ export class ReactEnv implements Environment {
    * returns a release pipeline.
    */
   getPipe(): ReleasePipe {
-    // return ReleasePipe.from([this.compile.task, this.tester.task]);
+    // return ReleasePipe.from([this.compiler.task, this.tester.task]);
     // return ReleasePipe.from([this.tester.task]);
-    return ReleasePipe.from([this.compile.task]);
+    return ReleasePipe.from([this.compiler.task]);
   }
 
   dev(workspace: Workspace, components: Component[]) {
