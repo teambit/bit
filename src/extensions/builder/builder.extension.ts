@@ -1,6 +1,6 @@
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
-import { ReleaserCmd } from './run.cmd';
+import { BuilderCmd } from './run.cmd';
 import { Component } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
@@ -37,7 +37,7 @@ export class BuilderExtension {
     private workspace: Workspace,
 
     /**
-     * release service.
+     * builder service.
      */
     private service: BuilderService
   ) {}
@@ -45,13 +45,13 @@ export class BuilderExtension {
   async tagListener(ids: BitId[]) {
     // @todo: some processes needs dependencies/dependents of the given ids
     const components = await this.workspace.getMany(ids);
-    return this.release(components);
+    return this.build(components);
   }
 
   /**
    * build given components for release.
    */
-  async release(components?: Component[]) {
+  async build(components?: Component[]) {
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
     return buildResult;
@@ -69,7 +69,7 @@ export class BuilderExtension {
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new ReleaserCmd(builder, workspace));
+    cli.register(new BuilderCmd(builder, workspace));
     return builder;
   }
 }

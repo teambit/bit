@@ -11,12 +11,12 @@ export class BuildPipe {
   ) {}
 
   /**
-   * execute a pipeline of release tasks.
+   * execute a pipeline of build tasks.
    */
-  async execute(releaseContext: BuildContext) {
+  async execute(buildContext: BuildContext) {
     return pMapSeries(this.tasks, async (task: BuildTask) => {
-      const taskResult = await task.execute(releaseContext);
-      const taskProcess = new TaskProcess(task, taskResult, releaseContext);
+      const taskResult = await task.execute(buildContext);
+      const taskProcess = new TaskProcess(task, taskResult, buildContext);
       taskProcess.throwIfErrorsFound();
       await taskProcess.saveTaskResults();
       // @todo: return summery results?
@@ -24,7 +24,7 @@ export class BuildPipe {
   }
 
   /**
-   * create a release pipe from an array of services.
+   * create a build pipe from an array of tasks.
    */
   static from(tasks: BuildTask[]) {
     return new BuildPipe(tasks);

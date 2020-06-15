@@ -12,7 +12,7 @@ export class TaskProcess {
   constructor(
     private task: BuildTask,
     private taskResult: BuildResults,
-    private releaseContext: BuildContext,
+    private buildContext: BuildContext,
     private extensionId = task.extensionId
   ) {}
 
@@ -31,7 +31,7 @@ export class TaskProcess {
   }
 
   public async saveTaskResults() {
-    const { components } = this.releaseContext;
+    const { components } = this.buildContext;
     const resultsP = components.map(async component => {
       this.saveDataToComponent(component);
       await this.saveArtifactsToComponent(component);
@@ -52,7 +52,7 @@ export class TaskProcess {
     const { artifacts } = this.taskResult;
     if (artifacts.length) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
-      const capsule = this.releaseContext.capsuleGraph.capsules.getCapsule(component.id);
+      const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
       const files = await this.getFilesByArtifacts(capsule);
       const artifactsVinyl = files.map(file => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));

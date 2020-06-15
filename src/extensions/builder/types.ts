@@ -2,12 +2,9 @@ import { Component, ComponentID } from '../component';
 import { Network } from '../isolator/isolator.extension';
 import { ExecutionContext } from '../environments';
 
-/**
- * Context of a release
- */
 export interface BuildContext extends ExecutionContext {
   /**
-   * all components about to be released/tagged.
+   * all components about to be built/tagged.
    */
   components: Component[];
 
@@ -22,9 +19,6 @@ export interface BuildResults {
   artifacts: Array<{ dirName: string }>;
 }
 
-/**
- * release task.
- */
 export interface BuildTask {
   /**
    * extensionId hosting this task.
@@ -32,7 +26,7 @@ export interface BuildTask {
    */
   extensionId: string;
   /**
-   * execute a task in a release context
+   * execute a task in a build context
    */
   execute(context: BuildContext): Promise<BuildResults>;
 }

@@ -19,7 +19,7 @@ export class ScopeExtension {
     readonly legacyScope: LegacyScope,
 
     /**
-     * slot registry for subscribing to release
+     * slot registry for subscribing to build
      */
     private tagRegistry: TagRegistry
   ) {}

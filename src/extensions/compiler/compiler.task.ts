@@ -3,7 +3,7 @@ import { BuildTask, BuildResults } from '../builder';
 import { Compiler } from './types';
 
 /**
- * compiler release task. Allows to compile components during component releases.
+ * compiler build task. Allows to compile components during component build.
  */
 export class CompilerTask implements BuildTask {
   constructor(readonly extensionId: string) {}

@@ -9,7 +9,7 @@ import { detectTestFiles } from './utils';
 const CAPSULES_BASE_DIR = join(CACHE_ROOT, 'capsules');
 
 /**
- * tester release task. Allows to test components during component releases.
+ * tester build task. Allows to test components during component build.
  */
 export class TesterTask implements BuildTask {
   constructor(readonly extensionId: string) {}
