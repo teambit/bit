@@ -13,9 +13,9 @@ export class GraphQlUI {
   /**
    * get the graphQL provider
    */
-  getProvider(rootComponent: JSX.Element) {
-    return <GraphQLProvider client={this.client} root={rootComponent} />;
-  }
+  getProvider = ({ children }: { children: JSX.Element }) => {
+    return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
+  };
 
   static async provider() {
     const client = new ApolloClient({

@@ -7,9 +7,7 @@ export class DependenciesUI {
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
       label: 'Dependencies',
-      getContent: function getContent() {
-        return <div>Here are dependencies y'all</div>;
-      }
+      onClick: () => workspace.open(<div>Here are dependencies y'all</div>)
     });
 
     return new DependenciesUI();

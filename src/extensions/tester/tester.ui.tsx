@@ -7,12 +7,7 @@ export class TesterUI {
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
       label: 'Tests',
-      getContent: function getContent() {
-        // const componentId = useContext(ComponentContext);
-        const componentId = 'ui/text';
-
-        return <div>Tests! of {componentId}</div>;
-      }
+      onClick: () => workspace.open(<div>Tests!</div>)
     });
 
     return new TesterUI();

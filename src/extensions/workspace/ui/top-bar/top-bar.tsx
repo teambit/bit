@@ -9,22 +9,17 @@ export type TopBarProps = {
    * slot for top bar menu items
    */
   topBarSlot: TopBarSlotRegistry;
-
-  /**
-   * on select stage event.
-   */
-  onStageSelect: (stage: JSX.Element) => void;
 };
 
 /**
  * top bar menu.
  */
-export function TopBar({ topBarSlot, className, onStageSelect }: TopBarProps) {
+export function TopBar({ topBarSlot, className }: TopBarProps) {
   const menuItems = topBarSlot.values();
   return (
     <ul className={classnames(styles.topBar, className)}>
       {menuItems.map((menuItem, key) => (
-        <li key={key} onClick={() => onStageSelect(menuItem.getContent())}>
+        <li key={key} onClick={menuItem.onClick}>
           {menuItem.label}
         </li>
       ))}

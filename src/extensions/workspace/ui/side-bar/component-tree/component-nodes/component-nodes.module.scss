@@ -3,13 +3,12 @@ $p30: #c9c3f6;
 
 .scope {
 	user-select: none;
-	font-size: 1.38em;
+	display: none;
 }
 
 .namespace {
 	user-select: none;
-	font-size: 1.23em;
-	color: var(--text-muted);
+	font-weight: bold;
 }
 
 .component {

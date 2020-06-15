@@ -7,9 +7,7 @@ export class DocsUI {
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
       label: 'Overview',
-      getContent: function getContent() {
-        return <div>Overview!</div>;
-      }
+      onClick: () => workspace.open(<div>Overview!</div>)
     });
     return new DocsUI();
   }

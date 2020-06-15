@@ -4,7 +4,7 @@ export interface IComponentTreeContext {
   selected?: string;
 }
 
-export const ComponentTreeContext = createContext({
-  onSelect: (id: string) => {},
+export const ComponentTreeContext = createContext<IComponentTreeContext>({
+  onSelect: () => {},
   selected: undefined
 });

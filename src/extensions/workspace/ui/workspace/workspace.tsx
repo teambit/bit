@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
+import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
+import 'reset-css';
+
 import { SideBar } from '../side-bar';
 import { TopBar } from '../top-bar';
 import { TopBarSlotRegistry } from '../../workspace.ui';
@@ -20,14 +23,14 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   topBarSlot: TopBarSlotRegistry;
+  stage?: JSX.Element;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ topBarSlot }: WorkspaceProps) {
+export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
-  const [stage, setStage] = useState(<div></div>);
   const [selectedComponent, selectComponent] = useState<string | undefined>();
 
   if (loading) return <div>loading</div>;
@@ -36,11 +39,20 @@ export function Workspace({ topBarSlot }: WorkspaceProps) {
   const workspace = data.workspace;
 
   return (
-    <div className={styles.explorer}>
-      <div className={styles.scopeName}>componentName</div>
-      <TopBar className={styles.topbar} topBarSlot={topBarSlot} onStageSelect={stageElm => setStage(stageElm)} />
-      <SideBar components={workspace.components} onSelectComponent={selectComponent} selected={selectedComponent} />
-      <Stage>{stage}</Stage>
-    </div>
+    <Theme>
+      <div className={styles.explorer}>
+        <div className={styles.scopeName}>
+          Google / <b>material-ui</b>
+        </div>
+        <TopBar className={styles.topbar} topBarSlot={topBarSlot} />
+        <SideBar
+          className={styles.sideBar}
+          components={workspace.components}
+          onSelectComponent={selectComponent}
+          selected={selectedComponent}
+        />
+        <Stage>{stage}</Stage>
+      </div>
+    </Theme>
   );
 }

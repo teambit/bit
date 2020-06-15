@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { FC, useState } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Workspace } from './ui';
 
 export type MenuItem = {
   label: string;
-  getContent: () => JSX.Element;
+  onClick?: () => any;
+  // getContent?: () => JSX.Element;
 };
 
 export type TopBarSlotRegistry = SlotRegistry<MenuItem>;
 
 export class WorkspaceUI {
   constructor(private topBarSlot: TopBarSlotRegistry) {}
+  setStage?: React.Dispatch<React.SetStateAction<JSX.Element | undefined>>;
 
   /**
    * register a new menu item.
@@ -20,8 +22,18 @@ export class WorkspaceUI {
     return this;
   }
 
-  getMain(): JSX.Element {
-    return <Workspace topBarSlot={this.topBarSlot} />;
+  open(element: JSX.Element) {
+    this.setStage && this.setStage(element);
+  }
+
+  getMain(): FC {
+    const WorkspaceUi = () => {
+      const [stage, setStage] = useState<JSX.Element | undefined>(undefined);
+      this.setStage = setStage;
+      return <Workspace topBarSlot={this.topBarSlot} stage={stage} />;
+    };
+
+    return WorkspaceUi;
   }
 
   static slots = [Slot.withType<MenuItem>()];

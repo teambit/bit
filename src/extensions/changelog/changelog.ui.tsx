@@ -13,7 +13,9 @@ export class ChangeLogUI {
 
     workspace.registerMenuItem({
       label: 'Changelog',
-      getContent: this.ChangeLog
+      onClick: () => {
+        workspace.open(ChangeLogUI.ChangeLog());
+      }
     });
 
     return ui;

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
+import { GraphQLProvider } from '../graphql/graphql-provider';
 // import * as serviceWorker from './serviceWorker';
 
 // If you want your app to work offline and load faster, you can change
@@ -28,8 +29,15 @@ export class UIRuntimeExtension {
   ) {}
 
   render() {
+    const Workspace = this.workspace.getMain();
+    const GraphqlProvider = this.graphql.getProvider;
+
     ReactDOM.render(
-      <React.StrictMode>{this.graphql.getProvider(this.workspace.getMain())}</React.StrictMode>,
+      <React.StrictMode>
+        <GraphqlProvider>
+          <Workspace />
+        </GraphqlProvider>
+      </React.StrictMode>,
       document.getElementById('root')
     );
   }

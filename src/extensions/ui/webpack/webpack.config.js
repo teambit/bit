@@ -118,6 +118,11 @@ module.exports = function(workspaceDir, entryFiles) {
               }
             }
           ]
+        },
+        {
+          test: /\.css$/,
+          exclude: /\.(s(a|c)ss)$/,
+          loader: [require.resolve('style-loader'), require.resolve('css-loader')]
         }
       ]
     },

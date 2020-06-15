@@ -27,11 +27,26 @@
 }
 
 .scopeName {
+	display: flex;
+	align-items: center;
 	border-bottom: 1px solid #babec9;
 	height: 40px;
+	background: #ededed;
+	
+	> b {
+		font-weight: bold;
+	}
 }
 
 .topbar {
+	display: flex;
+	align-items: center;
+	
 	border-bottom: 1px solid #babec9;
 	height: 40px;
+	background: #ededed;
+}
+
+.sideBar {
+	border-right: 1px solid #ededed;
 }

@@ -23,13 +23,11 @@ export class ComponentTree extends Component<ComponentTreeProps> {
     const rootNode = this.getRootNode(this.props.components);
 
     return (
-      <div>
-        <TreeNodeContext.Provider value={getTreeNodeComponent}>
-          <ComponentTreeContext.Provider value={treeContext}>
-            <ScopeView node={rootNode} depth={0} />
-          </ComponentTreeContext.Provider>
-        </TreeNodeContext.Provider>
-      </div>
+      <TreeNodeContext.Provider value={getTreeNodeComponent}>
+        <ComponentTreeContext.Provider value={treeContext}>
+          <ScopeView node={rootNode} depth={0} />
+        </ComponentTreeContext.Provider>
+      </TreeNodeContext.Provider>
     );
   }
 }
