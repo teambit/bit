@@ -8,10 +8,12 @@ import { DependencyResolverExtension } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
 import { GraphQLExtension } from '../graphql';
+import { CLIExtension } from '../cli';
 
 export default {
   name: EXT_NAME,
   dependencies: [
+    CLIExtension,
     ScopeExtension,
     ComponentFactoryExt,
     IsolatorExtension,

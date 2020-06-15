@@ -12,8 +12,11 @@ import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
 import { GraphQLExtension } from '../graphql';
 import workspaceSchema from './workspace.graphql';
+import InstallCmd from './install.cmd';
+import { CLIExtension } from '../cli';
 
 export type WorkspaceDeps = [
+  CLIExtension,
   ScopeExtension,
   ComponentFactory,
   IsolatorExtension,
@@ -39,7 +42,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -71,6 +74,8 @@ export default async function provideWorkspace(
         return workspace.loadExtensions(componentConfig.parseExtensions());
       });
       graphql.register(workspaceSchema(workspace));
+      cli.register(new InstallCmd(workspace));
+
       return workspace;
     }
 

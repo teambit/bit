@@ -1,11 +1,7 @@
 import { RawComponentState, DependenciesDefinition, DependencyResolverWorkspaceConfig, installOpts } from './types';
 import { LoggerExt, Logger } from '../logger';
-import { CLIExtension } from '../cli';
 import PackageManager from './package-manager';
-import { WorkspaceExt, Workspace } from '../workspace';
-import InstallCmd from './install.cmd';
-import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
-// TODO: it's weird we take it from here.. think about it
+// TODO: it's weird we take it from here.. think about it../workspace/utils
 import { Capsule } from '../isolator';
 
 // TODO: add example of exposing a hook once its API is final by harmony
@@ -14,7 +10,7 @@ import { Capsule } from '../isolator';
 
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
-  static dependencies = [CLIExtension, WorkspaceExt, LoggerExt];
+  static dependencies = [LoggerExt];
   static defaultConfig: DependencyResolverWorkspaceConfig = {
     /**
      * default package manager.
@@ -25,13 +21,12 @@ export class DependencyResolverExtension {
     strictPeerDependencies: true
   };
   static async provider(
-    [cli, workspace, logger]: [CLIExtension, Workspace, Logger],
+    [logger]: [Logger],
     config: DependencyResolverWorkspaceConfig
     // TODO: add slots
   ) {
     const packageManager = new PackageManager(config.packageManager, logger);
-    const DependencyResolver = new DependencyResolverExtension(config, workspace, packageManager);
-    cli.register(new InstallCmd(DependencyResolver));
+    const DependencyResolver = new DependencyResolverExtension(config, packageManager);
     return DependencyResolver;
   }
 
@@ -40,11 +35,6 @@ export class DependencyResolverExtension {
      * Dependency resolver  extension configuration.
      */
     readonly config: DependencyResolverWorkspaceConfig,
-
-    /**
-     * dependencies installer.
-     */
-    private workspace: Workspace,
 
     /**
      * package manager client.
@@ -56,26 +46,12 @@ export class DependencyResolverExtension {
     return this.config.packageManager;
   }
 
-  // TODO: might need to moved to workspace extension
-  async workspaceInstall() {
-    //      this.reporter.info('Installing component dependencies');
-    //      this.reporter.setStatusText('Installing');
-    const components = await this.workspace.list();
-    // this.reporter.info('Isolating Components');
-    const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-    const packageManagerName = this.config.packageManager;
-    // this.reporter.info('Installing workspace dependencies');
-    await removeExistingLinksInNodeModules(isolatedEnvs);
-    await this.packageManager.runInstallInFolder(process.cwd(), {
-      packageManager: packageManagerName
-    });
-    await symlinkCapsulesInNodeModules(isolatedEnvs);
-    // this.reporter.end();
-    return isolatedEnvs;
+  async capsulesInstall(capsules: Capsule[], opts: installOpts = { packageManager: this.packageManagerName }) {
+    return this.packageManager.capsulesInstall(capsules, opts);
   }
 
-  async capsulesInstall(capsules: Capsule[], opts: installOpts = {}) {
-    return this.packageManager.capsulesInstall(capsules, opts);
+  async folderInstall(folder: string, opts: installOpts = { packageManager: this.packageManagerName }) {
+    return this.packageManager.runInstallInFolder(folder, opts);
   }
 
   /**

@@ -39,6 +39,6 @@ export class CapsuleListCmd implements Command {
 
   async json() {
     const list = await this.getList();
-    return JSON.stringify(list, null, 2);
+    return list;
   }
 }

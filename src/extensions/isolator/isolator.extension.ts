@@ -45,17 +45,17 @@ async function createCapsulesFromComponents(components: any[], baseDir, orchOpti
 }
 
 function findSuccessorsInGraph(graph, seeders) {
-  const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+  const dependenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
   const components: ConsumerComponent[] = filter(
     val => val,
-    uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
+    uniq(concat(dependenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
   );
   return components;
 }
 
 export class IsolatorExtension {
   static id = '@teambit/isolator';
-  static dependencies = [DependencyResolverExtension];
+  static dependencies = [DependencyResolverExtension, CLIExtension];
   static defaultConfig = {};
   static async provide([dependencyResolver, cli]: IsolatorDeps) {
     const isolator = new IsolatorExtension(dependencyResolver);
