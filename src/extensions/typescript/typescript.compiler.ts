@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import ts from 'typescript';
-import { Compiler } from '../compile';
+import { Compiler } from '../compiler';
 import { Network } from '../isolator';
 import { BuildResults } from '../builder';
 

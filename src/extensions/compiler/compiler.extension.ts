@@ -3,9 +3,9 @@ import { WorkspaceExt } from '../workspace';
 import { Environments } from '../environments';
 import { Workspace } from '../workspace';
 import { CLIExtension } from '../cli';
-import { CompileCmd } from './compile.cmd';
+import { CompileCmd } from './compiler.cmd';
 import { Compile } from './compile';
-import { CompileTask } from './compile.task';
+import { CompilerTask } from './compiler.task';
 
 const name = 'compile';
 
@@ -18,7 +18,7 @@ export default {
 export type CompileDeps = [CLIExtension, Workspace, Environments];
 
 export async function provideCompile([cli, workspace, envs]: CompileDeps) {
-  const compilerTask = new CompileTask(name);
+  const compilerTask = new CompilerTask(name);
   const compile = new Compile(workspace, envs, compilerTask);
   // @ts-ignore
   cli.register(new CompileCmd(compile));
