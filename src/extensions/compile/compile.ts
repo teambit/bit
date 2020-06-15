@@ -14,7 +14,7 @@ import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments } from '../environments';
 import { CompileTask } from './compile.task';
-import { Compiler } from './compiler';
+import { Compiler } from './types';
 import { Component } from '../component';
 import { Capsule } from '../isolator';
 

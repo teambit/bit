@@ -1,6 +1,6 @@
 import { ReleaseContext } from '../releases';
 import { ReleaseTask, ReleaseResults } from '../releases';
-import { Compiler } from './compiler';
+import { Compiler } from './types';
 
 /**
  * compiler release task. Allows to compile components during component releases.
