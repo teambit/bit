@@ -1,8 +1,8 @@
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
-import { ReleaserCmd } from './run.cmd';
+import { BuilderCmd } from './run.cmd';
 import { Component } from '../component';
-import { ReleasesService } from './releases.service';
+import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { IsolatorExtension } from '../isolator';
@@ -11,15 +11,15 @@ import { CLIExtension } from '../cli';
 /**
  * extension config type.
  */
-export type ReleasesConfig = {
+export type BuilderConfig = {
   /**
    * number of components to build in parallel.
    */
   parallel: 10;
 };
 
-export class ReleasesExtension {
-  static id = '@teambit/releases';
+export class BuilderExtension {
+  static id = '@teambit/builder';
   /**
    * extension dependencies
    */
@@ -37,21 +37,21 @@ export class ReleasesExtension {
     private workspace: Workspace,
 
     /**
-     * release service.
+     * builder service.
      */
-    private service: ReleasesService
+    private service: BuilderService
   ) {}
 
   async tagListener(ids: BitId[]) {
     // @todo: some processes needs dependencies/dependents of the given ids
     const components = await this.workspace.getMany(ids);
-    return this.release(components);
+    return this.build(components);
   }
 
   /**
    * build given components for release.
    */
-  async release(components?: Component[]) {
+  async build(components?: Component[]) {
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
     return buildResult;
@@ -64,12 +64,12 @@ export class ReleasesExtension {
     ScopeExtension,
     IsolatorExtension
   ]) {
-    const releasesService = new ReleasesService(isolator, workspace);
-    const releases = new ReleasesExtension(envs, workspace, releasesService);
-    const func = releases.tagListener.bind(releases);
+    const builderService = new BuilderService(isolator, workspace);
+    const builder = new BuilderExtension(envs, workspace, builderService);
+    const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new ReleaserCmd(releases, workspace));
-    return releases;
+    cli.register(new BuilderCmd(builder, workspace));
+    return builder;
   }
 }

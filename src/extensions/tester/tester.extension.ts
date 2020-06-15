@@ -34,7 +34,7 @@ export class TesterExtension {
     readonly service: TesterService,
 
     /**
-     * release task.
+     * build task.
      */
     readonly task: TesterTask
   ) {}

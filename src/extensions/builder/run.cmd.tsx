@@ -4,21 +4,21 @@ import React, { useState, useEffect } from 'react';
 import { Box, Color } from 'ink';
 import { Command, CLIArgs } from '../cli';
 import { Workspace } from '../workspace';
-import { ReleasesExtension } from './releases.extension';
+import { BuilderExtension } from './builder.extension';
 
-export class ReleaserCmd implements Command {
+export class BuilderCmd implements Command {
   name = 'run-new [pattern]';
-  description = 'run set of tasks for release';
+  description = 'run set of tasks for build';
   alias = '';
   group = '';
   shortDescription = '';
   options = [];
 
-  constructor(private releaser: ReleasesExtension, private workspace: Workspace) {}
+  constructor(private builder: BuilderExtension, private workspace: Workspace) {}
 
   async render([userPattern]: CLIArgs) {
     const pattern = userPattern && userPattern.toString();
-    const results = await this.releaser.release(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    const results = await this.builder.build(pattern ? await this.workspace.byPattern(pattern) : undefined);
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console

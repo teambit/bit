@@ -1,7 +1,7 @@
 import glob from 'glob';
 import { flatten } from 'ramda';
 import path from 'path';
-import { ReleaseTask, ReleaseResults, ReleaseContext } from './types';
+import { BuildTask, BuildResults, BuildContext } from './types';
 import GeneralError from '../../error/general-error';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { Component } from '../component';
@@ -10,9 +10,9 @@ import { Artifact } from '../../consumer/component/sources/artifact';
 
 export class TaskProcess {
   constructor(
-    private task: ReleaseTask,
-    private taskResult: ReleaseResults,
-    private releaseContext: ReleaseContext,
+    private task: BuildTask,
+    private taskResult: BuildResults,
+    private buildContext: BuildContext,
     private extensionId = task.extensionId
   ) {}
 
@@ -31,7 +31,7 @@ export class TaskProcess {
   }
 
   public async saveTaskResults() {
-    const { components } = this.releaseContext;
+    const { components } = this.buildContext;
     const resultsP = components.map(async component => {
       this.saveDataToComponent(component);
       await this.saveArtifactsToComponent(component);
@@ -52,7 +52,7 @@ export class TaskProcess {
     const { artifacts } = this.taskResult;
     if (artifacts.length) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
-      const capsule = this.releaseContext.capsuleGraph.capsules.getCapsule(component.id);
+      const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
       const files = await this.getFilesByArtifacts(capsule);
       const artifactsVinyl = files.map(file => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));

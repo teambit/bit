@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import ts from 'typescript';
 import { Compiler } from '../compiler';
 import { Network } from '../isolator';
-import { ReleaseResults } from '../releases';
+import { BuildResults } from '../builder';
 
 export class TypescriptCompiler implements Compiler {
   constructor(readonly tsConfig: Record<string, any>) {}
@@ -50,7 +50,7 @@ export class TypescriptCompiler implements Compiler {
     }
     return outputFiles;
   }
-  async compileOnCapsules({ capsuleGraph }: { capsuleGraph: Network }): Promise<ReleaseResults> {
+  async compileOnCapsules({ capsuleGraph }: { capsuleGraph: Network }): Promise<BuildResults> {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
     capsuleDirs.forEach(capsuleDir =>

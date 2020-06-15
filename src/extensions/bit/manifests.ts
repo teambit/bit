@@ -17,7 +17,7 @@ import { React } from '../react';
 import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
-import { ReleasesExtension } from '../releases';
+import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
 import { GraphQLExtension } from '../graphql';
 import { WatchExt } from '../watch';
@@ -51,7 +51,7 @@ export const manifestsMap = {
   // TODO: take from the extension itself & change name to follow convention
   [TesterExtension.id]: TesterExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [ReleasesExtension.id]: ReleasesExtension,
+  [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt
