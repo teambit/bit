@@ -1,9 +1,9 @@
 import { EnvService, ExecutionContext } from '../environments';
 import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
-import { ReleasePipe } from './release-pipe';
+import { BuildPipe } from './build-pipe';
 
-export class ReleasesService implements EnvService {
+export class BuilderService implements EnvService {
   constructor(
     /**
      * isolator extension.
@@ -21,7 +21,7 @@ export class ReleasesService implements EnvService {
    */
   async run(context: ExecutionContext) {
     // make release pipe accessible throughout the context.
-    const releasePipe: ReleasePipe = context.env.getPipe(context);
+    const releasePipe: BuildPipe = context.env.getPipe(context);
     if (!releasePipe) {
       throw new Error(`releaser service expects ${context.id} to implement getPipe()`);
     }

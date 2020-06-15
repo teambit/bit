@@ -1,7 +1,7 @@
 import glob from 'glob';
 import { flatten } from 'ramda';
 import path from 'path';
-import { ReleaseTask, ReleaseResults, ReleaseContext } from './types';
+import { BuildTask, BuildResults, BuildContext } from './types';
 import GeneralError from '../../error/general-error';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { Component } from '../component';
@@ -10,9 +10,9 @@ import { Artifact } from '../../consumer/component/sources/artifact';
 
 export class TaskProcess {
   constructor(
-    private task: ReleaseTask,
-    private taskResult: ReleaseResults,
-    private releaseContext: ReleaseContext,
+    private task: BuildTask,
+    private taskResult: BuildResults,
+    private releaseContext: BuildContext,
     private extensionId = task.extensionId
   ) {}
 

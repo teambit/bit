@@ -1,20 +1,20 @@
 import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
-import { ReleaseTask, ReleaseContext } from './types';
+import { BuildTask, BuildContext } from './types';
 
-export class ReleasePipe {
+export class BuildPipe {
   constructor(
     /**
      * array of services to apply on the components.
      */
-    readonly tasks: ReleaseTask[]
+    readonly tasks: BuildTask[]
   ) {}
 
   /**
    * execute a pipeline of release tasks.
    */
-  async execute(releaseContext: ReleaseContext) {
-    return pMapSeries(this.tasks, async (task: ReleaseTask) => {
+  async execute(releaseContext: BuildContext) {
+    return pMapSeries(this.tasks, async (task: BuildTask) => {
       const taskResult = await task.execute(releaseContext);
       const taskProcess = new TaskProcess(task, taskResult, releaseContext);
       taskProcess.throwIfErrorsFound();
@@ -26,7 +26,7 @@ export class ReleasePipe {
   /**
    * create a release pipe from an array of services.
    */
-  static from(tasks: ReleaseTask[]) {
-    return new ReleasePipe(tasks);
+  static from(tasks: BuildTask[]) {
+    return new BuildPipe(tasks);
   }
 }

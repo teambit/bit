@@ -16,7 +16,7 @@ import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compiler, Compile } from '../compile';
-import { ReleasePipe } from '../releases';
+import { BuildPipe } from '../builder';
 
 export class ReactEnv implements Environment {
   constructor(
@@ -74,10 +74,10 @@ export class ReactEnv implements Environment {
   /**
    * returns a release pipeline.
    */
-  getPipe(): ReleasePipe {
-    // return ReleasePipe.from([this.compile.task, this.tester.task]);
-    // return ReleasePipe.from([this.tester.task]);
-    return ReleasePipe.from([this.compile.task]);
+  getPipe(): BuildPipe {
+    // return BuildPipe.from([this.compile.task, this.tester.task]);
+    // return BuildPipe.from([this.tester.task]);
+    return BuildPipe.from([this.compile.task]);
   }
 
   dev(workspace: Workspace, components: Component[]) {

@@ -1,3 +1,3 @@
-export { ReleasesExtension } from './releases.extension';
-export { ReleasePipe } from './release-pipe';
-export { ReleaseTask, ReleaseContext, ReleaseResults } from './types';
+export { BuilderExtension } from './builder.extension';
+export { BuildPipe } from './build-pipe';
+export { BuildTask, BuildContext, BuildResults } from './types';

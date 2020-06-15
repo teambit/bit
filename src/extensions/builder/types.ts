@@ -5,7 +5,7 @@ import { ExecutionContext } from '../environments';
 /**
  * Context of a release
  */
-export interface ReleaseContext extends ExecutionContext {
+export interface BuildContext extends ExecutionContext {
   /**
    * all components about to be released/tagged.
    */
@@ -17,7 +17,7 @@ export interface ReleaseContext extends ExecutionContext {
   capsuleGraph: Network;
 }
 
-export interface ReleaseResults {
+export interface BuildResults {
   components: Array<{ id: ComponentID; data?: any; errors: Array<Error | string>; warning?: string[] }>;
   artifacts: Array<{ dirName: string }>;
 }
@@ -25,7 +25,7 @@ export interface ReleaseResults {
 /**
  * release task.
  */
-export interface ReleaseTask {
+export interface BuildTask {
   /**
    * extensionId hosting this task.
    * @todo: should be automatically injected by Harmony
@@ -34,5 +34,5 @@ export interface ReleaseTask {
   /**
    * execute a task in a release context
    */
-  execute(context: ReleaseContext): Promise<ReleaseResults>;
+  execute(context: BuildContext): Promise<BuildResults>;
 }
