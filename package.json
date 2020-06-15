@@ -16,6 +16,7 @@
     "format": "prettier-eslint \"{src,e2e}/**/*.{ts,tsx}\" --write",
     "prettier:check": "prettier --list-different \"{src,e2e}/**/*.{ts,tsx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
+    "test:ext": "mocha --require ./babel-register './src/extensions/cli/commands/*.spec.tsx'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",

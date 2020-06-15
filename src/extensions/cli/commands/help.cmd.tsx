@@ -27,7 +27,7 @@ export type HelpProps = {
   };
 };
 
-function DefaultHelpRender(props: HelpProps) {
+export function DefaultHelpRender(props: HelpProps) {
   const element = (
     <Box key="help" flexDirection="column">
       <HelpHeader />
