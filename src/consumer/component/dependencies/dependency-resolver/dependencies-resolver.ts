@@ -14,7 +14,6 @@ import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import { RelativePath } from '../dependency';
-import EnvExtension from '../../../../legacy-extensions/env-extension';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -178,25 +177,6 @@ export default class DependencyResolver {
     this.component.setDevDependencies(this.allDependencies.devDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (shouldProcessEnvDependencies(this.component.compiler)) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.component.compilerPackageDependencies.devDependencies = R.merge(
-        this.allPackagesDependencies.compilerPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.component.compilerPackageDependencies.devDependencies
-      );
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (shouldProcessEnvDependencies(this.component.tester)) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.component.testerPackageDependencies.devDependencies = R.merge(
-        this.allPackagesDependencies.testerPackageDependencies,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.component.testerPackageDependencies.devDependencies
-      );
-    }
-
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.overridesDependencies.missingPackageDependencies)) {
       this.issues.missingPackagesDependenciesFromOverrides = this.overridesDependencies.missingPackageDependencies;
@@ -1162,13 +1142,4 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.issues.missingComponents[originFile] = [componentId];
     }
   }
-}
-
-/**
- * if the component doesn't have the env files written on the filesystem there is nothing to pass
- * to the dependencyResolver
- */
-function shouldProcessEnvDependencies(env: EnvExtension): boolean {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return Boolean(env && env.files && env.files.every(file => !file.fromModel));
 }
