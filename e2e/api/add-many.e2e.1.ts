@@ -29,7 +29,9 @@ function sortComponentsArrayByComponentId(componentsArray) {
 describe.skip('bit add many programmatically', function() {
   this.timeout(0);
   let helper: Helper;
+  this.timeout(0);
   before(() => {
+    this.timeout(0);
     helper = new Helper();
     helper.command.setFeatures('legacy-workspace-config');
   });
@@ -85,7 +87,6 @@ describe.skip('bit add many programmatically', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  this.timeout(0);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
