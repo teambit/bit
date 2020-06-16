@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';

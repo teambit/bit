@@ -1,4 +1,4 @@
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../../../utils';
 import { scopeList } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';

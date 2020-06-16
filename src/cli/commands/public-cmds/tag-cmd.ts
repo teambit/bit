@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';

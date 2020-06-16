@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { unTagAction } from '../../../api/consumer';
 import { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';

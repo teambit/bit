@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { getComponentLogs } from '../../../api/consumer';
 import { paintLog } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN } from '../../../constants';

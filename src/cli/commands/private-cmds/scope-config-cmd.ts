@@ -1,6 +1,6 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { objectToStringifiedTupleArray } from '../../../utils';
 import { scopeConfig } from '../../../api/scope';
 

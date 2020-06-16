@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { outputJsonFile } from '../../../utils';
 import { ciUpdateAction } from '../../../api/scope';
 import { paintCiResults } from '../../chalk-box';

@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { isolate } from '../../../api/consumer';
 import { WorkspaceIsolateOptions } from '../../../api/consumer/lib/isolate';
 

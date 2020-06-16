@@ -1,7 +1,7 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { deprecate } from '../../../api/consumer';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
 export default class Deprecate implements LegacyCommand {

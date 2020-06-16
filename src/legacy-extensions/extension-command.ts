@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../cli/command';
+import { LegacyCommand, CommandOptions } from '../cli/legacy-command';
 
 type ExtensionCommandProps = {
   name: string;

@@ -1,5 +1,5 @@
 import Table from 'tty-table';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { catScope } from '../../../api/scope';
 import ModelComponent from '../../../scope/models/model-component';
 

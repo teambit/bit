@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { fromBase64, unpackCommand, buildCommandMessage } from '../../../utils';
 import { fetch } from '../../../api/scope';
 import ComponentObjects from '../../../scope/component-objects';

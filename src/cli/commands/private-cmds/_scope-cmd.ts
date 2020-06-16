@@ -1,4 +1,4 @@
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { describeScope } from '../../../api/scope';
 import { fromBase64, empty, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';

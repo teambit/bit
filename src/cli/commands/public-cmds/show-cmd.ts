@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { show } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component/consumer-component';

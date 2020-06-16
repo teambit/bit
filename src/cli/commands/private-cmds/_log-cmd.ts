@@ -1,4 +1,4 @@
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';

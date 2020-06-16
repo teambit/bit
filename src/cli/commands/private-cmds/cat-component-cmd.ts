@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { catComponent } from '../../../api/scope';
 
 export default class CatComponent implements LegacyCommand {

@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { listScope } from '../../../api/consumer';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';

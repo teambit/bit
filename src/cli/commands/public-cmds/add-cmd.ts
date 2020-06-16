@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { add } from '../../../api/consumer';
 import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';

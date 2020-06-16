@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import * as nodePath from 'path';
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { ejectConf } from '../../../api/consumer';
 import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
 import { PathOsBased } from '../../../utils/path';

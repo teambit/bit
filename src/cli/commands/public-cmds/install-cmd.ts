@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { installAction } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
 import { LinksResult } from '../../../links/node-modules-linker';

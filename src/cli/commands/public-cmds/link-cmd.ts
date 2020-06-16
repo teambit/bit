@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { link } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';

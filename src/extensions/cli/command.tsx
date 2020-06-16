@@ -1,5 +1,5 @@
 // TODO: remove this
-import { CommandOptions } from '../../cli/command';
+import { CommandOptions } from '../../cli/legacy-command';
 
 export interface Command {
   /**

@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
 import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';

@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';

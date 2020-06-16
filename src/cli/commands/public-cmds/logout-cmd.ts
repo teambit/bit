@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import * as scopeConfig from '../../../api/consumer/lib/global-config';
 

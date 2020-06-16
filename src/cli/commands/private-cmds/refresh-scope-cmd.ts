@@ -1,4 +1,4 @@
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { refreshScope } from '../../../api/scope';
 
 export default class RefershScope implements LegacyCommand {

@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command, PaperOptions, GenericObject } from '.';
-import { LegacyCommand } from '../../cli/command';
+import { LegacyCommand } from '../../cli/legacy-command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
 import { CLIExtension } from './cli.extension';

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { login } from '../../../api/consumer';
 import { BASE_WEB_DOMAIN } from '../../../constants';
 

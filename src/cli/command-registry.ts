@@ -3,7 +3,7 @@ import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
 import { render } from 'ink';
-import { LegacyCommand } from './command';
+import { LegacyCommand } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';

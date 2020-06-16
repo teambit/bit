@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { injectConf } from '../../../api/consumer';
 import { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
 

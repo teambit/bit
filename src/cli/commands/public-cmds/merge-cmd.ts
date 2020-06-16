@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { merge } from '../../../api/consumer';
 import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';

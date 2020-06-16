@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { build, buildAll } from '../../../api/consumer';
 import { empty } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';

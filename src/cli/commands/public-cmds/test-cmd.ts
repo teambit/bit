@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';

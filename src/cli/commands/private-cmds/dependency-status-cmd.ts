@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { dependencyStatus } from '../../../api/consumer';
 import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import requestify from 'requestify';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { searchAdapter } from '../../../search';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { formatter } from '../../../search/searcher';

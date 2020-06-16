@@ -1,7 +1,7 @@
 import * as path from 'path';
 import os from 'os';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
 

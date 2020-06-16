@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';

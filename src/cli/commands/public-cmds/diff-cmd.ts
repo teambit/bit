@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { diff } from '../../../api/consumer';
 import { DiffResults } from '../../../consumer/component-ops/components-diff';
 import { WILDCARD_HELP } from '../../../constants';

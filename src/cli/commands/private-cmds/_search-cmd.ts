@@ -1,4 +1,4 @@
-import { LegacyCommand } from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 import { searchAdapter } from '../../../search';
 import { Doc } from '../../../search/indexer';

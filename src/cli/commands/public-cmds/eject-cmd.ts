@@ -1,4 +1,4 @@
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';

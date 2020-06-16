@@ -1,5 +1,5 @@
 import yn from 'yn';
-import { LegacyCommand, CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remove } from '../../../api/consumer';
 import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
