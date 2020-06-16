@@ -87,14 +87,15 @@ module.exports = {
     'max-lines': [2, 1800],
     'func-names': [0]
   },
-  overrides: [
-    {
-      files: ['src/extensions/**/*.ts'],
-      rules: {
-        'import/no-cycle': ['error']
-      }
-    }
-  ],
+  // return the no-cycle once "import type" is working
+  // overrides: [
+  //   {
+  //     files: ['src/extensions/**/*.ts'],
+  //     rules: {
+  //       'import/no-cycle': ['error']
+  //     }
+  //   }
+  // ],
   env: {
     browser: true,
     node: true,
