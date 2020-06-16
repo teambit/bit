@@ -1,6 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color, AppContext } from 'ink';
-import React from 'react';
 import { Command, PaperOptions, GenericObject } from '.';
 import LegacyInterface from '../../cli/command';
 import allHelp from '../../cli/templates/all-help';
@@ -30,10 +28,7 @@ export class LegacyCommand implements Command {
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
-
-    this.commands = cmd.commands.map(sub => {
-      return new LegacyCommand(sub, p);
-    });
+    this.commands = cmd.commands.map(sub => new LegacyCommand(sub, p));
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
@@ -79,20 +74,6 @@ export function findLegacyDetails(name: string, p: CLIExtension) {
     }
   }
   return { group, summery };
-}
-
-export function LegacyRender(props: { out: string; code: number }) {
-  return (
-    <AppContext.Consumer>
-      {({ exit }) => {
-        setTimeout(() => {
-          exit();
-        }, 0);
-
-        return <Color>{props.out}</Color>;
-      }}
-    </AppContext.Consumer>
-  );
 }
 
 type ActionResult = {
