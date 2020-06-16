@@ -6,7 +6,7 @@ import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
-import { LegacyCommand } from './legacy-command';
+import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 
@@ -107,11 +107,10 @@ export async function CLIProvider([paper]: [CLIExtension]) {
   }, []);
 
   const legacyRegistry = buildRegistry(extensionsCommands);
-  // const bitCLI = new BitCli(paper);
   const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
   allCommands.reduce((p, command) => {
-    const legacyCommand = new LegacyCommand(command, p);
-    p.register(legacyCommand);
+    const legacyCommandAdapter = new LegacyCommandAdapter(command, p);
+    p.register(legacyCommandAdapter);
     return p;
   }, paper);
   return paper;

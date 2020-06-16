@@ -5,7 +5,7 @@ import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
 import { CLIExtension } from './cli.extension';
 
-export class LegacyCommand implements Command {
+export class LegacyCommandAdapter implements Command {
   alias: string;
   name: string;
   description: string;
@@ -28,7 +28,7 @@ export class LegacyCommand implements Command {
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
-    this.commands = cmd.commands.map(sub => new LegacyCommand(sub, p));
+    this.commands = cmd.commands.map(sub => new LegacyCommandAdapter(sub, p));
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
