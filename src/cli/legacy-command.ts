@@ -2,11 +2,8 @@ export type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
 export interface LegacyCommand {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   description: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
   opts?: CommandOptions;
   commands?: LegacyCommand[];
