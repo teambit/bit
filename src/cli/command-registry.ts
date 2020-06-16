@@ -1,5 +1,4 @@
 import { serializeError } from 'serialize-error';
-import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
