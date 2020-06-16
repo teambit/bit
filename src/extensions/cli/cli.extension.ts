@@ -8,8 +8,7 @@ import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 import { LegacyCommand } from './legacy-command';
 import { buildRegistry } from '../../cli';
-// eslint-disable-next-line import/no-named-default
-import { default as LegacyLoadExtensions } from '../../legacy-extensions/extensions-loader';
+import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 
 export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
@@ -50,7 +49,7 @@ export class CLIExtension {
   }
 
   /**
-   * list of all registered commands.
+   * list of all registered commands. (legacy and new).
    */
   get commands() {
     return this.registry.commands;
@@ -58,19 +57,15 @@ export class CLIExtension {
 
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
-   *
    */
   async run() {
-    const args = process.argv.slice(2);
+    const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if ((args[0] && ['-h', '--help'].includes(args[0])) || process.argv.length === 2) {
       Help()(this.commands, this.groups);
       return;
     }
-    /* eslint-disable */
-    Object.entries(this.commands).reduce(function(acc, [_key, paperCommand]) {
-      register(paperCommand as any, acc);
-      return acc;
-    }, commander);
+
+    Object.values(this.commands).forEach(command => register(command as any, commander));
 
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
     if (packageManagerArgs && packageManagerArgs.length) {
@@ -78,11 +73,11 @@ export class CLIExtension {
       packageManagerArgs.shift();
     }
     commander.packageManagerArgs = packageManagerArgs;
+    // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
     if (this.shouldOutputJson()) {
       this.reporter.suppressOutput();
     }
-    return Promise.resolve();
   }
   private shouldOutputJson() {
     const showCommand = commander.commands.find(c => c._name === 'show');
