@@ -91,7 +91,7 @@ export class CLIExtension {
   }
 }
 
-export async function CLIProvider([paper]: [CLIExtension]) {
+export async function CLIProvider([cliExtension]: [CLIExtension]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {
@@ -108,10 +108,9 @@ export async function CLIProvider([paper]: [CLIExtension]) {
 
   const legacyRegistry = buildRegistry(extensionsCommands);
   const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-  allCommands.reduce((p, command) => {
-    const legacyCommandAdapter = new LegacyCommandAdapter(command, p);
-    p.register(legacyCommandAdapter);
-    return p;
-  }, paper);
-  return paper;
+  allCommands.forEach(command => {
+    const legacyCommandAdapter = new LegacyCommandAdapter(command, cliExtension);
+    cliExtension.register(legacyCommandAdapter);
+  });
+  return cliExtension;
 }
