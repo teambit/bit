@@ -1,4 +1,4 @@
-import Bluebird from 'bluebird';
+// import Bluebird from 'bluebird';
 import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
@@ -9,12 +9,15 @@ import { PaperError } from './extensions/cli';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
-// removing this, default to longStackTraces also when env is `development`, which impacts the
-// performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-Bluebird.config({
-  longStackTraces: true
-  // longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG)
-});
+// by default Bluebird enable the longStackTraces when env is `development`, or when
+// BLUEBIRD_DEBUG is set.
+// the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
+// to override the default, uncomment the following, and set to true/false
+
+// Bluebird.config({
+//   longStackTraces: true
+// });
+
 // loudRejection();
 HooksManager.init();
 try {
