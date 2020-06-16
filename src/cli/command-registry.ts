@@ -1,10 +1,8 @@
 import { serializeError } from 'serialize-error';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
 import { render } from 'ink';
-
 import Command from './command';
 import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
@@ -87,30 +85,52 @@ export function execAction(command, concrete, args): Promise<any> {
     }
     return Promise.resolve();
   };
+
+  const getCommandHandler = (): 'render' | 'report' | 'json' => {
+    if (flags.json) {
+      if (!command.json) throw new Error(`command "${command.name}" doesn't implement "json" method`);
+      return 'json';
+    }
+    if (command.render && command.report) {
+      return process.stdout.isTTY ? 'render' : 'report';
+    }
+    if (command.report) return 'report';
+    if (command.render) return 'render';
+    throw new Error(`command "${command.name}" doesn't implement "render" nor "report" methods`);
+  };
+  const commandHandler = getCommandHandler();
+
   return (
     migrateWrapper(command.migration)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
         // this is a hack in the legacy code to make paper work
         // it should be removed upon major refactoring process
-        // eslint-disable-next-line no-nested-ternary
-        const commandMain = flags.json ? 'json' : process.stdout.isTTY && command.report ? 'report' : 'render';
         command.packageManagerArgs = packageManagerArgs;
-        return command[commandMain](relevantArgs, flags, packageManagerArgs);
+        return command[commandHandler](relevantArgs, flags, packageManagerArgs);
       })
       .then(async res => {
         loader.off();
-        if (flags.json) {
-          const code = res.code || 0;
-          const data = res.data || res;
-          // eslint-disable-next-line no-console
-          console.log(JSON.stringify(data, null, 2));
-          return code;
+        switch (commandHandler) {
+          case 'json': {
+            const code = res.code || 0;
+            const data = res.data || res;
+            // eslint-disable-next-line no-console
+            console.log(JSON.stringify(data, null, 2));
+            return code;
+          }
+          case 'render': {
+            const { waitUntilExit } = render(res);
+            await waitUntilExit();
+            return res.props.code;
+          }
+          case 'report':
+          default: {
+            // eslint-disable-next-line no-console
+            console.log(res.data);
+            return res.code;
+          }
         }
-        const { waitUntilExit } = render(res);
-        await waitUntilExit();
-        return res.props.code;
-        // eslint-disable-next-line no-console
       })
       .then(function(code: number) {
         return logger.exitAfterFlush(code, command.name);

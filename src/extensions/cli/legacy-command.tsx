@@ -51,9 +51,9 @@ export class LegacyCommand implements Command {
     };
   }
 
-  async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
+  async report(params: any, options: { [key: string]: any }): Promise<{ data: string; code: number }> {
     const actionResult = await this.action(params, options);
-    return <LegacyRender {...{ out: actionResult.report, code: actionResult.code }}></LegacyRender>;
+    return { data: actionResult.report, code: actionResult.code };
   }
 
   async json(params: any, options: { [key: string]: any }): Promise<GenericObject> {
