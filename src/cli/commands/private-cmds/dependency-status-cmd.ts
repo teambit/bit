@@ -3,7 +3,7 @@ import { LegacyCommand } from '../../command';
 import { dependencyStatus } from '../../../api/consumer';
 import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 
-export default class DependencyStatus extends LegacyCommand {
+export default class DependencyStatus implements LegacyCommand {
   name = 'dependency-status [mainFile...]';
   private = true;
   description = 'returns the status of the dependency status of bit map against bit dependencies';

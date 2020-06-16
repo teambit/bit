@@ -3,7 +3,7 @@ import { LegacyCommand, CommandOptions } from '../../command';
 import { login } from '../../../api/consumer';
 import { BASE_WEB_DOMAIN } from '../../../constants';
 
-export default class Login extends LegacyCommand {
+export default class Login implements LegacyCommand {
   name = 'login';
   description = 'log the CLI into Bit';
   alias = '';

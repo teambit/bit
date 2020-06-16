@@ -7,7 +7,7 @@ import { LegacyCommand } from './command';
 import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
@@ -165,10 +165,11 @@ function serializeErrAndExit(err, commandName) {
  */
 function registerAction(command: LegacyCommand, concrete) {
   concrete.action((...args) => {
-    if (!empty(command.commands)) {
+    const subCommands = command.commands;
+    if (subCommands?.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
-      const subcommand = command.commands.find(cmd => {
+      const subcommand = subCommands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 

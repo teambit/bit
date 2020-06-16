@@ -3,7 +3,7 @@ import { LegacyCommand } from '../../command';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
-export default class Logout extends LegacyCommand {
+export default class Logout implements LegacyCommand {
   name = 'logout';
   description = 'log the CLI out of Bit';
   alias = '';

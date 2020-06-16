@@ -5,7 +5,7 @@ import { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
-export default class Untag extends LegacyCommand {
+export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components

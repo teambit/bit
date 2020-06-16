@@ -24,7 +24,7 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
     .join('\n\n');
 };
 
-export default class Merge extends LegacyCommand {
+export default class Merge implements LegacyCommand {
   name = 'merge <version> <ids...>';
   description = `merge changes of different component versions
   ${WILDCARD_HELP('merge 0.0.1')}`;

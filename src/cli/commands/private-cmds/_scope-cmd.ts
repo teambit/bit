@@ -4,7 +4,7 @@ import { fromBase64, empty, buildCommandMessage, packCommand, unpackCommand } fr
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Prepare extends LegacyCommand {
+export default class Prepare implements LegacyCommand {
   name = '_scope <path> <args>';
   description = 'describe a scope';
   private = true;

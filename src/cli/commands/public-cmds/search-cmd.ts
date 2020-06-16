@@ -9,7 +9,7 @@ import loader from '../../../cli/loader';
 import { SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
-export default class Search extends LegacyCommand {
+export default class Search implements LegacyCommand {
   name = 'search <query...>';
   description = 'search for components by desired functionality.';
   alias = '';

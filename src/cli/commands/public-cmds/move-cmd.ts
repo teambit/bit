@@ -4,7 +4,7 @@ import { move } from '../../../api/consumer';
 import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-export default class Move extends LegacyCommand {
+export default class Move implements LegacyCommand {
   name = 'move <from> <to>';
   description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#moving-and-renaming-files`;
   alias = 'mv';

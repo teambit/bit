@@ -12,7 +12,7 @@ import shouldShowInteractive from '../../../interactive/utils/should-show-intera
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Init extends LegacyCommand {
+export default class Init implements LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;

@@ -8,7 +8,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Fetch extends LegacyCommand {
+export default class Fetch implements LegacyCommand {
   name = '_fetch <path> <args>';
   private = true;
   description = 'fetch components(s) from a scope';

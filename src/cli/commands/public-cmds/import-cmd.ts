@@ -13,7 +13,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
-export default class Import extends LegacyCommand {
+export default class Import implements LegacyCommand {
   name = 'import [ids...]';
   description = `import components into your current workspace.
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components

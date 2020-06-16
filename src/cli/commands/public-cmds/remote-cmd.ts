@@ -8,7 +8,7 @@ import { forEach, empty } from '../../../utils';
 import RemoteUndefined from '../exceptions/remote-undefined';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-class RemoteAdd extends LegacyCommand {
+class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
   description = 'add a tracked bit remote';
   alias = '';
@@ -28,7 +28,7 @@ class RemoteAdd extends LegacyCommand {
   }
 }
 
-class RemoteRm extends LegacyCommand {
+class RemoteRm implements LegacyCommand {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
@@ -43,7 +43,7 @@ class RemoteRm extends LegacyCommand {
   }
 }
 
-export default class Remote extends LegacyCommand {
+export default class Remote implements LegacyCommand {
   name = 'remote';
   description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/bit-server#working-with-remote-scopes`;
   alias = '';

@@ -9,7 +9,7 @@ import { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
-export default class Add extends LegacyCommand {
+export default class Add implements LegacyCommand {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations

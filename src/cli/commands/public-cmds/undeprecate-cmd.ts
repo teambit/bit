@@ -4,7 +4,7 @@ import { undeprecate } from '../../../api/consumer';
 import { LegacyCommand, CommandOptions } from '../../command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
-export default class Undeprecate extends LegacyCommand {
+export default class Undeprecate implements LegacyCommand {
   name = 'undeprecate <ids...>';
   description = 'undeprecate a deprecated component (local/remote)';
   alias = '';

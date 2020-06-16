@@ -8,7 +8,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 
-export default class Delete extends LegacyCommand {
+export default class Delete implements LegacyCommand {
   name = '_delete <path> <args>';
   private = true;
   description = 'remove a component from a scope';

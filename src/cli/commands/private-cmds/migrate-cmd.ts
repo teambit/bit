@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { LegacyCommand, CommandOptions } from '../../command';
 import { migrate } from '../../../api/consumer';
 
-export default class Migrate extends LegacyCommand {
+export default class Migrate implements LegacyCommand {
   name = 'migrate [scopePath]';
   description = 'migrate scope to the current version';
   private = true;

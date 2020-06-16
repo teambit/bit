@@ -8,7 +8,7 @@ import { removePrompt } from '../../../prompts';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
-export default class Remove extends LegacyCommand {
+export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
   description = `remove a component (local/remote)
   https://${BASE_DOCS_DOMAIN}/docs/removing-components

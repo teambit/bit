@@ -2,7 +2,7 @@ import { LegacyCommand, CommandOptions } from '../../command';
 import { isolate } from '../../../api/consumer';
 import { WorkspaceIsolateOptions } from '../../../api/consumer/lib/isolate';
 
-export default class Isolate extends LegacyCommand {
+export default class Isolate implements LegacyCommand {
   name = 'isolate <id> [scopePath]';
   description = 'isolate component';
   alias = '';

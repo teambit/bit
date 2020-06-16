@@ -11,7 +11,7 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
-export default class Tag extends LegacyCommand {
+export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version

@@ -8,7 +8,7 @@ import { DeprecationResult } from '../../../scope/component-ops/components-depre
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Undeprecate extends LegacyCommand {
+export default class Undeprecate implements LegacyCommand {
   name = '_undeprecate <path> <args>';
   private = true;
   description = 'undeprecate a component from a scope';

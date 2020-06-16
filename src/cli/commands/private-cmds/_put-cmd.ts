@@ -7,7 +7,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Put extends LegacyCommand {
+export default class Put implements LegacyCommand {
   name = '_put <path> <args>';
   private = true;
   description = 'upload a component to a scope';

@@ -6,7 +6,7 @@ import SpecsResults from '../../../consumer/specs-results';
 import Dists from '../../../consumer/component/sources/dists';
 import { PathOsBased } from '../../../utils/path';
 
-export default class CiUpdate extends LegacyCommand {
+export default class CiUpdate implements LegacyCommand {
   name = 'ci-update <id> [scopePath]';
   description = 'run an update for build and test of a certain bit-component';
   alias = '';

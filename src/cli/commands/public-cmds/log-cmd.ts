@@ -4,7 +4,7 @@ import { getComponentLogs } from '../../../api/consumer';
 import { paintLog } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-export default class Log extends LegacyCommand {
+export default class Log implements LegacyCommand {
   name = 'log <id>';
   description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/view#log`;
   alias = '';

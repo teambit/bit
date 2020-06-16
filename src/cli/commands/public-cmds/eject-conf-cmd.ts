@@ -9,7 +9,7 @@ type EjectConfCliResult = EjectConfResult & {
   ejectPathRelativeToCwd: PathOsBased;
 };
 
-export default class EjectConf extends LegacyCommand {
+export default class EjectConf implements LegacyCommand {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';

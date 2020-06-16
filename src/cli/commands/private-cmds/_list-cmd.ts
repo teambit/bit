@@ -9,7 +9,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 
-export default class List extends LegacyCommand {
+export default class List implements LegacyCommand {
   name = '_list <path> <args>';
   private = true;
   description = 'list scope components';

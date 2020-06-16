@@ -3,7 +3,7 @@ import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 
-export default class Eject extends LegacyCommand {
+export default class Eject implements LegacyCommand {
   name = 'eject <id...>';
   description = 'replaces the components from the local scope with the corresponding packages';
   alias = 'E';

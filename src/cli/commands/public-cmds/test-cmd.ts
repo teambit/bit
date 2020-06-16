@@ -10,7 +10,7 @@ const validForkLevels = R.values(TESTS_FORK_LEVEL);
 
 let verboseReport = false;
 
-export default class Test extends LegacyCommand {
+export default class Test implements LegacyCommand {
   name = 'test [id]';
   description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';

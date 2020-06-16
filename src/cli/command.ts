@@ -1,33 +1,22 @@
 export type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
-export class LegacyCommand {
+export interface LegacyCommand {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   description: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
-  opts: CommandOptions = [];
-  commands: LegacyCommand[] = [];
+  opts?: CommandOptions;
+  commands?: LegacyCommand[];
   private?: boolean;
   loader?: boolean;
   skipWorkspace?: boolean;
   migration?: boolean;
   remoteOp?: boolean; // Used for adding the token option globally
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any> {
-    console.log('"action" method not implemented on this command'); // eslint-disable-line no-console
-    return new Promise(resolve => resolve({}));
-  }
+  action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any>;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  report(data: any, params: any, opts: { [key: string]: any }): string {
-    return '"report" method not implemented on this command';
-  }
-
-  handleError(): string | null | undefined {
-    return null;
-  }
+  report(data: any, params: any, opts: { [key: string]: any }): string;
 }

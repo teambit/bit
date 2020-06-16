@@ -4,7 +4,7 @@ import { LegacyCommand } from '../../command';
 import { objectToStringifiedTupleArray } from '../../../utils';
 import { scopeConfig } from '../../../api/scope';
 
-class ScopeConfigGet extends LegacyCommand {
+class ScopeConfigGet implements LegacyCommand {
   name = 'get <key>';
   description = 'get a scope configuration';
   alias = '';
@@ -20,7 +20,7 @@ class ScopeConfigGet extends LegacyCommand {
   }
 }
 
-class ScopeConfigList extends LegacyCommand {
+class ScopeConfigList implements LegacyCommand {
   name = 'list';
   description = 'list all scope configuration(s)';
   alias = '';
@@ -39,7 +39,7 @@ class ScopeConfigList extends LegacyCommand {
   }
 }
 
-class ScopeConfigDel extends LegacyCommand {
+class ScopeConfigDel implements LegacyCommand {
   name = 'del <key>';
   description = 'delete given key from global configuration';
   alias = '';
@@ -54,7 +54,7 @@ class ScopeConfigDel extends LegacyCommand {
   }
 }
 
-class ScopeConfigSet extends LegacyCommand {
+class ScopeConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a scope configuration';
   alias = '';
@@ -70,7 +70,7 @@ class ScopeConfigSet extends LegacyCommand {
   }
 }
 
-export default class ScopeConfig extends LegacyCommand {
+export default class ScopeConfig implements LegacyCommand {
   name = 'scope-config';
   description = 'scope config management';
   alias = '';

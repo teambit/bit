@@ -1,7 +1,7 @@
 import { LegacyCommand, CommandOptions } from '../../command';
 import { catComponent } from '../../../api/scope';
 
-export default class CatComponent extends LegacyCommand {
+export default class CatComponent implements LegacyCommand {
   name = 'cat-component [id]';
   description = 'cat a bit object by component-id';
   private = true;

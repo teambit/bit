@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { LegacyCommand } from '../../command';
 import { getResolver, setResolver, resetResolver } from '../../../api/scope/lib/resolver';
 
-class ResolverSet extends LegacyCommand {
+class ResolverSet implements LegacyCommand {
   name = 'set <resolverPath>';
   description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
@@ -25,7 +25,7 @@ class ResolverSet extends LegacyCommand {
   }
 }
 
-class ResolverReset extends LegacyCommand {
+class ResolverReset implements LegacyCommand {
   name = 'reset';
   description = 'reset remote resolver to default resolver';
   alias = 'r';
@@ -40,7 +40,7 @@ class ResolverReset extends LegacyCommand {
   }
 }
 
-export default class Resolver extends LegacyCommand {
+export default class Resolver implements LegacyCommand {
   name = 'resolver';
   description = 'get or set remote resolver to scope';
   alias = '';

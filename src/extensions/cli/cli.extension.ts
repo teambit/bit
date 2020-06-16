@@ -8,7 +8,6 @@ import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
-// eslint-disable-next-line import/no-cycle
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export class CLIExtension {

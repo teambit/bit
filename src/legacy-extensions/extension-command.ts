@@ -8,9 +8,10 @@ type ExtensionCommandProps = {
   opts?: CommandOptions;
 };
 
-export default class ExtensionCommand extends LegacyCommand {
+export default class ExtensionCommand implements LegacyCommand {
   name = '';
   description = '';
+  alias = '';
   opts: CommandOptions = [];
 
   private = false;
@@ -21,7 +22,6 @@ export default class ExtensionCommand extends LegacyCommand {
   _report;
 
   constructor(props: ExtensionCommandProps) {
-    super();
     this.name = props.name;
     this.description = props.description;
     this._action = props.action;

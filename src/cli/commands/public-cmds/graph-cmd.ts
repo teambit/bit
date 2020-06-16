@@ -5,7 +5,7 @@ import { LegacyCommand, CommandOptions } from '../../command';
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
 
-export default class Graph extends LegacyCommand {
+export default class Graph implements LegacyCommand {
   name = 'graph [id]';
   description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
   alias = '';

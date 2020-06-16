@@ -8,7 +8,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 // eslint-disable-next-line @typescript-eslint/class-name-casing
-export default class _Show extends LegacyCommand {
+export default class _Show implements LegacyCommand {
   name = '_show <path> <args>';
   private = true;
   description = 'show a specific component on scope';

@@ -3,7 +3,7 @@ import { LegacyCommand, CommandOptions } from '../../command';
 import { injectConf } from '../../../api/consumer';
 import { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
 
-export default class InjectConf extends LegacyCommand {
+export default class InjectConf implements LegacyCommand {
   name = 'inject-conf [id]';
   description = 'injecting components configuration';
   alias = '';

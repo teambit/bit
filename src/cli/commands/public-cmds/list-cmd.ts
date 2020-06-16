@@ -8,7 +8,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-export default class List extends LegacyCommand {
+export default class List implements LegacyCommand {
   name = 'list [scope]';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';

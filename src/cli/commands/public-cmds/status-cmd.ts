@@ -18,7 +18,7 @@ export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
 
-export default class Status extends LegacyCommand {
+export default class Status implements LegacyCommand {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';

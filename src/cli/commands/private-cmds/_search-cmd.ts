@@ -8,7 +8,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Search extends LegacyCommand {
+export default class Search implements LegacyCommand {
   name = '_search <path> <args>';
   private = true;
   description = 'search for components on a remote scope';

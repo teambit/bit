@@ -4,7 +4,7 @@ import { deprecate } from '../../../api/consumer';
 import { LegacyCommand, CommandOptions } from '../../command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
-export default class Deprecate extends LegacyCommand {
+export default class Deprecate implements LegacyCommand {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
   skipWorkspace = true;

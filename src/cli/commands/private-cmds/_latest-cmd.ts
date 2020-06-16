@@ -7,7 +7,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Latest extends LegacyCommand {
+export default class Latest implements LegacyCommand {
   name = '_latest <path> <args>';
   private = true;
   description = 'latest version numbers of given components';

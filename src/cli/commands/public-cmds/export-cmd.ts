@@ -8,7 +8,7 @@ import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
 
-export default class Export extends LegacyCommand {
+export default class Export implements LegacyCommand {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote

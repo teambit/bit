@@ -1,7 +1,7 @@
 import { LegacyCommand } from '../../command';
 import { refreshScope } from '../../../api/scope';
 
-export default class RefershScope extends LegacyCommand {
+export default class RefershScope implements LegacyCommand {
   name = 'refresh-scope [scopePath]';
   description = 'load all the object in the scope and write them again (for possible model changes between versions)';
   alias = '';

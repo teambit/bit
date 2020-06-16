@@ -5,7 +5,7 @@ import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/diagnosis';
 
-export default class Doctor extends LegacyCommand {
+export default class Doctor implements LegacyCommand {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
   alias = '';

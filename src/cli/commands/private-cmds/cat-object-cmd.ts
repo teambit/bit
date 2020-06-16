@@ -1,7 +1,7 @@
 import { LegacyCommand, CommandOptions } from '../../command';
 import { catObject } from '../../../api/scope';
 
-export default class CatObject extends LegacyCommand {
+export default class CatObject implements LegacyCommand {
   name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;

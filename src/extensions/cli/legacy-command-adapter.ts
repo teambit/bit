@@ -3,7 +3,6 @@ import { Command, PaperOptions, GenericObject } from '.';
 import { LegacyCommand } from '../../cli/command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
-// eslint-disable-next-line import/no-cycle
 import { CLIExtension } from './cli.extension';
 
 export class LegacyCommandAdapter implements Command {
@@ -20,7 +19,7 @@ export class LegacyCommandAdapter implements Command {
   constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
     this.name = cmd.name;
     this.description = cmd.description;
-    this.options = cmd.opts;
+    this.options = cmd.opts || [];
     this.alias = cmd.alias;
     const commandID = getID(cmd.name);
     const { summery, group } = findLegacyDetails(commandID, cliExtension);
@@ -29,7 +28,7 @@ export class LegacyCommandAdapter implements Command {
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
-    this.commands = cmd.commands.map(sub => new LegacyCommandAdapter(sub, cliExtension));
+    this.commands = (cmd.commands || []).map(sub => new LegacyCommandAdapter(sub, cliExtension));
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {

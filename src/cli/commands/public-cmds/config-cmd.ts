@@ -7,7 +7,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 // const config = require('../../../api/consumer/lib/global-config');
 import * as config from '../../../api/consumer/lib/global-config';
 
-class ConfigSet extends LegacyCommand {
+class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a global configuration';
   alias = '';
@@ -23,7 +23,7 @@ class ConfigSet extends LegacyCommand {
   }
 }
 
-class ConfigGet extends LegacyCommand {
+class ConfigGet implements LegacyCommand {
   name = 'get <key>';
   description = 'get a global configuration';
   alias = '';
@@ -38,7 +38,7 @@ class ConfigGet extends LegacyCommand {
   }
 }
 
-class ConfigList extends LegacyCommand {
+class ConfigList implements LegacyCommand {
   name = 'list';
   description = 'list all configuration(s)';
   alias = '';
@@ -57,7 +57,7 @@ class ConfigList extends LegacyCommand {
   }
 }
 
-class ConfigDel extends LegacyCommand {
+class ConfigDel implements LegacyCommand {
   name = 'del <key>';
   description = 'delete given key from global configuration';
   alias = '';
@@ -72,7 +72,7 @@ class ConfigDel extends LegacyCommand {
   }
 }
 
-export default class Config extends LegacyCommand {
+export default class Config implements LegacyCommand {
   name = 'config';
   description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config`;
   alias = '';

@@ -6,7 +6,7 @@ import { LegacyCommand } from '../../command';
 
 const { BASE_DOCS_DOMAIN } = require('../../../constants');
 
-export default class ClearCache extends LegacyCommand {
+export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
   description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
   alias = 'cc';
