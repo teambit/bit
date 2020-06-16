@@ -6,9 +6,10 @@ import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+// eslint-disable-next-line import/no-cycle
+import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
