@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
@@ -12,7 +12,7 @@ import shouldShowInteractive from '../../../interactive/utils/should-show-intera
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Init extends Command {
+export default class Init extends LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;

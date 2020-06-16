@@ -1,4 +1,4 @@
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../command';
 import { fromBase64, unpackCommand, buildCommandMessage } from '../../../utils';
 import { fetch } from '../../../api/scope';
 import ComponentObjects from '../../../scope/component-objects';
@@ -8,7 +8,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Fetch extends Command {
+export default class Fetch extends LegacyCommand {
   name = '_fetch <path> <args>';
   private = true;
   description = 'fetch components(s) from a scope';

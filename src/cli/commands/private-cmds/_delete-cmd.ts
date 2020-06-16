@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../command';
 import { remove } from '../../../api/scope';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
@@ -8,7 +8,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 
-export default class Delete extends Command {
+export default class Delete extends LegacyCommand {
   name = '_delete <path> <args>';
   private = true;
   description = 'remove a component from a scope';

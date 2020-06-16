@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command, PaperOptions, GenericObject } from '.';
-import LegacyInterface from '../../cli/command';
+import { LegacyCommand } from '../../cli/command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
 // eslint-disable-next-line import/no-cycle
@@ -17,7 +17,7 @@ export class LegacyCommandAdapter implements Command {
   commands: Command[];
   private?: boolean;
   migration?: boolean;
-  constructor(private cmd: LegacyInterface, cliExtension: CLIExtension) {
+  constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
     this.name = cmd.name;
     this.description = cmd.description;
     this.options = cmd.opts;

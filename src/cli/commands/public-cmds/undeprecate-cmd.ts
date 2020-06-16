@@ -1,10 +1,10 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { undeprecate } from '../../../api/consumer';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
-export default class Undeprecate extends Command {
+export default class Undeprecate extends LegacyCommand {
   name = 'undeprecate <ids...>';
   description = 'undeprecate a deprecated component (local/remote)';
   alias = '';

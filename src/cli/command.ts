@@ -1,7 +1,7 @@
 export type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
-export default class Cmd {
+export class LegacyCommand {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -9,7 +9,7 @@ export default class Cmd {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
   opts: CommandOptions = [];
-  commands: Cmd[] = [];
+  commands: LegacyCommand[] = [];
   private?: boolean;
   loader?: boolean;
   skipWorkspace?: boolean;

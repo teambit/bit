@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand } from '../../command';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
-export default class Logout extends Command {
+export default class Logout extends LegacyCommand {
   name = 'logout';
   description = 'log the CLI out of Bit';
   alias = '';

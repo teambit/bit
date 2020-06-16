@@ -1,9 +1,9 @@
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../command';
 import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 
-export default class Eject extends Command {
+export default class Eject extends LegacyCommand {
   name = 'eject <id...>';
   description = 'replaces the components from the local scope with the corresponding packages';
   alias = 'E';

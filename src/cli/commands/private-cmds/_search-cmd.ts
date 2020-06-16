@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../command';
 import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 import { searchAdapter } from '../../../search';
 import { Doc } from '../../../search/indexer';
@@ -8,7 +8,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Search extends Command {
+export default class Search extends LegacyCommand {
   name = '_search <path> <args>';
   private = true;
   description = 'search for components on a remote scope';

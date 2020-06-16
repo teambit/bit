@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import * as nodePath from 'path';
-import Command from '../../command';
+import { LegacyCommand } from '../../command';
 import { ejectConf } from '../../../api/consumer';
 import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
 import { PathOsBased } from '../../../utils/path';
@@ -9,7 +9,7 @@ type EjectConfCliResult = EjectConfResult & {
   ejectPathRelativeToCwd: PathOsBased;
 };
 
-export default class EjectConf extends Command {
+export default class EjectConf extends LegacyCommand {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';

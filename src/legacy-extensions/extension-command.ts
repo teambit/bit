@@ -1,4 +1,4 @@
-import Command, { CommandOptions } from '../cli/command';
+import { LegacyCommand, CommandOptions } from '../cli/command';
 
 type ExtensionCommandProps = {
   name: string;
@@ -8,7 +8,7 @@ type ExtensionCommandProps = {
   opts?: CommandOptions;
 };
 
-export default class ExtensionCommand extends Command {
+export default class ExtensionCommand extends LegacyCommand {
   name = '';
   description = '';
   opts: CommandOptions = [];
