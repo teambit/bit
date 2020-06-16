@@ -30,8 +30,4 @@ export class LegacyCommand {
   handleError(): string | null | undefined {
     return null;
   }
-
-  splitList(val: string) {
-    return val.split(',');
-  }
 }

@@ -80,6 +80,10 @@ export default class Add extends LegacyCommand {
     });
   }
 
+  splitList(val: string) {
+    return val.split(',');
+  }
+
   report({ addedComponents, warnings }: AddActionResults): string {
     const paintWarning = () => {
       const alreadyUsedOutput = () => {
