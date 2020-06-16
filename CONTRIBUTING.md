@@ -73,7 +73,7 @@ Keep in mind that running the e2e-tests locally may take hours to complete, it's
 
 ### Debugging
 
-The code is heavy on promises, as such, some errors don't have a useful stack trace. To enable the long stack trace of Bluebird, please prefix your command with `BLUEBIRD_DEBUG=1`.
+The code is heavy on promises, as such, some errors don't have a useful stack trace. Bluebird enables the long stack trace when the env is development or when `BLUEBIRD_DEBUG` is set. Normally, the full stack trace is not shown on the console but logged in the debug.log file. (located at /Users/your-use/Library/Caches/Bit/logs/debug.log on Mac).
 
 In some cases, you might get very helpful info by prefixing Bit command with `BIT_LOG=*`. For now, this helps to get more info about why a component is shown as modified and it also shows the events for `bit watch`.
 
