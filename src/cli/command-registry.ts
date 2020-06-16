@@ -1,5 +1,4 @@
 import { serializeError } from 'serialize-error';
-import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
@@ -55,6 +54,11 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
   return options;
 }
 
+/**
+ * execute the command.
+ * the stack trace up to this point is confusing, it's helpful to outline it here:
+ * CLIExtension.run => commander.parse(params) => commander-pkg.parse => commander-pkg.parseArgs => execAction
+ */
 export function execAction(command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
@@ -134,7 +138,11 @@ function serializeErrAndExit(err, commandName) {
   return logger.exitAfterFlush(code, commandName);
 }
 
-// @TODO add help for subcommands
+/**
+ * register the action of each one of the commands.
+ * at this point, it doesn't run any `execAction`, it only register it.
+ * the actual running of `execAction` happens once `commander.parse(params)` is called.
+ */
 function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     if (!empty(command.commands)) {
@@ -215,15 +223,6 @@ export default class CommandRegistry {
     this.extensionsCommands = extensionsCommands;
   }
 
-  registerExtenstionsCommands() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.extensionsCommands.forEach(cmd => register(cmd, commander));
-  }
-
-  registerCommands() {
-    this.commands.forEach(cmd => register(cmd, commander));
-  }
-
   printHelp() {
     // eslint-disable-next-line global-require
     const helpTemplateGenerator = require('./templates/help');
@@ -271,24 +270,4 @@ export default class CommandRegistry {
 
     return this;
   }
-
-  run() {
-    const args = process.argv.slice(2);
-    if (args[0] && ['-h', '--help'].includes(args[0])) {
-      this.printHelp();
-      return this;
-    }
-
-    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
-    packageManagerArgs.shift(); // the first item, '--', is not needed.
-    this.registerBaseCommand();
-    this.registerCommands();
-    this.registerExtenstionsCommands();
-    this.outputHelp();
-    commander.packageManagerArgs = packageManagerArgs; // it's a hack, I didn't find a better way to pass them
-    commander.parse(params);
-
-    return this;
-  }
 }
-process.on('exit', function() {});

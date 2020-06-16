@@ -5,7 +5,7 @@ import defaultHandleError, { findErrorDefinition } from './cli/default-error-han
 import { logErrAndExit } from './cli/command-registry';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
-import { PaperError } from './extensions/cli';
+import { PaperError, CLIExtension } from './extensions/cli';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -27,10 +27,10 @@ try {
       return harmony.set([BitExt]);
     })
     .then(() => {
-      const cli = harmony.get('CLIExtension');
+      const cli: CLIExtension = harmony.get('CLIExtension');
+      if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
       // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
-      // eslint-disable-next-line no-console
-      return cli?.run();
+      return cli.run();
     })
     .catch(err => {
       const originalError = err.originalError || err;
