@@ -31,17 +31,18 @@ export class LegacyCommandAdapter implements Command {
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
-    let report: string | null = null;
     //  packageManagerArgs is injected here for legacy reasons.
     const res = await this.cmd.action(params, options, (this as any).packageManagerArgs || []);
     let data = res;
-    if (res && res.data !== undefined) {
+    let code = 0;
+    if (res && res.__code !== undefined) {
       data = res.data;
+      code = res.__code;
     }
-    report = this.cmd.report && this.cmd.report(data, params, options);
+    const report = this.cmd.report(data, params, options);
     return {
-      code: res?.__code || 0,
-      report: report || ''
+      code,
+      report
     };
   }
 
