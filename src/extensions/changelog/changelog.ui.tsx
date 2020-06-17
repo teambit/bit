@@ -4,7 +4,7 @@ import { WorkspaceUI } from '../workspace/workspace.ui';
 export class ChangeLogUI {
   static dependencies = [WorkspaceUI];
 
-  static ChangeLog = () => {
+  ChangeLog = () => {
     return <ChangeLogPage versions={undefined} />;
   };
 
@@ -14,7 +14,7 @@ export class ChangeLogUI {
     workspace.registerMenuItem({
       label: 'Changelog',
       onClick: () => {
-        workspace.open(ChangeLogUI.ChangeLog());
+        workspace.open(ui.ChangeLog());
       }
     });
 
