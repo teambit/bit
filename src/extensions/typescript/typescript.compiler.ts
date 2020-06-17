@@ -75,10 +75,15 @@ export class TypescriptCompiler implements Compiler {
       getNewLine: () => ts.sys.newLine
     };
     const componentsErrors = diagnostics.map(diagnostic => {
-      if (!diagnostic.file) throw new Error(`diagnostic has no file. ${JSON.stringify(diagnostic)}`);
+      const errorStr = process.stdout.isTTY
+        ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
+        : ts.formatDiagnostic(diagnostic, formatHost);
+      if (!diagnostic.file) {
+        // this happens for example if one of the components and is not TS
+        throw new Error(errorStr);
+      }
       const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName);
       if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
-      const errorStr = ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost);
       return { componentId, error: errorStr };
     });
     const components = capsules.map(capsule => {
