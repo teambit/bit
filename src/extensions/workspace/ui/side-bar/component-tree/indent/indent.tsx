@@ -6,9 +6,7 @@ export const indentClass = styles.indent;
 export const indentMargin = styles.indentMargin;
 
 export function indentStyle(depth: number): CSSProperties {
-  return depth
-    ? ({
-        '--indent-depth': depth + ''
-      } as CSSProperties)
-    : {};
+  return {
+    '--indent-depth': depth
+  } as CSSProperties;
 }

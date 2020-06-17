@@ -9,9 +9,10 @@ export type MenuItem = {
 };
 
 export type TopBarSlotRegistry = SlotRegistry<MenuItem>;
+export type StageSlotRegistry = SlotRegistry<JSX.Element>;
 
 export class WorkspaceUI {
-  constructor(private topBarSlot: TopBarSlotRegistry) {}
+  constructor(private topBarSlot: TopBarSlotRegistry, private stageSlot: StageSlotRegistry) {}
   setStage?: React.Dispatch<React.SetStateAction<JSX.Element | undefined>>;
 
   /**
@@ -22,6 +23,7 @@ export class WorkspaceUI {
     return this;
   }
 
+  /** set content to appear in main stage */
   open(element: JSX.Element) {
     this.setStage && this.setStage(element);
   }
@@ -36,9 +38,9 @@ export class WorkspaceUI {
     return WorkspaceUi;
   }
 
-  static slots = [Slot.withType<MenuItem>()];
+  static slots = [Slot.withType<MenuItem>(), Slot.withType<JSX.Element>()];
 
-  static async provider(deps, config, [topBarSlot]: [TopBarSlotRegistry]) {
-    return new WorkspaceUI(topBarSlot);
+  static async provider(deps, config, [topBarSlot, stageSlot]: [TopBarSlotRegistry, StageSlotRegistry]) {
+    return new WorkspaceUI(topBarSlot, stageSlot);
   }
 }

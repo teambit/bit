@@ -5,7 +5,10 @@ import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
 
 import { ComponentTreeContext } from './component-tree-context';
-import { ScopeView, ComponentView, NamespaceView } from './component-nodes';
+import { /* ScopeView, */ ComponentView, NamespaceView } from './component-nodes';
+
+import styles from './component-tree.module.scss';
+import { indentStyle } from './indent';
 
 type ComponentTreeProps = {
   onSelect: (id: string) => any;
@@ -18,24 +21,37 @@ export class ComponentTree extends Component<ComponentTreeProps> {
     return inflateToTree(componentList);
   });
 
+  treeContext = memoizeOne((onSelect, selected) => {
+    return { onSelect, selected };
+  });
+
   render() {
-    const treeContext = { onSelect: this.props.onSelect, selected: this.props.selected }; //TODO - memoize
+    const treeContext = this.treeContext(this.props.onSelect, this.props.selected);
     const rootNode = this.getRootNode(this.props.components);
 
     return (
-      <TreeNodeContext.Provider value={getTreeNodeComponent}>
-        <ComponentTreeContext.Provider value={treeContext}>
-          <ScopeView node={rootNode} depth={0} />
-        </ComponentTreeContext.Provider>
-      </TreeNodeContext.Provider>
+      <div className={styles.componentTree} style={indentStyle(0)}>
+        <TreeNodeContext.Provider value={getTreeNodeComponent}>
+          <ComponentTreeContext.Provider value={treeContext}>
+            <RootNode node={rootNode} />
+          </ComponentTreeContext.Provider>
+        </TreeNodeContext.Provider>
+      </div>
     );
   }
+}
+
+function RootNode({ node }: { node: TreeNode }) {
+  const Node = getTreeNodeComponent(node);
+
+  return <Node node={node} depth={0} />;
 }
 
 function getTreeNodeComponent(node: TreeNode) {
   const { id, children } = node;
 
   if (!children) return ComponentView;
-  if (!id.includes('/')) return ScopeView;
+  // TODO - how to tell scopes from namespaces?
+  // if (!id.includes('/')) return ScopeView;
   return NamespaceView;
 }

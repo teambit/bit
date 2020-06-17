@@ -93,7 +93,9 @@ module.exports = function(workspaceDir, entryFiles) {
             {
               loader: require.resolve('css-loader'),
               options: {
-                modules: true,
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]'
+                },
                 sourceMap: true
               }
             },

@@ -1,6 +1,8 @@
 .explorer {
 	display: grid;
 	height: 100vh;
+	
+	color: var(--text-highlight);
 
 	grid-template:
 		'scopeName header'
