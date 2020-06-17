@@ -29,6 +29,24 @@ export type ComponentPkgExtensionConfig = {
 export class PkgExtension {
   static id = '@teambit/pkg';
   static dependencies = [CLIExtension, ScopeExtension, Environments];
+  static slots = [Slot.withType<PackageJsonProps>()];
+  static defaultConfig = {};
+
+  static provider(
+    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
+    config: PkgExtensionConfig,
+    [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
+  ) {
+    const packer = new Packer(scope?.legacyScope);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
+    // TODO: maybe we don't really need the id here any more
+    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
+    // TODO: consider passing the pkg instead of packer
+    cli.register(new PackCmd(packer));
+
+    return pkg;
+  }
+
   /**
    *Creates an instance of PkgExtension.
    * @param {PkgExtensionConfig} config
@@ -116,24 +134,5 @@ export class PkgExtension {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
     return newProps;
-  }
-
-  static slots = [Slot.withType<PackageJsonProps>()];
-
-  static defaultConfig = {};
-
-  static provider(
-    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
-    config: PkgExtensionConfig,
-    [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
-  ) {
-    const packer = new Packer(scope?.legacyScope);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
-    // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
-    // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-
-    return pkg;
   }
 }
