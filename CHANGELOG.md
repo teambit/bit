@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.0-dev.1] - 2020-06-17]
+
+- release pre-alpha version of [Harmony](https://github.com/teambit/bit/issues/2280) hidden behind a feature-flag
+
 ## [[14.7.7-dev.9] - 2020-06-02]
 
 - wait for the next event loop before exit child process in bit test
