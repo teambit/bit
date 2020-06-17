@@ -115,25 +115,18 @@ export function execAction(command, concrete, args): Promise<any> {
           case 'json': {
             const code = res.code || 0;
             const data = res.data || res;
-            // eslint-disable-next-line no-console
-            console.log(JSON.stringify(data, null, 2));
-            return code;
+            return process.stdout.write(JSON.stringify(data, null, 2), () => logger.exitAfterFlush(code, command.name));
           }
           case 'render': {
             const { waitUntilExit } = render(res);
             await waitUntilExit();
-            return res.props.code;
+            return logger.exitAfterFlush(res.props.code, command.name);
           }
           case 'report':
           default: {
-            // eslint-disable-next-line no-console
-            console.log(res.data);
-            return res.code;
+            return process.stdout.write(`${res.data}\n`, () => logger.exitAfterFlush(res.code, command.name));
           }
         }
-      })
-      .then(function(code: number) {
-        return logger.exitAfterFlush(code, command.name);
       })
       .catch(err => {
         logger.error(
