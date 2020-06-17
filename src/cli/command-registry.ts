@@ -1,16 +1,13 @@
 import { serializeError } from 'serialize-error';
-import R from 'ramda';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
 import { render } from 'ink';
-
-import Command from './command';
+import { LegacyCommand } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
@@ -55,6 +52,11 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
   return options;
 }
 
+/**
+ * execute the command.
+ * the stack trace up to this point is confusing, it's helpful to outline it here:
+ * CLIExtension.run => commander.parse(params) => commander-pkg.parse => commander-pkg.parseArgs => execAction
+ */
 export function execAction(command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
@@ -83,29 +85,48 @@ export function execAction(command, concrete, args): Promise<any> {
     }
     return Promise.resolve();
   };
+
+  const getCommandHandler = (): 'render' | 'report' | 'json' => {
+    if (flags.json) {
+      if (!command.json) throw new Error(`command "${command.name}" doesn't implement "json" method`);
+      return 'json';
+    }
+    if (command.render && command.report) {
+      return process.stdout.isTTY ? 'render' : 'report';
+    }
+    if (command.report) return 'report';
+    if (command.render) return 'render';
+    throw new Error(`command "${command.name}" doesn't implement "render" nor "report" methods`);
+  };
+  const commandHandler = getCommandHandler();
+
   return (
     migrateWrapper(command.migration)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
-        const commandMain = flags.json ? 'json' : 'render';
+        // this is a hack in the legacy code to make paper work
+        // it should be removed upon major refactoring process
         command.packageManagerArgs = packageManagerArgs;
-        return command[commandMain](relevantArgs, flags, packageManagerArgs);
+        return command[commandHandler](relevantArgs, flags, packageManagerArgs);
       })
       .then(async res => {
         loader.off();
-        if (flags.json) {
-          const code = res.code;
-          // eslint-disable-next-line no-console
-          console.log(JSON.stringify(res.data, null, 2));
-          return code;
+        switch (commandHandler) {
+          case 'json': {
+            const code = res.code || 0;
+            const data = res.data || res;
+            return process.stdout.write(JSON.stringify(data, null, 2), () => logger.exitAfterFlush(code, command.name));
+          }
+          case 'render': {
+            const { waitUntilExit } = render(res);
+            await waitUntilExit();
+            return logger.exitAfterFlush(res.props.code, command.name);
+          }
+          case 'report':
+          default: {
+            return process.stdout.write(`${res.data}\n`, () => logger.exitAfterFlush(res.code, command.name));
+          }
         }
-        const { waitUntilExit } = render(res);
-        await waitUntilExit();
-        return res.props.code;
-        // eslint-disable-next-line no-console
-      })
-      .then(function(code: number) {
-        return logger.exitAfterFlush(code, command.name);
       })
       .catch(err => {
         logger.error(
@@ -118,7 +139,6 @@ export function execAction(command, concrete, args): Promise<any> {
         const errorHandled = defaultHandleError(err) || command.handleError(err);
         if (command.private) return serializeErrAndExit(err, command.name);
         // uncomment this to see the entire error object on the console
-        // console.log(err);
         if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
         return logErrAndExit(err, command.name);
       })
@@ -131,13 +151,18 @@ function serializeErrAndExit(err, commandName) {
   return logger.exitAfterFlush(code, commandName);
 }
 
-// @TODO add help for subcommands
-function registerAction(command: Command, concrete) {
+/**
+ * register the action of each one of the commands.
+ * at this point, it doesn't run any `execAction`, it only register it.
+ * the actual running of `execAction` happens once `commander.parse(params)` is called.
+ */
+function registerAction(command: LegacyCommand, concrete) {
   concrete.action((...args) => {
-    if (!empty(command.commands)) {
+    const subCommands = command.commands;
+    if (subCommands?.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
-      const subcommand = command.commands.find(cmd => {
+      const subcommand = subCommands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 
@@ -156,7 +181,7 @@ function createOptStr(alias, name) {
   return `--${name}`;
 }
 
-export function register(command: Command, commanderCmd) {
+export function register(command: LegacyCommand, commanderCmd) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)
@@ -186,8 +211,8 @@ export default class CommandRegistry {
   version: string;
   usage: string;
   description: string;
-  commands: Command[];
-  extensionsCommands: Command[] | null | undefined;
+  commands: LegacyCommand[];
+  extensionsCommands: LegacyCommand[] | null | undefined;
 
   registerBaseCommand() {
     commander
@@ -201,7 +226,7 @@ export default class CommandRegistry {
     usage: string,
     description: string,
     version: string,
-    commands: Command[],
+    commands: LegacyCommand[],
     extensionsCommands: Array<Commands>
   ) {
     this.usage = usage;
@@ -210,15 +235,6 @@ export default class CommandRegistry {
     this.commands = commands;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.extensionsCommands = extensionsCommands;
-  }
-
-  registerExtenstionsCommands() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.extensionsCommands.forEach(cmd => register(cmd, commander));
-  }
-
-  registerCommands() {
-    this.commands.forEach(cmd => register(cmd, commander));
   }
 
   printHelp() {
@@ -268,24 +284,4 @@ export default class CommandRegistry {
 
     return this;
   }
-
-  run() {
-    const args = process.argv.slice(2);
-    if (args[0] && ['-h', '--help'].includes(args[0])) {
-      this.printHelp();
-      return this;
-    }
-
-    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
-    packageManagerArgs.shift(); // the first item, '--', is not needed.
-    this.registerBaseCommand();
-    this.registerCommands();
-    this.registerExtenstionsCommands();
-    this.outputHelp();
-    commander.packageManagerArgs = packageManagerArgs; // it's a hack, I didn't find a better way to pass them
-    commander.parse(params);
-
-    return this;
-  }
 }
-process.on('exit', function() {});

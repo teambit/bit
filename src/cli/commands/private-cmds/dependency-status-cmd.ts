@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { dependencyStatus } from '../../../api/consumer';
 import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 
-export default class DependencyStatus extends Command {
+export default class DependencyStatus implements LegacyCommand {
   name = 'dependency-status [mainFile...]';
   private = true;
   description = 'returns the status of the dependency status of bit map against bit dependencies';

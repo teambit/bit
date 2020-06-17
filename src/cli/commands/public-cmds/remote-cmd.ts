@@ -2,13 +2,13 @@
 
 import chalk from 'chalk';
 import Table from 'tty-table';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
 import RemoteUndefined from '../exceptions/remote-undefined';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-class RemoteAdd extends Command {
+class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
   description = 'add a tracked bit remote';
   alias = '';
@@ -28,7 +28,7 @@ class RemoteAdd extends Command {
   }
 }
 
-class RemoteRm extends Command {
+class RemoteRm implements LegacyCommand {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
@@ -43,7 +43,7 @@ class RemoteRm extends Command {
   }
 }
 
-export default class Remote extends Command {
+export default class Remote implements LegacyCommand {
   name = 'remote';
   description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/bit-server#working-with-remote-scopes`;
   alias = '';

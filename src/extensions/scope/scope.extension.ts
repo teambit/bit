@@ -10,6 +10,8 @@ type TagRegistry = SlotRegistry<OnTag>;
 export type OnTag = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension {
+  static id = '@teambit/scope';
+
   constructor(
     /**
      * legacy scope
@@ -17,7 +19,7 @@ export class ScopeExtension {
     readonly legacyScope: LegacyScope,
 
     /**
-     * slot registry for subscribing to release
+     * slot registry for subscribing to build
      */
     private tagRegistry: TagRegistry
   ) {}

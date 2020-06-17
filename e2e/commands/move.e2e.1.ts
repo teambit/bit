@@ -74,7 +74,7 @@ describe('bit move command', function() {
       helper.fs.createFile('bar', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
       helper.fs.createFile('bar', 'foo1.spec.js');
-      helper.command.addComponentLegacy('bar', {
+      helper.command.addComponent('bar', {
         i: 'bar/foo',
         t: path.normalize('bar/foo1.spec.js'),
         m: path.normalize('bar/foo1.js')
@@ -276,7 +276,7 @@ console.log(barFoo());`;
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js');
         helper.fs.outputFile('src/test/foo.spec.js');
-        helper.command.addComponentLegacy('src/foo.js src/test/foo.spec.js', { i: 'foo', m: 'src/foo.js' });
+        helper.command.addComponent('src/foo.js src/test/foo.spec.js', { i: 'foo', m: 'src/foo.js' });
         output = helper.command.moveComponent('foo', 'components/foo');
       });
       it('should output the file changes', () => {
@@ -303,7 +303,7 @@ console.log(barFoo());`;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js');
-        helper.command.addComponentLegacy('src', { i: 'foo' });
+        helper.command.addComponent('src', { i: 'foo' });
       });
       it('should throw an error saying it is not possible', () => {
         const cmd = () => helper.command.moveComponent('foo', 'components/foo');
@@ -314,7 +314,7 @@ console.log(barFoo());`;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js');
-        helper.command.addComponentAllowFiles('src', { i: 'foo' });
+        helper.command.addComponent('src', { i: 'foo' });
       });
       it('should throw an error saying it is not possible', () => {
         const cmd = () => helper.command.moveComponent('foo', 'components/foo');
@@ -326,7 +326,7 @@ console.log(barFoo());`;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.js');
-        helper.command.addComponentAllowFiles('foo.js', { i: 'foo' });
+        helper.command.addComponent('foo.js', { i: 'foo' });
         output = helper.command.moveComponent('foo', 'components/foo');
       });
       it('should output the file changes', () => {

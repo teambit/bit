@@ -2,15 +2,16 @@ import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { IS_WINDOWS } from '../../src/constants';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
-(IS_WINDOWS ? describe.skip : describe)('compile extension', function() {
+describe('compile extension', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -24,10 +25,10 @@ chai.use(require('chai-fs'));
       helper.bitJsonc.addDefaultScope();
       appOutput = helper.fixtures.populateComponentsTS();
       const environments = {
-        env: 'React',
+        env: '@teambit/react',
         config: {}
       };
-      helper.extensions.addExtensionToVariant('*', 'Environments', environments);
+      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -65,11 +66,11 @@ chai.use(require('chai-fs'));
       });
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
-        expect(catComp2).to.have.property('dists');
-        const dists = catComp2.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
-        expect(files).to.include('index.d.ts'); // makes sure it saves declaration files
+        expect(catComp2).to.have.property('extensions');
+        const compileExt = catComp2.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
+        expect(files).to.include('dist/index.d.ts'); // makes sure it saves declaration files
       });
       describe('export and import to another scope', () => {
         before(() => {
@@ -81,6 +82,25 @@ chai.use(require('chai-fs'));
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
+        });
+        it('should save the artifacts and package.json on node_modules', () => {
+          const artifactsPath = path.join(
+            helper.scopes.localPath,
+            'node_modules/@bit',
+            `${helper.scopes.remote}.comp1`
+          );
+          expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
+          expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
+        });
+        it('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
+          const nestedPath = path.join(
+            helper.scopes.localPath,
+            'components/.dependencies/comp2',
+            helper.scopes.remote,
+            '0.0.1'
+          );
+          expect(path.join(nestedPath, 'dist/index.js')).to.be.a.file();
+          expect(path.join(nestedPath, 'package.json')).to.be.a.file();
         });
         describe('running compile on the imported component', () => {
           it('should generate dists also after deleting the dists from the workspace', () => {
@@ -113,10 +133,10 @@ chai.use(require('chai-fs'));
       });
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
-        expect(catComp).to.have.property('dists');
-        const dists = catComp.dists;
-        const files = dists.map(d => d.relativePath);
-        expect(files).to.include('index.js');
+        expect(catComp).to.have.property('extensions');
+        const compileExt = catComp.extensions.find(e => e.name === 'compile');
+        const files = compileExt.artifacts.map(d => d.relativePath);
+        expect(files).to.include('dist/index.js');
       });
     });
   });

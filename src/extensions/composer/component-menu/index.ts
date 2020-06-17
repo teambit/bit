@@ -1,1 +1,0 @@
-export { ComponentMenu } from './menu';

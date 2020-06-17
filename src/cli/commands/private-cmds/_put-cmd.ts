@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
 import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
@@ -7,7 +7,7 @@ import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/che
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
-export default class Put extends Command {
+export default class Put implements LegacyCommand {
   name = '_put <path> <args>';
   private = true;
   description = 'upload a component to a scope';

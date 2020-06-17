@@ -41,10 +41,10 @@ describe('bit export command', function() {
       createFile('bar', 'foo2');
       createFile('baz', 'foo1');
       createFile('baz', 'foo2');
-      helper.command.addComponentAllowFiles('bar/foo1.js', { i: 'bar/foo1' });
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
-      helper.command.addComponentAllowFiles('baz/foo1.js', { i: 'baz/foo1' });
-      helper.command.addComponentAllowFiles('baz/foo2.js', { i: 'baz/foo2' });
+      helper.command.addComponent('bar/foo1.js', { i: 'bar/foo1' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('baz/foo1.js', { i: 'baz/foo1' });
+      helper.command.addComponent('baz/foo2.js', { i: 'baz/foo2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -66,7 +66,7 @@ describe('bit export command', function() {
       createFile('baz', 'foo1');
       createFile('baz', 'foo2');
       helper.command.addComponent('bar', { m: 'foo1.js' });
-      helper.command.addComponentAllowFiles('baz', { m: 'foo1.js' });
+      helper.command.addComponent('baz', { m: 'foo1.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -83,8 +83,8 @@ describe('bit export command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       createFile('bar', 'foo1');
       createFile('bar', 'foo2');
-      helper.command.addComponentAllowFiles('bar/foo1.js', { i: 'bar/foo1' });
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('bar/foo1.js', { i: 'bar/foo1' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.command.tagAllComponents();
       // DO NOT change the next line to `helper.command.exportAllComponents()`. the current form catches some wierd bugs
       helper.command.exportComponent('bar/foo1 bar/foo2');
@@ -350,7 +350,7 @@ describe('bit export command', function() {
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string1.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsType();
-      helper.command.addComponentAllowFiles('utils/is-string1.js', { i: 'utils/is-string1' });
+      helper.command.addComponent('utils/is-string1.js', { i: 'utils/is-string1' });
       helper.command.tagAllComponents('', '0.0.1');
       helper.command.exportAllComponents();
 
@@ -366,7 +366,7 @@ describe('bit export command', function() {
         'is-string2.js',
         `const isType = require('${isType}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`
       );
-      helper.command.addComponentAllowFiles('utils/is-string2.js', { i: 'utils/is-string2' });
+      helper.command.addComponent('utils/is-string2.js', { i: 'utils/is-string2' });
       const bitShowOutput = helper.command.showComponentParsed('utils/is-string2');
       expect(bitShowOutput.dependencies[0].id).to.have.string('utils/is-type@0.0.2');
       helper.command.tagComponent('utils/is-string2');
@@ -489,8 +489,8 @@ describe('bit export command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar.js', 'require("./bar-dep")');
       helper.fs.outputFile('bar-dep.js');
-      helper.command.addComponentAllowFiles('bar.js');
-      helper.command.addComponentAllowFiles('bar-dep.js');
+      helper.command.addComponent('bar.js');
+      helper.command.addComponent('bar-dep.js');
       helper.env.importDummyCompiler('add-scope-name');
       helper.command.tagAllComponents();
 
@@ -525,8 +525,8 @@ describe('bit export command', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.outputFile('foo1.js');
         helper.fs.outputFile('foo2.js');
-        helper.command.addComponentAllowFiles('foo1.js');
-        helper.command.addComponentAllowFiles('foo2.js');
+        helper.command.addComponent('foo1.js');
+        helper.command.addComponent('foo2.js');
         helper.command.tagAllComponents();
         helper.command.exportComponent('foo1');
         helper.command.tagScope('1.0.0');
@@ -610,7 +610,7 @@ describe('bit export command', function() {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.fs.outputFile('qux.js');
-        helper.command.addComponentAllowFiles('qux.js');
+        helper.command.addComponent('qux.js');
         helper.fs.outputFile('utils/is-string.js', 'require("../qux");');
         helper.command.tagAllComponents();
         output = helper.command.export();
@@ -633,8 +633,8 @@ describe('bit export command', function() {
         helper.scopeHelper.addRemoteScope(scopePath);
         helper.fs.outputFile('foo1.js');
         helper.fs.outputFile('foo2.js');
-        helper.command.addComponentAllowFiles('foo1.js');
-        helper.command.addComponentAllowFiles('foo2.js');
+        helper.command.addComponent('foo1.js');
+        helper.command.addComponent('foo2.js');
         helper.command.tagAllComponents();
         helper.command.exportComponent('foo1');
         helper.command.runCmd(`bit export ${anotherRemote} foo2`);
@@ -676,7 +676,7 @@ describe('bit export command', function() {
           helper.scopeHelper.addRemoteScope(scopePath);
           helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
           helper.fs.outputFile('bar.js', '');
-          helper.command.addComponentAllowFiles('bar.js');
+          helper.command.addComponent('bar.js');
           helper.fs.outputFile('foo1.js', 'require("./bar");');
           helper.command.tagAllComponents();
           helper.command.exportComponent('bar', scopeName);
@@ -747,7 +747,7 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.fs.outputFile('foo2.js', "require('./foo1');");
-          helper.command.tagScopeLegacy('3.0.0');
+          helper.command.tagScope('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.general.runWithTryCatch('bit export');
         });
@@ -788,12 +788,12 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js', '');
-          helper.command.addComponentAllowFiles('foo3.js');
-          helper.command.tagAllComponentsLegacy();
+          helper.command.addComponent('foo3.js');
+          helper.command.tagAllComponents();
           helper.command.runCmd(`bit export ${anotherRemote} foo3`);
           helper.fs.outputFile('foo2.js', "require('./foo3');");
           helper.fs.outputFile('foo3.js', "require('./foo2');");
-          helper.command.tagScopeLegacy('3.0.0');
+          helper.command.tagScope('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.command.export();
         });
@@ -809,7 +809,7 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js');
-          helper.command.addComponentAllowFiles('foo3.js');
+          helper.command.addComponent('foo3.js');
           helper.command.tagAllComponents();
           beforeExportScope = helper.scopeHelper.cloneLocalScope();
         });
@@ -1041,7 +1041,7 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
           helper.fs.outputFile('foo2.js');
-          helper.command.addComponentAllowFiles('foo2.js');
+          helper.command.addComponent('foo2.js');
           helper.command.tagComponent('foo2');
           localScopeWithFoo2 = helper.scopeHelper.cloneLocalScope();
         });
@@ -1097,7 +1097,7 @@ describe('bit export command', function() {
               helper.command.runCmd(`bit import ${forkScope}/bar/foo`);
             });
             it('should write the source code with the changed source of the forked scope', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
               expect(barFoo).to.have.string(forkScope);
               expect(barFoo).to.not.have.string(helper.scopes.remote);
             });
@@ -1162,11 +1162,11 @@ describe('bit export command', function() {
               output = helper.command.export(`${forkScope} --include-dependencies --set-current-scope --rewire --all`);
             });
             it('should change the files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the dist files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/dist/bar/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/dist/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the files objects locally', () => {

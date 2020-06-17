@@ -55,7 +55,7 @@ const _loadExtension = (consumerPath: string | null | undefined, scopePath: stri
  * Load all extensions
  * Regular, core, globals
  */
-export default (async function loadExtensions(): Promise<Extension[]> {
+export default async function loadExtensions(): Promise<Extension[]> {
   try {
     logger.debug('start loading extensions');
     const getConsumer = async (): Promise<Consumer | null | undefined> => {
@@ -93,4 +93,4 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     logger.error('loading extensions failed', err);
     return [];
   }
-});
+}

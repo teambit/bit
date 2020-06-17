@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import R from 'ramda';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { add } from '../../../api/consumer';
 import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
@@ -9,7 +9,7 @@ import { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
-export default class Add extends Command {
+export default class Add implements LegacyCommand {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations
@@ -29,8 +29,6 @@ export default class Add extends Command {
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
-    ['', 'allow-files', 'allow adding individual files to component (not recommended)'],
-    ['', 'allow-relative-paths', 'allow import statements between components with relative paths (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ] as CommandOptions;
   loader = true;
@@ -44,8 +42,6 @@ export default class Add extends Command {
       tests,
       namespace,
       exclude,
-      allowFiles = false,
-      allowRelativePaths = false,
       override = false
     }: {
       id: string | null | undefined;
@@ -53,8 +49,6 @@ export default class Add extends Command {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
-      allowFiles: boolean;
-      allowRelativePaths: boolean;
       override: boolean;
     }
   ): Promise<any> {
@@ -82,10 +76,12 @@ export default class Add extends Command {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
-      allowFiles,
-      allowRelativePaths,
       override
     });
+  }
+
+  splitList(val: string) {
+    return val.split(',');
   }
 
   report({ addedComponents, warnings }: AddActionResults): string {

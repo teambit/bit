@@ -14,7 +14,7 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { Compilers, Testers } from '../../consumer/config/abstract-config';
 
 import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import { isFeatureEnabled, HARMONY_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
 import { ILegacyWorkspaceConfig, ExtensionConfigList } from '../../consumer/config';
@@ -185,41 +185,45 @@ export class WorkspaceConfig implements HostConfig {
     dirPath?: PathOsBasedAbsolute,
     legacyInitProps?: LegacyInitProps
   ) {
-    if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
-      // Only support here what needed for e2e tests
-      const legacyProps: LegacyWorkspaceConfigProps = {};
-      if (props['@teambit/dependency-resolver']) {
-        legacyProps.packageManager = props['@teambit/dependency-resolver'].packageManager;
+    if (isFeatureEnabled(HARMONY_FEATURE)) {
+      const getTemplateFile = async () => {
+        try {
+          return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
+        } catch (err) {
+          if (err.code !== 'ENOENT') throw err;
+          // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
+          return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
+        }
+      };
+      const templateFile = await getTemplateFile();
+      const templateStr = templateFile.toString();
+      const template = parse(templateStr);
+      // TODO: replace this assign with some kind of deepAssign that keeps the comments
+      // right now the comments above the internal props are overrides after the assign
+      const merged = assign(template, props);
+      const instance = new WorkspaceConfig(merged, undefined);
+      if (dirPath) {
+        instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
       }
-      if (props['@teambit/workspace']) {
-        legacyProps.componentsDefaultDirectory = props['@teambit/workspace'].defaultDirectory;
-      }
-
-      const standAlone = legacyInitProps?.standAlone ?? false;
-      const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
-      const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
       return instance;
     }
-    const getTemplateFile = async () => {
-      try {
-        return await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-      } catch (err) {
-        if (err.code !== 'ENOENT') throw err;
-        // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-        return fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
-      }
-    };
-    const templateFile = await getTemplateFile();
-    const templateStr = templateFile.toString();
-    const template = parse(templateStr);
-    // TODO: replace this assign with some kind of deepAssign that keeps the comments
-    // right now the comments above the internal props are overrides after the assign
-    const merged = assign(template, props);
-    const instance = new WorkspaceConfig(merged, undefined);
-    if (dirPath) {
-      instance.path = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
+    // @todo: once harmony is stable, revert the if, and use this 'legacy-workspace-config' feature.
+    // if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
+    if (!dirPath) throw new Error('workspace-config, dirPath is missing');
+    // Only support here what needed for e2e tests
+    const legacyProps: LegacyWorkspaceConfigProps = {};
+    if (props['@teambit/dependency-resolver']) {
+      legacyProps.packageManager = props['@teambit/dependency-resolver'].packageManager;
     }
+    if (props['@teambit/workspace']) {
+      legacyProps.componentsDefaultDirectory = props['@teambit/workspace'].defaultDirectory;
+    }
+
+    const standAlone = legacyInitProps?.standAlone ?? false;
+    const legacyConfig = await LegacyWorkspaceConfig._ensure(dirPath, standAlone, legacyProps);
+    const instance = WorkspaceConfig.fromLegacyConfig(legacyConfig);
     return instance;
+    // }
   }
 
   /**
@@ -420,6 +424,7 @@ export class WorkspaceConfig implements HostConfig {
       // @ts-ignore
       path: this.path,
       _getEnvsByType,
+      isLegacy: this.isLegacy,
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.getVariantsConfig(),

@@ -9,7 +9,7 @@ console.log('got ' + a() + ' and got B')`;
 
 // @todo: this is failing due to NPM unable to "npm install" on capsules.
 // once Librarian is the one responsible to install packages on capsules, this must work.
-describe.skip('cyclic dependencies', function() {
+describe('cyclic dependencies', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -25,8 +25,8 @@ describe.skip('cyclic dependencies', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('comp', 'a.js', fixtureA);
       helper.fs.createFile('comp', 'b.js', fixtureB);
-      helper.command.addComponentAllowFiles('comp/a.js', { i: 'comp/a' });
-      helper.command.addComponentAllowFiles('comp/b.js', { i: 'comp/b' });
+      helper.command.addComponent('comp/a.js', { i: 'comp/a' });
+      helper.command.addComponent('comp/b.js', { i: 'comp/b' });
       output = helper.command.tagAllComponents();
     });
     it('should be able to tag both with no errors', () => {
@@ -99,7 +99,7 @@ describe.skip('cyclic dependencies', function() {
       helper.fs.createFile('comp', 'B2.js', "const B3 = require('./B3'); const A1 = require ('./A1');");
       helper.fs.createFile('comp', 'B3.js', "const B4 = require('./B4')");
       helper.fs.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
-      helper.command.addComponentAllowFiles('comp/*.js', { n: 'comp' });
+      helper.command.addComponent('comp/*.js', { n: 'comp' });
       output = helper.command.tagAllComponents();
     });
     it('should be able to tag with no errors', () => {

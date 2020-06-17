@@ -1,11 +1,12 @@
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
+// import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
 import { Packer, PackResult } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
+import { CLIExtension } from '../cli';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -26,6 +27,7 @@ export type ComponentPkgExtensionConfig = {
 };
 
 export class PkgExtension {
+  static id = '@teambit/pkg';
   static dependencies = [CLIExtension, ScopeExtension, Environments];
   /**
    *Creates an instance of PkgExtension.
@@ -36,7 +38,7 @@ export class PkgExtension {
    */
   constructor(
     /**
-     * environments extension configuration.
+     * pkg extension configuration.
      */
     readonly config: PkgExtensionConfig,
 
@@ -108,7 +110,7 @@ export class PkgExtension {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(this.constructor.name);
+    const currentExtension = configuredExtensions.findExtension(PkgExtension.id);
     const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
@@ -121,7 +123,7 @@ export class PkgExtension {
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs]: [CLI, ScopeExtension, Environments],
+    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {

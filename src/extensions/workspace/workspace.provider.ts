@@ -3,15 +3,28 @@ import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Isolator } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { Logger } from '../logger';
 import ConsumerComponent from '../../consumer/component';
-import { DependencyResolver } from '../dependency-resolver';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
+import { GraphQLExtension } from '../graphql';
+import workspaceSchema from './workspace.graphql';
+import InstallCmd from './install.cmd';
+import { CLIExtension } from '../cli';
 
-export type WorkspaceDeps = [ScopeExtension, ComponentFactory, Isolator, DependencyResolver, Variants, Logger];
+export type WorkspaceDeps = [
+  CLIExtension,
+  ScopeExtension,
+  ComponentFactory,
+  IsolatorExtension,
+  DependencyResolverExtension,
+  Variants,
+  Logger,
+  GraphQLExtension
+];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -29,7 +42,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [scope, component, isolator, dependencyResolver, variants, logger]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -60,6 +73,9 @@ export default async function provideWorkspace(
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
         return workspace.loadExtensions(componentConfig.parseExtensions());
       });
+      graphql.register(workspaceSchema(workspace));
+      cli.register(new InstallCmd(workspace));
+
       return workspace;
     }
 

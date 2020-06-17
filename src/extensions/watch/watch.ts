@@ -7,7 +7,7 @@ import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
 import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils';
-import { Compile } from './../compile';
+import { Compile } from '../compiler';
 import { Workspace } from '../workspace';
 import { Consumer } from '../../consumer';
 

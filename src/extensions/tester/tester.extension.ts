@@ -1,10 +1,10 @@
-import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { TestCmd } from './test.cmd';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { TesterService } from './tester.service';
 import { Component } from '../component';
 import { TesterTask } from './tester.task';
+import { CLIExtension } from '../cli';
 
 export type TesterExtensionConfig = {
   /**
@@ -14,6 +14,7 @@ export type TesterExtensionConfig = {
 };
 
 export class TesterExtension {
+  static id = '@teambit/tester';
   static dependencies = [CLIExtension, Environments, WorkspaceExt];
 
   constructor(
@@ -33,7 +34,7 @@ export class TesterExtension {
     readonly service: TesterService,
 
     /**
-     * release task.
+     * build task.
      */
     readonly task: TesterTask
   ) {}
@@ -51,7 +52,9 @@ export class TesterExtension {
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}'
   };
 
-  static provider([cli, envs, workspace]: [CLI, Environments, Workspace], config: TesterExtensionConfig) {
+  static provider([cli, envs, workspace]: [CLIExtension, Environments, Workspace], config: TesterExtensionConfig) {
+    // @todo: Ran to fix.
+    // @ts-ignore
     const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex), new TesterTask());
     cli.register(new TestCmd(tester, workspace));
 

@@ -19,8 +19,7 @@ export class FailedLoadForTag extends AbstractError {
     if (!this.componentsWithRelativePaths.length) return '';
     const components = this.componentsWithRelativePaths.join(', ');
     const title = `the following component(s) use relative paths to require other components.
-replace to module paths or use "bit link --rewire" to replace.
-to ignore this error (not recommended) use --allow-relative-paths flag. once this flag is used, users who import this component, will get the long paths as they appear on the workspace.`;
+replace to module paths or use "bit link --rewire" to replace.`;
     return `${title}\n${chalk.bold(components)}\n`;
   }
 
@@ -28,8 +27,7 @@ to ignore this error (not recommended) use --allow-relative-paths flag. once thi
     if (!this.componentsWithFilesNotDir.length) return '';
     const components = this.componentsWithFilesNotDir.join(', ');
     const title = `\nthe following component(s) don't have a dedicated directory, instead, the files are spread across multiple directories.
-refactor these components by moving the component files into one directory or use "bit move <component-id> <directory> --component" to do it for you.
-to ignore this error (not recommended) use --allow-files flag. once this flag is used, users who import this component, will get the long paths as they appear on the workspace`;
+refactor these components by moving the component files into one directory or use "bit move <component-id> <directory> --component" to do it for you.`;
     return `${title}\n${chalk.bold(components)}`;
   }
 }

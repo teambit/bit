@@ -103,6 +103,10 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
+    if (this.consumer && !this.consumer.isLegacy) {
+      await this._populateImportedNonLegacyComponentsLinks(component);
+      return;
+    }
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
@@ -146,6 +150,30 @@ export default class NodeModuleLinker {
       return component.defaultScope;
     }
     return this.consumer ? this.consumer.config.defaultScope : null;
+  }
+
+  /**
+   * for Harmony version and above, instead of symlink from the component dir to node_modules,
+   * create a directory on node_modules and symlink each one of the source files, this way, the
+   * structure is exactly the same as Authored
+   */
+  async _populateImportedNonLegacyComponentsLinks(component: Component) {
+    const componentId = component.id;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
+    filesToBind.forEach(file => {
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+      const dest = path.join(linkPath, file);
+
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+    });
+    await this._populateDependenciesAndMissingLinks(component);
   }
 
   /**
@@ -195,7 +223,7 @@ export default class NodeModuleLinker {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);
       } else {
-        // it's an un-supported file, create a symlink instead
+        // it's an un-supported file, or it's Harmony version and above, create a symlink instead
         this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
       }
     });

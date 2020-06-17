@@ -22,8 +22,8 @@ describe('component id with wildcard', function() {
       helper.fs.createFile('utils/fs', 'write.js');
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.addComponentAllowFiles('utils/is/*', { n: 'utils/is' });
-      helper.command.addComponentAllowFiles('utils/fs/*', { n: 'utils/fs' });
+      helper.command.addComponent('utils/is/*', { n: 'utils/is' });
+      helper.command.addComponent('utils/fs/*', { n: 'utils/fs' });
       scopeAfterAdd = helper.scopeHelper.cloneLocalScope();
     });
     describe('tag with wildcard', () => {

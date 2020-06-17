@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
@@ -13,7 +13,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
-export default class Import extends Command {
+export default class Import implements LegacyCommand {
   name = 'import [ids...]';
   description = `import components into your current workspace.
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components

@@ -1,6 +1,4 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { StartCmd } from './start.cmd';
-import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
@@ -17,7 +15,8 @@ export type EnvsConfig = {
 export type EnvOptions = {};
 
 export class Environments {
-  static dependencies = [BitCliExt, WorkspaceExt];
+  static id = '@teambit/envs';
+  static dependencies = [WorkspaceExt];
 
   constructor(
     /**
@@ -37,9 +36,6 @@ export class Environments {
     private envSlot: EnvsRegistry
   ) {}
 
-  // hack until gilad fixes ids.
-  readonly id: string = '@teambit/envs';
-
   /**
    * create a development runtime environment.
    */
@@ -54,7 +50,7 @@ export class Environments {
 
   // @todo remove duplications from `aggregateByDefs`, it was copied and pasted
   getEnvFromExtensions(extensions: ExtensionDataList): Environment | null {
-    const extension = extensions.findExtension(this.constructor.name);
+    const extension = extensions.findExtension(Environments.id);
     if (!extension) return null;
     const envId = extension.config.env;
     // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
@@ -82,8 +78,7 @@ export class Environments {
     components.forEach((current: Component) => {
       // :TODO fix this api. replace with `this.id` and improve naming.
       // const extension = current.config.extensions.findExtension(this.id);
-      // TODO: replace this.constructor.name with this.id once we fix it in harmony
-      const extension = current.config.extensions.findExtension(this.constructor.name);
+      const extension = current.config.extensions.findExtension(Environments.id);
       // this can also be handled better
       if (!extension) return;
       const envId = extension.config.env;
@@ -109,9 +104,8 @@ export class Environments {
 
   static defaultConfig = {};
 
-  static async provider([cli, workspace]: [BitCli, Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+  static async provider([workspace]: [Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
     const envs = new Environments(config, workspace, envSlot);
-    cli.register(new StartCmd(envs, workspace));
     return envs;
   }
 }

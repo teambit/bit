@@ -19,6 +19,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { Artifact } from '../component/sources/artifact';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -121,6 +122,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
+    this.populateArtifacts();
     return this.component;
   }
 
@@ -143,10 +145,11 @@ export default class ComponentWriter {
       this.writePackageJson &&
       (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
     ) {
+      const artifactsDir = this.getArtifactsDir();
       const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.bitMap,
         this.component,
-        this.writeToPath,
+        artifactsDir || this.writeToPath,
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
@@ -189,6 +192,31 @@ export default class ComponentWriter {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
     }
+  }
+
+  /**
+   * currently, it writes all artifacts.
+   * later, this responsibility might move to pkg extension, which could write only artifacts
+   * that are set in package.json.files[], to have a similar structure of a package.
+   */
+  private populateArtifacts() {
+    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
+    const artifactsDir = this.getArtifactsDir();
+    if (artifactsDir) {
+      artifactsVinyl.forEach(a => a.updatePaths({ newBase: artifactsDir }));
+    }
+    this.component.dataToPersist.addManyFiles(artifactsVinyl);
+  }
+
+  private getArtifactsDir() {
+    if (!this.consumer || this.consumer.isLegacy) return null;
+    if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
+    return getNodeModulesPathOfComponent(
+      this.consumer.config._bindingPrefix,
+      this.component.id,
+      true,
+      this.component.defaultScope
+    );
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {

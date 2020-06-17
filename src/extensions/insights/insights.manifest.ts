@@ -1,11 +1,11 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
-import { BitCliExt } from '../cli';
+import { CLIExtension } from '../cli';
 
 export default {
   name: 'insights',
-  dependencies: [ComponentGraphExt, BitCliExt],
+  dependencies: [ComponentGraphExt, CLIExtension],
   config: {
     silence: false
   },

@@ -30,14 +30,14 @@ describe('bit ci-update', function() {
       const level0Fixture =
         "var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };";
       helper.fs.createFile('', 'level0.js', level0Fixture);
-      helper.command.addComponentAllowFiles('level0.js', { i: 'dep/level0' });
-      helper.command.addComponentAllowFiles('level1.js', { i: 'dep/level1' });
+      helper.command.addComponent('level0.js', { i: 'dep/level0' });
+      helper.command.addComponent('level1.js', { i: 'dep/level1' });
       const fileFixture =
         "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.fs.createFile('', 'file.js', fileFixture);
       helper.fs.createFile('', 'file.spec.js', fileSpecFixture(true));
       helper.npm.installNpmPackage('chai', '4.1.2');
-      helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp', t: 'file.spec.js' });
+      helper.command.addComponent('file.js', { i: 'comp/comp', t: 'file.spec.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -61,7 +61,7 @@ describe('bit ci-update', function() {
 
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
       helper.npm.installNpmPackage('chai', '4.1.2');
-      helper.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+      helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.command.build(); // needed for building the dependencies
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

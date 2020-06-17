@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
-//  track directories functionality = add/rename files to rootDir or trackDir
+// track directories functionality = add/rename files to rootDir.
 describe('track directories functionality', function() {
   this.timeout(0);
   let helper: Helper;
@@ -19,7 +19,7 @@ describe('track directories functionality', function() {
   describe('add a directory as authored', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.command.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -132,39 +132,14 @@ describe('track directories functionality', function() {
       });
     });
     describe('adding a file outside of that directory', () => {
-      let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('utils', 'a.js');
       });
-      describe('without --allow-files flag', () => {
-        it('should throw an error', () => {
-          const addFunc = () => helper.command.addComponent('utils/a.js', { i: 'utils/bar' });
-          const error = new AddingIndividualFiles(path.normalize('utils/a.js'));
-          helper.general.expectToThrow(addFunc, error);
-        });
-      });
-      describe('with --allow-files flag', () => {
-        before(() => {
-          output = helper.general.runWithTryCatch('bit add utils/a.js --id utils/bar --allow-files');
-        });
-        // the decision has been made to throw an error in this case.
-        it.skip('should add the file successfully', () => {
-          expect(output).to.have.string('added utils/a.js');
-        });
-        // the decision has been made to throw an error in this case.
-        it.skip('should reset the rootDir to "."', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap).to.have.property('utils/bar');
-          expect(bitMap['utils/bar'].rootDir).equal('.');
-          expect(bitMap['utils/bar']).to.not.have.property('trackDir');
-        });
-        it('should throw an error suggesting to add the directory containing these files', () => {
-          expect(output).to.have.string('unable to add individual files outside the root dir');
-          expect(output).to.have.string(
-            "you can add the directory these files are located at and it'll change the root dir of the component accordingly"
-          );
-        });
+      it('should throw an error', () => {
+        const addFunc = () => helper.command.addComponent('utils/a.js', { i: 'utils/bar' });
+        const error = new AddingIndividualFiles(path.normalize('utils/a.js'));
+        helper.general.expectToThrow(addFunc, error);
       });
     });
     describe('adding a parent directory', () => {
@@ -208,7 +183,7 @@ describe('track directories functionality', function() {
   });
   describe('add multiple directories', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fs.createFile('utils/foo', 'index.js');
       helper.fs.createFile('utils/bar', 'index.js');
       helper.fs.createFile('utils/baz', 'index.js');
@@ -228,7 +203,7 @@ describe('track directories functionality', function() {
   });
   describe('add directory with tests', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo.spec.js');
       helper.command.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
@@ -248,27 +223,6 @@ describe('track directories functionality', function() {
         test: false,
         name: 'foo2.js'
       });
-    });
-  });
-  describe('add a directory with exclude', () => {
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fs.createFile('utils/bar', 'foo.js');
-      helper.fs.createFile('utils/bar', 'foo2.js');
-      helper.command.addComponentAllowFiles('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
-      helper.command.runCmd('bit status');
-    });
-    it('should set the rootDir to "."', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('utils/bar');
-      expect(bitMap['utils/bar']).to.not.have.property('trackDir');
-      expect(bitMap['utils/bar']).to.have.property('rootDir');
-      expect(bitMap['utils/bar'].rootDir).to.equal('.');
-    });
-    it('should not add the excluded file', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap['utils/bar'].files[0].relativePath).to.equal('utils/bar/foo.js');
-      expect(bitMap['utils/bar'].files).to.have.lengthOf(1);
     });
   });
   describe('import a component with dependencies', () => {

@@ -44,7 +44,7 @@ describe('flow of a long-dependencies-chain', function() {
           }
 
           helper.fs.createFile(dir, `${file}.js`, impl);
-          helper.command.addComponentAllowFiles(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
+          helper.command.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
           helper.command.tagComponent(`${dir}/${file}`);
           helper.command.exportComponent(`${dir}/${file}`);
         }

@@ -9,7 +9,6 @@ describe('dynamic namespaces', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -24,7 +23,7 @@ describe('dynamic namespaces', function() {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('bar', 'foo.js');
-        const addOutput = helper.command.addComponentAllowFiles('bar/foo.js', { i: componentName });
+        const addOutput = helper.command.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
         tagOutput = helper.command.tagAllComponents();
         catComp = helper.command.catComponent(componentName);
@@ -66,7 +65,7 @@ describe('dynamic namespaces', function() {
         });
         it('should create the directories according to the multiple namespaces', () => {
           expect(path.join(helper.scopes.localPath, 'components', componentName)).to.be.a.path();
-          expect(path.join(helper.scopes.localPath, 'components', componentName, 'bar/foo.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'components', componentName, 'foo.js')).to.be.a.file();
         });
       });
     });
@@ -75,14 +74,14 @@ describe('dynamic namespaces', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'foo.js');
-      helper.command.addComponentAllowFiles('foo.js', { i: 'foo' });
+      helper.command.addComponent('foo.js', { i: 'foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
+      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
     });
     it('should throw an error and not allow the import', () => {
       const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);

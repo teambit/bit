@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.0-dev.1] - 2020-06-17]
+
+- release pre-alpha version of [Harmony](https://github.com/teambit/bit/issues/2280) hidden behind a feature-flag
+
+## [[14.7.7-dev.9] - 2020-06-02]
+
+- wait for the next event loop before exit child process in bit test
+
+## [[14.7.7-dev.8] - 2020-06-01]
+
+## [[14.7.7-dev.7] - 2020-06-01]
+
+- fix importing compilers and testers for old node versions
+
+## [[14.7.7-dev.6] - 2020-06-01]
+
+- add specFileRelativePath to the tester API (context)
+
+## [[14.7.7-dev.5] - 2020-05-27]
+
+- add componentRootDir to the tester API (context)
+
+## [[14.7.7-dev.4] - 2020-05-19]
+
 - upgrade typescript to 3.8.3
 - [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
 - [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`

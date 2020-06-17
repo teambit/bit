@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { merge } from '../../../api/consumer';
 import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
@@ -24,7 +24,7 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
     .join('\n\n');
 };
 
-export default class Merge extends Command {
+export default class Merge implements LegacyCommand {
   name = 'merge <version> <ids...>';
   description = `merge changes of different component versions
   ${WILDCARD_HELP('merge 0.0.1')}`;

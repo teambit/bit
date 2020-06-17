@@ -1,61 +1,57 @@
-import { BitCliExt } from '../cli';
-import { CompileExt } from '../compile';
+import { CLIExtension } from '../cli';
+import { CompileExt } from '../compiler';
 import { ComponentFactoryExt } from '../component';
-// import { ComposerExt } from '../composer';
+import { ComponentGraphExt } from '../graph';
 import { ConfigExt } from '../config';
 import { CoreExt } from '../core';
 import { CreateExt } from '../create';
-// import { DependencyResolverExt } from '../dependency-resolver';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { Environments } from '../environments';
 import { FlowsExt } from '../flows';
 // import { GitExt } from '../git';
-import { ComponentGraphExt } from '../graph';
 import { InsightsExt } from '../insights';
-import { InstallExt } from '../install';
-import { IsolatorExt } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { LoggerExt } from '../logger';
 import { PkgExtension } from '../pkg';
-import { PackageManagerExt } from '../package-manager';
-import { PaperExt } from '../paper';
 import { React } from '../react';
 import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
-import { ReleasesExtension } from '../releases';
+import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
+import { GraphQLExtension } from '../graphql';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
+import { UIExtension } from '../ui';
 
 export const manifestsMap = {
-  [BitCliExt.name]: BitCliExt,
+  [CLIExtension.name]: CLIExtension,
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
-  [ComponentFactoryExt.name]: ComponentFactoryExt,
-  // [ComposerExt.name]: ComposerExt,
+  [ComponentFactoryExt.id]: ComponentFactoryExt,
   [ConfigExt.name]: ConfigExt,
+  [GraphQLExtension.name]: GraphQLExtension,
+  [UIExtension.name]: UIExtension,
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,
   // [DependencyResolverExt.name]: DependencyResolverExt,
-  // TODO: take from the extension itself
-  '@teambit/envs': Environments,
+  [Environments.id]: Environments,
   [FlowsExt.name]: FlowsExt,
   // [GitExt.name]: GitExt,
   [ComponentGraphExt.name]: ComponentGraphExt,
+  [DependencyResolverExtension.id]: DependencyResolverExtension,
   [InsightsExt.name]: InsightsExt,
-  [InstallExt.name]: InstallExt,
-  [IsolatorExt.name]: IsolatorExt,
+  [IsolatorExtension.id]: IsolatorExtension,
   [LoggerExt.name]: LoggerExt,
-  Pkg: PkgExtension,
-  [PackageManagerExt.name]: PackageManagerExt,
-  [PaperExt.name]: PaperExt,
+  [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
   [React.name]: React,
   [ReporterExt.name]: ReporterExt,
-  [ScopeExtension.name]: ScopeExtension,
+  [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
-  Tester: TesterExtension,
+  [TesterExtension.id]: TesterExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [ReleasesExtension.name]: ReleasesExtension,
+  [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WatchExt.name]: WatchExt,
   [WorkspaceExt.name]: WorkspaceExt

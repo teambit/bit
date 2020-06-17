@@ -25,33 +25,25 @@ export default class Config extends Map<string, string> {
   }
 
   static loadSync(): Config {
-    try {
-      const configPath = getPath();
-      if (!fs.existsSync(configPath)) {
-        const config = new Config([]);
-        config.writeSync();
-        return config;
-      }
-      const contents = fs.readFileSync(configPath);
-      return new Config(Object.entries(JSON.parse(contents.toString())));
-    } catch (err) {
-      return err;
+    const configPath = getPath();
+    if (!fs.existsSync(configPath)) {
+      const config = new Config([]);
+      config.writeSync();
+      return config;
     }
+    const contents = fs.readFileSync(configPath);
+    return new Config(Object.entries(JSON.parse(contents.toString())));
   }
 
   static async load(): Promise<Config> {
-    try {
-      const configPath = getPath();
-      const exists = await fs.pathExists(configPath);
-      if (!exists) {
-        const config = new Config([]);
-        await config.write();
-        return config;
-      }
-      const contents = await fs.readFile(configPath);
-      return new Config(Object.entries(JSON.parse(contents.toString())));
-    } catch (err) {
-      return err;
+    const configPath = getPath();
+    const exists = await fs.pathExists(configPath);
+    if (!exists) {
+      const config = new Config([]);
+      await config.write();
+      return config;
     }
+    const contents = await fs.readFile(configPath);
+    return new Config(Object.entries(JSON.parse(contents.toString())));
   }
 }

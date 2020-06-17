@@ -1,10 +1,10 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { deprecate } from '../../../api/consumer';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
-export default class Deprecate extends Command {
+export default class Deprecate implements LegacyCommand {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
   skipWorkspace = true;

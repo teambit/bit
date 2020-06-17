@@ -34,7 +34,7 @@ describe('bit untrack command', function() {
     // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
     it('Should remove new component that was added from bitmap', () => {
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
       helper.command.untrackComponent('bar/foo');
       const bitMap = helper.bitMap.read();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -46,9 +46,9 @@ describe('bit untrack command', function() {
     });
     it('Should remove specific component and keep all other new components', () => {
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.command.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.command.untrackComponent('bar/foo');
       const bitMap = helper.bitMap.readWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -56,7 +56,7 @@ describe('bit untrack command', function() {
     });
     it('Should be unsuccessful in untracking tagged component and return a message to the user', () => {
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.command.tagComponent('bar/foo');
       const output = helper.command.untrackComponent('bar/foo');
       const bitMap = helper.bitMap.readWithoutVersion();
@@ -66,19 +66,19 @@ describe('bit untrack command', function() {
     });
     it('Should resolve and untrack component and add global as prefix component ', () => {
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo.js'), { i: 'bar' });
+      helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar' });
       helper.command.untrackComponent('bar');
       const bitMap = helper.bitMap.readWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(0);
     });
     it('Should remove 2 new components and keep tagged component', () => {
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.command.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.command.tagComponent('bar/foo2');
       helper.fs.createFile('bar', 'foo3.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
+      helper.command.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.command.untrackComponent('bar/foo bar/foo3');
       const bitMap = helper.bitMap.readWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -86,12 +86,12 @@ describe('bit untrack command', function() {
     });
     it('Should remove all new components and keep tagged component', () => {
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.command.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.command.tagComponent('bar/foo2');
       helper.fs.createFile('bar', 'foo3.js');
-      helper.command.addComponentAllowFiles(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
+      helper.command.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.command.untrackComponent('', true);
       const bitMap = helper.bitMap.readWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);

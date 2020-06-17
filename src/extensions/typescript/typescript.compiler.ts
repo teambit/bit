@@ -1,7 +1,9 @@
 import path from 'path';
 import fs from 'fs-extra';
 import ts from 'typescript';
-import { Compiler } from '../compile';
+import { Compiler } from '../compiler';
+import { Network } from '../isolator';
+import { BuildResults } from '../builder';
 
 export class TypescriptCompiler implements Compiler {
   constructor(readonly tsConfig: Record<string, any>) {}
@@ -48,7 +50,9 @@ export class TypescriptCompiler implements Compiler {
     }
     return outputFiles;
   }
-  compileOnCapsules(capsuleDirs: string[]) {
+  async compileOnCapsules({ capsuleGraph }: { capsuleGraph: Network }): Promise<BuildResults> {
+    const capsules = capsuleGraph.capsules;
+    const capsuleDirs = capsules.getAllCapsuleDirs();
     capsuleDirs.forEach(capsuleDir =>
       fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2))
     );
@@ -62,17 +66,27 @@ export class TypescriptCompiler implements Compiler {
     const solutionBuilder = ts.createSolutionBuilder(host, capsuleDirs, { dry: false, verbose: false });
     solutionBuilder.clean();
     const result = solutionBuilder.build();
-    let errorStr = '';
-    if (diagnostics.length) {
-      const formatHost = {
-        getCanonicalFileName: p => p,
-        // @todo: replace this with the capsule dir for better error message
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine
-      };
-      errorStr = ts.formatDiagnosticsWithColorAndContext(diagnostics, formatHost);
+    if (result > 0 && !diagnostics.length) {
+      throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
     }
+    const formatHost = {
+      getCanonicalFileName: p => p,
+      getCurrentDirectory: () => '', // it helps to get the files with absolute paths
+      getNewLine: () => ts.sys.newLine
+    };
+    const componentsErrors = diagnostics.map(diagnostic => {
+      if (!diagnostic.file) throw new Error(`diagnostic has no file. ${JSON.stringify(diagnostic)}`);
+      const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName);
+      if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
+      const errorStr = ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost);
+      return { componentId, error: errorStr };
+    });
+    const components = capsules.map(capsule => {
+      const id = capsule.id;
+      const errors = componentsErrors.filter(c => c.componentId.isEqual(id)).map(c => c.error);
+      return { id, errors };
+    });
 
-    return { resultCode: result, error: errorStr ? new Error(errorStr) : null };
+    return { artifacts: [{ dirName: 'dist' }], components };
   }
 }

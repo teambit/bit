@@ -2,15 +2,26 @@ import { ExtensionManifest } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeExtension } from '../scope';
 import { ComponentFactoryExt } from '../component';
-import { IsolatorExt } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import { LoggerExt } from '../logger';
-import { DependencyResolverExt } from '../dependency-resolver';
+import { DependencyResolverExtension } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
+import { GraphQLExtension } from '../graphql';
+import { CLIExtension } from '../cli';
 
 export default {
   name: EXT_NAME,
-  dependencies: [ScopeExtension, ComponentFactoryExt, IsolatorExt, DependencyResolverExt, VariantsExt, LoggerExt],
+  dependencies: [
+    CLIExtension,
+    ScopeExtension,
+    ComponentFactoryExt,
+    IsolatorExtension,
+    DependencyResolverExtension,
+    VariantsExt,
+    LoggerExt,
+    GraphQLExtension
+  ],
   provider: workspaceProvider,
   defineRuntime: 'browser'
 } as ExtensionManifest;

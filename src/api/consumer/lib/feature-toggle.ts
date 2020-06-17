@@ -17,20 +17,37 @@ import { CFG_FEATURE_TOGGLE } from '../../../constants';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
 
-type IsFeatureEnabled = { (featureName: string): boolean; cache?: { [featureName: string]: boolean } };
-
-export const isFeatureEnabled: IsFeatureEnabled = (featureName: string): boolean => {
-  if (typeof isFeatureEnabled.cache === 'undefined' || !isFeatureEnabled[featureName]) {
-    isFeatureEnabled.cache = isFeatureEnabled.cache || {};
-    const enableFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
-    if (enableFeatures) {
-      const featureSplit = enableFeatures.split(',');
-      isFeatureEnabled.cache[featureName] = featureSplit.includes(featureName);
-    } else {
-      isFeatureEnabled.cache[featureName] = false;
-    }
+class FeatureToggle {
+  private features: string[] | null | undefined;
+  private areFeaturesPopulated() {
+    return this.features !== undefined;
   }
-  return isFeatureEnabled.cache[featureName];
-};
+  private setFeatures() {
+    if (this.areFeaturesPopulated()) return;
+    const enabledFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
+    this.features = enabledFeatures ? enabledFeatures.split(',').map(f => f.trim()) : null;
+  }
+  public isFeatureEnabled(featureName: string): boolean {
+    this.setFeatures();
+    return this.features ? this.features.includes(featureName) : false;
+  }
+  public addFeature(featureName: string) {
+    this.setFeatures();
+    if (this.features) this.features.push(featureName);
+    else this.features = [featureName];
+  }
+}
+
+const featureToggle = new FeatureToggle();
+
+export function isFeatureEnabled(featureName: string): boolean {
+  return featureToggle.isFeatureEnabled(featureName);
+}
+
+export function addFeature(featureName: string) {
+  featureToggle.addFeature(featureName);
+}
 
 export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
+
+export const HARMONY_FEATURE = 'harmony';
