@@ -1,3 +1,5 @@
+$topbarHeight: 64px;
+
 .explorer {
 	display: grid;
 	height: 100vh;
@@ -31,9 +33,23 @@
 .scopeName {
 	display: flex;
 	align-items: center;
-	border-bottom: 1px solid #babec9;
-	height: 40px;
+	height: $topbarHeight;
 	background: #ededed;
+	padding: 16px;
+	
+	box-sizing: border-box;
+	
+	.avatar {
+		margin-right: 8px;
+		width: 32px;
+		height: 32px;
+		background: white;
+
+		border-radius: 50%;
+		
+		line-height: 32px;
+		text-align: center;
+	}
 	
 	> b {
 		font-weight: bold;
@@ -44,9 +60,11 @@
 	display: flex;
 	align-items: center;
 	
-	border-bottom: 1px solid #babec9;
-	height: 40px;
+	padding-left: 64px;
+	
+	height: $topbarHeight;
 	background: #ededed;
+	box-sizing: border-box;
 }
 
 .sideBar {

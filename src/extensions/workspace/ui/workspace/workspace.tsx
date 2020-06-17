@@ -42,9 +42,9 @@ export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
     <Theme>
       <div className={styles.explorer}>
         <div className={styles.scopeName}>
-          Google / <b>material-ui</b>
+          <span className={styles.avatar}>A</span> Google / <b>material-ui</b>
         </div>
-        <TopBar className={styles.topbar} topBarSlot={topBarSlot} />
+        <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
         <SideBar
           className={styles.sideBar}
           components={workspace.components}
@@ -56,3 +56,10 @@ export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
     </Theme>
   );
 }
+
+//TEMP!
+const currentTag = {
+  version: '5.0.10',
+  downloads: 542,
+  likes: 86
+};

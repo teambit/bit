@@ -32,6 +32,7 @@ export class WorkspaceUI {
     const WorkspaceUi = () => {
       const [stage, setStage] = useState<JSX.Element | undefined>(undefined);
       this.setStage = setStage;
+
       return <Workspace topBarSlot={this.topBarSlot} stage={stage} />;
     };
 

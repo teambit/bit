@@ -9,20 +9,36 @@ export type TopBarProps = {
    * slot for top bar menu items
    */
   topBarSlot: TopBarSlotRegistry;
+  currentTag: {
+    version: string;
+    downloads: number;
+    likes: number;
+  };
 };
 
 /**
  * top bar menu.
  */
-export function TopBar({ topBarSlot, className }: TopBarProps) {
+export function TopBar({ topBarSlot, className, currentTag }: TopBarProps) {
   const menuItems = topBarSlot.values();
   return (
-    <ul className={classnames(styles.topBar, className)}>
-      {menuItems.map((menuItem, key) => (
-        <li key={key} onClick={menuItem.onClick}>
-          {menuItem.label}
-        </li>
-      ))}
-    </ul>
+    <div className={classnames(styles.topBar, className)}>
+      <ul className={styles.navigation}>
+        {menuItems.map((menuItem, key) => (
+          <li key={key} onClick={menuItem.onClick}>
+            {menuItem.label}
+          </li>
+        ))}
+      </ul>
+      <div className={styles.rightSide}>
+        <span>🔖 {currentTag.version}</span>
+        <span>⬇️ {currentTag.downloads}</span>
+        <span>♡ {currentTag.likes}</span>
+        <span>|</span>
+        <button>import ▾</button>
+        <button>simulations</button>
+        <button>code</button>
+      </div>
+    </div>
   );
 }
