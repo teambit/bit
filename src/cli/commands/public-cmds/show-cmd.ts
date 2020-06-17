@@ -1,4 +1,4 @@
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { show } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
@@ -6,7 +6,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
-export default class Show extends Command {
+export default class Show implements LegacyCommand {
   name = 'show <id>';
   description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/view#show`;
   alias = '';

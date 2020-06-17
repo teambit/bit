@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../../../utils';
 import { scopeList } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
@@ -9,7 +9,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 
-export default class List extends Command {
+export default class List implements LegacyCommand {
   name = '_list <path> <args>';
   private = true;
   description = 'list scope components';

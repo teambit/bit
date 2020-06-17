@@ -1,11 +1,11 @@
 import * as path from 'path';
 import os from 'os';
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
 
-export default class Graph extends Command {
+export default class Graph implements LegacyCommand {
   name = 'graph [id]';
   description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
   alias = '';

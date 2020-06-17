@@ -6,9 +6,9 @@ import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
-import { LegacyCommand } from './legacy-command';
 import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
@@ -91,7 +91,7 @@ export class CLIExtension {
   }
 }
 
-export async function CLIProvider([paper]: [CLIExtension]) {
+export async function CLIProvider([cliExtension]: [CLIExtension]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {
@@ -107,12 +107,10 @@ export async function CLIProvider([paper]: [CLIExtension]) {
   }, []);
 
   const legacyRegistry = buildRegistry(extensionsCommands);
-  // const bitCLI = new BitCli(paper);
   const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-  allCommands.reduce((p, command) => {
-    const legacyCommand = new LegacyCommand(command, p);
-    p.register(legacyCommand);
-    return p;
-  }, paper);
-  return paper;
+  allCommands.forEach(command => {
+    const legacyCommandAdapter = new LegacyCommandAdapter(command, cliExtension);
+    cliExtension.register(legacyCommandAdapter);
+  });
+  return cliExtension;
 }

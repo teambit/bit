@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
@@ -18,7 +18,7 @@ export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
 
-export default class Status extends Command {
+export default class Status implements LegacyCommand {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';

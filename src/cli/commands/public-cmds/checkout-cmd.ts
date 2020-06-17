@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
@@ -7,7 +7,7 @@ import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
-export default class Checkout extends Command {
+export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';
   description = `switch between component versions or remove local changes
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
