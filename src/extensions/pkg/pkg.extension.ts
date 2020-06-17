@@ -40,7 +40,7 @@ export class PkgExtension {
     const packer = new Packer(scope?.legacyScope);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
     // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
+    ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
 

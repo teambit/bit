@@ -15,7 +15,10 @@ export type DetailedDependencyPolicy = {
    */
   force?: boolean;
 };
-export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
+
+// TODO: add DetailedDependencyPolicy once support the force prop
+// export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
+export type DependencyPolicy = SemverVersionRule;
 
 export interface DependenciesPolicyObject {
   [dependencyId: string]: DependencyPolicy;

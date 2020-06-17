@@ -6,4 +6,7 @@ export interface Environment {
    * @memberof Environment
    */
   getPackageJsonProps?: () => Record<string, any>;
+  // TODO: define this return type (dependency policy) - it's not defined since we have an
+  // TODO: issue because it's defined in deps-resolver which use envs
+  dependencies?: () => any;
 }
