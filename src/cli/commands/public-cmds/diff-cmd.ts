@@ -1,10 +1,10 @@
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { diff } from '../../../api/consumer';
 import { DiffResults } from '../../../consumer/component-ops/components-diff';
 import { WILDCARD_HELP } from '../../../constants';
 
-export default class Diff extends Command {
+export default class Diff implements LegacyCommand {
   name = 'diff [values...]';
   description = `show diff between components files
   bit diff => compare all modified components to their model version

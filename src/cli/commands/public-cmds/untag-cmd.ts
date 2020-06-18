@@ -1,11 +1,11 @@
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { unTagAction } from '../../../api/consumer';
 import { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
-export default class Untag extends Command {
+export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components

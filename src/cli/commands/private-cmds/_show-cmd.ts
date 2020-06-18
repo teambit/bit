@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { scopeShow } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
@@ -8,7 +8,7 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 
 let compressResponse;
 // eslint-disable-next-line @typescript-eslint/class-name-casing
-export default class _Show extends Command {
+export default class _Show implements LegacyCommand {
   name = '_show <path> <args>';
   private = true;
   description = 'show a specific component on scope';

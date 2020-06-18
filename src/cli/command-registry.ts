@@ -3,11 +3,11 @@ import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
 import { render } from 'ink';
-import Command from './command';
+import { LegacyCommand } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
@@ -115,25 +115,18 @@ export function execAction(command, concrete, args): Promise<any> {
           case 'json': {
             const code = res.code || 0;
             const data = res.data || res;
-            // eslint-disable-next-line no-console
-            console.log(JSON.stringify(data, null, 2));
-            return code;
+            return process.stdout.write(JSON.stringify(data, null, 2), () => logger.exitAfterFlush(code, command.name));
           }
           case 'render': {
             const { waitUntilExit } = render(res);
             await waitUntilExit();
-            return res.props.code;
+            return logger.exitAfterFlush(res.props.code, command.name);
           }
           case 'report':
           default: {
-            // eslint-disable-next-line no-console
-            console.log(res.data);
-            return res.code;
+            return process.stdout.write(`${res.data}\n`, () => logger.exitAfterFlush(res.code, command.name));
           }
         }
-      })
-      .then(function(code: number) {
-        return logger.exitAfterFlush(code, command.name);
       })
       .catch(err => {
         logger.error(
@@ -163,12 +156,13 @@ function serializeErrAndExit(err, commandName) {
  * at this point, it doesn't run any `execAction`, it only register it.
  * the actual running of `execAction` happens once `commander.parse(params)` is called.
  */
-function registerAction(command: Command, concrete) {
+function registerAction(command: LegacyCommand, concrete) {
   concrete.action((...args) => {
-    if (!empty(command.commands)) {
+    const subCommands = command.commands;
+    if (subCommands?.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
-      const subcommand = command.commands.find(cmd => {
+      const subcommand = subCommands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 
@@ -187,7 +181,7 @@ function createOptStr(alias, name) {
   return `--${name}`;
 }
 
-export function register(command: Command, commanderCmd) {
+export function register(command: LegacyCommand, commanderCmd) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)
@@ -217,8 +211,8 @@ export default class CommandRegistry {
   version: string;
   usage: string;
   description: string;
-  commands: Command[];
-  extensionsCommands: Command[] | null | undefined;
+  commands: LegacyCommand[];
+  extensionsCommands: LegacyCommand[] | null | undefined;
 
   registerBaseCommand() {
     commander
@@ -232,7 +226,7 @@ export default class CommandRegistry {
     usage: string,
     description: string,
     version: string,
-    commands: Command[],
+    commands: LegacyCommand[],
     extensionsCommands: Array<Commands>
   ) {
     this.usage = usage;

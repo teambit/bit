@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
@@ -7,7 +7,7 @@ import log from '../../../api/scope/lib/log';
 
 let compressResponse;
 // eslint-disable-next-line @typescript-eslint/class-name-casing
-export default class _Log extends Command {
+export default class _Log implements LegacyCommand {
   name = '_log <path> <args>';
   private = true;
   description = 'show component logs';

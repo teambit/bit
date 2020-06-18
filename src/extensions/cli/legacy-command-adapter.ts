@@ -1,13 +1,10 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color, AppContext } from 'ink';
-import React from 'react';
 import { Command, PaperOptions, GenericObject } from '.';
-import LegacyInterface from '../../cli/command';
+import { LegacyCommand } from '../../cli/legacy-command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
 import { CLIExtension } from './cli.extension';
 
-export class LegacyCommand implements Command {
+export class LegacyCommandAdapter implements Command {
   alias: string;
   name: string;
   description: string;
@@ -18,36 +15,34 @@ export class LegacyCommand implements Command {
   commands: Command[];
   private?: boolean;
   migration?: boolean;
-  constructor(private cmd: LegacyInterface, p: CLIExtension) {
+  constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
     this.name = cmd.name;
     this.description = cmd.description;
-    this.options = cmd.opts;
+    this.options = cmd.opts || [];
     this.alias = cmd.alias;
     const commandID = getID(cmd.name);
-    const { summery, group } = findLegacyDetails(commandID, p);
+    const { summery, group } = findLegacyDetails(commandID, cliExtension);
     this.shortDescription = summery;
     this.group = group;
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
-
-    this.commands = cmd.commands.map(sub => {
-      return new LegacyCommand(sub, p);
-    });
+    this.commands = (cmd.commands || []).map(sub => new LegacyCommandAdapter(sub, cliExtension));
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
-    let report: string | null = null;
     //  packageManagerArgs is injected here for legacy reasons.
     const res = await this.cmd.action(params, options, (this as any).packageManagerArgs || []);
     let data = res;
-    if (res && res.data !== undefined) {
+    let code = 0;
+    if (res && res.__code !== undefined) {
       data = res.data;
+      code = res.__code;
     }
-    report = this.cmd.report && this.cmd.report(data, params, options);
+    const report = this.cmd.report(data, params, options);
     return {
-      code: res?.__code || 0,
-      report: report || ''
+      code,
+      report
     };
   }
 
@@ -79,20 +74,6 @@ export function findLegacyDetails(name: string, p: CLIExtension) {
     }
   }
   return { group, summery };
-}
-
-export function LegacyRender(props: { out: string; code: number }) {
-  return (
-    <AppContext.Consumer>
-      {({ exit }) => {
-        setTimeout(() => {
-          exit();
-        }, 0);
-
-        return <Color>{props.out}</Color>;
-      }}
-    </AppContext.Consumer>
-  );
 }
 
 type ActionResult = {

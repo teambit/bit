@@ -1,10 +1,10 @@
 /* eslint max-classes-per-file: 0 */
 
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { getResolver, setResolver, resetResolver } from '../../../api/scope/lib/resolver';
 
-class ResolverSet extends Command {
+class ResolverSet implements LegacyCommand {
   name = 'set <resolverPath>';
   description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
@@ -25,7 +25,7 @@ class ResolverSet extends Command {
   }
 }
 
-class ResolverReset extends Command {
+class ResolverReset implements LegacyCommand {
   name = 'reset';
   description = 'reset remote resolver to default resolver';
   alias = 'r';
@@ -40,7 +40,7 @@ class ResolverReset extends Command {
   }
 }
 
-export default class Resolver extends Command {
+export default class Resolver implements LegacyCommand {
   name = 'resolver';
   description = 'get or set remote resolver to scope';
   alias = '';
