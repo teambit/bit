@@ -1,15 +1,22 @@
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
 describe('workspace config', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -159,7 +166,7 @@ describe('workspace config', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo('require("chai");');
         helper.fixtures.addComponentBarFoo();
-        helper.npm.addNpmPackage('chai', '2.4.0');
+        helper.npm.addNpmPackage('chai', '2.2.0');
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -211,6 +218,12 @@ describe('workspace config', function() {
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
+        });
+        it('should show a warning saying that this feature is deprecated', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string(
+            'warning: file overrides (using "file://") is deprecated and will be removed on the next major version'
+          );
         });
         it('should not add any dependency to the component', () => {
           expect(showBar.dependencies).to.have.lengthOf(0);
@@ -396,6 +409,7 @@ describe('workspace config', function() {
           );
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.have.string(statusFailureMsg);
 
@@ -443,6 +457,7 @@ describe('workspace config', function() {
           showBar = helper.command.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing component', () => {
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.not.have.string(statusFailureMsg);
         });
@@ -560,7 +575,11 @@ describe('workspace config', function() {
             'bar.spec.js',
             "require('existing-package'); require('another-existing-package');"
           );
-          helper.command.addComponent('bar-dir/*', { i: 'bar', m: 'bar-dir/bar.js', t: 'bar-dir/bar.spec.js' });
+          helper.command.addComponent('bar-dir/*', {
+            i: 'bar',
+            m: 'bar-dir/bar.js',
+            t: 'bar-dir/bar.spec.js'
+          });
 
           const overrides = {
             bar: {
@@ -593,7 +612,7 @@ describe('workspace config', function() {
           // also saved as a peerDependency
           helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.npm.addNpmPackage('chai', '2.4');
+          helper.npm.addNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
           helper.fixtures.addComponentBarFoo();
           const overrides = {
@@ -673,8 +692,9 @@ describe('workspace config', function() {
           expect(status).to.not.have.string('modified components');
         });
         describe('importing the component', () => {
-          const barRoot = path.join(helper.scopes.localPath, 'components/bar/');
+          let barRoot;
           before(() => {
+            barRoot = path.join(helper.scopes.localPath, 'components/bar/');
             helper.command.exportAllComponents();
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
@@ -689,8 +709,7 @@ describe('workspace config', function() {
             expect(packageJson.bit.overrides.dependencies[`${OVERRIDE_COMPONENT_PREFIX}foo2`]).to.equal('-');
           });
           it('bit status should not show the component as modified', () => {
-            const status = helper.command.status();
-            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           it('bit diff should not show any diff', () => {
             const diff = helper.command.diff('bar');
@@ -704,7 +723,7 @@ describe('workspace config', function() {
             });
             it('bit status should show the component as modified', () => {
               const status = helper.command.status();
-              expect(status).to.not.have.string(statusWorkspaceIsCleanMsg);
+              expect(status).to.have.string('modified components');
             });
             it('should show the previously ignored dependency as a missing component', () => {
               const status = helper.command.status();
@@ -726,7 +745,7 @@ describe('workspace config', function() {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-        helper.npm.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('chai', '2.2.0');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -742,7 +761,7 @@ describe('workspace config', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        helper.npm.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('chai', '2.2.0');
         const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
         const packageJson = helper.packageJson.read(componentDir);
         // an intermediate step to make sure we're good so far
@@ -765,7 +784,7 @@ describe('workspace config', function() {
       it('should be saved into the model with the package in place', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.4' });
+        expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.2.0' });
       });
       describe('then, author re-import', () => {
         let scopeAfterReImport;
@@ -775,8 +794,7 @@ describe('workspace config', function() {
           scopeAfterReImport = helper.scopeHelper.cloneLocalScope();
         });
         it('bit status should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should save the new overrides to the consumer config', () => {
           const bitJson = helper.bitJson.read();
@@ -826,7 +844,7 @@ describe('workspace config', function() {
             helper.scopeHelper.getClonedLocalScope(authorScope);
             helper.npm.initNpm();
             const packageJson = helper.packageJson.read();
-            packageJson.dependencies = { chai: '2.4' };
+            packageJson.dependencies = { chai: '2.2.0' };
             packageJson.bit = {
               env: {},
               componentsDefaultDirectory: 'components/{name}',
@@ -854,7 +872,7 @@ describe('workspace config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo("require('chai');");
-        helper.npm.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('chai', '2.2.0');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -881,8 +899,8 @@ describe('workspace config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo("require('chai'); require('lodash')");
-        helper.npm.addNpmPackage('chai', '2.4');
-        helper.npm.addNpmPackage('lodash', '2.4');
+        helper.npm.addNpmPackage('chai', '2.2.0');
+        helper.npm.addNpmPackage('lodash', '2.2.0');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -915,8 +933,8 @@ describe('workspace config', function() {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.npm.addNpmPackage('chai', '2.4');
-          helper.packageJson.create({ dependencies: { chai: '2.4' } });
+          helper.npm.addNpmPackage('chai', '2.2.0');
+          helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
           helper.fixtures.addComponentBarFoo();
           const overrides = {
             'bar/foo': {
@@ -936,7 +954,7 @@ describe('workspace config', function() {
         });
         it('should add the specified package to peerDependencies', () => {
           expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
-          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.2.0' });
         });
         it('should show the package as ignored from dependencies', () => {
           expect(showBar).to.have.property('manuallyRemovedDependencies');
@@ -946,7 +964,7 @@ describe('workspace config', function() {
         it('should show the package as manually added to peerDependencies', () => {
           expect(showBar).to.have.property('manuallyAddedDependencies');
           expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
-          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.2.0']);
         });
       });
       describe('adding a package with version that does not exist in package.json', () => {
@@ -958,7 +976,7 @@ describe('workspace config', function() {
           const overrides = {
             'bar/foo': {
               peerDependencies: {
-                chai: '2.4'
+                chai: '2.2.0'
               }
             }
           };
@@ -967,12 +985,12 @@ describe('workspace config', function() {
         });
         it('should add the specified package to peerDependencies', () => {
           expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
-          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.2.0' });
         });
         it('should show the package as manually added to peerDependencies', () => {
           expect(showBar).to.have.property('manuallyAddedDependencies');
           expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
-          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.2.0']);
         });
       });
       describe('adding a package without version that does not exist in package.json', () => {
@@ -996,8 +1014,8 @@ describe('workspace config', function() {
         });
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
-          const output = helper.command.status();
-          expect(output).to.have.string('missing packages dependencies');
+          const output = helper.command.status().replace(/\n/g, '');
+          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
@@ -1030,6 +1048,8 @@ describe('workspace config', function() {
         describe('tagging the components', () => {
           let catBar;
           before(() => {
+            // with non-legacy mode, it complains about the missing foo@0.0.1 during the capsule write
+            // this is fine. normally users use the version once the version created.
             helper.command.tagAllComponents();
             catBar = helper.command.catComponent('bar@latest');
           });
@@ -1069,8 +1089,7 @@ describe('workspace config', function() {
               });
             });
             it('bit status should show a clean state', () => {
-              const status = helper.command.status();
-              expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+              helper.command.expectStatusToBeClean();
             });
             describe('changing the component name in the overrides to a package syntax', () => {
               before(() => {
@@ -1112,8 +1131,7 @@ describe('workspace config', function() {
                   helper.command.importComponent('bar');
                 });
                 it('bit status should show a clean state', () => {
-                  const status = helper.command.status();
-                  expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+                  helper.command.expectStatusToBeClean();
                 });
                 it('should remove the added dependencies from consumer-config', () => {
                   const bitJson = helper.bitJson.read();
@@ -1195,8 +1213,7 @@ describe('workspace config', function() {
             expect(packageJson.bit.overrides.dependencies).to.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+' });
           });
           it('bit status should show a clean state', () => {
-            const status = helper.command.status();
-            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
       });
@@ -1277,6 +1294,7 @@ describe('workspace config', function() {
         });
       });
     });
+    // legacy test in order to check the originallySharedDir
     describe('ignoring files with originallySharedDir', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -1347,7 +1365,7 @@ describe('workspace config', function() {
         overrides = {
           'bar/*': {
             peerDependencies: {
-              chai: '2.4.0'
+              chai: '2.2.0'
             },
             env: {
               compiler: 'bit.env/my-special-compiler@0.0.1'
@@ -1366,12 +1384,12 @@ describe('workspace config', function() {
       it('bit diff should show the diff', () => {
         const diff = helper.command.diff('bar/foo');
         expect(diff).to.have.string('+ bit.env/my-special-compiler@0.0.1');
-        expect(diff).to.have.string('+ [ chai@2.4.0 ]');
+        expect(diff).to.have.string('+ [ chai@2.2.0 ]');
       });
       it('bit show should show the settings from the workspace config', () => {
         const showBar = helper.command.showComponentParsed('bar/foo');
         expect(showBar.compiler.name).to.equal('bit.env/my-special-compiler@0.0.1');
-        expect(showBar.overrides.peerDependencies).to.deep.equal({ chai: '2.4.0' });
+        expect(showBar.overrides.peerDependencies).to.deep.equal({ chai: '2.2.0' });
       });
       describe('when the overrides data on consumer config excluded the imported component', () => {
         before(() => {
@@ -1379,8 +1397,7 @@ describe('workspace config', function() {
           helper.bitJson.addOverrides(overrides);
         });
         it('bit status should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('bit diff should not show any diff', () => {
           const diff = helper.command.diff('bar/foo');
@@ -1427,8 +1444,7 @@ describe('workspace config', function() {
             .that.equals('my-bin-file.js');
         });
         it('should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         describe('changing the value in the package.json directly (not inside overrides)', () => {
           before(() => {
@@ -1715,6 +1731,21 @@ describe('workspace config', function() {
         const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.*.exclude to be array, got string');
       });
+    });
+  });
+  describe('export a component with compiler then import', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.env.importDummyCompiler();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.importComponent('bar/foo');
+    });
+    it('should not add the component into the overrides of the workspace because nothing has changed', () => {
+      const bitJson = helper.bitJson.read();
+      expect(bitJson).to.not.have.property('overrides');
     });
   });
 });

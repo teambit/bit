@@ -1,16 +1,21 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixtureA = `const b = require('./b');
 console.log('got ' + b() + ' and got A')`;
 const fixtureB = `const a = require('./a');
 console.log('got ' + a() + ' and got B')`;
 
+// @todo: this is failing due to NPM unable to "npm install" on capsules.
+// once Librarian is the one responsible to install packages on capsules, this must work.
 describe('cyclic dependencies', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -67,8 +72,7 @@ describe('cyclic dependencies', function() {
           expect(list).to.have.string('comp/b');
         });
         it('should not show a clean workspace', () => {
-          const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
     });
@@ -262,8 +266,7 @@ describe('cyclic dependencies', function() {
           expect(list).to.have.string('comp/a1');
         });
         it('should not show a clean workspace', () => {
-          const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
     });

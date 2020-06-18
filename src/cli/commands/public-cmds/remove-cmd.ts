@@ -1,6 +1,6 @@
 import yn from 'yn';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remove } from '../../../api/consumer';
 import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
@@ -10,14 +10,13 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Remove extends Command {
+export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
   description = `remove a component (local/remote)
   https://${BASE_DOCS_DOMAIN}/docs/removing-components
   ${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
@@ -33,7 +32,7 @@ export default class Remove extends Command {
     ],
     ['s', 'silent [boolean]', 'skip confirmation'],
     ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

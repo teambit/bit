@@ -32,10 +32,7 @@ export default class Remote {
   }
 
   connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
-    return connect(
-      this.host,
-      strategiesNames
-    );
+    return connect(this.host, strategiesNames);
   }
 
   toPlainObject() {

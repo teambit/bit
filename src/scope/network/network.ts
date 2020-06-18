@@ -11,7 +11,8 @@ import CompsAndLanesObjects from '../comps-and-lanes-objects';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 
 export interface Network {
-  connect(host: string): Network;
+  // @todo: this causes ts errors in the ssh class for some reason
+  // connect(host: string): Promise<any>;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
@@ -22,7 +23,7 @@ export interface Network {
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   log(id: BitId): Promise<ComponentLogs>;
-  latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
+  latestVersions(bitIds: BitIds): Promise<string[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
 }

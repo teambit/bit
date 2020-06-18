@@ -1,10 +1,10 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { objectToStringifiedTupleArray } from '../../../utils';
 import { scopeConfig } from '../../../api/scope';
 
-class ScopeConfigGet extends Command {
+class ScopeConfigGet implements LegacyCommand {
   name = 'get <key>';
   description = 'get a scope configuration';
   alias = '';
@@ -20,7 +20,7 @@ class ScopeConfigGet extends Command {
   }
 }
 
-class ScopeConfigList extends Command {
+class ScopeConfigList implements LegacyCommand {
   name = 'list';
   description = 'list all scope configuration(s)';
   alias = '';
@@ -39,7 +39,7 @@ class ScopeConfigList extends Command {
   }
 }
 
-class ScopeConfigDel extends Command {
+class ScopeConfigDel implements LegacyCommand {
   name = 'del <key>';
   description = 'delete given key from global configuration';
   alias = '';
@@ -54,7 +54,7 @@ class ScopeConfigDel extends Command {
   }
 }
 
-class ScopeConfigSet extends Command {
+class ScopeConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a scope configuration';
   alias = '';
@@ -70,7 +70,7 @@ class ScopeConfigSet extends Command {
   }
 }
 
-export default class ScopeConfig extends Command {
+export default class ScopeConfig implements LegacyCommand {
   name = 'scope-config';
   description = 'scope config management';
   alias = '';

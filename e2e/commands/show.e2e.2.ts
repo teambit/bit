@@ -3,6 +3,7 @@ import * as path from 'path';
 import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import NothingToCompareTo from '../../src/api/consumer/lib/exceptions/nothing-to-compare-to';
 
 const assertArrays = require('chai-arrays');
 
@@ -10,7 +11,11 @@ chai.use(assertArrays);
 
 describe('bit show command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
 
   after(() => {
     helper.scopeHelper.destroy();
@@ -38,7 +43,10 @@ describe('bit show command', function() {
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
       helper.fs.createFile('src/utils', 'utilFile.js');
-      helper.command.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
+      helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', {
+        m: 'src/mainFile.js',
+        i: 'comp/comp'
+      });
       helper.command.tagComponent('comp/comp');
     });
 
@@ -403,12 +411,13 @@ describe('bit show command', function() {
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
-        expect(showCmd).to.throw('no previous versions to compare\n');
+        const error = new NothingToCompareTo('bar/foo');
+        helper.general.expectToThrow(showCmd, error);
       });
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsNew();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
@@ -453,9 +462,7 @@ describe('bit show command', function() {
     describe('with a consumer component', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         helper.command.tagComponent('utils/is-type');
         helper.command.tagComponent('utils/is-type', 'msg', '-f');
         helper.command.exportAllComponents();
@@ -509,9 +516,7 @@ describe('bit show command', function() {
     describe('with a scope component', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         helper.command.tagComponent('utils/is-type');
         helper.command.tagComponent('utils/is-type', 'msg', '-f');
         helper.command.exportAllComponents();
@@ -554,7 +559,7 @@ describe('bit show command', function() {
       helper.command.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {
-      output = helper.command.runCmd('bit show bar/foo -v');
+      output = helper.command.runCmd('bit show bar/foo -v --json');
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({
@@ -627,14 +632,15 @@ Circle.defaultProps = {
   describe('show with --dependents and --dependencies flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('bar-dep', 'bar.js');
       helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
       helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
       helper.command.addComponent('baz/baz.js');
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.linkAndRewire();
+      helper.command.tagAllComponentsNew();
+      helper.command.exportAllComponentsAndRewire();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
     });
@@ -746,7 +752,7 @@ Circle.defaultProps = {
     let show;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       show = helper.command.showComponentParsed('utils/is-string --dependents --dependencies');
     });
     it('should show all dependents and dependencies', () => {

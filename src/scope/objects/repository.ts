@@ -7,7 +7,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
+import { resolveGroupId, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
@@ -60,7 +60,7 @@ export default class Repository {
   }
 
   ensureDir() {
-    return mkdirp(this.getPath());
+    return fs.ensureDir(this.getPath());
   }
 
   getPath() {
@@ -99,11 +99,11 @@ export default class Repository {
         return parsedObject;
       })
       .catch(err => {
-        if (err.code === 'ENOENT') {
-          logger.debug(`Failed finding a ref file ${this.objectPath(ref)}.`);
-        } else {
+        if (err.code !== 'ENOENT') {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+          throw err;
         }
+        logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
         if (throws) throw err;
         return null;
       });
@@ -163,6 +163,7 @@ export default class Repository {
           }
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
+          await this.scopeIndex.deleteFile();
           // @ts-ignore componentId must be set as it was retrieved from indexPath before
           throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
         }
@@ -329,7 +330,7 @@ export default class Repository {
   _deleteOne(ref: Ref): Promise<boolean> {
     this.removeFromCache(ref);
     const pathToDelete = this.objectPath(ref);
-    logger.debug(`repository._deleteOne: deleting ${pathToDelete}`);
+    logger.silly(`repository._deleteOne: deleting ${pathToDelete}`);
     return removeFile(pathToDelete, true);
   }
 
@@ -344,7 +345,7 @@ export default class Repository {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
-    logger.debug(`repository._writeOne: ${objectPath}`);
+    logger.silly(`repository._writeOne: ${objectPath}`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return writeFile(objectPath, contents, options);
   }

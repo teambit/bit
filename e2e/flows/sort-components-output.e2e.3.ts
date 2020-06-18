@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+import * as fixtures from '../../src/fixtures/fixtures';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 /**
@@ -13,24 +14,19 @@ function expectComponentsToBeSortedAlphabetically(output, start = 0) {
 
 describe('basic flow with dependencies', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('after adding components', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
-      const fooBarFixture =
-        "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.fixtures.createComponentBarFoo(fooBarFixture);
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.command.linkAndRewire();
     });
     describe('bit status', () => {
       let output;
@@ -72,14 +68,9 @@ describe('basic flow with dependencies', function() {
       });
       describe('after modifying the components', () => {
         before(() => {
-          const isTypeFixture = "module.exports = function isType() { return 'got is-type v2'; };";
-          helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-          const isStringFixture =
-            "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-          helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-          const fooBarFixture =
-            "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-          helper.fs.createFile('bar', 'foo.js', fooBarFixture);
+          helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+          helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
+          helper.fs.createFile('bar', 'foo.js', fixtures.barFooFixtureV2);
         });
         describe('bit status', () => {
           let output;
@@ -157,9 +148,7 @@ describe('basic flow with dependencies', function() {
       helper.scopeHelper.reInitLocalScope();
       const isTypeFixture = "console.log('got is-type v1')";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
       const fooBarFixture =
         "const isString = require('../utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
       helper.fs.createFile('bar', 'foo.js', fooBarFixture);

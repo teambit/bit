@@ -14,7 +14,11 @@ chai.use(require('chai-fs'));
  */
 describe('mainFile of the dist is different than the source', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   let npmCiRegistry;
   after(() => {
     helper.scopeHelper.destroy();
@@ -121,7 +125,6 @@ describe('mainFile of the dist is different than the source', function() {
           helper.command.importComponent('utils/is-type@0.0.1');
           helper.command.importComponent('utils/is-string@0.0.1');
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('utils/is-type');
           npmCiRegistry.publishComponent('utils/is-string');

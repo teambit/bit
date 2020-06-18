@@ -2,14 +2,17 @@ import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
 describe('dev-dependencies functionality', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -195,8 +198,7 @@ describe('foo', () => {
       expect(output).to.have.string('successfully imported');
     });
     it('bit status should show a clean state', () => {
-      const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('dev-dependency that requires prod-dependency', () => {
@@ -210,6 +212,7 @@ describe('foo', () => {
       helper.command.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.addComponentUtilsIsType();
+      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       barFoo = helper.command.catComponent('bar/foo@latest');
 

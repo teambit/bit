@@ -3,12 +3,18 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import WatchRunner from '../watch-runner';
+import { IS_WINDOWS } from '../../src/constants';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
 describe('bit watch command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -16,7 +22,7 @@ describe('bit watch command', function() {
     let scopeAfterBuild;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.env.importDummyCompiler();
       helper.command.build();
       scopeAfterBuild = helper.scopeHelper.cloneLocalScope();
@@ -52,7 +58,7 @@ describe('bit watch command', function() {
       });
     });
     describe('as imported', function() {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
         // @ts-ignore
         this.skip;
@@ -96,6 +102,42 @@ describe('bit watch command', function() {
           });
         });
       }
+    });
+  });
+  describe('Harmony watch, using Compiler & Typescript extensions', () => {
+    before(() => {
+      helper.command.resetFeatures();
+      helper.command.setFeatures(HARMONY_FEATURE);
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponentsTS();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+
+      const environments = {
+        env: '@teambit/react',
+        config: {}
+      };
+      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+    });
+    describe('run bit watch', () => {
+      let watchRunner: WatchRunner;
+      before(async () => {
+        watchRunner = new WatchRunner(helper);
+        await watchRunner.watch();
+      });
+      after(() => {
+        watchRunner.killWatcher();
+      });
+      describe('changing a file', () => {
+        before(async () => {
+          helper.fs.outputFile('comp1/index.ts', 'console.log("hello")');
+          await watchRunner.waitForWatchToRebuildComponent();
+        });
+        it('should write the dists on node_modules correctly', () => {
+          const distContent = helper.fs.readFile('node_modules/@bit/comp1/dist/index.js');
+          expect(distContent).to.have.string('hello');
+        });
+      });
     });
   });
 });

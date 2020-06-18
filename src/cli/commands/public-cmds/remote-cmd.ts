@@ -2,18 +2,17 @@
 
 import chalk from 'chalk';
 import Table from 'tty-table';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
 import RemoteUndefined from '../exceptions/remote-undefined';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-class RemoteAdd extends Command {
+class RemoteAdd implements LegacyCommand {
   name = 'add <url>';
   description = 'add a tracked bit remote';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['g', 'global', 'configure a remote bit scope']];
+  opts = [['g', 'global', 'configure a remote bit scope']] as CommandOptions;
 
   action([url]: [string], { global }: { global: boolean }): Promise<any> {
     try {
@@ -29,12 +28,11 @@ class RemoteAdd extends Command {
   }
 }
 
-class RemoteRm extends Command {
+class RemoteRm implements LegacyCommand {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['g', 'global', 'remove a global configured remote scope']];
+  opts = [['g', 'global', 'remove a global configured remote scope']] as CommandOptions;
 
   action([name]: [string], { global }: { global: boolean }): Promise<any> {
     return remoteRm(name, global);
@@ -45,18 +43,16 @@ class RemoteRm extends Command {
   }
 }
 
-export default class Remote extends Command {
+export default class Remote implements LegacyCommand {
   name = 'remote';
   description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/bit-server#working-with-remote-scopes`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['g', 'global', 'see globally configured remotes']];
+  opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
   migration = true;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm()];
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  action(args: string[], { global }: { glboal: boolean }): Promise<any> {
+  action(args: string[], { global }: { global: boolean }): Promise<any> {
     return remoteList(global);
   }
 

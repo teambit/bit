@@ -2,7 +2,6 @@ import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { WRAPPER_DIR } from '../../src/constants';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixturePackageJson = { name: 'nice-package' };
 const fixturePackageJsonV2 = { name: 'nice-package-v2' }; // name must be valid, otherwise, npm skips it and install from nested dirs
@@ -11,10 +10,15 @@ chai.use(require('chai-fs'));
 
 describe('component with package.json as a file of the component', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component with package.json', () => {
     let consumerFiles;
     let bitMap;
@@ -53,16 +57,14 @@ describe('component with package.json as a file of the component', function() {
       expect(componentMap.wrapDir).to.equal(WRAPPER_DIR);
     });
     it('bit status should not show the component as modified', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     describe('having files in the rootDir outside the wrapDir', () => {
       before(() => {
         helper.fs.createFile('components/foo/pkg', 'bar.js');
       });
       it('should not automatically add them to the component', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
       it('should prevent users from deliberately adding them', () => {
         const output = helper.command.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
@@ -79,6 +81,7 @@ describe('component with package.json as a file of the component', function() {
       });
     });
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component with package.json in an shared directory with another file', () => {
     let consumerFiles;
     let bitMap;
@@ -108,8 +111,7 @@ describe('component with package.json as a file of the component', function() {
       expect(componentMap).to.not.have.property('originallySharedDir');
     });
     it('bit status should not show the component as modified', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     describe('importing the component using isolated environment', () => {
       let isolatePath;
@@ -121,6 +123,7 @@ describe('component with package.json as a file of the component', function() {
       });
     });
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component requires another component with package.json', () => {
     let consumerFiles;
     let bitMap;
@@ -186,8 +189,7 @@ describe('component with package.json as a file of the component', function() {
         helper.command.importComponent('foo/pkg');
 
         // an intermediate step, make sure the components are not modified
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
 
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.fs.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
@@ -239,8 +241,7 @@ describe('component with package.json as a file of the component', function() {
           expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
         });
         it('should not show the component as modified', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         describe('running bit link', () => {
           before(() => {
@@ -251,11 +252,24 @@ describe('component with package.json as a file of the component', function() {
             expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
           });
           it('should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
       });
+    });
+  });
+  describe('bit version >= 14.8.0 should ignore package.json files altogether', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fs.outputFile('bar/package.json');
+      helper.fs.outputFile('bar/foo.js');
+      helper.command.addComponent('bar');
+    });
+    it('should not track the package.json file', () => {
+      const bitMap = helper.bitMap.read();
+      const files = bitMap.bar.files;
+      expect(files).to.have.lengthOf(1);
+      expect(files[0].relativePath).to.equal('foo.js');
     });
   });
 });

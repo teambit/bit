@@ -1,7 +1,8 @@
-module.exports = function (api) {
+module.exports = function(api) {
   api.cache(true);
 
   const presets = [
+    '@babel/preset-react',
     '@babel/typescript',
     [
       '@babel/preset-env',
@@ -19,6 +20,8 @@ module.exports = function (api) {
         lazy: () => true
       }
     ],
+    'babel-plugin-transform-typescript-metadata',
+    ['@babel/plugin-proposal-decorators', { legacy: true }],
     ['@babel/plugin-transform-runtime'],
     ['@babel/plugin-proposal-object-rest-spread'],
     ['@babel/plugin-proposal-class-properties'],
@@ -34,7 +37,7 @@ module.exports = function (api) {
   return {
     presets,
     plugins,
-    only: ['**/*.ts'],
+    only: ['**/*.ts', '**/*.tsx', 'src/extensions/flows/task/container-script.js'],
     ignore: ['components/*']
   };
 };

@@ -5,14 +5,18 @@ chai.use(require('chai-fs'));
 
 describe('bit log', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('when a component does not have all versions in the scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.command.tagScope('2.0.0', 'new-tagging-message');

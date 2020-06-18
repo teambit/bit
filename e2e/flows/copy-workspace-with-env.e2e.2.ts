@@ -8,7 +8,11 @@ chai.use(require('chai-fs'));
 
 describe('copy workspace with env', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -20,7 +24,8 @@ describe('copy workspace with env', function() {
       helper.fixtures.addComponentBarFoo();
       helper.env.importTypescriptCompiler();
 
-      copiedPath = helper.scopeHelper.cloneLocalScope();
+      // Make sure we are not preserve the symlinks to get error and suggest from bit doctor
+      copiedPath = helper.scopeHelper.cloneLocalScope(false);
       // remove the original workspace so then symlinks get invalid
       fs.removeSync(helper.scopes.localPath);
     });

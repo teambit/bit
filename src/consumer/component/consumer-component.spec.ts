@@ -2,7 +2,7 @@ import { expect } from 'chai';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import withCompilerFixture from '../../../fixtures/consumer-components/with-compiler/with-compiler.json';
 import Component from './consumer-component';
-import CompilerExtension from '../../extensions/compiler-extension';
+import CompilerExtension from '../../legacy-extensions/compiler-extension';
 import { SourceFile } from './sources';
 
 describe('ConsumerComponent', function() {

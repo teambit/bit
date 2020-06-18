@@ -26,11 +26,6 @@ export default class BitObject {
     throw new Error('toBuffer() was not implemented...');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static parse(data: any, hash?: string) {
-    throw new Error('parse() was not implemented...');
-  }
-
   refs(): Ref[] {
     return [];
   }
@@ -114,6 +109,10 @@ path: ${err.path}`);
   static parseObject(fileContents: Buffer): Promise<BitObject> {
     return inflate(fileContents).then(buffer => parse(buffer));
   }
+
+  // static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
+  //   return Promise.resolve(parse(fileContents, types));
+  // }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.

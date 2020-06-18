@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
-import { PathOsBased, PathLinux } from '../../utils/path';
+import { PathOsBased, PathLinux, pathNormalizeToLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import { isHash, isTag } from '../../version/version-parser';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
@@ -21,6 +21,7 @@ import Lane from '../models/lane';
 import UnmergedComponents from '../lanes/unmerged-components';
 import GeneralError from '../../error/general-error';
 import { getAllVersionHashesByVersionsObjects, getAllVersionHashes } from '../component-ops/traverse-versions';
+import { Artifact } from '../../consumer/component/sources/artifact';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -62,9 +63,9 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | null | undefined> {
+  async get(bitId: BitId): Promise<ModelComponent | undefined> {
     const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
+    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       // @ts-ignore
       const isSnap = isHash(bitId.version);
@@ -82,20 +83,20 @@ export default class SourceRepository {
       // @ts-ignore
       if (!foundComponent.hasTag(bitId.version)) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
-        return null;
+        return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-        return null;
+        return undefined;
       }
     }
 
     return foundComponent;
   }
 
-  async _findComponent(component: ModelComponent): Promise<ModelComponent | null | undefined> {
+  async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
@@ -107,10 +108,10 @@ export default class SourceRepository {
       logger.error(`findComponent got an error ${err}`);
     }
     logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
+    return undefined;
   }
 
-  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | null | undefined> {
+  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | undefined> {
     const realComponentId: BitId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
     const foundComponent = await this.objects().load(realModelComponent.hash());
@@ -174,7 +175,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : undefined;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
         return objectRepo.persist();
@@ -199,8 +200,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     specsResults
   }: {
     readonly consumerComponent: ConsumerComponent;
@@ -208,12 +207,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message?: string;
     flattenedDependencies?: Record<string, any>;
     flattenedDevDependencies?: Record<string, any>;
-    flattenedCompilerDependencies?: Record<string, any>;
-    flattenedTesterDependencies?: Record<string, any>;
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
-  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
+  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any; artifacts: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return null;
@@ -236,11 +233,34 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test
       };
     });
+    // @todo: is this the best way to find out whether a compiler is set?
+    const isCompileSet = Boolean(
+      consumerComponent.compiler ||
+        clonedComponent.extensions.some(
+          e => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === '@teambit/envs'
+        )
+    );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
       consumer,
       consumerComponent.originallySharedDir,
-      consumerComponent.compiler
+      isCompileSet
     );
+    const artifacts: any[] = [];
+    const extensions = clonedComponent.extensions.clone();
+    extensions.forEach(extensionDataEntry => {
+      const artifactsSource = extensionDataEntry.artifacts.map(artifact => {
+        if (!(artifact instanceof Artifact)) {
+          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
+        }
+
+        return {
+          relativePath: pathNormalizeToLinux(artifact.relative),
+          file: artifact.toSourceAsLinuxEOL()
+        };
+      });
+      artifacts.push(...artifactsSource);
+      extensionDataEntry.artifacts = artifactsSource;
+    });
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
@@ -282,11 +302,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedDependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedCompilerDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedTesterDependencies,
       specsResults,
+      extensions,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       message,
       username,
@@ -295,7 +312,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles };
+    return { version, files, dists, compilerFiles, testerFiles, artifacts };
   }
 
   async addSource({
@@ -303,8 +320,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     message,
     lane,
     specsResults,
@@ -314,8 +329,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer: Consumer;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    flattenedCompilerDependencies: BitIds;
-    flattenedTesterDependencies: BitIds;
     message: string;
     lane: Lane | null;
     specsResults?: any;
@@ -332,14 +345,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       );
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const { version, files, dists, compilerFiles, testerFiles, artifacts } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
       message,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       specsResults
     });
     objectRepo.add(version);
@@ -358,6 +369,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
     if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach(file => objectRepo.add(file.file));
 
     return component;
   }

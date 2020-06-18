@@ -18,6 +18,7 @@ import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
 import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
+import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
 chai.use(require('chai-fs'));
 
@@ -27,7 +28,11 @@ chai.use(assertArrays);
 
 describe('bit add command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
 
   after(() => {
     helper.scopeHelper.destroy();
@@ -53,7 +58,7 @@ describe('bit add command', function() {
       helper.fs.deletePath('.bit');
       helper.fs.deletePath('bit.json');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      helper.scopeHelper.initLocalScope('bit init');
+      helper.scopeHelper.initLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       const addCmd = () => helper.command.addComponent('bar/foo.js', { i: 'bar/foo ' });
       expect(addCmd).to.not.throw('fatal: scope not found. to create a new scope, please use `bit init`');
@@ -345,7 +350,7 @@ describe('bit add command', function() {
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo.spec.js');
       helper.command.addComponent('bar', { t: 'bar/foo.spec.js', m: 'bar/foo.js' });
-      helper.command.addComponent('bar', { o: true, m: 'bar/foo.js' });
+      helper.command.addComponent('bar', { o: true, m: 'bar/foo.js', i: 'bar' });
       const bitMap = helper.bitMap.read();
       const specFile = bitMap.bar.files.find(f => f.relativePath === 'bar/foo.spec.js');
       expect(specFile.test).to.be.false;
@@ -453,18 +458,6 @@ describe('bit add command', function() {
       expect(files).to.deep.include({ relativePath: 'bar/foo.js', test: false, name: 'foo.js' });
       expect(files).to.deep.include({ relativePath: 'test/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
-    });
-    it('Should return error if used the "-i" flag without specifying an ID', () => {
-      helper.fs.createFile('bar', 'foo.js');
-      let errorMessage;
-      try {
-        helper.command.addComponent('bar', {
-          i: ''
-        });
-      } catch (err) {
-        errorMessage = err.message;
-      }
-      expect(errorMessage).to.have.string("error: option `-i, --id <name>' argument missing");
     });
     it('Should return error if used an invalid ID', () => {
       helper.fs.createFile('bar', 'foo.js');
@@ -574,41 +567,12 @@ describe('bit add command', function() {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
-    it.skip('Should prevent using exclude flag without wrapping in quotes', () => {
-      let errMsg = '';
-      helper.fs.createFile('bar', 'foo.js');
-      helper.fs.createFile('bar', 'foo2.js');
-      try {
-        helper.command.runCmd('bit add bar/*.js -e bar/foo2.js');
-      } catch (err) {
-        errMsg = err.message;
-      }
-      expect(errMsg).to.have.string('Please wrap excluded files with quotes');
-    });
     it('should throw an error when main file is excluded', () => {
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo2.js');
-      const addCmd = () => helper.command.runCmd('bit add bar/*.js -e bar/foo2.js -m bar/foo2.js');
+      const addCmd = () => helper.command.addComponent('bar/*.js', { e: 'bar/foo2.js', m: 'bar/foo2.js' });
       const error = new ExcludedMainFile(path.join('bar', 'foo2.js'));
       helper.general.expectToThrow(addCmd, error);
-    });
-    it('Should modify bitmap when adding component again when specifing id', () => {
-      helper.fs.createFile('bar', 'foo2.js');
-      helper.fs.createFile('bar', 'index.js');
-      helper.fs.createFile('bars', 'foo3.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
-      const bitMap1 = helper.bitMap.read();
-      const files1 = bitMap1['bar/foo'].files;
-      expect(bitMap1).to.have.property('bar/foo');
-      expect(files1).to.be.array();
-      expect(files1).to.be.ofSize(2);
-      helper.command.addComponent('bars/', { i: 'bar/foo' });
-      const bitMap2 = helper.bitMap.read();
-      const files2 = bitMap2['bar/foo'].files;
-      expect(bitMap2).to.have.property('bar/foo');
-      expect(files2).to.be.array();
-      expect(files2).to.be.ofSize(3);
     });
     it('Should modify bitmap when adding component again without id', () => {
       helper.fs.createFile('bar/foo', 'foo.js');
@@ -688,19 +652,6 @@ describe('bit add command', function() {
       expect(bitMap).to.have.property('test/foo1');
       expect(bitMap).to.have.property('test/foo2');
       expect(output).to.have.string('tracking 2 new components');
-    });
-    it('Should return error for missing namespace', () => {
-      helper.scopeHelper.reInitLocalScope();
-      const basePath = path.normalize('bar/*');
-      let errorMessage;
-      helper.fs.createFile('bar', 'foo2.js');
-      helper.fs.createFile('bar', 'foo1.js');
-      try {
-        helper.command.addComponent(basePath, { n: '' });
-      } catch (err) {
-        errorMessage = err.message;
-      }
-      expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
     });
     it('should indicate in the error message which components are missing the main file', () => {
       helper.scopeHelper.reInitLocalScope();
@@ -1202,7 +1153,7 @@ describe('bit add command', function() {
       helper.scopeHelper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
-      const addCmd = () => helper.command.runCmd('bit add ../foo.js', consumerDir);
+      const addCmd = () => helper.command.addComponent('../foo.js', undefined, consumerDir);
       const error = new PathOutsideConsumer(path.normalize('../foo.js'));
       helper.general.expectToThrow(addCmd, error);
     });
@@ -1217,7 +1168,7 @@ describe('bit add command', function() {
       helper.scopeHelper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
-      const addCmd = () => helper.command.runCmd('bit add ../foo', consumerDir);
+      const addCmd = () => helper.command.addComponent('../foo', undefined, consumerDir);
       const error = new PathOutsideConsumer(path.normalize('../foo'));
       helper.general.expectToThrow(addCmd, error);
     });
@@ -1322,6 +1273,22 @@ describe('bit add command', function() {
       expect(files[1].relativePath).to.equal('bbb.js');
       expect(files[2].relativePath).to.equal('ccc.js');
       expect(files[3].relativePath).to.equal('ddd.js');
+    });
+  });
+  describe('adding files when workspace is new', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.createComponentBarFoo();
+    });
+    it('should throw an error AddingIndividualFiles', () => {
+      const addFunc = () => helper.command.addComponent('bar/foo.js');
+      const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
+      helper.general.expectToThrow(addFunc, error);
+    });
+    it('when excluding a file, should throw an error', () => {
+      helper.fs.outputFile('bar/foo1.js');
+      const cmd = () => helper.command.addComponent('bar', { e: 'bar/foo1.js' });
+      expect(cmd).to.throw('unable to exclude files when tracking a directory');
     });
   });
 });

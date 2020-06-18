@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.7-dev.9] - 2020-06-02]
+
+- wait for the next event loop before exit child process in bit test
+
+## [[14.7.7-dev.8] - 2020-06-01]
+
+## [[14.7.7-dev.7] - 2020-06-01]
+
+- fix importing compilers and testers for old node versions
+
+## [[14.7.7-dev.6] - 2020-06-01]
+
+- add specFileRelativePath to the tester API (context)
+
+## [[14.7.7-dev.5] - 2020-05-27]
+
+- add componentRootDir to the tester API (context)
+
+## [[14.7.7-dev.4] - 2020-05-19]
+
+- upgrade typescript to 3.8.3
+- [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
+- [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+- support running `bit link` for specific components
+- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
+- [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
+- stabilize capsule by writing the same paths as the workspace relative to the component rootDir
+- stabilize Bit by eliminating the removal of shared directory upon import and having rootDir for authored components
+- fix `bit link --rewire` for css/sass/less files
+- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
+- add infrastructure for feature-toggle
+- deprecate files overrides (using file:// prefix)
+- disallow adding individual files by `bit add` unless `--allow-files` flag is used
+- introduce `bit link --rewire` to change relative paths in the source code to module paths
+- prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
+- prevent exporting components when import/require uses a module path with no scope-name
+
+## [[14.7.7-dev.3] - 2020-03-31]
+
+- support react-docs of multiple exports
+
+## [[14.7.7-dev.2] - 2020-03-31]
+
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+
+## [[14.7.7-dev.1] - 2020-03-24]
+
+- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
+- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
+- fix components dependencies detection to resolve from package.json if not exist on the fs
+
+## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)
+
+### Internal
+
+- fix building binary assets
+
+## [[14.7.5] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.5)
+
+### New
+
+- support configuring the logger level by running `bit config set log_level <level>`.
+
+### Changes
+
+- support a basic flow of using module paths when no `scopeDefault` is set
+
+### Bug Fixes
+
+- [#2211](https://github.com/teambit/bit/issues/2211) fix `bit export` to not export non-staged dependencies
+- [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
+- [#1808](https://github.com/teambit/bit/issues/1808) fix dynamic dist reference from `package.json` when isolating via capsule
+- [#2341](https://github.com/teambit/bit/issues/2341) fix `bit export --all` to successfully export when deleted from remote
+- [#2268](https://github.com/teambit/bit/issues/2268) prevent logger from holding the terminal once a command is completed
+
+
+## [[14.7.4] - 2020-02-06](https://github.com/teambit/bit/releases/tag/v14.7.4)
+
+- [#2300](https://github.com/teambit/bit/issues/2300) improve `bit export` performance by pushing new tags only
+
+## [[14.7.3] - 2020-02-02](https://github.com/teambit/bit/releases/tag/v14.7.3)
+
+### New
+
+- support overrides of the workspace defaultScope per components
+- use workspace defaultScope to generate node-modules links for pre-export components
+
+### Changes
+
+- [#2247](https://github.com/teambit/bit/issues/2247) improve auto-tag output
+
+### Bug fixes
+
+- fix "JavaScript heap out of memory" errors during `bit export`
+- [#2260](https://github.com/teambit/bit/issues/2260) fix duplicate dependencies
+- [#2264](https://github.com/teambit/bit/issues/2264) fix generated dependencies links on capsule
+- [#2267](https://github.com/teambit/bit/issues/2267) fix duplicate devDependencies
+- [#2258](https://github.com/teambit/bit/issues/2258) don't install devDependencies packages upon extensions import
+- [#2255](https://github.com/teambit/bit/issues/2255) avoid adding unneeded overrides upon import
+
 ## [[14.7.2] - 2020-01-12](https://github.com/teambit/bit/releases/tag/v14.7.2)
 
 ### New

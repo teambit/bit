@@ -103,11 +103,20 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
+    if (this.consumer && !this.consumer.isLegacy) {
+      await this._populateImportedNonLegacyComponentsLinks(component);
+      return;
+    }
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
-    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
+    const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -136,33 +145,86 @@ export default class NodeModuleLinker {
     await this._populateDependenciesAndMissingLinks(component);
   }
 
+  _getDefaultScope(component?: Component): string | undefined | null {
+    if (component) {
+      return component.defaultScope;
+    }
+    return this.consumer ? this.consumer.config.defaultScope : null;
+  }
+
+  /**
+   * for Harmony version and above, instead of symlink from the component dir to node_modules,
+   * create a directory on node_modules and symlink each one of the source files, this way, the
+   * structure is exactly the same as Authored
+   */
+  async _populateImportedNonLegacyComponentsLinks(component: Component) {
+    const componentId = component.id;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
+    filesToBind.forEach(file => {
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+      const dest = path.join(linkPath, file);
+
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+    });
+    await this._populateDependenciesAndMissingLinks(component);
+  }
+
+  /**
+   * even when an authored component has rootDir, we can't just symlink that rootDir to
+   * node_modules/rootDir. it could work only when the main-file is index.js, not for other cases.
+   * node expects the module inside node_modules to have either package.json with valid "main"
+   * property or an index.js file. this main property can't be relative.
+   */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const isMain = file === component.componentMap.mainFile;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
-      const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true), file);
+      const isMain = file === componentMap.mainFile;
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+      const possiblyDist = component.dists.calculateDistFileForAuthored(
+        path.normalize(fileWithRootDir),
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        this.consumer,
+        isMain
+      );
+      const dest = path.join(linkPath, file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
-      if (fileContent) {
+      // if component.compiler is set, this component is working with the old compiler (< v15)
+      // and not with compile extension. as such, the dists for author are in the root, not in the
+      // component directory. Having symlinks here instead of links causes import of module-paths to
+      // break. try e2e-test: 'as author, move individual component files to dedicated directory with bit move --component'
+      if (fileContent && component.compiler) {
         const linkFile = LinkFile.load({
           filePath: dest,
           content: fileContent,
           srcPath: file,
           componentId,
-          override: true
+          override: true,
+          ignorePreviousSymlink: true // in case the component didn't have a compiler before, this file was a symlink
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);
       } else {
-        // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
+        // it's an un-supported file, or it's Harmony version and above, create a symlink instead
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
       }
     });
     this._deleteOldLinksOfIdWithoutScope(component);
@@ -176,7 +238,12 @@ export default class NodeModuleLinker {
    */
   _deleteOldLinksOfIdWithoutScope(component: Component) {
     if (component.id.scope) {
-      const previousDest = getNodeModulesPathOfComponent(component.bindingPrefix, component.id.changeScope(null), true);
+      const previousDest = getNodeModulesPathOfComponent(
+        component.bindingPrefix,
+        component.id.changeScope(null),
+        true,
+        this._getDefaultScope(component)
+      );
       this.dataToPersist.removePath(new RemovePath(previousDest));
     }
   }
@@ -207,7 +274,7 @@ export default class NodeModuleLinker {
       this.dataToPersist.addManySymlinks(componentsDependenciesLinks.symlinks);
     }
     if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component, componentMap);
+      const dependenciesLinks = await this._getDependenciesLinks(component, componentMap);
       this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
   }
@@ -226,7 +293,7 @@ export default class NodeModuleLinker {
     const unfilteredDirs = glob.sync('*', { cwd: fromNodeModules });
     // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
     // otherwise, node_modules/@bit has packages as any other directory in node_modules
-    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.config.bindingPrefix] : [];
+    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.config._bindingPrefix] : [];
     const customResolvedData = component.dependencies.getCustomResolvedData();
     if (!R.isEmpty(customResolvedData)) {
       // filter out packages that are actually symlinks to dependencies
@@ -241,29 +308,30 @@ export default class NodeModuleLinker {
     });
   }
 
-  _getDependenciesLinks(component: Component, componentMap: ComponentMap): Symlink[] {
-    const getSymlinks = (dependency: Dependency): Symlink[] => {
+  async _getDependenciesLinks(component: Component, componentMap: ComponentMap): Promise<Symlink[]> {
+    const getSymlinks = async (dependency: Dependency): Promise<Symlink[]> => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
+      const depModel = await (this.consumer?.scope.getModelComponentIfExist(dependency.id) || Promise.resolve());
+      const bindingPrefix = depModel ? depModel.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
       const dependenciesLinks: Symlink[] = [];
-      if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
+      if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
-      dependenciesLinks.push(
-        this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, component.bindingPrefix)
-      );
+      dependenciesLinks.push(this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix));
       if (this.consumer && !this.consumer.shouldDistsBeInsideTheComponent()) {
         // when dists are written outside the component, it doesn't matter whether a component
         // has dists files or not, in case it doesn't have, the files are copied from the component
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
-        const distSymlink = this._getDependencyLink(from, dependency.id, to, component.bindingPrefix);
+        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix);
         distSymlink.forDistOutsideComponentsDir = true;
         dependenciesLinks.push(distSymlink);
       }
       return dependenciesLinks;
     };
-    const symlinks = component.getAllDependencies().map((dependency: Dependency) => getSymlinks(dependency));
+    const symlinksP = component.getAllDependencies().map((dependency: Dependency) => getSymlinks(dependency));
+    const symlinks = await Promise.all(symlinksP);
     return R.flatten(symlinks);
   }
 
@@ -273,7 +341,7 @@ export default class NodeModuleLinker {
     rootDir: PathOsBasedRelative,
     bindingPrefix: string
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true);
+    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this._getDefaultScope());
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
@@ -289,7 +357,9 @@ export default class NodeModuleLinker {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
-    const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true));
+    const dest = path.join(
+      getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true, this._getDefaultScope(component))
+    );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }

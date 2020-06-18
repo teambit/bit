@@ -4,6 +4,9 @@ import os from 'os';
 import fs from 'fs-extra';
 import { generateRandomStr } from '../utils';
 
+export type ScopesOptions = {
+  remoteScopeWithDot?: boolean;
+};
 export default class ScopesData {
   e2eDir: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -20,10 +23,10 @@ export default class ScopesData {
   envPath: string;
   globalRemote: string;
   globalRemotePath: string;
-  constructor() {
+  constructor(scopesOptions?: ScopesOptions) {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
-    this.setRemoteScope();
+    this.setRemoteScope(scopesOptions?.remoteScopeWithDot);
     this.setEnvScope();
     this.globalRemote = 'global-remote';
     this.globalRemotePath = path.join(this.e2eDir, this.globalRemote);
@@ -33,8 +36,14 @@ export default class ScopesData {
     this.localPath = path.join(this.e2eDir, this.local);
     fs.ensureDirSync(this.localPath);
   }
-  setRemoteScope(remoteScope?: string) {
-    this.remote = remoteScope || `${generateRandomStr()}-remote`;
+  setRemoteScope(remoteScopeWithDot = false, remoteScope?: string) {
+    if (remoteScope) {
+      this.remote = remoteScope;
+    } else if (remoteScopeWithDot) {
+      this.remote = `${generateRandomStr()}.${generateRandomStr()}-remote`;
+    } else {
+      this.remote = `${generateRandomStr()}-remote`;
+    }
     this.remotePath = path.join(this.e2eDir, this.remote);
   }
   setEnvScope() {

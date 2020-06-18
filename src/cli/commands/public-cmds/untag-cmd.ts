@@ -1,17 +1,16 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { unTagAction } from '../../../api/consumer';
 import { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
-export default class Untag extends Command {
+export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
   ${WILDCARD_HELP('untag')}`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
     [
@@ -19,7 +18,7 @@ export default class Untag extends Command {
       'force',
       'revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt'
     ]
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
 

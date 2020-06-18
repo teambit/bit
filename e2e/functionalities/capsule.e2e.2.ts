@@ -4,21 +4,27 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
-import { AUTO_GENERATED_STAMP, COMPILER_ENV_TYPE } from '../../src/constants';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
 describe('capsule', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('new components with dependencies (untagged)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
@@ -32,8 +38,9 @@ describe('capsule', function() {
     });
   });
   describe('new components with package dependencies (untagged)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponentsAndPackages();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -45,10 +52,11 @@ describe('capsule', function() {
     });
   });
   describe('tagged components with dependencies (before export)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
@@ -59,8 +67,9 @@ describe('capsule', function() {
     });
   });
   describe('components with peer packages', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.npm.installNpmPackage('left-pad', '1.3.0');
       helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
@@ -81,8 +90,9 @@ describe('capsule', function() {
     });
   });
   describe('components with peer packages of the dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.npm.installNpmPackage('left-pad', '1.3.0');
       helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
@@ -115,10 +125,11 @@ describe('capsule', function() {
     });
   });
   describe('exported components with dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -130,10 +141,11 @@ describe('capsule', function() {
     });
   });
   describe('imported components with dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -169,12 +181,14 @@ describe('capsule', function() {
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('using the new compiler API', () => {
+    // Skip for now, until talking with @david about it, the add files to envs are deleted so this test
+    // need to be changed or deleted.
+    describe.skip('using the new compiler API', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
         const babelrcFixture = path.join('compilers', 'new-babel', '.babelrc');
         helper.fixtures.copyFixtureFile(babelrcFixture);
-        helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
+        // helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
         helper.env.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
         const output = helper.command.build();
         expect(output).to.have.string('using the new compiler API');
@@ -330,7 +344,7 @@ describe('capsule', function() {
           helper.command.addComponent('circle/comp-b.js');
           helper.command.addComponent('circle/comp-c.js');
           helper.command.addComponent('circle/comp-d.js'); // comp-d has no deps, so is not part of the circle
-          buildOutput = helper.general.runWithTryCatch('bit build comp-a');
+          buildOutput = helper.general.runWithTryCatch('bit build comp-a', undefined, LEGACY_SHARED_DIR_FEATURE);
         });
         it('should throw an error saying there is cyclic dependencies', () => {
           expect(buildOutput).to.have.string('cyclic dependencies');
@@ -419,17 +433,35 @@ describe('capsule', function() {
   describe('test in capsule', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.env.importDummyTester('capsule');
 
       helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
+      helper.command.addComponent('utils/is-type.js', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
       const output = helper.command.testComponent();
       expect(output).to.have.string('tests passed');
+    });
+  });
+  // validates https://github.com/teambit/bit/issues/2264
+  describe('component with a dependency that has the same file name', () => {
+    let capsuleDir;
+    before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('foo.js', 'require("./utils/foo");');
+      helper.fs.outputFile('utils/foo.js', '');
+      helper.command.addComponent('foo.js');
+      helper.command.addComponent('utils/foo.js');
+      // notice how both components have the same filename: "foo.js".
+      helper.command.runCmd(`bit isolate foo --use-capsule --directory ${capsuleDir}`);
+    });
+    it('should generate the link file to the dependency', () => {
+      const link = path.join(capsuleDir, 'utils/foo.js');
+      expect(link).to.be.a.file();
     });
   });
 });

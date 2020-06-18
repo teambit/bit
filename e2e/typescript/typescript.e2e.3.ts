@@ -6,14 +6,17 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { AUTO_GENERATED_STAMP, IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-const helper = new Helper();
-
 describe('typescript', function() {
   this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -26,7 +29,7 @@ describe('typescript', function() {
     });
     describe('components with auto-resolve dependencies - with ts compiler', () => {
       // Skipping this test on appveyor because it's fail due to madge issues
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // @ts-ignore
         this.skip;
       } else {
@@ -57,12 +60,13 @@ describe('typescript', function() {
          * components/.dependencies/utils/is-type/scope-name/version-number/dist/utils/is-type.js (compiled version)
          */
         let localConsumerFiles;
+        let isStringPath;
+        let isTypePath;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.scopeHelper.addRemoteScope();
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
@@ -78,16 +82,10 @@ describe('typescript', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts,json}');
+
+          isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.scopes.remote, '0.0.1');
+          isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
         });
-        const isStringPath = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.scopes.remote,
-          '0.0.1'
-        );
-        const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
         it('should keep the original directory structure of the main component', () => {
           const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.ts');
           expect(localConsumerFiles).to.include(expectedLocation);
@@ -166,7 +164,7 @@ describe('typescript', function() {
       }
     });
     describe('with default and non default export', () => {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
         // @ts-ignore
         this.skip;
@@ -220,8 +218,7 @@ describe('typescript', function() {
           const bitJson = helper.bitJson.read();
           bitJson.resolveModules = { modulesDirectories: ['src'] };
           helper.bitJson.write(bitJson);
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('src/utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from 'utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
@@ -308,8 +305,7 @@ describe('typescript', function() {
           bitJson.resolveModules = { aliases: { '@': 'src' } };
           helper.bitJson.write(bitJson);
 
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('src/utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from '@/utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
@@ -406,7 +402,7 @@ describe('typescript', function() {
         helper.command.importComponent('bar/foo');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
+        const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
@@ -417,7 +413,6 @@ describe('typescript', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.unpublishComponent('bar.foo');
           npmCiRegistry.unpublishComponent('utils.is-string');
@@ -594,7 +589,7 @@ describe('typescript', function() {
     });
   });
   describe('react style => .tsx extension', () => {
-    if (process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // @ts-ignore
       this.skip;
     } else {

@@ -1,11 +1,10 @@
 import doctrine from 'doctrine';
+import * as reactDocs from 'react-docgen';
 import { PathOsBased } from '../../utils/path';
 import { pathNormalizeToLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Doclet } from '../types';
 import extractDataRegex from '../extract-data-regex';
-
-const reactDocs = require('react-docgen');
 
 function formatProperties(props) {
   const parseDescription = description => {
@@ -21,13 +20,13 @@ function formatProperties(props) {
     return description;
   };
   return Object.keys(props).map(name => {
-    const { type, description, required, defaultValue, flowType } = props[name];
+    const { type, description, required, defaultValue, flowType, tsType } = props[name];
 
     return {
       name,
       description: parseDescription(description),
       required,
-      type: stringifyType(type || flowType),
+      type: stringifyType(type || flowType || tsType),
       defaultValue
     };
   });
@@ -58,7 +57,9 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
   };
 }
 
-function stringifyType(prop: { name: string; value?: any }): string {
+function stringifyType(prop: { name: string; value?: any; raw?: string }): string {
+  if (!prop) return '?'; // TODO!
+
   const { name } = prop;
   let transformed;
 
@@ -84,7 +85,7 @@ function stringifyType(prop: { name: string; value?: any }): string {
       transformed = prop.value;
       break;
     case 'union':
-      transformed = prop.value.map(p => stringifyType(p)).join(' | ');
+      transformed = prop.value ? prop.value.map(p => stringifyType(p)).join(' | ') : prop.raw;
       break;
     case 'arrayOf':
       transformed = `${stringifyType(prop.value)}[]`;
@@ -94,23 +95,29 @@ function stringifyType(prop: { name: string; value?: any }): string {
   return transformed;
 }
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | undefined> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[] | undefined> {
   const doclets: Array<Doclet> = [];
   try {
-    const componentInfo = reactDocs.parse(data, undefined, undefined, { configFile: false });
-    if (componentInfo) {
-      const formatted = fromReactDocs(componentInfo, filePath);
-      formatted.args = [];
-      // this is a workaround to get the 'example' tag parsed when using react-docs
-      // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
-      // the @description tag.
-      extractDataRegex(formatted.description, doclets, filePath);
-      formatted.description = doclets[0].description;
-      formatted.examples = doclets[0].examples;
-      return formatted;
+    const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllExportedComponentDefinitions, undefined, {
+      configFile: false,
+      filename: filePath // should we use pathNormalizeToLinux(filePath) ?
+    });
+
+    if (componentsInfo) {
+      return componentsInfo.map(componentInfo => {
+        const formatted = fromReactDocs(componentInfo, filePath);
+        formatted.args = [];
+        // this is a workaround to get the 'example' tag parsed when using react-docs
+        // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
+        // the @description tag.
+        extractDataRegex(formatted.description, doclets, filePath, false);
+        formatted.description = doclets[0].description;
+        formatted.examples = doclets[0].examples;
+        return formatted;
+      });
     }
   } catch (err) {
-    logger.debug(`failed parsing docs using docgen on path ${filePath} with error`, err);
+    logger.silly(`failed parsing docs using docgen on path ${filePath} with error`, err);
   }
   return undefined;
 }

@@ -11,13 +11,13 @@ import { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import { BitIds } from '../bit-id';
+import { BitIds, BitId } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
 
-export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
-  const componentsIds = consumer.bitMap.getAllIdsAvailableOnLane();
+export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
+  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitMap.getAllIdsAvailableOnLane();
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
@@ -179,23 +179,6 @@ export async function getAllComponentsLinks({
   const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   dataToPersist.merge(nodeModuleLinks);
-
-  componentsWithDependencies.map(async componentWithDependencies => {
-    const component = componentWithDependencies.component;
-    [component.compilerDependencies, component.testerDependencies].map(async deps => {
-      const links = await linkGenerator.getLinksByDependencies(
-        // $FlowFixMe writtenPath is set here
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.writtenPath,
-        component,
-        deps,
-        consumer,
-        bitMap,
-        componentWithDependencies
-      );
-      dataToPersist.addManyFiles(links);
-    });
-  });
 
   if (consumer) {
     const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));

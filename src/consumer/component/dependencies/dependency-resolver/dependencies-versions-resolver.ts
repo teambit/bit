@@ -9,6 +9,9 @@ import { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
 import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
+import Dependency from '../dependency';
+import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
+import { resolveModulePath, resolveNodePackage } from '../files-dependency-builder';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -34,51 +37,72 @@ import componentIdToPackageName from '../../../../utils/bit/component-id-to-pack
 export default function updateDependenciesVersions(consumer: Consumer, component: Component) {
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
-  updateDependencies(component.compilerDependencies);
-  updateDependencies(component.testerDependencies);
+  updateExtensions(component.extensions);
 
-  function updateDependencies(dependencies: Dependencies) {
-    dependencies.get().forEach(dependency => {
-      const id = dependency.id;
-      // $FlowFixMe component.componentFromModel is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
-      const idFromPackageJson = getIdFromPackageJson(id);
-      const idFromBitMap = getIdFromBitMap(id);
-      const idFromComponentConfig = getIdFromComponentConfig(id);
-      const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
+  function resolveVersion(id: BitId): string | undefined {
+    // $FlowFixMe component.componentFromModel is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
+    const idFromPackageJson = getIdFromPackageJson(id);
+    const idFromBitMap = getIdFromBitMap(id);
+    const idFromComponentConfig = getIdFromComponentConfig(id);
+    const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
 
-      // get from packageJson when it was changed from the model or when there is no model.
-      const getFromPackageJsonIfChanged = () => {
-        if (!idFromPackageJson) return null;
-        if (!idFromModel) return idFromPackageJson;
-        if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
-        return null;
-      };
-      const getFromComponentConfig = () => idFromComponentConfig || null;
-      const getFromBitMap = () => idFromBitMap || null;
-      const getFromModel = () => idFromModel || null;
-      const getFromPackageJson = () => idFromPackageJson || null;
-      const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
-      const strategies: Function[] = [
-        getFromComponentConfig,
-        getFromDependentPackageJson,
-        getFromPackageJsonIfChanged,
-        getFromBitMap,
-        getFromModel,
-        getFromPackageJson
-      ];
+    // get from packageJson when it was changed from the model or when there is no model.
+    const getFromPackageJsonIfChanged = () => {
+      if (!idFromPackageJson) return null;
+      if (!idFromModel) return idFromPackageJson;
+      if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
+      return null;
+    };
+    const getFromComponentConfig = () => idFromComponentConfig;
+    const getFromBitMap = () => idFromBitMap || null;
+    const getFromModel = () => idFromModel || null;
+    const getFromPackageJson = () => idFromPackageJson || null;
+    const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
+    const strategies: Function[] = [
+      getFromComponentConfig,
+      getFromDependentPackageJson,
+      getFromPackageJsonIfChanged,
+      getFromBitMap,
+      getFromModel,
+      getFromPackageJson
+    ];
 
-      for (const strategy of strategies) {
-        const strategyId = strategy();
-        if (strategyId) {
-          dependency.id = dependency.id.changeVersion(strategyId.version);
-          logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
-          return;
-        }
+    for (const strategy of strategies) {
+      const strategyId = strategy();
+      if (strategyId) {
+        logger.debug(
+          `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
+        );
+        return strategyId.version;
       }
-    });
+    }
+    return undefined;
   }
+
+  function updateDependency(dependency: Dependency) {
+    const resolvedVersion = resolveVersion(dependency.id);
+    if (resolvedVersion) {
+      dependency.id = dependency.id.changeVersion(resolvedVersion);
+    }
+  }
+  function updateDependencies(dependencies: Dependencies) {
+    dependencies.get().forEach(updateDependency);
+  }
+
+  function updateExtension(extension: ExtensionDataEntry) {
+    if (extension.extensionId) {
+      const resolvedVersion = resolveVersion(extension.extensionId);
+      if (resolvedVersion) {
+        extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
+      }
+    }
+  }
+  function updateExtensions(extensions: ExtensionDataList) {
+    extensions.forEach(updateExtension);
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): BitId | null | undefined {
     if (!componentFromModel) return null;
@@ -103,10 +127,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
+    const modulePath = resolveModulePath(packageName, basePath, consumerPath);
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
+    const packageObject = resolveNodePackage(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
     const version = packageObject[packageId];
@@ -121,7 +145,11 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
     }
-    const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
+    const dependencyIdAsPackage = componentIdToPackageName(
+      componentId,
+      component.bindingPrefix,
+      component.defaultScope
+    );
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
@@ -133,13 +161,13 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromComponentConfig(componentId: BitId): BitId | null | undefined {
+  function getIdFromComponentConfig(componentId: BitId): BitId | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
-    if (R.isEmpty(dependencies)) return null;
+    if (R.isEmpty(dependencies)) return undefined;
     const dependency = Object.keys(dependencies).find(
       idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
     );
-    if (!dependency) return null;
+    if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
   }
 }

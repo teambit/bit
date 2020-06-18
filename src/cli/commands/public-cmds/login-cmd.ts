@@ -1,15 +1,13 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { login } from '../../../api/consumer';
 import { BASE_WEB_DOMAIN } from '../../../constants';
 
-export default class Login extends Command {
+export default class Login implements LegacyCommand {
   name = 'login';
   description = 'log the CLI into Bit';
   alias = '';
   skipWorkspace = true;
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
@@ -20,7 +18,7 @@ export default class Login extends Command {
       'machine-name <string>',
       'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)'
     ]
-  ];
+  ] as CommandOptions;
   action(
     [], // eslint-disable-line no-empty-pattern
     {

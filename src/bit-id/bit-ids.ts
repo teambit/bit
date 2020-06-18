@@ -52,7 +52,7 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
-  searchWithoutScopeAndVersion(bitId: BitId): BitId | null | undefined {
+  searchWithoutScopeAndVersion(bitId: BitId): BitId | undefined {
     return this.find(id => id.hasSameName(bitId));
   }
 
@@ -87,6 +87,9 @@ export default class BitIds extends Array<BitId> {
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
     return BitIds.fromArray(this.filter(id => !id.isEqualWithoutVersion(bitId)));
   }
+  removeMultipleIfExistWithoutVersion(bitIds: BitIds): BitIds {
+    return BitIds.fromArray(this.filter(id => !bitIds.hasWithoutVersion(id)));
+  }
 
   /**
    * make sure to pass only bit ids you know they have scope, otherwise, you'll get invalid bit ids.
@@ -97,13 +100,23 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array.map(id => BitId.parse(id, true)));
   }
 
+  static deserializeObsolete(array: string[] = []): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return new BitIds(...array.map(id => BitId.parseObsolete(id)));
+  }
+
   toString(): string {
     return this.map(id => id.toString()).join(', ');
   }
 
-  toGroupByScopeName(defaultScope?: string | null | undefined): { [scopeName: string]: BitIds } {
+  toGroupByScopeName(idsWithDefaultScope: BitIds): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
-      const scopeName = current.scope || defaultScope;
+      const getScopeName = () => {
+        if (current.scope) return current.scope;
+        const idWithDefaultScope = idsWithDefaultScope.searchWithoutScopeAndVersion(current);
+        return idWithDefaultScope ? idWithDefaultScope.scope : null;
+      };
+      const scopeName = getScopeName();
       if (!scopeName) {
         throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
       }

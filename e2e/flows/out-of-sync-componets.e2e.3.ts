@@ -1,14 +1,18 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusWorkspaceIsCleanMsg, importPendingMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
+import { IMPORT_PENDING_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
 describe('components that are not synced between the scope and the consumer', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -85,13 +89,12 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
     describe('bit status', () => {
-      let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
-        output = helper.command.status();
+        helper.command.status();
       });
       it('should sync .bitmap according to the scope', () => {
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
         const bitMap = helper.bitMap.read();
         const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
@@ -118,13 +121,12 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
     describe('bit status', () => {
-      let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
-        output = helper.command.status();
+        helper.command.status();
       });
       it('should sync .bitmap according to the scope', () => {
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
         const bitMap = helper.bitMap.read();
         const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
@@ -280,7 +282,7 @@ describe('components that are not synced between the scope and the consumer', fu
         output = helper.command.status();
       });
       it('should show a massage suggesting to import the components', () => {
-        expect(output).to.have.string(importPendingMsg);
+        expect(output).to.have.string(IMPORT_PENDING_MSG);
       });
     });
   });
@@ -371,12 +373,11 @@ describe('components that are not synced between the scope and the consumer', fu
         scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
       });
       describe('bit status', () => {
-        let output;
         before(() => {
-          output = helper.command.status();
+          helper.command.status();
         });
         it('should sync .bitmap according to the latest version of the scope', () => {
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
           const bitMap = helper.bitMap.read();
           const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
           expect(bitMap).to.have.property(newId);

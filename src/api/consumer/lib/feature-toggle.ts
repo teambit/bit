@@ -1,10 +1,15 @@
 /**
  * provides an option to enable/disable experimental features before releasing them.
  * two ways to enable a feature:
- * 1) from the CLI. prefix your command with CFG_FEATURE_TOGGLE and the features list separated by a comma.
+ * 1) from the CLI. prefix your command with BIT_FEATURES and the features list separated by a comma.
  * 2) from the config. run `bit config set features=<features-list>` and the features list separated by a comma.
  * if the environment variable was provided, it'll skip the config.
  * the results are cached so no penalty calling it multiple times in the same process.
+ *
+ * to use it in the code, simply call `isFeatureEnabled('your-feature')`
+ *
+ * for the e2e-tests, there is a mechanism built around it, to enable/disable features per file or
+ * per command. see the docs of CommandHelper class for more info.
  */
 
 import { getSync } from './global-config';
@@ -13,21 +18,40 @@ import GeneralError from '../../../error/general-error';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
 
-type IsFeatureEnabled = { (featureName: string): boolean; cache?: { [featureName: string]: boolean } };
-
-export const isFeatureEnabled: IsFeatureEnabled = (featureName: string): boolean => {
-  if (typeof isFeatureEnabled.cache === 'undefined' || !isFeatureEnabled[featureName]) {
-    isFeatureEnabled.cache = isFeatureEnabled.cache || {};
-    const enableFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
-    if (enableFeatures) {
-      const featureSplit = enableFeatures.split(',');
-      isFeatureEnabled.cache[featureName] = featureSplit.includes(featureName);
-    } else {
-      isFeatureEnabled.cache[featureName] = false;
-    }
+class FeatureToggle {
+  private features: string[] | null | undefined;
+  private areFeaturesPopulated() {
+    return this.features !== undefined;
   }
-  return isFeatureEnabled.cache[featureName];
-};
+  private setFeatures() {
+    if (this.areFeaturesPopulated()) return;
+    const enabledFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
+    this.features = enabledFeatures ? enabledFeatures.split(',').map(f => f.trim()) : null;
+  }
+  public isFeatureEnabled(featureName: string): boolean {
+    this.setFeatures();
+    return this.features ? this.features.includes(featureName) : false;
+  }
+  public addFeature(featureName: string) {
+    this.setFeatures();
+    if (this.features) this.features.push(featureName);
+    else this.features = [featureName];
+  }
+}
+
+const featureToggle = new FeatureToggle();
+
+export function isFeatureEnabled(featureName: string): boolean {
+  return featureToggle.isFeatureEnabled(featureName);
+}
+
+export function addFeature(featureName: string) {
+  featureToggle.addFeature(featureName);
+}
+
+export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
+
+export const HARMONY_FEATURE = 'harmony';
 
 const LANES_FEATURE = 'lanes';
 

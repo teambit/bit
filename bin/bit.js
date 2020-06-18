@@ -15,7 +15,7 @@ bitVersion();
 
 /* eslint-disable no-var */
 const semver = require('semver');
-const mkdirp = require('mkdirp');
+const fs = require('fs-extra');
 const chalk = require('chalk');
 // const bitUpdates = require('./bit-updates');
 
@@ -25,8 +25,8 @@ const compatibilityStatus = getCompatibilityStatus();
 warnIfRunningAsRoot();
 
 function ensureDirectories() {
-  mkdirp.sync(constants.GLOBAL_CONFIG);
-  mkdirp.sync(constants.GLOBAL_LOGS);
+  fs.ensureDirSync(constants.GLOBAL_CONFIG);
+  fs.ensureDirSync(constants.GLOBAL_LOGS);
 }
 
 function warnIfRunningAsRoot() {
@@ -82,9 +82,8 @@ function loadCli() {
 function promptAnalyticsIfNeeded(cb) {
   // this require is needed here because bit caches are not created yet and will cause exception
   const { Analytics } = require('../dist/analytics/analytics');
-  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2))
-    .then(() => cb())
-    .catch(() => console.log(chalk.yellow('\noperation aborted')));
+  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2)).then(() => cb());
+  // .catch(() => console.log(chalk.yellow('\noperation aborted')));
 }
 verifyCompatibility();
 ensureDirectories();

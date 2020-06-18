@@ -67,7 +67,7 @@ export default class ComponentsList {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : null
+          version: componentObjects.scope ? componentObjects.latest() : undefined
         });
       });
     }
@@ -95,9 +95,11 @@ export default class ComponentsList {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
       const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
-      this._modifiedComponents = (await filterAsync(fileSystemComponents, (component: Component) => {
-        return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
-      })).filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
+      this._modifiedComponents = (
+        await filterAsync(fileSystemComponents, (component: Component) => {
+          return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
+        })
+      ).filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map(component => component.id);
@@ -144,16 +146,19 @@ export default class ComponentsList {
       const componentsFromFs = await this.getAuthoredAndImportedFromFS();
       const componentsFromModel = await this.getModelComponents();
       const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
-      this._mergePendingComponents = (await Promise.all(
-        componentsFromFs.map(async (component: Component) => {
-          const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
-          if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)) return null;
-          await modelComponent.setDivergeData(this.scope.objects);
-          const divergedData = modelComponent.getDivergeData();
-          if (!modelComponent.getDivergeData().isDiverged()) return null;
-          return { id: modelComponent.toBitId(), diverge: divergedData };
-        })
-      )).filter(x => x) as DivergedComponent[];
+      this._mergePendingComponents = (
+        await Promise.all(
+          componentsFromFs.map(async (component: Component) => {
+            const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
+            if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id))
+              return null;
+            await modelComponent.setDivergeData(this.scope.objects);
+            const divergedData = modelComponent.getDivergeData();
+            if (!modelComponent.getDivergeData().isDiverged()) return null;
+            return { id: modelComponent.toBitId(), diverge: divergedData };
+          })
+        )
+      ).filter(x => x) as DivergedComponent[];
     }
     return this._mergePendingComponents;
   }
@@ -233,7 +238,8 @@ export default class ComponentsList {
     const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
     const warnings = [];
     tagPendingComponentsLatest.forEach(componentId => {
-      if (semver.gt(componentId.version, version)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (semver.gt(componentId.version!, version)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }

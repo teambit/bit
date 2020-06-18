@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
@@ -11,13 +11,12 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
-export default class Tag extends Command {
+export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
@@ -30,9 +29,11 @@ export default class Tag extends Command {
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
+    ['', 'allow-relative-paths', 'allow require statements between components to use relative paths (not recommended)'],
+    ['', 'allow-files', 'allow component to have files spread over multiple directories (not recommended)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
@@ -76,7 +77,7 @@ export default class Tag extends Command {
     }
 
     if (!id && !all && !scope) {
-      throw new GeneralError('missing [id]. to tag all components, please use --all flag');
+      throw new GeneralError('missing id. to tag all components, please use --all flag');
     }
     if (id && all) {
       throw new GeneralError(
@@ -147,7 +148,8 @@ export default class Tag extends Command {
           );
           if (autoTag.length) {
             const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
-            componentOutput += `\n       ${AUTO_TAGGED_MSG}: ${autoTagComp.join(', ')}`;
+            componentOutput += `\n       ${AUTO_TAGGED_MSG}:
+            ${autoTagComp.join('\n            ')}`;
           }
           return componentOutput;
         })

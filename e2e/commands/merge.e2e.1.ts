@@ -15,7 +15,11 @@ const successOutput = 'successfully merged components';
 
 describe('bit merge command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
   });
@@ -231,7 +235,14 @@ describe('bit merge command', function() {
           });
           it('should not be able to run the app because of the conflicts', () => {
             const result = helper.general.runWithTryCatch('node app.js');
-            expect(result).to.have.string('SyntaxError: Unexpected token <<');
+            // Check only the relevant line since for some reason we got it in circle for windows in this form:
+            // SyntaxError: Unexpected token \'<<\'\r\n
+            // In another place of the error in circle we have <<<<<
+            // So we want to make sure the << is also in the relevant error line
+            const splitted = result.split('\n');
+            const line = splitted.find(l => l.includes('SyntaxError:'));
+            expect(line).to.have.string('SyntaxError: Unexpected token');
+            expect(line).to.have.string('<<');
           });
           it('bit tag should not tag the component', () => {
             const tagOutput = helper.general.runWithTryCatch('bit tag -a');

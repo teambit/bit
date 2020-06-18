@@ -2,17 +2,22 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '../../src/constants';
 
 const sizeOfChain = 5;
 
 describe('flow of a long-dependencies-chain', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('a component bar4/foo4 (or any other number set in sizeOfChain) has a dependency bar3/foo3, which has a dependency bar2/foo2 and so on', () => {
-    if (process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // @ts-ignore
       this.skip;
     } else {

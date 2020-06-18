@@ -28,7 +28,7 @@ import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import { getDivergeData } from '../component-ops/get-diverge-data';
 import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import { makeEnvFromModel } from '../../extensions/env-factory';
+import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
@@ -37,6 +37,7 @@ import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getAllVersionsInfo, getAllVersionHashes } from '../component-ops/traverse-versions';
+import { Artifact } from '../../consumer/component/sources/artifact';
 
 type State = {
   versions?: {
@@ -75,6 +76,8 @@ const VERSION_ZERO = '0.0.0';
  * we can't rename the class as ModelComponent because old components are already saved in the model
  * with 'Component' in their headers. see object-registrar.types()
  */
+// TODO: FIX me .parser
+// @ts-ignore
 export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;
@@ -278,7 +281,8 @@ export default class Component extends BitObject {
 
   latestVersion(): string {
     if (empty(this.versions)) return VERSION_ZERO;
-    return semver.maxSatisfying(this.listVersions(), '*');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return semver.maxSatisfying(this.listVersions(), '*')!;
   }
 
   // @todo: make it readable, it's a mess
@@ -407,9 +411,10 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
     const latest = this.latestVersion();
-    if (latest) return semver.inc(latest, releaseType);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (latest) return semver.inc(latest, releaseType)!;
     return DEFAULT_BIT_VERSION;
   }
 
@@ -427,7 +432,7 @@ export default class Component extends BitObject {
 
   toBitIdWithLatestVersionAllowNull(): BitId {
     const id = this.toBitIdWithLatestVersion();
-    return id.version === VERSION_ZERO ? id.changeVersion(null) : id;
+    return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
   }
 
   toObject() {
@@ -473,6 +478,27 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
+  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<Buffer[]> {
+    const collectRefs = async (): Promise<Ref[]> => {
+      const refsCollection: Ref[] = [];
+
+      async function addRefs(object: BitObject) {
+        const refs = object.refs();
+        const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+        refsCollection.push(...refs);
+        await Promise.all(objs.map(obj => addRefs(obj)));
+      }
+
+      const versionsRefs = versions.map(version => this.versions[version]);
+      refsCollection.push(...versionsRefs);
+      const versionsObjects = await Promise.all(versions.map(version => this.versions[version].load(repo)));
+      await Promise.all(versionsObjects.map(versionObject => addRefs(versionObject)));
+      return refsCollection;
+    };
+    const refs = await collectRefs();
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
+  }
+
   collectObjects(repo: Repository): Promise<ComponentObjects> {
     return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
@@ -500,13 +526,14 @@ export default class Component extends BitObject {
   toComponentVersion(versionStr: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
-
-    if (isTag(versionNum) && !this.hasTag(versionNum)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
     }
-    return new ComponentVersion(this, versionNum);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return new ComponentVersion(this, versionNum!);
   }
 
   /**
@@ -549,6 +576,13 @@ export default class Component extends BitObject {
       testerP
     ]);
 
+    const extensions = version.extensions.clone();
+    await Promise.all(
+      extensions.map(async extension => {
+        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(Artifact)));
+      })
+    );
+
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
@@ -568,12 +602,8 @@ export default class Component extends BitObject {
       tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
-      compilerDependencies: version.compilerDependencies.getClone(),
-      testerDependencies: version.testerDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       flattenedDevDependencies: version.flattenedDevDependencies.clone(),
-      flattenedCompilerDependencies: version.flattenedCompilerDependencies.clone(),
-      flattenedTesterDependencies: version.flattenedTesterDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -583,7 +613,7 @@ export default class Component extends BitObject {
       dists,
       mainDistFile: version.mainDistFile,
       docs: version.docs,
-      license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
@@ -592,7 +622,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
-      extensions: clone(version.extensions)
+      extensions
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
@@ -620,7 +650,7 @@ export default class Component extends BitObject {
   }
 
   validateBeforePersisting(componentStr: string): void {
-    logger.debug(`validating component object: ${this.hash().hash} ${this.id()}`);
+    logger.silly(`validating component object: ${this.hash().hash} ${this.id()}`);
     const component = Component.parse(componentStr);
     component.validate();
   }

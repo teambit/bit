@@ -1,4 +1,5 @@
 import execa from 'execa';
+import { spawn } from 'child_process';
 import pMapSeries from 'p-map-series';
 import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
@@ -6,21 +7,24 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
 import logger from '../logger/logger';
-import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
+import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN, IS_WINDOWS } from '../constants';
 import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
+import { PackageManagerClients } from '../consumer/config/legacy-workspace-config-interface';
 
-type PackageManagerResults = { stdout: string; stderr: string };
+export type PackageManagerResults = { stdout: string; stderr: string };
 
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
 
 const defaultNpmArgs = [];
 const defaultYarnArgs = [];
+const defaultPnpmArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
-  yarn: defaultYarnArgs
+  yarn: defaultYarnArgs,
+  pnpm: defaultPnpmArgs
 };
 const defaultPackageManagerProcessOptions = {
   cwd: process.cwd
@@ -65,16 +69,16 @@ const getAllowdPackageManagerProcessOptions = userOptions => {
 
 type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'npm' | 'yarn';
-  packageManagerArgs: string[];
-  packageManagerProcessOptions: Record<string, any>;
-  useWorkspaces: boolean;
+  packageManager?: PackageManagerClients;
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Record<string, any>;
+  useWorkspaces?: boolean;
   dirs: string[];
   rootDir: string | null | undefined; // Used for yarn workspace
   installRootPackageJson: boolean;
   installPeerDependencies: boolean;
+  installProdPackagesOnly?: boolean;
   verbose: boolean;
 };
 
@@ -87,6 +91,7 @@ const _installInOneDirectory = ({
   packageManagerArgs = [],
   packageManagerProcessOptions = {},
   dir,
+  installProdPackagesOnly = false,
   verbose = false
 }): Promise<PackageManagerResults> => {
   // Handle process options
@@ -114,14 +119,15 @@ const _installInOneDirectory = ({
     // we may want to use it later. For now, it print too much information
     // concretePackageManagerArgs.push('--verbose');
   }
+  if (installProdPackagesOnly) {
+    concretePackageManagerArgs.push('--production');
+  }
 
   fs.ensureDirSync(path.join(cwd, 'node_modules'));
   logger.debug(
-    `installing npm packages using ${packageManager} at ${cwd} with options:`,
-    concretePackageManagerProcessOptions,
-    `and args: ${concretePackageManagerArgs}`
+    `installing npm packages using ${packageManager} at ${cwd} with args: ${concretePackageManagerArgs} and options:`,
+    concretePackageManagerProcessOptions
   );
-
   // Set the shell to true to prevent problems with post install scripts when running as root
   const packageManagerClientName = packageManager;
   const childProcess = execa(
@@ -152,6 +158,45 @@ const _installInOneDirectory = ({
     });
 };
 
+const _getNpmList = async (
+  packageManager: string,
+  dir: PathOsBased
+): Promise<{ stdout: string; stderr: string; code: number }> => {
+  // We don't use here execa since there is a bug with execa (2.*) with some node versions
+  // execa uses util.getSystemErrorName which not available in some node versions
+  // see more here - https://github.com/sindresorhus/execa/issues/318
+  // We also use spwan instead of exec since the output might be very long and exec is limited with
+  // handling such long outputs
+  // once we stop support node < 10 we can replace it with something like
+  // npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
+  return new Promise(resolve => {
+    let stdout = '';
+    let stderr = '';
+    const shell = IS_WINDOWS;
+    const ls = spawn(packageManager, ['list', '-j'], { cwd: dir, shell });
+    ls.stdout.on('data', data => {
+      stdout += data;
+    });
+
+    ls.stderr.on('data', data => {
+      stderr += data;
+    });
+
+    ls.on('error', err => {
+      stderr += err;
+    });
+
+    ls.on('close', code => {
+      const res = {
+        stdout,
+        stderr,
+        code
+      };
+      resolve(res);
+    });
+  });
+};
+
 /**
  * Get peer dependencies for directory
  * you should run this after you run npm install
@@ -159,17 +204,13 @@ const _installInOneDirectory = ({
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
-  let npmList;
-  try {
-    npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
-  } catch (err) {
-    if (err.stdout && err.stdout.startsWith('{')) {
-      // it's probably a valid json with errors, that's fine, parse it.
-      npmList = err;
-    } else {
-      logger.error('npm-client got an error', err);
-      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
-    }
+  const npmList = await _getNpmList(packageManager, dir);
+  // If the npmList.stdout starts with '{' it's probably a valid json so no throw an error
+  if (npmList.stderr && !npmList.stdout.startsWith('{')) {
+    logger.error('npm-client got an error', npmList.stderr);
+    throw new Error(
+      `failed running ${packageManager} list on folder ${dir} to find the peer dependencies due to an error: ${npmList.stderr}`
+    );
   }
   const peerDepsObject = await getPeerDepsFromNpmList(npmList.stdout, packageManager);
   return objectToArray(peerDepsObject);
@@ -227,6 +268,7 @@ const _installInOneDirectoryWithPeerOption = async ({
   packageManagerProcessOptions = {},
   dir,
   installPeerDependencies = false,
+  installProdPackagesOnly = false,
   verbose = false
 }): Promise<PackageManagerResults | PackageManagerResults[]> => {
   const rootDirResults = await _installInOneDirectory({
@@ -237,6 +279,7 @@ const _installInOneDirectoryWithPeerOption = async ({
     dir,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     installPeerDependencies,
+    installProdPackagesOnly,
     verbose
   });
 
@@ -249,6 +292,7 @@ const _installInOneDirectoryWithPeerOption = async ({
       packageManagerArgs,
       packageManagerProcessOptions,
       dir,
+      installProdPackagesOnly,
       verbose
     });
     return [rootDirResults, peerResults];
@@ -269,6 +313,7 @@ const installAction = async ({
   rootDir,
   installRootPackageJson = false,
   installPeerDependencies = false,
+  installProdPackagesOnly = false,
   verbose = false
 }: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
@@ -281,6 +326,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir: rootDir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
   }
@@ -297,6 +343,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir: rootDir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
     if (Array.isArray(rootDirResults)) {
@@ -318,6 +365,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
 

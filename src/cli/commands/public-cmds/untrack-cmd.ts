@@ -1,18 +1,17 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { untrack } from '../../../api/consumer';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
-export default class Untrack extends Command {
+export default class Untrack implements LegacyCommand {
   name = 'untrack [ids...]';
   description = `untrack a new component(s)
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#untracking-components
   ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['a', 'all', 'revert add for all tracked components']];
+  opts = [['a', 'all', 'revert add for all tracked components']] as CommandOptions;
   loader = true;
   migration = true;
 

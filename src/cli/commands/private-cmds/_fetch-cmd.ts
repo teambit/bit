@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { fromBase64, unpackCommand, buildCommandMessage } from '../../../utils';
 import { fetch } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
@@ -8,13 +8,16 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 
 let compressResponse;
-export default class Fetch extends Command {
+export default class Fetch implements LegacyCommand {
   name = '_fetch <path> <args>';
   private = true;
   description = 'fetch components(s) from a scope';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['n', 'no-dependencies', 'do not include component dependencies'], ['', 'lanes', 'provided ids are lanes']];
+  opts = [
+    ['n', 'no-dependencies', 'do not include component dependencies'],
+    ['', 'lanes', 'provided ids are lanes']
+  ] as CommandOptions;
 
   action([path, args]: [string, string], { noDependencies, lanes }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);

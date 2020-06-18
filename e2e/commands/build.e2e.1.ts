@@ -11,7 +11,11 @@ chai.use(assertArrays);
 
 describe('bit build', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -70,12 +74,18 @@ describe('bit build', function() {
         });
       });
       describe('when there is nothing modified', () => {
-        const distFolder = path.join('dist');
-        const distFolderFullPath = path.join(helper.scopes.localPath, 'dist');
-        const compilerFolder = path.join('.bit', 'components', 'compilers');
-        const compilerFolderFullPath = path.join(helper.scopes.localPath, '.bit', 'components', 'compilers');
-        const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
+        let distFolder;
+        let distFolderFullPath;
+        let compilerFolder;
+        let compilerFolderFullPath;
+        let distFileFullPath;
         before(() => {
+          distFolder = path.join('dist');
+          distFolderFullPath = path.join(helper.scopes.localPath, 'dist');
+          compilerFolder = path.join('.bit', 'components', 'compilers');
+          compilerFolderFullPath = path.join(helper.scopes.localPath, '.bit', 'components', 'compilers');
+          distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
+
           helper.command.tagAllComponents();
           const output = helper.command.status();
           // Make sure there is no modified components
@@ -281,6 +291,18 @@ describe('bit build', function() {
           it(`should search for ${COMPONENT_DIST_PATH_TEMPLATE} template and replace with the path to the dist`, () => {
             expect(packageJson).to.have.property('dynamicValue');
             expect(packageJson.dynamicValue).equal('dist/bar/foo.js');
+          });
+          describe('isolating into a capsule', () => {
+            let capsuleDir;
+            before(() => {
+              capsuleDir = helper.general.generateRandomTmpDirName();
+              helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
+            });
+            it('should update the package.json in the capsule', () => {
+              const capsulePackageJson = helper.packageJson.read(capsuleDir);
+              expect(capsulePackageJson).to.have.property('dynamicValue');
+              expect(capsulePackageJson.dynamicValue).equal('dist/bar/foo.js');
+            });
           });
           describe('importing when the dist is outside the components dir', () => {
             before(() => {

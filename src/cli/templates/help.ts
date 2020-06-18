@@ -48,6 +48,7 @@ function commandsTemplate(commands) {
 module.exports = function(extensionsCommands) {
   if (extensionsCommands && extensionsCommands.length) {
     allCommands.push({
+      group: 'extensions',
       title: 'extensions commands',
       commands: extensionsCommands
     });

@@ -7,8 +7,13 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('component that requires another component internal (not main) file', function() {
   this.timeout(0);
-  const helper = new Helper();
-  const npmCiRegistry = new NpmCiRegistry(helper);
+  let helper: Helper;
+  let npmCiRegistry;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+    npmCiRegistry = new NpmCiRegistry(helper);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -55,7 +60,6 @@ describe('component that requires another component internal (not main) file', f
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -121,7 +125,6 @@ describe('component that requires another component internal (not main) file', f
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');

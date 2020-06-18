@@ -6,7 +6,11 @@ chai.use(require('chai-fs'));
 
 describe('support vue files', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
 
   after(() => {
     helper.scopeHelper.destroy();
@@ -97,6 +101,7 @@ describe('support vue files', function() {
         helper.command.addComponent('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
         helper.command.runCmd('npm i fuzzysearch');
       });
+
       it('should find missing vue dependencies', () => {
         const output = helper.command.tagAllComponents();
         expect(output).to.have.string('9 component(s) tagged');

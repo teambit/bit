@@ -10,7 +10,10 @@ chai.use(require('chai-fs'));
   `export --eject functionality using ${BASE_WEB_DOMAIN}`,
   function() {
     this.timeout(0);
-    const helper = new Helper();
+    let helper: Helper;
+    before(() => {
+      helper = new Helper();
+    });
     const bitsrcTester = new BitsrcTester();
     let scopeName;
     before(() => {

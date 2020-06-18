@@ -30,7 +30,7 @@ describe('hash mismatch', function() {
     let output: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.scopes.setRemoteScope('hash-mismatch-case');
+      helper.scopes.setRemoteScope(false, 'hash-mismatch-case');
       helper.scopeHelper.reInitRemoteScope();
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.copyFixtureDir('scopes/hash-mismatch-case/', helper.scopes.remotePath);

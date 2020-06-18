@@ -5,7 +5,7 @@ export type PathLinux = string; // Linux format path (even when running on Windo
 export type PathLinuxRelative = string;
 export type PathLinuxAbsolute = string;
 
-export type PathOsBased = string; // OS based format. On Windows it's Windows format, on Linux it's Linux format.
+export type PathOsBased = string | PathOsBasedRelative | PathOsBasedAbsolute; // OS based format. On Windows it's Windows format, on Linux it's Linux format.
 export type PathOsBasedRelative = string;
 export type PathOsBasedAbsolute = string;
 

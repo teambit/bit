@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { merge } from '../../../api/consumer';
 import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
@@ -27,7 +27,7 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
     .join('\n\n');
 };
 
-export default class Merge extends Command {
+export default class Merge implements LegacyCommand {
   name = 'merge [values...]';
   description = `merge changes of different component versions
   bit merge <version> [ids...] => merge changes of the given version into the checked out version
@@ -36,7 +36,6 @@ export default class Merge extends Command {
   bit merge <remote> <lane> --lane => EXPERIMENTAL. merge given remote-lane into current lane
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
@@ -51,7 +50,7 @@ export default class Merge extends Command {
     ],
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap']
-  ];
+  ] as CommandOptions;
   loader = true;
 
   action(

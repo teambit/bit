@@ -9,7 +9,11 @@ chai.use(require('chai-fs'));
 
 describe('bit export command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   const createFile = (dir, name) => {
     const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
     fs.outputFileSync(path.join(helper.scopes.localPath, dir, `${name}.js`), componentFixture);
@@ -61,8 +65,8 @@ describe('bit export command', function() {
       createFile('bar', 'foo2');
       createFile('baz', 'foo1');
       createFile('baz', 'foo2');
-      helper.command.runCmd('bit add bar -m foo1.js');
-      helper.command.runCmd('bit add baz -m foo1.js');
+      helper.command.addComponent('bar', { m: 'foo1.js' });
+      helper.command.addComponent('baz', { m: 'foo1.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -79,8 +83,8 @@ describe('bit export command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       createFile('bar', 'foo1');
       createFile('bar', 'foo2');
-      helper.command.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
-      helper.command.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('bar/foo1.js', { i: 'bar/foo1' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.command.tagAllComponents();
       // DO NOT change the next line to `helper.command.exportAllComponents()`. the current form catches some wierd bugs
       helper.command.exportComponent('bar/foo1 bar/foo2');
@@ -100,14 +104,11 @@ describe('bit export command', function() {
   describe('with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
       helper.command.exportComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent('utils/is-string');
@@ -123,14 +124,8 @@ describe('bit export command', function() {
   describe('with dependencies and export-all', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
       helper.command.tagComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportAllComponents();
     });
@@ -197,12 +192,9 @@ describe('bit export command', function() {
   describe('after import with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -224,13 +216,10 @@ describe('bit export command', function() {
     let anotherScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent('utils/is-type');
@@ -307,7 +296,7 @@ describe('bit export command', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.runCmd('bit add bar -m foo.js -i bar/foo');
+      helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -388,7 +377,7 @@ describe('bit export command', function() {
       remote2 = scopeName;
       remote2Path = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent('utils/is-string2', remote2);
+      helper.command.exportComponent('utils/is-string2', remote2, true, '--force');
     });
     it('should have is-type@0.0.2 on that remote', () => {
       const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
@@ -408,7 +397,7 @@ describe('bit export command', function() {
     describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
       before(() => {
         helper.command.importComponent('utils/is-string1');
-        output = helper.command.exportComponent('utils/is-string1', remote2);
+        output = helper.command.exportComponent('utils/is-string1', remote2, true, '--force');
       });
       it('should not throw an error saying it does not have the version 0.0.1 of the dependency', () => {
         expect(output).to.not.have.string('failed loading version 0.0.1');
@@ -473,7 +462,7 @@ describe('bit export command', function() {
         if (isWin) {
           expect(output).to.have.string('exported 1 components');
         } else {
-          expect(output).to.have.string('unable to resolve group id of "nonExistGroup", the group does not exist');
+          expect(output).to.have.string('unable to resolve group id of "nonExistGroup"');
         }
       });
     });
@@ -579,7 +568,27 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+          helper.bitJson.addDefaultScope();
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully both, the id with and without the scope', () => {
+          expect(output).to.have.string('exported the following 2 component');
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(2);
+          expect(remoteList[0].id).to.have.string('foo1');
+          expect(remoteList[1].id).to.have.string('foo2');
+        });
+        it('should not show a warning about ids with missing scope', () => {
+          expect(output).to.not.have.string('the following component(s) were not exported');
+        });
+      });
+      describe('export with no remote and no flags when workspace config has defaultScope overridden for this component', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.bitJson.addDefaultScope('my-general-remote');
+          helper.bitJson.addOverrides({ foo2: { defaultScope: helper.scopes.remote } });
           output = helper.command.runCmd('bit export');
         });
         it('should export successfully both, the id with and without the scope', () => {
@@ -594,9 +603,28 @@ describe('bit export command', function() {
         });
       });
     });
+    describe('when a component has flattened dependency change', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateWorkspaceWithThreeComponents();
+        helper.bitJson.addDefaultScope();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.fs.outputFile('qux.js');
+        helper.command.addComponent('qux.js');
+        helper.fs.outputFile('utils/is-string.js', 'require("../qux");');
+        helper.command.tagAllComponents();
+        output = helper.command.export();
+      });
+      it('should send the component with the flattened dependency changes to the remote', () => {
+        expect(output).to.have.string('exported the following 3 component(s)');
+      });
+    });
     describe('some components were exported to one scope and other to another scope', () => {
       let localScopeBefore;
       let remoteScopeBefore;
+      let anotherRemoteScopeBefore;
       let anotherRemote;
       let anotherRemotePath;
       before(() => {
@@ -615,6 +643,7 @@ describe('bit export command', function() {
         helper.command.tagScope('2.0.0');
         localScopeBefore = helper.scopeHelper.cloneLocalScope();
         remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
+        anotherRemoteScopeBefore = helper.scopeHelper.cloneScope(anotherRemotePath);
       });
       describe('export with no ids, no remote and no flags', () => {
         let output;
@@ -636,12 +665,45 @@ describe('bit export command', function() {
           expect(output).to.have.string(`${anotherRemote}/foo2`);
         });
       });
+      // fixes https://github.com/teambit/bit/issues/2308
+      // here, the component foo1 has a new dependency "bar", this dependency has been exported
+      // already, so we expect "bit export" to not attempt to export it.
+      describe('export with no ids, no remote and no flags when a dependency is from another collection', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
+          const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+          helper.scopeHelper.addRemoteScope(scopePath);
+          helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+          helper.fs.outputFile('bar.js', '');
+          helper.command.addComponent('bar.js');
+          helper.fs.outputFile('foo1.js', 'require("./bar");');
+          helper.command.tagAllComponents();
+          helper.command.exportComponent('bar', scopeName);
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully all ids, each to its own remote', () => {
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(1);
+          expect(remoteList[0].id).to.have.string('foo1');
+
+          const anotherRemoteListJson = helper.command.runCmd(`bit list ${anotherRemote} --json`);
+          const anotherRemoteList = JSON.parse(anotherRemoteListJson);
+          expect(anotherRemoteList).to.have.lengthOf(1);
+          expect(anotherRemoteList[0].id).to.have.string('foo2');
+        });
+        it('should not export the dependency that was not intended to be exported', () => {
+          expect(output).to.not.have.string('bar');
+        });
+      });
       describe('export with ids, no remote and the flag --last-scope', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           output = helper.command.exportToCurrentScope('foo1 foo2');
         });
         it('should export successfully all ids, each to its own remote', () => {
@@ -664,7 +726,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.command.tagScope('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
@@ -678,12 +740,13 @@ describe('bit export command', function() {
           expect(output).to.have.string('exported the following 2 component');
         });
       });
+      // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
       describe('circular dependencies between the scopes', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.fs.outputFile('foo2.js', "require('./foo1');");
           helper.command.tagScope('3.0.0');
@@ -701,7 +764,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
 
           helper.command.tagScope('3.0.0');
@@ -719,12 +782,13 @@ describe('bit export command', function() {
           );
         });
       });
+      // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
       describe('circular dependencies within the same scope and a non-circular dependency between the scopes', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js', '');
           helper.command.addComponent('foo3.js');
           helper.command.tagAllComponents();
@@ -745,7 +809,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js');
           helper.command.addComponent('foo3.js');
           helper.command.tagAllComponents();
@@ -766,8 +830,8 @@ describe('bit export command', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeExportScope);
             helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-            helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
-            helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+            helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
+            helper.bitJson.addDefaultScope();
             output = helper.command.export();
           });
           it('should export them all successfully', () => {
@@ -785,7 +849,7 @@ describe('bit export command', function() {
       let localScope;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.fixtures.populateWorkspaceWithComponents();
+        helper.fixtures.populateWorkspaceWithThreeComponents();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
@@ -824,7 +888,7 @@ describe('bit export command', function() {
             helper.scopeHelper.reInitRemoteScope(forkScopePath);
             helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
             helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.export('--all-versions');
 
             helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
             const forkScopeList = helper.command.listScopeParsed(forkScope);
@@ -849,7 +913,7 @@ describe('bit export command', function() {
             helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
             helper.fs.createFile('utils', 'is-type.js', ''); // add another version for is-type
             helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.export('--all-versions');
 
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
@@ -1154,8 +1218,8 @@ describe('bit export command', function() {
     let anotherRemotePath;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
-      helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+      helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.bitJson.addDefaultScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       anotherRemotePath = scopePath;
@@ -1166,6 +1230,59 @@ describe('bit export command', function() {
     it('should export to the specified remote', () => {
       const list = helper.command.listScopeParsed(anotherRemote);
       expect(list).to.have.lengthOf(1);
+    });
+  });
+  describe('export after re-creating the remote', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitRemoteScope();
+    });
+    describe('export without any flag', () => {
+      it('should show a message that nothing to export', () => {
+        const output = helper.command.exportAllComponents();
+        expect(output).to.have.string('nothing to export');
+      });
+    });
+    describe('export with --all flag', () => {
+      before(() => {
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.export(`${helper.scopes.remote} ${helper.scopes.remote}/* --all`);
+      });
+      it('should export them successfully', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
+    describe('export with --all flag', () => {
+      before(() => {
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.export(`${helper.scopes.remote} ${helper.scopes.remote}/* --all-versions`);
+      });
+      it('should export them successfully', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
+  });
+  describe('re-export using the component name without the scope name', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      output = helper.command.exportComponent('bar/foo');
+    });
+    // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }
+    it('should not show the "fork" prompt', () => {
+      expect(output).to.have.string('exported 1 components');
     });
   });
 });

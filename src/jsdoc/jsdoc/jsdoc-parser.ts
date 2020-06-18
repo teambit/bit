@@ -3,7 +3,7 @@ import logger from '../../logger/logger';
 import { Doclet } from '../types';
 import extractDataRegex from '../extract-data-regex';
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[]> {
   const doclets: Array<Doclet> = [];
   try {
     /**
@@ -25,8 +25,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
     docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
-    logger.debug(`failed parsing docs using on path ${filePath} with error`, e);
+    logger.silly(`failed parsing docs using on path ${filePath} with error`, e);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return doclets.filter(doclet => doclet.access === 'public');
 }

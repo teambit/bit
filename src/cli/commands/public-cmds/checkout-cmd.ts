@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
@@ -7,7 +7,7 @@ import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
-export default class Checkout extends Command {
+export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';
   description = `switch between component versions or remove local changes
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
@@ -15,7 +15,6 @@ export default class Checkout extends Command {
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     [
       'i',
@@ -40,7 +39,7 @@ export default class Checkout extends Command {
       'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)'
     ],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
-  ];
+  ] as CommandOptions;
   loader = true;
 
   action(
@@ -83,9 +82,6 @@ export default class Checkout extends Command {
       ignorePackageJson,
       writeConfig: !!conf
     };
-    if (typeof conf === 'string') {
-      checkoutProps.configDir = conf;
-    }
     return checkout(values, checkoutProps);
   }
 

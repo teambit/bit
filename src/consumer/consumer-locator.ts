@@ -6,12 +6,11 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
-import WorkspaceConfig from './config/workspace-config';
-import { BitConfigNotFound } from './config/exceptions';
+import { LegacyWorkspaceConfig } from './config';
 
 export type ConsumerInfo = {
   path: string;
-  consumerConfig: WorkspaceConfig | null | undefined;
+  hasConsumerConfig: boolean;
   hasBitMap: boolean;
   hasScope: boolean;
 };
@@ -45,25 +44,25 @@ export function pathHasLocalScope(path: string) {
 /**
  * propagate from the given directory up to the root to find the consumer
  */
-export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | null | undefined> {
+export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | undefined> {
   const searchPaths = buildPropagationPaths();
   searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
     const path = searchPaths[i];
     const hasScope = await pathHasScopeDir(path); // eslint-disable-line no-await-in-loop
-    const consumerConfig = await getConsumerConfigIfExists(path); // eslint-disable-line no-await-in-loop
+    const hasConsumerConfig = await pathHasConsumerConfig(path); // eslint-disable-line no-await-in-loop
     const hasBitMap = await pathHasBitMap(path); // eslint-disable-line no-await-in-loop
-    const consumerExists = (hasScope && consumerConfig) || hasBitMap;
+    const consumerExists = (hasScope && hasConsumerConfig) || hasBitMap;
     if (consumerExists) {
       return {
         path,
         hasScope,
-        consumerConfig,
+        hasConsumerConfig,
         hasBitMap
       };
     }
   }
-  return null;
+  return undefined;
 
   function buildPropagationPaths(): string[] {
     const paths: string[] = [];
@@ -86,14 +85,8 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | n
     return (await fs.pathExists(composeBitHiddenDirPath(path))) || fs.pathExists(composeBitGitHiddenDirPath(path));
   }
 
-  async function getConsumerConfigIfExists(path: string): Promise<WorkspaceConfig | null | undefined> {
-    try {
-      return await WorkspaceConfig.load(path);
-    } catch (err) {
-      if (err instanceof BitConfigNotFound) {
-        return null;
-      }
-      throw err;
-    }
+  async function pathHasConsumerConfig(path: string): Promise<boolean> {
+    const isExist = await LegacyWorkspaceConfig.isExist(path);
+    return !!isExist;
   }
 }

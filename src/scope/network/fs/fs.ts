@@ -14,6 +14,7 @@ import { ComponentLogs } from '../../models/model-component';
 import { LaneData } from '../../lanes/lanes';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
+import Component from '../../../consumer/component/consumer-component';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -75,8 +76,7 @@ export default class Fs implements Network {
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  latestVersions(componentIds: BitId[]) {
+  latestVersions(componentIds: BitId[]): Promise<string[]> {
     return this.getScope()
       .latestVersions(componentIds)
       .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
@@ -86,13 +86,11 @@ export default class Fs implements Network {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  search(query: string, reindex: boolean): Promise<[]> {
+  search(query: string, reindex: boolean): Promise<string> {
     return searchAdapter.scopeSearch(this.scopePath, query, reindex);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  show(bitId: BitId): Promise<> {
+  show(bitId: BitId): Promise<Component> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
     return scopeComponentsImporter.loadComponent(bitId);
   }
@@ -120,8 +118,7 @@ export default class Fs implements Network {
     return DependencyGraph.loadFromString(graphStr);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  connect() {
+  connect(): Promise<Fs> {
     return loadScope(this.scopePath).then(scope => {
       this.scope = scope;
       return this;

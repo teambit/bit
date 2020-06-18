@@ -1,11 +1,16 @@
 /* eslint-disable max-lines */
+
+// this entire file works with the legacy of add-components only because it requires lots of work
+// to convert them all to the non-legacy. this is the only file that works this way and it's not
+// so bad because it practically tests the backward compatibility of bit < v14.8.0
+
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
@@ -19,7 +24,11 @@ chai.use(require('chai-string'));
 
 describe('bit import', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
 
   after(() => {
     helper.scopeHelper.destroy();
@@ -68,9 +77,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/imprel'
+        });
         helper.command.tagComponent('imprel/imprel');
         helper.command.exportComponent('imprel/imprel');
         helper.scopeHelper.reInitLocalScope();
@@ -103,10 +114,13 @@ describe('bit import', function() {
     });
 
     describe('when the default component directory already exist', () => {
-      const componentFileLocation = path.join(helper.scopes.localPath, 'components/global/simple/simple.js');
-      const componentDir = path.join(helper.scopes.localPath, 'components/global/simple');
+      let componentFileLocation;
+      let componentDir;
       describe('when the destination is an existing empty directory', () => {
         before(() => {
+          componentFileLocation = path.join(helper.scopes.localPath, 'components/global/simple/simple.js');
+          componentDir = path.join(helper.scopes.localPath, 'components/global/simple');
+
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.ensureDirSync(componentDir);
@@ -118,8 +132,9 @@ describe('bit import', function() {
       });
       describe('when the destination directory is not empty', () => {
         let output;
-        const existingFile = path.join(componentDir, 'my-file.js');
+        let existingFile;
         before(() => {
+          existingFile = path.join(componentDir, 'my-file.js');
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(existingFile, 'console.log()');
@@ -205,8 +220,9 @@ describe('bit import', function() {
         });
       });
       describe('as imported', () => {
-        const componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
+        let componentFileLocation;
         before(() => {
+          componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
         });
@@ -231,8 +247,9 @@ describe('bit import', function() {
         });
         describe('when the destination directory is not empty', () => {
           let output;
-          const existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
+          let existingFile;
           before(() => {
+            existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
@@ -383,9 +400,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/impreldist'
+        });
         helper.command.tagComponent('imprel/impreldist');
         helper.command.exportComponent('imprel/impreldist');
       });
@@ -523,9 +542,11 @@ describe('bit import', function() {
       helper.fs.createFile('src', 'imprel.js');
       helper.fs.createFile('src', 'imprel.spec.js');
       helper.fs.createFile('src/utils', 'myUtil.js');
-      helper.command.runCmd(
-        'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-      );
+      helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+        t: 'src/imprel.spec.js',
+        m: 'src/imprel.js',
+        i: 'imprel/imprel'
+      });
       helper.command.tagComponent('imprel/imprel');
       helper.command.deprecateComponent('imprel/imprel');
       helper.command.exportComponent('imprel/imprel');
@@ -546,7 +567,7 @@ describe('bit import', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponents();
       helper.command.exportComponent('bar/foo');
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
@@ -910,7 +931,9 @@ describe('bit import', function() {
         });
         describe('after running bit link', () => {
           before(() => {
-            helper.command.runCmd('bit link');
+            helper.command.linkAndRewire();
+            // first time creates the link file, the second does the rewire. (yes, ideally it'd be one).
+            helper.command.linkAndRewire();
           });
           it('bit status should not show issues', () => {
             const status = helper.command.status();
@@ -1086,6 +1109,8 @@ describe('bit import', function() {
      * components/.dependencies/utils/is-type/scope-name/version-number/dist/utils/is-type.js (compiled version)
      */
     let localConsumerFiles;
+    let isStringLocation;
+    let isTypeLocation;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
@@ -1101,16 +1126,10 @@ describe('bit import', function() {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       localConsumerFiles = helper.fs.getConsumerFiles();
+
+      isStringLocation = path.join('components', '.dependencies', 'utils', 'is-string', helper.scopes.remote, '0.0.1');
+      isTypeLocation = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
     });
-    const isStringLocation = path.join(
-      'components',
-      '.dependencies',
-      'utils',
-      'is-string',
-      helper.scopes.remote,
-      '0.0.1'
-    );
-    const isTypeLocation = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -1267,11 +1286,8 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      const isStringFixtureV2 =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixtureV2); // modify is-string
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2); // modify is-string
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -1297,7 +1313,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
@@ -1324,8 +1340,7 @@ console.log(barFoo.default());`;
       helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV1);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
       helper.command.tagComponent('utils/is-type');
       helper.command.exportAllComponents();
 
@@ -1385,9 +1400,10 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string(
-        `error: issues found with the following component dependencies\n\n${helper.scopes.remote}/utils/is-string@0.0.1\n       \n       components with relative import statements (please use absolute paths for imported components): \n          is-string.js -> utils/is-type\n\n`
-      );
+      expect(output).to.have.string('error: issues found with the following component dependencies');
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
+      expect(output).to.have.string('is-string.js -> utils/is-type');
     });
   });
 
@@ -1417,9 +1433,7 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string(
-        'components with relative import statements (please use absolute paths for imported components)'
-      );
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
     });
   });
 
@@ -1476,8 +1490,7 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // update component
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // update component
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
@@ -1542,11 +1555,10 @@ console.log(barFoo.default());`;
         const output = helper.command.runCmd('bit status');
         expect(output).to.not.have.string('utils/is-string');
         expect(output).to.not.have.string('utils/is-type');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
       it('should not break the is-string component', () => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
 
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
@@ -1589,8 +1601,7 @@ console.log(barFoo.default());`;
         expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
       it('changes of is-type in components directory should affect is-string', () => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
@@ -1660,16 +1671,14 @@ console.log(barFoo.default());`;
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
       // modify the component
-      const isStringModifiedFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
-      helper.fs.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
+      helper.fs.createFile(componentPath, 'is-string.js', fixtures.isStringV2);
       helper.command.tagComponent('utils/is-string');
       // export to scope B
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       scopeB = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`, scopeB);
+      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`, scopeB, true, '--force');
       // import to a new local scope
       helper.scopeHelper.initNewLocalScope();
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -1704,10 +1713,8 @@ console.log(barFoo.default());`;
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
       // modify the component
-      const isStringModifiedFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
-      helper.fs.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
+      helper.fs.createFile(componentPath, 'is-string.js', fixtures.isStringV2);
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`);
 
@@ -1834,10 +1841,8 @@ console.log(barFoo.default());`;
       helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.fs.createFile(path.join('src', 'utils'), 'is-string.js', fixtures.isString);
       helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
-      const fooBarFixture =
-        "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.fixtures.createComponentBarFoo(fooBarFixture);
-      helper.fs.createFile(path.join('src', 'bar'), 'foo.js', fooBarFixture);
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
+      helper.fs.createFile(path.join('src', 'bar'), 'foo.js', fixtures.barFooFixture);
       helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -1862,8 +1867,7 @@ console.log(barFoo.default());`;
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
     it('should not show any of the components as new or modified or deleted or staged', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {
@@ -1934,8 +1938,7 @@ console.log(barFoo.default());`;
         expect(output).to.have.string('successfully imported one component');
       });
       it('bit status should show a clean state', () => {
-        const statusOutput = helper.command.runCmd('bit status');
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });
@@ -2146,7 +2149,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
@@ -2161,10 +2164,11 @@ console.log(barFoo.default());`;
   });
   describe('import compiler with a non-exist version', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
     });
     it('should throw an error that a component does not exist', () => {
-      const compiler = 'bit.envs/compilers/babel@1000.0.0';
+      helper.env.importCompiler(); // makes sure the component exists. (only not the same version)
+      const compiler = `${helper.scopes.env}/compilers/babel@1000.0.1`;
       const error = new ComponentNotFound(compiler);
       const importCmd = () => helper.env.importCompiler(compiler);
       helper.general.expectToThrow(importCmd, error);
@@ -2284,7 +2288,7 @@ console.log(barFoo.default());`;
     let scopeBeforeImport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('utils', 'bar-dep.js');
       helper.fs.createFile('bar', 'foo2.js', 'require("../utils/bar-dep");');
       helper.command.addComponent('utils/bar-dep.js');
@@ -2338,7 +2342,7 @@ console.log(barFoo.default());`;
   describe('component with different versions of the same dependent', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.fixtures.createComponentBarFoo("require('../utils/is-type.js')");
       helper.command.tagAllComponents();

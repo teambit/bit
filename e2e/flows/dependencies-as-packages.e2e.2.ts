@@ -4,7 +4,6 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
@@ -13,8 +12,12 @@ chai.use(require('chai-fs'));
   'installing dependencies as packages (not as components)',
   function() {
     this.timeout(0);
-    let helper = new Helper();
+    let helper: Helper;
     let npmCiRegistry;
+    before(() => {
+      helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
+    });
     after(() => {
       helper.scopeHelper.destroy();
     });
@@ -45,7 +48,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('fixtures');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -106,8 +108,7 @@ chai.use(require('chai-fs'));
           expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -129,7 +130,8 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string('pending updates');
+            const outputWithoutLinebreaks = output.replace(/\n/, '');
+            expect(outputWithoutLinebreaks).to.have.string('pending updates');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -152,8 +154,7 @@ chai.use(require('chai-fs'));
             expect(packages).to.include(`@ci/${helper.scopes.remote}.utils.is-type`);
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('bit checkout all components to an older version', () => {
             let checkoutOutput;
@@ -215,7 +216,8 @@ chai.use(require('chai-fs'));
               });
               it('bit status should not show the component as modified', () => {
                 const status = helper.command.status();
-                expect(status).to.not.have.string('modified');
+                const statusWithoutLinebreaks = status.replace(/\n/, '');
+                expect(statusWithoutLinebreaks).to.not.have.string('modified');
               });
             });
           });
@@ -282,11 +284,36 @@ chai.use(require('chai-fs'));
             expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/bar/foo@0.0.2`);
           });
         });
+        describe('multiple test files require the same package', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterImportScope);
+            const barFooDir = 'components/bar/foo/bar';
+            helper.fs.createFile(path.join(barFooDir, 'foo.js'), ''); // remove the prod dep
+            helper.fs.outputFile(
+              path.join(barFooDir, 'foo.spec.js'),
+              `require('@ci/${helper.scopes.remote}.utils.is-string');`
+            ); // add dev-dep
+            helper.fs.outputFile(
+              path.join(barFooDir, 'foo1.spec.js'),
+              `require('@ci/${helper.scopes.remote}.utils.is-string');`
+            ); // add another spec with same dep
+            helper.command.addComponent('-t components/bar/foo/bar/foo1.spec.js -i bar/foo');
+          });
+          it('bit show should not show the same devDependency twice', () => {
+            const show = helper.command.showComponentParsed('bar/foo');
+            expect(show.devDependencies).to.have.lengthOf(1);
+          });
+          it('bit tag should tag them successfully', () => {
+            const tag = helper.command.tagAllComponents();
+            expect(tag).to.have.string('1 component(s) tagged');
+          });
+        });
       });
     });
     describe('components with nested dependencies and compiler', () => {
       before(async () => {
         helper = new Helper();
+        helper.command.setFeatures('legacy-workspace-config');
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -306,7 +333,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-type');
         helper.command.importComponent('utils/is-string');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -338,8 +364,7 @@ chai.use(require('chai-fs'));
           helper.command.importComponent('bar/foo');
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -351,10 +376,13 @@ chai.use(require('chai-fs'));
           before(() => {
             helper.fs.deletePath('components/bar/foo/node_modules/@ci');
           });
-          it('bit status should show missing components and not untracked components', () => {
+          it('bit status should show not show it as untracked components', () => {
+            const statusJson = helper.command.statusJson();
+            expect(statusJson.invalidComponents).to.have.lengthOf(0);
+            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(0);
             const status = helper.command.status();
-            expect(status).to.have.string(componentIssuesLabels.missingComponents);
-            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+            const statusWithoutLinebreaks = status.replace(/\n/g, '');
+            expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);
           });
         });
         describe('import with dist outside the component directory', () => {
@@ -365,8 +393,7 @@ chai.use(require('chai-fs'));
             helper.command.importComponent('bar/foo');
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('running bit link after deleting the symlink from dist directory', () => {
             let symlinkPath;

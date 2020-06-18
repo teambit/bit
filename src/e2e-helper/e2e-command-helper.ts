@@ -1,5 +1,6 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
+import tar from 'tar';
 import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
@@ -15,6 +16,12 @@ import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
+/**
+ * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
+ * to enable a feature for a single command, add the feature to the runCmd, e.g. `runCmd(cmd, cwd, stdio, 'your-feature');`
+ * if you set both, the runCmd wins.
+ * more about feature-toggle head to feature-toggle.ts file.
+ */
 export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
@@ -29,12 +36,20 @@ export default class CommandHelper {
   setFeatures(featuresToggle: string) {
     this.featuresToggle = featuresToggle;
   }
+  resetFeatures() {
+    this.featuresToggle = undefined;
+  }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
+  runCmd(
+    cmd: string,
+    cwd: string = this.scopes.localPath,
+    stdio: StdioOptions = 'pipe',
+    overrideFeatures?: string
+  ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
-    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix() : '';
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     cmd = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
@@ -43,9 +58,10 @@ export default class CommandHelper {
     return cmdOutput.toString();
   }
 
-  _getFeatureToggleCmdPrefix(): string {
-    if (!this.featuresToggle) return '';
-    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${this.featuresToggle}`;
+  _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
+    const featuresToggle = overrideFeatures || this.featuresToggle;
+    if (!featuresToggle) return '';
+    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${featuresToggle}`;
     if (process.platform === 'win32') {
       return `set "${featureToggleStr}" && `;
     }
@@ -83,18 +99,21 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string, cwd?: string): Record<string, any> {
-    const result = this.runCmd(`bit cat-component ${id}`, cwd);
-    return JSON.parse(result);
+  catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
+    const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
+    return parse ? JSON.parse(result) : result;
   }
   catLane(id: string, cwd?: string): Record<string, any> {
     const result = this.runCmd(`bit cat-lane ${id}`, cwd);
     return JSON.parse(result);
   }
-  addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
+  addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
+    const value =
+      typeof options === 'string'
+        ? options
+        : Object.keys(options)
+            .map(key => `-${key} ${options[key]}`)
+            .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
   getConfig(configName: string) {
@@ -125,9 +144,19 @@ export default class CommandHelper {
     return this.runCmd(`bit tag ${id} ${version} ${options}`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} `);
+    const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
+  }
+  // @todo: change to tagAllComponents
+  tagAllComponentsNew(options = '', version = '', assertTagged = true) {
+    const result = this.runCmd(`bit tag -a ${version} ${options}`);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
+    this.linkAndRewire();
+    return this.tagAllComponentsNew(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
@@ -181,8 +210,8 @@ export default class CommandHelper {
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
-  exportComponent(id: string, scope: string = this.scopes.remote, assert = true) {
-    const result = this.runCmd(`bit export ${scope} ${id} --force`);
+  exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
+    const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
@@ -193,6 +222,9 @@ export default class CommandHelper {
   }
   exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --force`);
+  }
+  exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
+    return this.runCmd(`bit export ${scope} --rewire --force`);
   }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
@@ -249,6 +281,14 @@ export default class CommandHelper {
     return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
+  getCapsuleOfComponent(id: string) {
+    const capsulesJson = this.runCmd('bit capsule-list -j');
+    const capsules = JSON.parse(capsulesJson);
+    const capsulePath = capsules.capsules.find(c => c.endsWith(id));
+    if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
+    return capsulePath;
+  }
+
   importExtension(id: string) {
     return this.runCmd(`bit import ${id} --extension`);
   }
@@ -283,6 +323,13 @@ export default class CommandHelper {
   statusJson() {
     const status = this.runCmd('bit status --json');
     return JSON.parse(status);
+  }
+
+  expectStatusToBeClean() {
+    const statusJson = this.statusJson();
+    Object.keys(statusJson).forEach(key => {
+      expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
+    });
   }
 
   statusComponentIsStaged(id: string): boolean {
@@ -348,7 +395,52 @@ export default class CommandHelper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
-  ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
+  runTask(taskName: string) {
+    return this.runCmd(`bit run ${taskName}`);
+  }
+  create(name: string) {
+    return this.runCmd(`bit create ${name}`);
+  }
+  moveComponent(id: string, to: string) {
+    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
+  }
+  link(flags?: string) {
+    return this.runCmd(`bit link ${flags || ''}`);
+  }
+  linkAndRewire(ids = '') {
+    return this.runCmd(`bit link ${ids} --rewire`);
+  }
+
+  packComponent(id: string, options: Record<string, any>, extract = false) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    const result = this.runCmd(`bit pack ${id} ${value}`);
+    if (extract) {
+      if (
+        !options ||
+        // We don't just check that it's falsy because usually it's an empty string.
+        // eslint-disable-next-line no-prototype-builtins
+        (!options.hasOwnProperty('-json') && !options.hasOwnProperty('j')) ||
+        (!options['-out-dir'] && !options.d)
+      ) {
+        throw new Error('extracting supporting only when packing with json and out-dir');
+      }
+      const resultParsed = JSON.parse(result);
+      if (!resultParsed || !resultParsed.tarPath) {
+        throw new Error('npm pack results are invalid');
+      }
+      const tarballFilePath = resultParsed.tarPath;
+      const dir = options.d || options['-out-dir'];
+      if (this.debugMode) {
+        console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
+      }
+      tar.x({ file: tarballFilePath, C: dir, sync: true });
+    }
+    return result;
+  }
+
+  ejectConf(id = 'bar/foo', options?: Record<string, any>) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
           .map(key => `-${key} ${options[key]}`)

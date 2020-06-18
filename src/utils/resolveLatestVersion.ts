@@ -5,6 +5,7 @@
  */
 import R from 'ramda';
 import semver from 'semver';
+import { compact } from 'lodash';
 import { BitId, BitIds } from '../bit-id';
 
 export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): BitId {
@@ -26,11 +27,12 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
       throw new Error(`found multiple snaps for ${bitId.toString()}, unable to figure which one is the latest`);
     return bitId;
   }
+  const allVersionsWithoutNullForId = compact(allVersionsForId);
 
-  const maxVersion = semver.maxSatisfying(allVersionsForId, '*');
+  const maxVersion = semver.maxSatisfying<string>(allVersionsWithoutNullForId, '*');
   if (!maxVersion) {
     throw new Error(
-      `semver was not able to find the highest version among the following: ${allVersionsForId.join(', ')}`
+      `semver was not able to find the highest version among the following: ${allVersionsWithoutNullForId.join(', ')}`
     );
   }
   const bitIdWithMaxVersion = bitId.changeVersion(maxVersion);

@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { listScope } from '../../../api/consumer';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
@@ -8,11 +8,10 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-export default class List extends Command {
+export default class List implements LegacyCommand {
   name = 'list [scope]';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
@@ -21,7 +20,7 @@ export default class List extends Command {
     ['o', 'outdated', 'show latest versions from remotes'],
     ['j', 'json', 'show the output in JSON format'],
     ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   skipWorkspace = true;

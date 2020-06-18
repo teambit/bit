@@ -49,7 +49,7 @@ function getComponentLinks({
   createNpmLinkFiles,
   bitMap
 }: {
-  consumer: Consumer | null | undefined;
+  consumer?: Consumer | null | undefined;
   component: Component;
   dependencies: Component[]; // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean;
@@ -338,7 +338,7 @@ function getInternalCustomResolvedLinks(
     const linkContent = getLinkToFileContent(destRelative);
 
     const postInstallSymlink = createNpmLinkFiles && !linkContent;
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
     const getSymlink = () => {
       if (linkContent) return undefined;
@@ -514,6 +514,7 @@ async function getLinksByDependencies(
 }
 
 export {
+  getComponentLinks,
   getEntryPointsForComponent,
   getComponentsDependenciesLinks,
   getIndexFileName,

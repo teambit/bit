@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
@@ -10,7 +10,7 @@ import GeneralError from '../../../error/general-error';
 import { Lane } from '../../../scope/models';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Export extends Command {
+export default class Export implements LegacyCommand {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
@@ -20,7 +20,6 @@ export default class Export extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/export
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['a', 'all', 'export all components include non-staged'],
@@ -37,11 +36,12 @@ export default class Export extends Command {
     [
       'r',
       'rewire',
-      'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
+      'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope'
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    ['l', 'lanes', 'EXPERIMENTAL. export lanes']
-  ];
+    ['l', 'lanes', 'EXPERIMENTAL. export lanes'],
+    ['', 'all-versions', 'export not only staged versions but all of them']
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;
@@ -53,6 +53,7 @@ export default class Export extends Command {
       includeDependencies = false,
       setCurrentScope = false,
       all = false,
+      allVersions = false,
       force = false,
       rewire = false,
       lanes = false
@@ -68,18 +69,14 @@ export default class Export extends Command {
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
       );
     }
-    if (rewire && !includeDependencies) {
-      throw new GeneralError(
-        'to use --rewire, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
-      );
-    }
     return exportAction({
       ids,
       remote,
       eject,
       includeDependencies,
       setCurrentScope,
-      includeNonStaged: all,
+      includeNonStaged: all || allVersions,
+      allVersions: allVersions || all,
       codemod: rewire,
       force,
       lanes

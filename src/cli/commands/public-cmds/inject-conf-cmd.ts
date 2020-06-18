@@ -1,14 +1,13 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { injectConf } from '../../../api/consumer';
 import { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
 
-export default class InjectConf extends Command {
+export default class InjectConf implements LegacyCommand {
   name = 'inject-conf [id]';
   description = 'injecting components configuration';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['f', 'force', 'force injecting even if there are config files changes']];
+  opts = [['f', 'force', 'force injecting even if there are config files changes']] as CommandOptions;
   loader = true;
   migration = true;
 

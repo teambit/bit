@@ -19,7 +19,7 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK } from '../../../constants';
+import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_BINDINGS_PREFIX } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
@@ -38,6 +38,7 @@ export default (async function exportAction(params: {
   eject: boolean;
   includeDependencies: boolean;
   setCurrentScope: boolean;
+  allVersions: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
@@ -60,7 +61,8 @@ async function exportComponents({
   includeNonStaged,
   codemod,
   force,
-  lanes
+  lanes,
+  allVersions
 }: {
   ids: string[];
   remote: string | null | undefined;
@@ -68,6 +70,7 @@ async function exportComponents({
   setCurrentScope: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
+  allVersions: boolean;
   force: boolean;
   lanes: boolean;
 }): Promise<{
@@ -78,13 +81,11 @@ async function exportComponents({
   exportedLanes: Lane[];
 }> {
   const consumer: Consumer = await loadConsumer();
-  const defaultScope = consumer.config.defaultScope;
-  const { idsToExport, missingScope, lanesObjects } = await getComponentsToExport(
+  const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,
     remote,
     includeNonStaged,
-    defaultScope,
     force,
     lanes
   );
@@ -98,8 +99,9 @@ async function exportComponents({
     includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
-    defaultScope,
-    lanesObjects
+    lanesObjects,
+    allVersions,
+    idsWithFutureScope
   });
   if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
@@ -133,16 +135,22 @@ async function getComponentsToExport(
   consumer: Consumer,
   remote: string | null | undefined,
   includeNonStaged: boolean,
-  defaultScope: string | null | undefined,
   force: boolean,
   lanes: boolean
-): Promise<{ idsToExport: BitIds; missingScope: BitId[]; lanesObjects?: Lane[] }> {
+): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; lanesObjects?: Lane[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
-  const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds; missingScope: BitId[] } => {
-    if (remote) return { idsToExport: bitIds, missingScope: [] };
-    const [idsToExport, missingScope] = R.partition(id => id.hasScope() || defaultScope, bitIds);
-    return { idsToExport: BitIds.fromArray(idsToExport), missingScope };
+  const filterNonScopeIfNeeded = (
+    bitIds: BitIds
+  ): { idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds } => {
+    const idsWithFutureScope = getIdsWithFutureScope(bitIds, consumer, remote);
+    if (remote) return { idsToExport: bitIds, missingScope: [], idsWithFutureScope };
+    const [idsToExport, missingScope] = R.partition(id => {
+      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
+      if (!idWithFutureScope) throw new Error(`idsWithFutureScope is missing ${id.toString()}`);
+      return idWithFutureScope.hasScope();
+    }, bitIds);
+    return { idsToExport: BitIds.fromArray(idsToExport), missingScope, idsWithFutureScope };
   };
   const promptForFork = async (bitIds: BitIds | BitId[]) => {
     if (force || !remote) return;
@@ -192,6 +200,30 @@ async function getComponentsToExport(
   const idsToExport = await Promise.all(idsToExportP);
   await promptForFork(idsToExport);
   return filterNonScopeIfNeeded(BitIds.fromArray(idsToExport));
+}
+
+function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
+  const workspaceDefaultScope = consumer.config.defaultScope;
+  let workspaceDefaultOwner = consumer.config.defaultOwner;
+  // For backward computability don't treat the default binding prefix as real owner
+  if (workspaceDefaultOwner === DEFAULT_BINDINGS_PREFIX) {
+    workspaceDefaultOwner = undefined;
+  }
+
+  const idsArray = ids.map(id => {
+    if (remote) return id.changeScope(remote);
+    if (id.hasScope()) return id;
+    const overrides = consumer.config.getComponentConfig(id);
+    const componentDefaultScope = overrides ? overrides.defaultScope : null;
+    // TODO: handle separation of owner from default scope on component
+    // TODO: handle owner of component
+    let finalScope = componentDefaultScope || workspaceDefaultScope;
+    if (workspaceDefaultScope && workspaceDefaultOwner && !componentDefaultScope) {
+      finalScope = `${workspaceDefaultOwner}.${workspaceDefaultScope}`;
+    }
+    return id.changeScope(finalScope);
+  });
+  return BitIds.fromArray(idsArray);
 }
 
 async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
@@ -262,9 +294,6 @@ async function reImportComponent(consumer: Consumer, id: BitId) {
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
-    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap.configDir,
     writePackageJson
   });
   await manyComponentsWriter.writeAll();

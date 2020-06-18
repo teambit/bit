@@ -1,6 +1,5 @@
 // covers also init, create, tag, import and export commands
 
-import sinon from 'sinon';
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -8,21 +7,24 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
-let logSpy;
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
 describe('bit tag command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
-    logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bit.json', () => {
     let output;
@@ -277,18 +279,6 @@ describe('bit tag command', function() {
       expect(output).to.have.string(
         "error: component \"non/existing\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
-    });
-    it.skip('should print warning if the a driver is not installed', () => {
-      const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
-      helper.fs.createFile('bar', 'foo2.js', fixture);
-      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
-      // var myargs = logSpy.getCalls()[4].args
-      // console.log("args", myargs);
-      expect(
-        logSpy.calledWith(
-          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run tag again.\n'
-        )
-      ).to.be.true;
     });
     it.skip('should persist the model in the scope', () => {});
     it.skip('should run the onCommit hook', () => {});
@@ -579,9 +569,7 @@ describe('bit tag command', function() {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -601,9 +589,7 @@ describe('bit tag command', function() {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('error: issues found with the following component dependencies');
-      expect(output).to.have.string(
-        'components with relative import statements (please use absolute paths for imported components)'
-      );
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
   });
@@ -745,13 +731,7 @@ describe('bit tag command', function() {
 
     it('should add dependencies for files which are not the main files', () => {
       helper.scopeHelper.reInitLocalScope();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
 
       const mainFileFixture =
         "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -780,13 +760,7 @@ describe('bit tag command', function() {
 
     it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
       helper.scopeHelper.reInitLocalScope();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
 
       const mainFileFixture =
         "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -865,13 +839,7 @@ describe('bit tag command', function() {
     let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

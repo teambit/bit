@@ -102,16 +102,15 @@ async function rewriteFlattenedDependencies(
   const notFoundDependencies = new BitIds();
   const updateAll = updatedComponents.map(async updatedComponent => {
     const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionStr);
-    const {
-      flattenedDependencies,
-      flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies
-    } = await getAllFlattenedDependencies(scope, id, allDependenciesGraphs, dependenciesCache, notFoundDependencies);
+    const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
+      scope,
+      id,
+      allDependenciesGraphs,
+      dependenciesCache,
+      notFoundDependencies
+    );
     updatedComponent.version.flattenedDependencies = flattenedDependencies;
     updatedComponent.version.flattenedDevDependencies = flattenedDevDependencies;
-    updatedComponent.version.flattenedCompilerDependencies = flattenedCompilerDependencies;
-    updatedComponent.version.flattenedTesterDependencies = flattenedTesterDependencies;
   });
   await Promise.all(updateAll);
 }
@@ -150,7 +149,7 @@ async function updateComponents(
         if (
           (isTag(changedComponentId.version) &&
             isTag(dependencyId.version) &&
-            semver.gt(changedComponentId.version, dependencyId.version)) ||
+            semver.gt(changedComponentId.version!, dependencyId.version!)) ||
           changedComponentId.version !== dependencyId.version
         ) {
           // read the comments in getAutoTagPending() in this file to understand the logic better
@@ -259,7 +258,7 @@ export async function getAutoTagPending(
       // tagged with 1.0.1. So, because A has B with a higher version already, we don't want to
       // auto-tag it and downgrade its B version.
       if (isTag(changedComponentId.version) && isTag(edgeId.version)) {
-        return semver.gte(changedComponentId.version, edgeId.version);
+        return semver.gte(changedComponentId.version!, edgeId.version!);
       }
       // when they're not tags but snaps, it is impossible to snap from a detached head so a
       // component is always candidate when its dependencies have changed.

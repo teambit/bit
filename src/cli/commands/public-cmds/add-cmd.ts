@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import R from 'ramda';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { add } from '../../../api/consumer';
 import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
@@ -9,13 +9,12 @@ import { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
-export default class Add extends Command {
+export default class Add implements LegacyCommand {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations 
+  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components`;
   alias = 'a';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
@@ -24,14 +23,14 @@ export default class Add extends Command {
       'tests <file>/"<file>,<file>"',
       'specify test files to track. use quotation marks to list files or use a glob pattern'
     ],
-    ['n', 'namespace <namespace>', 'orginize component in a namespace'],
+    ['n', 'namespace <namespace>', 'organize component in a namespace'],
     [
       'e',
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
 
@@ -79,6 +78,10 @@ export default class Add extends Command {
       exclude: excludedFiles,
       override
     });
+  }
+
+  splitList(val: string) {
+    return val.split(',');
   }
 
   report({ addedComponents, warnings }: AddActionResults): string {

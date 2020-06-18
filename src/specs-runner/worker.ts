@@ -1,4 +1,3 @@
-// TODO - move to language specific driver.
 import { serializeError } from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
 import loader from '../cli/loader';
@@ -34,7 +33,11 @@ export default function run(): Promise<void> {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         process.send(serializedResults);
         // Make sure the child process will not hang
-        process.exit();
+        // This is inside timeout, since in rare cases the exit might happen before the send
+        // which cause the parent process to hang (since it never get the message)
+        setTimeout(() => {
+          process.exit();
+        }, 0);
       })
       .catch(e => {
         loader.off();
@@ -42,7 +45,11 @@ export default function run(): Promise<void> {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         process.send(serializedResults);
         // Make sure the child process will not hang
-        process.exit();
+        // This is inside timeout, since in rare cases the exit might happen before the send
+        // which cause the parent process to hang (since it never get the message)
+        setTimeout(() => {
+          process.exit();
+        }, 0);
       });
   }
   const testAllP = ids.map(testOneComponent(verbose));
@@ -52,7 +59,11 @@ export default function run(): Promise<void> {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.send(serializedResults);
       // Make sure the child process will not hang
-      process.exit();
+      // This is inside timeout, since in rare cases the exit might happen before the send
+      // which cause the parent process to hang (since it never get the message)
+      setTimeout(() => {
+        process.exit();
+      }, 0);
     })
     .catch(e => {
       loader.off();
@@ -60,7 +71,11 @@ export default function run(): Promise<void> {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.send(serializedResults);
       // Make sure the child process will not hang
-      process.exit();
+      // This is inside timeout, since in rare cases the exit might happen before the send
+      // which cause the parent process to hang (since it never get the message)
+      setTimeout(() => {
+        process.exit();
+      }, 0);
     });
 }
 

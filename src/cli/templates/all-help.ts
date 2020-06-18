@@ -2,57 +2,60 @@ import { BASE_WEB_DOMAIN } from '../../constants';
 
 const allCommands = [
   {
+    group: 'start',
     title: 'start a working area',
     commands: [
       {
         name: 'init',
-        description: 'create or reinitialize an empty Bit scope or reinitialize an existing one'
+        description: 'Create or reinitialize an empty Bit scope or reinitialize an existing one'
       }
     ]
   },
   {
-    title: 'add, modify and control components',
+    group: 'component',
+    title: 'Develop components',
     commands: [
       {
         name: 'add',
-        description: 'add any subset of files to be tracked as a component(s).'
+        description: 'Add any subset of files to be tracked as a component(s).'
       },
       {
         name: 'status',
-        description: 'show the working area component(s) status.'
+        description: 'Show the working area component(s) status.'
       },
       {
         name: 'tag',
-        description: 'record component changes and lock versions.'
+        description: 'Record component changes and lock versions.'
       },
       {
         name: 'checkout',
-        description: 'switch between component versions.'
+        description: 'Switch between component versions.'
       },
       {
         name: 'merge',
-        description: 'merge changes of different component versions.'
+        description: 'Merge changes of different component versions.'
       },
       {
         name: 'diff',
-        description: 'show diff between components files.'
+        description: 'Show diff between components files.'
       },
       {
         name: 'untag',
-        description: 'revert versions tagged for component(s).'
+        description: 'Revert versions tagged for component(s).'
       },
       {
         name: 'move',
-        description: 'move a component to a different filesystem path.'
+        description: 'Move a component to a different filesystem path.'
       },
       {
         name: 'untrack',
-        description: 'untrack a new component(s).'
+        description: 'Untrack a new component(s).'
       }
     ]
   },
   {
-    title: 'collaborate and share components',
+    group: 'collaborate',
+    title: 'Collaborate on components',
     commands: [
       {
         name: 'import',
@@ -64,36 +67,37 @@ const allCommands = [
       },
       {
         name: 'install',
-        description: 'install node packages of all components and calls the link command.'
+        description: 'Install node packages of all components and calls the link command.'
       },
       {
         name: 'remote',
-        description: 'manage set of tracked bit scope(s).'
+        description: 'Manage set of tracked bit scope(s).'
       },
       {
         name: 'remove',
-        description: 'remove component(s) from your working area, or a remote scope.'
+        description: 'Remove component(s) from your working area, or a remote scope.'
       },
       {
         name: 'eject',
-        description: 'replaces the components from the local scope with the corresponding packages.'
+        description: 'Replaces the components from the local scope with the corresponding packages.'
       },
       {
         name: 'link',
-        description: 'generate symlinks for sourced components absolute path resolution.'
+        description: 'Generate symlinks for imported components absolute path resolution.'
       },
       {
         name: 'deprecate',
-        description: 'deprecate a component'
+        description: 'Deprecate a component'
       },
       {
         name: 'undeprecate',
-        description: 'undeprecate a deprecated component'
+        description: 'Undeprecate a deprecated component'
       }
     ]
   },
   {
-    title: 'discover components',
+    group: 'discover',
+    title: 'Explore components',
     commands: [
       {
         name: 'list',
@@ -106,7 +110,8 @@ const allCommands = [
     ]
   },
   {
-    title: 'examine component history and state',
+    group: 'info',
+    title: 'View components',
     commands: [
       {
         name: 'log',
@@ -119,6 +124,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'env',
     title: 'component environment operations',
     commands: [
       {
@@ -133,6 +139,10 @@ const allCommands = [
       {
         name: 'watch',
         description: 'watch components and perform `build` on changes'
+      },
+      {
+        name: 'run',
+        description: 'run an activity in the capsule'
       }
       // {
       //   name: 'eject-conf',
@@ -145,7 +155,8 @@ const allCommands = [
     ]
   },
   {
-    title: 'general commands',
+    group: 'general',
+    title: 'Workspace commands',
     commands: [
       {
         name: 'login',

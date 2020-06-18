@@ -1,15 +1,14 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { undeprecate } from '../../../api/consumer';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
-export default class Undeprecate extends Command {
+export default class Undeprecate implements LegacyCommand {
   name = 'undeprecate <ids...>';
   description = 'undeprecate a deprecated component (local/remote)';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['r', 'remote [boolean]', 'undeprecate a component from a remote scope']];
+  opts = [['r', 'remote [boolean]', 'undeprecate a component from a remote scope']] as CommandOptions;
   loader = true;
   migration = true;
   skipWorkspace = true;

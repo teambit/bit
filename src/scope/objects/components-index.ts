@@ -140,6 +140,10 @@ export default class ScopeIndex {
     }
     return false;
   }
+  async deleteFile() {
+    logger.debug(`ComponentsIndex, deleting the index file at ${this.indexPath}`);
+    await fs.remove(this.indexPath);
+  }
   getPath() {
     return this.indexPath;
   }

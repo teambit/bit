@@ -7,6 +7,7 @@ import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 import { generateRandomStr } from '../utils';
+import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -20,6 +21,7 @@ export default class ScopeHelper {
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
+  packageManager = 'npm';
   constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
@@ -51,9 +53,17 @@ export default class ScopeHelper {
     fs.emptyDirSync(this.scopes.localPath);
   }
 
+  usePackageManager(packageManager: string) {
+    this.packageManager = packageManager;
+  }
+
   reInitLocalScope() {
     this.cleanLocalScope();
     this.initLocalScope();
+  }
+  reInitLocalScopeHarmony() {
+    this.cleanLocalScope();
+    this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
   }
 
   initLocalScope() {
@@ -62,7 +72,13 @@ export default class ScopeHelper {
 
   initWorkspace(workspacePath?: string) {
     // return this.command.runCmd('bit init -N', workspacePath);
-    return this.command.runCmd('bit init', workspacePath);
+    return this.command.runCmd(`bit init -p ${this.packageManager}`, workspacePath);
+  }
+
+  initWorkspaceAndRemoteScope(workspacePath?: string) {
+    this.initWorkspace(workspacePath);
+    this.reInitRemoteScope();
+    this.addRemoteScope();
   }
 
   async initInteractive(inputs: InteractiveInputs) {
@@ -78,6 +94,11 @@ export default class ScopeHelper {
   }
   setNewLocalAndRemoteScopes() {
     this.reInitLocalScope();
+    this.reInitRemoteScope();
+    this.addRemoteScope();
+  }
+  setNewLocalAndRemoteScopesHarmony() {
+    this.reInitLocalScopeHarmony();
     this.reInitRemoteScope();
     this.addRemoteScope();
   }
@@ -158,11 +179,11 @@ export default class ScopeHelper {
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
    * cloned scope.
    */
-  cloneLocalScope() {
+  cloneLocalScope(dereferenceSymlinks = true) {
     const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
-    fs.copySync(this.scopes.localPath, clonedScopePath);
+    fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: dereferenceSymlinks });
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
@@ -181,21 +202,25 @@ export default class ScopeHelper {
   }
 
   cloneRemoteScope() {
+    return this.cloneScope(this.scopes.remotePath);
+  }
+
+  cloneScope(scopePath: string) {
     const clonedScope = generateRandomStr();
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
-    if (this.debugMode) console.log(`cloning a scope from ${this.scopes.remotePath} to ${clonedScopePath}`);
-    fs.copySync(this.scopes.remotePath, clonedScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${scopePath} to ${clonedScopePath}`);
+    fs.copySync(scopePath, clonedScopePath);
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope = true) {
-    if (deleteCurrentScope) {
-      fs.removeSync(this.scopes.remotePath);
-    } else {
-      this.getNewBareScope();
-    }
-    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.scopes.remotePath}`);
-    fs.copySync(clonedScopePath, this.scopes.remotePath);
+  getClonedScope(clonedScopePath: string, scopePath: string) {
+    fs.removeSync(scopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${scopePath}`);
+    fs.copySync(clonedScopePath, scopePath);
+  }
+
+  getClonedRemoteScope(clonedScopePath: string) {
+    return this.getClonedScope(clonedScopePath, this.scopes.remotePath);
   }
 }

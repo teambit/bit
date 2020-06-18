@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
@@ -11,7 +10,11 @@ chai.use(require('chai-fs'));
 
 describe('binary files', function() {
   this.timeout(0);
-  let helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -26,7 +29,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.runCmd('bit add bar -m foo.js -i bar/foo');
+      helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -46,6 +49,8 @@ describe('binary files', function() {
       });
     });
   });
+  // legacy test, to check the writing of links in node_modules for author.
+  // new code doesn't have it. only one symlink and that's it.
   describe('exporting a PNG file as the only file', () => {
     let pngSize;
     let destPngFile;
@@ -56,7 +61,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/foo');
+      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -109,7 +114,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
@@ -129,14 +134,14 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('import a PNG file as a dependency with custom-resolve-modules', () => {
     let destPngFile;
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let npmCiRegistry;
     before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       npmCiRegistry.setCiScopeInBitJson();
@@ -147,7 +152,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -167,15 +172,13 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -207,13 +210,14 @@ describe('binary files', function() {
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -233,15 +237,13 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -293,13 +295,14 @@ describe('binary files', function() {
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -320,15 +323,13 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -391,6 +392,7 @@ describe('binary files', function() {
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
@@ -398,7 +400,7 @@ describe('binary files', function() {
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.fs.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
-      helper.command.runCmd('bit add src/bar -m index.js -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'index.js', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -419,15 +421,13 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -490,7 +490,7 @@ describe('binary files', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'my-comp.md', 'some md5 content');
       helper.fs.createFile('bar', 'my-comp.js');
-      helper.command.runCmd('bit add bar -m my-comp.js -i bar/foo');
+      helper.command.addComponent('bar', { m: 'my-comp.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.env.importDummyCompiler();

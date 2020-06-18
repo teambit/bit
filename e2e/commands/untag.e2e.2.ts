@@ -5,7 +5,11 @@ import * as fixtures from '../../src/fixtures/fixtures';
 
 describe('bit untag command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -190,7 +194,7 @@ describe('bit untag command', function() {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        helper.command.runCmd('bit tag --scope 0.0.5');
+        helper.command.tagScope('0.0.5');
         untagOutput = helper.command.runCmd('bit untag 0.0.5 --all');
       });
       it('should display a descriptive successful message', () => {
@@ -247,7 +251,7 @@ describe('bit untag command', function() {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
-          helper.command.runCmd('bit tag -s 1.0.5');
+          helper.command.tagScope('1.0.5');
           try {
             output = helper.command.runCmd('bit untag utils/is-type');
           } catch (err) {

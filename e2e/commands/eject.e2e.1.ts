@@ -3,7 +3,6 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
@@ -13,7 +12,10 @@ chai.use(require('chai-fs'));
 
 describe('bit eject command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   describe('local component', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
@@ -72,7 +74,6 @@ describe('bit eject command', function() {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/foo');
 
@@ -108,8 +109,7 @@ describe('bit eject command', function() {
           });
         });
         it('bit status should show a clean state', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
@@ -152,8 +152,7 @@ describe('bit eject command', function() {
           expect(path.join(helper.scopes.localPath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('bit status should show a clean state', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
       describe('eject two components, the additional one has not been exported yet', () => {
@@ -234,7 +233,6 @@ describe('bit eject command', function() {
         helper.command.exportAllComponents();
         remoteScope = helper.scopeHelper.cloneRemoteScope();
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.unpublishComponent('bar.foo');
         npmCiRegistry.unpublishComponent('utils.is-string');
@@ -296,8 +294,7 @@ describe('bit eject command', function() {
             });
           });
           it('bit status should show a clean state', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
       });
@@ -309,12 +306,11 @@ describe('bit eject command', function() {
             npmCiRegistry.setCiScopeInBitJson();
             helper.command.importComponent('bar/foo');
             // an intermediate step, make sure the workspace is clean
-            const statusOutput = helper.command.status();
-            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
+
             helper.fs.createFile('components/bar/foo/bar/', 'foo.js', fixtures.barFooFixtureV2);
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('bar/foo', '0.0.2');
 
@@ -345,8 +341,7 @@ describe('bit eject command', function() {
             });
           });
           it('bit status should show a clean state', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           it('should not delete the objects from the scope', () => {
             const listScope = helper.command.listLocalScopeParsed('--scope');
@@ -363,14 +358,12 @@ describe('bit eject command', function() {
             helper.command.importComponent('bar/foo');
             helper.command.importComponent('utils/is-string');
             // an intermediate step, make sure the workspace is clean
-            const statusOutput = helper.command.status();
-            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
             helper.fs.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
 
             npmCiRegistry.setCiScopeInBitJson();
             helper.command.tagScope('2.0.0', 'msg', '-a');
             helper.command.exportAllComponents();
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('bar/foo', '2.0.0');
             npmCiRegistry.publishComponent('utils/is-string', '2.0.0');
@@ -407,8 +400,7 @@ describe('bit eject command', function() {
               });
             });
             it('bit status should show a clean state', () => {
-              const output = helper.command.runCmd('bit status');
-              expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+              helper.command.expectStatusToBeClean();
             });
             it('should not delete any objects from the scope', () => {
               const listScope = helper.command.listLocalScope('--scope');

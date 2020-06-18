@@ -37,7 +37,7 @@ import {
 } from './exceptions';
 import { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import ComponentMap from '../../bit-map/component-map';
-import { PathLinux, PathOsBased } from '../../../utils/path';
+import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';
@@ -47,6 +47,7 @@ import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
+import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
@@ -303,8 +304,7 @@ export default class AddComponents {
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter(file => file);
     if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     if (foundComponentFromBitMap) {
-      const existingRootDir = foundComponentFromBitMap.rootDir;
-      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
+      this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
     if (this.trackDirFeature) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -322,22 +322,73 @@ export default class AddComponents {
 
     const { componentId, trackDir } = component;
     const mainFile = determineMainFile(component, foundComponentFromBitMap);
+    const getRootDir = (): PathLinuxRelative | undefined => {
+      if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
+      if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
+      if (this.consumer.isLegacy) return '';
+      if (!trackDir) throw new Error(`addOrUpdateComponentInBitMap expect to have trackDir for non-legacy workspace`);
+      const fileNotInsideTrackDir = componentFiles.find(
+        file => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
+      );
+      if (fileNotInsideTrackDir) {
+        // we check for this error before. however, it's possible that a user have one trackDir
+        // and another dir for the tests.
+        throw new AddingIndividualFiles(fileNotInsideTrackDir.relativePath);
+      }
+      return pathNormalizeToLinux(trackDir);
+    };
     const getComponentMap = (): ComponentMap => {
       if (this.trackDirFeature) {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
-      return this.bitMap.addComponent({
+      const rootDir = getRootDir();
+      const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
         mainFile,
-        trackDir,
+        trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
         origin: COMPONENT_ORIGINS.AUTHORED,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override
       });
+      if (rootDir) componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
+      return componentMap;
     };
     const componentMap = getComponentMap();
     return { id: componentId.toString(), files: componentMap.files };
+  }
+
+  /**
+   * current componentFiles are relative to the workspace. we want them relative to the rootDir.
+   */
+  _updateFilesAccordingToExistingRootDir(
+    foundComponentFromBitMap: ComponentMap,
+    componentFiles: ComponentMapFile[],
+    component: AddedComponent
+  ) {
+    const existingRootDir = foundComponentFromBitMap.rootDir;
+    if (!existingRootDir) return; // nothing to do.
+    const areFilesInsideExistingRootDir = componentFiles.every(file =>
+      pathNormalizeToLinux(file.relativePath).startsWith(`${existingRootDir}/`)
+    );
+    if (foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED || areFilesInsideExistingRootDir) {
+      ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
+      return;
+    }
+    // some (or all) added files are outside the existing rootDir, the rootDir needs to be changed
+    // if a directory was added and it's a parent of the existing rootDir, change the rootDir to
+    // the currently added rootDir.
+    const currentlyAddedDir = pathNormalizeToLinux(component.trackDir);
+    const currentlyAddedDirParentOfRootDir = currentlyAddedDir && existingRootDir.startsWith(`${currentlyAddedDir}/`);
+    if (currentlyAddedDirParentOfRootDir) {
+      foundComponentFromBitMap.changeRootDirAndUpdateFilesAccordingly(currentlyAddedDir);
+      ComponentMap.changeFilesPathAccordingToItsRootDir(currentlyAddedDir, componentFiles);
+      return;
+    }
+    throw new GeneralError(`unable to add individual files outside the root dir (${existingRootDir}) of ${component.componentId}.
+you can add the directory these files are located at and it'll change the root dir of the component accordingly`);
+    // we might want to change the behavior here to not throw an error and only change the rootDir to "."
+    // foundComponentFromBitMap.changeRootDirAndUpdateFilesAccordingly('.');
   }
 
   /**
@@ -395,9 +446,9 @@ export default class AddComponents {
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (resolvedExcludedFiles.includes(mainFile)) {
+        // if mainFile is excluded, exclude all files
         componentWithFiles.files = [];
       } else {
-        // if mainFile is excluded, exclude all files
         componentWithFiles.files = componentWithFiles.files.filter(
           key => !resolvedExcludedFiles.includes(key.relativePath)
         );
@@ -504,7 +555,10 @@ export default class AddComponents {
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
     const testFiles = !R.isEmpty(this.tests)
-      ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
+      ? await this.getFilesAccordingToDsl(
+          files.map(file => file.relativePath),
+          this.tests
+        )
       : [];
 
     const resolvedTestFiles = testFiles.map(testFile => {
@@ -569,12 +623,19 @@ export default class AddComponents {
           }
         }
 
-        const trackDir =
-          Object.keys(componentPathsStats).length === 1 &&
-          !this.exclude.length &&
-          this.origin === COMPONENT_ORIGINS.AUTHORED
-            ? relativeComponentPath
-            : undefined;
+        const getTrackDir = () => {
+          if (Object.keys(componentPathsStats).length === 1 && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+            if (!this.exclude.length) {
+              return relativeComponentPath;
+            }
+            if (!this.consumer.isLegacy) {
+              throw new GeneralError(`unable to exclude files when tracking a directory, as Bit won't be able to auto-track changes in this directory.
+try to avoid excluding files and maybe put them in your .gitignore if it makes sense.`);
+            }
+          }
+          return undefined;
+        };
+        const trackDir = getTrackDir();
 
         return {
           componentId: finalBitId,
@@ -651,14 +712,9 @@ export default class AddComponents {
     const distDirsOfImportedComponents = importedComponents.map(componentMap =>
       pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
-    const configsToIgnore = await this.bitMap.getConfigDirsAndFilesToIgnore(
-      this.consumer.getPath(),
-      this.consumer.config
-    );
-    const configDirs = configsToIgnore.dirs.map(dir => pathJoinLinux(dir, '**'));
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    ignoreList = ignoreList.concat(configsToIgnore.files);
-    ignoreList = ignoreList.concat(configDirs);
+    // the ability to track package.json is deprecated since Harmony
+    if (!this.consumer.isLegacy) ignoreList.push(PACKAGE_JSON);
     return ignoreList;
   }
 
@@ -701,6 +757,13 @@ export default class AddComponents {
       } else {
         throw new NoFiles(diff);
       }
+    }
+    if (!this.consumer.isLegacy) {
+      Object.keys(componentPathsStats).forEach(compPath => {
+        if (!componentPathsStats[compPath].isDir) {
+          throw new AddingIndividualFiles(compPath);
+        }
+      });
     }
     // if a user entered multiple paths and entered an id, he wants all these paths to be one component
     // conversely, if a user entered multiple paths without id, he wants each dir as an individual component

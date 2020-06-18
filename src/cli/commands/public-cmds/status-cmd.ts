@@ -1,14 +1,14 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ModelComponent } from '../../../scope/models';
+import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -18,15 +18,12 @@ export const statusFailureMsg = 'issues found';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
-export const importPendingMsg =
-  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 
-export default class Status extends Command {
+export default class Status implements LegacyCommand {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['j', 'json', 'return a json version of the component']];
+  opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
   loader = true;
   migration = true;
   json = false;
@@ -95,7 +92,7 @@ export default class Status extends Command {
       return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
     }
 
-    const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${importPendingMsg}.\n`) : '';
+    const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';
 
     const splitByMissing = R.groupBy(component => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';

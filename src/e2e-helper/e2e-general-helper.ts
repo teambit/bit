@@ -1,4 +1,5 @@
 import * as path from 'path';
+import tar from 'tar';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../constants';
@@ -49,10 +50,14 @@ export default class GeneralHelper {
     return this.command.runCmd(`node ${mainFilePath}`, cwd);
   }
 
-  runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath) {
+  untarFile(filePath: string, dir: string, sync: boolean) {
+    return tar.x({ file: filePath, C: dir, sync });
+  }
+
+  runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath, overrideFeatures?: string) {
     let output;
     try {
-      output = this.command.runCmd(cmd, cwd);
+      output = this.command.runCmd(cmd, cwd, undefined, overrideFeatures);
     } catch (err) {
       output = err.toString() + err.stdout.toString();
     }

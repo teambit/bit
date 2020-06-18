@@ -3,7 +3,11 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit _scope command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -16,7 +20,7 @@ describe('bit _scope command', function() {
       output = helper.general.runWithTryCatch(`bit _scope ${nonExistScopePath} ${header}`);
     });
     it('should throw ScopeNotFound error', () => {
-      expect(output).to.have.string('ScopeNotFound');
+      expect(output).to.have.string('scope not found');
     });
   });
 });

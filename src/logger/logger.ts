@@ -5,9 +5,10 @@ import format from 'string-format';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import winston, { Logger } from 'winston';
 import * as path from 'path';
-import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
+import defaultHandleError from '../cli/default-error-handler';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -15,10 +16,12 @@ const extensionsLoggers = new Map();
 
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
+const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
+
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
   format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
-  level: 'debug',
+  level: logLevel,
   maxsize: 10 * 1024 * 1024, // 10MB
   maxFiles: 10,
   // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
@@ -56,10 +59,24 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
 
 class BitLogger {
   logger: Logger;
-  shouldWriteToConsole = true;
+  /**
+   * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
+   * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
+   * is actually "json". that's why this variable is overridden once the command-registrar is up.
+   */
+  shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
 
   constructor(logger: Logger) {
     this.logger = logger;
+    logger.on('error', err => {
+      // eslint-disable-next-line no-console
+      console.log('got an error from the logger', err);
+    });
+  }
+
+  silly(...args: any[]) {
+    // @ts-ignore
+    this.logger.silly(...args);
   }
 
   debug(...args: any[]) {
@@ -82,12 +99,24 @@ class BitLogger {
     this.logger.error(...args);
   }
 
-  console(msg: string, level = 'info') {
+  console(msg: string | Error, level = 'info', color?: string) {
+    let actualMessage = msg;
+    if (msg instanceof Error) {
+      actualMessage = defaultHandleError(msg) || msg;
+    }
     if (!this.shouldWriteToConsole) {
-      this[level](msg);
+      this[level](actualMessage);
       return;
     }
-    winston.loggers.get('consoleOnly')[level](msg);
+    if (color) {
+      try {
+        // @ts-ignore
+        actualMessage = chalk.keyword(color)(actualMessage);
+      } catch (e) {
+        this.silly('a wrong color provided to logger.console method');
+      }
+    }
+    winston.loggers.get('consoleOnly')[level](actualMessage);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {
@@ -222,7 +251,10 @@ if (process.env.BIT_LOG) {
   logger.logger.add(
     new winston.transports.Console({
       level: isLevel ? process.env.BIT_LOG : 'silly',
-      format: winston.format.combine(filterPrefix(), winston.format.printf(info => info.message))
+      format: winston.format.combine(
+        filterPrefix(),
+        winston.format.printf(info => info.message)
+      )
     })
   );
 }

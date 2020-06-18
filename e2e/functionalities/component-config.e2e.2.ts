@@ -2,13 +2,16 @@ import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
 describe('component config', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -172,8 +175,7 @@ describe('component config', function() {
         helper.fs.deletePath('components/bar/foo/package.json');
       });
       it('bit status should not throw an error', () => {
-        const status = helper.command.status();
-        expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });

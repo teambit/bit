@@ -51,7 +51,7 @@ const run = (specFile, context) => {
   return context.isolate({ targetDir }).then(({ capsule, componentWithDependencies }) => {
     return new Promise(resolve => {
       const componentRootDir = path.join(targetDir, componentWithDependencies.component.writtenPath);
-      const relativeSpecFile = path.relative(componentWithDependencies.component.originallySharedDir, specFile);
+      const relativeSpecFile = path.relative(targetDir, specFile);
       const specFileInCapsule = path.join(componentRootDir, relativeSpecFile);
       const mocha = new Mocha({ reporter: JSONReporter });
       mocha.addFile(specFileInCapsule);

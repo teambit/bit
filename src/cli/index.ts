@@ -1,7 +1,2 @@
-import buildRegistrar from './command-registrar-builder';
-import CommandRegistrar from './command-registrar';
-
-export default {
-  buildRegistrar,
-  CommandRegistrar
-};
+export { default as buildRegistry } from './command-registry-builder';
+export { default as CommandRegistry } from './command-registry';

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import * as nodePath from 'path';
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { ejectConf } from '../../../api/consumer';
 import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
 import { PathOsBased } from '../../../utils/path';
@@ -9,23 +9,19 @@ type EjectConfCliResult = EjectConfResult & {
   ejectPathRelativeToCwd: PathOsBased;
 };
 
-export default class EjectConf extends Command {
+export default class EjectConf implements LegacyCommand {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['p', 'path <path>', 'ejecting configuration into a specific directory']];
+  opts = [];
   loader = true;
   migration = true;
 
-  async action([id]: [string], { path }: { path?: string }): Promise<EjectConfCliResult> {
+  async action([id]: [string]): Promise<EjectConfCliResult> {
     const cwd = process.cwd();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const res = await ejectConf(id, { ejectPath: path });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    res.ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedFullPath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return res;
+    const res = await ejectConf(id);
+    const ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedPath);
+    return Object.assign({}, res, { ejectPathRelativeToCwd });
   }
 
   report(ejectResults: EjectConfCliResult): string {
