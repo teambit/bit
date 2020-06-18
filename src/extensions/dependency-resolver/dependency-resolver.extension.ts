@@ -96,7 +96,7 @@ export class DependencyResolverExtension {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  async mergeDependencies(configuredExtensions: ExtensionDataList): DependenciesPolicy {
+  async mergeDependencies(configuredExtensions: ExtensionDataList): Promise<DependenciesPolicy> {
     let policiesFromEnv: DependenciesPolicy = {};
     let policiesFromHooks: DependenciesPolicy = {};
     let policiesFromConfig: DependenciesPolicy = {};
