@@ -1,5 +1,4 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { WorkspaceExt, Workspace } from '../workspace';
 import { Component } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
