@@ -77,7 +77,7 @@ export class ReactEnv implements Environment {
         react: '-'
       },
       // TODO: add this only if using ts
-      dev: {
+      devDependencies: {
         '@types/react': '^16.9.17'
       },
       // TODO: take version from workspace.json config
