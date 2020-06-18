@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('pkg extension', function() {
+describe.only('pkg extension', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
