@@ -113,11 +113,11 @@ export class PkgExtension {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  mergePackageJsonProps(configuredExtensions: ExtensionDataList): PackageJsonProps {
+  async mergePackageJsonProps(configuredExtensions: ExtensionDataList): Promise<PackageJsonProps> {
     let newProps = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
-      const propsFromEnv = env.getPackageJsonProps();
+      const propsFromEnv = await env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);
     }
     const configuredIds = configuredExtensions.ids;
