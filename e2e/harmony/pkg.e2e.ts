@@ -11,7 +11,6 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 describe('pkg extension', function() {
-  this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
@@ -90,9 +89,15 @@ describe('pkg extension', function() {
       });
       it.skip('should have the updated config in another extension asks for the component', function() {});
     });
-    describe.skip('conflict between few extensions on simple config', function() {});
-    describe.skip('conflict between extension and user overrides ', function() {});
-    describe.skip('extensions that add dependencies', function() {});
-    describe.skip('extensions that add dependencies overrides', function() {});
+    describe.skip('conflict between few extensions on simple config', function() {
+      it.skip('should merge them', function() {});
+    });
+    describe.skip('conflict between extension and user overrides ', function() {
+      it.skip('should prefer user config', function() {});
+    });
+    describe.skip('extensions that add protected fields', function() {
+      // dependencies, devDeps, peerDeps, overrides, name, main file
+      it.skip('should ignore all protected fields', function() {});
+    });
   });
 });
