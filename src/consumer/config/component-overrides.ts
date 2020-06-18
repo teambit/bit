@@ -101,10 +101,10 @@ export default class ComponentOverrides {
       extensionsAddedOverrides
     );
     const fromComponent = getFromComponent();
-
     if (!fromComponent) {
       return new ComponentOverrides(mergedLegacyConsumerOverridesWithExtensions);
     }
+
     const mergedOverrides = mergedLegacyConsumerOverridesWithExtensions
       ? mergeOverrides(fromComponent, mergedLegacyConsumerOverridesWithExtensions)
       : fromComponent;
@@ -125,6 +125,11 @@ export default class ComponentOverrides {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
     return R.pickBy(isPackageJsonField, this.overrides);
   }
+
+  getEnvByType(envType): string | Record<string, any> | undefined {
+    return R.path(['env', envType], this.overrides);
+  }
+
   getComponentDependenciesWithVersion(): Record<string, any> {
     const allDeps = Object.assign(
       {},
