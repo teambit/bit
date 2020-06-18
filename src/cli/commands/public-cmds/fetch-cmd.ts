@@ -1,22 +1,21 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { fetch } from '../../../api/consumer';
 import { ComponentWithDependencies } from '../../../scope';
 import { ImportDetails } from '../../../consumer/component-ops/import-components';
 import { formatPlainComponentItemWithVersions } from '../../chalk-box';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Fetch extends Command {
+export default class Fetch implements LegacyCommand {
   name = 'fetch [ids...]';
   description = `fetch remote objects and store locally`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON']
-  ];
+  ] as CommandOptions;
   loader = true;
 
   action(

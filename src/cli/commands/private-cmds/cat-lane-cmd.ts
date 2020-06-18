@@ -1,7 +1,7 @@
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { catLane } from '../../../api/scope';
 
-export default class CatLane extends Command {
+export default class CatLane implements LegacyCommand {
   name = 'cat-lane [id]';
   description = 'cat a bit object by lane-name';
   private = true;

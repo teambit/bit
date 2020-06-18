@@ -1,24 +1,23 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { lane } from '../../../api/consumer';
 import { LaneResults } from '../../../api/consumer/lib/lane';
 import { LaneData } from '../../../scope/lanes/lanes';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
-export default class Lane extends Command {
+export default class Lane implements LegacyCommand {
   name = 'lane [name]';
   description = `show lanes details
   https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
     ['', 'merged', 'show merged lanes'],
     ['', 'not-merged', 'show not merged lanes']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

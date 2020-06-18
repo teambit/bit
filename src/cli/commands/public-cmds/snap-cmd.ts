@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { snapAction } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
@@ -9,13 +9,12 @@ import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-t
 export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
 export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
 
-export default class Snap extends Command {
+export default class Snap implements LegacyCommand {
   name = 'snap [id]';
   description = `record component changes.
   https://${BASE_DOCS_DOMAIN}/docs/snap-component-version
   ${WILDCARD_HELP('snap')}`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all', 'snap all new and modified components'],
@@ -24,7 +23,7 @@ export default class Snap extends Command {
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
 

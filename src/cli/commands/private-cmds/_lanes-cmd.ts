@@ -1,4 +1,4 @@
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
@@ -9,13 +9,13 @@ import lanesList from '../../../api/scope/lib/scope-lanes-list';
 
 let compressResponse;
 
-export default class ListLanes extends Command {
+export default class ListLanes implements LegacyCommand {
   name = '_lanes <path> <args>';
   private = true;
   description = 'list lanes';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['', 'merge-data', 'collect merge data']];
+  opts = [['', 'merge-data', 'collect merge data']] as CommandOptions;
 
   action([path, args]: [string, string], { mergeData }: { mergeData?: boolean }): Promise<LaneData[]> {
     const { payload, headers } = unpackCommand(args);

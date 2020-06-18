@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { switchAction } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
@@ -10,11 +10,10 @@ import GeneralError from '../../../error/general-error';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 
-export default class Switch extends Command {
+export default class Switch implements LegacyCommand {
   name = 'switch <lane>';
   description = `switch to the specified lane`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['c', 'create', 'create a new lane'],
     ['r', 'remote <scope>', 'fetch remote lane objects and switch to a local lane tracked to the remote'],
@@ -34,7 +33,7 @@ export default class Switch extends Command {
     ],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
-  ];
+  ] as CommandOptions;
   loader = true;
 
   action(
@@ -131,8 +130,9 @@ export default class Switch extends Command {
       if (components.length === 1) {
         const component = components[0];
         const componentName = component.id.toStringWithoutVersion();
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(component.id
-          .version as string)}\n`;
+        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
+          component.id.version as string
+        )}\n`;
         return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
       }
       const title = `successfully switched the following components to the version of ${lane}\n\n`;
