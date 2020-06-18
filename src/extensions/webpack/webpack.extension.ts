@@ -1,5 +1,7 @@
 export class WebpackExtension {
-  bundle() {}
+  createBundler() {}
+
+  createDevServer() {}
 
   static async provide() {
     return new WebpackExtension();

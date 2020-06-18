@@ -101,8 +101,8 @@ export class DependencyResolverExtension {
     let policiesFromHooks: DependenciesPolicy = {};
     let policiesFromConfig: DependenciesPolicy = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
-    if (env?.dependencies && typeof env.dependencies === 'function') {
-      policiesFromEnv = await env.dependencies();
+    if (env?.getDependencies && typeof env.getDependencies === 'function') {
+      policiesFromEnv = await env.getDependencies();
     }
     const configuredIds = configuredExtensions.ids;
     configuredIds.forEach(extId => {

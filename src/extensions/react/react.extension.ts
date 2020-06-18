@@ -1,35 +1,56 @@
 import { Environments } from '../environments';
 import { ReactEnv } from './react.env';
-import { Logger, LoggerExt } from '../logger';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compile, CompileExt } from '../compiler';
 import { TesterExtension } from '../tester';
 
+type Deps = [Environments, JestExtension, TypescriptExtension, Compile, TesterExtension];
+
 export type ReactConfig = {
-  writeDist: boolean;
-  compiler: {};
+  /**
+   * configure the react env compiler.
+   * can be configured to either TypeScript ('ts') or Babel ('babel').
+   */
+  compiler: 'babel' | 'ts';
+
+  /**
+   * configure the component tester.
+   * can be either Jest ('jest') or Mocha ('mocha')
+   */
+  tester: 'jest' | 'mocha';
+
+  /**
+   * version of React to configure.
+   */
+  reactVersion: string;
 };
 
 export class React {
   static id = '@teambit/react';
-  static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt, TesterExtension];
 
-  // createTsCompiler(tsconfig: {}) {}
+  constructor(
+    /**
+     * an instance of the React env.
+     */
+    private reactEnv: ReactEnv
+  ) {}
 
-  setTsConfig() {}
+  /**
+   * override the TS config of the extension.
+   */
+  overrideTsConfig() {}
 
-  // @typescript-eslint/no-unused-vars
-  static provider([envs, logger, jest, ts, compile, tester]: [
-    Environments,
-    Logger,
-    JestExtension,
-    TypescriptExtension,
-    Compile,
-    TesterExtension
-  ]) {
-    // support factories from harmony?
-    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.id), jest, ts, compile, tester));
-    return {};
+  /**
+   * override the jest configuration.
+   */
+  overrideJestConfig() {}
+
+  static dependencies = [Environments, JestExtension, TypescriptExtension, CompileExt];
+
+  static provider([envs, jest, ts, compile]: Deps, config: ReactConfig) {
+    const reactEnv = new ReactEnv(jest, ts, compile);
+    envs.registerEnv(reactEnv);
+    return new React(reactEnv);
   }
 }
