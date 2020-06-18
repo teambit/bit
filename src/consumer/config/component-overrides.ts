@@ -14,6 +14,7 @@ import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 import { BitId } from '../../bit-id';
 import { ComponentOrigin } from '../bit-map/component-map';
 import { ExtensionDataList } from './extension-data';
+import { filterObject } from '../../utils';
 
 // consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
@@ -288,6 +289,8 @@ async function runOnLoadOverridesEvent(
     return func(extensions);
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
-  const extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
+  let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
+  const filterFunc = val => !R.isEmpty(val);
+  extensionsConfigModificationsObject = filterObject(extensionsConfigModificationsObject, filterFunc);
   return extensionsConfigModificationsObject;
 }
