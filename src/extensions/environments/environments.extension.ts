@@ -16,19 +16,13 @@ export type EnvOptions = {};
 
 export class Environments {
   static id = '@teambit/envs';
-  static dependencies = [WorkspaceExt];
+  static dependencies = [];
 
   constructor(
     /**
      * environments extension configuration.
      */
     readonly config: EnvsConfig,
-
-    /**
-     * component workspace.
-     */
-
-    private workspace: Workspace,
 
     /**
      * slot for allowing extensions to register new environment.
@@ -39,13 +33,13 @@ export class Environments {
   /**
    * create a development runtime environment.
    */
-  async dev(components?: Component[]): Promise<Runtime> {
+  async dev(components: Component[]): Promise<Runtime> {
     // :TODO how to standardize this? we need to make sure all validation errors will throw nicely at least.
-    return this.createRuntime(components || (await this.workspace.list()));
+    return this.createRuntime(components);
   }
 
-  async createEnvironment(components?: Component[]): Promise<Runtime> {
-    return this.createRuntime(components || (await this.workspace.list()));
+  async createEnvironment(components: Component[]): Promise<Runtime> {
+    return this.createRuntime(components);
   }
 
   // @todo remove duplications from `aggregateByDefs`, it was copied and pasted
@@ -69,7 +63,7 @@ export class Environments {
 
   // refactor here
   private createRuntime(components: Component[]): Runtime {
-    return new Runtime(this.workspace, this.aggregateByDefs(components));
+    return new Runtime(this.aggregateByDefs(components));
   }
 
   // :TODO can be refactorerd to few utilities who will make repeating this very easy.
@@ -104,8 +98,8 @@ export class Environments {
 
   static defaultConfig = {};
 
-  static async provider([workspace]: [Workspace], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
-    const envs = new Environments(config, workspace, envSlot);
+  static async provider(_deps: [], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
+    const envs = new Environments(config, envSlot);
     return envs;
   }
 }

@@ -18,7 +18,9 @@ export class BuilderCmd implements Command {
 
   async render([userPattern]: CLIArgs) {
     const pattern = userPattern && userPattern.toString();
-    const results = await this.builder.build(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    const results = await this.builder.build(
+      pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list()
+    );
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console

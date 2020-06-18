@@ -39,7 +39,7 @@ export class TesterExtension {
     readonly task: TesterTask
   ) {}
 
-  async test(components?: Component[]) {
+  async test(components: Component[]) {
     const envs = await this.envs.createEnvironment(components);
     const results = await envs.run(this.service);
     return results;
@@ -55,7 +55,12 @@ export class TesterExtension {
   static provider([cli, envs, workspace]: [CLIExtension, Environments, Workspace], config: TesterExtensionConfig) {
     // @todo: Ran to fix.
     // @ts-ignore
-    const tester = new TesterExtension(envs, workspace, new TesterService(config.testRegex), new TesterTask());
+    const tester = new TesterExtension(
+      envs,
+      workspace,
+      new TesterService(workspace, config.testRegex),
+      new TesterTask()
+    );
     cli.register(new TestCmd(tester, workspace));
 
     return tester;
