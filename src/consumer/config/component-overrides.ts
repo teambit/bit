@@ -257,7 +257,7 @@ function mergeOverrides(
       return; // do nothing
     }
     if (isObjectAndNotArray(overrides1[field]) && isObjectAndNotArray(overrides2[field])) {
-      result[field] = Object.assign(overrides1[field], overrides2[field]);
+      result[field] = Object.assign({}, overrides2[field], overrides1[field]);
     } else if (!result[field]) {
       result[field] = overrides2[field];
     }
