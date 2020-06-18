@@ -1,12 +1,36 @@
 .topBar {
 	display: flex;
+	justify-content: space-between;
+}
+
+.navigation {
+	display: flex;
 	list-style: none;
 	// align-items: center;
 
-	margin: 0;
-	padding: 0;
-	
 	> li {
-		margin-right: 11px;
+		margin-right: 16px;
+		height: 100%;
+		padding: 0 8px;
+		
+		box-sizing: border-box;
+		
+		display: flex;
+		align-items: center;
+		
+		border: 4px solid transparent;
+		
+		&.active {
+			border-bottom: 4px solid var(--base-color);
+		}
 	}
+}
+
+.rightSide {
+	float: right;
+	> * {
+		margin-right: 8px;
+	}
+	// display: flex;
+	
 }
