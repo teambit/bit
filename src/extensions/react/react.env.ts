@@ -71,6 +71,22 @@ export class ReactEnv implements Environment {
     return this.ts.createCompiler(tsConfig);
   }
 
+  async dependencies() {
+    return {
+      dependencies: {
+        react: '-'
+      },
+      // TODO: add this only if using ts
+      devDependencies: {
+        '@types/react': '^16.9.17'
+      },
+      // TODO: take version from workspace.json config
+      peerDependencies: {
+        react: '^16.12.0'
+      }
+    };
+  }
+
   /**
    * returns a build pipeline.
    */

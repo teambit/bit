@@ -18,7 +18,9 @@ export class TestCmd implements Command {
 
   async render([userPattern]: CLIArgs) {
     const pattern = userPattern && userPattern.toString();
-    const results = await this.tester.test(pattern ? await this.workspace.byPattern(pattern) : undefined);
+    const results = await this.tester.test(
+      pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list()
+    );
 
     return <Envs envs={results} />;
   }

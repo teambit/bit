@@ -51,7 +51,7 @@ export class BuilderExtension {
   /**
    * build given components for release.
    */
-  async build(components?: Component[]) {
+  async build(components: Component[]) {
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
     return buildResult;

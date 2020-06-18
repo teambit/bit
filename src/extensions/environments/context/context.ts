@@ -1,5 +1,4 @@
 import { Component } from '../../component';
-import { Workspace } from '../../workspace';
 import { Runtime } from '../runtime';
 
 export type ServiceMap<T> = {
@@ -26,19 +25,14 @@ export class ExecutionContext {
     /**
      * components for the environment context
      */
-    readonly components: Component[],
-
-    /**
-     * component workspace.
-     */
-    readonly workspace: Workspace
+    readonly components: Component[]
   ) {}
 
   // applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
 
   apply<T>(name: string, args: any[]): T {
     if (!this.env[name]) {
-      throw new Error(`method ${name} not implmented`);
+      throw new Error(`method ${name} not implemented`);
     }
 
     return this.env[name].apply(this.env, ...args);
