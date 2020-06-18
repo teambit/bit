@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
-import { Command } from '../command';
+import { Command } from '../../../cli/command';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {

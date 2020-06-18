@@ -1,25 +1,18 @@
-import { Command } from './command';
-// eslint-disable-next-line import/named
+import { Command } from '../../cli/command';
 import { AlreadyExistsError } from './exceptions';
 
 export default class CommandRegistry {
-  constructor(
-    /**
-     * array of registered commands
-     */
-    readonly commands: { [k: string]: Command }
-  ) {}
+  constructor(readonly commands: { [commandId: string]: Command }) {}
 
   /**
    * register a new command
    */
   register(command: Command) {
-    const key = CommandRegistry.getID(command);
-    if (this.commands[key]) {
-      throw new AlreadyExistsError('Command', key);
+    const id = CommandRegistry.getID(command);
+    if (this.commands[id]) {
+      throw new AlreadyExistsError('Command', id);
     }
-    this.commands[key] = command;
-    return this;
+    this.commands[id] = command;
   }
 
   /**

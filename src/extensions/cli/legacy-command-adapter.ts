@@ -1,4 +1,4 @@
-import { Command, PaperOptions, GenericObject } from '.';
+import { Command, CommandOptions, GenericObject } from '.';
 import { LegacyCommand } from '../../cli/legacy-command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
@@ -8,13 +8,14 @@ export class LegacyCommandAdapter implements Command {
   alias: string;
   name: string;
   description: string;
-  options: PaperOptions;
+  options: CommandOptions;
   shortDescription: string;
   group: string;
   loader?: boolean;
   commands: Command[];
   private?: boolean;
   migration?: boolean;
+  _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
     this.name = cmd.name;
     this.description = cmd.description;
@@ -31,8 +32,7 @@ export class LegacyCommandAdapter implements Command {
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
-    //  packageManagerArgs is injected here for legacy reasons.
-    const res = await this.cmd.action(params, options, (this as any).packageManagerArgs || []);
+    const res = await this.cmd.action(params, options, this._packageManagerArgs);
     let data = res;
     let code = 0;
     if (res && res.__code !== undefined) {

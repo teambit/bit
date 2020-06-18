@@ -2,7 +2,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, CLIArgs, PaperOptions } from '../cli';
+import { Command, CLIArgs, CommandOptions } from '../cli';
 import { Watch } from '.';
 
 export class WatchCommand implements Command {
@@ -11,7 +11,7 @@ export class WatchCommand implements Command {
   alias = '';
   group = '';
   shortDescription = '';
-  options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as PaperOptions;
+  options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
 
   constructor(private watch: Watch) {}
 
