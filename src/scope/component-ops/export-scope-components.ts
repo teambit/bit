@@ -157,7 +157,9 @@ export async function exportMany({
 
       const componentBuffer = await componentAndObject.component.compress();
       const getObjectsBuffer = () => {
-        if (allVersions || includeDependencies || didConvertScope) {
+        // @todo currently, for lanes (componentAndObject.component.head) this optimization is skipped.
+        // it should be enabled with a different mechanism
+        if (allVersions || includeDependencies || didConvertScope || componentAndObject.component.head) {
           // only when really needed (e.g. fork or version changes), collect all versions objects
           return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
         }
