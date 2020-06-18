@@ -40,7 +40,7 @@ export class DependencyResolverExtension {
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverExtension.id,
       async (configuredExtensions: ExtensionDataList) => {
-        const policies = dependencyResolver.mergeDependencies(configuredExtensions);
+        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
         return transformPoliciesToLegacyDepsOverrides(policies);
       }
     );
@@ -96,20 +96,20 @@ export class DependencyResolverExtension {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  mergeDependencies(configuredExtensions: ExtensionDataList): DependenciesPolicy {
+  async mergeDependencies(configuredExtensions: ExtensionDataList): DependenciesPolicy {
     let policiesFromEnv: DependenciesPolicy = {};
     let policiesFromHooks: DependenciesPolicy = {};
     let policiesFromConfig: DependenciesPolicy = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
     if (env?.dependencies && typeof env.dependencies === 'function') {
-      policiesFromEnv = env.dependencies();
+      policiesFromEnv = await env.dependencies();
     }
     const configuredIds = configuredExtensions.ids;
     configuredIds.forEach(extId => {
       // Only get props from configured extensions on this specific component
       const currentPolicy = this.policiesRegistry.get(extId);
       if (currentPolicy) {
-        policiesFromHooks = mergePolices([policiesFromHooks]);
+        policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverExtension.id);
