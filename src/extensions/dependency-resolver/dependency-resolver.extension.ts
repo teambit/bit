@@ -128,7 +128,7 @@ function mergePolices(policies: DependenciesPolicy[]) {
     devDependencies: {},
     peerDependencies: {}
   };
-  return R.mergeAll(result, ...policies);
+  return R.reduce(R.mergeDeepRight, result, policies);
 }
 
 function transformPoliciesToLegacyDepsOverrides(policy: DependenciesPolicy): DependenciesOverridesData {
