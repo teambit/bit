@@ -9,17 +9,14 @@ import GeneralError from '../../error/general-error';
 import AbstractConfig from './abstract-config';
 import { DEPENDENCIES_FIELDS, OVERRIDE_FILE_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
+import { ComponentOverridesData } from './component-overrides';
 
-export type ConsumerOverridesOfComponent = {
-  dependencies?: Record<string, any>;
-  devDependencies?: Record<string, any>;
+export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;
-  peerDependencies?: Record<string, any>;
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
   defaultScope?: string; // default scope to export to
   defaultOwner?: string; // default scope to export to
-  [key: string]: any; // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [key: string]: ConsumerOverridesOfComponent };

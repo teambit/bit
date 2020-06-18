@@ -1,5 +1,5 @@
 // TODO: remove this
-import { CommandOptions } from '../../cli/command';
+import { CommandOptions } from '../../cli/legacy-command';
 
 export interface Command {
   /**
@@ -59,20 +59,17 @@ export interface Command {
   commands?: Command[];
 
   /**
-   * Main command handler which is called when invoking commands
+   * Main command handler which is called when invoking new commands
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
-  render: (args: CLIArgs, flags: Flags) => Promise<React.ReactElement>;
+  render?: (args: CLIArgs, flags: Flags) => Promise<React.ReactElement>;
 
   /**
-   * Command handler which is called when process.isTTY is true
-   * @param args  - arguments object as defined in name.
-   * @param flags - command flags as described in options.
-   * @return - JSX element which is rendered with ink
+   * Command handler which is called for legacy commands or when process.isTTY is false
    */
-  report?: (args: CLIArgs, flags: Flags) => Promise<string>;
+  report?: (args: CLIArgs, flags: Flags) => Promise<{ data: string; code: number }>;
 
   /**
    * Optional handler to provide a raw result of the command.

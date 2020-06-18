@@ -7,7 +7,7 @@ import { ScopeExtension } from '../scope';
 import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
-import { Isolator } from '../isolator';
+import { IsolatorExtension } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -22,6 +22,7 @@ import { Variants } from '../variants';
 import LegacyComponentConfig from '../../consumer/config';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
+import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 
 /**
  * API of the Bit Workspace
@@ -47,7 +48,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly isolateEnv: Isolator,
+    readonly isolateEnv: IsolatorExtension,
 
     private dependencyResolver: DependencyResolverExtension,
 
@@ -271,6 +272,26 @@ export default class Workspace implements ComponentHost {
     // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
     // level passed to it).
     return loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+  }
+
+  /**
+   * Install dependencies for all components in the workspace
+   *
+   * @returns
+   * @memberof Workspace
+   */
+  async install() {
+    //      this.reporter.info('Installing component dependencies');
+    //      this.reporter.setStatusText('Installing');
+    const components = await this.list();
+    // this.reporter.info('Isolating Components');
+    const isolatedEnvs = await this.load(components.map(c => c.id.toString()));
+    // this.reporter.info('Installing workspace dependencies');
+    await removeExistingLinksInNodeModules(isolatedEnvs);
+    await this.dependencyResolver.folderInstall(process.cwd());
+    await symlinkCapsulesInNodeModules(isolatedEnvs);
+    // this.reporter.end();
+    return isolatedEnvs;
   }
 
   /**

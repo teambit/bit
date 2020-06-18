@@ -1,3 +1,2 @@
-export { default as IsolatorExt } from './isolator.manifest';
-export { default as Isolator, Network } from './isolator';
+export { IsolatorExtension, Network } from './isolator.extension';
 export { FsContainer, Capsule, ContainerExec } from './capsule';

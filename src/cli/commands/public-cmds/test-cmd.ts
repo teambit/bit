@@ -1,5 +1,5 @@
 import R from 'ramda';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
@@ -10,7 +10,7 @@ const validForkLevels = R.values(TESTS_FORK_LEVEL);
 
 let verboseReport = false;
 
-export default class Test extends Command {
+export default class Test implements LegacyCommand {
   name = 'test [id]';
   description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';

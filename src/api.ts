@@ -7,6 +7,7 @@ import { BaseLoadArgsProps } from './legacy-extensions/base-extension';
 
 export { ComponentFactoryExt, ComponentFactory } from './extensions/component';
 export { PkgExtension } from './extensions/pkg';
+export { DependencyResolverExtension } from './extensions/dependency-resolver';
 
 HooksManager.init();
 

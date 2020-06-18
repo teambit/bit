@@ -1,4 +1,4 @@
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { link } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -6,7 +6,7 @@ import { LinksResult } from '../../../links/node-modules-linker';
 import { CodemodResult } from '../../../consumer/component-ops/codemod-components';
 import { codemodTemplate } from '../../templates/codemod-template';
 
-export default class Link extends Command {
+export default class Link implements LegacyCommand {
   name = 'link [ids...]';
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';

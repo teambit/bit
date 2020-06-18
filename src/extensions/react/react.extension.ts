@@ -3,7 +3,7 @@ import { ReactEnv } from './react.env';
 import { Logger, LoggerExt } from '../logger';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compile, CompileExt } from '../compile';
+import { Compile, CompileExt } from '../compiler';
 import { TesterExtension } from '../tester';
 
 export type ReactConfig = {

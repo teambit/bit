@@ -1,10 +1,10 @@
 import R from 'ramda';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { getComponentLogs } from '../../../api/consumer';
 import { paintLog } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-export default class Log extends Command {
+export default class Log implements LegacyCommand {
   name = 'log <id>';
   description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/view#log`;
   alias = '';

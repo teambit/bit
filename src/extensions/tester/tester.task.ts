@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { ReleaseContext } from '../releases';
-import { ReleaseTask, ReleaseResults } from '../releases';
+import { BuildContext } from '../builder';
+import { BuildTask, BuildResults } from '../builder';
 import { Tester } from './tester';
 import { CACHE_ROOT } from '../../constants';
 import { detectTestFiles } from './utils';
@@ -9,12 +9,12 @@ import { detectTestFiles } from './utils';
 const CAPSULES_BASE_DIR = join(CACHE_ROOT, 'capsules');
 
 /**
- * tester release task. Allows to test components during component releases.
+ * tester build task. Allows to test components during component build.
  */
-export class TesterTask implements ReleaseTask {
+export class TesterTask implements BuildTask {
   constructor(readonly extensionId: string) {}
 
-  async execute(context: ReleaseContext): Promise<ReleaseResults> {
+  async execute(context: BuildContext): Promise<BuildResults> {
     const tester: Tester = context.env.getTester();
     const components = detectTestFiles(context.components);
 

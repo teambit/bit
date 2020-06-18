@@ -1,13 +1,13 @@
 /* eslint max-classes-per-file: 0 */
 import rightpad from 'pad-right';
 import chalk from 'chalk';
-import Command from '../../command';
+import { LegacyCommand } from '../../legacy-command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
 // const config = require('../../../api/consumer/lib/global-config');
 import * as config from '../../../api/consumer/lib/global-config';
 
-class ConfigSet extends Command {
+class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';
   description = 'set a global configuration';
   alias = '';
@@ -23,7 +23,7 @@ class ConfigSet extends Command {
   }
 }
 
-class ConfigGet extends Command {
+class ConfigGet implements LegacyCommand {
   name = 'get <key>';
   description = 'get a global configuration';
   alias = '';
@@ -38,7 +38,7 @@ class ConfigGet extends Command {
   }
 }
 
-class ConfigList extends Command {
+class ConfigList implements LegacyCommand {
   name = 'list';
   description = 'list all configuration(s)';
   alias = '';
@@ -57,7 +57,7 @@ class ConfigList extends Command {
   }
 }
 
-class ConfigDel extends Command {
+class ConfigDel implements LegacyCommand {
   name = 'del <key>';
   description = 'delete given key from global configuration';
   alias = '';
@@ -72,7 +72,7 @@ class ConfigDel extends Command {
   }
 }
 
-export default class Config extends Command {
+export default class Config implements LegacyCommand {
   name = 'config';
   description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config`;
   alias = '';

@@ -1,7 +1,7 @@
 import { Workspace } from '../workspace';
 // import { BitCli } from '../cli';
 import { WatchCommand } from './watch.cmd';
-import { Compile } from '../compile/compile';
+import { Compile } from '../compiler';
 import Watch from './watch';
 import { CLIExtension } from '../cli';
 

@@ -1,9 +1,9 @@
 import Table from 'tty-table';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { catScope } from '../../../api/scope';
 import ModelComponent from '../../../scope/models/model-component';
 
-export default class CatScope extends Command {
+export default class CatScope implements LegacyCommand {
   name = 'cat-scope [scopePath]';
   description = 'cat a scope and show all the contents';
   private = true;

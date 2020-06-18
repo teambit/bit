@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
@@ -11,7 +11,7 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
-export default class Tag extends Command {
+export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version

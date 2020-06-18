@@ -15,7 +15,10 @@ export type DetailedDependencyPolicy = {
    */
   force?: boolean;
 };
-export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
+
+// TODO: add DetailedDependencyPolicy once support the force prop
+// export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
+export type DependencyPolicy = SemverVersionRule;
 
 export interface DependenciesPolicyObject {
   [dependencyId: string]: DependencyPolicy;
@@ -34,7 +37,7 @@ export interface DependencyResolverWorkspaceConfig {
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
    * and totally removes the need of a 'node_modules' directory in your project.
    */
-  packageManager: 'npm' | 'yarn' | 'librarian' | 'pnpm';
+  packageManager: 'npm' | 'yarn' | 'pnpm';
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
@@ -132,3 +135,7 @@ export interface DependenciesDefinition {
   devDependencies?: DependencyDefinition[];
   peerDependencies?: DependencyDefinition[];
 }
+
+export type installOpts = {
+  packageManager?: string;
+};

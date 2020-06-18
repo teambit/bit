@@ -104,51 +104,40 @@ describe('bit watch command', function() {
       }
     });
   });
-  // @todo: once the project references is implemented for compile on capsules,
-  // use this as a template for a new e2e-test.
-  describe.skip('watch using TS Project Reference', () => {
-    if (IS_WINDOWS) {
-      // @todo: fix!
-      // @ts-ignore
-      this.skip;
-    } else {
-      before(() => {
-        helper.command.resetFeatures();
-        helper.command.setFeatures(HARMONY_FEATURE);
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.fixtures.populateComponentsTS();
-        helper.fixtures.addExtensionTS();
-        helper.fs.outputFile('bar/foo.js');
-        helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+  describe('Harmony watch, using Compiler & Typescript extensions', () => {
+    before(() => {
+      helper.command.resetFeatures();
+      helper.command.setFeatures(HARMONY_FEATURE);
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponentsTS();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
 
-        const tsExtName = `${helper.scopes.remote}/extensions/typescript`;
-        helper.extensions.addExtensionToVariant('*', tsExtName, {});
-        const compileExtConfig = {
-          compiler: `@bit/${helper.scopes.remote}.extensions.typescript`
-        };
-        helper.extensions.addExtensionToVariant('*', 'compile', compileExtConfig);
+      const environments = {
+        env: '@teambit/react',
+        config: {}
+      };
+      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+    });
+    describe('run bit watch', () => {
+      let watchRunner: WatchRunner;
+      before(async () => {
+        watchRunner = new WatchRunner(helper);
+        await watchRunner.watch();
       });
-      describe('run bit watch', () => {
-        let watchRunner: WatchRunner;
+      after(() => {
+        watchRunner.killWatcher();
+      });
+      describe('changing a file', () => {
         before(async () => {
-          watchRunner = new WatchRunner(helper);
-          await watchRunner.watch();
+          helper.fs.outputFile('comp1/index.ts', 'console.log("hello")');
+          await watchRunner.waitForWatchToRebuildComponent();
         });
-        after(() => {
-          watchRunner.killWatcher();
-        });
-        describe('changing a file', () => {
-          before(() => {
-            helper.fs.outputFile('comp1/index.ts', 'console.log("hello")');
-          });
-          it('should show results from tsc -w', async () => {
-            const tscMsg = 'Starting compilation in watch mode...';
-            const dataFromWatcher = await watchRunner.waitForWatchToPrintMsg(tscMsg);
-            expect(dataFromWatcher).to.have.string(tscMsg);
-          });
+        it('should write the dists on node_modules correctly', () => {
+          const distContent = helper.fs.readFile('node_modules/@bit/comp1/dist/index.js');
+          expect(distContent).to.have.string('hello');
         });
       });
-    }
+    });
   });
 });

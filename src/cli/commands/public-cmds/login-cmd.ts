@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { login } from '../../../api/consumer';
 import { BASE_WEB_DOMAIN } from '../../../constants';
 
-export default class Login extends Command {
+export default class Login implements LegacyCommand {
   name = 'login';
   description = 'log the CLI into Bit';
   alias = '';

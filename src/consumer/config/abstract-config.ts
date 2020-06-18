@@ -145,11 +145,7 @@ export default class AbstractConfig {
     if (!envObj) return undefined;
     if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id
     const envId = Object.keys(envObj)[0];
-    if (
-      RA.isNilOrEmpty(envObj[envId].rawConfig) &&
-      RA.isNilOrEmpty(envObj[envId].options) &&
-      RA.isNilOrEmpty(envObj[envId].files)
-    ) {
+    if (RA.isNilOrEmpty(envObj[envId].rawConfig) && RA.isNilOrEmpty(envObj[envId].options)) {
       return envId;
     }
     return envObj;

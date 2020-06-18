@@ -121,6 +121,9 @@ export default class Component {
   static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
+  static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
+    ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
+  }
 
   name: string;
   version: string | undefined;
@@ -691,8 +694,27 @@ export default class Component {
           const oneFileSpecResult = async testFile => {
             const testFilePath = testFile.path;
             try {
+              const componentRootDir = component.componentMap?.getTrackDir();
+              let testFileRelative = testFile.relative;
+              if (
+                this.origin === COMPONENT_ORIGINS.AUTHORED &&
+                componentRootDir &&
+                testFileRelative.startsWith(componentRootDir)
+              ) {
+                testFileRelative = path.relative(componentRootDir, testFileRelative);
+              }
               const context: Record<string, any> = {
+                /**
+                 * @deprecated
+                 * this is not the component dir, it's the workspace dir
+                 */
                 componentDir: cwd,
+                /**
+                 * absolute path of the component in the workspace.
+                 * available only when is running inside the workspace and the component has either trackDir or rootDir
+                 */
+                componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null,
+                specFileRelativePath: testFileRelative,
                 isolate: isolateFunc
               };
 
@@ -1107,20 +1129,15 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
-    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
 
-    const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
-    // overrides from consumer-config is not relevant and should not affect imported
-    let overridesFromConsumer = isNotNested ? workspaceConfig?.getComponentConfig(id) : null;
-    if (isAuthor) {
-      const plainLegacy = workspaceConfig?._legacyPlainObject();
-      if (plainLegacy && plainLegacy.env) {
-        overridesFromConsumer = overridesFromConsumer || {};
-        overridesFromConsumer.env = {};
-        overridesFromConsumer.env.compiler = plainLegacy.env.compiler || plainLegacy.env.compiler;
-        overridesFromConsumer.env.tester = plainLegacy.env.tester || plainLegacy.env.tester;
-      }
-    }
+    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
+    const overrides = await ComponentOverrides.loadFromConsumer(
+      id,
+      workspaceConfig,
+      overridesFromModel,
+      componentConfig,
+      componentMap.origin
+    );
 
     const propsToLoadEnvs = {
       consumerPath,
@@ -1128,7 +1145,7 @@ export default class Component {
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
-      overridesFromConsumer,
+      overrides,
       workspaceConfig,
       componentConfig,
       context: envsContext
@@ -1156,14 +1173,6 @@ export default class Component {
     const testerPackageDependencies = R.isEmpty(testerDynamicPackageDependencies)
       ? modelTesterPackageDependencies
       : testerDynamicPackageDependencies;
-
-    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
-    const overrides = ComponentOverrides.loadFromConsumer(
-      overridesFromConsumer,
-      overridesFromModel,
-      componentConfig,
-      isAuthor
-    );
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;

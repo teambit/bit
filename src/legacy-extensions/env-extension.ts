@@ -23,10 +23,10 @@ import logger from '../logger/logger';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
 import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 import GeneralError from '../error/general-error';
+import ComponentOverrides from '../consumer/config/component-overrides';
 
 export type EnvPackages = {
   dependencies?: Record<string, any>;
@@ -240,7 +240,7 @@ export default class EnvExtension extends BaseExtension {
     componentOrigin,
     componentFromModel,
     componentConfig,
-    overridesFromConsumer,
+    overrides,
     workspaceConfig,
     envType,
     context
@@ -250,7 +250,7 @@ export default class EnvExtension extends BaseExtension {
     componentOrigin: ComponentOrigin;
     componentFromModel: ConsumerComponent;
     componentConfig: ComponentConfig | undefined;
-    overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
+    overrides: ComponentOverrides;
     workspaceConfig: ILegacyWorkspaceConfig;
     envType: EnvType;
     context?: Record<string, any>;
@@ -291,13 +291,14 @@ export default class EnvExtension extends BaseExtension {
       logger.silly(`env-extension, loading ${envType} from the model`);
       return componentFromModel[envType];
     }
-    if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
-      if (overridesFromConsumer.env[envType] === MANUALLY_REMOVE_ENVIRONMENT) {
-        logger.debug(`env-extension, ${envType} was manually removed from the consumer config overrides`);
+    const envFromOverride = overrides.getEnvByType(envType);
+    if (envFromOverride) {
+      if (envFromOverride === MANUALLY_REMOVE_ENVIRONMENT) {
+        logger.debug(`env-extension, ${envType} was manually removed from the overrides`);
         return null;
       }
-      logger.silly(`env-extension, loading ${envType} from the consumer config overrides`);
-      const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
+      logger.silly(`env-extension, loading ${envType} from the overrides`);
+      const envConfig = { [envType]: AbstractConfig.transformEnvToObject(envFromOverride) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     if (isAuthor && workspaceConfig[`_${envType}`]) {

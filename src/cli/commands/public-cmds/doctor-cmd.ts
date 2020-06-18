@@ -1,11 +1,11 @@
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
 import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/diagnosis';
 
-export default class Doctor extends Command {
+export default class Doctor implements LegacyCommand {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
   alias = '';

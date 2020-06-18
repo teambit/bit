@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import requestify from 'requestify';
-import Command, { CommandOptions } from '../../command';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { searchAdapter } from '../../../search';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { formatter } from '../../../search/searcher';
@@ -9,7 +9,7 @@ import loader from '../../../cli/loader';
 import { SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';
 
-export default class Search extends Command {
+export default class Search implements LegacyCommand {
   name = 'search <query...>';
   description = 'search for components by desired functionality.';
   alias = '';
