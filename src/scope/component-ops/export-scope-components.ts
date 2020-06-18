@@ -415,6 +415,7 @@ async function convertToCorrectScope(
       const didCodeMod = await _replaceSrcOfVersionIfNeeded(objectVersion);
       const didDependencyChange = changeDependencyScope(objectVersion);
       changeDependencyScope(objectVersion);
+      changeExtensionsScope(objectVersion);
       // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
       // this is currently needed because remote-servers with older code still saving Version
       // objects into the calculated hash path and not into the originally created hash.
