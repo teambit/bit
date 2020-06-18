@@ -11,6 +11,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 describe('pkg extension', function() {
+  this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
