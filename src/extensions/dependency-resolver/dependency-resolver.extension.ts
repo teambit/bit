@@ -74,6 +74,13 @@ export class DependencyResolverExtension {
     return this.config.packageManager;
   }
 
+  /**
+   * register new dependencies policies
+   */
+  registerDependenciesPolicies(policy: DependenciesPolicy): void {
+    return this.policiesRegistry.register(policy);
+  }
+
   async capsulesInstall(capsules: Capsule[], opts: installOpts = { packageManager: this.packageManagerName }) {
     return this.packageManager.capsulesInstall(capsules, opts);
   }
@@ -94,7 +101,7 @@ export class DependencyResolverExtension {
     let policiesFromHooks: DependenciesPolicy = {};
     let policiesFromConfig: DependenciesPolicy = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
-    if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
+    if (env?.dependencies && typeof env.dependencies === 'function') {
       policiesFromEnv = env.dependencies();
     }
     const configuredIds = configuredExtensions.ids;
