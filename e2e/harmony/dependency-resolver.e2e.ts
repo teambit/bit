@@ -61,7 +61,24 @@ describe('dependency-resolver extension', function() {
     });
     // TODO: implement once we can extend a specific env with new methods (to apply config changes)
     // and maybe to also apply custom compiler which add deps
-    describe.skip('policies added by an env', function() {});
+    describe('policies added by an env', function() {
+      let barFooOutput;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFooAsDir();
+        // TODO: use custom env with versions provided from outside in the config by the user
+        helper.extensions.addExtensionToVariant('bar/foo', '@teambit/envs', {
+          env: '@teambit/react',
+          config: {}
+        });
+        barFooOutput = helper.command.showComponentParsed('bar/foo');
+      });
+      it('should have the updated dependencies for bar/foo from the env', function() {
+        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.12.0');
+        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.9.17');
+      });
+    });
     describe('policies added by extension', function() {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
