@@ -59,7 +59,7 @@ export class TesterExtension {
       envs,
       workspace,
       new TesterService(workspace, config.testRegex),
-      new TesterTask()
+      new TesterTask(TesterExtension.id)
     );
     cli.register(new TestCmd(tester, workspace));
 
