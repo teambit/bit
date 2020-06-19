@@ -10,26 +10,51 @@ import logger from '../logger/logger';
 export class CommandRunner {
   constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}
 
+  /**
+   * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
+   */
   async runCommand() {
     await this.runMigrateIfNeeded();
     try {
-      await this.runJsonHandler();
-      await this.runRenderHandler();
-      return this.runReportHandler();
+      if (this.flags.json) {
+        return this.runJsonHandler();
+      }
+      if (this.shouldRunRender()) {
+        return this.runRenderHandler();
+      }
+      if (this.command.report) {
+        return this.runReportHandler();
+      }
     } catch (err) {
-      logger.error(
-        `got an error from command ${this.command.name}: ${err}. Error serialized: ${JSON.stringify(
-          err,
-          Object.getOwnPropertyNames(err)
-        )}`
-      );
-      loader.off();
-      const errorHandled = defaultHandleError(err);
-      if (this.command.private) return serializeErrAndExit(err, this.command.name);
-      // uncomment this to see the entire error object on the console
-      if (!this.command.private && errorHandled) return logErrAndExit(errorHandled, this.command.name);
-      return logErrAndExit(err, this.command.name);
+      return this.handleError(err);
     }
+
+    throw new Error(`command "${this.command.name}" doesn't implement "render" nor "report" methods`);
+  }
+
+  /**
+   * when both "render" and "report" were implemented, check whether it's a terminal.
+   * if it's a terminal, use "render", if not, use "report" because "report" is just a string
+   */
+  private shouldRunRender() {
+    const isTerminal = process.stdout.isTTY;
+    if (this.command.report && !isTerminal) {
+      return false;
+    }
+    return Boolean(this.command.render);
+  }
+
+  private handleError(err: Error) {
+    logger.error(
+      `got an error from command ${this.command.name}: ${err}. Error serialized: ${JSON.stringify(
+        err,
+        Object.getOwnPropertyNames(err)
+      )}`
+    );
+    loader.off();
+    if (this.command.private) return serializeErrAndExit(err, this.command.name);
+    const errorHandled = defaultHandleError(err);
+    return logErrAndExit(errorHandled || err, this.command.name);
   }
 
   private async runJsonHandler() {
@@ -39,12 +64,11 @@ export class CommandRunner {
     loader.off();
     const code = result.code || 0;
     const data = result.data || result;
-    return process.stdout.write(JSON.stringify(data, null, 2), () => logger.exitAfterFlush(code, this.command.name));
+    return this.writeAndExit(JSON.stringify(data, null, 2), code);
   }
 
   private async runRenderHandler() {
-    if (!this.command.render) return null;
-    if (this.command.report && !process.stdout.isTTY) return null; // will be handled by "report"
+    if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
     const { waitUntilExit } = render(result);
@@ -53,13 +77,14 @@ export class CommandRunner {
   }
 
   private async runReportHandler() {
-    if (!this.command.report) {
-      throw new Error(`command "${this.command.name}" doesn't implement "render" nor "report" methods`);
-    }
-    if (this.command.render && !process.stdout.isTTY) return null;
+    if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
-    return process.stdout.write(`${result.data}\n`, () => logger.exitAfterFlush(result.code, this.command.name));
+    return this.writeAndExit(`${result.data}\n`, result.code);
+  }
+
+  private writeAndExit(data: string, exitCode: number) {
+    return process.stdout.write(data, () => logger.exitAfterFlush(exitCode, this.command.name));
   }
 
   private async runMigrateIfNeeded(): Promise<any> {
