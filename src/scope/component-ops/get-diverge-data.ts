@@ -70,6 +70,9 @@ export async function getDivergeData(
     return new DivergeData(snapsOnLocal, [], remoteHead);
   }
   const remoteVersion = (await repo.load(remoteHead)) as Version;
+  if (!remoteVersion) {
+    throw new Error(`getDivergeData: unable to find Version ${remoteHead.toString()} of ${modelComponent.id()}`);
+  }
   await addParentsRecursively(remoteVersion, snapsOnRemote, false);
   if (localHeadExistsRemotely) {
     return new DivergeData([], snapsOnRemote, localHead);
