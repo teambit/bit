@@ -1153,7 +1153,6 @@ describe('bit export command', function() {
             let output;
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeFork);
-              helper.scopeHelper.reInitRemoteScope();
               helper.command.exportAllComponents();
 
               helper.scopeHelper.reInitLocalScope();
