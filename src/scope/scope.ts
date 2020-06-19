@@ -278,7 +278,7 @@ export default class Scope {
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
-    componentIds = componentIds.map(componentId => componentId.changeVersion(null));
+    componentIds = componentIds.map(componentId => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
     const ids = components.map(component => {
       const getVersion = () => {

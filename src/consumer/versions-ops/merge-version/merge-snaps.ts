@@ -294,8 +294,6 @@ export async function applyVersion({
   if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
-    componentWithDependencies.compilerDependencies = [];
-    componentWithDependencies.testerDependencies = [];
   }
   const shouldWritePackageJson = async (): Promise<boolean> => {
     if (!componentMap) return true;
@@ -336,9 +334,7 @@ export async function applyVersion({
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
-    writeConfig: Boolean(componentMap && componentMap.configDir), // write bit.json and config files only if it was there before
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap && componentMap.configDir,
+    writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
     verbose: false, // @todo: do we need a flag here?
     writeDists: true, // @todo: do we need a flag here?
     writePackageJson

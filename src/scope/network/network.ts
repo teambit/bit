@@ -1,5 +1,4 @@
 import { BitIds, BitId } from '../../bit-id';
-import ComponentObjects from '../../scope/component-objects';
 import { ScopeDescriptor } from '../scope';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';

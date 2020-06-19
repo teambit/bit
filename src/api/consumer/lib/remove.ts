@@ -26,7 +26,7 @@ export default (async function remove({
   lane: boolean;
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
-  const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
+  const consumer: Consumer | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
   let removeResults;
   if (lane) {
     removeResults = await removeLanes(consumer, ids, remote, force);

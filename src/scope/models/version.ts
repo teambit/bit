@@ -78,7 +78,7 @@ export type VersionProps = {
   customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
-  hash: string;
+  hash?: string;
   parents?: Ref[];
   extensions?: ExtensionDataList;
 };
@@ -143,6 +143,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
+    // @ts-ignore yes, props.hash can be undefined here, but it gets populated as soon as Version is created
     this._hash = props.hash;
     this.parents = props.parents || [];
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
@@ -648,7 +649,7 @@ export default class Version extends BitObject {
       extensions: parseComponentExtensions()
     });
     if (isHash(component.version)) {
-      version._hash = component.version;
+      version._hash = component.version as string;
     } else {
       version.setNewHash();
     }

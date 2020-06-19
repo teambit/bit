@@ -726,7 +726,7 @@ export default class Component extends BitObject {
       local: rawComponent.local,
       state: rawComponent.state,
       scopesList: rawComponent.remotes,
-      head: rawComponent.head ? Ref.from(rawComponent.head) : null
+      head: rawComponent.head ? Ref.from(rawComponent.head) : undefined
     });
   }
 

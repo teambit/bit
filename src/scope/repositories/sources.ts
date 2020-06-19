@@ -76,7 +76,7 @@ export default class SourceRepository {
         const snap = await this.objects().load(new Ref(bitId.version));
         if (!snap) {
           logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-          return null;
+          return undefined;
         }
         return foundComponent;
       }
@@ -354,6 +354,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       specsResults
     });
     objectRepo.add(version);
+    if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, objectRepo);
 
     if (unmergedComponent) {

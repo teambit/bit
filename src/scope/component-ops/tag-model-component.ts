@@ -171,8 +171,8 @@ export default async function tagModelComponent({
   skipTests: boolean;
   verbose?: boolean;
   skipAutoTag: boolean;
-  resolveUnmerged: boolean;
-  isSnap: boolean;
+  resolveUnmerged?: boolean;
+  isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};

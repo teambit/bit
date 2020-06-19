@@ -149,6 +149,7 @@ async function updateComponents(
         if (
           (isTag(changedComponentId.version) &&
             isTag(dependencyId.version) &&
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             semver.gt(changedComponentId.version!, dependencyId.version!)) ||
           changedComponentId.version !== dependencyId.version
         ) {
@@ -258,6 +259,7 @@ export async function getAutoTagPending(
       // tagged with 1.0.1. So, because A has B with a higher version already, we don't want to
       // auto-tag it and downgrade its B version.
       if (isTag(changedComponentId.version) && isTag(edgeId.version)) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return semver.gte(changedComponentId.version!, edgeId.version!);
       }
       // when they're not tags but snaps, it is impossible to snap from a detached head so a

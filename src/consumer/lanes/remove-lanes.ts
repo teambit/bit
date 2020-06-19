@@ -7,7 +7,12 @@ import { Remotes } from '../../remotes';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import WorkspaceLane from '../bit-map/workspace-lane';
 
-export default async function removeLanes(consumer: Consumer | null, lanes: string[], remote: boolean, force: boolean) {
+export default async function removeLanes(
+  consumer: Consumer | undefined,
+  lanes: string[],
+  remote: boolean,
+  force: boolean
+) {
   if (remote) {
     const remoteLaneIds = lanes.map(lane => RemoteLaneId.parse(lane));
     const results = await removeRemoteLanes(consumer, remoteLaneIds, force);
@@ -22,7 +27,7 @@ export default async function removeLanes(consumer: Consumer | null, lanes: stri
   return { laneResults: lanes };
 }
 
-async function removeRemoteLanes(consumer: Consumer | null, lanes: RemoteLaneId[], force: boolean) {
+async function removeRemoteLanes(consumer: Consumer | undefined, lanes: RemoteLaneId[], force: boolean) {
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};
