@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, Box, Text } from 'ink';
-import { Command, CLIArgs, CommandOptions } from '../cli';
-import { Flags } from '../cli';
+import { Command, CommandOptions } from '../cli';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
 
@@ -16,7 +15,7 @@ export default class InsightsCmd implements Command {
     this.insightManager = insightManager;
   }
 
-  async render([names]: CLIArgs, { list }: Flags) {
+  async render([names]: [string[]], { list }: { list: boolean }) {
     if (list) {
       const results = this.insightManager.listInsights();
       const listItems = results.map(insight => (insight += '\n'));

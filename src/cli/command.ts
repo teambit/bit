@@ -75,7 +75,7 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
-  render?: (args: CLIArgs, flags: Flags) => Promise<React.ReactElement>;
+  render?(args: CLIArgs, flags: Flags): Promise<React.ReactElement>;
 
   /**
    * Command handler which is called for legacy commands or when process.isTTY is false
@@ -83,7 +83,7 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
    */
-  report?: (args: CLIArgs, flags: Flags) => Promise<Report>;
+  report?(args: CLIArgs, flags: Flags): Promise<Report>;
 
   /**
    * Optional handler to provide a raw result of the command.
@@ -92,9 +92,9 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return a GenericObject to be rendered to string (by json.stringify) in the console.
    */
-  json?: (args: CLIArgs, flags: Flags) => Promise<GenericObject>;
+  json?(args: CLIArgs, flags: Flags): Promise<GenericObject>;
 }
-export type Flags = { [flagName: string]: string | boolean };
+export type Flags = { [flagName: string]: string | boolean | undefined };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
