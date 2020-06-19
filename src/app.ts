@@ -2,7 +2,7 @@
 import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
-import { logErrAndExit } from './cli/command-registry';
+import { logErrAndExit } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
 import { PaperError, CLIExtension } from './extensions/cli';

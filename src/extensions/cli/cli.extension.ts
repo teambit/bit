@@ -1,6 +1,6 @@
 import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
-import { Command } from './command';
+import { Command } from '../../cli/command';
 import CommandRegistry from './registry';
 import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
@@ -45,7 +45,6 @@ export class CLIExtension {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     command.commands!.forEach(cmd => this.setDefaults(cmd));
     this.registry.register(command);
-    return this;
   }
 
   /**
@@ -65,14 +64,13 @@ export class CLIExtension {
       return;
     }
 
-    Object.values(this.commands).forEach(command => register(command as any, commander));
-
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
     if (packageManagerArgs && packageManagerArgs.length) {
-      // Remove the -- delimiter
-      packageManagerArgs.shift();
+      packageManagerArgs.shift(); // remove the -- delimiter
     }
-    commander.packageManagerArgs = packageManagerArgs;
+
+    Object.values(this.commands).forEach(command => register(command as any, commander, packageManagerArgs));
+
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
     if (this.shouldOutputJson()) {

@@ -3,7 +3,7 @@ import React from 'react';
 import _ from 'lodash';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, PaperOptions, CLIArgs, Flags } from '../cli';
+import { Command, CommandOptions, CLIArgs, Flags } from '../cli';
 import { IsolatorExtension } from './isolator.extension';
 import { loadConsumerIfExist } from '../../consumer';
 import CapsuleList from './capsule-list';
@@ -26,7 +26,7 @@ export class CapsuleCreateCmd implements Command {
     ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['d', 'installPackages', 'install packages in capsule with npm']
-  ] as PaperOptions;
+  ] as CommandOptions;
 
   constructor(private isolator: IsolatorExtension) {}
 
@@ -54,6 +54,6 @@ export class CapsuleCreateCmd implements Command {
   async json([componentIds]: CLIArgs, opts: Flags) {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
-    return JSON.stringify(capsules, null, 2);
+    return capsules;
   }
 }

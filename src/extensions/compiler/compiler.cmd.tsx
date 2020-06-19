@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
 import { Command, CLIArgs } from '../cli';
-import { Flags, PaperOptions } from '../cli';
+import { Flags, CommandOptions } from '../cli';
 import { Compile } from './compile';
 
 export class CompileCmd implements Command {
@@ -14,7 +14,7 @@ export class CompileCmd implements Command {
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],
     ['j', 'json', 'return the compile results in json format']
-  ] as PaperOptions;
+  ] as CommandOptions;
 
   constructor(private compile: Compile) {}
 

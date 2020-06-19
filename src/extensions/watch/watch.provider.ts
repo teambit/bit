@@ -9,7 +9,6 @@ export type watchDeps = [CLIExtension, Compile, Workspace];
 
 export function provideWatch([cli, compile, workspace]: watchDeps) {
   const watch = new Watch(compile, workspace);
-  // @ts-ignore
   cli.register(new WatchCommand(watch));
   return watch;
 }

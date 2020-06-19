@@ -3,7 +3,7 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Packer } from './pack';
-import { Flags, PaperOptions, Command, CLIArgs } from '../cli';
+import { Flags, CommandOptions, Command, CLIArgs } from '../cli';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
@@ -14,7 +14,7 @@ export class PackCmd implements Command {
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix', 'keep custom prefix'],
     ['j', 'json', 'return the output as JSON']
-  ] as PaperOptions;
+  ] as CommandOptions;
   shortDescription = '';
   alias = '';
   group = '';
