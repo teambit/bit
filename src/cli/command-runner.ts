@@ -52,8 +52,8 @@ export class CommandRunner {
       )}`
     );
     loader.off();
-    if (this.command.private) return serializeErrAndExit(err, this.command.name);
     const errorHandled = defaultHandleError(err);
+    if (this.command.private) return serializeErrAndExit(err, this.command.name);
     return logErrAndExit(errorHandled || err, this.command.name);
   }
 

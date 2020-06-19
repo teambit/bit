@@ -627,6 +627,7 @@ function handleNonBitCustomErrors(err: Error): string {
   return chalk.red(err.message || err);
 }
 
+// @todo: fix. this violates CQRS. it returns data and also has side effect.
 export default (err: Error): string | undefined => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
