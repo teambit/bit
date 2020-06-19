@@ -14,8 +14,8 @@ export class CommandRunner {
    * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
    */
   async runCommand() {
-    await this.runMigrateIfNeeded();
     try {
+      await this.runMigrateIfNeeded();
       if (this.flags.json) {
         return await this.runJsonHandler();
       }
