@@ -70,11 +70,6 @@ export interface Command {
   _packageManagerArgs?: string[];
 
   /**
-   * do not set this. it is being set once the legacy command is created
-   */
-  _legacyOptions?: { migration?: boolean };
-
-  /**
    * Main command handler which is called when invoking new commands
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
