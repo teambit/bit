@@ -17,13 +17,13 @@ export class CommandRunner {
     await this.runMigrateIfNeeded();
     try {
       if (this.flags.json) {
-        return this.runJsonHandler();
+        return await this.runJsonHandler();
       }
       if (this.shouldRunRender()) {
-        return this.runRenderHandler();
+        return await this.runRenderHandler();
       }
       if (this.command.report) {
-        return this.runReportHandler();
+        return await this.runReportHandler();
       }
     } catch (err) {
       return this.handleError(err);
