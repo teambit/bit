@@ -16,7 +16,11 @@ export type LogEntry = {
 
 export default class Logger {
   private eventEmitter = new EventEmitter();
+  private subscribers: string[] = [];
   createLogPublisher(extensionName: string): LogPublisher {
+    if (extensionName && !this.subscribers.includes(extensionName)) {
+      this.subscribers.push(extensionName);
+    }
     const emitter = this.eventEmitter;
     return {
       info(componentId, messages) {
@@ -36,6 +40,13 @@ export default class Logger {
   subscribe(extensionName: string, cb: (LogEntry) => void) {
     this.eventEmitter.on(extensionName, (logEntry: LogEntry) => {
       cb(logEntry);
+    });
+  }
+  subscribeAll(cb: (LogEntry) => void) {
+    this.subscribers.forEach(extensionName => {
+      this.eventEmitter.on(extensionName, (logEntry: LogEntry) => {
+        cb(logEntry);
+      });
     });
   }
   unsubscribe(extensionName: string) {

@@ -15,7 +15,7 @@ import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { docsTemplate } from './docs.tpl';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { BuildPipe } from '../builder';
+import { BuildPipe, BuildTask } from '../builder';
 import { Compiler, Compile } from '../compiler';
 
 export class ReactEnv implements Environment {
@@ -90,10 +90,10 @@ export class ReactEnv implements Environment {
   /**
    * returns a build pipeline.
    */
-  getPipe(): BuildPipe {
+  getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return BuildPipe.from([this.compiler.task]);
+    return [this.compiler.task];
   }
 
   dev(workspace: Workspace, components: Component[]) {

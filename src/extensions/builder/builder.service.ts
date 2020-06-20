@@ -2,6 +2,8 @@ import { EnvService, ExecutionContext } from '../environments';
 import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
+import { LogPublisher } from '../types';
+import { BuildTask } from './types';
 
 export class BuilderService implements EnvService {
   constructor(
@@ -13,7 +15,8 @@ export class BuilderService implements EnvService {
     /**
      * workspace extension.
      */
-    private workspace: Workspace
+    private workspace: Workspace,
+    private logger: LogPublisher
   ) {}
 
   /**
@@ -21,10 +24,15 @@ export class BuilderService implements EnvService {
    */
   async run(context: ExecutionContext) {
     // make build pipe accessible throughout the context.
-    const buildPipe: BuildPipe = context.env.getPipe(context);
-    if (!buildPipe) {
+    if (!context.env.getPipe) {
       throw new Error(`Builder service expects ${context.id} to implement getPipe()`);
     }
+    const buildTasks: BuildTask[] = context.env.getPipe(context);
+    const buildPipe = BuildPipe.from(buildTasks, this.logger);
+    this.logger.info(
+      context.id,
+      `start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`
+    );
 
     const buildContext = Object.assign(context, {
       capsuleGraph: await this.isolator.createNetworkFromConsumer(
