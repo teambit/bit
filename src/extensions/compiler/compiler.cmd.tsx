@@ -1,7 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Command, CLIArgs } from '../cli';
-import { Flags, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '../cli';
 import { Compile } from './compile';
 
 export class CompileCmd implements Command {
@@ -18,7 +16,7 @@ export class CompileCmd implements Command {
 
   constructor(private compile: Compile) {}
 
-  async render([components]: CLIArgs, { verbose, noCache }: Flags) {
+  async render([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
     // @ts-ignore
     const compileResults = await this.compile.compileOnWorkspace(components, { verbose, noCache });
     // eslint-disable-next-line no-console
@@ -27,7 +25,7 @@ export class CompileCmd implements Command {
     return <div>{output}</div>;
   }
 
-  async json([components]: CLIArgs, { verbose, noCache }: Flags) {
+  async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
     // @ts-ignore
     const compileResults = await this.compile.compileOnWorkspace(components, { verbose, noCache });
     return {

@@ -1,8 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, CLIArgs, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '../cli';
 import { Watch } from '.';
 
 export class WatchCommand implements Command {
@@ -15,7 +13,7 @@ export class WatchCommand implements Command {
 
   constructor(private watch: Watch) {}
 
-  async render(cliArgs: CLIArgs, { verbose = false }: { verbose?: boolean }) {
+  async render(cliArgs: [], { verbose = false }: { verbose?: boolean }): Promise<React.ReactElement> {
     await this.watch.watch({ verbose });
     return <Color>watcher terminated</Color>;
   }

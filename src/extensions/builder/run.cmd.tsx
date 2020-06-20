@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Box, Color } from 'ink';
-import { Command, CLIArgs, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
 import { Reporter } from '../reporter';
@@ -18,7 +18,7 @@ export class BuilderCmd implements Command {
 
   constructor(private builder: BuilderExtension, private workspace: Workspace, private reporter: Reporter) {}
 
-  async render([userPattern]: CLIArgs, { verbose }: { verbose: boolean }) {
+  async render([userPattern]: [string], { verbose }: { verbose: boolean }) {
     this.reporter.title('Starting "build"');
     let capsulesInstalled = 0;
     let totalCapsules = 0;
