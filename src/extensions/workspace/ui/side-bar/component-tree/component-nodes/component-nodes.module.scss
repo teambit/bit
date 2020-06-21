@@ -18,7 +18,7 @@
 		transition: all 300ms;
 
 		[data-collapsed="true"] & {
-			transform: translate(-16px, 2px) rotate(0.5turn);
+			transform: translate(-16px, 2px) rotate(-0.25turn);
 		}
 	}
 }
