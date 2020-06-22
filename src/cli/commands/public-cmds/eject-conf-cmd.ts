@@ -13,6 +13,7 @@ export default class EjectConf implements LegacyCommand {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';
+  private = true;
   opts = [];
   loader = true;
   migration = true;

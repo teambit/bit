@@ -1,27 +1,18 @@
-import { serializeError } from 'serialize-error';
 import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
-import { render } from 'ink';
-import { LegacyCommand } from './legacy-command';
+import { LegacyCommand, CommandOptions } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
-import { migrate } from '../api/consumer';
-import defaultHandleError from './default-error-handler';
-import { camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { camelCase, first } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
+import { Command } from './command';
+import { CommandRunner } from './command-runner';
 
 didYouMean.returnFirstMatch = true;
-
-export function logErrAndExit(msg: Error | string, commandName: string) {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (msg.code) throw msg;
-  console.error(msg); // eslint-disable-line
-  logger.exitAfterFlush(1, commandName);
-}
 
 function parseSubcommandFromArgs(args: [any]) {
   if (typeof first(args) === 'string') return first(args);
@@ -33,7 +24,7 @@ function parseCommandName(commandName: string): string {
   return first(commandName.split(' '));
 }
 
-function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean | string } {
+function getOpts(c, opts: CommandOptions): { [key: string]: boolean | string } {
   const options = {};
 
   opts.forEach(([, name]) => {
@@ -57,99 +48,23 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
  * the stack trace up to this point is confusing, it's helpful to outline it here:
  * CLIExtension.run => commander.parse(params) => commander-pkg.parse => commander-pkg.parseArgs => execAction
  */
-export function execAction(command, concrete, args): Promise<any> {
+export async function execAction(command: Command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
-  const packageManagerArgs = concrete.parent.packageManagerArgs;
   Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
     args: relevantArgs,
-    flags,
-    packageManagerArgs
+    flags
   });
-  if (command.loader) {
+  if (command.loader && !flags.json) {
     loader.on();
   }
   if (flags[TOKEN_FLAG_NAME]) {
     globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
   }
-  if (flags.json) {
-    loader.off();
-  }
   logger.shouldWriteToConsole = !flags.json;
-  const migrateWrapper = (run: boolean) => {
-    if (run) {
-      logger.debug('Checking if a migration is needed');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return migrate(null, false);
-    }
-    return Promise.resolve();
-  };
-
-  const getCommandHandler = (): 'render' | 'report' | 'json' => {
-    if (flags.json) {
-      if (!command.json) throw new Error(`command "${command.name}" doesn't implement "json" method`);
-      return 'json';
-    }
-    if (command.render && command.report) {
-      return process.stdout.isTTY ? 'render' : 'report';
-    }
-    if (command.report) return 'report';
-    if (command.render) return 'render';
-    throw new Error(`command "${command.name}" doesn't implement "render" nor "report" methods`);
-  };
-  const commandHandler = getCommandHandler();
-
-  return (
-    migrateWrapper(command.migration)
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .then(() => {
-        // this is a hack in the legacy code to make paper work
-        // it should be removed upon major refactoring process
-        command.packageManagerArgs = packageManagerArgs;
-        return command[commandHandler](relevantArgs, flags, packageManagerArgs);
-      })
-      .then(async res => {
-        loader.off();
-        switch (commandHandler) {
-          case 'json': {
-            const code = res.code || 0;
-            const data = res.data || res;
-            return process.stdout.write(JSON.stringify(data, null, 2), () => logger.exitAfterFlush(code, command.name));
-          }
-          case 'render': {
-            const { waitUntilExit } = render(res);
-            await waitUntilExit();
-            return logger.exitAfterFlush(res.props.code, command.name);
-          }
-          case 'report':
-          default: {
-            return process.stdout.write(`${res.data}\n`, () => logger.exitAfterFlush(res.code, command.name));
-          }
-        }
-      })
-      .catch(err => {
-        logger.error(
-          `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-            err,
-            Object.getOwnPropertyNames(err)
-          )}`
-        );
-        loader.off();
-        console.log(err);
-        const errorHandled = defaultHandleError(err) || command.handleError(err);
-        if (command.private) return serializeErrAndExit(err, command.name);
-        // uncomment this to see the entire error object on the console
-        if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
-        return logErrAndExit(err, command.name);
-      })
-  );
-}
-
-function serializeErrAndExit(err, commandName) {
-  process.stderr.write(packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false));
-  const code = err.code && isNumeric(err.code) ? err.code : 1;
-  return logger.exitAfterFlush(code, commandName);
+  const commandRunner = new CommandRunner(command, relevantArgs, flags);
+  return commandRunner.runCommand();
 }
 
 /**
@@ -157,7 +72,7 @@ function serializeErrAndExit(err, commandName) {
  * at this point, it doesn't run any `execAction`, it only register it.
  * the actual running of `execAction` happens once `commander.parse(params)` is called.
  */
-function registerAction(command: LegacyCommand, concrete) {
+function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     const subCommands = command.commands;
     if (subCommands?.length) {
@@ -182,17 +97,21 @@ function createOptStr(alias, name) {
   return `--${name}`;
 }
 
-export function register(command: LegacyCommand, commanderCmd) {
+export function register(command: Command, commanderCmd, packageManagerArgs?: string[]) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)
     .alias(command.alias);
 
   if (command.remoteOp) {
-    (command.opts || (command as any).options).push(['', TOKEN_FLAG, 'authentication token']);
+    command.options.push(['', TOKEN_FLAG, 'authentication token']);
   }
 
-  (command.opts || (command as any).options).forEach(([alias, name, description]) => {
+  if (packageManagerArgs) {
+    command._packageManagerArgs = packageManagerArgs;
+  }
+
+  command.options.forEach(([alias, name, description]) => {
     concrete.option(createOptStr(alias, name), description);
   });
 

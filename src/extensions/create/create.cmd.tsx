@@ -2,7 +2,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, Text, Box } from 'ink';
-import { Command, CLIArgs } from '../cli';
+import { Command } from '../cli';
 import { Create } from './create';
 
 export class CreateCmd implements Command {
@@ -11,11 +11,12 @@ export class CreateCmd implements Command {
   shortDescription = '';
   alias = '';
   group = '';
+  private = true;
   options = [];
 
   constructor(private create: Create) {}
 
-  async render([name]: CLIArgs) {
+  async render([name]: [string]) {
     // @ts-ignore
     const results = await this.create.create(name);
     const result = results.addedComponents[0];

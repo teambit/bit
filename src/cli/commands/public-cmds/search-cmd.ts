@@ -18,6 +18,7 @@ export default class Search implements LegacyCommand {
     ['r', 'reindex', 're-index all components']
   ] as CommandOptions;
   loader = true;
+  private = true;
   migration = true;
 
   action([query]: [string[]], { scope, reindex }: { scope: string; reindex: boolean }): Promise<any> {

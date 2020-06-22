@@ -2,12 +2,19 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
-import { Command } from '../command';
+import { Command } from '../../../cli/command';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {
     const help: HelpProps = Object.entries(commands)
-      .filter(([_name, command]) => !command.private && (command.shortDescription || command.description))
+      // The ci-update condition is a workaround because we don't want to make it private for other reason (see the ci-update-cmd for more info)
+      // TODO: remove this once the ci-update command has been removed soon
+      .filter(
+        ([_name, command]) =>
+          !command.private &&
+          (command.shortDescription || command.description) &&
+          command.name !== 'ci-update <id> [scopePath]'
+      )
       .reduce(function(partialHelp, [id, command]) {
         partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},

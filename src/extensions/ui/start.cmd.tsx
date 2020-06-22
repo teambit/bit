@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Color, Text } from 'ink';
 // import { EnvConsole } from './components';
 // make sure to update eslint to read JSX.
-import { Command, CLIArgs } from '../cli';
+import { Command } from '../cli';
 import { Workspace } from '../workspace';
 import { UIExtension } from './ui.extension';
 
@@ -12,6 +12,7 @@ export class StartCmd implements Command {
   name = 'start [pattern]';
   description = 'start a dev environment for a workspace or a specific component';
   alias = 'c';
+  private = true;
   group = 'development';
   shortDescription = '';
   options = [];
@@ -32,8 +33,7 @@ export class StartCmd implements Command {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  // @ts-ignore TODO: align cli api.
-  async render([userPattern]: CLIArgs): Promise<React.ReactElement> {
+  async render([userPattern]: [string]): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     const uiRuntime = await this.ui.createRuntime(pattern ? await this.workspace.byPattern(pattern) : undefined);

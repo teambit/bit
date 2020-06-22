@@ -3,7 +3,17 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Packer } from './pack';
-import { Flags, PaperOptions, Command, CLIArgs } from '../cli';
+import { CommandOptions, Command } from '../cli';
+
+type PackArgs = [string, string];
+
+type PackFlags = {
+  outDir: string;
+  prefix?: boolean;
+  override?: boolean;
+  keep?: boolean;
+  json?: boolean;
+};
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
@@ -14,19 +24,19 @@ export class PackCmd implements Command {
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix', 'keep custom prefix'],
     ['j', 'json', 'return the output as JSON']
-  ] as PaperOptions;
+  ] as CommandOptions;
   shortDescription = '';
   alias = '';
-  group = '';
+  group = 'collaborate';
 
   constructor(private packer: Packer) {}
 
-  async render(args: CLIArgs, options: Flags) {
+  async render(args: PackArgs, options: PackFlags) {
     const packResult = await this.json(args, options);
     return <Color green>tar path: {packResult.data.tarPath}</Color>;
   }
 
-  async json([componentId, scopePath]: CLIArgs, options: Flags) {
+  async json([componentId, scopePath]: PackArgs, options: PackFlags) {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     let scopePathStr: string | undefined;
     if (scopePath) {
@@ -36,7 +46,6 @@ export class PackCmd implements Command {
     const packResult = await this.packer.packComponent(
       compId,
       scopePathStr,
-      // @ts-ignore
       options.outDir,
       options.prefix,
       options.override,

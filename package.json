@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.0-dev.2",
+  "version": "14.8.0-dev.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -20,6 +20,9 @@
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
     "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
+    "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
+    "e2e-test:ssh": "npm run e2e-test --ssh",
+    "e2e-test:ssh-debug": "npm run e2e-test --ssh --debug --keep-envs",
     "e2e-test:appveyor1": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.1.ts 2> output.err",
     "e2e-test:appveyor2": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.2.ts 2> output.err",
     "e2e-test:appveyor3": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.3.ts 2> output.err",

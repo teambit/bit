@@ -7,7 +7,6 @@ export type PackDeps = [CLIExtension, ScopeExtension];
 
 export default async function packProvider([cli, scope]: PackDeps) {
   const packer = new Packer(scope?.legacyScope);
-  // @ts-ignore
   cli.register(new PackCmd(packer));
   return packer;
 }
