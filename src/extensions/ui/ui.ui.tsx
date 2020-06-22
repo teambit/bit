@@ -1,9 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
-import { GraphQLProvider } from '../graphql/graphql-provider';
 // import * as serviceWorker from './serviceWorker';
 
 // If you want your app to work offline and load faster, you can change

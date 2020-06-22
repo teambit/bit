@@ -30,13 +30,8 @@ export class Environments {
   ) {}
 
   /**
-   * create a development runtime environment.
+   * creates a new runtime environments for a set of components.
    */
-  async dev(components: Component[]): Promise<Runtime> {
-    // :TODO how to standardize this? we need to make sure all validation errors will throw nicely at least.
-    return this.createRuntime(components);
-  }
-
   async createEnvironment(components: Component[]): Promise<Runtime> {
     return this.createRuntime(components);
   }

@@ -1,9 +1,12 @@
-import { Environment } from '../environments';
+import { Environment, ExecutionContext } from '../environments';
 import { Tester } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { BuildPipe } from '../builder';
 import { Compiler, Compile } from '../compiler';
+import { WebpackExtension } from '../webpack';
+import { DevServer } from '../bundler';
+import webpackConfigFactory from './webpack/webpack.config';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -23,7 +26,12 @@ export class ReactEnv implements Environment {
     /**
      * compiler extension.
      */
-    private compiler: Compile
+    private compiler: Compile,
+
+    /**
+     * webpack extension.
+     */
+    private webpack: WebpackExtension
   ) {}
 
   /**
@@ -50,7 +58,9 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer() {}
+  getDevServer(context: ExecutionContext): DevServer {
+    return this.webpack.createDevServer(context.components, webpackConfigFactory());
+  }
 
   /**
    * adds dependencies to all configured components.

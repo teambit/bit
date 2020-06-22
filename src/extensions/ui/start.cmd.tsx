@@ -37,10 +37,10 @@ export class StartCmd implements Command {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     const uiRuntime = await this.ui.createRuntime(pattern ? await this.workspace.byPattern(pattern) : undefined);
-    this.clearConsole();
+    // this.clearConsole();
     // @ts-ignore
     // uiRuntime.dev();
-    this.clearConsole();
+    // this.clearConsole();
     return <EnvConsole runtime={uiRuntime} />;
   }
 }
