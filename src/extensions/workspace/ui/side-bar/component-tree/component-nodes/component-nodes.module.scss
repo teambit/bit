@@ -26,6 +26,11 @@
 .component {
 	height: 40px;
 	line-height: 40px;
+	display: block;
+	
+	//TODO - move to a link component
+	text-decoration: none;
+	color: inherit;
 	
 	box-sizing: border-box;
 	border-left: 0px solid transparent;

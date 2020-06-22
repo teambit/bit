@@ -13,7 +13,8 @@ export class DocsUI {
     });
 
     workspace.registerPage({
-      path: '/~overview',
+      path: ['~overview', ''],
+      exact: true,
       children: <DocsSection {...docsMock} />
     });
 

@@ -10,6 +10,7 @@ import { clickable } from '../../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
 
 import styles from './component-nodes.module.scss';
+import { NavLink } from 'react-router-dom';
 
 export function ScopeView({ node, depth }: TreeNodeProps) {
   return (
@@ -42,31 +43,31 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
 }
 export class ComponentView extends Component<TreeNodeProps> {
   static contextType = ComponentTreeContext;
-  context!: IComponentTreeContext;
+  // context!: IComponentTreeContext;
 
-  handleClick = () => {
-    const { node } = this.props;
-    this.context.onSelect(node.id);
-  };
+  // handleClick = () => {
+  //   const { node } = this.props;
+  //   this.context.onSelect(node.id);
+  // };
 
-  private get isSelected() {
-    const { node } = this.props;
-    const { selected } = this.context;
+  // private get isSelected() {
+  //   const { node } = this.props;
+  //   const { selected } = this.context;
 
-    return node.id === selected;
-  }
+  //   return node.id === selected;
+  // }
 
   render() {
     const { node } = this.props;
-    const { isSelected } = this;
 
     return (
-      <div
-        className={classNames(indentClass, isSelected && styles.active, clickable, hoverable, styles.component)}
-        onClick={this.handleClick}
+      <NavLink
+        to={`/${node.id}`}
+        className={classNames(indentClass, clickable, hoverable, styles.component)}
+        activeClassName={styles.active}
       >
         {getName(node.id)}
-      </div>
+      </NavLink>
     );
   }
 }

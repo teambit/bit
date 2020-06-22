@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
-import { HashRouter } from 'react-router-dom';
+import { HashRouter, Route } from 'react-router-dom';
 import 'reset-css';
 
 import { SideBar } from '../side-bar';
@@ -51,10 +51,10 @@ export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
           onSelectComponent={selectComponent}
           selected={selectedComponent}
         />
-        {/* <Route path="/:slug([\w]*)"> */}
-        <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
-        <Stage pageSlot={pageSlot} />
-        {/* </Route> */}
+        <Route path="/:slug([^~]+)">
+          <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
+          <Stage pageSlot={pageSlot} />
+        </Route>
       </div>
     </WorkspaceContext>
   );

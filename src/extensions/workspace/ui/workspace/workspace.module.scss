@@ -18,11 +18,11 @@ $topbarHeight: 64px;
 	}
 	
 	> :nth-child(2) {
-		grid-area: header;
-	}
-
-	> :nth-child(3) {
 		grid-area: navigation;
+	}
+	
+	> :nth-child(3) {
+		grid-area: header;
 	}
 
 	> :nth-child(4) {

@@ -20,7 +20,7 @@ export class ChangeLogUI {
     });
 
     workspace.registerPage({
-      path: '/~changelog',
+      path: '~changelog',
       children: ui.ChangeLog()
     });
 

@@ -12,7 +12,7 @@ export class DependenciesUI {
     });
 
     workspace.registerPage({
-      path: '/~dependencies',
+      path: '~dependencies',
       children: <DependenciesPage />
     });
 

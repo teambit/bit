@@ -18,7 +18,7 @@ export class TesterUI {
     });
 
     workspace.registerPage({
-      path: '/~tests',
+      path: '~tests',
       children: <TestsPage />
     });
 
