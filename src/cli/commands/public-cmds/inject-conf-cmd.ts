@@ -7,6 +7,7 @@ export default class InjectConf implements LegacyCommand {
   name = 'inject-conf [id]';
   description = 'injecting components configuration';
   alias = '';
+  private = true;
   opts = [['f', 'force', 'force injecting even if there are config files changes']] as CommandOptions;
   loader = true;
   migration = true;

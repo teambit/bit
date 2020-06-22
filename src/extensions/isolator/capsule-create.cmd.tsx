@@ -20,6 +20,7 @@ export class CapsuleCreateCmd implements Command {
   description = `create capsule`;
   shortDescription = 'create capsule';
   group = 'capsules';
+  private = true;
   alias = '';
   options = [
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
