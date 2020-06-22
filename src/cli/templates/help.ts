@@ -1,13 +1,12 @@
+import rightpad from 'pad-right';
+import chalk from 'chalk';
 import allCommands from './all-help';
 import { BASE_DOCS_DOMAIN } from '../../constants';
-
-const rightpad = require('pad-right');
-const chalk = require('chalk');
 
 const SPACE = ' ';
 const TITLE_LEFT_SPACES_NUMBER = 2;
 const COMMAND_LEFT_SPACES_NUMBER = 4;
-const NAME_WITH_SPACES_LENTH = 15;
+const NAME_WITH_SPACES_LENGTH = 15;
 
 const baseTemplate = commands => {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
@@ -27,7 +26,7 @@ ${commandsTemplate(commands)}
 function commandTemplate(command) {
   const { name, description } = command;
   const nameSpace = SPACE.repeat(COMMAND_LEFT_SPACES_NUMBER);
-  const nameWithRightSpace = rightpad(name, NAME_WITH_SPACES_LENTH, SPACE);
+  const nameWithRightSpace = rightpad(name, NAME_WITH_SPACES_LENGTH, SPACE);
   const res = `${nameSpace}${chalk.cyan(nameWithRightSpace)}${description}`;
   return res;
 }
