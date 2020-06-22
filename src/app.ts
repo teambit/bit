@@ -1,7 +1,7 @@
 // import Bluebird from 'bluebird';
-import harmony, { HarmonyError } from '@teambit/harmony';
+import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
-import { logErrAndExit, handleErrorAndExit } from './cli/command-runner';
+import { handleErrorAndExit } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
 import { CLIExtension } from './extensions/cli';
@@ -21,23 +21,15 @@ initApp();
 
 async function initApp() {
   HooksManager.init();
-  await initHarmony();
   await initCLI();
 }
 
-async function initHarmony() {
+async function initCLI() {
   try {
     await harmony.run(ConfigExt);
     await harmony.set([BitExt]);
-  } catch (err) {
-    const handledError = err instanceof HarmonyError ? err.toString() : err;
-    logErrAndExit(handledError, process.argv[2] || '');
-  }
-}
-async function initCLI() {
-  const cli: CLIExtension = harmony.get('CLIExtension');
-  if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
-  try {
+    const cli: CLIExtension = harmony.get('CLIExtension');
+    if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
     await cli.run();
   } catch (err) {
     const originalError = err.originalError || err;
