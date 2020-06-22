@@ -1,6 +1,7 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { TopBarNav } from '../workspace/ui/top-bar-nav';
+import { DependenciesPage } from './ui/dependencies-page';
 
 export class DependenciesUI {
   static dependencies = [WorkspaceUI];
@@ -17,8 +18,4 @@ export class DependenciesUI {
 
     return new DependenciesUI();
   }
-}
-
-function DependenciesPage() {
-  return <div>Here are dependencies y'all</div>;
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { TopBarNav } from '../workspace/ui/top-bar-nav';
+import { TestsPage } from './ui/tests-page';
 
 export class TesterUI {
   static dependencies = [WorkspaceUI];
@@ -23,18 +24,4 @@ export class TesterUI {
 
     return testerUi;
   }
-
-  handleMenuItemClick = () => {
-    const { TestsStage } = this;
-
-    this.workspace.open(<TestsStage />);
-  };
-
-  TestsStage = () => {
-    return <div>Here be tests results</div>;
-  };
-}
-
-function TestsPage() {
-  return <div>here be tests</div>;
 }

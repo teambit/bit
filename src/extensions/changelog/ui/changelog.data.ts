@@ -1,4 +1,4 @@
-import { Version, JobStatus, AccountTypes } from '../stage-components/workspace-page/change-log.data';
+import { Version, JobStatus, AccountTypes } from '../../stage-components/workspace-page/change-log.data';
 
 export const versionExample1: Version = {
   id: '1.0.0',
