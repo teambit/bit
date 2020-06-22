@@ -177,6 +177,10 @@ const allCommands = [
       {
         name: 'clear-cache',
         description: "clears Bit's cache from current working machine"
+      },
+      {
+        name: 'scope-config',
+        description: 'local scope config management'
       }
     ]
   }

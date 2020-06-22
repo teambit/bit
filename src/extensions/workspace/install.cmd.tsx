@@ -9,7 +9,7 @@ export default class InstallCmd implements Command {
   name = 'install';
   description = 'install all component dependencies';
   alias = 'in';
-  group = 'development';
+  group = 'component';
   shortDescription = '';
   options = [];
 

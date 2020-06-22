@@ -11,6 +11,7 @@ export class CapsuleListCmd implements Command {
   description = `list all capsules`;
   shortDescription = 'list all capsules';
   group = 'capsules';
+  private = true;
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 

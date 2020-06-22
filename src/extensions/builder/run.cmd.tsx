@@ -11,6 +11,7 @@ export class BuilderCmd implements Command {
   description = 'run set of tasks for build';
   alias = '';
   group = '';
+  private = true;
   shortDescription = '';
   options = [];
 

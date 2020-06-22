@@ -11,6 +11,7 @@ export class CreateCmd implements Command {
   shortDescription = '';
   alias = '';
   group = '';
+  private = true;
   options = [];
 
   constructor(private create: Create) {}

@@ -28,6 +28,9 @@ export class CLIExtension {
   ) {}
 
   private setDefaults(command: Command) {
+    if (command.name === 'compile [component...]') {
+      debugger;
+    }
     command.alias = command.alias || '';
     command.description = command.description || '';
     command.shortDescription = command.shortDescription || '';

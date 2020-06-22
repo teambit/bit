@@ -7,7 +7,8 @@ export class CompileCmd implements Command {
   description = 'compile components';
   shortDescription = '';
   alias = '';
-  group = '';
+  group = 'development';
+  private = true;
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],
