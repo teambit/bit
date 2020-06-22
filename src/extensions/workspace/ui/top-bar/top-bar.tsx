@@ -1,5 +1,8 @@
 import React from 'react';
 import classnames from 'classnames';
+import { Button } from '@bit/bit.evangelist.elements.button';
+import { Icon } from '@bit/bit.evangelist.elements.icon';
+import { themedText } from '@bit/bit.base-ui.text.themed-text';
 
 import { TopBarSlotRegistry } from '../../workspace.ui';
 import styles from './top-bar.module.scss';
@@ -33,13 +36,19 @@ export function TopBar({ topBarSlot, className, currentTag }: TopBarProps) {
         ))}
       </ul>
       <div className={styles.rightSide}>
-        <span>🔖 {currentTag.version}</span>
-        <span>⬇️ {currentTag.downloads}</span>
-        <span>♡ {currentTag.likes}</span>
+        <span>
+          <Icon className={classnames(themedText, styles.icon)} of="version-tag-stroke" /> {currentTag.version}
+        </span>{' '}
+        <span>
+          <Icon className={styles.icon} of="download" /> <span>{currentTag.downloads}</span>
+        </span>{' '}
+        <span>
+          <Icon className={styles.icon} of="heartstroke" /> {currentTag.likes}
+        </span>{' '}
         <span>|</span>
-        <button>import ▾</button>
-        <button>simulations</button>
-        <button>code</button>
+        <Button importance="muted">import ▾</Button>
+        <Button importance="muted">simulations </Button>
+        <Button importance="muted">code 📄</Button>
       </div>
     </div>
   );

@@ -45,14 +45,16 @@ export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
         <div className={styles.scopeName}>
           <span className={styles.avatar}>A</span> Google / <b>material-ui</b>
         </div>
-        <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
         <SideBar
           className={styles.sideBar}
           components={workspace.components}
           onSelectComponent={selectComponent}
           selected={selectedComponent}
         />
+        {/* <Route path="/:slug([\w]*)"> */}
+        <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
         <Stage pageSlot={pageSlot} />
+        {/* </Route> */}
       </div>
     </WorkspaceContext>
   );
@@ -61,6 +63,8 @@ export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
 function WorkspaceContext({ children }) {
   return (
     <HashRouter>
+      {/* TODO - use 'icon-font' component */}
+      <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
       <Theme>{children}</Theme>
     </HashRouter>
   );
