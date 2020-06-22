@@ -19,7 +19,7 @@ export class CommandNotFound extends PaperError {
           </Color>
         </Box>
         <Box>
-          <Color yellow>see 'bit --help' for additional information</Color>
+          <Color yellow>see &apos;bit --help&apos; for additional information</Color>
         </Box>
         {this.renderSuggestion()}
       </Box>

@@ -1,5 +1,6 @@
 import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
+import didYouMean from 'didyoumean';
 import { Command } from '../../cli/command';
 import CommandRegistry from './registry';
 import { Reporter, ReporterExt } from '../reporter';
@@ -10,7 +11,6 @@ import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
-import didYouMean from 'didyoumean';
 
 export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
@@ -92,13 +92,12 @@ export class CLIExtension {
     const commandExist = validCommands.includes(commandName);
 
     if (!commandExist) {
+      didYouMean.returnFirstMatch = true;
       const suggestions = didYouMean(
         commandName,
-        Object.keys(this.commands)
-          .filter(c => !this.commands[c].private)
-          .map(c => this.commands[c].name)
+        Object.keys(this.commands).filter(c => !this.commands[c].private)
       );
-      const suggestion = suggestions && suggestions.length ? suggestions[0] : suggestions;
+      const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
       throw new CommandNotFound(commandName, suggestion);
     }
   }

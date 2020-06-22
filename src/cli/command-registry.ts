@@ -1,6 +1,4 @@
 import commander from 'commander';
-import chalk from 'chalk';
-import didYouMean from 'didyoumean';
 import { LegacyCommand, CommandOptions } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { camelCase, first } from '../utils';
@@ -11,8 +9,6 @@ import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
 import { Command } from './command';
 import { CommandRunner } from './command-runner';
-
-didYouMean.returnFirstMatch = true;
 
 function parseSubcommandFromArgs(args: [any]) {
   if (typeof first(args) === 'string') return first(args);
