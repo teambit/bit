@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
+import { HashRouter } from 'react-router-dom';
 import 'reset-css';
 
 import { SideBar } from '../side-bar';
 import { TopBar } from '../top-bar';
-import { TopBarSlotRegistry } from '../../workspace.ui';
+import { TopBarSlotRegistry, PageSlotRegistry } from '../../workspace.ui';
 import { Stage } from '../stage';
 import styles from './workspace.module.scss';
 
@@ -23,13 +24,13 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   topBarSlot: TopBarSlotRegistry;
-  stage?: JSX.Element;
+  pageSlot: PageSlotRegistry;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
+export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
   const [selectedComponent, selectComponent] = useState<string | undefined>();
 
@@ -39,7 +40,7 @@ export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
   const workspace = data.workspace;
 
   return (
-    <Theme>
+    <WorkspaceContext>
       <div className={styles.explorer}>
         <div className={styles.scopeName}>
           <span className={styles.avatar}>A</span> Google / <b>material-ui</b>
@@ -51,9 +52,17 @@ export function Workspace({ topBarSlot, stage }: WorkspaceProps) {
           onSelectComponent={selectComponent}
           selected={selectedComponent}
         />
-        <Stage>{stage}</Stage>
+        <Stage pageSlot={pageSlot} />
       </div>
-    </Theme>
+    </WorkspaceContext>
+  );
+}
+
+function WorkspaceContext({ children }) {
+  return (
+    <HashRouter>
+      <Theme>{children}</Theme>
+    </HashRouter>
   );
 }
 

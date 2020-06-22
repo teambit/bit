@@ -1,6 +1,7 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { DocsSection } from '../stage-components/workspace-sections/docs-section';
+import { TopBarNav } from '../workspace/ui/top-bar-nav';
 
 const docsMock = {
   title: 'Radio',
@@ -21,9 +22,14 @@ export class DocsUI {
 
   static async provider([workspace]: [WorkspaceUI]) {
     workspace.registerMenuItem({
-      label: 'Overview',
-      onClick: () => workspace.open(<DocsSection {...docsMock} />)
+      label: <TopBarNav to="~overview">Overview</TopBarNav>
     });
+
+    workspace.registerPage({
+      path: '/~overview',
+      children: <DocsSection {...docsMock} />
+    });
+
     return new DocsUI();
   }
 }

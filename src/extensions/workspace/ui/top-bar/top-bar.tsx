@@ -1,5 +1,6 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import classnames from 'classnames';
+
 import { TopBarSlotRegistry } from '../../workspace.ui';
 import styles from './top-bar.module.scss';
 
@@ -21,6 +22,7 @@ export type TopBarProps = {
  */
 export function TopBar({ topBarSlot, className, currentTag }: TopBarProps) {
   const menuItems = topBarSlot.values();
+
   return (
     <div className={classnames(styles.topBar, className)}>
       <ul className={styles.navigation}>

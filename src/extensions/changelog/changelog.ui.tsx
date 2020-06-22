@@ -1,5 +1,7 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
+import { TopBarNav } from '../workspace/ui/top-bar-nav';
+
 import { versionsArray } from './changelog.data';
 import { VersionBlock } from '../stage-components/workspace-sections/version-block';
 import { Version } from '../stage-components/workspace-page/change-log.data';
@@ -15,10 +17,12 @@ export class ChangeLogUI {
     const ui = new ChangeLogUI();
 
     workspace.registerMenuItem({
-      label: 'Changelog',
-      onClick: () => {
-        workspace.open(ui.ChangeLog());
-      }
+      label: <TopBarNav to="~changelog">Changelog</TopBarNav>
+    });
+
+    workspace.registerPage({
+      path: '/~changelog',
+      children: ui.ChangeLog()
     });
 
     return ui;
