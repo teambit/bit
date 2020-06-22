@@ -1,0 +1,51 @@
+
+.avatar {
+	position: relative;
+	display: inline-flex;
+	box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-align: center;
+    text-transform: uppercase;
+	font-weight: bold;
+
+	.tooltip {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 13ch;
+	}
+	
+	.letter {
+		text-align: center;
+		display: inline-block;
+		justify-self: center;
+		color: white;
+	}
+	.orgDefault {
+		text-align: center;
+		display: inline-block;
+	}
+}
+.avatarImg {
+	position: absolute;
+	left: 0; right: 0;
+	top: 0; bottom: 0;
+	border-radius: 50%;
+	box-sizing: border-box;
+	margin: auto;
+	width: 100%;
+	height: 100%;
+}
+
+.default {
+	background-color: grey;
+	border: 1px solid grey;
+	box-sizing: border-box;
+}
+
+:export {
+	//text without hash
+	defaultAvatarBgColor: str-slice(inspect(grey), 2);
+}

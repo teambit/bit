@@ -1,18 +1,19 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { RouteProps } from 'react-router-dom';
 import { Workspace } from './ui';
 
 export type MenuItem = {
-  label: string;
-  onClick?: () => any;
-  // getContent?: () => JSX.Element;
+  label: JSX.Element | string | null;
 };
 
+export type PageRoute = RouteProps;
+
 export type TopBarSlotRegistry = SlotRegistry<MenuItem>;
-export type StageSlotRegistry = SlotRegistry<JSX.Element>;
+export type PageSlotRegistry = SlotRegistry<RouteProps>;
 
 export class WorkspaceUI {
-  constructor(private topBarSlot: TopBarSlotRegistry, private stageSlot: StageSlotRegistry) {}
+  constructor(private topBarSlot: TopBarSlotRegistry, private pageSlot: PageSlotRegistry) {}
   setStage?: React.Dispatch<React.SetStateAction<JSX.Element | undefined>>;
 
   /**
@@ -23,6 +24,11 @@ export class WorkspaceUI {
     return this;
   }
 
+  registerPage(pageRoute: PageRoute) {
+    this.pageSlot.register(pageRoute);
+    return this;
+  }
+
   /** set content to appear in main stage */
   open(element: JSX.Element) {
     this.setStage && this.setStage(element);
@@ -30,10 +36,7 @@ export class WorkspaceUI {
 
   getMain(): FC {
     const WorkspaceUi = () => {
-      const [stage, setStage] = useState<JSX.Element | undefined>(undefined);
-      this.setStage = setStage;
-
-      return <Workspace topBarSlot={this.topBarSlot} stage={stage} />;
+      return <Workspace topBarSlot={this.topBarSlot} pageSlot={this.pageSlot} />;
     };
 
     return WorkspaceUi;
@@ -41,7 +44,7 @@ export class WorkspaceUI {
 
   static slots = [Slot.withType<MenuItem>(), Slot.withType<JSX.Element>()];
 
-  static async provider(deps, config, [topBarSlot, stageSlot]: [TopBarSlotRegistry, StageSlotRegistry]) {
-    return new WorkspaceUI(topBarSlot, stageSlot);
+  static async provider(deps, config, [topBarSlot, pageSlot]: [TopBarSlotRegistry, PageSlotRegistry]) {
+    return new WorkspaceUI(topBarSlot, pageSlot);
   }
 }

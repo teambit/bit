@@ -1,36 +1,29 @@
 import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
+import { TopBarNav } from '../workspace/ui/top-bar-nav';
+
+import { versionsArray } from './ui/changelog.data';
+import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangeLogUI {
   static dependencies = [WorkspaceUI];
 
   ChangeLog = () => {
-    return <ChangeLogPage versions={undefined} />;
+    return <ChangeLogPage versions={versionsArray} />;
   };
 
   static async provider([workspace]: [WorkspaceUI]) {
     const ui = new ChangeLogUI();
 
     workspace.registerMenuItem({
-      label: 'Changelog',
-      onClick: () => {
-        workspace.open(ui.ChangeLog());
-      }
+      label: <TopBarNav to="~changelog">Changelog</TopBarNav>
+    });
+
+    workspace.registerPage({
+      path: '/~changelog',
+      children: ui.ChangeLog()
     });
 
     return ui;
   }
-}
-
-// @graphqlConnector()
-function ChangeLogPage({ versions }: { versions?: string[] }) {
-  if (!versions) return <div>No tags yet</div>;
-
-  return (
-    <div>
-      {versions.map(x => (
-        <div key={x}>{x}</div>
-      ))}
-    </div>
-  );
 }
