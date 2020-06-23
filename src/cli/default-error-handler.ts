@@ -604,7 +604,7 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
  * in which case, it loses its class and has only the fields.
  */
-function sendToAnalyticsAndSentry(err: Error) {
+export function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -628,7 +628,7 @@ function handleNonBitCustomErrors(err: Error): string {
 }
 
 // @todo: fix. this violates CQRS. it returns data and also has side effect.
-export default (err: Error): string | undefined => {
+export default (err: Error): string => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {

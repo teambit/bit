@@ -2,10 +2,11 @@ import { serializeError } from 'serialize-error';
 import { render } from 'ink';
 import { Command, CLIArgs, Flags } from './command';
 import { migrate } from '../api/consumer';
-import defaultHandleError from './default-error-handler';
+import defaultHandleError, { sendToAnalyticsAndSentry } from './default-error-handler';
 import { isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
+import { PaperError } from '../extensions/cli';
 
 export class CommandRunner {
   constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}
@@ -44,17 +45,8 @@ export class CommandRunner {
     return Boolean(this.command.render);
   }
 
-  private handleError(err: Error) {
-    logger.error(
-      `got an error from command ${this.command.name}: ${err}. Error serialized: ${JSON.stringify(
-        err,
-        Object.getOwnPropertyNames(err)
-      )}`
-    );
-    loader.off();
-    const errorHandled = defaultHandleError(err);
-    if (this.command.private) return serializeErrAndExit(err, this.command.name);
-    return logErrAndExit(errorHandled || err, this.command.name);
+  private async handleError(err: Error) {
+    return handleErrorAndExit(err, this.command.name, this.command.private);
   }
 
   private async runJsonHandler() {
@@ -71,8 +63,10 @@ export class CommandRunner {
     if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
-    const { waitUntilExit } = render(result);
-    await waitUntilExit();
+    render(result);
+    // @todo: not clear if is needed to call waitUntilExit()
+    // const { waitUntilExit } = render(result);
+    // await waitUntilExit();
     return logger.exitAfterFlush(result.props.code, this.command.name);
   }
 
@@ -99,14 +93,33 @@ export class CommandRunner {
 }
 
 function serializeErrAndExit(err, commandName: string) {
-  process.stderr.write(packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false));
+  const data = packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false);
   const code = err.code && isNumeric(err.code) ? err.code : 1;
-  return logger.exitAfterFlush(code, commandName);
+  return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 
-export function logErrAndExit(msg: Error | string, commandName: string) {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (msg.code) throw msg;
-  console.error(msg); // eslint-disable-line
+export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
+  logger.error(
+    `got an error from command ${commandName}: ${err}. Error serialized: ${JSON.stringify(
+      err,
+      Object.getOwnPropertyNames(err)
+    )}`
+  );
+  loader.off();
+  if (err instanceof PaperError) {
+    sendToAnalyticsAndSentry(err);
+    PaperError.handleError(err);
+    return logger.exitAfterFlush(1, commandName);
+  }
+  const handledError = defaultHandleError(err);
+  if (shouldSerialize) return serializeErrAndExit(err, commandName);
+  return logErrAndExit(handledError || err, commandName);
+}
+
+export function logErrAndExit(err: Error | string, commandName: string) {
+  if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
+  // probably not needed, because commands from the ssh are private and as such serialized
+  // if (err.code) throw err;
+  console.error(err); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
 }
