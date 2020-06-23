@@ -2,9 +2,11 @@ import path from 'path';
 import execa from 'execa';
 import fs from 'fs-extra';
 import LegacyScope from '../../scope/scope';
-import IsolatedEnvironment from '../../environment';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
+import { IsolatorExtension } from '../isolator';
+import GeneralError from '../../error/general-error';
+import { ComponentID } from '../component';
 
 export type PackResult = {
   pkgJson: Record<any, string>;
@@ -12,38 +14,30 @@ export type PackResult = {
 };
 
 export class Packer {
-  constructor(private scope?: LegacyScope) {}
+  constructor(private isolator: IsolatorExtension, private scope?: LegacyScope) {}
 
   async packComponent(
     componentId: string,
     scopePath: string | undefined,
     outDir: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     prefix = false,
-    override = false,
-    keep = false
+    override = false
   ): Promise<PackResult> {
     const scope = scopePath ? await LegacyScope.load(scopePath) : this.scope;
     if (!scope) {
       throw new ScopeNotFound(scopePath);
     }
-    // TODO: change to use the new capsule
-    const isolatedEnvironment = new IsolatedEnvironment(scope, undefined);
-    await isolatedEnvironment.create();
-    const isolatePath = isolatedEnvironment.path;
-    const isolateOpts = {
-      writeBitDependencies: true,
-      createNpmLinkFiles: true,
-      installPackages: false,
-      noPackageJson: false,
-      excludeRegistryPrefix: !prefix,
-      saveDependenciesAsComponents: false
-    };
-    await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
-    outDir = outDir || isolatePath;
-    const packResult = await npmPack(isolatePath, outDir, override);
-    if (!keep) {
-      await isolatedEnvironment.destroy();
+    const bitId = await scope.getParsedId(componentId);
+    if (!bitId.hasScope()) {
+      throw new GeneralError(`unable to find "${componentId}" in the scope, make sure the component is tagged first`);
     }
+    const network = await this.isolator.createNetworkFromScope([componentId], scope);
+    const capsule = network.capsules.getCapsuleIgnoreVersion(new ComponentID(bitId));
+    if (!capsule) throw new Error(`capsule not found for ${componentId}`);
+    const capsulePath = capsule.wrkDir;
+    const packDir = outDir || capsulePath;
+    const packResult = await npmPack(capsulePath, packDir, override);
     return packResult;
   }
 }
@@ -53,7 +47,7 @@ function readPackageJson(outDir) {
   return pkgJson;
 }
 
-async function npmPack(cwd, outputPath, override = false) {
+async function npmPack(cwd: string, outputPath: string, override = false) {
   const result = await execa('npm', ['pack'], { cwd });
   const stdout = result.stdout;
   const tgzName = stdout.trim();
@@ -68,7 +62,7 @@ async function npmPack(cwd, outputPath, override = false) {
     if (override) {
       fs.removeSync(tarPath);
     } else {
-      throw new Error('File already exists');
+      throw new GeneralError(`directory "${outputPath}" already exists, use --override flag to override`);
     }
   }
   if (tgzOriginPath !== tarPath) {

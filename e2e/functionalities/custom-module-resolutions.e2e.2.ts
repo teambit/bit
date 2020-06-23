@@ -122,7 +122,6 @@ describe('custom module resolutions', function() {
           const componentId = `${helper.scopes.remote}/bar/foo`;
           const options = {
             o: '',
-            k: '',
             p: '',
             j: '',
             d: packDir
@@ -278,7 +277,6 @@ describe('custom module resolutions', function() {
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
               o: '',
-              k: '',
               p: '',
               j: '',
               d: packDir
@@ -382,7 +380,6 @@ describe('custom module resolutions', function() {
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
               o: '',
-              k: '',
               p: '',
               j: '',
               d: packDir

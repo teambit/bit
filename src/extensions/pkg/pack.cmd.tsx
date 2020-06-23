@@ -11,7 +11,6 @@ type PackFlags = {
   outDir: string;
   prefix?: boolean;
   override?: boolean;
-  keep?: boolean;
   json?: boolean;
 };
 
@@ -21,7 +20,6 @@ export class PackCmd implements Command {
   options = [
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
     ['o', 'override [boolean]', 'override existing pack file'],
-    ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix', 'keep custom prefix'],
     ['j', 'json', 'return the output as JSON']
   ] as CommandOptions;
@@ -48,8 +46,7 @@ export class PackCmd implements Command {
       scopePathStr,
       options.outDir,
       options.prefix,
-      options.override,
-      options.keep
+      options.override
     );
     return {
       data: packResult,

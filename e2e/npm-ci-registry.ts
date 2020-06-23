@@ -126,7 +126,6 @@ EOD`;
     const componentId = `${componentFullName}@${componentVersion}`;
     const options = {
       o: '',
-      k: '',
       p: '',
       j: '',
       d: packDir

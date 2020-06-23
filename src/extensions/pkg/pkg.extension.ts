@@ -7,6 +7,7 @@ import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
 import { CLIExtension } from '../cli';
+import { IsolatorExtension } from '../isolator';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -28,16 +29,16 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
-  static dependencies = [CLIExtension, ScopeExtension, Environments];
+  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
+    [cli, scope, envs, isolator]: [CLIExtension, ScopeExtension, Environments, IsolatorExtension],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
-    const packer = new Packer(scope?.legacyScope);
+    const packer = new Packer(isolator, scope?.legacyScope);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));

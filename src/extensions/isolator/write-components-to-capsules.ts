@@ -49,7 +49,7 @@ export default async function writeComponentsToCapsules(
     writePackageJson: true,
     writeConfig: false,
     writeBitDependencies: false,
-    createNpmLinkFiles: false,
+    createNpmLinkFiles: true,
     saveDependenciesAsComponents: false,
     writeDists: false,
     installNpmPackages: false,
@@ -69,7 +69,7 @@ export default async function writeComponentsToCapsules(
     const links = getComponentLinks({
       component: componentWithDependencies.component,
       dependencies: componentWithDependencies.allDependencies,
-      createNpmLinkFiles: false,
+      createNpmLinkFiles: true,
       bitMap: manyComponentsWriter.bitMap
     });
     componentWithDependencies.component.dataToPersist.addManyFiles(links.files);
