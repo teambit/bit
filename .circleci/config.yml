@@ -838,6 +838,11 @@ workflows:
         generate_types:
           requires:
             - build
+      -
+        generate_docs:
+          <<: *semver_tags_only_filters
+          requires:
+            - build
       # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
       # -
       #   pack:
