@@ -4,23 +4,25 @@
 
 .docsMainBlock {
 	padding-left: 50px;
+	padding-top: 80px;
 	max-width: 80%;
 	.heading {
 		margin-bottom: unset;
 	}
 }
 
-.heading {
-	// color: var(--base-color);
+.maxWidth {
+	max-width: 700px;
 }
-// .subTitle {
 
-// }
+.marginBottom {
+	margin-bottom: 30px;
+}
+
 
 .topRow {
 	display: flex;
 	align-items: baseline;
-	margin-bottom: 20px;
 }
 
 .copyMethod {

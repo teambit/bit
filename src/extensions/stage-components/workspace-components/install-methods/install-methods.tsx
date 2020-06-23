@@ -13,10 +13,11 @@ export type InstallMethodsData = {
 
 export type InstallMethodsProps = {
   data: InstallMethodsData[];
-};
-export function InstallMethods({ data }: InstallMethodsProps) {
+} & React.HTMLAttributes<HTMLDivElement>;
+
+export function InstallMethods({ data, className }: InstallMethodsProps) {
   return (
-    <Grid colMd={2} className={styles.copyMethod}>
+    <Grid colMd={2} className={classNames(styles.copyMethod, className)}>
       {data.map(method => (
         <>
           <H5 className={styles.copyTitle} size={PossibleSizes.xxs}>
