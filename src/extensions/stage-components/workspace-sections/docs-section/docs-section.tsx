@@ -79,21 +79,28 @@ export function DocsSection({ title, subTitle, labels, installMethods, className
   return (
     <div className={classNames(styles.docsMainBlock, className)} {...rest}>
       <div className={styles.topRow}>
-        <H1 className={classNames(styles.heading, styles.marginRight)}>{title}</H1>
+        <H1 className={classNames(styles.maxWidth, styles.marginRight)}>{title}</H1>
         <VersionTag className={styles.marginRight}>Latest</VersionTag>
       </div>
-      <Paragraph className={classNames(mutedText, className)} size={PossibleSizes.xxl}>
-        {subTitle}
-      </Paragraph>
-      <LabelList>{labels}</LabelList>
-      <Separator />
-      <InstallMethods data={installMethods} />
-      <Paragraph>
+      <Subtitle className={styles.marginBottom}>{subTitle}</Subtitle>
+      <LabelList className={styles.marginBottom}>{labels}</LabelList>
+      <Separator className={styles.marginBottom} />
+      <InstallMethods data={installMethods} className={classNames(styles.maxWidth, styles.marginBottom)} />
+      {/* <Paragraph>
         You can set the type of the choice to be either a radio or a checkbox. Using radio type allows you to use Choice
         component inside Google’s Choice Group.
-      </Paragraph>
+      </Paragraph> */}
       <CreateMarkup text=" `RadioGroup` is a helpful wrapper used to group `radio` components that provides an easier API, and proper keyboard accessibility to the group." />
       {/* <PropertyTable data={data} /> */}
     </div>
+  );
+}
+
+type SubtitleProps = {} & React.HTMLAttributes<HTMLParagraphElement>;
+function Subtitle({ children, className, ...rest }: SubtitleProps) {
+  return (
+    <Paragraph className={classNames(mutedText, styles.maxWidth, className)} size={PossibleSizes.xxl} {...rest}>
+      {children}
+    </Paragraph>
   );
 }

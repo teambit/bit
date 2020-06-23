@@ -4,19 +4,16 @@
 
 .versionBlock {
 	padding-left: 50px;
+	margin-bottom: 30px;
 	.heading {
 		margin-bottom: unset;
 	}
 }
 
-.heading {
-	color: var(--base-color);
-}
-
 .topRow {
 	display: flex;
 	align-items: center;
-	margin-bottom: 20px;
+	margin-bottom: 16px;
 }
 
 .marginRight {

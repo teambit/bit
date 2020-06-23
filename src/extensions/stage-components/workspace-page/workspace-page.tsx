@@ -1,7 +1,7 @@
 import React, { HTMLAttributes } from 'react';
 import { VersionBlock } from '..//workspace-sections/version-block/version-block';
 import styles from './workspace-page.module.scss';
-import { versionsArray } from '../workspace-page/change-log.data';
+// import { versionsArray } from '../workspace-page/change-log.data';
 import { DocsSection } from '..//workspace-sections/docs-section';
 
 const docsMock = {
@@ -26,10 +26,10 @@ export type WorkSpacePageProps = {} & HTMLAttributes<HTMLDivElement>;
 export function WorkSpacePage(props: WorkSpacePageProps) {
   return (
     <div>
-      <DocsSection {...docsMock} />
+      {/* <DocsSection {...docsMock} />
       {versionsArray.map((version, index) => (
         <VersionBlock key={index} version={version} className={styles.marginBottom} />
-      ))}
+      ))} */}
     </div>
   );
 }
