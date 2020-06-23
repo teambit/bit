@@ -93,6 +93,7 @@
     "@bit/bit.base-ui.text.muted-text": "^1.0.1",
     "@bit/bit.base-ui.text.paragraph": "^1.0.2",
     "@bit/bit.base-ui.text.themed-text": "^1.0.3",
+    "@bit/bit.base-ui.theme.colors": "^1.1.1",
     "@bit/bit.base-ui.theme.sizes": "^1.0.4",
     "@bit/bit.base-ui.theme.theme-provider": "^2.0.1",
     "@bit/bit.bit-dev-utils.time-ago": "0.0.4",
