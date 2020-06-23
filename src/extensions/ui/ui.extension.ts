@@ -1,3 +1,4 @@
+import getPort from 'get-port';
 import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
 import { CLIExtension } from '../cli';
@@ -8,7 +9,6 @@ import { GraphQLExtension } from '../graphql';
 import { Component } from '../component';
 import createWebpackConfig from './webpack/webpack.config';
 import { BundlerExtension } from '../bundler/bundler.extension';
-import getPort from 'get-port';
 
 type UIDeps = [CLIExtension, Environments, Workspace, GraphQLExtension, BundlerExtension];
 export class UIExtension {
@@ -45,11 +45,11 @@ export class UIExtension {
 
   async createRuntime(components?: Component[]) {
     const server = this.graphql.listen();
-    const devServers = await this.bundler.devServer(components);
     const config = createWebpackConfig(this.workspace.path, [require.resolve('./ui.runtime')]);
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler);
     devServer.listen(await this.selectPort());
+    const devServers = await this.bundler.devServer(components);
     return server;
   }
 

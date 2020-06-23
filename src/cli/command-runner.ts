@@ -64,9 +64,8 @@ export class CommandRunner {
     const result = await this.command.render(this.args, this.flags);
     loader.off();
     render(result);
-    // @todo: not clear if is needed to call waitUntilExit()
-    // const { waitUntilExit } = render(result);
-    // await waitUntilExit();
+    const { waitUntilExit } = render(result);
+    await waitUntilExit();
     return logger.exitAfterFlush(result.props.code, this.command.name);
   }
 

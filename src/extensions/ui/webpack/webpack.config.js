@@ -4,13 +4,6 @@ const path = require('path');
 const html = require('./html');
 
 module.exports = function(workspaceDir, entryFiles) {
-  // Gets absolute path of file within app directory
-  entryFiles = entryFiles.concat([
-    // path.join(__dirname, './browser'),
-    // path.join(__dirname, './preview')
-    // '/Users/ranmizrahi/Bit/react-new-project/components/logo/logo.docs.tsx'
-  ]);
-
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -60,8 +53,6 @@ module.exports = function(workspaceDir, entryFiles) {
       hot: true,
 
       host,
-
-      port: 3000,
 
       // Public path is root of content base
       publicPath: '/'
