@@ -101,10 +101,9 @@ export class PkgExtension {
     scopePath: string | undefined,
     outDir: string,
     prefix = false,
-    override = false,
-    keep = false
+    override = false
   ): Promise<PackResult> {
-    return this.packer.packComponent(componentId, scopePath, outDir, prefix, override, keep);
+    return this.packer.packComponent(componentId, scopePath, outDir, prefix, override);
   }
 
   /**
