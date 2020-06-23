@@ -1,7 +1,7 @@
 // import Bluebird from 'bluebird';
 import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
-import { handleErrorAndExit } from './cli/command-runner';
+import { handleErrorAndExit, handleUnhandledRejection } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
 import { CLIExtension } from './extensions/cli';
@@ -20,12 +20,8 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 initApp();
 
 async function initApp() {
-  HooksManager.init();
-  await initCLI();
-}
-
-async function initCLI() {
   try {
+    HooksManager.init();
     await harmony.run(ConfigExt);
     await harmony.set([BitExt]);
     const cli: CLIExtension = harmony.get('CLIExtension');
@@ -36,3 +32,5 @@ async function initCLI() {
     handleErrorAndExit(originalError, process.argv[2]);
   }
 }
+
+process.on('unhandledRejection', err => handleUnhandledRejection(err));

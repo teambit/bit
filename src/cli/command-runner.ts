@@ -63,10 +63,8 @@ export class CommandRunner {
     if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
-    render(result);
-    // @todo: not clear if is needed to call waitUntilExit()
-    // const { waitUntilExit } = render(result);
-    // await waitUntilExit();
+    const { waitUntilExit } = render(result);
+    await waitUntilExit();
     return logger.exitAfterFlush(result.props.code, this.command.name);
   }
 
@@ -114,6 +112,16 @@ export function handleErrorAndExit(err: Error, commandName: string, shouldSerial
   const handledError = defaultHandleError(err);
   if (shouldSerialize) return serializeErrAndExit(err, commandName);
   return logErrAndExit(handledError || err, commandName);
+}
+
+export function handleUnhandledRejection(err: Error | null | undefined | {}) {
+  // eslint-disable-next-line no-console
+  console.error('** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **');
+  if (err instanceof Error) {
+    return handleErrorAndExit(err, process.argv[2]);
+  }
+  console.error(err); // eslint-disable-line
+  return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
 export function logErrAndExit(err: Error | string, commandName: string) {
