@@ -103,7 +103,7 @@ export class PkgExtension {
     prefix = false,
     override = false
   ): Promise<PackResult> {
-    return this.packer.packComponent(componentId, scopePath, outDir, prefix, override);
+    return this.packer.packComponent(componentId, scopePath, { outDir, prefix, override, useCapsule: true });
   }
 
   /**
