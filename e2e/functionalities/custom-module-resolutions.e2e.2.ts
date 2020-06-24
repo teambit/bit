@@ -121,9 +121,6 @@ describe('custom module resolutions', function() {
           untarDir = path.join(packDir, 'package');
           const componentId = `${helper.scopes.remote}/bar/foo`;
           const options = {
-            o: '',
-            p: '',
-            j: '',
             d: packDir
           };
           helper.command.packComponent(componentId, options, true);
@@ -276,9 +273,6 @@ describe('custom module resolutions', function() {
             untarDir = path.join(packDir, 'package');
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
-              o: '',
-              p: '',
-              j: '',
               d: packDir
             };
             helper.command.packComponent(componentId, options, true);
@@ -379,9 +373,6 @@ describe('custom module resolutions', function() {
             untarDir = path.join(packDir, 'package');
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
-              o: '',
-              p: '',
-              j: '',
               d: packDir
             };
             helper.command.packComponent(componentId, options, true);

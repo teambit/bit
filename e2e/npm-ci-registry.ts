@@ -125,9 +125,6 @@ EOD`;
       : `${this.helper.scopes.remote}/${componentName}`;
     const componentId = `${componentFullName}@${componentVersion}`;
     const options = {
-      o: '',
-      p: '',
-      j: '',
       d: packDir
     };
     this.helper.command.packComponent(componentId, options, true);
