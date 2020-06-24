@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.0-dev.4] - 2020-06-24]
+
 - support hooks for persist and read bit objects into scope
 
 ## [[14.8.0-dev.3] - 2020-06-21]
