@@ -12,6 +12,7 @@ let compressResponse;
 export default class List implements LegacyCommand {
   name = '_list <path> <args>';
   private = true;
+  internal = true;
   description = 'list scope components';
   alias = '';
   opts = [];

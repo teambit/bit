@@ -27,7 +27,7 @@ export class CommandRunner {
         return await this.runReportHandler();
       }
     } catch (err) {
-      return this.handleError(err);
+      return handleErrorAndExit(err, this.command.name, this.command.internal);
     }
 
     throw new Error(`command "${this.command.name}" doesn't implement "render" nor "report" methods`);
@@ -43,10 +43,6 @@ export class CommandRunner {
       return false;
     }
     return Boolean(this.command.render);
-  }
-
-  private async handleError(err: Error) {
-    return handleErrorAndExit(err, this.command.name, this.command.private);
   }
 
   private async runJsonHandler() {

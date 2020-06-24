@@ -22,5 +22,9 @@ describe('bit _scope command', function() {
     it('should throw ScopeNotFound error', () => {
       expect(output).to.have.string('scope not found');
     });
+    it('should serialize the error and return a json', () => {
+      expect(output).to.string('{"payload":');
+      expect(output).to.string('"name":"ScopeNotFound"');
+    });
   });
 });

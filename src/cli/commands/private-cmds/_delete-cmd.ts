@@ -11,6 +11,7 @@ let compressResponse;
 export default class Delete implements LegacyCommand {
   name = '_delete <path> <args>';
   private = true;
+  internal = true;
   description = 'remove a component from a scope';
   alias = '';
   opts = [];
