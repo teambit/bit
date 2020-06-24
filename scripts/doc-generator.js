@@ -61,8 +61,8 @@ const generateCommand = c => {
 harmony.default
   .run(BitExt.BitExt)
   .then(() => {
-    const cli = harmony.default.get('BitCli');
-    const commandRegistry = cli.instance.paper.registry;
+    const cli = harmony.default.get('CLIExtension');
+    const commandRegistry = cli.registry;
 
     let commands = allCommands.reduce((acc, i) => [...acc, ...i.commands], []);
     commands = commands.sort((a, b) => a.name.localeCompare(b.name));

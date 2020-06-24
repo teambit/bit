@@ -12,6 +12,7 @@ export class StartCmd implements Command {
   name = 'start [pattern]';
   description = 'start a dev environment for a workspace or a specific component';
   alias = 'c';
+  private = true;
   group = 'development';
   shortDescription = '';
   options = [];

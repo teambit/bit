@@ -1,11 +1,10 @@
 // import Bluebird from 'bluebird';
-import harmony, { HarmonyError } from '@teambit/harmony';
+import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
-import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
-import { logErrAndExit } from './cli/command-runner';
+import { handleErrorAndExit } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
 import { BitExt } from './extensions/bit';
-import { PaperError, CLIExtension } from './extensions/cli';
+import { CLIExtension } from './extensions/cli';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -18,36 +17,22 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 //   longStackTraces: true
 // });
 
-// loudRejection();
-HooksManager.init();
-try {
-  harmony
-    .run(ConfigExt)
-    .then(() => {
-      return harmony.set([BitExt]);
-    })
-    .then(() => {
-      const cli: CLIExtension = harmony.get('CLIExtension');
-      if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
-      // @ts-ignore :TODO until refactoring cli extension to dynamically load extensions
-      return cli.run();
-    })
-    .catch(err => {
-      const originalError = err.originalError || err;
-      const errorHandlerExist = findErrorDefinition(originalError);
-      let handledError;
-      if (originalError instanceof PaperError) {
-        // at this point CLI or Harmony might be broken. handling by paper
-        PaperError.handleError(err);
-      } else if (errorHandlerExist) {
-        handledError = defaultHandleError(originalError);
-      } else {
-        handledError = err;
-      }
-      logErrAndExit(handledError, process.argv[1] || '');
-    });
-  // Catching errors from the load phase
-} catch (err) {
-  const handledError = err instanceof HarmonyError ? err.toString() : err;
-  logErrAndExit(handledError, process.argv[1] || '');
+initApp();
+
+async function initApp() {
+  HooksManager.init();
+  await initCLI();
+}
+
+async function initCLI() {
+  try {
+    await harmony.run(ConfigExt);
+    await harmony.set([BitExt]);
+    const cli: CLIExtension = harmony.get('CLIExtension');
+    if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
+    await cli.run();
+  } catch (err) {
+    const originalError = err.originalError || err;
+    handleErrorAndExit(originalError, process.argv[2]);
+  }
 }

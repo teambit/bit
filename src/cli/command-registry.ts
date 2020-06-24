@@ -1,6 +1,4 @@
 import commander from 'commander';
-import chalk from 'chalk';
-import didYouMean from 'didyoumean';
 import { LegacyCommand, CommandOptions } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { camelCase, first } from '../utils';
@@ -11,8 +9,6 @@ import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
 import { Command } from './command';
 import { CommandRunner } from './command-runner';
-
-didYouMean.returnFirstMatch = true;
 
 function parseSubcommandFromArgs(args: [any]) {
   if (typeof first(args) === 'string') return first(args);
@@ -155,53 +151,5 @@ export default class CommandRegistry {
     this.commands = commands;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.extensionsCommands = extensionsCommands;
-  }
-
-  printHelp() {
-    // eslint-disable-next-line global-require
-    const helpTemplateGenerator = require('./templates/help');
-    console.log(helpTemplateGenerator(this.extensionsCommands)); // eslint-disable-line no-console
-    return this;
-  }
-
-  outputHelp() {
-    const args = process.argv.slice(2);
-    if (!args.length) {
-      // @TODO replace back to commander help and override help method
-      // commander.help();
-      this.printHelp();
-      return this;
-    }
-
-    const subcommand = args[0];
-    const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const extensionsCmdList = this.extensionsCommands.map(cmd => first(cmd.name.split(' ')));
-    const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
-
-    if (
-      !cmdList.includes(subcommand) &&
-      !extensionsCmdList.includes(subcommand) &&
-      !aliasList.includes(subcommand) &&
-      subcommand !== '-V' &&
-      subcommand !== '--version'
-    ) {
-      process.stdout.write(
-        chalk.yellow(
-          `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
-        )
-      );
-      const suggestion = didYouMean(
-        subcommand,
-        commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name)
-      );
-      if (suggestion) {
-        const match = typeof suggestion === 'string' ? suggestion : suggestion[0];
-        console.log(chalk.red(`Did you mean ${chalk.bold(match)}?`)); // eslint-disable-line no-console
-      }
-      return this;
-    }
-
-    return this;
   }
 }

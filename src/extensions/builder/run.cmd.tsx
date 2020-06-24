@@ -13,6 +13,7 @@ export class BuilderCmd implements Command {
   description = 'run set of tasks for build';
   alias = '';
   group = '';
+  private = true;
   shortDescription = '';
   options = [['v', 'verbose', 'print log stdout to the screen']] as CommandOptions;
 
