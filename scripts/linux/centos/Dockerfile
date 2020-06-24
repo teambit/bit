@@ -4,5 +4,5 @@ RUN yum install -y git gcc-c++ make rpm dpkg-deb fakeroot rpmbuild ruby-devel gc
 RUN yum install -y nano
 RUN gem install --no-ri --no-rdoc fpm
 COPY ./bit.repo /etc/yum.repos.d/bit.repo
-RUN npm i -g pkg@4.4.0
+RUN npm i -g pkg@4.4.6
 CMD ["/bin/bash"]

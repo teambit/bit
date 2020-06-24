@@ -6,6 +6,7 @@ import { FileStatus } from '../consumer/versions-ops/merge-version';
 
 import ScopesData, { ScopesOptions } from './e2e-scopes';
 import BitJsonHelper from './e2e-bit-json-helper';
+import ScopeJsonHelper from './e2e-scope-json-helper';
 import FsHelper from './e2e-fs-helper';
 import CommandHelper from './e2e-command-helper';
 import ConfigHelper from './e2e-config-helper';
@@ -27,6 +28,7 @@ export default class Helper {
   debugMode: boolean;
   scopes: ScopesData;
   bitJson: BitJsonHelper;
+  scopeJson: ScopeJsonHelper;
   bitJsonc: BitJsoncHelper;
   fs: FsHelper;
   command: CommandHelper;
@@ -44,6 +46,7 @@ export default class Helper {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
     this.bitJson = new BitJsonHelper(this.scopes);
+    this.scopeJson = new ScopeJsonHelper(this.scopes);
     this.bitJsonc = new BitJsoncHelper(this.scopes);
     this.packageJson = new PackageJsonHelper(this.scopes);
     this.fs = new FsHelper(this.scopes);
