@@ -1,11 +1,12 @@
 import { Version, JobStatus, AccountTypes } from '../../stage-components/workspace-page/change-log.data';
 
 export const versionExample1: Version = {
-  id: '1.0.0',
+  id: '1.1.0',
   time: '2019-12-31 23:02:51.561Z',
   ciStatus: JobStatus.fail,
   testStatus: JobStatus.pass,
-  message: 'bla bla bla1',
+  message: 'Support overrides of the workspace defaultScope per components',
+  isLatest: true,
   contributors: {
     name: 'oded',
     accountType: AccountTypes.user,
@@ -18,7 +19,8 @@ export const versionExample2: Version = {
   time: '2020-01-31 23:02:51.561Z',
   ciStatus: JobStatus.fail,
   testStatus: JobStatus.pass,
-  message: 'bla bla bla2',
+  message:
+    'Support overrides of the workspace defaultScope per components Use workspaces default Scope to generate node-modules links for pre-export components',
   contributors: {
     name: 'oded',
     accountType: AccountTypes.user,
@@ -27,11 +29,11 @@ export const versionExample2: Version = {
   }
 };
 export const versionExample3: Version = {
-  id: '1.1.0',
+  id: '1.0.0',
   time: '2020-04-31 23:02:51.561Z',
   ciStatus: JobStatus.fail,
   testStatus: JobStatus.pass,
-  message: 'bla bla bla3',
+  message: 'Support overrides of the workspace defaultScope per components',
   contributors: {
     name: 'oded',
     accountType: AccountTypes.user,

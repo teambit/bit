@@ -4,13 +4,12 @@ import { TopBarNav } from '../workspace/ui/top-bar-nav';
 
 import { versionsArray } from './ui/changelog.data';
 import { ChangeLogPage } from './ui/change-log-page';
-import styles from './changelog.module.scss';
 
 export class ChangeLogUI {
   static dependencies = [WorkspaceUI];
 
   ChangeLog = () => {
-    return <ChangeLogPage className={styles.changeLog} versions={versionsArray} />;
+    return <ChangeLogPage versions={versionsArray} />;
   };
 
   static async provider([workspace]: [WorkspaceUI]) {

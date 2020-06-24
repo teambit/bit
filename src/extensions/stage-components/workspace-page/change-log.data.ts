@@ -31,6 +31,7 @@ export type Version = {
   id: SemVer;
   time: TimeStamp;
   labels?: string[];
+  isLatest?: boolean;
   ciStatus: JobStatus;
   testStatus: JobStatus;
   message: string;

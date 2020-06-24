@@ -100,6 +100,7 @@
     "@bit/bit.evangelist.elements.button": "^1.4.0",
     "@bit/bit.evangelist.elements.heading": "^1.1.0",
     "@bit/bit.evangelist.elements.icon": "^1.1.0",
+    "@bit/bit.evangelist.elements.image": "^1.1.0",
     "@bit/bit.evangelist.input.input": "^0.1.0",
     "@bit/bit.utils.fs.sub-paths": "0.0.4",
     "@graphql-modules/core": "^0.7.17",
