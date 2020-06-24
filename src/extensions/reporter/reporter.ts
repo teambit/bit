@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { Logger, LogEntry, LogLevel } from '../logger';
 import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
+import legacyLogger from '../../logger/logger';
 
 export default class Reporter {
   private outputShouldBeSuppressed = false;
@@ -38,13 +39,14 @@ export default class Reporter {
     this.statusLine.startSpinner();
   }
   info(componentId, messages) {
+    legacyLogger.info(`${componentId}, ${messages}`);
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.hex(stc(componentId))(line));
+          console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(line);
         }
@@ -52,6 +54,7 @@ export default class Reporter {
     this.statusLine.startSpinner();
   }
   warn(componentId, messages) {
+    legacyLogger.warn(`${componentId}, ${messages}`);
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
@@ -59,7 +62,7 @@ export default class Reporter {
       .forEach(line => {
         // console.log(chalk.yellow('warn:'), chalk.hex(stc(id))(line));
         if (componentId) {
-          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(line));
+          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(chalk.yellow('warn:'), line);
         }
@@ -67,13 +70,14 @@ export default class Reporter {
     this.statusLine.startSpinner();
   }
   error(componentId, messages) {
+    legacyLogger.error(`${componentId}, ${messages}`);
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(line));
+          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(chalk.red('error:'), line);
         }
@@ -81,13 +85,14 @@ export default class Reporter {
     this.statusLine.startSpinner();
   }
   debug(componentId, messages) {
+    legacyLogger.debug(`${componentId}, ${messages}`);
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.hex(stc(componentId))(line));
+          console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(line);
         }

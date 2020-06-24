@@ -1,7 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color } from 'ink';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
@@ -19,7 +15,7 @@ export class BuilderCmd implements Command {
 
   constructor(private builder: BuilderExtension, private workspace: Workspace, private reporter: Reporter) {}
 
-  async render([userPattern]: [string], { verbose }: { verbose: boolean }) {
+  async report([userPattern]: [string], { verbose }: { verbose: boolean }): Promise<string> {
     this.reporter.title('Starting "build"');
     let capsulesInstalled = 0;
     let totalCapsules = 0;
@@ -48,6 +44,6 @@ export class BuilderCmd implements Command {
     ) => console.log('result', `Env: ${result.env}\nResult: ${JSON.stringify(result.res, undefined, 2)}`));
     this.reporter.end();
 
-    return <Color cyan>compiled {results.length} components successfully</Color>;
+    return `compiled ${results.length} components successfully`;
   }
 }
