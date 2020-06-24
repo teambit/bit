@@ -51,7 +51,7 @@ export default async function writeComponentsToCapsules(
     writeBitDependencies: false,
     createNpmLinkFiles: true,
     saveDependenciesAsComponents: false,
-    writeDists: false,
+    writeDists: true,
     installNpmPackages: false,
     installPeerDependencies: false,
     addToRootPackageJson: false,
