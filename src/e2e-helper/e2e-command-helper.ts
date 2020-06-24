@@ -340,7 +340,7 @@ export default class CommandHelper {
       k: '',
       j: ''
     };
-    options = { ...defaultOptions, options };
+    options = { ...defaultOptions, ...options };
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
