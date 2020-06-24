@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
-import { Color } from 'ink';
 import { PaperError } from '../../cli';
 
 export default class InsightAlreadyExists extends PaperError {
   constructor(readonly insightName: string) {
     super(generateMessage(insightName));
   }
-  render() {
-    return <Color red>{this.message}</Color>;
+  report() {
+    return this.message;
   }
 }
 function generateMessage(insightName: string) {

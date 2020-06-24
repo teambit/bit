@@ -104,6 +104,7 @@ import { AddingIndividualFiles } from '../consumer/component-ops/add-components/
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
+import { PaperError } from '../extensions/cli';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -627,17 +628,25 @@ function handleNonBitCustomErrors(err: Error): string {
   return chalk.red(err.message || err);
 }
 
-// @todo: fix. this violates CQRS. it returns data and also has side effect.
-export default (err: Error): string => {
+export default (err: Error): { message: string; error: Error } => {
   const errorDefinition = findErrorDefinition(err);
+  const getErrMsg = (): string => {
+    if (err instanceof PaperError) {
+      return err.report();
+    }
+    if (!errorDefinition) {
+      return handleNonBitCustomErrors(err);
+    }
+    const func = getErrorFunc(errorDefinition);
+    const errorMessage = getErrorMessage(err, func) || 'unknown error';
+    err.message = errorMessage;
+    return errorMessage;
+  };
   sendToAnalyticsAndSentry(err);
-  if (!errorDefinition) {
-    return handleNonBitCustomErrors(err);
-  }
-  const func = getErrorFunc(errorDefinition);
-  const errorMessage = getErrorMessage(err, func) || 'unknown error';
-  err.message = errorMessage;
+  const errorMessage = getErrMsg();
   logger.error(`user gets the following error: ${errorMessage}`);
   logger.silly(err.stack);
-  return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
+  // eslint-disable-next-line no-console
+  if (process.env.BIT_DEBUG) console.error(err); // todo: remove once we have a good mechanism to handle it
+  return { message: chalk.red(errorMessage), error: err };
 };
