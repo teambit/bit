@@ -1010,7 +1010,6 @@ workflows:
         install_npm_deps:
           <<: *dev_tag_only_filters
           requires:
-            - validate-git-tag-and-version
             - checkout_code
       -
         build:
