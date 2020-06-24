@@ -8,6 +8,7 @@ export default class Prepare implements LegacyCommand {
   name = '_scope <path> <args>';
   description = 'describe a scope';
   private = true;
+  internal = true;
   alias = '';
   opts = [];
 
