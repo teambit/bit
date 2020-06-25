@@ -102,7 +102,8 @@ class BitLogger {
   console(msg: string | Error, level = 'info', color?: string) {
     let actualMessage = msg;
     if (msg instanceof Error) {
-      actualMessage = defaultHandleError(msg) || msg;
+      const { message } = defaultHandleError(msg);
+      actualMessage = message;
     }
     if (!this.shouldWriteToConsole) {
       this[level](actualMessage);

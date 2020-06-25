@@ -259,9 +259,7 @@ please use bit remove command to remove them.`,
   }
 
   throwEjectError(message: string, originalError: Error) {
-    // $FlowFixMe that's right, we don't know whether originalError has 'msg' property, but most have. what other choices do we have?
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const originalErrorMessage: string = defaultErrorHandler(originalError) || originalError.msg || originalError;
+    const { message: originalErrorMessage } = defaultErrorHandler(originalError);
     logger.error(`eject has stopped due to an error ${originalErrorMessage}`, originalError);
     throw new Error(`${message}
 

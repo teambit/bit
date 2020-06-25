@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
-import { Color } from 'ink';
 import { PaperError } from './paper-error';
 
 export class AlreadyExistsError extends PaperError {
   constructor(type: string, name: string) {
     super(`${type} ${name} already exists.`);
   }
-  render() {
-    return <Color red>{this.message}</Color>;
+  report() {
+    return this.message;
   }
 }
