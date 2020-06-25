@@ -58,7 +58,6 @@ export class CommandRunner {
     if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
-    render(result);
     const { waitUntilExit } = render(result);
     await waitUntilExit();
     return logger.exitAfterFlush(result.props.code, this.command.name);
