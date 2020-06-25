@@ -1,7 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color } from 'ink';
 import { PaperError } from '../../cli';
 
 export class ScopeNotFound extends PaperError {
@@ -9,12 +5,8 @@ export class ScopeNotFound extends PaperError {
     super(generateMessage(scopePath));
   }
 
-  render() {
-    if (this.scopePath) {
-      return <Color red>{this.message}</Color>;
-    }
-    return <Color red>{this.message}</Color>;
-    // return this.message
+  report() {
+    return this.message;
   }
 }
 

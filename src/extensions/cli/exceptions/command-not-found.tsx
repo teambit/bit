@@ -1,5 +1,4 @@
-import React from 'react';
-import { Color, Text, Box } from 'ink';
+import chalk from 'chalk';
 import { PaperError } from './paper-error';
 
 export class CommandNotFound extends PaperError {
@@ -10,32 +9,14 @@ export class CommandNotFound extends PaperError {
     this.commandName = commandName;
     this.suggestion = suggestion;
   }
-  render() {
-    return (
-      <Box flexDirection="column">
-        <Box>
-          <Color yellow>
-            warning: <Text bold>{this.commandName}</Text> is not a valid command
-          </Color>
-        </Box>
-        <Box>
-          <Color yellow>see &apos;bit --help&apos; for additional information</Color>
-        </Box>
-        {this.renderSuggestion()}
-      </Box>
+  report() {
+    let output = chalk.yellow(
+      `warning: '${chalk.bold(this.commandName)}' is not a valid command.
+see 'bit --help' for additional information`
     );
-  }
-
-  renderSuggestion() {
-    if (!this.suggestion) return <Box></Box>;
-    return (
-      <Box flexDirection="column">
-        <Box>
-          <Color red>
-            Did you mean: <Text bold>{this.suggestion}</Text>?
-          </Color>
-        </Box>
-      </Box>
-    );
+    if (this.suggestion) {
+      output += `\nDid you mean ${chalk.bold(this.suggestion)}?`;
+    }
+    return output;
   }
 }

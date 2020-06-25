@@ -334,6 +334,13 @@ export default class CommandHelper {
   }
 
   packComponent(id: string, options: Record<string, any>, extract = false) {
+    const defaultOptions = {
+      o: '',
+      p: '',
+      k: '',
+      j: ''
+    };
+    options = { ...defaultOptions, ...options };
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
