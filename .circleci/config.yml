@@ -251,6 +251,17 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
+  github-pre-release:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      # - run:
+      #     name: set GitHub token
+      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      -
+        run: 'cd bit && npm run pre-release:circle'
   build-debian:
     <<: *defaults
     docker:
@@ -1021,6 +1032,11 @@ workflows:
           <<: *dev_tag_only_filters
           requires:
             - build
+      -
+        github-pre-release:
+          <<: *dev_tag_only_filters
+          requires:
+            - pack
       -
         build-rpm:
           <<: *dev_tag_only_filters

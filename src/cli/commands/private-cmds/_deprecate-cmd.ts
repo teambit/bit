@@ -11,6 +11,7 @@ let compressResponse;
 export default class Deprecate implements LegacyCommand {
   name = '_deprecate <path> <args>';
   private = true;
+  internal = true;
   description = 'deprecate a component from a scope';
   alias = '';
   opts = [];

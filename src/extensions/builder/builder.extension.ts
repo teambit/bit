@@ -7,6 +7,8 @@ import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
+import { ReporterExt, Reporter } from '../reporter';
+import { LoggerExt, Logger } from '../logger';
 
 /**
  * extension config type.
@@ -23,7 +25,15 @@ export class BuilderExtension {
   /**
    * extension dependencies
    */
-  static dependencies = [CLIExtension, Environments, WorkspaceExt, ScopeExtension, IsolatorExtension];
+  static dependencies = [
+    CLIExtension,
+    Environments,
+    WorkspaceExt,
+    ScopeExtension,
+    IsolatorExtension,
+    ReporterExt,
+    LoggerExt
+  ];
 
   constructor(
     /**
@@ -57,19 +67,22 @@ export class BuilderExtension {
     return buildResult;
   }
 
-  static async provider([cli, envs, workspace, scope, isolator]: [
+  static async provider([cli, envs, workspace, scope, isolator, reporter, logger]: [
     CLIExtension,
     Environments,
     Workspace,
     ScopeExtension,
-    IsolatorExtension
+    IsolatorExtension,
+    Reporter,
+    Logger
   ]) {
-    const builderService = new BuilderService(isolator, workspace);
+    const logPublisher = logger.createLogPublisher(BuilderExtension.id);
+    const builderService = new BuilderService(isolator, workspace, logPublisher);
     const builder = new BuilderExtension(envs, workspace, builderService);
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new BuilderCmd(builder, workspace));
+    cli.register(new BuilderCmd(builder, workspace, reporter));
     return builder;
   }
 }

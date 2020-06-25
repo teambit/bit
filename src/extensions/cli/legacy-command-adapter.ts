@@ -15,6 +15,7 @@ export class LegacyCommandAdapter implements Command {
   commands: Command[];
   private?: boolean;
   migration?: boolean;
+  internal?: boolean;
   _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
     this.name = cmd.name;
@@ -28,6 +29,7 @@ export class LegacyCommandAdapter implements Command {
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
+    this.internal = cmd.internal;
     this.commands = (cmd.commands || []).map(sub => new LegacyCommandAdapter(sub, cliExtension));
   }
 

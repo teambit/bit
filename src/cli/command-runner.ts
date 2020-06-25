@@ -2,11 +2,10 @@ import { serializeError } from 'serialize-error';
 import { render } from 'ink';
 import { Command, CLIArgs, Flags } from './command';
 import { migrate } from '../api/consumer';
-import defaultHandleError, { sendToAnalyticsAndSentry } from './default-error-handler';
+import defaultHandleError from './default-error-handler';
 import { isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
-import { PaperError } from '../extensions/cli';
 
 export class CommandRunner {
   constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}
@@ -27,7 +26,7 @@ export class CommandRunner {
         return await this.runReportHandler();
       }
     } catch (err) {
-      return this.handleError(err);
+      return handleErrorAndExit(err, this.command.name, this.command.internal);
     }
 
     throw new Error(`command "${this.command.name}" doesn't implement "render" nor "report" methods`);
@@ -43,10 +42,6 @@ export class CommandRunner {
       return false;
     }
     return Boolean(this.command.render);
-  }
-
-  private async handleError(err: Error) {
-    return handleErrorAndExit(err, this.command.name, this.command.private);
   }
 
   private async runJsonHandler() {
@@ -72,7 +67,9 @@ export class CommandRunner {
     if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
-    return this.writeAndExit(`${result.data}\n`, result.code);
+    const data = typeof result === 'string' ? result : result.data;
+    const exitCode = typeof result === 'string' ? 0 : result.code;
+    return this.writeAndExit(`${data}\n`, exitCode);
   }
 
   private writeAndExit(data: string, exitCode: number) {
@@ -104,14 +101,9 @@ export function handleErrorAndExit(err: Error, commandName: string, shouldSerial
     )}`
   );
   loader.off();
-  if (err instanceof PaperError) {
-    sendToAnalyticsAndSentry(err);
-    PaperError.handleError(err);
-    return logger.exitAfterFlush(1, commandName);
-  }
-  const handledError = defaultHandleError(err);
-  if (shouldSerialize) return serializeErrAndExit(err, commandName);
-  return logErrAndExit(handledError || err, commandName);
+  const { message, error } = defaultHandleError(err);
+  if (shouldSerialize) return serializeErrAndExit(error, commandName);
+  return logErrAndExit(message, commandName);
 }
 
 export function handleUnhandledRejection(err: Error | null | undefined | {}) {
@@ -126,8 +118,6 @@ export function handleUnhandledRejection(err: Error | null | undefined | {}) {
 
 export function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
-  // probably not needed, because commands from the ssh are private and as such serialized
-  // if (err.code) throw err;
   console.error(err); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
 }

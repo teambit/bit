@@ -11,6 +11,7 @@ export interface LegacyCommand {
   loader?: boolean;
   skipWorkspace?: boolean;
   migration?: boolean;
+  internal?: boolean; // used for serialize the error it returns
   remoteOp?: boolean; // Used for adding the token option globally
 
   action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any>;

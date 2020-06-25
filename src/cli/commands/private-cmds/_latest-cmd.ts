@@ -10,6 +10,7 @@ let compressResponse;
 export default class Latest implements LegacyCommand {
   name = '_latest <path> <args>';
   private = true;
+  internal = true;
   description = 'latest version numbers of given components';
   alias = '';
   opts = [];

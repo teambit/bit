@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.0-dev.4] - 2020-06-25]
+
+- add a way to run `bit pack` with a capsule
+- internal changes for command interface
+- change PapperError to not render React component
+
 ## [[14.8.0-dev.4] - 2020-06-24]
 
 - support hooks for persist and read bit objects into scope

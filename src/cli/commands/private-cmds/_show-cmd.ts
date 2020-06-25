@@ -11,6 +11,7 @@ let compressResponse;
 export default class _Show implements LegacyCommand {
   name = '_show <path> <args>';
   private = true;
+  internal = true;
   description = 'show a specific component on scope';
   alias = '';
   opts = [];
