@@ -90,7 +90,7 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
    */
-  report?(args: CLIArgs, flags: Flags): Promise<Report>;
+  report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
 
   /**
    * Optional handler to provide a raw result of the command.

@@ -68,7 +68,9 @@ export class CommandRunner {
     if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
-    return this.writeAndExit(`${result.data}\n`, result.code);
+    const data = typeof result === 'string' ? result : result.data;
+    const exitCode = typeof result === 'string' ? 0 : result.code;
+    return this.writeAndExit(`${data}\n`, exitCode);
   }
 
   private writeAndExit(data: string, exitCode: number) {
