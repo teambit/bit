@@ -3,7 +3,7 @@ import Workspace from './workspace';
 import { Component } from '../component';
 
 export default (workspace: Workspace) => {
-  return new GraphQLModule({
+  return {
     typeDefs: `
       type Workspace {
         path: String
@@ -43,5 +43,5 @@ export default (workspace: Workspace) => {
         workspace: () => workspace
       }
     }
-  });
+  };
 };

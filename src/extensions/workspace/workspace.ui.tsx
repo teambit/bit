@@ -14,6 +14,7 @@ export type PageSlotRegistry = SlotRegistry<RouteProps>;
 
 export class WorkspaceUI {
   constructor(private topBarSlot: TopBarSlotRegistry, private pageSlot: PageSlotRegistry) {}
+
   setStage?: React.Dispatch<React.SetStateAction<JSX.Element | undefined>>;
 
   /**
