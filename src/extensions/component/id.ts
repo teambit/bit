@@ -26,11 +26,17 @@ export default class ComponentID {
     return this.legacyComponentId.version;
   }
 
+  get namespace() {
+    const arr = this.legacyComponentId.name.split('/');
+    return arr.splice(-1, 1).join('/');
+  }
+
   /**
    * resolves the name of the component.
    */
   get name() {
-    return this.legacyComponentId.name;
+    const arr = this.legacyComponentId.name.split('/');
+    return arr[arr.length - 1];
   }
 
   isEqual(id: ComponentID): boolean {

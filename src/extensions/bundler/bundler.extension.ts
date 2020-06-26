@@ -2,6 +2,9 @@ import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { DevServerService } from './dev-server.service';
 import { Environments } from '../environments';
+import { GraphQLExtension } from '../graphql';
+import { devServerSchema } from './dev-server.graphql';
+import { ComponentServer } from './component-server';
 
 /**
  * bundler extension.
@@ -30,9 +33,30 @@ export class BundlerExtension {
    */
   async devServer(components?: Component[]) {
     const envRuntime = await this.envs.createEnvironment(components || (await this.workspace.list()));
-    const server = await envRuntime.run(this.devService);
+    const executionResponse = await envRuntime.run(this.devService);
+
+    this._componentServers = executionResponse.map(res => res.res);
+    this.indexByComponent();
+    return this._componentServers;
+  }
+
+  /**
+   * get a dev server instance containing a component.
+   * @param component
+   */
+  getComponentServer(component: Component): undefined | ComponentServer {
+    if (!this._componentServers) return undefined;
+    const server = this._componentServers.find(componentServer => componentServer.hasComponent(component));
+
     return server;
   }
+
+  /**
+   * component servers.
+   */
+  private _componentServers: null | ComponentServer[];
+
+  private indexByComponent() {}
 
   /**
    * bundle components.
@@ -42,9 +66,11 @@ export class BundlerExtension {
     return components;
   }
 
-  static dependencies = [WorkspaceExt, Environments];
+  static dependencies = [WorkspaceExt, Environments, GraphQLExtension];
 
-  static async provider([workspace, envs]: [Workspace, Environments]) {
-    return new BundlerExtension(workspace, envs, new DevServerService());
+  static async provider([workspace, envs, graphql]: [Workspace, Environments, GraphQLExtension]) {
+    const bundler = new BundlerExtension(workspace, envs, new DevServerService());
+    graphql.register(devServerSchema(bundler));
+    return bundler;
   }
 }

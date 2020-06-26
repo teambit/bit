@@ -111,6 +111,7 @@ export default class Reporter {
       }
     });
   }
+
   unsubscribe(extensionName) {
     this.logger.unsubscribe(extensionName);
   }

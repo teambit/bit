@@ -13,6 +13,7 @@ export default (workspace: Workspace) => {
 
       type Component {
         id: String
+        displayName: String
         versions(limit: Int): [String]
         isNew: Boolean
         isModified: Boolean
@@ -25,6 +26,7 @@ export default (workspace: Workspace) => {
     resolvers: {
       Component: {
         id: (component: Component) => component.id.toString(),
+        displayName: (component: Component) => component.displayName,
         isNew: (component: Component) => component.isNew(),
         isModified: (component: Component) => component.isModified(),
         versions: (component: Component, { limit = 10 }: { limit?: number }) =>

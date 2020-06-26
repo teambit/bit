@@ -1,7 +1,6 @@
 import getPort from 'get-port';
 import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
-import { uiSchema } from './ui.graphql';
 import { CLIExtension } from '../cli';
 import { StartCmd } from './start.cmd';
 import { Environments } from '../environments';
@@ -65,7 +64,6 @@ export class UIExtension {
 
   static async provider([cli, envs, workspace, graphql, bundler]: UIDeps) {
     const ui = new UIExtension(envs, graphql, workspace, bundler);
-    graphql.register(uiSchema(ui));
     cli.register(new StartCmd(ui, workspace));
     return ui;
   }

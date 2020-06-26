@@ -9,6 +9,7 @@ import ComponentID from './id';
 import State from './state';
 // eslint-disable-next-line import/no-cycle
 import Snap, { Author } from './snap';
+import { capitalize } from '../utils/capitalize';
 
 /**
  * in-memory representation of a component.
@@ -79,6 +80,14 @@ export default class Component {
   }
 
   /**
+   * display name of the component.
+   */
+  get displayName() {
+    const tokens = this.id.name.split('-').map(token => capitalize(token));
+    return tokens.join('');
+  }
+
+  /**
    * tag a component `Snap` with a semantic version. we follow SemVer specs as defined [here](https://semver.org/)).
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -143,6 +152,6 @@ export default class Component {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   equals(component: Component): boolean {
-    return true;
+    return component.id.toString() === this.id.toString();
   }
 }
