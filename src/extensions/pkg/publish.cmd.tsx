@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { CommandOptions, Command } from '../cli';
-import { Publisher } from './publisher';
-import { BuildResults } from '../builder';
+import { Publisher, PublishResult } from './publisher';
 
 type PublishArgs = [string];
 type PublishOptions = { dryRun: boolean };
@@ -22,16 +21,16 @@ export class PublishCmd implements Command {
 
   async report(args: PublishArgs, options: PublishOptions) {
     const result = await this.json(args, options);
-    const data: BuildResults = result.data;
+    const components = result.data;
     const title = chalk.white.inverse.bold(' Publish Results \n');
-    const output = data.components
+    const output = components
       .map(component => {
         const compName = component.id.toString();
         const getData = () => {
           if (component.errors.length) {
             return chalk.red(component.errors.join('\n'));
           }
-          return chalk.green(component.data);
+          return chalk.green(component.data as string);
         };
         return `${chalk.bold(compName)}\n${getData()}\n`;
       })
@@ -39,7 +38,7 @@ export class PublishCmd implements Command {
     return title + output;
   }
 
-  async json([componentId]: PublishArgs, options: PublishOptions) {
+  async json([componentId]: PublishArgs, options: PublishOptions): Promise<{ data: PublishResult[]; code: number }> {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     const packResult = await this.publisher.publish([compId], options);
     return {

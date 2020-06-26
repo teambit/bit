@@ -11,7 +11,7 @@ export type PublisherOptions = {
   dryRun?: boolean;
 };
 
-type PublishResult = { id: ComponentID; data?: string; errors: string[] };
+export type PublishResult = { id: ComponentID; data?: string; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
