@@ -102,6 +102,7 @@ export default class Scope {
   }
 
   public onTag: Function[] = []; // enable extensions to hook during the tag process
+  public onPostExport: Function[] = []; // enable extensions to hook during the tag process
 
   /**
    * import components to the `Scope.

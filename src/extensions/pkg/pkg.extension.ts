@@ -45,6 +45,10 @@ export class PkgExtension {
     const packer = new Packer(isolator, scope?.legacyScope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
+
+    const postExportFunc = publisher.postExportListener.bind(publisher);
+    if (scope) scope.onPostExport(postExportFunc);
+
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
