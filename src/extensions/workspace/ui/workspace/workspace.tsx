@@ -4,7 +4,6 @@ import { gql } from 'apollo-boost';
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import { HashRouter, Route } from 'react-router-dom';
 import 'reset-css';
-
 import { SideBar } from '../side-bar';
 import { TopBar } from '../top-bar';
 import { TopBarSlotRegistry, PageSlotRegistry } from '../../workspace.ui';
@@ -17,6 +16,10 @@ const WORKSPACE = gql`
       path
       components {
         id
+        devServer {
+          env
+          url
+        }
       }
     }
   }
@@ -70,7 +73,7 @@ function WorkspaceContext({ children }) {
   );
 }
 
-//TEMP!
+// TEMP!
 const currentTag = {
   version: '5.0.10',
   downloads: 542,

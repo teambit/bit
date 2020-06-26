@@ -80,10 +80,12 @@ export class GraphQLExtension {
   private buildModules() {
     const schemaSlots = this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
+      const moduleDeps = this.getModuleDependencies(extensionId);
+
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
-        imports: this.getModuleDependencies(extensionId)
+        imports: moduleDeps
       });
 
       this.modules.set(extensionId, module);
@@ -94,7 +96,8 @@ export class GraphQLExtension {
 
   private getModuleDependencies(extensionId: string): GraphQLModule[] {
     const extension = this.context.extensions.get(extensionId);
-    const deps = extension?.dependencies.map(ext => ext.name);
+    // @ts-ignore
+    const deps = extension?.dependencies.map(ext => ext.id || ext.name);
 
     // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
