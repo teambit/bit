@@ -35,6 +35,8 @@ export class CapsuleCreateCmd implements Command {
     [componentIds]: [string[]],
     { baseDir, alwaysNew = false, id, installPackages = false }: CreateOpts
   ): Promise<CapsuleList> {
+    // @todo: why it is not an array?
+    if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
     // TODO: remove this consumer loading from here. it shouldn't be here
     const consumer = await loadConsumerIfExist();
     // TODO: throw a proper error instance

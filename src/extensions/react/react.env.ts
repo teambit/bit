@@ -71,6 +71,10 @@ export class ReactEnv implements Environment {
     return this.ts.createCompiler(tsConfig);
   }
 
+  getPackageJsonProps() {
+    return TypescriptExtension.getPackageJsonProps();
+  }
+
   async dependencies() {
     return {
       dependencies: {

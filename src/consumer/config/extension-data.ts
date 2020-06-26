@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import R, { find, forEachObjIndexed } from 'ramda';
+import R, { forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import Consumer from '../consumer';
 import { ExtensionConfigList, IExtensionConfigList } from './extension-config-list';
@@ -66,18 +66,16 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
   }
 
   findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
-    return find((extEntry: ExtensionDataEntry) => {
+    return this.find(extEntry => {
       if (!ignoreVersion) {
         return extEntry.stringId === extensionId;
       }
       return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
-    }, this);
+    });
   }
 
   findCoreExtension(extensionId: string): ExtensionDataEntry | undefined {
-    return find((extEntry: ExtensionDataEntry) => {
-      return extEntry.name === extensionId;
-    }, this);
+    return this.find(extEntry => extEntry.name === extensionId);
   }
 
   remove(id: BitId) {

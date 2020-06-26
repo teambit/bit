@@ -30,6 +30,20 @@ This extensions gets properties to add to the package.json in the variants confi
 }
 ```
 
+#### Placeholders
+
+`{main}` main source file without the extension
+`{scope}` scope name
+`{name}` component name
+
+e.g.
+```js
+ "packageJson": {
+    "main": "dist/{main}.js"
+  }
+```
+if the main file is "index.ts", it'll be translated to `dist/index.js`.
+
 ### Commands
 This extension register a new `pack` command.
 `pack <componentId> [scopePath]`

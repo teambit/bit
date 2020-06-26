@@ -368,7 +368,9 @@ export default class CommandHelper {
     }
     return result;
   }
-
+  publish(id: string) {
+    return this.runCmd(`bit publish ${id}`);
+  }
   ejectConf(id = 'bar/foo', options?: Record<string, any>) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
