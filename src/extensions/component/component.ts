@@ -67,8 +67,6 @@ export default class Component {
     return this.state.dependencyGraph();
   }
 
-  capsule() {}
-
   /**
    * record component changes in the `Scope`.
    */

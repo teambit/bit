@@ -65,6 +65,12 @@ module.exports = function(workspaceDir, entryFiles) {
     module: {
       rules: [
         {
+          test: /\.js$/,
+          enforce: 'pre',
+          exclude: /node_modules/,
+          use: [require.resolve('source-map-loader')]
+        },
+        {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
           include: workspaceDir,
