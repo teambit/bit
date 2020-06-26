@@ -1,10 +1,11 @@
-# `extension Pkg name`
+# `extension @teambit/pkg`
 
-An extension that:
 1. allows users to change (add) properties in the component's package.json
-2. allow other extensions to add new properties to the component's package.json
-3. allow an env to add new properties to the component's package.json
-4. expose a pack command to pack a component into a tar suitable for an npm registry
+2. allows other extensions to add new properties to the component's package.json
+3. allows an env to add new properties to the component's package.json
+4. exposes a pack command to pack a component into a tar suitable for an npm registry
+5. exposes a publish command to publish components to a private registry
+6. utilizes PostExport hook to auto publish components during export
 
 ## Usage
 
@@ -21,7 +22,7 @@ This extensions gets properties to add to the package.json in the variants confi
 ```js
 {
   "ui/*": {
-    "Pkg": {
+    "@teambit/pkg": {
       "packageJson": {
         "myPropToAdd": "propValue"
       }
@@ -30,11 +31,30 @@ This extensions gets properties to add to the package.json in the variants confi
 }
 ```
 
+#### Publish
+
+Configure the `publishConfig` prop with your registry data. For example:
+
+```js
+"ui/*": {
+  "@teambit/pkg": {
+    "packageJson": {
+       "publishConfig": {
+         "scope": "@custom",
+         "registry": "http://localhost:4873"
+      }
+    }
+  }
+}
+```
+
+The auto-publishing during export is triggered only when this `publishConfig` is set
+
 #### Placeholders
 
-`{main}` main source file without the extension
-`{scope}` scope name
-`{name}` component name
+* `{main}` main source file without the extension
+* `{scope}` scope name
+* `{name}` component name
 
 e.g.
 ```js
