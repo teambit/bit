@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch, useRouteMatch } from 'react-router-dom';
+import { Route, Switch, useRouteMatch, useParams } from 'react-router-dom';
 import { PageSlotRegistry } from '../../workspace.ui';
 
 export type StageProps = {
@@ -7,6 +7,7 @@ export type StageProps = {
 };
 
 export function Stage({ pageSlot }: StageProps) {
+  const { slug } = useParams();
   const pages = pageSlot.values();
   const { path: basePath } = useRouteMatch();
   // const path =

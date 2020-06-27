@@ -47,7 +47,7 @@ export class UIExtension {
     const server = this.graphql.listen();
     const config = createWebpackConfig(this.workspace.path, [require.resolve('./ui.runtime')]);
     const compiler = webpack(config);
-    const devServer = new WebpackDevServer(compiler);
+    const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
     const devServers = await this.bundler.devServer(components);
     return server;

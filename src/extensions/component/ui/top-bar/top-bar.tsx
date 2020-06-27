@@ -3,8 +3,7 @@ import classnames from 'classnames';
 import { Button } from '@bit/bit.evangelist.elements.button';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { themedText } from '@bit/bit.base-ui.text.themed-text';
-
-import { TopBarSlotRegistry } from '../../workspace.ui';
+import { TopBarSlotRegistry } from '../../../workspace/workspace.ui';
 import styles from './top-bar.module.scss';
 
 export type TopBarProps = {

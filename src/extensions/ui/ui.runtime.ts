@@ -4,13 +4,14 @@ import { DocsUI } from '../docs/docs.ui';
 import { TesterUI } from '../tester/tester.ui';
 import { ChangeLogUI } from '../changelog/changelog.ui';
 import { DependenciesUI } from '../dependencies/dependencies.ui';
+import { ComponentUI } from '../component/component.ui';
 
 /**
  * configure all core extensions
  * :TODO pass all other extensions from above.
  */
 harmony
-  .run([UIRuntimeExtension, TesterUI, DependenciesUI, ChangeLogUI, DocsUI])
+  .run([UIRuntimeExtension, TesterUI, DependenciesUI, ChangeLogUI, DocsUI, ComponentUI])
   .then(() => {
     const uiExtension = harmony.get<UIRuntimeExtension>('UIRuntimeExtension');
     uiExtension.render();

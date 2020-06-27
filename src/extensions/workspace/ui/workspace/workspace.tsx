@@ -2,16 +2,18 @@ import React, { useState, ReactNode } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
-import { HashRouter, Route } from 'react-router-dom';
+import { Switch, Route } from 'react-router-dom';
 import 'reset-css';
 import { SideBar } from '../side-bar';
-import { TopBar } from '../top-bar';
+// import { TopBar } from '../top-bar';
 import { TopBarSlotRegistry, PageSlotRegistry } from '../../workspace.ui';
 import { Stage } from '../stage';
 import styles from './workspace.module.scss';
-import { ComponentProvider } from './component-provider';
 import { Component } from '../../../component/component.ui';
 import { defaultComponent } from './default-component';
+import { Workspace as WorkspaceModel } from './workspace-model';
+import { WorkspaceProvider } from './workspace-provider';
+import { RouteSlotRegistry } from '../../../react-router/react-router.ui';
 
 const WORKSPACE = gql`
   {
@@ -31,30 +33,25 @@ const WORKSPACE = gql`
 export type WorkspaceProps = {
   topBarSlot: TopBarSlotRegistry;
   pageSlot: PageSlotRegistry;
-};
-
-// TEMP!
-const currentTag = {
-  version: '5.0.10',
-  downloads: 542,
-  likes: 86
+  routeSlot: RouteSlotRegistry;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
+export function Workspace({ topBarSlot, pageSlot, routeSlot }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
-  const [selectedComponent, selectComponent] = useState<Component>(defaultComponent);
+  const [, selectComponent] = useState<Component>(defaultComponent);
 
   if (loading) return <div>loading</div>;
   if (error) return <div>{error.message}</div>;
 
-  const workspace = data.workspace;
+  const workspace = WorkspaceModel.from(data.workspace);
 
   return (
-    <ComponentProvider component={selectedComponent}>
-      <WorkspaceContext>
+    <WorkspaceProvider workspace={workspace}>
+      <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
+      <Theme>
         <div className={styles.explorer}>
           <div className={styles.scopeName}>
             <span className={styles.avatar}>A</span> Google / <b>material-ui</b>
@@ -64,26 +61,15 @@ export function Workspace({ topBarSlot, pageSlot }: WorkspaceProps) {
             components={workspace.components}
             onSelectComponent={component => selectComponent(component)}
           />
-          <Route path="/:slug([^~]+)">
-            <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
-            <Stage pageSlot={pageSlot} />
-          </Route>
+          <Switch>{routeSlot.values().map(routeGetter => routeGetter())}</Switch>
+          {/* <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
+          <Stage pageSlot={pageSlot} /> */}
         </div>
-      </WorkspaceContext>
-    </ComponentProvider>
+      </Theme>
+    </WorkspaceProvider>
   );
 }
 
 export type WorkspaceContextProps = {
   children: ReactNode;
 };
-
-function WorkspaceContext({ children }: WorkspaceContextProps) {
-  return (
-    <HashRouter>
-      {/* TODO - use 'icon-font' component */}
-      <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
-      <Theme>{children}</Theme>
-    </HashRouter>
-  );
-}

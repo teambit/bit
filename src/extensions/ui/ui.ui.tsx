@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
+import { ReactRouterUI } from '../react-router/react-router.ui';
 // import * as serviceWorker from './serviceWorker';
 
 // If you want your app to work offline and load faster, you can change
@@ -12,8 +13,6 @@ import { GraphQlUI } from '../graphql/graphql.ui';
  * extension
  */
 export class UIRuntimeExtension {
-  static dependencies = [WorkspaceUI, GraphQlUI];
-
   constructor(
     /**
      * workspace UI extension.
@@ -23,24 +22,29 @@ export class UIRuntimeExtension {
     /**
      * GraphQL extension.
      */
-    private graphql: GraphQlUI
+    private graphql: GraphQlUI,
+
+    /**
+     * react-router extension.
+     */
+    private router: ReactRouterUI
   ) {}
 
   render() {
-    const Workspace = this.workspace.getMain();
     const GraphqlProvider = this.graphql.getProvider;
+    const routes = this.router.renderRoutes();
 
     ReactDOM.render(
       <React.StrictMode>
-        <GraphqlProvider>
-          <Workspace />
-        </GraphqlProvider>
+        <GraphqlProvider>{routes}</GraphqlProvider>
       </React.StrictMode>,
       document.getElementById('root')
     );
   }
 
-  static async provider([workspace, graphql]: [WorkspaceUI, GraphQlUI]) {
-    return new UIRuntimeExtension(workspace, graphql);
+  static dependencies = [WorkspaceUI, GraphQlUI, ReactRouterUI];
+
+  static async provider([workspace, graphql, router]: [WorkspaceUI, GraphQlUI, ReactRouterUI]) {
+    return new UIRuntimeExtension(workspace, graphql, router);
   }
 }
