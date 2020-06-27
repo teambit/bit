@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, useRouteMatch } from 'react-router-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';
@@ -32,10 +32,13 @@ export class ComponentUI {
   /**
    * expose the route for a component.
    */
-  route() {
+  componentRoute() {
+    const { url } = useRouteMatch();
+
     return (
-      <Route exact path={`*`} key={ComponentUI.name}>
-        <Component sectionSlot={this.sectionSlot} />
+      <Route exact path="*" key={ComponentUI.name}>
+        {/* :TODO hack until @uri fixes component routing */}
+        {url === '/' ? <Component sectionSlot={this.sectionSlot} /> : <div></div>}
       </Route>
     );
   }
@@ -54,7 +57,7 @@ export class ComponentUI {
 
   static async provider([workspace]: [WorkspaceUI], config, [sectionSlot]: [SectionSlotRegistry]) {
     const componentUI = new ComponentUI(sectionSlot);
-    workspace.registerRoute(componentUI.route.bind(componentUI));
+    workspace.registerRoute(componentUI.componentRoute.bind(componentUI));
     return componentUI;
   }
 }

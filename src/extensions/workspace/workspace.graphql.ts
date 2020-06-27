@@ -5,7 +5,7 @@ export default (workspace: Workspace) => {
     typeDefs: `
       type Workspace {
         path: String
-        components: [Component]
+        components: [ComponentMeta]
         getComponent(id: String!): Component
       }
 

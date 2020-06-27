@@ -10,8 +10,17 @@ export function componentSchema() {
         isNew: Boolean
         isModified: Boolean
       }
+
+      type ComponentMeta {
+        id: String
+        displayName: String
+      }
   `,
     resolvers: {
+      ComponentMeta: {
+        id: (component: Component) => component.id.toString(),
+        displayName: (component: Component) => component.displayName
+      },
       Component: {
         id: (component: Component) => component.id.toString(),
         displayName: (component: Component) => component.displayName,

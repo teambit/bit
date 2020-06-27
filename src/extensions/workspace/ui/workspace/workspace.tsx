@@ -21,10 +21,6 @@ const WORKSPACE = gql`
       path
       components {
         id
-        devServer {
-          env
-          url
-        }
       }
     }
   }

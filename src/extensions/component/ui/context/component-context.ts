@@ -1,4 +1,4 @@
 import { createContext } from 'react';
-// import { Component } from
+import { ComponentModel } from '../component-model';
 
-export const ComponentContext = createContext<>();
+export const ComponentContext = createContext<ComponentModel>(ComponentModel.from({ id: '' }));
