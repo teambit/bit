@@ -13,7 +13,7 @@ const GET_COMPONENT = gql`
     workspace {
       getComponent(id: $id) {
         id
-        devServer {
+        server {
           env
           url
         }
@@ -47,7 +47,7 @@ export function Component({ sectionSlot }: ComponentProps) {
   if (loading) return <div>loading</div>;
   if (error) throw error;
 
-  const component = ComponentModel.from(data);
+  const component = ComponentModel.from(data.workspace.getComponent);
 
   return (
     <ComponentProvider component={component}>

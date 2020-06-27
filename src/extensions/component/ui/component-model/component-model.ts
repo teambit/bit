@@ -1,5 +1,11 @@
 export type ComponentModelProps = {
   id: string;
+  server: ComponentServer;
+};
+
+export type ComponentServer = {
+  env: string;
+  url: string;
 };
 
 export class ComponentModel {
@@ -7,13 +13,19 @@ export class ComponentModel {
     /**
      * id of the component
      */
-    readonly id: string
+    readonly id: string,
+
+    readonly server: ComponentServer
   ) {}
 
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id }: ComponentModelProps) {
-    return new ComponentModel(id);
+  static from({ id, server }: ComponentModelProps) {
+    return new ComponentModel(id, server);
+  }
+
+  static empty() {
+    return new ComponentModel('', { env: '', url: '' });
   }
 }

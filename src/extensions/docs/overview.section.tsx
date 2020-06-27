@@ -19,7 +19,7 @@ export class OverviewSection implements Section {
   }
 
   get route() {
-    const { path, url } = useRouteMatch();
+    const { path } = useRouteMatch();
 
     return (
       <Route exact path={`${path}/~overview`} key={OverviewSection.name}>

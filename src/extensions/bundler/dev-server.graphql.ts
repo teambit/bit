@@ -6,17 +6,17 @@ export function devServerSchema(bundler: BundlerExtension): Schema {
   return {
     typeDefs: `
       extend type Component {
-        devServer: DevServer
+        server: ComponentServer
       }
 
-      type DevServer {
+      type ComponentServer {
         env: String
         url: String
       }
     `,
     resolvers: {
       Component: {
-        devServer: (component: Component) => {
+        server: (component: Component) => {
           const componentServer = bundler.getComponentServer(component);
           if (!componentServer) return {};
 

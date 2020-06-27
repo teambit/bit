@@ -38,7 +38,8 @@ export class ComponentUI {
     return (
       <Route exact path="*" key={ComponentUI.name}>
         {/* :TODO hack until @uri fixes component routing */}
-        {url === '/' ? <Component sectionSlot={this.sectionSlot} /> : <div></div>}
+        <Component sectionSlot={this.sectionSlot} />
+        {/* {url === '/' ? <Component sectionSlot={this.sectionSlot} /> : <div></div>} */}
       </Route>
     );
   }
