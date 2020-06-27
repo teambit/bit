@@ -53,7 +53,7 @@ export class ComponentUI {
 
   static dependencies = [WorkspaceUI];
 
-  static slots = [Slot.withType<MenuItem>()];
+  static slots = [Slot.withType<Section>()];
 
   static async provider([workspace]: [WorkspaceUI], config, [sectionSlot]: [SectionSlotRegistry]) {
     const componentUI = new ComponentUI(sectionSlot);
