@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { Button } from '@bit/bit.evangelist.elements.button';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { themedText } from '@bit/bit.base-ui.text.themed-text';
-import { TopBarSlotRegistry } from '../../../workspace/workspace.ui';
+import { SectionSlotRegistry } from '../../component.ui';
 import styles from './top-bar.module.scss';
 
 export type TopBarProps = {
@@ -11,7 +11,7 @@ export type TopBarProps = {
   /**
    * slot for top bar menu items
    */
-  topBarSlot: TopBarSlotRegistry;
+  sectionSlot: SectionSlotRegistry;
   currentTag: {
     version: string;
     downloads: number;
@@ -22,8 +22,8 @@ export type TopBarProps = {
 /**
  * top bar menu.
  */
-export function TopBar({ topBarSlot, className, currentTag }: TopBarProps) {
-  const menuItems = topBarSlot.values();
+export function TopBar({ sectionSlot, className, currentTag }: TopBarProps) {
+  const menuItems = sectionSlot.values();
 
   return (
     <div className={classnames(styles.topBar, className)}>

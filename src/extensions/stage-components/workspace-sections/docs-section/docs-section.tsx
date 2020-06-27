@@ -1,5 +1,5 @@
 import React, { HTMLAttributes } from 'react';
-import classNames from 'classnames';
+import classNames from '../../../component/ui/top-bar-nav/node_modules/classnames';
 
 import { H1 } from '@bit/bit.evangelist.elements.heading';
 

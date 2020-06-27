@@ -1,24 +1,13 @@
-import React from 'react';
-import { WorkspaceUI } from '../workspace/workspace.ui';
-import { DocsSection } from '../stage-components/workspace-sections/docs-section';
-import { TopBarNav } from '../workspace/ui/top-bar-nav';
-import { docsMock } from './docs.data';
-import { Overview } from './overview';
+import { ComponentUI } from '../component/component.ui';
+import { OverviewSection } from './overview.section';
 
 export class DocsUI {
-  static dependencies = [WorkspaceUI];
+  static dependencies = [ComponentUI];
 
-  static async provider([workspace]: [WorkspaceUI]) {
-    workspace.registerMenuItem({
-      label: <TopBarNav to="~overview">Overview</TopBarNav>
-    });
+  static async provider([component]: [ComponentUI]) {
+    const docs = new DocsUI();
+    component.registerSection(new OverviewSection(docs));
 
-    workspace.registerPage({
-      path: ['~overview', ''],
-      exact: true,
-      children: <Overview />
-    });
-
-    return new DocsUI();
+    return docs;
   }
 }

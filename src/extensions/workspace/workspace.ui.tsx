@@ -60,7 +60,7 @@ export class WorkspaceUI {
 
   route() {
     return (
-      <Route path="/">
+      <Route path="/" key={WorkspaceUI.name}>
         <Workspace topBarSlot={this.topBarSlot} pageSlot={this.pageSlot} routeSlot={this.routeSlot} />
       </Route>
     );

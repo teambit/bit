@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { useParams } from 'react-router-dom';
+import { useParams, Switch } from 'react-router-dom';
 import { ComponentProvider } from './context';
 import { TopBar } from './top-bar';
 import styles from './component.module.scss';
-import { TopBarSlotRegistry } from '../component.ui';
+import { SectionSlotRegistry } from '../component.ui';
 
 const GET_COMPONENT = gql`
   query Component($id: String!) {
@@ -23,19 +23,18 @@ const currentTag = {
 };
 
 export type ComponentProps = {
-  topBarSlot: TopBarSlotRegistry;
+  sectionSlot: SectionSlotRegistry;
 };
 
-export function Component({ topBarSlot }: ComponentProps) {
+export function Component({ sectionSlot }: ComponentProps) {
   const { slug } = useParams();
   // const { loading, error, data } = useQuery(GET_COMPONENT, {
   //   variables: {id: slug}
   // });
-
   return (
-    <TopBar className={styles.topbar} sectionSlot={topBarSlot} currentTag={currentTag} />
-    // <ComponentProvider>
-
-    // </ComponentProvider>
+    <div>
+      <TopBar className={styles.topbar} sectionSlot={sectionSlot} currentTag={currentTag} />
+      <Switch>{sectionSlot.values().map(section => section.route)}</Switch>
+    </div>
   );
 }

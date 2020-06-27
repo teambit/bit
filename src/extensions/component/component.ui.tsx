@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';
+import { Section } from './section/section';
 
 export type Server = {
   env: string;
@@ -18,14 +19,14 @@ export type MenuItem = {
   label: JSX.Element | string | null;
 };
 
-export type TopBarSlotRegistry = SlotRegistry<MenuItem>;
+export type SectionSlotRegistry = SlotRegistry<Section>;
 
 export class ComponentUI {
   constructor(
     /**
      * top bar slot.
      */
-    private topBarSlot: TopBarSlotRegistry
+    private sectionSlot: SectionSlotRegistry
   ) {}
 
   /**
@@ -33,8 +34,8 @@ export class ComponentUI {
    */
   route() {
     return (
-      <Route exact path={`/:id([^~]+)`}>
-        <Component topBarSlot={this.topBarSlot} />
+      <Route exact path={`*`} key={ComponentUI.name}>
+        <Component sectionSlot={this.sectionSlot} />
       </Route>
     );
   }
@@ -42,8 +43,8 @@ export class ComponentUI {
   /**
    * register a new menu item.
    */
-  registerMenuItem(menuItem: MenuItem) {
-    this.topBarSlot.register(menuItem);
+  registerSection(section: Section) {
+    this.sectionSlot.register(section);
     return this;
   }
 
@@ -51,8 +52,9 @@ export class ComponentUI {
 
   static slots = [Slot.withType<MenuItem>()];
 
-  static async provider([workspace]: [WorkspaceUI], config, [topBarSlot]: [TopBarSlotRegistry]) {
-    const componentUI = new ComponentUI(topBarSlot);
+  static async provider([workspace]: [WorkspaceUI], config, [sectionSlot]: [SectionSlotRegistry]) {
+    const componentUI = new ComponentUI(sectionSlot);
     workspace.registerRoute(componentUI.route.bind(componentUI));
+    return componentUI;
   }
 }
