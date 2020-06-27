@@ -58,7 +58,7 @@ export class WorkspaceUI {
     return this;
   }
 
-  route() {
+  workspaceRoute() {
     return (
       <Route path="/" key={WorkspaceUI.name}>
         <Workspace topBarSlot={this.topBarSlot} pageSlot={this.pageSlot} routeSlot={this.routeSlot} />
@@ -76,7 +76,7 @@ export class WorkspaceUI {
     [topBarSlot, pageSlot, routeSlot]: [TopBarSlotRegistry, PageSlotRegistry, RouteSlotRegistry]
   ) {
     const workspaceUI = new WorkspaceUI(topBarSlot, pageSlot, routeSlot);
-    router.register(workspaceUI.route.bind(workspaceUI));
+    router.register(workspaceUI.workspaceRoute.bind(workspaceUI));
     return workspaceUI;
   }
 }
