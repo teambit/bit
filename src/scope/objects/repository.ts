@@ -14,6 +14,7 @@ import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
 import { ScopeJson } from '../scope-json';
 import { typesObj } from '../object-registrar';
+import { onPersist, onRead, ContentTransformer } from './repository-hooks';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -23,6 +24,8 @@ export default class Repository {
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
+  onRead: ContentTransformer;
+  onPersist: ContentTransformer;
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -38,6 +41,8 @@ export default class Repository {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.types = types;
+    this.onRead = onRead(scopePath, scopeJson);
+    this.onPersist = onPersist(scopePath, scopeJson);
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -94,6 +99,9 @@ export default class Repository {
     // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
       .readFile(this.objectPath(ref))
+      .then(fileContents => {
+        return this.onRead(fileContents);
+      })
       .then(fileContents => {
         return BitObject.parseObject(fileContents, this.types);
       })
@@ -192,8 +200,11 @@ export default class Repository {
     }
   }
 
-  loadRaw(ref: Ref): Promise<Buffer> {
-    return fs.readFile(this.objectPath(ref));
+  async loadRaw(ref: Ref): Promise<Buffer> {
+    const raw = await fs.readFile(this.objectPath(ref));
+    // Run hook to transform content pre reading
+    const transformedContent = this.onRead(raw);
+    return transformedContent;
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
@@ -208,7 +219,9 @@ export default class Repository {
   loadSync(ref: Ref, throws = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
-      return BitObject.parseSync(objectFile, this.types);
+      // Run hook to transform content pre reading
+      const transformedContent = this.onRead(objectFile);
+      return BitObject.parseSync(transformedContent, this.types);
     } catch (err) {
       if (throws) {
         throw new HashNotFound(ref.toString());
@@ -346,7 +359,9 @@ export default class Repository {
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.silly(`repository._writeOne: ${objectPath}`);
+    // Run hook to transform content pre persisting
+    const transformedContent = this.onPersist(contents);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return writeFile(objectPath, contents, options);
+    return writeFile(objectPath, transformedContent, options);
   }
 }

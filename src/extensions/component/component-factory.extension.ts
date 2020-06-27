@@ -33,40 +33,4 @@ export default class ComponentFactory {
     graphql.register(componentSchema());
     return new ComponentFactory(isolator);
   }
-
-  // private async getConfigFromExtensions(legacyComponent: ConsumerComponent) {
-  //   const extensionsConfigModificationsP = this.configsRegistry.keys.map(entry => {
-  //     // TODO: only running func for relevant extensions
-  //     const func = this.configsRegistry.get(entry);
-  //     return func()
-  //   });
-  //   const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
-  //   const extensionsConfigModificationsObject = mergeAll(extensionsConfigModifications);
-  //   return extensionsConfigModificationsObject;
-  // }
 }
-
-// export class Registry {
-//   private configHooks = {};
-
-//   /**
-//    * get a config func from the registry.
-//    */
-//   get(name: string) {
-//     const hook = this.configHooks[name];
-//     // if (!hook) throw new GeneralError(`there is no config hook for ${name}`);
-//     return hook;
-//   }
-
-//   get keys() {
-//     return Object.keys(this.configHooks);
-//   }
-
-//   /**
-//    * set a config func to the registry.
-//    */
-//   set(name, configFunc: ConfigFunc) {
-//     this.configHooks[name] = configFunc;
-//     return this;
-//   }
-// }

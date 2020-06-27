@@ -11,6 +11,7 @@ let compressResponse;
 export default class Search implements LegacyCommand {
   name = '_search <path> <args>';
   private = true;
+  internal = true;
   description = 'search for components on a remote scope';
   alias = '';
   opts = [];

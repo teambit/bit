@@ -1,12 +1,8 @@
-import { render } from 'ink';
-
-import React from 'react';
-
 export abstract class PaperError extends Error {
   isUserError: boolean; // user errors are not reported to Sentry
-  abstract render(): React.ReactElement;
+  abstract report(): string;
 
-  static handleError(err: PaperError): void {
-    render(err.render());
+  static handleError(err: PaperError): string {
+    return err.report();
   }
 }

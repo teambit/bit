@@ -10,6 +10,7 @@ let compressResponse;
 export default class _Log implements LegacyCommand {
   name = '_log <path> <args>';
   private = true;
+  internal = true;
   description = 'show component logs';
   alias = '';
   opts = [];

@@ -17,8 +17,7 @@ export default class CiUpdate implements LegacyCommand {
     ['c', 'no-cache', 'ignore component cache when creating dist file'],
     ['o', 'output [file]', 'save ci results to file system']
   ] as CommandOptions;
-  /* changed command to not private so bit will not print {"payload":"","headers":{"version":"0.12.10-dev.1"}} when it fails */
-  private = false;
+  private = true;
 
   action(
     [id, scopePath]: [string, string | null | undefined],

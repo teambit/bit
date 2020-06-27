@@ -10,6 +10,7 @@ let compressResponse;
 export default class Put implements LegacyCommand {
   name = '_put <path> <args>';
   private = true;
+  internal = true;
   description = 'upload a component to a scope';
   alias = '';
   opts = [];

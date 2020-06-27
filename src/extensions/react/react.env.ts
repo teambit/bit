@@ -2,7 +2,7 @@ import { Environment, ExecutionContext } from '../environments';
 import { Tester } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { BuildPipe } from '../builder';
+import { BuildTask } from '../builder';
 import { Compiler, Compile } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { DevServer } from '../bundler';
@@ -84,9 +84,9 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildPipe {
+  getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return BuildPipe.from([this.compiler.task]);
+    return [this.compiler.task];
   }
 }

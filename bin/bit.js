@@ -5,7 +5,7 @@
 const constants = require('../dist/constants');
 const { printWarning } = require('../dist/logger/logger');
 
-const MINIMUM_NODE_VERSION = '8.12.0';
+const MINIMUM_NODE_VERSION = '10.0.0';
 
 // set max listeners to a more appropriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;

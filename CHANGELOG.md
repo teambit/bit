@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.0-dev.6] - 2020-06-26]
+
+- drop support for node 8
+
+## [[14.8.0-dev.5] - 2020-06-25]
+
+- add a way to run `bit pack` with a capsule
+- internal changes for command interface
+
+## [[14.8.0-dev.4] - 2020-06-24]
+
+- support hooks for persist and read bit objects into scope
+
 ## [[14.8.0-dev.3] - 2020-06-21]
 
 - internal changes to command registration and interfaces
