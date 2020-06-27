@@ -79,7 +79,7 @@ export class Publisher {
    */
   private async getIdsToPublish(componentIds: string[]): Promise<string[]> {
     const ids = BitIds.fromArray(componentIds.map(id => BitId.parse(id, true)));
-    const components = await this.scope.getComponentsAndVersions(ids);
+    const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
       .filter(c => {
         const ext = c.version.extensions.findExtension('@teambit/pkg');
