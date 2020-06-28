@@ -23,13 +23,17 @@ import { GraphQLExtension } from '../graphql';
 import { WatchExt } from '../watch';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
+import { PreviewExtension } from '../preview/preview.extension';
+import { DocsExtension } from '../docs/docs.extension';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
   [WorkspaceExt.name]: WorkspaceExt,
   [CompileExt.name]: CompileExt,
   [ComponentFactoryExt.id]: ComponentFactoryExt,
+  [PreviewExtension.name]: PreviewExtension,
   [ConfigExt.name]: ConfigExt,
+  [DocsExtension.name]: DocsExtension,
   [GraphQLExtension.name]: GraphQLExtension,
   [UIExtension.name]: UIExtension,
   [CoreExt.name]: CoreExt,

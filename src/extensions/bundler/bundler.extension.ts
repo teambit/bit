@@ -1,3 +1,4 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { DevServerService } from './dev-server.service';
@@ -5,6 +6,9 @@ import { Environments } from '../environments';
 import { GraphQLExtension } from '../graphql';
 import { devServerSchema } from './dev-server.graphql';
 import { ComponentServer } from './component-server';
+import { BrowserRuntime } from './browser-runtime';
+
+export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
 /**
  * bundler extension.
@@ -24,7 +28,12 @@ export class BundlerExtension {
     /**
      * dev server service.
      */
-    private devService: DevServerService
+    private devService: DevServerService,
+
+    /**
+     * browser runtime slot.
+     */
+    private runtimeSlot: BrowserRuntimeSlot
   ) {}
 
   /**
@@ -52,13 +61,6 @@ export class BundlerExtension {
   }
 
   /**
-   * component servers.
-   */
-  private _componentServers: null | ComponentServer[];
-
-  private indexByComponent() {}
-
-  /**
    * bundle components.
    * @param components defaults to all components in the workspace.
    */
@@ -66,10 +68,32 @@ export class BundlerExtension {
     return components;
   }
 
+  /**
+   * register a new browser runtime environment.
+   * @param browserRuntime
+   */
+  registerTarget(browserRuntime: BrowserRuntime) {
+    this.runtimeSlot.register(browserRuntime);
+    return this;
+  }
+
+  /**
+   * component servers.
+   */
+  private _componentServers: null | ComponentServer[];
+
+  private indexByComponent() {}
+
+  static slots = [Slot.withType<BrowserRuntime>()];
+
   static dependencies = [WorkspaceExt, Environments, GraphQLExtension];
 
-  static async provider([workspace, envs, graphql]: [Workspace, Environments, GraphQLExtension]) {
-    const bundler = new BundlerExtension(workspace, envs, new DevServerService());
+  static async provider(
+    [workspace, envs, graphql]: [Workspace, Environments, GraphQLExtension],
+    config,
+    [runtimeSlot]: [BrowserRuntimeSlot]
+  ) {
+    const bundler = new BundlerExtension(workspace, envs, new DevServerService(runtimeSlot), runtimeSlot);
     graphql.register(devServerSchema(bundler));
     return bundler;
   }

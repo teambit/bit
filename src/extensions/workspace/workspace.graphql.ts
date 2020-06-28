@@ -4,6 +4,7 @@ export default (workspace: Workspace) => {
   return {
     typeDefs: `
       type Workspace {
+        name: String
         path: String
         components: [ComponentMeta]
         getComponent(id: String!): Component
@@ -16,6 +17,7 @@ export default (workspace: Workspace) => {
     resolvers: {
       Workspace: {
         path: ws => ws.path,
+        name: ws => ws.name,
         components: async (ws: Workspace) => {
           return ws.list();
         },

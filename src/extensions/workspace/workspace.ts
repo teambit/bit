@@ -39,7 +39,7 @@ export default class Workspace implements ComponentHost {
     public consumer: Consumer,
 
     /**
-     * access to the Workspace's `Scope` instance
+     * access to the workspace `Scope` instance
      */
     readonly scope: ScopeExtension,
 
@@ -72,6 +72,16 @@ export default class Workspace implements ComponentHost {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /**
+   * name of the workspace as configured in either `workspace.json`.
+   * defaults to workspace root directory name.
+   */
+  get name() {
+    if (this.config.name) return this.config.name;
+    const tokenizedPath = this.path.split('/');
+    return tokenizedPath[tokenizedPath.length - 1];
   }
 
   /**

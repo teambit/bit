@@ -1,9 +1,30 @@
 import { Component } from '../../../component/component.ui';
 
-export class Workspace {
-  constructor(readonly path: string, readonly components: Component[]) {}
+export type WorkspaceProps = {
+  name: string;
+  path: string;
+  components: Component[];
+};
 
-  static from({ path, components }: { path: string; components: Component[] }) {
-    return new Workspace(path, components);
+export class Workspace {
+  constructor(
+    /**
+     * name of the workspace.
+     */
+    readonly name: string,
+
+    /**
+     * absolute path of the workspace.
+     */
+    readonly path: string,
+
+    /**
+     * components container in the workspace.
+     */
+    readonly components: Component[]
+  ) {}
+
+  static from({ name, path, components }: WorkspaceProps) {
+    return new Workspace(name, path, components);
   }
 }

@@ -18,6 +18,7 @@ import { RouteSlotRegistry } from '../../../react-router/react-router.ui';
 const WORKSPACE = gql`
   {
     workspace {
+      name
       path
       components {
         id
@@ -35,7 +36,7 @@ export type WorkspaceProps = {
 /**
  * main workspace component.
  */
-export function Workspace({ topBarSlot, pageSlot, routeSlot }: WorkspaceProps) {
+export function Workspace({ routeSlot }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
   const [, selectComponent] = useState<Component>(defaultComponent);
 
@@ -50,7 +51,7 @@ export function Workspace({ topBarSlot, pageSlot, routeSlot }: WorkspaceProps) {
       <Theme>
         <div className={styles.explorer}>
           <div className={styles.scopeName}>
-            <span className={styles.avatar}>A</span> Google / <b>material-ui</b>
+            <span className={styles.avatar}>A</span> {workspace.name}
           </div>
           <SideBar
             className={styles.sideBar}

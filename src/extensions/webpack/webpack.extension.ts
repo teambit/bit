@@ -2,7 +2,7 @@ import webpack from 'webpack';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
 import merge from 'webpack-merge';
-import { DevServer } from '../bundler';
+import { DevServer, DevServerContext } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.config';
 import { Component } from '../component';
@@ -22,14 +22,14 @@ export class WebpackExtension {
    * @param components array of components to launch.
    * @param config webpack config. will be merged to the base webpack config as seen at './config'
    */
-  createDevServer(components: Component[], config: any): DevServer {
-    const mergedConfig = merge(this.createConfig(components), config);
+  createDevServer(context: DevServerContext, config: any): DevServer {
+    const mergedConfig = merge(this.createConfig(context), config);
     const compiler = webpack(mergedConfig);
-    return new WebpackDevServer(compiler);
+    return new WebpackDevServer(compiler, mergedConfig.devServer);
   }
 
-  private createConfig(components: Component[]) {
-    return configFactory(this.workspace.path, this.getEntries(components));
+  private createConfig(context: DevServerContext) {
+    return configFactory(this.workspace.path, context.entry);
   }
 
   private getEntries(components: Component[]) {

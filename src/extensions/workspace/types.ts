@@ -23,4 +23,9 @@ export interface WorkspaceExtConfig {
    * set the default structure of components in your project
    */
   components: ComponentScopeDir[];
+
+  /**
+   * name of the workspace.
+   */
+  name: string;
 }

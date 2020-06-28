@@ -15,6 +15,9 @@ export class ComponentModel {
      */
     readonly id: string,
 
+    /**
+     * the component server.
+     */
     readonly server: ComponentServer
   ) {}
 
