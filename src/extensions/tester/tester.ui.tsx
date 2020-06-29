@@ -1,7 +1,4 @@
-import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
-import { TopBarNav } from '../workspace/ui/top-bar-nav';
-import { TestsPage } from './ui/tests-page';
 
 export class TesterUI {
   static dependencies = [WorkspaceUI];
@@ -13,14 +10,14 @@ export class TesterUI {
   static async provider([workspace]: [WorkspaceUI]) {
     const testerUi = new TesterUI(workspace);
 
-    workspace.registerMenuItem({
-      label: <TopBarNav to="~tests">Tests</TopBarNav>
-    });
+    // workspace.registerMenuItem({
+    //   label: <TopBarNav to="~tests">Tests</TopBarNav>
+    // });
 
-    workspace.registerPage({
-      path: '~tests',
-      children: <TestsPage />
-    });
+    // workspace.registerPage({
+    //   path: '~tests',
+    //   children: <TestsPage />
+    // });
 
     return testerUi;
   }

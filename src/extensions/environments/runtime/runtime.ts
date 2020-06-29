@@ -13,7 +13,7 @@ export class Runtime {
   async run(service: EnvService) {
     const contexts = await Promise.all(
       this.runtimeEnvs.map(async env => {
-        const res = await service.run(new ExecutionContext(env.id, this, env.env, env.components));
+        const res = await service.run(new ExecutionContext(this, env));
         return {
           env: env.id,
           res

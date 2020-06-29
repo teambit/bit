@@ -34,9 +34,16 @@ export interface Command {
   group?: string;
 
   /**
-   * Should a command be exposed to the user.
+   * should a command be exposed to the user.
+   * e.g. experimental commands or commands created for the ssh communication should not be exposed
    */
   private?: boolean;
+
+  /**
+   * command that is not running on the terminal, such as "_fetch", "_put".
+   * in case an error is thrown, it is serialized so it's easier to parse it later
+   */
+  internal?: boolean;
 
   /**
    * should turn on Loader
@@ -58,7 +65,7 @@ export interface Command {
   commands?: Command[];
 
   /**
-   * command running on a remote ssh server, such as, _fetch, _put.
+   * interact with a remote, e.g. "export" push to a remote
    * for now, the only difference is that they get a "token" flag to authenticate anonymously.
    */
   remoteOp?: boolean;
@@ -83,7 +90,7 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
    */
-  report?(args: CLIArgs, flags: Flags): Promise<Report>;
+  report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
 
   /**
    * Optional handler to provide a raw result of the command.

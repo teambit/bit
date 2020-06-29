@@ -2,17 +2,17 @@ type SemVer = string;
 type TimeStamp = string;
 type ComponentID = string;
 
-function toString(id: ComponentID) {
-  return id;
-}
+// function toString(id: ComponentID) {
+//   return id;
+// }
 
-function toCdnUrl(id: ComponentID) {
-  return `http://esm.bit...${id}`;
-}
+// function toCdnUrl(id: ComponentID) {
+//   return `http://esm.bit...${id}`;
+// }
 
-function toNpmString(id: ComponentID) {
-  return id.replace('/', '.');
-}
+// function toNpmString(id: ComponentID) {
+//   return id.replace('/', '.');
+// }
 
 export enum JobStatus {
   fail = 'fail',

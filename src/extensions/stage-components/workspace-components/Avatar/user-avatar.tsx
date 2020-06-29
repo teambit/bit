@@ -1,8 +1,8 @@
 // import { AccountObj } from '../../types/account';
-import { AccountObj } from './avatar';
 
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import { AccountObj } from './avatar';
 // import Tooltip from 'components/Tooltip';
 import avatarColors from './avatar-colors.module.scss';
 import styles from './styles.module.scss';
@@ -16,13 +16,13 @@ type UserAvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  hideTooltip?: boolean;
+  // hideTooltip?: boolean;
 };
 
 export class UserAvatar extends PureComponent<UserAvatarProps> {
-  state = {
-    tooltipId: null
-  };
+  // state = {
+  //   tooltipId: null
+  // };
   // componentDidMount() {
   // 	//mount only happens in client side
   // 	//setting state here will prevent id reallocated after serverside rendering
@@ -37,10 +37,10 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       imageSize = size,
       fontSize = Math.round(size * 0.4),
       className,
-      imgClassName,
-      hideTooltip = false
+      imgClassName
+      // hideTooltip = false
     } = this.props;
-    const { tooltipId } = this.state;
+    // const { tooltipId } = this.state;
 
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0];

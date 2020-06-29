@@ -1,12 +1,13 @@
-import { Environment, ExecutionContext } from '../environments';
+import { Environment } from '../environments';
 import { Tester } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { BuildPipe } from '../builder';
+import { BuildTask } from '../builder';
 import { Compiler, Compile } from '../compiler';
 import { WebpackExtension } from '../webpack';
-import { DevServer } from '../bundler';
+import { DevServer, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
+import { Workspace } from '../workspace';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -31,7 +32,12 @@ export class ReactEnv implements Environment {
     /**
      * webpack extension.
      */
-    private webpack: WebpackExtension
+    private webpack: WebpackExtension,
+
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace
   ) {}
 
   /**
@@ -58,8 +64,19 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: ExecutionContext): DevServer {
-    return this.webpack.createDevServer(context.components, webpackConfigFactory());
+  getDevServer(context: DevServerContext): DevServer {
+    const withDocs = Object.assign(context, {
+      entry: context.entry.concat([require.resolve('./docs')])
+    });
+
+    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+  }
+
+  /**
+   * return a path to a docs template.
+   */
+  getDocsTemplate() {
+    return require.resolve('./docs');
   }
 
   /**
@@ -84,9 +101,9 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildPipe {
+  getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return BuildPipe.from([this.compiler.task]);
+    return [this.compiler.task];
   }
 }

@@ -1,9 +1,8 @@
 import React from 'react';
-import classNames from 'classnames';
-import styles from './commit-details.module.scss';
 import { H5 } from '@bit/bit.evangelist.elements.heading';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
+import styles from './commit-details.module.scss';
 
 type CommitDetailsProps = {
   /**

@@ -18,13 +18,13 @@ export type InstallMethodsProps = {
 export function InstallMethods({ data, className }: InstallMethodsProps) {
   return (
     <Grid colMd={2} className={classNames(styles.copyMethod, className)}>
-      {data.map(method => (
-        <>
+      {data.map((method, key) => (
+        <div key={key}>
           <H5 className={styles.copyTitle} size={PossibleSizes.xxs}>
             {method.title}
           </H5>
           <CopyBox className={styles.copyBox}>{method.content}</CopyBox>
-        </>
+        </div>
       ))}
     </Grid>
   );

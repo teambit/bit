@@ -1,16 +1,14 @@
 import React, { Component, useState } from 'react';
 import classNames from 'classnames';
-
+import { NavLink } from 'react-router-dom';
 import { TreeNodeProps, TreeLayer } from '../recursive-tree';
-import { ComponentTreeContext, IComponentTreeContext } from '../component-tree-context';
+import { ComponentTreeContext } from '../component-tree-context';
 import { indentStyle, indentClass } from '../indent';
 import { getName } from '../utils/get-name';
-
 import { clickable } from '../../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
 
 import styles from './component-nodes.module.scss';
-import { NavLink } from 'react-router-dom';
 
 export function ScopeView({ node, depth }: TreeNodeProps) {
   return (

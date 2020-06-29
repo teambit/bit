@@ -9,6 +9,7 @@ import ComponentID from './id';
 import State from './state';
 // eslint-disable-next-line import/no-cycle
 import Snap, { Author } from './snap';
+import { capitalize } from '../utils/capitalize';
 
 /**
  * in-memory representation of a component.
@@ -66,8 +67,6 @@ export default class Component {
     return this.state.dependencyGraph();
   }
 
-  capsule() {}
-
   /**
    * record component changes in the `Scope`.
    */
@@ -76,6 +75,14 @@ export default class Component {
     const snap = Snap.create(this, author, message);
 
     return new Component(this.id, snap, snap.state, this.tags);
+  }
+
+  /**
+   * display name of the component.
+   */
+  get displayName() {
+    const tokens = this.id.name.split('-').map(token => capitalize(token));
+    return tokens.join('');
   }
 
   /**
@@ -143,6 +150,6 @@ export default class Component {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   equals(component: Component): boolean {
-    return true;
+    return component.id.toString() === this.id.toString();
   }
 }

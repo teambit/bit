@@ -11,7 +11,7 @@ import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import ComponentConfig from '../../consumer/config';
 import { GraphQLExtension } from '../graphql';
-import workspaceSchema from './workspace.graphql';
+import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 
@@ -73,7 +73,8 @@ export default async function provideWorkspace(
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
         return workspace.loadExtensions(componentConfig.parseExtensions());
       });
-      graphql.register(workspaceSchema(workspace));
+      const workspaceSchema = getWorkspaceSchema(workspace);
+      graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
 
       return workspace;

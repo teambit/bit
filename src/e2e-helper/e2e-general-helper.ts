@@ -72,7 +72,7 @@ export default class GeneralHelper {
       output = err.toString();
     }
 
-    const errorString = defaultErrorHandler(error);
+    const { message: errorString } = defaultErrorHandler(error);
     expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString) as string);
   }
 

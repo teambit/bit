@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
 import memoizeOne from 'memoize-one';
-
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
-
 import { ComponentTreeContext } from './component-tree-context';
 import { /* ScopeView, */ ComponentView, NamespaceView } from './component-nodes';
-
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 
@@ -16,6 +13,7 @@ type ComponentTreeProps = {
   components: string[];
 };
 
+// :TODO @uri please refactor to a React hook.
 export class ComponentTree extends Component<ComponentTreeProps> {
   getRootNode = memoizeOne((componentList: string[]) => {
     return inflateToTree(componentList);
@@ -48,7 +46,7 @@ function RootNode({ node }: { node: TreeNode }) {
 }
 
 function getTreeNodeComponent(node: TreeNode) {
-  const { id, children } = node;
+  const { children } = node;
 
   if (!children) return ComponentView;
   // TODO - how to tell scopes from namespaces?

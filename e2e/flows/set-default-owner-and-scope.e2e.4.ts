@@ -96,10 +96,6 @@ describe('set default owner and scope', function() {
             const componentIdWithVersion = `${componentId}@0.0.1`;
             const packDir = path.join(helper.scopes.localPath, 'pack');
             const options = {
-              o: '',
-              k: '',
-              p: '',
-              j: '',
               d: packDir
             };
             helper.command.packComponent(componentIdWithVersion, options, true);

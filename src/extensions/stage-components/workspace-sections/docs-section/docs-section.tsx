@@ -1,8 +1,6 @@
 import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
-
 import { H1 } from '@bit/bit.evangelist.elements.heading';
-
 // import { Avatar } from '../../../workspace-components/avatar';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
@@ -11,14 +9,12 @@ import { LabelList } from '../../workspace-components/label';
 import { Separator } from '../../workspace-components/separator';
 import { VersionTag } from '../../workspace-components/version-tag';
 import styles from './docs-section.module.scss';
-
 import { InstallMethods, InstallMethodsData } from '../../workspace-components/install-methods';
 
 function getText(text: Bla) {
   // var text = 'Hello `@James P. Pauli`, How r `you`.';
 
   const markupText = text.text.replace(/`(.*?)`/g, '<code>$1</code>');
-  console.log(markupText);
   return markupText;
 }
 
@@ -31,38 +27,20 @@ function CreateMarkup(text: Bla): JSX.Element {
   return <div className={styles.enhancedText} dangerouslySetInnerHTML={{ __html: formattedText }} />;
 }
 
-// const data = {
-// 	titles: ['name', 'type', 'defaultValue', 'description'],
-// 	content: [
-// 		{
-// 			name: 'as',
-// 			type: 'elementType',
-// 			defaultValue: '20 minutes',
-// 			description: 'An element type to render as (string or function).',
-// 		},
-// 		{
-// 			name: 'className',
-// 			type: 'string',
-// 			defaultValue: 'false',
-// 			description: 'Additional classes.',
-// 		},
-// 	],
-// };
-
-const data = [
-  {
-    name: 'as',
-    type: 'elementType',
-    defaultValue: '20 minutes',
-    description: 'An element type to render as (string or function).'
-  },
-  {
-    name: 'className',
-    type: 'string',
-    defaultValue: 'false',
-    description: 'Additional classes.'
-  }
-];
+// const data = [
+//   {
+//     name: 'as',
+//     type: 'elementType',
+//     defaultValue: '20 minutes',
+//     description: 'An element type to render as (string or function).'
+//   },
+//   {
+//     name: 'className',
+//     type: 'string',
+//     defaultValue: 'false',
+//     description: 'Additional classes.'
+//   }
+// ];
 
 export type DocsSectionProps = {
   // version?: Version;

@@ -1,0 +1,27 @@
+.topBar {
+	display: flex;
+	justify-content: space-between;
+}
+
+.navigation {
+	display: flex;
+	list-style: none;
+	height: 100%;
+
+	> li {
+		display: block;
+		margin-right: 16px;
+		height: 100%;
+	}
+}
+
+.rightSide {
+	> * {
+		margin-right: 8px;
+	}
+}
+
+.icon {
+	vertical-align: middle;
+	
+}	

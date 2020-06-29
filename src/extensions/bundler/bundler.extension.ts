@@ -1,7 +1,14 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { DevServerService } from './dev-server.service';
 import { Environments } from '../environments';
+import { GraphQLExtension } from '../graphql';
+import { devServerSchema } from './dev-server.graphql';
+import { ComponentServer } from './component-server';
+import { BrowserRuntime } from './browser-runtime';
+
+export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
 /**
  * bundler extension.
@@ -21,7 +28,12 @@ export class BundlerExtension {
     /**
      * dev server service.
      */
-    private devService: DevServerService
+    private devService: DevServerService,
+
+    /**
+     * browser runtime slot.
+     */
+    private runtimeSlot: BrowserRuntimeSlot
   ) {}
 
   /**
@@ -30,7 +42,21 @@ export class BundlerExtension {
    */
   async devServer(components?: Component[]) {
     const envRuntime = await this.envs.createEnvironment(components || (await this.workspace.list()));
-    const server = await envRuntime.run(this.devService);
+    const executionResponse = await envRuntime.run(this.devService);
+
+    this._componentServers = executionResponse.map(res => res.res);
+    this.indexByComponent();
+    return this._componentServers;
+  }
+
+  /**
+   * get a dev server instance containing a component.
+   * @param component
+   */
+  getComponentServer(component: Component): undefined | ComponentServer {
+    if (!this._componentServers) return undefined;
+    const server = this._componentServers.find(componentServer => componentServer.hasComponent(component));
+
     return server;
   }
 
@@ -42,9 +68,33 @@ export class BundlerExtension {
     return components;
   }
 
-  static dependencies = [WorkspaceExt, Environments];
+  /**
+   * register a new browser runtime environment.
+   * @param browserRuntime
+   */
+  registerTarget(browserRuntime: BrowserRuntime) {
+    this.runtimeSlot.register(browserRuntime);
+    return this;
+  }
 
-  static async provider([workspace, envs]: [Workspace, Environments]) {
-    return new BundlerExtension(workspace, envs, new DevServerService());
+  /**
+   * component servers.
+   */
+  private _componentServers: null | ComponentServer[];
+
+  private indexByComponent() {}
+
+  static slots = [Slot.withType<BrowserRuntime>()];
+
+  static dependencies = [WorkspaceExt, Environments, GraphQLExtension];
+
+  static async provider(
+    [workspace, envs, graphql]: [Workspace, Environments, GraphQLExtension],
+    config,
+    [runtimeSlot]: [BrowserRuntimeSlot]
+  ) {
+    const bundler = new BundlerExtension(workspace, envs, new DevServerService(runtimeSlot), runtimeSlot);
+    graphql.register(devServerSchema(bundler));
+    return bundler;
   }
 }

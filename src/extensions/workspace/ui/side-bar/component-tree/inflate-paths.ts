@@ -1,5 +1,5 @@
 import { subPaths } from '@bit/bit.utils.fs.sub-paths';
-import { TreeNode } from '../recursive-tree';
+import { TreeNode } from './recursive-tree';
 
 type KeyTree = { [filePath: string]: KeyTree | undefined };
 
@@ -10,16 +10,15 @@ export function inflateToTree(paths: string[]) {
   if (rootItems.length === 1) {
     const [singleRootKey, singleRootNode] = rootItems[0];
     return keyTreeToNodeTree(singleRootKey, singleRootNode);
-  } else {
-    return keyTreeToNodeTree('', treeSkeleton);
   }
+  return keyTreeToNodeTree('', treeSkeleton);
 }
 
 function buildKeyTree(paths: string[]): KeyTree {
   const treeRoot: KeyTree = {};
 
   paths.forEach(fullpath => {
-    const segments = subPaths(fullpath).filter(x => x !== '.'); //@HACK!
+    const segments = subPaths(fullpath).filter(x => x !== '.'); // @HACK!
     const fileName = segments.pop();
 
     let currentFolder = treeRoot;
@@ -32,7 +31,7 @@ function buildKeyTree(paths: string[]): KeyTree {
 
     if (!fileName) return;
     const isExisting = currentFolder[fileName];
-    if (isExisting) return; //folders may repeat, do not override
+    if (isExisting) return; // folders may repeat, do not override
 
     const isFolder = fullpath.endsWith('/');
     currentFolder[fileName] = isFolder ? {} : undefined;
@@ -42,7 +41,7 @@ function buildKeyTree(paths: string[]): KeyTree {
 }
 
 function keyTreeToNodeTree(nodeId: string, children?: KeyTree): TreeNode {
-  //leaf:
+  // leaf:
   if (!children) {
     return {
       id: nodeId,
@@ -51,20 +50,20 @@ function keyTreeToNodeTree(nodeId: string, children?: KeyTree): TreeNode {
     };
   }
 
-  //innerNode:
+  // innerNode:
   return {
     id: nodeId,
     children: Object.entries(children)
       .sort(alphabetically)
       .sort(foldersFirst)
-      .map(([fullpath, children]) => keyTreeToNodeTree(fullpath, children))
+      .map(([fullpath, subChildren]) => keyTreeToNodeTree(fullpath, subChildren))
   };
 }
 
-function alphabetically([key1, node1]: [string, any], [key2, node2]: [string, any]) {
+function alphabetically([key1 /* node1 */]: [string, any], [key2 /* node2 */]: [string, any]) {
   return key1 < key2 ? -1 : 1;
 }
 
-function foldersFirst<T>([key1, children1]: [string, T], [key2, children2]: [string, T]) {
+function foldersFirst<T>([, /* key1 */ children1]: [string, T], [, /* key2 */ children2]: [string, T]) {
   return (children1 !== undefined ? -1 : 0) + (children2 !== undefined ? 1 : 0);
 }

@@ -16,6 +16,7 @@ export type ScopeJsonProps = {
   name: string;
   version: string;
   resolverPath?: string;
+  hooksPath?: string;
   license?: string;
   groupName: string | null | undefined;
   remotes?: { name: string; url: string };
@@ -26,14 +27,16 @@ export class ScopeJson {
   _name: string;
   version: string | null | undefined;
   resolverPath: string | null | undefined;
+  hooksPath: string | undefined;
   license: string | null | undefined;
   remotes: { [key: string]: string };
   groupName: string;
 
-  constructor({ name, remotes, resolverPath, license, groupName, version }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version }: ScopeJsonProps) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
+    this.hooksPath = hooksPath;
     this.license = license;
     this.remotes = remotes || {};
     this.groupName = groupName || '';
