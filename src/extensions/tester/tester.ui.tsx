@@ -13,14 +13,14 @@ export class TesterUI {
   static async provider([workspace]: [WorkspaceUI]) {
     const testerUi = new TesterUI(workspace);
 
-    workspace.registerMenuItem({
-      label: <TopBarNav to="~tests">Tests</TopBarNav>
-    });
+    // workspace.registerMenuItem({
+    //   label: <TopBarNav to="~tests">Tests</TopBarNav>
+    // });
 
-    workspace.registerPage({
-      path: '~tests',
-      children: <TestsPage />
-    });
+    // workspace.registerPage({
+    //   path: '~tests',
+    //   children: <TestsPage />
+    // });
 
     return testerUi;
   }

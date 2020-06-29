@@ -1,12 +1,12 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { Switch, useRouteMatch } from 'react-router-dom';
+import { useRouteMatch } from 'react-router-dom';
 import { ComponentProvider } from './context';
 import { TopBar } from './top-bar';
 import styles from './component.module.scss';
-import { SectionSlotRegistry } from '../component.ui';
 import { ComponentModel } from './component-model';
+import { NavigationSlot, RouteSlot, SubRouteSlot } from '../../react-router/slot-router';
 
 const GET_COMPONENT = gql`
   query Component($id: String!) {
@@ -30,15 +30,18 @@ const currentTag = {
 };
 
 export type ComponentProps = {
-  sectionSlot: SectionSlotRegistry;
+  navSlot: NavigationSlot;
+  routeSlot: RouteSlot;
 };
 
 /**
  * main UI component of the Component extension.
  */
-export function Component({ sectionSlot }: ComponentProps) {
-  const { url } = useRouteMatch();
-  const componentId = parseComponentId(url);
+export function Component({ navSlot, routeSlot }: ComponentProps) {
+  const {
+    params: { componentId }
+  } = useRouteMatch();
+
   const { loading, error, data } = useQuery(GET_COMPONENT, {
     variables: { id: componentId }
   });
@@ -51,14 +54,8 @@ export function Component({ sectionSlot }: ComponentProps) {
 
   return (
     <ComponentProvider component={component}>
-      <TopBar className={styles.topbar} sectionSlot={sectionSlot} currentTag={currentTag} />
-      <Switch>{sectionSlot.values().map(section => section.route)}</Switch>
+      <TopBar className={styles.topbar} navigationSlot={navSlot} currentTag={currentTag} />
+      {routeSlot && <SubRouteSlot slot={routeSlot} />}
     </ComponentProvider>
   );
-}
-
-// :TODO @uri we need to find a better solution for this through the react-router api.
-function parseComponentId(url: string) {
-  const componentId = url.split('/~')[0];
-  return componentId.substr(1, componentId.length - 1);
 }

@@ -6,7 +6,10 @@ export class SimulationsUI {
 
   static async provider([component]: [ComponentUI]) {
     const sims = new SimulationsUI();
-    component.registerSection(new SimulationSection(sims));
+    const section = new SimulationSection(sims);
+
+    component.registerRoute(section.route);
+    component.registerNavigation(section.navigationLink);
 
     return sims;
   }

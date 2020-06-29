@@ -6,7 +6,10 @@ export class DocsUI {
 
   static async provider([component]: [ComponentUI]) {
     const docs = new DocsUI();
-    component.registerSection(new OverviewSection(docs));
+    const section = new OverviewSection(docs);
+
+    component.registerRoute(section.route);
+    component.registerNavigation(section.navigationLink);
 
     return docs;
   }

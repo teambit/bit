@@ -13,17 +13,13 @@ export class SimulationSection implements Section {
     private sims: SimulationsExtension
   ) {}
 
-  get label() {
-    return <TopBarNav to="~simulation">Simulation</TopBarNav>;
-  }
+  navigationLink = {
+    to: '~simulation',
+    children: 'Simulation'
+  };
 
-  get route() {
-    const { path } = useRouteMatch();
-
-    return (
-      <Route exact path={`${path}/~simulation`} key={SimulationSection.name}>
-        <ComponentSimulation />
-      </Route>
-    );
-  }
+  route = {
+    path: '~simulation',
+    children: <ComponentSimulation />
+  };
 }

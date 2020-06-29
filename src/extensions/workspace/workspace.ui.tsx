@@ -32,19 +32,6 @@ export class WorkspaceUI {
 
   setStage?: React.Dispatch<React.SetStateAction<JSX.Element | undefined>>;
 
-  /**
-   * register a new menu item.
-   */
-  registerMenuItem(menuItem: MenuItem) {
-    this.topBarSlot.register(menuItem);
-    return this;
-  }
-
-  registerPage(pageRoute: PageRoute) {
-    this.pageSlot.register(pageRoute);
-    return this;
-  }
-
   /** set content to appear in main stage */
   open(element: JSX.Element) {
     this.setStage && this.setStage(element);
@@ -58,13 +45,13 @@ export class WorkspaceUI {
     return this;
   }
 
-  workspaceRoute() {
+  workspaceRoute = () => {
     return (
       <Route path="/" key={WorkspaceUI.name}>
-        <Workspace topBarSlot={this.topBarSlot} pageSlot={this.pageSlot} routeSlot={this.routeSlot} />
+        <Workspace /* topBarSlot={this.topBarSlot} */ /* pageSlot={this.pageSlot} */ routeSlot={this.routeSlot} />
       </Route>
     );
-  }
+  };
 
   static dependencies = [ReactRouterUI];
 
@@ -76,7 +63,7 @@ export class WorkspaceUI {
     [topBarSlot, pageSlot, routeSlot]: [TopBarSlotRegistry, PageSlotRegistry, RouteSlotRegistry]
   ) {
     const workspaceUI = new WorkspaceUI(topBarSlot, pageSlot, routeSlot);
-    router.register(workspaceUI.workspaceRoute.bind(workspaceUI));
+    router.register(workspaceUI.workspaceRoute);
     return workspaceUI;
   }
 }
