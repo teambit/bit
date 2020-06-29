@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- expose extensions declarations and instances from api
+
 ## [[14.8.2] - 2020-06-29](https://github.com/teambit/bit/releases/tag/v14.8.2)
 
 - do not show loader for internal commands
