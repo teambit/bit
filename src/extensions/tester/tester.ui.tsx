@@ -1,7 +1,4 @@
-import React from 'react';
 import { WorkspaceUI } from '../workspace/workspace.ui';
-import { TopBarNav } from '../component/ui/top-bar-nav';
-import { TestsPage } from './ui/tests-page';
 
 export class TesterUI {
   static dependencies = [WorkspaceUI];

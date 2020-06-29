@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, RouteProps, NavLinkProps } from 'react-router-dom';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
@@ -19,19 +19,10 @@ export type MenuItem = {
   label: JSX.Element | string | null;
 };
 
-//WIP
-// /^\/?([^./@]+)\/([^./@]+)(\/([^.@]*))$/
 const componentIdUrlRegex = '[\\w/-]+';
 
 export class ComponentUI {
-  constructor(
-    /**
-     * top bar slot.
-     */
-    // private sectionSlot: SectionSlotRegistry,
-    private routeSlot: RouteSlot,
-    private navSlot: NavigationSlot
-  ) {}
+  constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot) {}
 
   /**
    * expose the route for a component.

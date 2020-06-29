@@ -1,7 +1,5 @@
 import React from 'react';
-import { useRouteMatch, Route } from 'react-router-dom';
 import { Section } from '../component/section';
-import { TopBarNav } from '../component/ui/top-bar-nav';
 import { ComponentSimulation } from './ui';
 import { SimulationsExtension } from './simulations.extension';
 

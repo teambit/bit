@@ -10,7 +10,7 @@ type DefaultAvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  hideTooltip?: boolean;
+  // hideTooltip?: boolean;
 };
 
 export function DefaultAvatar(props: DefaultAvatarProps) {

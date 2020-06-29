@@ -10,15 +10,10 @@ export enum AccountTypes {
 }
 
 export type AccountObj = {
-  accountType: AccountTypes; //defined at constant/roles.js
+  accountType: AccountTypes;
   name: string;
   displayName?: string;
   profileImage?: string;
-};
-
-const AvatarByType = {
-  [AccountTypes.user]: UserAvatar,
-  [AccountTypes.org]: OrgAvatar
 };
 
 type AvatarProps = {
@@ -33,15 +28,13 @@ type AvatarProps = {
 
 export default function Avatar(props: AvatarProps) {
   const { account } = props;
-  // const { accountType } = account;
-  if (account.accountType === AccountTypes.user) {
-    return <UserAvatar {...props} />;
-  }
-  if (account.accountType === AccountTypes.org) {
-    return <OrgAvatar {...props} />;
-  }
-  return <DefaultAvatar {...props} />;
-  // const SpecificAvatar = AvatarByType[accountType] || DefaultAvatar;
 
-  // return <SpecificAvatar {...props} />;
+  switch (account.accountType) {
+    case AccountTypes.user:
+      return <UserAvatar {...props} />;
+    case AccountTypes.org:
+      return <OrgAvatar {...props} />;
+    default:
+      return <DefaultAvatar {...props} />;
+  }
 }

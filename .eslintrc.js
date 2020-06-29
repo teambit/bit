@@ -85,7 +85,10 @@ module.exports = {
       }
     ],
     'max-lines': [2, 1800],
-    'func-names': [0]
+    'func-names': [0],
+
+    // ERRORS OF plugin:react/recommended
+    'react/no-unescaped-entities': 'off'
   },
   // return the no-cycle once "import type" is working
   // overrides: [

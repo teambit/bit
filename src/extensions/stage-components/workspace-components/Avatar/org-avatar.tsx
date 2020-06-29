@@ -1,7 +1,6 @@
-import { AccountObj } from './avatar';
-
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import { AccountObj } from './avatar';
 // import Tooltip from 'react-tooltip';
 
 import styles from './styles.module.scss';
@@ -15,13 +14,13 @@ type Props = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  hideTooltip?: boolean;
+  // hideTooltip?: boolean;
 };
 
 export class OrgAvatar extends PureComponent<Props> {
-  state = {
-    tooltipId: null
-  };
+  // state = {
+  //   tooltipId: null
+  // };
 
   // componentDidMount() {
   // 	//mount only happens in client side
@@ -37,12 +36,12 @@ export class OrgAvatar extends PureComponent<Props> {
       imageSize = size,
       fontSize = size * 0.35,
       className,
-      imgClassName,
-      hideTooltip = false
+      imgClassName
+      // hideTooltip = false
     } = this.props;
     // const { tooltipId } = this.state;
 
-    const { profileImage = '', name = '', displayName = '' } = account;
+    const { profileImage = '' /* , name = '', displayName = '' */ } = account;
     const profileImageWithParams = addQueryParams(profileImage, imageSize);
 
     return (

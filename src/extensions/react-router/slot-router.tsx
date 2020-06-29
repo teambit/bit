@@ -10,7 +10,7 @@ export type NavigationSlot = SlotRegistry<NavLinkProps>;
 function RouteSlot({ slot }: { slot: RouteSlot }) {
   const routes = slot.values();
   const { path: contextPath } = useRouteMatch();
-  //TODO - generate key as part of the slot.
+  // TODO - generate key as part of the slot.
 
   return (
     <Switch>
@@ -24,7 +24,7 @@ function RouteSlot({ slot }: { slot: RouteSlot }) {
 export function SubRouteSlot({ slot, basePath }: { slot: RouteSlot; basePath?: string }) {
   const routes = slot.values();
   const { path: contextPath } = useRouteMatch();
-  //TODO - generate key as part of the slot.
+  // TODO - generate key as part of the slot.
 
   return (
     <Switch>
