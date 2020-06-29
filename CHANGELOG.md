@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- do not show loader for internal commands
+
 ## [[14.8.2-dev.1] - 2020-06-29]
 
 - fix error when trying to load extension in a folder which is not a workspace or scope

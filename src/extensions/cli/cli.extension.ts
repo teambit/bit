@@ -36,8 +36,14 @@ export class CLIExtension {
     command.group = command.group || 'ungrouped';
     command.options = command.options || [];
     command.private = command.private || false;
-    command.loader = command.loader || true;
     command.commands = command.commands || [];
+    if (command.loader === undefined) {
+      if (command.internal) {
+        command.loader = false;
+      } else {
+        command.loader = true;
+      }
+    }
   }
   /**
    * registers a new command in to `Paper`.
