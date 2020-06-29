@@ -44,6 +44,14 @@ export async function addMany(components: AddProps[], alternateCwd?: string) {
   return addManyInternal(components, alternateCwd);
 }
 
+/**
+ * Make sure harmony is loaded in specific cwd (to simulate like you run the cli in a workspace/scope)
+ * This will return the harmony instance after load all core extensions
+ *
+ * @export
+ * @param {string} [cwd]
+ * @returns
+ */
 export async function loadCoreExtensions(cwd?: string) {
   if (harmonyLoaded) {
     return harmony;
@@ -60,11 +68,29 @@ export async function loadCoreExtensions(cwd?: string) {
   return harmony;
 }
 
+/**
+ * Make sure harmony is loaded in specific cwd (to simulate like you run the cli in a workspace/scope)
+ * Then return the loaded extension.
+ * this return the actual initialized extension
+ *
+ * @export
+ * @param {string} extensionId
+ * @param {string} [cwd]
+ * @returns
+ */
 export async function getLoadedCoreExtension(extensionId: string, cwd?: string) {
   await loadCoreExtensions(cwd);
   return harmony.get(extensionId);
 }
 
+/**
+ * Get the deceleration (manifest) of a core extension
+ * This is used in order to put the extension as dependency for other extension
+ *
+ * @export
+ * @param {string} extensionId
+ * @returns
+ */
 export function getCoreExtension(extensionId: string) {
   return coreExtensions[extensionId];
 }
