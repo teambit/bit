@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.1] - 2020-06-29](https://github.com/teambit/bit/releases/tag/v14.8.1)
+
+### Bug Fixes
+
 - fix dependency detection for css/scss files
-
-## [[14.8.1-dev.1] - 2020-06-28]
-
 - improve error handling
 
 ## [[14.8.0] - 2020-06-28](https://github.com/teambit/bit/releases/tag/v14.8.0)
