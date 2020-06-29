@@ -2,16 +2,14 @@ import React, { useState, ReactNode } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
-import { Switch } from 'react-router-dom';
 import 'reset-css';
 import { SideBar } from '../side-bar';
-// import { TopBar } from '../top-bar';
 import styles from './workspace.module.scss';
 import { Component } from '../../../component/component.ui';
 import { defaultComponent } from './default-component';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
-import { RouteSlotRegistry } from '../../../react-router/react-router.ui';
+import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 
 const WORKSPACE = gql`
   {
@@ -26,7 +24,7 @@ const WORKSPACE = gql`
 `;
 
 export type WorkspaceProps = {
-  routeSlot: RouteSlotRegistry;
+  routeSlot: RouteSlot;
 };
 
 /**
@@ -41,8 +39,6 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
 
   const workspace = WorkspaceModel.from(data.workspace);
 
-  const routeValues = routeSlot.values();
-
   return (
     <WorkspaceProvider workspace={workspace}>
       <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
@@ -56,10 +52,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
             components={workspace.components}
             onSelectComponent={component => selectComponent(component)}
           />
-          <Switch>{routeValues.map(routeGetter => routeGetter())}</Switch>
-          {/* <Switch>{routeValues.map(routeGetter => routeGetter())}</Switch> */}
-          {/* <TopBar className={styles.topbar} topBarSlot={topBarSlot} currentTag={currentTag} />
-          <Stage pageSlot={pageSlot} /> */}
+          <SlotRouter slot={routeSlot} />
         </div>
       </Theme>
     </WorkspaceProvider>

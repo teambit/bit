@@ -6,7 +6,7 @@ import { ComponentProvider } from './context';
 import { TopBar } from './top-bar';
 import styles from './component.module.scss';
 import { ComponentModel } from './component-model';
-import { NavigationSlot, RouteSlot, SubRouteSlot } from '../../react-router/slot-router';
+import { NavigationSlot, RouteSlot, SlotSubRouter } from '../../react-router/slot-router';
 
 const GET_COMPONENT = gql`
   query Component($id: String!) {
@@ -55,7 +55,7 @@ export function Component({ navSlot, routeSlot }: ComponentProps) {
   return (
     <ComponentProvider component={component}>
       <TopBar className={styles.topbar} navigationSlot={navSlot} currentTag={currentTag} />
-      {routeSlot && <SubRouteSlot slot={routeSlot} />}
+      {routeSlot && <SlotSubRouter slot={routeSlot} />}
     </ComponentProvider>
   );
 }

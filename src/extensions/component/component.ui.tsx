@@ -27,13 +27,12 @@ export class ComponentUI {
   /**
    * expose the route for a component.
    */
-  ComponentRoute = () => {
-    return (
-      <Route path={`/:componentId(${componentIdUrlRegex})`} key={ComponentUI.name}>
-        <Component navSlot={this.navSlot} routeSlot={this.routeSlot} />
-      </Route>
-    );
-  };
+  get componentRoute() {
+    return {
+      path: `/:componentId(${componentIdUrlRegex})`,
+      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} />
+    };
+  }
 
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
@@ -50,7 +49,7 @@ export class ComponentUI {
 
   static async provider([workspace]: [WorkspaceUI], config, [routeSlot, navSlot]: [RouteSlot, NavigationSlot]) {
     const componentUI = new ComponentUI(routeSlot, navSlot);
-    workspace.registerRoute(() => <componentUI.ComponentRoute key="component-page" />);
+    workspace.registerRoute(componentUI.componentRoute);
     return componentUI;
   }
 }
