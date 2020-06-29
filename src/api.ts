@@ -8,6 +8,7 @@ import { BitExt } from './extensions/bit';
 import { manifestsMap as coreExtensions } from './extensions/bit';
 
 export * from '@teambit/harmony';
+export { default as harmony } from '@teambit/harmony';
 export { coreExtensions };
 
 HooksManager.init();
