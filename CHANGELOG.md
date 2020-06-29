@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix dependency detection for css/scss files
+
 ## [[14.8.1-dev.1] - 2020-06-28]
 
 - improve error handling
