@@ -155,10 +155,6 @@ EOD`;
     this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
   }
 
-  publishComponentHarmony(componentName: string) {
-    this.helper.command.publish(componentName);
-  }
-
   unpublishComponent(packageName: string) {
     this.helper.command.runCmd(`npm unpublish @ci/${this.helper.scopes.remote}.${packageName} --force`);
   }
@@ -171,12 +167,6 @@ EOD`;
     const remoteIds = remoteComponents.map(c => c.id);
     this.helper.scopeHelper.removeRemoteScope();
     remoteIds.forEach(id => this.publishComponent(id));
-  }
-
-  publishEntireScopeHarmony() {
-    const remoteComponents = this.helper.command.listRemoteScopeParsed();
-    const remoteIds = remoteComponents.map(c => c.id);
-    remoteIds.forEach(id => this.publishComponentHarmony(id));
   }
 
   /**

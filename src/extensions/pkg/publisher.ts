@@ -6,18 +6,26 @@ import { loadConsumer } from '../../consumer';
 import { BitId, BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
+import GeneralError from '../../error/general-error';
 
 export type PublisherOptions = {
   dryRun?: boolean;
+  allowStaged?: boolean;
 };
 
 export type PublishResult = { id: ComponentID; data?: string; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
-  constructor(private isolator: IsolatorExtension, private logger: LogPublisher, private scope: Scope) {}
+  constructor(
+    private isolator: IsolatorExtension,
+    private logger: LogPublisher,
+    private scope: Scope,
+    private options: PublisherOptions = {}
+  ) {}
 
   async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+    this.options = options;
     const capsules = await this.getComponentCapsules(componentIds);
     const resultsP = capsules.map(capsule => this.publishOneCapsule(capsule, options));
     return Promise.all(resultsP);
@@ -78,7 +86,9 @@ export class Publisher {
    * should be published. ignore the rest.
    */
   private async getIdsToPublish(componentIds: string[]): Promise<string[]> {
-    const ids = BitIds.fromArray(componentIds.map(id => BitId.parse(id, true)));
+    const bitIds = await Promise.all(componentIds.map(id => this.scope.getParsedId(id)));
+    await this.throwForNonStagedOrTaggedComponents(bitIds);
+    const ids = BitIds.fromArray(bitIds);
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
       .filter(c => {
@@ -92,5 +102,33 @@ export class Publisher {
           .changeVersion(c.versionStr)
           .toString()
       );
+  }
+
+  private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
+    const idsWithoutScope = bitIds.filter(id => !id.hasScope());
+    if (!idsWithoutScope.length) return;
+    if (!this.options.allowStaged) {
+      throw new GeneralError(
+        `unable to publish the following component(s), please make sure they are exported: ${idsWithoutScope.join(
+          ', '
+        )}`
+      );
+    }
+    const missingFromScope: BitId[] = [];
+    await Promise.all(
+      idsWithoutScope.map(async id => {
+        const inScope = await this.scope.isComponentInScope(id);
+        if (!inScope) {
+          missingFromScope.push(id);
+        }
+      })
+    );
+    if (missingFromScope.length) {
+      throw new GeneralError(
+        `unable to publish the following component(s), please make sure they are not new: ${missingFromScope.join(
+          ', '
+        )}`
+      );
+    }
   }
 }

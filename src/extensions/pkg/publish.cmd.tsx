@@ -1,15 +1,15 @@
 import chalk from 'chalk';
 import { CommandOptions, Command } from '../cli';
-import { Publisher, PublishResult } from './publisher';
+import { Publisher, PublishResult, PublisherOptions } from './publisher';
 
 type PublishArgs = [string];
-type PublishOptions = { dryRun: boolean };
 
 export class PublishCmd implements Command {
   name = 'publish <componentId>';
   description = 'publish components to npm (npm publish)';
   options = [
     ['d', 'dry-run [boolean]', 'npm publish --dry-run'],
+    ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
     ['j', 'json [boolean]', 'return the output as JSON']
   ] as CommandOptions;
   shortDescription = '';
@@ -19,7 +19,7 @@ export class PublishCmd implements Command {
 
   constructor(private publisher: Publisher) {}
 
-  async report(args: PublishArgs, options: PublishOptions) {
+  async report(args: PublishArgs, options: PublisherOptions) {
     const result = await this.json(args, options);
     const components = result.data;
     const title = chalk.white.inverse.bold(' Publish Results \n');
@@ -38,7 +38,7 @@ export class PublishCmd implements Command {
     return title + output;
   }
 
-  async json([componentId]: PublishArgs, options: PublishOptions): Promise<{ data: PublishResult[]; code: number }> {
+  async json([componentId]: PublishArgs, options: PublisherOptions): Promise<{ data: PublishResult[]; code: number }> {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     const packResult = await this.publisher.publish([compId], options);
     return {

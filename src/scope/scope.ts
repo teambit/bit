@@ -620,6 +620,11 @@ export default class Scope {
     return removeNils(componentsAndVersions);
   }
 
+  async isComponentInScope(id: BitId): Promise<boolean> {
+    const comp = await this.sources.get(id);
+    return Boolean(comp);
+  }
+
   async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
