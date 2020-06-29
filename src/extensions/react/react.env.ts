@@ -7,6 +7,7 @@ import { Compiler, Compile } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { DevServer, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
+import { Workspace } from '../workspace';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -31,7 +32,12 @@ export class ReactEnv implements Environment {
     /**
      * webpack extension.
      */
-    private webpack: WebpackExtension
+    private webpack: WebpackExtension,
+
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace
   ) {}
 
   /**
@@ -59,7 +65,18 @@ export class ReactEnv implements Environment {
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext): DevServer {
-    return this.webpack.createDevServer(context, webpackConfigFactory());
+    const withDocs = Object.assign(context, {
+      entry: context.entry.concat([require.resolve('./docs')])
+    });
+
+    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+  }
+
+  /**
+   * return a path to a docs template.
+   */
+  getDocsTemplate() {
+    return require.resolve('./docs');
   }
 
   /**

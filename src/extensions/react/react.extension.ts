@@ -4,8 +4,9 @@ import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compile, CompileExt } from '../compiler';
 import { WebpackExtension } from '../webpack';
+import { WorkspaceExt, Workspace } from '../workspace';
 
-type ReactDeps = [Environments, JestExtension, TypescriptExtension, Compile, WebpackExtension];
+type ReactDeps = [Environments, JestExtension, TypescriptExtension, Compile, WebpackExtension, Workspace];
 
 export type ReactConfig = {
   /**
@@ -46,10 +47,10 @@ export class React {
    */
   overrideJestConfig() {}
 
-  static dependencies = [Environments, JestExtension, TypescriptExtension, CompileExt, WebpackExtension];
+  static dependencies = [Environments, JestExtension, TypescriptExtension, CompileExt, WebpackExtension, WorkspaceExt];
 
-  static provider([envs, jest, ts, compile, webpack]: ReactDeps, config: ReactConfig) {
-    const reactEnv = new ReactEnv(jest, ts, compile, webpack);
+  static provider([envs, jest, ts, compile, webpack, workspace]: ReactDeps) {
+    const reactEnv = new ReactEnv(jest, ts, compile, webpack, workspace);
     envs.registerEnv(reactEnv);
     return new React(reactEnv);
   }

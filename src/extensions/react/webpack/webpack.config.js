@@ -13,7 +13,7 @@ module.exports = function(workspaceDir) {
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
-          include: '/Users/ranmizrahi/Bit/react-new-project',
+          include: workspaceDir,
           loader: require.resolve('babel-loader'),
           options: {
             presets: [

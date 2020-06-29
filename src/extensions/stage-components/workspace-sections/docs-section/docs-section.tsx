@@ -1,8 +1,6 @@
 import React, { HTMLAttributes } from 'react';
-import classNames from '../../../component/ui/top-bar-nav/node_modules/classnames';
-
+import classNames from 'classnames';
 import { H1 } from '@bit/bit.evangelist.elements.heading';
-
 // import { Avatar } from '../../../workspace-components/avatar';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
@@ -11,7 +9,6 @@ import { LabelList } from '../../workspace-components/label';
 import { Separator } from '../../workspace-components/separator';
 import { VersionTag } from '../../workspace-components/version-tag';
 import styles from './docs-section.module.scss';
-
 import { InstallMethods, InstallMethodsData } from '../../workspace-components/install-methods';
 
 function getText(text: Bla) {
@@ -30,24 +27,6 @@ function CreateMarkup(text: Bla): JSX.Element {
   const formattedText = getText(text);
   return <div className={styles.enhancedText} dangerouslySetInnerHTML={{ __html: formattedText }} />;
 }
-
-// const data = {
-// 	titles: ['name', 'type', 'defaultValue', 'description'],
-// 	content: [
-// 		{
-// 			name: 'as',
-// 			type: 'elementType',
-// 			defaultValue: '20 minutes',
-// 			description: 'An element type to render as (string or function).',
-// 		},
-// 		{
-// 			name: 'className',
-// 			type: 'string',
-// 			defaultValue: 'false',
-// 			description: 'Additional classes.',
-// 		},
-// 	],
-// };
 
 const data = [
   {

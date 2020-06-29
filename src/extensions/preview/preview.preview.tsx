@@ -1,12 +1,29 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { PreviewType } from './preview-type';
+
+export type PreviewSlot = SlotRegistry<PreviewType>;
 
 export class Preview {
+  constructor(private previewSlot: PreviewSlot) {}
+
+  /**
+   * render the preview.
+   */
   render() {
-    ReactDOM.render(<div>hello from preview</div>, document.getElementById('root'));
+    return this.previewSlot.values()[0].render();
   }
 
-  static async provider() {
-    return new Preview();
+  /**
+   * register a new preview.
+   */
+  registerPreview(preview: PreviewType) {
+    this.previewSlot.register(preview);
+    return this;
+  }
+
+  static slots = [Slot.withType<PreviewType>()];
+
+  static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
+    return new Preview(previewSlot);
   }
 }

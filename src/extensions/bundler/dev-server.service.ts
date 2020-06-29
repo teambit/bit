@@ -18,7 +18,7 @@ export class DevServerService implements EnvService {
   ) {}
 
   async run(context: ExecutionContext) {
-    const devServer: DevServer = context.env.getDevServer(this.buildContext(context));
+    const devServer: DevServer = context.env.getDevServer(await this.buildContext(context));
     const port = await selectPort();
     const server = devServer.listen(port);
     const address = server.address();
@@ -31,17 +31,17 @@ export class DevServerService implements EnvService {
   /**
    * builds the execution context for the dev server.
    */
-  private buildContext(context: ExecutionContext): DevServerContext {
+  private async buildContext(context: ExecutionContext): Promise<DevServerContext> {
     return Object.assign(context, {
-      entry: this.getEntry(context.components)
+      entry: await this.getEntry(context)
     });
   }
 
   /**
    * computes the bundler entry.
    */
-  private getEntry(components: Component[]): string[] {
-    const mainFiles = components.map(component => {
+  private async getEntry(context: ExecutionContext): Promise<string[]> {
+    const mainFiles = context.components.map(component => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
         // @ts-ignore
@@ -53,7 +53,9 @@ export class DevServerService implements EnvService {
       return path;
     });
 
-    const slotEntries = this.runtimeSlot.values().map(browserRuntime => browserRuntime.entry(components));
+    const slotEntries = await Promise.all(
+      this.runtimeSlot.values().map(async browserRuntime => browserRuntime.entry(context))
+    );
 
     const slotPaths = slotEntries.reduce((acc, current) => {
       acc = acc.concat(current);

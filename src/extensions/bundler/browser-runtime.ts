@@ -1,5 +1,5 @@
-import { Component } from '../component';
+import { ExecutionContext } from '../environments';
 
 export type BrowserRuntime = {
-  entry: (components: Component[]) => string[];
+  entry: (context: ExecutionContext) => Promise<string[]>;
 };

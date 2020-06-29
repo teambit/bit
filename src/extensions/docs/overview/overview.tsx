@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 import { ComponentContext } from '../../component/ui';
+import { ComponentPreview } from '../../preview/ui';
 
 export function Overview() {
   const component = useContext(ComponentContext);
 
-  return <iframe style={{ width: '100%', height: '100%' }} src={component.server.url} />;
+  return <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} />;
 }
