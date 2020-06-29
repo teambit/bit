@@ -2,10 +2,11 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { generateRandomStr } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
-describe('publish command', function() {
+describe('publish functionality', function() {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
@@ -44,6 +45,8 @@ describe('publish command', function() {
           'unable to publish the following component(s), please make sure they are exported: comp1'
         );
       });
+      // @todo
+      it('should allow when --dry-run is specified', () => {});
     });
     describe('publishing before export', () => {
       before(() => {
@@ -102,6 +105,38 @@ describe('publish command', function() {
           expect(output.trim()).to.be.equal(appOutput.trim());
         });
       });
+    });
+  });
+  describe('with custom package name', function() {
+    let randomStr: string;
+    before(async function() {
+      if (!supportNpmCiRegistryTesting) this.skip();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
+      helper.command.addComponent('ui', { i: 'ui/button' });
+
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `react.${randomStr}.{name}`;
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+
+      helper.command.tagAllComponents();
+      helper.command.publish('ui/button', '--allow-staged');
+    });
+    after(() => {
+      if (!supportNpmCiRegistryTesting) return;
+      npmCiRegistry.destroy();
+    });
+    it('should publish them successfully and be able to consume them by installing the packages', () => {
+      const pkgName = `react.${randomStr}.ui.button`;
+      helper.scopeHelper.reInitLocalScope();
+      helper.npm.initNpm();
+      npmCiRegistry.installPackage(pkgName);
+
+      helper.fs.outputFile('app.js', `require('${pkgName}');\n`);
+      const output = helper.command.runCmd('node app.js');
+      expect(output.trim()).to.be.equal('hello button');
     });
   });
 });

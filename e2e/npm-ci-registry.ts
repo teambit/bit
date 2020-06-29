@@ -155,6 +155,22 @@ EOD`;
     this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
   }
 
+  configureCustomNameInPackageJsonHarmony(name: string) {
+    const pkg = {
+      packageJson: {
+        name,
+        publishConfig: {
+          registry: this.ciRegistry
+        }
+      }
+    };
+    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+  }
+
+  installPackage(pkgName: string) {
+    this.helper.command.runCmd(`npm install ${pkgName} --registry=${this.ciRegistry}`);
+  }
+
   unpublishComponent(packageName: string) {
     this.helper.command.runCmd(`npm unpublish @ci/${this.helper.scopes.remote}.${packageName} --force`);
   }
