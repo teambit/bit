@@ -107,7 +107,7 @@ export class Publisher {
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
     const idsWithoutScope = bitIds.filter(id => !id.hasScope());
     if (!idsWithoutScope.length) return;
-    if (!this.options.allowStaged) {
+    if (!this.options.allowStaged && !this.options.dryRun) {
       throw new GeneralError(
         `unable to publish the following component(s), please make sure they are exported: ${idsWithoutScope.join(
           ', '
@@ -125,9 +125,7 @@ export class Publisher {
     );
     if (missingFromScope.length) {
       throw new GeneralError(
-        `unable to publish the following component(s), please make sure they are not new: ${missingFromScope.join(
-          ', '
-        )}`
+        `unable to publish the following component(s), please make sure they are tagged: ${missingFromScope.join(', ')}`
       );
     }
   }

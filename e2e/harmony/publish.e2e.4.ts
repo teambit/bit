@@ -45,8 +45,6 @@ describe('publish functionality', function() {
           'unable to publish the following component(s), please make sure they are exported: comp1'
         );
       });
-      // @todo
-      it('should allow when --dry-run is specified', () => {});
     });
     describe('publishing before export', () => {
       before(() => {
@@ -57,6 +55,10 @@ describe('publish functionality', function() {
         expect(output).to.have.string(
           'unable to publish the following component(s), please make sure they are exported: comp1'
         );
+      });
+      it('should allow when --dry-run is specified', () => {
+        const output = helper.command.publish('comp1', '--dry-run');
+        expect(output).to.have.string(`+ @ci/${helper.scopes.remote}.comp1@0.0.1`);
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {

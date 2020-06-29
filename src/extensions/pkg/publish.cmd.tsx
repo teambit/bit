@@ -22,7 +22,10 @@ export class PublishCmd implements Command {
   async report(args: PublishArgs, options: PublisherOptions) {
     const result = await this.json(args, options);
     const components = result.data;
-    const title = chalk.white.inverse.bold(' Publish Results \n');
+    if (!components.length) return 'no components were found candidate for publish';
+
+    const publishOrDryRun = options.dryRun ? 'dry-run' : 'published';
+    const title = chalk.white.bold(`successfully ${publishOrDryRun} the following components\n`);
     const output = components
       .map(component => {
         const compName = component.id.toString();
