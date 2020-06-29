@@ -11,6 +11,7 @@ export * from '@teambit/harmony';
 export { coreExtensions };
 
 HooksManager.init();
+let harmonyLoaded = false;
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -43,6 +44,10 @@ export async function addMany(components: AddProps[], alternateCwd?: string) {
 }
 
 export async function loadCoreExtensions(cwd?: string) {
+  if (harmonyLoaded) {
+    return harmony;
+  }
+
   const originalCwd = process.cwd();
   if (cwd) {
     process.chdir(cwd);
@@ -50,6 +55,7 @@ export async function loadCoreExtensions(cwd?: string) {
   await harmony.run(ConfigExt);
   await harmony.set([BitExt]);
   process.chdir(originalCwd);
+  harmonyLoaded = true;
   return harmony;
 }
 
