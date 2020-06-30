@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, isValidElement } from 'react';
 import classNames from 'classnames';
 import { H1 } from '@bit/bit.evangelist.elements.heading';
 import 'reset-css';
@@ -11,6 +11,7 @@ import { LabelList } from '../../stage-components/workspace-components/label';
 import { Separator } from '../../stage-components/workspace-components/separator';
 import { VersionTag } from '../../stage-components/workspace-components/version-tag';
 import styles from './base.module.scss';
+import { isFunction } from 'ramda-adjunct';
 // import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
 // import { Docs } from '../../docs/docs';
 
@@ -24,10 +25,10 @@ export type DocsSectionProps = {
 /**
  * base template for react component documentation.
  */
-export function Base({ docs, query, ...rest }: DocsSectionProps) {
-  const Content = docs.default;
-  const labels = docs.labels;
-  const abstract = docs.abstract;
+export function Base({ docs = {}, ...rest }: DocsSectionProps) {
+  const Content = isFunction(docs.default) ? docs.default : () => <div></div>;
+  const labels = docs.labels || [];
+  const abstract = docs.abstract || '';
 
   return (
     <ClientContext>

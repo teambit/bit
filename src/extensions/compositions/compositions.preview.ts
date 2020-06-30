@@ -6,7 +6,8 @@ export class CompositionsPreview {
   static async provider([preview]: [Preview]) {
     preview.registerPreview({
       name: 'compositions',
-      render: () => {}
+      render: () => {},
+      default: true
     });
   }
 }
