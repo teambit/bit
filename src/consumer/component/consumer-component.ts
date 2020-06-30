@@ -12,9 +12,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
-import { getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
-import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -353,32 +351,8 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(consumer: Consumer): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap);
-    if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
-    await ejectConfData.dataToPersist.persistAllToFS();
-    return ejectConfData;
-  }
-
-  async getConfigToWrite(consumer: Consumer, bitMap: BitMap): Promise<EjectConfData> {
-    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
-    const componentMap = this.componentMap;
-    if (!componentMap) {
-      throw new GeneralError('could not find component in the .bitmap file');
-    }
-
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      const isCompilerDetached = await this.getDetachedCompiler(consumer);
-      const isTesterDetached = await this.getDetachedTester(consumer);
-      if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
-    }
-
-    const res = await getEjectConfDataToPersist(this, consumer);
-    return res;
-  }
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<EjectConfResult> {
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<any> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {

@@ -134,10 +134,12 @@ export default class ComponentWriter {
     this.component.files.map(file => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
-    if (this.writeConfig && this.consumer) {
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
-      this.component.dataToPersist.merge(configToWrite.dataToPersist);
-    }
+    // TODO: change to new eject config
+    // if (this.writeConfig && this.consumer) {
+    //   const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
+    //   this.component.dataToPersist.merge(configToWrite.dataToPersist);
+    // }
+
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
