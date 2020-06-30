@@ -40,6 +40,18 @@ export class ComponentTree extends Component<ComponentTreeProps> {
 }
 
 function RootNode({ node }: { node: TreeNode }) {
+  if (!node.id) {
+    if (!node.children) return null;
+
+    return (
+      <>
+        {node.children.map(rootNode => (
+          <RootNode key={rootNode.id} node={rootNode} />
+        ))}
+      </>
+    );
+  }
+
   const Node = getTreeNodeComponent(node);
 
   return <Node node={node} depth={0} />;
