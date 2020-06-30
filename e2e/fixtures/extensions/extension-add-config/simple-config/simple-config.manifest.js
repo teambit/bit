@@ -1,5 +1,6 @@
-const { getCoreExtension } = require('bit-bin');
-const PkgExtension = getCoreExtension('@teambit/pkg');
+const { getDeclarationCoreExtension } = require('bit-bin');
+console.log('im here');
+const PkgExtension = getDeclarationCoreExtension('@teambit/pkg');
 
 module.exports = {
   name: 'simple config',
