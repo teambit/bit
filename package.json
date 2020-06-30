@@ -104,6 +104,8 @@
     "@bit/bit.evangelist.input.input": "^0.1.0",
     "@bit/bit.utils.fs.sub-paths": "0.0.4",
     "@graphql-modules/core": "^0.7.17",
+    "@stencil/core": "^1.15.0",
+    "@stencil/webpack": "0.0.6",
     "@svgr/webpack": "^5.4.0",
     "@teambit/any-fs": "0.0.5",
     "@teambit/capsule": "0.0.12",

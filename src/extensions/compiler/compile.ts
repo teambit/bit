@@ -97,6 +97,7 @@ export class Compile {
           }
           const base = distDir;
           if (compileResults) {
+            console.log(dists);
             dists.push(
               ...compileResults.map(
                 result =>

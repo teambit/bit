@@ -66,6 +66,10 @@ module.exports = function(workspaceDir) {
       ]
     },
 
-    plugins: [new ReactRefreshWebpackPlugin()]
+    plugins: [
+      new ReactRefreshWebpackPlugin({
+        overlay: true
+      })
+    ]
   };
 };

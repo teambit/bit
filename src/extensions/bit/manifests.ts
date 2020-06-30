@@ -25,6 +25,7 @@ import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
+import { StencilExtension } from '../stencil';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -50,6 +51,7 @@ export const manifestsMap = {
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
   [React.name]: React,
+  [StencilExtension.name]: StencilExtension,
   [ReporterExt.name]: ReporterExt,
   [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
