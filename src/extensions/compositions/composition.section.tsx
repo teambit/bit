@@ -1,14 +1,14 @@
 import React from 'react';
 import { Section } from '../component/section';
-import { ComponentSimulation } from './ui';
-import { SimulationsExtension } from './simulations.extension';
+import { ComponentComposition } from './ui';
+import { CompositionsExtension } from './compositions.extension';
 
 export class SimulationSection implements Section {
   constructor(
     /**
      * simulations ui extension.
      */
-    private sims: SimulationsExtension
+    private compositions: CompositionsExtension
   ) {}
 
   navigationLink = {
@@ -18,6 +18,6 @@ export class SimulationSection implements Section {
 
   route = {
     path: '~simulation',
-    children: <ComponentSimulation />
+    children: <ComponentComposition />
   };
 }

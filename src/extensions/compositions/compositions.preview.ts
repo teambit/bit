@@ -1,11 +1,11 @@
 import { Preview } from '../preview/preview.preview';
 
-export class SimulationPreview {
+export class CompositionsPreview {
   static dependencies = [Preview];
 
   static async provider([preview]: [Preview]) {
     preview.registerPreview({
-      name: 'simulation',
+      name: 'compositions',
       render: () => {}
     });
   }

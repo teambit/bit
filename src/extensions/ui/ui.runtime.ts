@@ -5,7 +5,7 @@ import { TesterUI } from '../tester/tester.ui';
 import { ChangeLogUI } from '../changelog/changelog.ui';
 import { DependenciesUI } from '../dependencies/dependencies.ui';
 import { ComponentUI } from '../component/component.ui';
-import { SimulationsUI } from '../simulations/simulations.ui';
+import { SimulationsUI } from '../compositions/compositions.ui';
 
 /**
  * configure all core extensions

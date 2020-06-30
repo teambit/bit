@@ -1,16 +1,16 @@
 import { ComponentUI } from '../component/component.ui';
-import { SimulationSection } from './simulation.section';
+import { SimulationSection } from './composition.section';
 
-export class SimulationsUI {
+export class CompositionsUI {
   static dependencies = [ComponentUI];
 
   static async provider([component]: [ComponentUI]) {
-    const sims = new SimulationsUI();
-    const section = new SimulationSection(sims);
+    const compositions = new CompositionsUI();
+    const section = new SimulationSection(compositions);
 
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink);
 
-    return sims;
+    return compositions;
   }
 }
