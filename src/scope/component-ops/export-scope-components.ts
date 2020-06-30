@@ -477,7 +477,12 @@ async function convertToCorrectScope(
       const idWithNewScope = id.changeScope(remoteScope);
       const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
       if (!codemod) {
-        if (id.hasScope()) return;
+        // use did not enter --rewire flag
+        if (id.hasScope()) {
+          return; // because only --rewire is permitted to change from scope-a to scope-b.
+        }
+        // dists can change no-scope to scope without --rewire flag. if this is not a dist file
+        // and the file needs to change from no-scope to scope, it needs to --rewire flag
         if (!isDist && fileString.includes(pkgNameWithOldScope)) {
           throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
             file.relativePath
