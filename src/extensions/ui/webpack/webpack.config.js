@@ -9,12 +9,17 @@ const path = require('path');
 const html = require('./html');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
+const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
+console.log('publicPath', publicUrlOrPath);
 
-module.exports = function(workspaceDir, entryFiles) {
+module.exports = {
+  createWebpackConfig
+};
+
+function createWebpackConfig(workspaceDir, entryFiles) {
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -68,10 +73,6 @@ module.exports = function(workspaceDir, entryFiles) {
 
       // Enable compression
       compress: true,
-
-      // Prevent a WS client from getting injected as we're already including
-      // `webpackHotDevClient`.
-      injectClient: false,
 
       // Use 'ws' instead of 'sockjs-node' on server since we're using native
       // websockets in `webpackHotDevClient`.
@@ -202,4 +203,4 @@ module.exports = function(workspaceDir, entryFiles) {
       // })
     ]
   };
-};
+}

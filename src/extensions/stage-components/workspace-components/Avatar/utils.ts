@@ -4,7 +4,7 @@ export function getInitials(name: string) {
   if (!name) return '?';
 
   const words = name.split(' ');
-  if (1 < words.length) {
+  if (words.length > 1) {
     return words
       .slice(0, 2)
       .map(word => word[0])
@@ -16,7 +16,7 @@ export function getInitials(name: string) {
 export function addQueryParams(url: string, size: string | number) {
   if (!url) return url;
 
-  const isQuestionExisting = -1 < url.indexOf('?');
+  const isQuestionExisting = url.indexOf('?') > -1;
   const controlChar = isQuestionExisting ? '&' : '?';
   const gravatarParams: string[] = [`size=${size}`];
   const imgixParams = [`w=${size}`, `h=${size}`, `fill=fillmax`, `bg=${styles.defaultAvatarBgColor}`];

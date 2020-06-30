@@ -15,7 +15,6 @@ function getText(text: Bla) {
   // var text = 'Hello `@James P. Pauli`, How r `you`.';
 
   const markupText = text.text.replace(/`(.*?)`/g, '<code>$1</code>');
-  console.log(markupText);
   return markupText;
 }
 
@@ -28,20 +27,20 @@ function CreateMarkup(text: Bla): JSX.Element {
   return <div className={styles.enhancedText} dangerouslySetInnerHTML={{ __html: formattedText }} />;
 }
 
-const data = [
-  {
-    name: 'as',
-    type: 'elementType',
-    defaultValue: '20 minutes',
-    description: 'An element type to render as (string or function).'
-  },
-  {
-    name: 'className',
-    type: 'string',
-    defaultValue: 'false',
-    description: 'Additional classes.'
-  }
-];
+// const data = [
+//   {
+//     name: 'as',
+//     type: 'elementType',
+//     defaultValue: '20 minutes',
+//     description: 'An element type to render as (string or function).'
+//   },
+//   {
+//     name: 'className',
+//     type: 'string',
+//     defaultValue: 'false',
+//     description: 'Additional classes.'
+//   }
+// ];
 
 export type DocsSectionProps = {
   // version?: Version;

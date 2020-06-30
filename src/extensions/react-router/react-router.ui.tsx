@@ -1,16 +1,14 @@
 import React from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Switch, BrowserRouter } from 'react-router-dom';
-import { Route as RouteType } from './route';
-
-export type RouteSlotRegistry = SlotRegistry<RouteType>;
+import { Slot } from '@teambit/harmony';
+import { BrowserRouter, RouteProps } from 'react-router-dom';
+import { SlotRouter, RouteSlot } from './slot-router';
 
 export class ReactRouterUI {
   constructor(
     /**
      * route slot.
      */
-    private routeSlot: RouteSlotRegistry
+    private routeSlot: RouteSlot
   ) {}
 
   /**
@@ -19,11 +17,7 @@ export class ReactRouterUI {
   renderRoutes(): JSX.Element {
     return (
       <BrowserRouter>
-        <Switch>
-          {this.routeSlot.values().map(routeGetter => {
-            return routeGetter();
-          })}
-        </Switch>
+        <SlotRouter slot={this.routeSlot} />
       </BrowserRouter>
     );
   }
@@ -31,16 +25,14 @@ export class ReactRouterUI {
   /**
    * register a new route.
    */
-  register(route: RouteType) {
+  register(route: RouteProps) {
     this.routeSlot.register(route);
     return this;
   }
 
-  static slots = [Slot.withType<JSX.Element>()];
+  static slots = [Slot.withType<RouteProps>()];
 
-  static async provider(deps, config, [routeSlot]: [RouteSlotRegistry]) {
+  static async provider(deps, config, [routeSlot]: [RouteSlot]) {
     return new ReactRouterUI(routeSlot);
   }
 }
-
-export { RouteType };

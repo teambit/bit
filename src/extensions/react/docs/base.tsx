@@ -9,8 +9,8 @@ import { LabelList } from '../../stage-components/workspace-components/label';
 import { Separator } from '../../stage-components/workspace-components/separator';
 import { VersionTag } from '../../stage-components/workspace-components/version-tag';
 import styles from './base.module.scss';
-import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
-import { Docs } from '../../docs/docs';
+// import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
+// import { Docs } from '../../docs/docs';
 
 export type DocsSectionProps = {
   docs: any;

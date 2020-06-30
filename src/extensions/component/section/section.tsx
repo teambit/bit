@@ -1,4 +1,6 @@
+import { RouteProps, NavLinkProps } from 'react-router-dom';
+
 export interface Section {
-  route: JSX.Element;
-  label: JSX.Element;
+  route: RouteProps;
+  navigationLink: NavLinkProps;
 }

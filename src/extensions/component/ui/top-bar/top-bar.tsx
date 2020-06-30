@@ -1,17 +1,18 @@
 import React from 'react';
 import classnames from 'classnames';
-import { Button } from '@bit/bit.evangelist.elements.button';
+// import { Button } from '@bit/bit.evangelist.elements.button';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { themedText } from '@bit/bit.base-ui.text.themed-text';
-import { SectionSlotRegistry } from '../../component.ui';
 import styles from './top-bar.module.scss';
+import { NavigationSlot } from '../../../react-router/slot-router';
+import { TopBarNav } from '../top-bar-nav';
 
 export type TopBarProps = {
   className?: string;
   /**
    * slot for top bar menu items
    */
-  sectionSlot: SectionSlotRegistry;
+  navigationSlot: NavigationSlot;
   currentTag: {
     version: string;
     downloads: number;
@@ -22,18 +23,16 @@ export type TopBarProps = {
 /**
  * top bar menu.
  */
-export function TopBar({ sectionSlot, className, currentTag }: TopBarProps) {
-  const menuItems = sectionSlot.values();
+export function TopBar({ navigationSlot, className, currentTag }: TopBarProps) {
+  const navLinks = navigationSlot.values();
 
   return (
     <div className={classnames(styles.topBar, className)}>
-      <ul className={styles.navigation}>
-        {menuItems.map((menuItem, key) => (
-          <li key={key} onClick={menuItem.onClick}>
-            {menuItem.label}
-          </li>
+      <nav className={styles.navigation}>
+        {navLinks.map((menuItem, key) => (
+          <TopBarNav key={key} {...menuItem} />
         ))}
-      </ul>
+      </nav>
       <div className={styles.rightSide}>
         <span>
           <Icon className={classnames(themedText, styles.icon)} of="version-tag-stroke" /> {currentTag.version}
@@ -43,11 +42,11 @@ export function TopBar({ sectionSlot, className, currentTag }: TopBarProps) {
         </span>{' '}
         <span>
           <Icon className={styles.icon} of="heartstroke" /> {currentTag.likes}
-        </span>{' '}
-        <span>|</span>
-        <Button importance="muted">import ▾</Button>
-        <Button importance="muted">simulations </Button>
-        <Button importance="muted">code 📄</Button>
+        </span>
+        {/* <span>|</span>
+        <Button>import ▾</Button>
+        <Button>simulations </Button>
+        <Button>code 📄</Button> */}
       </div>
     </div>
   );

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Route, useRouteMatch } from 'react-router-dom';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Route, RouteProps, NavLinkProps } from 'react-router-dom';
+import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';
-import { Section } from './section/section';
+import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
 
 export type Server = {
   env: string;
@@ -19,46 +19,37 @@ export type MenuItem = {
   label: JSX.Element | string | null;
 };
 
-export type SectionSlotRegistry = SlotRegistry<Section>;
+const componentIdUrlRegex = '[\\w/-]+';
 
 export class ComponentUI {
-  constructor(
-    /**
-     * top bar slot.
-     */
-    private sectionSlot: SectionSlotRegistry
-  ) {}
+  constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot) {}
 
   /**
    * expose the route for a component.
    */
-  componentRoute() {
-    const { url } = useRouteMatch();
-
-    return (
-      <Route exact path="*" key={ComponentUI.name}>
-        {/* :TODO hack until @uri fixes component routing */}
-        <Component sectionSlot={this.sectionSlot} />
-        {/* {url === '/' ? <Component sectionSlot={this.sectionSlot} /> : <div></div>} */}
-      </Route>
-    );
+  get componentRoute() {
+    return {
+      path: `/:componentId(${componentIdUrlRegex})`,
+      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} />
+    };
   }
 
-  /**
-   * register a new menu item.
-   */
-  registerSection(section: Section) {
-    this.sectionSlot.register(section);
+  registerRoute(route: RouteProps) {
+    this.routeSlot.register(route);
     return this;
+  }
+
+  registerNavigation(nav: NavLinkProps) {
+    this.navSlot.register(nav);
   }
 
   static dependencies = [WorkspaceUI];
 
-  static slots = [Slot.withType<Section>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>()];
 
-  static async provider([workspace]: [WorkspaceUI], config, [sectionSlot]: [SectionSlotRegistry]) {
-    const componentUI = new ComponentUI(sectionSlot);
-    workspace.registerRoute(componentUI.componentRoute.bind(componentUI));
+  static async provider([workspace]: [WorkspaceUI], config, [routeSlot, navSlot]: [RouteSlot, NavigationSlot]) {
+    const componentUI = new ComponentUI(routeSlot, navSlot);
+    workspace.registerRoute(componentUI.componentRoute);
     return componentUI;
   }
 }

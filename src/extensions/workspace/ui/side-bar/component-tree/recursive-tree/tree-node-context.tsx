@@ -4,4 +4,4 @@ import { DefaultTreeNode } from './default-tree-node';
 
 type TreeNodeResolver = (node: TreeNode) => ComponentType<TreeNodeProps>;
 
-export const TreeNodeContext = createContext<TreeNodeResolver>((node: TreeNode) => DefaultTreeNode);
+export const TreeNodeContext = createContext<TreeNodeResolver>(() => DefaultTreeNode);
