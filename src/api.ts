@@ -1,4 +1,5 @@
 import harmony from '@teambit/harmony';
+import pWaitFor from 'p-wait-for';
 import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
@@ -13,6 +14,7 @@ export { coreExtensions };
 
 HooksManager.init();
 let harmonyLoaded = false;
+let harmonyCurrentlyLoading = false;
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -53,9 +55,17 @@ export async function addMany(components: AddProps[], alternateCwd?: string) {
  * @returns
  */
 export async function loadCoreExtensions(cwd?: string) {
+  // Sometime different code can ask for loading the extensions
+  // for example if you call getLoadedCoreExtension in a promise.all
+  // this make sure we are wait for harmony to load if it's already in load process before we send response back
+  if (harmonyCurrentlyLoading) {
+    await pWaitFor(() => harmonyCurrentlyLoading === false, { timeout: 4000 });
+  }
   if (harmonyLoaded) {
     return harmony;
   }
+
+  harmonyCurrentlyLoading = true;
 
   const originalCwd = process.cwd();
   if (cwd) {
@@ -65,6 +75,7 @@ export async function loadCoreExtensions(cwd?: string) {
   await harmony.set([BitExt]);
   process.chdir(originalCwd);
   harmonyLoaded = true;
+  harmonyCurrentlyLoading = false;
   return harmony;
 }
 
@@ -91,6 +102,6 @@ export async function getLoadedCoreExtension(extensionId: string, cwd?: string) 
  * @param {string} extensionId
  * @returns
  */
-export function getCoreExtension(extensionId: string) {
+export function getDeclarationCoreExtension(extensionId: string) {
   return coreExtensions[extensionId];
 }

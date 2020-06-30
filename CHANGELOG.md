@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- wait for harmony to load if you load it many times in parallel via the api
+
 ## [[14.8.3-dev.1] - 2020-06-29]
 
 - expose extensions declarations and instances from api
