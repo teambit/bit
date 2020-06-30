@@ -35,7 +35,7 @@ export class Publisher {
     const componentIds = ids.map(id => id.toString());
     const components = await this.publish(componentIds, {});
     return components.map(c => ({
-      id: c.id instanceof BitId ? c.id : c.id.legacyComponentId,
+      id: c.id.legacyComponentId,
       data: c.data,
       errors: c.errors as string[]
     }));
@@ -67,7 +67,9 @@ export class Publisher {
       if (err.stderr) this.logger.error(componentIdStr, err.stderr);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
-    return { id: capsule.component.id, data, errors };
+    // @ts-ignore fix once capsule has the right Component object
+    const id = new ComponentID(capsule.component.id as BitId);
+    return { id, data, errors };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {
