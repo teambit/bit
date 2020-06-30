@@ -5,5 +5,5 @@ import { ComponentPreview } from '../../preview/ui';
 export function Overview() {
   const component = useContext(ComponentContext);
 
-  return <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} />;
+  return <ComponentPreview component={component} style={{ width: '100%', height: '100%' }} previewName="overview" />;
 }

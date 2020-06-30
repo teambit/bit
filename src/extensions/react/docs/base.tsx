@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, isValidElement } from 'react';
 import classNames from 'classnames';
 import { H1 } from '@bit/bit.evangelist.elements.heading';
 import 'reset-css';
@@ -24,10 +24,10 @@ export type DocsSectionProps = {
 /**
  * base template for react component documentation.
  */
-export function Base({ docs, query, ...rest }: DocsSectionProps) {
-  const Content = docs.default;
-  const labels = docs.labels;
-  const abstract = docs.abstract;
+export function Base({ docs = {}, ...rest }: DocsSectionProps) {
+  const Content = isValidElement(docs.default) ? docs.default : () => <div />;
+  const labels = docs.labels || [];
+  const abstract = docs.abstract || '';
 
   return (
     <ClientContext>

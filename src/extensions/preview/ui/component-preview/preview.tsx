@@ -21,6 +21,8 @@ export type ComponentPreviewProps = {
 /**
  * renders a preview of a component.
  */
-export function ComponentPreview({ component, style }: ComponentPreviewProps) {
-  return <iframe style={style} src={component.server.url} />;
+export function ComponentPreview({ component, style, previewName }: ComponentPreviewProps) {
+  const url = `${component.server.url}/#${component.id}${`?preview=${previewName}` || ''}`;
+
+  return <iframe style={style} src={url} />;
 }
