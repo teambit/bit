@@ -42,7 +42,7 @@ export function VersionBlock({ version, className, ...rest }: VersionBlockProps)
           // name={version.contributors.name}
           // alt=""
         />
-        <Image src="bit-assets/simulations.svg" />
+        <Image alt="" src="bit-assets/simulations.svg" />
       </div>
       <CommitDetails commitTitle="Minor changes" commitMessage={version.message} />
     </div>
