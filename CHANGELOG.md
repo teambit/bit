@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2780](https://github.com/teambit/bit/issues/2780) - fix dists codemod of changing one scope to another to not be triggered without --rewire flag
+
 ## [[14.8.3-dev.3] - 2020-06-30]
 
 - add timeout option for load core extension via api
