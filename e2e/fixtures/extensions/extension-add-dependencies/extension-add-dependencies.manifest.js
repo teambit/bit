@@ -1,4 +1,5 @@
-const DependencyResolverExtension = require('bit-bin').DependencyResolverExtension;
+const { getCoreExtension } = require('bit-bin');
+const DependencyResolverExtension = getCoreExtension('@teambit/dependency-resolver');
 
 module.exports = {
   name: 'extension-add-dependencies',

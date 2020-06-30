@@ -3,7 +3,7 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
 import { PublishCmd } from './publish.cmd';
-import { Packer, PackResult } from './pack';
+import { Packer, PackResult, PackOptions } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
@@ -110,14 +110,8 @@ export class PkgExtension {
    * @returns {Promise<PackResult>}
    * @memberof PkgExtension
    */
-  async packComponent(
-    componentId: string,
-    scopePath: string | undefined,
-    outDir: string,
-    prefix = false,
-    override = false
-  ): Promise<PackResult> {
-    return this.packer.packComponent(componentId, scopePath, { outDir, prefix, override, useCapsule: true });
+  async packComponent(componentId: string, scopePath: string | undefined, options: PackOptions): Promise<PackResult> {
+    return this.packer.packComponent(componentId, scopePath, options);
   }
 
   /**
