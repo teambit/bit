@@ -13,7 +13,6 @@ const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
-console.log('publicPath', publicUrlOrPath);
 
 module.exports = {
   createWebpackConfig

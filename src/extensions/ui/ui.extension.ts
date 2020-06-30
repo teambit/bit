@@ -7,7 +7,7 @@ import { Environments } from '../environments';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { GraphQLExtension } from '../graphql';
 import { Component } from '../component';
-import createWebpackConfig from './webpack/webpack.config';
+import { createWebpackConfig } from './webpack/webpack.config';
 import { BundlerExtension } from '../bundler/bundler.extension';
 
 type UIDeps = [CLIExtension, Environments, Workspace, GraphQLExtension, BundlerExtension];
