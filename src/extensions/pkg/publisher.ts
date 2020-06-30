@@ -7,6 +7,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
 import GeneralError from '../../error/general-error';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -21,14 +22,13 @@ export class Publisher {
     private isolator: IsolatorExtension,
     private logger: LogPublisher,
     private scope: Scope,
-    private options: PublisherOptions = {}
+    public options: PublisherOptions = {}
   ) {}
 
   async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
     this.options = options;
     const capsules = await this.getComponentCapsules(componentIds);
-    const resultsP = capsules.map(capsule => this.publishOneCapsule(capsule, options));
-    return Promise.all(resultsP);
+    return this.publishMultipleCapsules(capsules);
   }
 
   async postExportListener(ids: BitId[]): Promise<PublishPostExportResult[]> {
@@ -41,9 +41,14 @@ export class Publisher {
     }));
   }
 
-  private async publishOneCapsule(capsule: Capsule, options: PublisherOptions): Promise<PublishResult> {
+  public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
+    const resultsP = capsules.map(capsule => this.publishOneCapsule(capsule));
+    return Promise.all(resultsP);
+  }
+
+  private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
     const publishParams = ['publish'];
-    if (options.dryRun) publishParams.push('--dry-run');
+    if (this.options.dryRun) publishParams.push('--dry-run');
     const publishParamsStr = publishParams.join(' ');
     const cwd = capsule.path;
     const componentIdStr = capsule.id.toString();
@@ -58,8 +63,8 @@ export class Publisher {
       data = stdout;
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
-      this.logger.error(errorMsg);
-      this.logger.error(err.stderr);
+      this.logger.error(componentIdStr, errorMsg);
+      if (err.stderr) this.logger.error(componentIdStr, err.stderr);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
     return { id: capsule.component.id, data, errors };
@@ -91,17 +96,19 @@ export class Publisher {
     const ids = BitIds.fromArray(bitIds);
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
-      .filter(c => {
-        const ext = c.version.extensions.findExtension('@teambit/pkg');
-        if (!ext) return false;
-        return ext.config?.packageJson?.publishConfig;
-      })
+      .filter(c => this.shouldPublish(c.version.extensions))
       .map(c =>
         c.component
           .toBitId()
           .changeVersion(c.versionStr)
           .toString()
       );
+  }
+
+  public shouldPublish(extensions: ExtensionDataList): boolean {
+    const pkgExt = extensions.findExtension('@teambit/pkg');
+    if (!pkgExt) return false;
+    return pkgExt.config?.packageJson?.publishConfig;
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {

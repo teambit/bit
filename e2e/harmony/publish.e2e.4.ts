@@ -141,4 +141,22 @@ describe('publish functionality', function() {
       expect(output.trim()).to.be.equal('hello button');
     });
   });
+  describe('with invalid package name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.fixtures.populateComponentsTS(1);
+      const environments = {
+        env: '@teambit/react',
+        config: {}
+      };
+      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
+    });
+    it('builder should show the npm error about invalid name', () => {
+      const output = helper.general.runWithTryCatch('bit run-new');
+      expect(output).to.have.string('npm ERR! Invalid name: "invalid/name/comp1"');
+    });
+  });
 });

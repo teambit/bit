@@ -17,6 +17,7 @@ import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
 import { Compiler, Compile } from '../compiler';
+import { PkgExtension } from '../pkg';
 
 export class ReactEnv implements Environment {
   constructor(
@@ -24,7 +25,8 @@ export class ReactEnv implements Environment {
     private jest: JestExtension,
     private ts: TypescriptExtension,
     private compiler: Compile,
-    private tester: TesterExtension
+    private tester: TesterExtension,
+    private pkg: PkgExtension
   ) {}
 
   // this should happen on component load.
@@ -97,7 +99,7 @@ export class ReactEnv implements Environment {
   getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return [this.compiler.task];
+    return [this.compiler.task, this.pkg.dryRunTask];
   }
 
   dev(workspace: Workspace, components: Component[]) {

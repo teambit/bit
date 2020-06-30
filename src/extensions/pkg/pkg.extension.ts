@@ -11,6 +11,7 @@ import { CLIExtension } from '../cli';
 import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
 import { LoggerExt, Logger } from '../logger';
+import { PublishDryRunTask } from './publish-dry-run.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -44,7 +45,8 @@ export class PkgExtension {
     const logPublisher = logger.createLogPublisher(PkgExtension.id);
     const packer = new Packer(isolator, scope?.legacyScope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
+    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
     if (scope) scope.onPostExport(postExportFunc);
@@ -84,7 +86,9 @@ export class PkgExtension {
     /**
      * envs extension.
      */
-    private envs: Environments
+    private envs: Environments,
+
+    readonly dryRunTask: PublishDryRunTask
   ) {}
 
   /**
