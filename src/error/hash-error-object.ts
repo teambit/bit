@@ -3,9 +3,15 @@ import yn from 'yn';
 import { getSync } from '../api/consumer/lib/global-config';
 import { CFG_ANALYTICS_ANONYMOUS_KEY } from '../constants';
 import cloneErrorObject, { systemFields } from './clone-error-object';
+import logger from '../logger/logger';
 
 export default function hashErrorIfNeeded(error: Error) {
-  const clonedError = cloneErrorObject(error);
+  let clonedError = error;
+  try {
+    clonedError = cloneErrorObject(error);
+  } catch (e) {
+    logger.warn('could not clone error', error);
+  }
   const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
