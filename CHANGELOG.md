@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.3-dev.3] - 2020-06-30]
+
+- add timeout option for load core extension via api
+
 ## [[14.8.3-dev.2] - 2020-06-30]
 
 - wait for harmony to load if you load it many times in parallel via the api
