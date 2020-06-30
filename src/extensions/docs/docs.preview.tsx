@@ -6,7 +6,8 @@ export class DocsPreview {
   static dependencies = [Preview];
 
   render() {
-    const docs = LOADED_DOCS[0];
+    // ran's hack for getting the data to the workspace
+    const docs = LOADED_DOCS[1];
     DOCS_TEMPLATE(docs);
   }
 
