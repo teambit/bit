@@ -14,6 +14,7 @@ import { GraphQLExtension } from '../graphql';
 import workspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
+import EjectConfCmd from './eject-conf.cmd';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -75,6 +76,7 @@ export default async function provideWorkspace(
       });
       graphql.register(workspaceSchema(workspace));
       cli.register(new InstallCmd(workspace));
+      cli.register(new EjectConfCmd(workspace));
 
       return workspace;
     }

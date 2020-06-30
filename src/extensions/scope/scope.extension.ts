@@ -52,7 +52,7 @@ export class ScopeExtension {
    * get a component from scope
    * @param id component ID
    */
-  async get(id: string | ComponentID): Promise<Component | undefined> {
+  async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
     return undefined;

@@ -24,6 +24,15 @@ import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 
+export type EjectConfResult = {
+  componentId: string;
+  configPath: string;
+};
+
+export type EjectConfOptions = {
+  propagate?: boolean;
+};
+
 /**
  * API of the Bit Workspace
  */
@@ -154,6 +163,11 @@ export default class Workspace implements ComponentHost {
     if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
+  }
+
+  async ejectConfig(id: string | BitId | ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
+    const component = await this.scope.get(id);
+    // component?.config
   }
 
   // @gilad needs to implment on variants
