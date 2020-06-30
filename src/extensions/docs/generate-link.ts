@@ -1,7 +1,8 @@
 import { ComponentDocs } from './docs.extension';
+import { camelCase } from '../../utils';
 
 function toIdentifier(name: string) {
-  return name.replace('/', '$');
+  return camelCase(name.replace('/', '$'));
 }
 
 export function generateLink(components: ComponentDocs[], templatePath: string) {
