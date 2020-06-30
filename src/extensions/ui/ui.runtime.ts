@@ -12,7 +12,7 @@ import { CompositionsUI } from '../compositions/compositions.ui';
  * :TODO pass all other extensions from above.
  */
 harmony
-  .run([UIRuntimeExtension, TesterUI, DependenciesUI, ChangeLogUI, DocsUI, ComponentUI, CompositionsUI])
+  .run([UIRuntimeExtension, TesterUI, DependenciesUI, ChangeLogUI, CompositionsUI, DocsUI, ComponentUI])
   .then(() => {
     const uiExtension = harmony.get<UIRuntimeExtension>('UIRuntimeExtension');
     uiExtension.render();
