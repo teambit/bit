@@ -1,6 +1,8 @@
 import React, { Component, useState } from 'react';
 import classNames from 'classnames';
 import { NavLink } from 'react-router-dom';
+import { Icon } from '@bit/bit.evangelist.elements.icon';
+
 import { TreeNodeProps, TreeLayer } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentStyle, indentClass } from '../indent';
@@ -26,10 +28,12 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
 
   return (
     <div data-collapsed={collapsed}>
-      <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
-        <span className={styles.arrow}>▾</span> {/* WIP */}
-        {getName(node.id)}
-      </div>
+      {node.id && (
+        <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
+          <Icon className={styles.arrow} of="fat-arrow-down" />
+          {getName(node.id)}
+        </div>
+      )}
 
       {!collapsed && (
         <div style={indentStyle(depth + 1)}>

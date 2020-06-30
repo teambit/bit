@@ -14,6 +14,7 @@
 	
 	> .arrow {
 		position: absolute; //only used to not take space
+		line-height: inherit;
 		transform: translate(-16px, 0);
 		transition: all 300ms;
 
