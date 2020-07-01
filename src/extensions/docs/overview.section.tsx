@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLinkProps } from 'react-router-dom';
 import { Section } from '../component/section';
 import { DocsUI } from './docs.ui';
 import { Overview } from './overview';
@@ -11,13 +12,14 @@ export class OverviewSection implements Section {
     private docs: DocsUI
   ) {}
 
-  navigationLink = {
-    to: '~overview',
+  navigationLink: NavLinkProps = {
+    to: '',
+    exact: true,
     children: 'Overview'
   };
 
   route = {
-    path: '~overview',
+    path: '',
     children: <Overview />
   };
 }

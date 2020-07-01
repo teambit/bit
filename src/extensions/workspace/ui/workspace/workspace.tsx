@@ -32,7 +32,6 @@ export type WorkspaceProps = {
  */
 export function Workspace({ routeSlot }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
-  const [, selectComponent] = useState<Component>(defaultComponent);
 
   if (loading) return <div>loading</div>;
   if (error) return <div>{error.message}</div>;
@@ -47,11 +46,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
           <div className={styles.scopeName}>
             <span className={styles.avatar}>A</span> {workspace.name}
           </div>
-          <SideBar
-            className={styles.sideBar}
-            components={workspace.components}
-            onSelectComponent={component => selectComponent(component)}
-          />
+          <SideBar className={styles.sideBar} components={workspace.components} />
           <SlotRouter slot={routeSlot} />
         </div>
       </Theme>
