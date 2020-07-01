@@ -69,6 +69,7 @@ import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import IncorrectRootDir from './exceptions/incorrect-root-dir';
 import { ExtensionDataList } from '../config/extension-data';
+import { SchemaName, isSchemaSupport, SchemaFeature } from './component-schema';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -107,6 +108,7 @@ export type ComponentProps = {
   deprecated?: boolean;
   origin: ComponentOrigin;
   log?: Log;
+  schema?: string;
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
   extensionsAddedConfig: any;
@@ -161,6 +163,7 @@ export default class Component {
   _wasOriginallySharedDirStripped: boolean | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: PathLinux | undefined; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
+  schema?: string;
   componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -215,6 +218,7 @@ export default class Component {
     testerPackageDependencies,
     componentFromModel,
     overrides,
+    schema,
     defaultScope,
     packageJsonFile,
     packageJsonChangedProps,
@@ -267,6 +271,7 @@ export default class Component {
     this.extensions = extensions || [];
     this.extensionsAddedConfig = extensionsAddedConfig || {};
     this.componentFromModel = componentFromModel;
+    this.schema = schema;
   }
 
   validateComponent() {
@@ -476,14 +481,7 @@ export default class Component {
    * already relative to the sharedDir rather than the author workspace.
    */
   get ignoreSharedDir(): boolean {
-    if (!this.componentMap) {
-      // @todo: this happens when isolating via capsule. needs to decide what should be the behavior.
-      return !this.originallySharedDir;
-    }
-    return (
-      Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
-      Boolean(this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED && !this.componentMap.originallySharedDir)
-    );
+    return !isSchemaSupport(SchemaFeature.sharedDir, this.schema);
   }
 
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
@@ -1186,6 +1184,10 @@ export default class Component {
       dists = undefined;
     }
     const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
+    const getSchema = () => {
+      if (componentFromModel) return componentFromModel.schema;
+      return consumer.isLegacy ? undefined : SchemaName.Harmony;
+    };
 
     return new Component({
       name: id.name,
@@ -1212,6 +1214,7 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       overrides,
+      schema: getSchema(),
       defaultScope,
       packageJsonFile,
       packageJsonChangedProps,

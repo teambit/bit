@@ -269,4 +269,46 @@ ${duplicationStr}`);
       );
     }
   });
+
+  if (!version.isLegacy) {
+    const fieldsForSchemaCheck = ['compiler', 'tester', 'dists', 'mainDistFile'];
+    const fieldsForSchemaCheckNotEmpty = [
+      'customResolvedPaths',
+      'compilerPackageDependencies',
+      'testerPackageDependencies'
+    ];
+    fieldsForSchemaCheck.forEach(field => {
+      if (version[field]) {
+        throw new VersionInvalid(
+          `${message}, the ${field} field is not permitted according to schema "${version.schema}"`
+        );
+      }
+    });
+    fieldsForSchemaCheckNotEmpty.forEach(field => {
+      if (version[field] && !R.isEmpty(version[field])) {
+        throw new VersionInvalid(
+          `${message}, the ${field} field is cannot have values according to schema "${version.schema}"`
+        );
+      }
+    });
+    ['dependencies', 'devDependencies'].forEach(dependenciesField => {
+      const deps: Dependencies = version[dependenciesField];
+      deps.dependencies.forEach(dep => {
+        if (dep.relativePaths.length) {
+          throw new VersionInvalid(
+            `${message}, the ${dependenciesField} should not have relativePaths according to schema "${version.schema}"`
+          );
+        }
+      });
+    });
+  }
+  if (version.isLegacy) {
+    // mainly to make sure that all Harmony components are saved with schema
+    // if they don't have schema, they'll fail on this test
+    if (version.extensions && version.extensions.some(e => e.artifacts)) {
+      throw new VersionInvalid(
+        `${message}, the extensions field should not have "artifacts" prop according to schema "${version.schema}"`
+      );
+    }
+  }
 }
