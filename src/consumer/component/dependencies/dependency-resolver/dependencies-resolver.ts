@@ -1103,7 +1103,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     importSource: string,
     importSpecifiers: ImportSpecifier[] | undefined
   ) {
-    if (this.consumer.isLegacy) return;
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }
