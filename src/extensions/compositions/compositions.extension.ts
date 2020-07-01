@@ -1,8 +1,12 @@
+/* eslint-disable import/no-dynamic-require */
 import { BundlerExtension } from '../bundler';
-import { Component } from '../component';
+import { Component, ComponentFactoryExt } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component/component-map';
 import { PreviewExtension } from '../preview/preview.extension';
+import { Composition } from './composition';
+import { compositionsSchema } from './compositions.graphql';
+import { GraphQLExtension } from '../graphql';
 
 export type CompositionsConfig = {
   /**
@@ -32,6 +36,18 @@ export class CompositionsExtension {
     });
   }
 
+  getCompositions(component: Component) {
+    const maybeFiles = this.getCompositionFiles([component]).byComponent(component);
+    if (!maybeFiles) return [];
+    const [, files] = maybeFiles;
+
+    return files.map(file => {
+      return {
+        [file]: this.computeCompositions(file)
+      };
+    });
+  }
+
   async compositionsPreviewTarget(context: ExecutionContext) {
     const compositionsMap = this.getCompositionFiles(context.components);
     const template = await this.getTemplate(context);
@@ -46,6 +62,14 @@ export class CompositionsExtension {
     return targetFiles.concat(link);
   }
 
+  private computeCompositions(modulePath: string) {
+    // eslint-disable-next-line global-require
+    const module = require(modulePath);
+    return Object.keys(module).map(identifier => {
+      return new Composition(identifier, modulePath);
+    });
+  }
+
   private flattenMap(compositionsMap: string[][]) {
     return compositionsMap.reduce((acc: string[], current) => {
       acc = acc.concat(current);
@@ -57,11 +81,12 @@ export class CompositionsExtension {
     return context.env.getMounter();
   }
 
-  static dependencies = [BundlerExtension, PreviewExtension];
+  static dependencies = [BundlerExtension, PreviewExtension, GraphQLExtension, ComponentFactoryExt];
 
-  static async provider([bundler, preview]: [BundlerExtension, PreviewExtension]) {
+  static async provider([bundler, preview, graphql]: [BundlerExtension, PreviewExtension, GraphQLExtension]) {
     const compositions = new CompositionsExtension(preview);
 
+    graphql.register(compositionsSchema(compositions));
     bundler.registerTarget({
       entry: compositions.compositionsPreviewTarget.bind(compositions)
     });

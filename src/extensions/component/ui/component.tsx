@@ -18,6 +18,9 @@ const GET_COMPONENT = gql`
           env
           url
         }
+        compositions {
+          identifier
+        }
       }
     }
   }

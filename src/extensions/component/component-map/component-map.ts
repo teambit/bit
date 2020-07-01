@@ -4,15 +4,15 @@ import Component from '../component';
  * allows to index components -> values.
  */
 export class ComponentMap<T> extends Map<string, [Component, T]> {
+  byComponent(component: Component) {
+    return super.get(component.id.toString());
+  }
+
   /**
    * returns an array.
    */
   toArray() {
     return Array.from(this.values());
-  }
-
-  toTuplesArray() {
-    return this.values();
   }
 
   /**

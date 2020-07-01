@@ -1,14 +1,14 @@
 import React from 'react';
 import { Section } from '../component/section';
 import { ComponentComposition } from './ui';
-import { CompositionsExtension } from './compositions.extension';
+import { CompositionsUI } from './compositions.ui';
 
 export class CompositionsSection implements Section {
   constructor(
     /**
      * simulations ui extension.
      */
-    private compositions: CompositionsExtension
+    private compositions: CompositionsUI
   ) {}
 
   navigationLink = {
