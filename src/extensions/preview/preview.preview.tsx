@@ -4,6 +4,8 @@ import { PreviewNotFound } from './exceptions';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
+const PREVIEW_MODULES = {};
+
 export class Preview {
   constructor(
     /**
@@ -17,13 +19,14 @@ export class Preview {
    */
   render() {
     const { previewName, componentId } = this.getLocation();
+    const name = previewName || this.getDefault();
 
-    const preview = this.getPreview(previewName || this.getDefault());
+    const preview = this.getPreview(name);
     if (!preview) {
       throw new PreviewNotFound(previewName);
     }
 
-    return preview.render(componentId);
+    return preview.render(componentId, PREVIEW_MODULES[name]);
   }
 
   /**
@@ -68,4 +71,11 @@ export class Preview {
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
     return new Preview(previewSlot);
   }
+}
+
+export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
+  PREVIEW_MODULES[previewName] = {
+    mainModule: defaultModule,
+    componentMap
+  };
 }

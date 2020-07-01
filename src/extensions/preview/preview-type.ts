@@ -7,7 +7,7 @@ export interface PreviewType {
   /**
    * preview render method.
    */
-  render(componentId: string): void;
+  render(componentId: string, linkedModules: { [key: string]: any }): void;
 
   /**
    * determine if this will be the default preview to render.

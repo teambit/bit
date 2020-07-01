@@ -1,20 +1,18 @@
 import { Preview } from '../preview/preview.preview';
-import { PreviewExtension } from '../preview/preview.extension';
 
-let LOADED_DOCS = [];
-let DOCS_TEMPLATE = (doc: any) => doc;
 export class DocsPreview {
   constructor(
     /**
      * preview extension.
      */
-    private preview: PreviewExtension
+    private preview: Preview
   ) {}
 
-  render(componentId: string) {
-    // ran's hack for getting the data to the workspace
-    const docs = LOADED_DOCS[componentId];
-    DOCS_TEMPLATE(docs);
+  render(componentId: string, modules: any) {
+    // only one doc file is supported.
+    modules.mainModule.default(modules.componentMap[componentId][0]);
+    // const docs = LOADED_DOCS[componentId];
+    // DOCS_TEMPLATE(docs);
   }
 
   static dependencies = [Preview];
@@ -28,9 +26,4 @@ export class DocsPreview {
 
     return docsPreview;
   }
-}
-
-export function addDocs(template, docModules) {
-  LOADED_DOCS = docModules;
-  DOCS_TEMPLATE = template;
 }

@@ -22,6 +22,13 @@ export default class ComponentFS extends MemoryFS {
     return '';
   }
 
+  /**
+   * filter all component files by regex.
+   */
+  byRegex(extension: RegExp) {
+    return this.files.filter(file => file.path.match(extension));
+  }
+
   toObject() {}
 
   toJSON() {}

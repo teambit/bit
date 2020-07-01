@@ -1,14 +1,19 @@
-import { writeFileSync } from 'fs';
-import { resolve, join } from 'path';
 import { BundlerExtension } from '../bundler';
 import { Component } from '../component';
-import { generateLink } from './generate-link';
-import { Environments, ExecutionContext } from '../environments';
-import { DocsService } from './docs.service';
+import { ExecutionContext } from '../environments';
+import { ComponentMap } from '../component/component-map';
+import { PreviewExtension } from '../preview/preview.extension';
 
 export type ComponentDocs = {
   files: string[];
   component: Component;
+};
+
+export type DocsConfig = {
+  /**
+   * regex for detection of documentation files
+   */
+  extension: string;
 };
 
 /**
@@ -19,51 +24,36 @@ export class DocsExtension {
     /**
      * envs extension.
      */
-    private envs: Environments,
-
-    /**
-     * environment service for docs.
-     */
-    private docsService: DocsService
+    private preview: PreviewExtension
   ) {}
 
   /**
    * returns an array of doc file paths for a set of components.
    */
-  getDocFiles(components: Component[]): string[] {
-    const docsMap = this.getDocsMap(components);
-    return docsMap.reduce((acc: string[], current) => {
-      acc = acc.concat(current.files);
-      return acc;
-    }, []);
-  }
-
-  getDocsMap(components: Component[]): ComponentDocs[] {
-    const docsMap = components.map(component => {
-      return {
-        files: component.state.filesystem.files.filter(file => file.path.includes('.docs.ts')).map(file => file.path),
-        component
-      };
+  getDocsMap(components: Component[]): ComponentMap<string[]> {
+    return ComponentMap.as<string[]>(components, component => {
+      const files = component.state.filesystem.byRegex(/docs.ts/);
+      return files.map(file => file.path);
     });
-
-    return docsMap;
   }
 
-  async generateLink(context: ExecutionContext) {
+  async docsPreviewTarget(context: ExecutionContext) {
     const docsMap = this.getDocsMap(context.components);
     const template = await this.getTemplate(context);
 
-    const link = this.writePreviewLink(
-      docsMap.filter(componentDocs => componentDocs.files.length !== 0),
+    const link = this.preview.writeLink(
+      'overview',
+      docsMap.filter(value => value.length !== 0),
       template
     );
 
-    return this.flattenMap(docsMap).concat(link);
+    const targetFiles = this.flattenMap(docsMap.flattenValue());
+    return targetFiles.concat(link);
   }
 
-  private flattenMap(docsMap: ComponentDocs[]) {
+  private flattenMap(docsMap: string[][]) {
     return docsMap.reduce((acc: string[], current) => {
-      acc = acc.concat(current.files);
+      acc = acc.concat(current);
       return acc;
     }, []);
   }
@@ -72,22 +62,13 @@ export class DocsExtension {
     return context.env.getDocsTemplate();
   }
 
-  private writePreviewLink(componentDocs: ComponentDocs[], templatePath: string): string {
-    const contents = generateLink(componentDocs, templatePath);
-    // :TODO @uri please generate a random file in a temporary directory
-    const targetPath = resolve(join(__dirname, '/__docs.js'));
-    writeFileSync(targetPath, contents);
+  static dependencies = [BundlerExtension, PreviewExtension];
 
-    return targetPath;
-  }
-
-  static dependencies = [BundlerExtension, Environments];
-
-  static async provider([bundler, envs]: [BundlerExtension, Environments]) {
-    const docs = new DocsExtension(envs, new DocsService());
+  static async provider([bundler, preview]: [BundlerExtension, PreviewExtension]) {
+    const docs = new DocsExtension(preview);
 
     bundler.registerTarget({
-      entry: docs.generateLink.bind(docs)
+      entry: docs.docsPreviewTarget.bind(docs)
     });
 
     return docs;
