@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import memoizeOne from 'memoize-one';
+import React, { useMemo } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
 import { ComponentTreeContext } from './component-tree-context';
@@ -13,30 +12,21 @@ type ComponentTreeProps = {
   components: string[];
 };
 
-// :TODO @uri please refactor to a React hook.
-export class ComponentTree extends Component<ComponentTreeProps> {
-  getRootNode = memoizeOne((componentList: string[]) => {
-    return inflateToTree(componentList);
-  });
+export function ComponentTree(props: ComponentTreeProps) {
+  const { components, onSelect, selected } = props;
 
-  treeContext = memoizeOne((onSelect, selected) => {
-    return { onSelect, selected };
-  });
+  const treeContext = useMemo(() => ({ onSelect, selected }), [onSelect, selected]);
+  const rootNode = useMemo(() => inflateToTree(components), [components]);
 
-  render() {
-    const treeContext = this.treeContext(this.props.onSelect, this.props.selected);
-    const rootNode = this.getRootNode(this.props.components);
-
-    return (
-      <div className={styles.componentTree} style={indentStyle(0)}>
-        <TreeNodeContext.Provider value={getTreeNodeComponent}>
-          <ComponentTreeContext.Provider value={treeContext}>
-            <RootNode node={rootNode} />
-          </ComponentTreeContext.Provider>
-        </TreeNodeContext.Provider>
-      </div>
-    );
-  }
+  return (
+    <div className={styles.componentTree} style={indentStyle(0)}>
+      <TreeNodeContext.Provider value={getTreeNodeComponent}>
+        <ComponentTreeContext.Provider value={treeContext}>
+          <RootNode node={rootNode} />
+        </ComponentTreeContext.Provider>
+      </TreeNodeContext.Provider>
+    </div>
+  );
 }
 
 function RootNode({ node }: { node: TreeNode }) {
