@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.3-dev.1",
+  "version": "14.8.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -188,6 +188,7 @@
     "p-event": "^4.1.0",
     "p-map-series": "^1.0.0",
     "p-series": "^2.1.0",
+    "p-wait-for": "^3.1.0",
     "package-json-validator": "^0.6.3",
     "pad-right": "^0.2.2",
     "parents": "^1.0.1",

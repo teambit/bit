@@ -1,4 +1,5 @@
 import harmony from '@teambit/harmony';
+import pWaitFor from 'p-wait-for';
 import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
@@ -13,18 +14,36 @@ export { coreExtensions };
 
 HooksManager.init();
 let harmonyLoaded = false;
+let harmonyCurrentlyLoading = false;
+
+type LoadCoreExtensionsOptions = {
+  cwd?: string;
+  timeout?: number;
+};
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
+  // When using the API programmatically do not use the scope cache by default
+  const loadScopeFromCache = opts && opts.loadScopeFromCache !== undefined ? !!opts.loadScopeFromCache : false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
-    if (Array.isArray(component)) {
-      return component.map(v => v.toObject());
+  return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions, loadScopeFromCache }).then(
+    ({ component }) => {
+      if (Array.isArray(component)) {
+        return component.map(v => v.toObject());
+      }
+      return component.toObject();
     }
-    return component.toObject();
-  });
+  );
 }
-export function list(scopePath: string) {
-  return scopeList(scopePath).then(listScopeResult => listScopeResult.map(result => result.id.toString()));
+export function list(
+  scopePath: string,
+  namespacesUsingWildcards?: string,
+  opts: { loadScopeFromCache?: boolean } = {}
+) {
+  // When using the API programmatically do not use the scope cache by default
+  const loadScopeFromCache = opts && opts.loadScopeFromCache !== undefined ? !!opts.loadScopeFromCache : false;
+  return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then(listScopeResult =>
+    listScopeResult.map(result => result.id.toString())
+  );
 }
 
 export async function buildOne(
@@ -52,19 +71,28 @@ export async function addMany(components: AddProps[], alternateCwd?: string) {
  * @param {string} [cwd]
  * @returns
  */
-export async function loadCoreExtensions(cwd?: string) {
+export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}) {
+  // Sometime different code can ask for loading the extensions
+  // for example if you call getLoadedCoreExtension in a promise.all
+  // this make sure we are wait for harmony to load if it's already in load process before we send response back
+  if (harmonyCurrentlyLoading) {
+    await pWaitFor(() => harmonyCurrentlyLoading === false, { timeout: options.timeout || 10000 });
+  }
   if (harmonyLoaded) {
     return harmony;
   }
 
+  harmonyCurrentlyLoading = true;
+
   const originalCwd = process.cwd();
-  if (cwd) {
-    process.chdir(cwd);
+  if (options.cwd) {
+    process.chdir(options.cwd);
   }
   await harmony.run(ConfigExt);
   await harmony.set([BitExt]);
   process.chdir(originalCwd);
   harmonyLoaded = true;
+  harmonyCurrentlyLoading = false;
   return harmony;
 }
 
@@ -78,8 +106,8 @@ export async function loadCoreExtensions(cwd?: string) {
  * @param {string} [cwd]
  * @returns
  */
-export async function getLoadedCoreExtension(extensionId: string, cwd?: string) {
-  await loadCoreExtensions(cwd);
+export async function getLoadedCoreExtension(extensionId: string, options: LoadCoreExtensionsOptions = {}) {
+  await loadCoreExtensions(options);
   return harmony.get(extensionId);
 }
 
@@ -91,6 +119,6 @@ export async function getLoadedCoreExtension(extensionId: string, cwd?: string) 
  * @param {string} extensionId
  * @returns
  */
-export function getCoreExtension(extensionId: string) {
+export function getDeclarationCoreExtension(extensionId: string) {
   return coreExtensions[extensionId];
 }
