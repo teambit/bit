@@ -14,7 +14,7 @@ import { VersionTag } from '../../stage-components/workspace-components/version-
 import { GET_COMPONENT } from './queries/component';
 import styles from './base.module.scss';
 import { ComponentModel } from '../../component/ui';
-import { getCurrentComponentId } from './getCurrentComponentId';
+import { getCurrentComponentId } from './navigation';
 // import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
 // import { Docs } from '../../docs/docs';
 
@@ -42,8 +42,8 @@ export function Base({ docs = {}, ...rest }: DocsSectionProps) {
   // :TODO @uri please add a proper loader with amir
   if (loading) return <div>loading</div>;
   if (error) throw error;
-
   const component = ComponentModel.from(data.workspace.getComponent);
+  console.log('vars', component);
 
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
@@ -61,7 +61,7 @@ export function Base({ docs = {}, ...rest }: DocsSectionProps) {
   );
 }
 
-// type SubtitleProps = {} & React.HTMLAttributes<HTMLParagraphElement>;
+type SubtitleProps = {} & React.HTMLAttributes<HTMLParagraphElement>;
 
 function Subtitle({ children, className, ...rest }: SubtitleProps) {
   return (
