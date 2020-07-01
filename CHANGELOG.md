@@ -7,21 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add an option to not use cache when loading scope
+- do not use scope cache by default when loading scope programmatically
+
+## [[14.8.3] - 2020-07-01](https://github.com/teambit/bit/releases/tag/v14.8.3)
+
+### Bug Fixes
+
 - [#2780](https://github.com/teambit/bit/issues/2780) - fix dists codemod of changing one scope to another to not be triggered without --rewire flag
-
-## [[14.8.3-dev.3] - 2020-06-30]
-
 - add timeout option for load core extension via api
 
-## [[14.8.3-dev.2] - 2020-06-30]
+### Internal
 
 - wait for harmony to load if you load it many times in parallel via the api
-
-## [[14.8.3-dev.1] - 2020-06-29]
-
 - expose extensions declarations and instances from api
 
 ## [[14.8.2] - 2020-06-29](https://github.com/teambit/bit/releases/tag/v14.8.2)
+
+### Bug Fixes
 
 - do not show loader for internal commands
 - fix error when trying to load extension in a folder which is not a workspace or scope
