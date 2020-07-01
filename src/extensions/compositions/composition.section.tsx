@@ -3,7 +3,7 @@ import { Section } from '../component/section';
 import { ComponentComposition } from './ui';
 import { CompositionsExtension } from './compositions.extension';
 
-export class SimulationSection implements Section {
+export class CompositionsSection implements Section {
   constructor(
     /**
      * simulations ui extension.
@@ -12,12 +12,12 @@ export class SimulationSection implements Section {
   ) {}
 
   navigationLink = {
-    to: '~simulation',
-    children: 'Simulation'
+    to: '~compositions',
+    children: 'Compositions'
   };
 
   route = {
-    path: '~simulation',
+    path: '~compositions',
     children: <ComponentComposition />
   };
 }

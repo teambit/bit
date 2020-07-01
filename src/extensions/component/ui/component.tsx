@@ -13,6 +13,7 @@ const GET_COMPONENT = gql`
     workspace {
       getComponent(id: $id) {
         id
+        displayName
         server {
           env
           url

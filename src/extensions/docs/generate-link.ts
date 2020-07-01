@@ -1,9 +1,5 @@
 import { ComponentDocs } from './docs.extension';
-import { camelCase } from '../../utils';
-
-function toIdentifier(name: string) {
-  return camelCase(name.replace('/', '$'));
-}
+import { toIdentifier } from '../utils/to-identifier';
 
 export function generateLink(components: ComponentDocs[], templatePath: string) {
   return `
@@ -18,8 +14,12 @@ ${components
   .join('')}
 
 
-addDocs(templateFn, [
-${components.map(componentDocs => `${toIdentifier(componentDocs.component.id.name)},\n`).join('')}
-]);  
+addDocs(templateFn, {
+${components
+  .map(
+    componentDocs => `'${componentDocs.component.id.toString()}':${toIdentifier(componentDocs.component.id.name)},\n`
+  )
+  .join('')}
+});  
 `;
 }

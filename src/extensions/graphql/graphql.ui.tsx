@@ -17,7 +17,8 @@ export class GraphQlUI {
     return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
   };
 
-  static async provider() {
+  // @HACK should be async
+  static provider() {
     const client = new ApolloClient({
       uri: 'http://localhost:4000/graphql'
     });
