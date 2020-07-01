@@ -4,5 +4,5 @@ export function ExtendPath(prefix: string, path?: string | string[]) {
     return `${prefix}/${path}`;
   }
 
-  return path.map(x => `${prefix}/${x}`);
+  return path.map(x => ExtendPath(prefix, x));
 }
