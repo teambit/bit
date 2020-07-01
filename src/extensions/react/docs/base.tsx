@@ -32,29 +32,29 @@ export function Base({ docs, query, ...rest }: DocsSectionProps) {
   return (
     <ClientContext>
       <div className={classNames(styles.docsMainBlock)} {...rest}>
-        <div className={styles.topRow}>
+        {/* <div className={styles.topRow}>
           <H1 className={classNames(styles.maxWidth, styles.marginRight)}>{'title'}</H1>
           <VersionTag className={styles.marginRight}>Latest</VersionTag>
         </div>
         <div></div>
         <Subtitle className={styles.marginBottom}>{abstract}</Subtitle>
         <LabelList className={styles.marginBottom}>{labels}</LabelList>
-        <Separator className={styles.marginBottom} />
+        <Separator className={styles.marginBottom} /> */}
         <Content />
       </div>
     </ClientContext>
   );
 }
 
-type SubtitleProps = {} & React.HTMLAttributes<HTMLParagraphElement>;
+// type SubtitleProps = {} & React.HTMLAttributes<HTMLParagraphElement>;
 
-function Subtitle({ children, className, ...rest }: SubtitleProps) {
-  return (
-    <Paragraph className={classNames(mutedText, styles.maxWidth, className)} size={PossibleSizes.xxl} {...rest}>
-      {children}
-    </Paragraph>
-  );
-}
+// function Subtitle({ children, className, ...rest }: SubtitleProps) {
+//   return (
+//     <Paragraph className={classNames(mutedText, styles.maxWidth, className)} size={PossibleSizes.xxl} {...rest}>
+//       {children}
+//     </Paragraph>
+//   );
+// }
 
 type ClientContextProps = {
   children: JSX.Element;
