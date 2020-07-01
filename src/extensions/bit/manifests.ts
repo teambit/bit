@@ -26,6 +26,7 @@ import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
 import { StencilExtension } from '../stencil';
+import { CompositionsExtension } from '../compositions';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -35,6 +36,7 @@ export const manifestsMap = {
   [PreviewExtension.name]: PreviewExtension,
   [ConfigExt.name]: ConfigExt,
   [DocsExtension.name]: DocsExtension,
+  [CompositionsExtension.name]: CompositionsExtension,
   [GraphQLExtension.name]: GraphQLExtension,
   [UIExtension.name]: UIExtension,
   [CoreExt.name]: CoreExt,

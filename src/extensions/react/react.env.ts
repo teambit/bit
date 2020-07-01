@@ -80,6 +80,13 @@ export class ReactEnv implements Environment {
   }
 
   /**
+   * return a function which mounts a given component to DOM
+   */
+  getMounter() {
+    return require.resolve('./mount');
+  }
+
+  /**
    * adds dependencies to all configured components.
    */
   async getDependencies() {

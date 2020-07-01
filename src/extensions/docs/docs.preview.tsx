@@ -11,8 +11,6 @@ export class DocsPreview {
   render(componentId: string, modules: any) {
     // only one doc file is supported.
     modules.mainModule.default(modules.componentMap[componentId][0]);
-    // const docs = LOADED_DOCS[componentId];
-    // DOCS_TEMPLATE(docs);
   }
 
   static dependencies = [Preview];

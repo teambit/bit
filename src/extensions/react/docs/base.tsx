@@ -1,8 +1,8 @@
-import React, { HTMLAttributes, isValidElement } from 'react';
+import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
 import { H1 } from '@bit/bit.evangelist.elements.heading';
+import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
-
 import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
@@ -11,7 +11,6 @@ import { LabelList } from '../../stage-components/workspace-components/label';
 import { Separator } from '../../stage-components/workspace-components/separator';
 import { VersionTag } from '../../stage-components/workspace-components/version-tag';
 import styles from './base.module.scss';
-import { isFunction } from 'ramda-adjunct';
 // import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
 // import { Docs } from '../../docs/docs';
 
