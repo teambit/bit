@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section } from '../component/section';
-import { ComponentComposition } from './ui';
 import { CompositionsUI } from './compositions.ui';
+import { Compositions } from './compositions';
 
 export class CompositionsSection implements Section {
   constructor(
@@ -18,6 +18,6 @@ export class CompositionsSection implements Section {
 
   route = {
     path: '~compositions',
-    children: <ComponentComposition />
+    children: <Compositions />
   };
 }

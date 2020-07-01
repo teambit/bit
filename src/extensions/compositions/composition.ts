@@ -1,3 +1,5 @@
+import { capitalize } from '../utils/capitalize';
+
 export type CompositionProps = {
   identifier: string;
   filepath: string;
@@ -16,7 +18,9 @@ export class Composition {
   ) {}
 
   get displayName() {
-    return this.identifier;
+    const text = this.identifier.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+
+    return capitalize(text);
   }
 
   static fromArray(compositions: CompositionProps[]): Composition[] {

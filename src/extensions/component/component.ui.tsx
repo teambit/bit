@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, RouteProps, NavLinkProps } from 'react-router-dom';
+import { RouteProps, NavLinkProps } from 'react-router-dom';
 import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';

@@ -1,5 +1,3 @@
-import { join } from 'path';
-/* eslint-disable import/no-dynamic-require */
 import { BundlerExtension } from '../bundler';
 import { Component, ComponentFactoryExt } from '../component';
 import { ExecutionContext } from '../environments';
@@ -8,8 +6,6 @@ import { PreviewExtension } from '../preview/preview.extension';
 import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
 import { GraphQLExtension } from '../graphql';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { SchemaExtension } from '../schema';

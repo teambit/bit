@@ -39,7 +39,6 @@ export class ComponentModel {
    * create an instance of a component from a plain object.
    */
   static from({ id, server, displayName, compositions }: ComponentModelProps) {
-    console.log(compositions);
     return new ComponentModel(id, displayName, server, Composition.fromArray(compositions));
   }
 

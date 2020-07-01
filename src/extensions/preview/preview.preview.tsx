@@ -69,7 +69,13 @@ export class Preview {
   static slots = [Slot.withType<PreviewType>()];
 
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
-    return new Preview(previewSlot);
+    const preview = new Preview(previewSlot);
+
+    window.addEventListener('hashchange', () => {
+      preview.render();
+    });
+
+    return preview;
   }
 }
 

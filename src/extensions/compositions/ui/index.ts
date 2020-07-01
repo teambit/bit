@@ -1,1 +1,1 @@
-export { ComponentComposition } from './composition';
+export { ComponentComposition } from './composition-preview';
