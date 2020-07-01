@@ -23,6 +23,7 @@ module.exports = {
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
     'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
@@ -48,6 +49,7 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
     // END ERRORS OF plugin:@typescript-eslint/recommended
 
     // ERRORS OF 'plugin:promise/recommended'
