@@ -1,3 +1,8 @@
+export type CompositionProps = {
+  identifier: string;
+  filepath: string;
+};
+
 export class Composition {
   constructor(
     /**
@@ -12,5 +17,11 @@ export class Composition {
 
   get displayName() {
     return this.identifier;
+  }
+
+  static fromArray(compositions: CompositionProps[]): Composition[] {
+    return compositions.map(composition => {
+      return new Composition(composition.identifier, composition.filepath);
+    });
   }
 }

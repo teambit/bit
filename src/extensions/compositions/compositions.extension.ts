@@ -1,3 +1,4 @@
+import { join } from 'path';
 /* eslint-disable import/no-dynamic-require */
 import { BundlerExtension } from '../bundler';
 import { Component, ComponentFactoryExt } from '../component';
@@ -7,10 +8,15 @@ import { PreviewExtension } from '../preview/preview.extension';
 import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
 import { GraphQLExtension } from '../graphql';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
+import { AbstractVinyl } from '../../consumer/component/sources';
+import { Workspace, WorkspaceExt } from '../workspace';
+import { SchemaExtension } from '../schema';
 
 export type CompositionsConfig = {
   /**
-   * regex for detection of documentation files
+   * regex for detection of composition files
    */
   extension: string;
 };
@@ -23,16 +29,25 @@ export class CompositionsExtension {
     /**
      * envs extension.
      */
-    private preview: PreviewExtension
+    private preview: PreviewExtension,
+
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace,
+
+    /**
+     * schema extension.
+     */
+    private schema: SchemaExtension
   ) {}
 
   /**
    * returns an array of doc file paths for a set of components.
    */
-  getCompositionFiles(components: Component[]): ComponentMap<string[]> {
-    return ComponentMap.as<string[]>(components, component => {
-      const files = component.state.filesystem.byRegex(/composition.ts/);
-      return files.map(file => file.path);
+  getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
+    return ComponentMap.as<AbstractVinyl[]>(components, component => {
+      return component.state.filesystem.byRegex(/composition.ts/);
     });
   }
 
@@ -41,50 +56,64 @@ export class CompositionsExtension {
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
 
-    return files.map(file => {
-      return {
-        [file]: this.computeCompositions(file)
-      };
+    return files.flatMap(file => {
+      return this.computeCompositions(component, file);
     });
   }
 
   async compositionsPreviewTarget(context: ExecutionContext) {
     const compositionsMap = this.getCompositionFiles(context.components);
     const template = await this.getTemplate(context);
+    const notEmpty = compositionsMap.filter(value => value.length !== 0);
+    const withPaths = notEmpty.map<string[]>(files => {
+      return files.map(file => file.path);
+    });
 
     const link = this.preview.writeLink(
       'compositions',
-      compositionsMap.filter(value => value.length !== 0),
+      withPaths.filter(value => value.length !== 0),
       template
     );
 
-    const targetFiles = this.flattenMap(compositionsMap.flattenValue());
+    const targetFiles = compositionsMap.toArray().flatMap(([, files]) => {
+      return files.map(file => file.path);
+    });
+
     return targetFiles.concat(link);
   }
 
-  private computeCompositions(modulePath: string) {
-    // eslint-disable-next-line global-require
-    const module = require(modulePath);
-    return Object.keys(module).map(identifier => {
-      return new Composition(identifier, modulePath);
-    });
-  }
+  private computeCompositions(component: Component, file: AbstractVinyl) {
+    // :TODO hacked for a specific file extension now until david will take care in the compiler.
+    const pathArray = file.path.split('.');
+    pathArray[pathArray.length - 1] = 'js';
 
-  private flattenMap(compositionsMap: string[][]) {
-    return compositionsMap.reduce((acc: string[], current) => {
-      acc = acc.concat(current);
-      return acc;
-    }, []);
+    const module = this.schema.parseModule(file.path);
+    return module.exports.map(exportModel => {
+      return new Composition(exportModel.identifier, file.relative);
+    });
   }
 
   private async getTemplate(context: ExecutionContext) {
     return context.env.getMounter();
   }
 
-  static dependencies = [BundlerExtension, PreviewExtension, GraphQLExtension, ComponentFactoryExt];
+  static dependencies = [
+    BundlerExtension,
+    PreviewExtension,
+    GraphQLExtension,
+    WorkspaceExt,
+    SchemaExtension,
+    ComponentFactoryExt
+  ];
 
-  static async provider([bundler, preview, graphql]: [BundlerExtension, PreviewExtension, GraphQLExtension]) {
-    const compositions = new CompositionsExtension(preview);
+  static async provider([bundler, preview, graphql, workspace, schema]: [
+    BundlerExtension,
+    PreviewExtension,
+    GraphQLExtension,
+    Workspace,
+    SchemaExtension
+  ]) {
+    const compositions = new CompositionsExtension(preview, workspace, schema);
 
     graphql.register(compositionsSchema(compositions));
     bundler.registerTarget({

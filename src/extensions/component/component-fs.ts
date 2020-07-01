@@ -25,7 +25,7 @@ export default class ComponentFS extends MemoryFS {
   /**
    * filter all component files by regex.
    */
-  byRegex(extension: RegExp) {
+  byRegex(extension: RegExp): AbstractVinyl[] {
     return this.files.filter(file => file.path.match(extension));
   }
 

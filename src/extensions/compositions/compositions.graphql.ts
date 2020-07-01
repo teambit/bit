@@ -12,7 +12,6 @@ export function compositionsSchema(compositions: CompositionsExtension): Schema 
       type Composition {
         filepath: String
         identifier: String
-        displayName: String
       }
     `,
     resolvers: {

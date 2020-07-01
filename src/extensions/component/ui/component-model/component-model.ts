@@ -1,7 +1,10 @@
+import { Composition, CompositionProps } from '../../../compositions/composition';
+
 export type ComponentModelProps = {
   id: string;
   server: ComponentServer;
   displayName: string;
+  compositions: CompositionProps[];
 };
 
 export type ComponentServer = {
@@ -24,17 +27,23 @@ export class ComponentModel {
     /**
      * the component server.
      */
-    readonly server: ComponentServer
+    readonly server: ComponentServer,
+
+    /**
+     * array of compositions
+     */
+    readonly compositions: Composition[]
   ) {}
 
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, server, displayName }: ComponentModelProps) {
-    return new ComponentModel(id, displayName, server);
+  static from({ id, server, displayName, compositions }: ComponentModelProps) {
+    console.log(compositions);
+    return new ComponentModel(id, displayName, server, Composition.fromArray(compositions));
   }
 
   static empty() {
-    return new ComponentModel('', '', { env: '', url: '' });
+    return new ComponentModel('', '', { env: '', url: '' }, []);
   }
 }

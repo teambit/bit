@@ -6,7 +6,8 @@ import harmony from '@teambit/harmony';
 ${defaultModule ? `const defaultModule = require('${defaultModule}'` : ''});
 
 linkModules('${prefix}', defaultModule, {
-  ${Array.from(componentMap.entries())
+  ${componentMap
+    .toArray()
     .map(([component, modulePaths]: any) => {
       return `'${component.id.toString()}': [${modulePaths.map(path => `require('${path}')`).join(', ')}]`;
     })

@@ -16,6 +16,19 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
   }
 
   /**
+   * map entries and return a new component map.
+   */
+  map<NewType>(predicate: (value: T) => NewType): ComponentMap<NewType> {
+    const tuples = this.toArray().map(([component, value]) => {
+      const newValue = predicate(value);
+      return [component.id.toString(), [component, newValue]];
+    });
+
+    // @ts-ignore :TODO understand why this type error is occurring.
+    return new ComponentMap(tuples);
+  }
+
+  /**
    * flatten values of all components into a single array.
    */
   flattenValue(): T[] {
@@ -33,8 +46,12 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
       return predicate(value);
     });
 
+    const asMap = tuples.map(([component, value]) => {
+      return [component.id.toString(), [component, value]];
+    });
+
     // @ts-ignore
-    return new ComponentMap(tuples);
+    return new ComponentMap(asMap);
   }
 
   /**
