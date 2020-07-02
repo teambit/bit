@@ -22,6 +22,7 @@ import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsule
 import logger from '../../logger/logger';
 import { CLIExtension } from '../cli';
 import { DEPENDENCIES_FIELDS } from '../../constants';
+import { Network } from './network';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -29,10 +30,6 @@ export type IsolatorDeps = [DependencyResolverExtension, CLIExtension];
 export type ListResults = {
   workspace: string;
   capsules: string[];
-};
-export type Network = {
-  capsules: CapsuleList;
-  components: Graph;
 };
 
 async function createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
@@ -141,10 +138,11 @@ export class IsolatorExtension {
       );
     });
 
-    return {
-      capsules: capsuleList,
-      components: graph
-    };
+    return new Network(
+      capsuleList,
+      graph,
+      seederIds.map(s => new ComponentID(s))
+    );
   }
   async list(consumer: Consumer): Promise<ListResults> {
     const workspacePath = consumer.getPath();

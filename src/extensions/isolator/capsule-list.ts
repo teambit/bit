@@ -23,4 +23,7 @@ export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsu
     const found = this.find(item => pathInCapsule.startsWith(item.capsule.wrkDir));
     return found ? found.id : null;
   }
+  getAllCapsules(): Capsule[] {
+    return this.map(c => c.capsule);
+  }
 }

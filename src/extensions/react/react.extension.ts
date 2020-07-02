@@ -5,6 +5,7 @@ import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compile, CompileExt } from '../compiler';
 import { TesterExtension } from '../tester';
+import { PkgExtension } from '../pkg';
 
 export type ReactConfig = {
   writeDist: boolean;
@@ -13,23 +14,32 @@ export type ReactConfig = {
 
 export class React {
   static id = '@teambit/react';
-  static dependencies = [Environments, LoggerExt, JestExtension, TypescriptExtension, CompileExt, TesterExtension];
+  static dependencies = [
+    Environments,
+    LoggerExt,
+    JestExtension,
+    TypescriptExtension,
+    CompileExt,
+    TesterExtension,
+    PkgExtension
+  ];
 
   // createTsCompiler(tsconfig: {}) {}
 
   setTsConfig() {}
 
   // @typescript-eslint/no-unused-vars
-  static provider([envs, logger, jest, ts, compile, tester]: [
+  static provider([envs, logger, jest, ts, compile, tester, pkg]: [
     Environments,
     Logger,
     JestExtension,
     TypescriptExtension,
     Compile,
-    TesterExtension
+    TesterExtension,
+    PkgExtension
   ]) {
     // support factories from harmony?
-    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.id), jest, ts, compile, tester));
+    envs.registerEnv(new ReactEnv(logger.createLogPublisher(this.id), jest, ts, compile, tester, pkg));
     return {};
   }
 }
