@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [[14.8.4-dev.1] - 2020-07-01]
+## [[14.8.4] - 2020-07-02](https://github.com/teambit/bit/releases/tag/v14.8.4)
 
 - add an option to not use cache when loading scope
 - do not use scope cache by default when loading scope programmatically
