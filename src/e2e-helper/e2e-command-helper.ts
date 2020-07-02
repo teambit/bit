@@ -223,7 +223,12 @@ export default class CommandHelper {
   createCapsuleHarmony(id: string): string {
     const output = this.runCmd(`bit capsule-create ${id} --json`);
     const capsules = JSON.parse(output);
-    return capsules[0].path;
+    const capsule = capsules.find(c => c.id === id);
+    if (!capsule)
+      throw new Error(
+        `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map(c => c.id).join(', ')}`
+      );
+    return capsule.path;
   }
 
   getCapsuleOfComponent(id: string) {

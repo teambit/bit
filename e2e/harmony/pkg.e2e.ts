@@ -73,10 +73,8 @@ describe('pkg extension', function() {
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
         helper.extensions.addExtensionToVariant('bar/foo', 'simple-config', config);
-        barFooCapsuleDir = helper.general.generateRandomTmpDirName();
-        isTypeCapsuleDir = helper.general.generateRandomTmpDirName();
-        helper.command.isolateComponentWithCapsule('bar/foo', barFooCapsuleDir);
-        helper.command.isolateComponentWithCapsule('utils/is-type', isTypeCapsuleDir);
+        barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
+        isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
       });
       it('should have the updated config in the package.json of the component with the defined extension in capsule', function() {
         const packageJson = helper.packageJson.read(barFooCapsuleDir);

@@ -210,7 +210,9 @@ export default class ComponentWriter {
   }
 
   private getArtifactsDir() {
-    if (!this.consumer || this.component.isLegacy) return null;
+    // @todo: decide whether new components are allowed to be imported to a legacy workspace
+    // if not, remove the "this.consumer.isLegacy" part in the condition below
+    if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
     return getNodeModulesPathOfComponent(
       this.consumer.config._bindingPrefix,
