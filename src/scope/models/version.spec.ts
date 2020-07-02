@@ -346,6 +346,27 @@ describe('Version', () => {
         delete version.dists;
         expect(validateFunc).to.throw('the dependencies should not have relativePaths');
       });
+      it('should throw for having relativePaths on any other version other than legacy', () => {
+        version.schema = '2.0.0';
+        delete version.compiler;
+        delete version.dists;
+        expect(validateFunc).to.throw('the dependencies should not have relativePaths');
+      });
+      it('should not throw for having relativePaths on legacy', () => {
+        version.schema = SchemaName.Legacy;
+        delete version.compiler;
+        delete version.dists;
+        expect(validateFunc).to.not.throw();
+      });
+      it('should throw for having customResolvedPaths on Harmony', () => {
+        delete version.compiler;
+        delete version.dists;
+        version.dependencies.dependencies[0].relativePaths = [];
+        version.customResolvedPaths = ['something'];
+        expect(validateFunc).to.throw(
+          'the customResolvedPaths field is cannot have values according to schema "1.0.0"'
+        );
+      });
       it('should not throw when all is good', () => {
         delete version.compiler;
         delete version.dists;
