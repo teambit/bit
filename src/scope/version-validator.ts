@@ -305,7 +305,7 @@ ${duplicationStr}`);
   if (version.isLegacy) {
     // mainly to make sure that all Harmony components are saved with schema
     // if they don't have schema, they'll fail on this test
-    if (version.extensions && version.extensions.some(e => e.artifacts)) {
+    if (version.extensions && version.extensions.some(e => e.artifacts && e.artifacts.length)) {
       throw new VersionInvalid(
         `${message}, the extensions field should not have "artifacts" prop according to schema "${version.schema}"`
       );
