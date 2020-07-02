@@ -217,6 +217,15 @@ export default class CommandHelper {
     return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
+  /**
+   * returns the capsule dir
+   */
+  createCapsuleHarmony(id: string): string {
+    const output = this.runCmd(`bit capsule-create ${id} --json`);
+    const capsules = JSON.parse(output);
+    return capsules[0].path;
+  }
+
   getCapsuleOfComponent(id: string) {
     const capsulesJson = this.runCmd('bit capsule-list -j');
     const capsules = JSON.parse(capsulesJson);
