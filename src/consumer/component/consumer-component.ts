@@ -69,7 +69,7 @@ import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import IncorrectRootDir from './exceptions/incorrect-root-dir';
 import { ExtensionDataList } from '../config/extension-data';
-import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA } from './component-schema';
+import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA, SchemaName } from './component-schema';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -482,6 +482,10 @@ export default class Component {
    */
   get ignoreSharedDir(): boolean {
     return !isSchemaSupport(SchemaFeature.sharedDir, this.schema);
+  }
+
+  get isLegacy(): boolean {
+    return !this.schema || this.schema === SchemaName.Legacy;
   }
 
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {

@@ -24,6 +24,7 @@ import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
 import { PackageManagerResults } from '../npm-client/npm-client';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -80,6 +81,7 @@ export default class Isolator {
     const loaderPrefix = `isolating component - ${componentId.name}`;
     loader.setText(loaderPrefix);
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
+    throwForNonLegacy(componentWithDependencies.component.isLegacy, 'evn/Isolator.isolate');
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {

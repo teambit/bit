@@ -26,3 +26,9 @@ export function isSchemaSupport(feature: SchemaFeature, schema: string = SchemaN
   if (!schemas[schema]) throw new Error(`schemas doesn't include "${schema}"`);
   return schemas[schema].includes(feature);
 }
+
+export function throwForNonLegacy(isLegacy: boolean, functionName: string) {
+  if (!isLegacy) {
+    throw new Error(`${functionName} should not be running on a non-legacy component`);
+  }
+}
