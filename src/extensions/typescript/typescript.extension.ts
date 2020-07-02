@@ -6,6 +6,9 @@ export class TypescriptExtension {
   createCompiler(tsConfig: Record<string, any>) {
     return new TypescriptCompiler(tsConfig);
   }
+  static getPackageJsonProps() {
+    return { main: 'dist/{main}.js' };
+  }
   static provider() {
     return new TypescriptExtension();
   }

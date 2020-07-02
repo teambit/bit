@@ -71,7 +71,7 @@ export async function exportMany({
   codemod: boolean;
   allVersions: boolean;
   idsWithFutureScope: BitIds;
-}): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+}): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
   if (includeDependencies) {
@@ -92,6 +92,7 @@ export async function exportMany({
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
   return {
+    newIdsOnRemote: R.flatten(results.map(r => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
   };
@@ -99,7 +100,7 @@ export async function exportMany({
   async function exportIntoRemote(
     remoteNameStr: string,
     bitIds: BitIds
-  ): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+  ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
@@ -164,10 +165,12 @@ export async function exportMany({
     idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
+    const newIdsOnRemote = exportedIds.map(id => BitId.parse(id, true));
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(undefined));
+    const idsWithRemoteScope: BitId[] = newIdsOnRemote.map(id => id.changeVersion(undefined));
     const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
+      newIdsOnRemote,
       exported: idsWithRemoteScopeUniq,
       updatedLocally: BitIds.fromArray(
         idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))

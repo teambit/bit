@@ -1,5 +1,5 @@
 import { Component, ComponentID } from '../component';
-import { Network } from '../isolator/isolator.extension';
+import { Network } from '../isolator';
 import { ExecutionContext } from '../environments';
 
 export interface BuildContext extends ExecutionContext {

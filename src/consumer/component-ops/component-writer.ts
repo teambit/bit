@@ -20,6 +20,7 @@ import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Artifact } from '../component/sources/artifact';
+import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -247,7 +248,12 @@ export default class ComponentWriter {
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
     if (!this.component.extensionsAddedConfig || R.isEmpty(this.component.extensionsAddedConfig)) return;
     const valuesToMerge = R.omit(specialKeys, this.component.extensionsAddedConfig);
-    packageJson.mergePackageJsonObject(valuesToMerge);
+    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
+      const value = replacePlaceHolderWithComponentValue(this.component, valuesToMerge[current]);
+      acc[current] = value;
+      return acc;
+    }, {});
+    packageJson.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   /**
