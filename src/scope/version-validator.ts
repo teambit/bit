@@ -15,6 +15,7 @@ import { DEPENDENCIES_FIELDS } from '../constants';
 import GeneralError from '../error/general-error';
 import { PathLinux } from '../utils/path';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
+import { SchemaName } from '../consumer/component/component-schema';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -269,7 +270,7 @@ ${duplicationStr}`);
       );
     }
   });
-
+  const schema = version.schema || SchemaName.Legacy;
   if (!version.isLegacy) {
     const fieldsForSchemaCheck = ['compiler', 'tester', 'dists', 'mainDistFile'];
     const fieldsForSchemaCheckNotEmpty = [
@@ -279,15 +280,13 @@ ${duplicationStr}`);
     ];
     fieldsForSchemaCheck.forEach(field => {
       if (version[field]) {
-        throw new VersionInvalid(
-          `${message}, the ${field} field is not permitted according to schema "${version.schema}"`
-        );
+        throw new VersionInvalid(`${message}, the ${field} field is not permitted according to schema "${schema}"`);
       }
     });
     fieldsForSchemaCheckNotEmpty.forEach(field => {
       if (version[field] && !R.isEmpty(version[field])) {
         throw new VersionInvalid(
-          `${message}, the ${field} field is cannot have values according to schema "${version.schema}"`
+          `${message}, the ${field} field is cannot have values according to schema "${schema}"`
         );
       }
     });
@@ -296,7 +295,7 @@ ${duplicationStr}`);
       deps.dependencies.forEach(dep => {
         if (dep.relativePaths.length) {
           throw new VersionInvalid(
-            `${message}, the ${dependenciesField} should not have relativePaths according to schema "${version.schema}"`
+            `${message}, the ${dependenciesField} should not have relativePaths according to schema "${schema}"`
           );
         }
       });
@@ -307,7 +306,7 @@ ${duplicationStr}`);
     // if they don't have schema, they'll fail on this test
     if (version.extensions && version.extensions.some(e => e.artifacts && e.artifacts.length)) {
       throw new VersionInvalid(
-        `${message}, the extensions field should not have "artifacts" prop according to schema "${version.schema}"`
+        `${message}, the extensions field should not have "artifacts" prop according to schema "${schema}"`
       );
     }
   }

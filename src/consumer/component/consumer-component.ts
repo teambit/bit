@@ -69,7 +69,7 @@ import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import IncorrectRootDir from './exceptions/incorrect-root-dir';
 import { ExtensionDataList } from '../config/extension-data';
-import { SchemaName, isSchemaSupport, SchemaFeature } from './component-schema';
+import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA } from './component-schema';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -1186,7 +1186,7 @@ export default class Component {
     const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
-      return consumer.isLegacy ? undefined : SchemaName.Harmony;
+      return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
     };
 
     return new Component({

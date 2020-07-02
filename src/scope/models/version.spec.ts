@@ -4,6 +4,7 @@ import Version from '../../scope/models/version';
 import versionFixture from '../../../fixtures/version-model-object.json';
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
 import GeneralError from '../../error/general-error';
+import { SchemaName } from '../../consumer/component/component-schema';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
@@ -328,6 +329,29 @@ describe('Version', () => {
     it('should show the original error from package-json-validator when overrides has a package.json field that is non-compliant npm value', () => {
       version.overrides = { scripts: false };
       expect(validateFunc).to.throw('Type for field scripts, was expected to be object, not boolean');
+    });
+    describe('Harmony schema', () => {
+      beforeEach(() => {
+        version.schema = SchemaName.Harmony;
+      });
+      it('should throw for having compiler set on Harmony', () => {
+        expect(validateFunc).to.throw('the compiler field is not permitted according to schema "1.0.0"');
+      });
+      it('should throw for having dists set on Harmony', () => {
+        delete version.compiler;
+        expect(validateFunc).to.throw('the dists field is not permitted according to schema "1.0.0"');
+      });
+      it('should throw for having relativePaths on Harmony', () => {
+        delete version.compiler;
+        delete version.dists;
+        expect(validateFunc).to.throw('the dependencies should not have relativePaths');
+      });
+      it('should not throw when all is good', () => {
+        delete version.compiler;
+        delete version.dists;
+        version.dependencies.dependencies[0].relativePaths = [];
+        expect(validateFunc).to.not.throw();
+      });
     });
   });
 });
