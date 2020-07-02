@@ -843,6 +843,7 @@ describe('bit import', function() {
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
       helper.fixtures.addComponentBarFoo();
+      helper.command.expectStatusToNotHaveIssues();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();

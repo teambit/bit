@@ -268,6 +268,13 @@ export default class CommandHelper {
     });
   }
 
+  expectStatusToNotHaveIssues() {
+    const statusJson = this.statusJson();
+    ['componentsWithMissingDeps', 'invalidComponents'].forEach(key => {
+      expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
+    });
+  }
+
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
     return status.stagedComponents.includes(id);
