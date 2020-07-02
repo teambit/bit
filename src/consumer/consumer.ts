@@ -637,7 +637,7 @@ export default class Consumer {
     if (this.isLegacy) {
       return components;
     }
-    let shouldReloadComponents;
+    let shouldReloadComponents = false;
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
     const componentsWithCustomModuleResolution: string[] = [];

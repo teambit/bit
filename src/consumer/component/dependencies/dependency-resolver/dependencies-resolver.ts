@@ -66,8 +66,9 @@ export type Issues = {
   missingDependenciesOnFs: {};
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
+  customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
   relativeComponents: {};
-  relativeComponentsAuthored: RelativeComponentsAuthoredIssues;
+  relativeComponentsAuthored: RelativeComponentsAuthoredIssues; // invalid on Harmony
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
@@ -123,6 +124,7 @@ export default class DependencyResolver {
       missingDependenciesOnFs: {},
       missingLinks: {},
       missingCustomModuleResolutionLinks: {},
+      customModuleResolutionUsed: {},
       relativeComponents: {},
       relativeComponentsAuthored: {},
       parseErrors: {},
@@ -225,11 +227,30 @@ export default class DependencyResolver {
     });
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
+    this.addCustomResolvedIssues();
     this.combineIssues();
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
+  }
+
+  addCustomResolvedIssues() {
+    if (this.consumer.isLegacy) return;
+    const deps: Dependency[] = [...this.allDependencies.dependencies, ...this.allDependencies.devDependencies];
+    const customModulesDeps = deps.filter(dep => dep.relativePaths.some(r => r.isCustomResolveUsed));
+    if (customModulesDeps.length) {
+      const importSources = customModulesDeps.reduce((acc, current) => {
+        current.relativePaths.forEach(relativePath => {
+          if (relativePath.isCustomResolveUsed) {
+            // @ts-ignore
+            acc[relativePath.importSource] = current.id.toStringWithoutVersion();
+          }
+        });
+        return acc;
+      }, {});
+      this.issues.customModuleResolutionUsed = importSources;
+    }
   }
 
   removeIgnoredPackagesByOverrides() {
