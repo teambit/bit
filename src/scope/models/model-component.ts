@@ -440,6 +440,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
+      schema: version.schema,
       extensions
     });
     if (manipulateDirData) {
