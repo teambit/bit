@@ -111,6 +111,8 @@ describe('publish functionality', function() {
   });
   describe('with custom package name', function() {
     let randomStr: string;
+    let publishOutput: string;
+    let pkgName: string;
     before(async function() {
       if (!supportNpmCiRegistryTesting) this.skip();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -124,21 +126,39 @@ describe('publish functionality', function() {
       await npmCiRegistry.init();
 
       helper.command.tagAllComponents();
-      helper.command.publish('ui/button', '--allow-staged');
+      publishOutput = helper.command.publish('ui/button', '--allow-staged');
+      pkgName = `react.${randomStr}.ui.button`;
     });
     after(() => {
       if (!supportNpmCiRegistryTesting) return;
       npmCiRegistry.destroy();
     });
-    it('should publish them successfully and be able to consume them by installing the packages', () => {
-      const pkgName = `react.${randomStr}.ui.button`;
-      helper.scopeHelper.reInitLocalScope();
-      helper.npm.initNpm();
-      npmCiRegistry.installPackage(pkgName);
-
-      helper.fs.outputFile('app.js', `require('${pkgName}');\n`);
-      const output = helper.command.runCmd('node app.js');
-      expect(output.trim()).to.be.equal('hello button');
+    it('should publish them successfully', () => {
+      expect(publishOutput).to.have.string(pkgName);
+    });
+    describe('installing the component as a package', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.npm.initNpm();
+        npmCiRegistry.installPackage(pkgName);
+      });
+      it('should be able to consume them by installing the packages', () => {
+        helper.fs.outputFile('app.js', `require('${pkgName}');\n`);
+        const output = helper.command.runCmd('node app.js');
+        expect(output.trim()).to.be.equal('hello button');
+      });
+      // @todo: make sure it gets also the scope-name
+      describe('requiring the package from another component', () => {
+        before(() => {
+          helper.fs.outputFile('bar/foo.js', `const pkg = require('${pkgName}'); console.log(pkg);`);
+          helper.command.addComponent('bar');
+        });
+        it('should recognize that the package is a component', () => {
+          const show = helper.command.showComponentParsed('bar');
+          expect(show.dependencies).to.have.lengthOf(1);
+          expect(show.dependencies[0].id).equal('ui/button@0.0.1');
+        });
+      });
     });
   });
   describe('with invalid package name', () => {

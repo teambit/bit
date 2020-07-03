@@ -1,5 +1,4 @@
-import { BitId } from '../../../../../bit-id';
-import { PathLinuxAbsolute } from '../../../../../utils/path';
+import { ResolvedPackageData } from '../../../../../utils/packages';
 
 /**
  * Import Specifier data.
@@ -38,22 +37,11 @@ export type LinkFile = {
 
 type MissingType = 'files' | 'packages' | 'bits';
 
-export interface ResolvedNodePackage {
-  fullPath?: PathLinuxAbsolute;
-  name: string;
-  // Version from the package.json of the package itself
-  concreteVersion?: string;
-  // Version from the dependent package.json
-  versionUsedByDependent?: string;
-  // add the component id in case it's a bit component
-  componentId?: BitId;
-}
-
 export type DependenciesResults = {
   files?: FileObject[];
   packages?: { [packageName: string]: string }; // pkgName: pkgVersion
   unidentifiedPackages?: string[];
-  bits?: Array<ResolvedNodePackage>;
+  bits?: ResolvedPackageData[];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
   missing?: { [key in MissingType]: string[] };
 };
@@ -69,7 +57,7 @@ export type ResolveModulesConfig = {
 };
 
 export type DependencyTreeParams = {
-  baseDir: string;
+  componentDir: string;
   workspacePath: string;
   filePaths: string[];
   bindingPrefix: string;
