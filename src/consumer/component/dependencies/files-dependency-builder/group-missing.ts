@@ -1,8 +1,6 @@
 import R from 'ramda';
-import { partition } from 'lodash';
 import { processPath } from './generate-tree-madge';
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
-import PackageJson from '../../package-json';
 import {
   resolvePackagePath,
   resolvePackageData,
@@ -41,73 +39,39 @@ export class GroupMissing {
       packages: {},
       bits: []
     };
-    const packageJson = PackageJson.findPackage(this.componentDir);
-    missingGroups.forEach(group => this.processMissingGroup(group, packageJson, foundPackages, missingGroups));
+    missingGroups.forEach(group => this.processMissingGroup(group, foundPackages));
 
     return { missingGroups, foundPackages };
   }
 
-  private processMissingGroup(
-    group: MissingGroupItem,
-    packageJson: {},
-    foundPackages: FoundPackages,
-    missingGroups: MissingGroupItem[]
-  ) {
+  private processMissingGroup(group: MissingGroupItem, foundPackages: FoundPackages) {
+    if (!group.packages) return;
     const missingPackages: string[] = [];
-    if (group.packages) {
-      group.packages.forEach(packageName => {
-        // Don't try to resolve the same package twice
-        if (missingPackages.includes(packageName)) return;
-        const resolvedPath = resolvePackagePath(packageName, this.componentDir, this.workspacePath);
-        if (!resolvedPath) {
-          missingPackages.push(packageName);
-          return;
-        }
-        const resolvedPackageData = resolvePackageData(this.componentDir, resolvedPath);
-        if (!resolvedPackageData) {
-          missingPackages.push(packageName);
-          return;
-        }
-        // if the package is actually a component add it to the components (bits) list
-        if (resolvedPackageData.componentId) {
-          foundPackages.bits.push(resolvedPackageData);
-        } else {
-          const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
-          if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
-          const packageWithVersion = {
-            [resolvedPackageData.name]: version
-          };
-          Object.assign(foundPackages.packages, packageWithVersion);
-        }
-      });
-    }
-    // this was disabled since it cause these bugs:
-    // (as part of 9ddeb61aa29c170cd58df0c2cc1cc30db1ebded8 of bit-javascript)
-    // https://github.com/teambit/bit/issues/635
-    // https://github.com/teambit/bit/issues/690
-    // later it re-enabled by this commit (d192a295632255dba9f0d62232fb237feeb8f33a of bit-javascript)
-    // now with Harmony, it makes sense to disable it because if we can't find the package.json of
-    // that package, we have no way to know whether this is a package or a component. as a reminder,
-    // with Harmony it's possible to have a totally different package-name than the component-id
-    // and the only way to know the component-id is by loading the package.json and reading the
-    // component-id data.
-    // if (packageJson) {
-    //   const result = findPackagesInPackageJson(packageJson, missingPackages);
-    //   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    //   missingGroups.packages = result.missingPackages;
-    //   Object.assign(foundPackages.packages, result.foundPackages);
-
-    //   if (group.bits) {
-    //     const foundBits = findPackagesInPackageJson(packageJson, group.bits);
-    //     R.forEachObjIndexed((version, name) => {
-    //       const resolvedFoundBit: ResolvedPackageData = {
-    //         name,
-    //         versionUsedByDependent: version
-    //       };
-    //       foundPackages.bits.push(resolvedFoundBit);
-    //     }, foundBits.foundPackages);
-    //   }
-    // }
+    group.packages.forEach(packageName => {
+      // Don't try to resolve the same package twice
+      if (missingPackages.includes(packageName)) return;
+      const resolvedPath = resolvePackagePath(packageName, this.componentDir, this.workspacePath);
+      if (!resolvedPath) {
+        missingPackages.push(packageName);
+        return;
+      }
+      const resolvedPackageData = resolvePackageData(this.componentDir, resolvedPath);
+      if (!resolvedPackageData) {
+        missingPackages.push(packageName);
+        return;
+      }
+      // if the package is actually a component add it to the components (bits) list
+      if (resolvedPackageData.componentId) {
+        foundPackages.bits.push(resolvedPackageData);
+      } else {
+        const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
+        if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
+        const packageWithVersion = {
+          [resolvedPackageData.name]: version
+        };
+        Object.assign(foundPackages.packages, packageWithVersion);
+      }
+    });
   }
 
   /**
@@ -127,39 +91,4 @@ export class GroupMissing {
       )
     );
   }
-}
-
-interface PackageDependency {
-  [dependencyId: string]: string;
-}
-
-interface PackageDependenciesTypes {
-  dependencies?: PackageDependency;
-  devDependencies?: PackageDependency;
-  peerDependencies?: PackageDependency;
-}
-interface FindPackagesResult {
-  foundPackages: {
-    [packageName: string]: PackageDependenciesTypes;
-  };
-  missingPackages: string[];
-}
-
-/**
- * Resolve package dependencies from package.json according to package names
- *
- * @param {Object} packageJson
- * @param {string []} packagesNames
- * @returns new object with found and missing
- */
-function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNames: string[]): FindPackagesResult {
-  const { dependencies, devDependencies, peerDependencies } = packageJson;
-  const foundPackages = {};
-  const mergedDependencies = Object.assign({}, dependencies, devDependencies, peerDependencies);
-  if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
-    const [foundPackagesPartition, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
-    foundPackagesPartition.forEach(pack => (foundPackages[pack] = mergedDependencies[pack]));
-    return { foundPackages, missingPackages };
-  }
-  return { foundPackages: {}, missingPackages: packagesNames };
 }
