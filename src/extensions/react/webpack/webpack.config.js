@@ -66,7 +66,7 @@ module.exports = function(workspaceDir) {
       ]
     },
     resolve: {
-      // @hack - this is for resolving react from env and not from consuming project
+      // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom')

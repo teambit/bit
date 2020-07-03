@@ -1,19 +1,23 @@
+import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
+import { PubSub } from 'graphql-subscriptions';
 import graphqlHTTP from 'express-graphql';
+import { execute, subscribe } from 'graphql';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { GraphQLModule } from '@graphql-modules/core';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { Schema } from './schema';
+import { LoggerExt, Logger, LogPublisher } from '../logger';
 
 export type GraphQLConfig = {
   port: number;
+  subscriptionsPort: number;
 };
 
 export type SchemaRegistry = SlotRegistry<Schema>;
 
 export class GraphQLExtension {
-  static dependencies = [];
-
   constructor(
     /**
      * extension config
@@ -28,7 +32,17 @@ export class GraphQLExtension {
     /**
      * harmony context.
      */
-    private context: Harmony
+    private context: Harmony,
+
+    /**
+     * graphql pubsub. allows to emit events to clients.
+     */
+    readonly pubsub: PubSub,
+
+    /**
+     * logger extension.
+     */
+    readonly logger: LogPublisher
   ) {}
 
   private modules = new Map<string, GraphQLModule>();
@@ -38,6 +52,8 @@ export class GraphQLExtension {
    */
   async listen(port?: number) {
     const schema = this.createRootModule();
+    const serverPort = port || this.config.port;
+    const subscriptionsPath = '/subscriptions';
 
     const app = express();
     app.use(cors());
@@ -49,15 +65,34 @@ export class GraphQLExtension {
       })
     );
 
-    app.listen(port || this.config.port);
+    const subscriptionServer = createServer(app);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const subServer = new SubscriptionServer(
+      {
+        execute,
+        subscribe,
+        schema: schema.schema
+      },
+      {
+        server: subscriptionServer,
+        path: subscriptionsPath
+      }
+    );
+
+    subscriptionServer.listen(serverPort, () => {
+      this.logger.info(`API Server over HTTP is now running on http://localhost:${serverPort}`);
+      this.logger.info(
+        `API Server over web socket with subscriptions is now running on ws://localhost:${serverPort}/${subscriptionsPath}`
+      );
+    });
   }
 
   /**
    * get the root schema.
    */
   getSchema() {
-    const modules = this.moduleSlot.values();
-    return this.createRootModule(modules);
+    return this.createRootModule();
   }
 
   /**
@@ -109,13 +144,23 @@ export class GraphQLExtension {
       .filter(module => !!module);
   }
 
+  static id = '@teambit/graphql';
+
   static slots = [Slot.withType<Schema>()];
 
   static defaultConfig = {
     port: 4000
   };
 
-  static async provider(deps, config: GraphQLConfig, [moduleSlot]: [SchemaRegistry], context: Harmony) {
-    return new GraphQLExtension(config, moduleSlot, context);
+  static dependencies = [LoggerExt];
+
+  static async provider(
+    [loggerFactory]: [Logger],
+    config: GraphQLConfig,
+    [moduleSlot]: [SchemaRegistry],
+    context: Harmony
+  ) {
+    const logger = loggerFactory.createLogPublisher(GraphQLExtension.id);
+    return new GraphQLExtension(config, moduleSlot, context, new PubSub(), logger);
   }
 }
