@@ -11,7 +11,7 @@ import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import Dependency from '../dependency';
 import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
-import { resolveModulePath, resolveNodePackage } from '../files-dependency-builder';
+import { resolvePackagePath, resolvePackageData } from '../../../../utils/packages';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -112,8 +112,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   /**
-   * the logic of finding the dependency version in the package.json is mostly done in the driver
-   * resolveNodePackage method.
+   * the logic of finding the dependency version in the package.json is mostly done in
+   * resolvePackageData function.
    * it first searches in the dependent package.json and propagate up to the consumer root, if not
    * found it goes to the dependency package.json.
    */
@@ -127,10 +127,9 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = resolveModulePath(packageName, basePath, consumerPath);
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageObject = resolveNodePackage(basePath, modulePath);
+    const packageObject = resolvePackageData(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
     const version = packageObject[packageId];

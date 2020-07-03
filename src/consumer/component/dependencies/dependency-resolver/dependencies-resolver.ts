@@ -163,7 +163,7 @@ export default class DependencyResolver {
     const allFiles = [...nonTestsFiles, ...testsFiles];
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
-      baseDir: bitDir,
+      componentDir: bitDir,
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
@@ -773,9 +773,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.packages)) return;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingPackages = missing.packages.filter(
         pkg => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
@@ -796,9 +794,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.bits)) return;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();
