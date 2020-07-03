@@ -91,23 +91,23 @@ export class GroupMissing {
     // with Harmony it's possible to have a totally different package-name than the component-id
     // and the only way to know the component-id is by loading the package.json and reading the
     // component-id data.
-    if (packageJson) {
-      const result = findPackagesInPackageJson(packageJson, missingPackages);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      missingGroups.packages = result.missingPackages;
-      Object.assign(foundPackages.packages, result.foundPackages);
+    // if (packageJson) {
+    //   const result = findPackagesInPackageJson(packageJson, missingPackages);
+    //   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    //   missingGroups.packages = result.missingPackages;
+    //   Object.assign(foundPackages.packages, result.foundPackages);
 
-      if (group.bits) {
-        const foundBits = findPackagesInPackageJson(packageJson, group.bits);
-        R.forEachObjIndexed((version, name) => {
-          const resolvedFoundBit: ResolvedPackageData = {
-            name,
-            versionUsedByDependent: version
-          };
-          foundPackages.bits.push(resolvedFoundBit);
-        }, foundBits.foundPackages);
-      }
-    }
+    //   if (group.bits) {
+    //     const foundBits = findPackagesInPackageJson(packageJson, group.bits);
+    //     R.forEachObjIndexed((version, name) => {
+    //       const resolvedFoundBit: ResolvedPackageData = {
+    //         name,
+    //         versionUsedByDependent: version
+    //       };
+    //       foundPackages.bits.push(resolvedFoundBit);
+    //     }, foundBits.foundPackages);
+    //   }
+    // }
   }
 
   /**
