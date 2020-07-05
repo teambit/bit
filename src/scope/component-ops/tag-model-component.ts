@@ -23,6 +23,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
+import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
@@ -256,6 +257,7 @@ export default (async function tagModelComponent({
 
   // go through all components and find the future versions for them
   await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
+  setCurrentSchema(componentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
@@ -298,3 +300,10 @@ export default (async function tagModelComponent({
   await scope.objects.persist();
   return { taggedComponents, autoTaggedResults };
 });
+
+function setCurrentSchema(components: Component[], consumer: Consumer) {
+  if (consumer.isLegacy) return;
+  components.forEach(component => {
+    component.schema = CURRENT_SCHEMA;
+  });
+}

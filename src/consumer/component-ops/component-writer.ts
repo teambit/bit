@@ -20,6 +20,7 @@ import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Artifact } from '../component/sources/artifact';
+import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -211,7 +212,9 @@ export default class ComponentWriter {
   }
 
   private getArtifactsDir() {
-    if (!this.consumer || this.consumer.isLegacy) return null;
+    // @todo: decide whether new components are allowed to be imported to a legacy workspace
+    // if not, remove the "this.consumer.isLegacy" part in the condition below
+    if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
     return getNodeModulesPathOfComponent(
       this.consumer.config._bindingPrefix,
@@ -249,7 +252,12 @@ export default class ComponentWriter {
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
     if (!this.component.extensionsAddedConfig || R.isEmpty(this.component.extensionsAddedConfig)) return;
     const valuesToMerge = R.omit(specialKeys, this.component.extensionsAddedConfig);
-    packageJson.mergePackageJsonObject(valuesToMerge);
+    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
+      const value = replacePlaceHolderWithComponentValue(this.component, valuesToMerge[current]);
+      acc[current] = value;
+      return acc;
+    }, {});
+    packageJson.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   /**

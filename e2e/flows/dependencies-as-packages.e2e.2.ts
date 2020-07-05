@@ -376,10 +376,10 @@ chai.use(require('chai-fs'));
           before(() => {
             helper.fs.deletePath('components/bar/foo/node_modules/@ci');
           });
-          it('bit status should show not show it as untracked components', () => {
+          it('bit status should show it as missing deps not as untracked', () => {
             const statusJson = helper.command.statusJson();
             expect(statusJson.invalidComponents).to.have.lengthOf(0);
-            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(0);
+            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(1);
             const status = helper.command.status();
             const statusWithoutLinebreaks = status.replace(/\n/g, '');
             expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);

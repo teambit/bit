@@ -1,7 +1,5 @@
 import ConsumerComponent from '../../consumer/component';
 import { Capsule } from './capsule';
-import { getComponentLinks } from '../../links/link-generator';
-import { getManipulateDirForComponentWithDependencies } from '../../consumer/component-ops/manipulate-dir';
 
 import { ComponentWithDependencies } from '../../scope';
 import ManyComponentsWriter, { ManyComponentsWriterParams } from '../../consumer/component-ops/many-components-writer';
@@ -62,18 +60,8 @@ export default async function writeComponentsToCapsules(
     packageManager,
     applyExtensionsAddedConfig: true
   };
-  componentsWithDependencies.map(cmp => normalizeComponentDir(cmp));
   const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
   await manyComponentsWriter._populateComponentsFilesToWrite();
-  componentsWithDependencies.forEach(componentWithDependencies => {
-    const links = getComponentLinks({
-      component: componentWithDependencies.component,
-      dependencies: componentWithDependencies.allDependencies,
-      createNpmLinkFiles: true,
-      bitMap: manyComponentsWriter.bitMap
-    });
-    componentWithDependencies.component.dataToPersist.addManyFiles(links.files);
-  });
   // write data to capsule
   await Promise.all(
     manyComponentsWriter.writtenComponents.map(async componentToWrite => {
@@ -83,12 +71,4 @@ export default async function writeComponentsToCapsules(
     })
   );
   return manyComponentsWriter.writtenComponents;
-}
-
-function normalizeComponentDir(componentWithDependencies: ComponentWithDependencies) {
-  const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
-  const manipulateDirData = getManipulateDirForComponentWithDependencies(componentWithDependencies);
-  allComponents.forEach(component => {
-    component.stripOriginallySharedDir(manipulateDirData);
-  });
 }

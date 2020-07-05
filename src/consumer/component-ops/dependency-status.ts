@@ -9,7 +9,7 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
   const tree = await getDependencyTree({
-    baseDir: consumerPath,
+    componentDir: consumerPath,
     workspacePath: consumerPath,
     filePaths: paths,
     bindingPrefix: DEFAULT_BINDINGS_PREFIX,
