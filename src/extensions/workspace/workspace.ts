@@ -34,6 +34,7 @@ export type EjectConfResult = {
 
 export type EjectConfOptions = {
   propagate?: boolean;
+  override?: boolean;
 };
 
 /**
@@ -177,7 +178,7 @@ export default class Workspace implements ComponentHost {
       throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
     }
     const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
-    await componentConfigFile.write(componentDir);
+    await componentConfigFile.write(componentDir, { override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir)
     };

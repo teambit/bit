@@ -8,10 +8,15 @@ import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
 import { PathOsBasedAbsolute } from '../../../utils/path';
 import { Consumer } from '../../../consumer';
+import GeneralError from '../../../error/general-error';
 
 interface ComponentConfigFileOptions {
   indent: number;
   newLine: '\r\n' | '\n' | undefined;
+}
+
+interface WriteConfigFileOptions {
+  override?: boolean;
 }
 
 interface ComponentConfigFileJson {
@@ -52,9 +57,13 @@ export class ComponentConfigFile {
     return path.join(componentRootFolder, COMPONENT_CONFIG_FILE_NAME);
   }
 
-  async write(componentDir: string): Promise<void> {
+  async write(componentDir: string, options: WriteConfigFileOptions = {}): Promise<void> {
     const json = this.toJson();
     const filePath = ComponentConfigFile.composePath(componentDir);
+    const isExist = await fs.pathExists(filePath);
+    if (isExist && !options.override) {
+      throw new GeneralError(`config file at ${filePath} already exist. use override in case you want to override it`);
+    }
     return fs.writeJsonSync(filePath, json, { spaces: this.options.indent, EOL: this.options.newLine });
   }
 

@@ -12,7 +12,10 @@ export default class EjectConfCmd implements Command {
   alias = '';
   group = 'component';
   shortDescription = 'ejecting components configuration';
-  options = [['p', 'propagate [boolean]', 'mark propagate true in the config file']] as CommandOptions;
+  options = [
+    ['p', 'propagate [boolean]', 'mark propagate true in the config file'],
+    ['o', 'override [boolean]', 'override file if exist']
+  ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 
