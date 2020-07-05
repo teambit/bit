@@ -10,8 +10,10 @@ export class DocsPreview {
 
   render(componentId: string, modules: any) {
     if (!modules.componentMap[componentId]) {
+      modules.mainModule.default();
       return;
     }
+
     // only one doc file is supported.
     modules.mainModule.default(modules.componentMap[componentId][0]);
   }
