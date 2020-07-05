@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import classNames from 'classnames';
 import { NavLink } from 'react-router-dom';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
@@ -43,33 +43,25 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
     </div>
   );
 }
-export class ComponentView extends Component<TreeNodeProps> {
-  static contextType = ComponentTreeContext;
-  // context!: IComponentTreeContext;
 
-  // handleClick = () => {
-  //   const { node } = this.props;
-  //   this.context.onSelect(node.id);
-  // };
+export function ComponentView(props: TreeNodeProps) {
+  const { node } = props;
+  const { onSelect } = useContext(ComponentTreeContext);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+      onSelect && onSelect(node.id, event);
+    },
+    [onSelect, node.id]
+  );
 
-  // private get isSelected() {
-  //   const { node } = this.props;
-  //   const { selected } = this.context;
-
-  //   return node.id === selected;
-  // }
-
-  render() {
-    const { node } = this.props;
-
-    return (
-      <NavLink
-        to={`/${node.id}`}
-        className={classNames(indentClass, clickable, hoverable, styles.component)}
-        activeClassName={styles.active}
-      >
-        {getName(node.id)}
-      </NavLink>
-    );
-  }
+  return (
+    <NavLink
+      to={`/${node.id}`}
+      className={classNames(indentClass, clickable, hoverable, styles.component)}
+      activeClassName={styles.active}
+      onClick={handleClick}
+    >
+      {getName(node.id)}
+    </NavLink>
+  );
 }
