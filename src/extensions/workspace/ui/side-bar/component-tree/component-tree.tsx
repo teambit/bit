@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
-import { ComponentTreeContext } from './component-tree-context';
+import { ComponentTreeContextProvider } from './component-tree-context';
 import { /* ScopeView, */ ComponentView, NamespaceView } from './component-nodes';
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 
 type ComponentTreeProps = {
-  onSelect: (id: string) => any;
+  onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   components: string[];
 };
@@ -15,15 +15,14 @@ type ComponentTreeProps = {
 export function ComponentTree(props: ComponentTreeProps) {
   const { components, onSelect, selected } = props;
 
-  const treeContext = useMemo(() => ({ onSelect, selected }), [onSelect, selected]);
   const rootNode = useMemo(() => inflateToTree(components), [components]);
 
   return (
     <div className={styles.componentTree} style={indentStyle(0)}>
       <TreeNodeContext.Provider value={getTreeNodeComponent}>
-        <ComponentTreeContext.Provider value={treeContext}>
+        <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} />
-        </ComponentTreeContext.Provider>
+        </ComponentTreeContextProvider>
       </TreeNodeContext.Provider>
     </div>
   );
