@@ -20,16 +20,18 @@ export default class EjectConfCmd implements Command {
   // @ts-ignore
   async render(args: EjectConfArgs, options: EjectConfOptions) {
     const ejectResult = await this.json(args, options);
+    const [componentId] = args;
     return (
       <Color green>
-        Successfully ejected config for component {ejectResult.componentId} in path {ejectResult.configPath}
+        Successfully ejected config for component {componentId} in path {ejectResult.configPath}
       </Color>
     );
   }
 
   async report(args: EjectConfArgs, options: EjectConfOptions): Promise<string> {
     const ejectResult = await this.json(args, options);
-    return `Successfully ejected config for component ${chalk.bold(ejectResult.componentId)} in path ${chalk.green(
+    const [componentId] = args;
+    return `Successfully ejected config for component ${chalk.bold(componentId)} in path ${chalk.green(
       ejectResult.configPath
     )}`;
   }

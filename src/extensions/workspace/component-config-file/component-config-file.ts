@@ -6,11 +6,18 @@ import stringifyPackage from 'stringify-package';
 import { BitId } from '../../../bit-id';
 import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
-import { PathOsBasedAbsolute, PathOsBased } from '../../../utils/path';
+import { PathOsBasedAbsolute } from '../../../utils/path';
+import { Consumer } from '../../../consumer';
 
 interface ComponentConfigFileOptions {
   indent: number;
-  newLine: string;
+  newLine: '\r\n' | '\n' | undefined;
+}
+
+interface ComponentConfigFileJson {
+  componentId: any;
+  extensions: any;
+  propagate: boolean;
 }
 
 const DEFAULT_INDENT = 2;
@@ -24,42 +31,51 @@ export class ComponentConfigFile {
     private options: ComponentConfigFileOptions = { indent: DEFAULT_INDENT, newLine: DEFAULT_NEWLINE }
   ) {}
 
-  static async load(componentDir: PathOsBasedAbsolute): ComponentConfigFile {
-    const filePath = composePath(componentDir);
-    const content = await readFileIfExist(filePath);
-    if (!content) {
-      return new PackageJsonFile({ filePath, fileExist: false, workspaceDir });
+  // TODO: remove consumer from here
+  static async load(componentDir: PathOsBasedAbsolute, consumer: Consumer): Promise<ComponentConfigFile | undefined> {
+    const filePath = ComponentConfigFile.composePath(componentDir);
+    const isExist = await fs.pathExists(filePath);
+    if (!isExist) {
+      return undefined;
     }
-    const parsed = parseComponentJsonContent(content, componentDir);
+    const content = await fs.readFile(filePath, 'utf-8');
+    const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
     const indent = detectIndent(content).indent;
-    const newline = detectNewline(content);
-    const componentId = BitId.parse();
+    const newLine = detectNewline(content);
+    const componentId = new BitId(parsed.componentId);
+    const extensions = ExtensionDataList.fromObject(parsed.extensions, consumer);
 
-    return new ComponentConfigFile(componentId);
+    return new ComponentConfigFile(componentId, extensions, parsed.propagate, { indent, newLine });
   }
 
-  async write(componentDir: string): Promise<void> {}
+  static composePath(componentRootFolder: string) {
+    return path.join(componentRootFolder, COMPONENT_CONFIG_FILE_NAME);
+  }
+
+  async write(componentDir: string): Promise<void> {
+    const json = this.toJson();
+    const filePath = ComponentConfigFile.composePath(componentDir);
+    return fs.writeJsonSync(filePath, json, { spaces: this.options.indent, EOL: this.options.newLine });
+  }
+
+  toJson(): ComponentConfigFileJson {
+    return {
+      componentId: this.componentId.serialize(),
+      propagate: this.propagate,
+      extensions: this.extensions.toObject()
+    };
+  }
+
+  toString(): string {
+    const json = this.toJson();
+    return stringifyPackage(json, this.options.indent, this.options.newLine);
+  }
 }
 
-function composePath(componentRootFolder: string) {
-  return path.join(componentRootFolder, COMPONENT_CONFIG_FILE_NAME);
-}
-
-async function parseComponentJsonContent(str: string, dir: string) {
+function parseComponentJsonContent(str: string, dir: string) {
   try {
     return JSON.parse(str);
   } catch (err) {
     throw new Error(`failed parsing component.json file at ${dir}. original error: ${err.message}`);
-  }
-}
-
-async function readFileIfExist(filePath: PathOsBased) {
-  try {
-    return await fs.readFile(filePath, 'utf-8');
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      return null; // file not found
-    }
-    throw err;
   }
 }

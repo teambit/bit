@@ -23,9 +23,12 @@ import LegacyComponentConfig from '../../consumer/config';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
+import { ComponentConfigFile } from './component-config-file';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
+import GeneralError from '../../error/general-error';
+import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 
 export type EjectConfResult = {
-  componentId: string;
   configPath: string;
 };
 
@@ -165,9 +168,19 @@ export default class Workspace implements ComponentHost {
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
-  async ejectConfig(id: string | BitId | ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
-    const component = await this.scope.get(id);
-    // component?.config
+  async ejectConfig(id: BitId | string, options: EjectConfOptions): Promise<EjectConfResult> {
+    const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+    const component = await this.scope.get(componentId);
+    const extensions = component?.config.extensions ?? new ExtensionDataList();
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true });
+    if (!componentDir) {
+      throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
+    }
+    const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
+    await componentConfigFile.write(componentDir);
+    return {
+      configPath: ComponentConfigFile.composePath(componentDir)
+    };
   }
 
   // @gilad needs to implment on variants
@@ -216,10 +229,14 @@ export default class Workspace implements ComponentHost {
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
-  componentDir(componentId: BitId, relative = false): PathOsBased | undefined {
-    const componentMap = this.consumer.bitMap.getComponent(componentId);
+  componentDir(
+    componentId: BitId,
+    bitMapOptions: GetBitMapComponentOptions,
+    options = { relative: false }
+  ): PathOsBased | undefined {
+    const componentMap = this.consumer.bitMap.getComponent(componentId, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
-    if (relative) {
+    if (options.relative) {
       return relativeComponentDir;
     }
 
