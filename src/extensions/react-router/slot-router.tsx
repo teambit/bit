@@ -1,7 +1,7 @@
 import React from 'react';
 import { Switch, Route, useRouteMatch, RouteProps, NavLinkProps } from 'react-router-dom';
 
-import { ExtendPath } from './extend-path';
+import { extendPath } from './extend-path/extend-path';
 import { SlotRegistry } from '../../api';
 
 export type RouteSlot = SlotRegistry<RouteProps>;
@@ -28,7 +28,7 @@ export function SlotSubRouter({ slot, basePath }: { slot: RouteSlot; basePath?: 
   return (
     <Switch>
       {routes.map((route, idx) => (
-        <Route key={idx} {...route} path={ExtendPath(basePath || contextPath, route.path)} />
+        <Route key={idx} {...route} path={extendPath(basePath || contextPath, route.path)} />
       ))}
     </Switch>
   );
