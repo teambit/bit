@@ -3,6 +3,7 @@ import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
 import { Component } from '../../../component/component.ui';
+import { Icon } from '@bit/bit.evangelist.elements.icon';
 
 type SideBarProps = {
   components: Component[];
@@ -14,7 +15,10 @@ export function SideBar({ components, selected, onSelectComponent, ...rest }: Si
   return (
     <div {...rest}>
       {/* :TODO filter components upon search */}
-      <Input placeholder="find components" error={false} className={styles.input} />
+      <div className={styles.inputWrapper}>
+        <Input placeholder="Find components" error={false} className={styles.input} />
+        <Icon of="discovery" className={styles.searchIcon} />
+      </div>
       <ComponentTree
         selected={selected}
         onSelect={id => onSelectComponent(getComponentById(components, id))}
