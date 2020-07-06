@@ -8,16 +8,22 @@ import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
 import { mutedText } from '@bit/bit.base-ui.text.muted-text';
+import { Section } from '@bit/bit.test-scope.ui.section';
 import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
+import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { PropTable } from '@bit/bit.test-scope.ui.property-table';
 import { gql } from 'apollo-boost';
 import { Playground } from './playground';
 import { ComponentModel } from '../../component/ui';
 import { LabelList } from '../../stage-components/workspace-components/label';
-
 import { Separator } from '../../stage-components/workspace-components/separator';
 import { VersionTag } from '../../stage-components/workspace-components/version-tag';
+import { CompositionsOverview } from '../../compositions/ui/compositions-overview';
 import styles from './base.module.scss';
+
+// this is temporarily here to get the docs spacing styles
+import spacing from './docs-spacer.module.scss';
+
 // import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
 // import { Docs } from '../../docs/docs';
 
@@ -69,40 +75,43 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
   const component = ComponentModel.from(data.workspace.getComponent);
   const docsModel = data.workspace.getDocs;
-
   const Content = isFunction(docs.default) ? docs.default : () => <div></div>;
   const labels = docs.labels || [];
-  // const examples = docs.examples || [];
+  const examples = docs.examples || [];
   const abstract = docs.abstract || docsModel.abstract || '';
 
   return (
     <ClientContext>
-      <div className={classNames(styles.docsMainBlock)} {...rest}>
+      <div className={classNames(styles.docsMainBlock, spacing.docsStyles)} {...rest}>
         <div className={styles.topRow}>
           <H1 className={classNames(styles.maxWidth, styles.marginRight)}>{component.displayName}</H1>
           <VersionTag className={styles.marginRight}>{component.version}</VersionTag>
         </div>
-        <div></div>
         <Subtitle className={styles.marginBottom}>{abstract}</Subtitle>
         <LabelList className={styles.marginBottom}>{labels}</LabelList>
         <Separator className={styles.marginBottom} />
-        <ConsumableLink title="Package name" link={component.packageName}></ConsumableLink>
+        <Section className={classNames(spacing.sectionMargin, spacing.maxWidth700)}>
+          <ConsumableLink title="Package name" link={component.packageName}></ConsumableLink>
+        </Section>
         <Content />
-        {docsModel.properties.length !== 0 && (
-          <PropTable headings={['name', 'type', 'defaultValue', 'description']} rows={docsModel.properties} />
+        {compositions && Object.keys(compositions).length > 0 && (
+          <Section className={spacing.sectionMargin}>
+            <LinkedHeading title="Simulations" link="/~compositions" className={spacing.secondaryTitleMargin} />
+            <CompositionsOverview compositions={compositions} />
+          </Section>
         )}
-        {/* Playground: */}
-        {/* <Playground code={examples[0].code} scope={[examples[0].scope]} /> */}
-        Compositions:
-        {compositions &&
-          Object.keys(compositions).map(key => {
-            return (
-              <div key={key}>
-                {key}
-                {compositions[key]()}
-              </div>
-            );
-          })}
+        <Section className={spacing.sectionMargin}>
+          {examples.length > 0 && (
+            <LinkedHeading title="Examples" link="/~compositions" className={spacing.secondaryTitleMargin} />
+          )}
+          {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />}
+        </Section>
+        {docsModel.properties.length !== 0 && (
+          <Section className={spacing.sectionMargin}>
+            <LinkedHeading title="Properties" link="/~compositions" className={spacing.secondaryTitleMargin} />
+            <PropTable headings={['name', 'type', 'defaultValue', 'description']} rows={docsModel.properties} />
+          </Section>
+        )}
       </div>
     </ClientContext>
   );
