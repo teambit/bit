@@ -11,7 +11,6 @@ import { mutedText } from '@bit/bit.base-ui.text.muted-text';
 import { ConsumableLinks } from '@bit/bit.test-scope.ui.consumable-links';
 import { PropTable } from '@bit/bit.test-scope.ui.property-table';
 import { gql } from 'apollo-boost';
-import { Playground } from './playground';
 import { ComponentModel } from '../../component/ui';
 import { LabelList } from '../../stage-components/workspace-components/label';
 
@@ -46,10 +45,10 @@ const GET_COMPONENT = gql`
           description
           required
           type
-          # defaultValue {
-          #   value
-          #   computed
-          # }
+          defaultValue {
+            value
+            computed
+          }
         }
       }
     }
@@ -71,10 +70,12 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   const component = ComponentModel.from(data.workspace.getComponent);
   const docsModel = data.workspace.getDocs;
 
+  // @todo uri we should pass all this as props properly to the template.
   const Content = isFunction(docs.default) ? docs.default : () => <div></div>;
   const labels = docs.labels || [];
   // const examples = docs.examples || [];
   const abstract = docs.abstract || docsModel.abstract || '';
+  const overviewCompositions = docs.compositions || compositions;
 
   return (
     <ClientContext>
@@ -92,11 +93,11 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
         {docsModel.properties.length !== 0 && (
           <PropTable headings={['name', 'type', 'defaultValue', 'description']} rows={docsModel.properties} />
         )}
-        {/* Playground: */}
-        {/* <Playground code={examples[0].code} scope={[examples[0].scope]} /> */}
+        {/* Playground:
+        <Playground code={examples[0].code} scope={[examples[0].scope]} /> */}
         Compositions:
         {compositions &&
-          Object.keys(compositions).map(key => {
+          Object.keys(overviewCompositions).map(key => {
             return (
               <div key={key}>
                 {key}
