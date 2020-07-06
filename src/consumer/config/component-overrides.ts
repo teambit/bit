@@ -177,7 +177,7 @@ export default class ComponentOverrides {
   // TODO: This strategy should be stopped using since harmony, because a package name
   // TODO: might be completely different than a component id
   // TODO: instead we should go to the package.json and check the component name there
-  // TODO: Like we do in build-tree.resolveNodePackage
+  // TODO: Like we do in resolvePackageData()
   // TODO: or use some index that store it (doesn't exist at the moment)
   /**
    * it is possible that a user added the component into the overrides as a package.

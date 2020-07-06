@@ -112,7 +112,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
       it('should throw an error when --allow-relative-paths was not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
-        const error = new FailedLoadForTag(['foo'], []);
+        const error = new FailedLoadForTag(['foo'], [], []);
         helper.general.expectToThrow(cmd, error);
       });
       describe('when using --allow-relative-paths', () => {
@@ -140,7 +140,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
       it('should throw an error when --allow-files was not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
-        const error = new FailedLoadForTag([], ['foo']);
+        const error = new FailedLoadForTag([], ['foo'], []);
         helper.general.expectToThrow(cmd, error);
       });
       describe('when using --allow-files', () => {
@@ -170,17 +170,17 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       });
       it('should throw an error when --allow-relative-paths and --allow-files were not used', () => {
         const cmd = () => helper.command.tagAllComponentsNew();
-        const error = new FailedLoadForTag(['foo'], ['bar', 'foo']);
+        const error = new FailedLoadForTag(['foo'], ['bar', 'foo'], []);
         helper.general.expectToThrow(cmd, error);
       });
       it('should still throw an error when --allow-relative-paths is used but not --allow-files', () => {
         const cmd = () => helper.command.tagAllComponentsNew('--allow-relative-paths');
-        const error = new FailedLoadForTag([], ['bar', 'foo']);
+        const error = new FailedLoadForTag([], ['bar', 'foo'], []);
         helper.general.expectToThrow(cmd, error);
       });
       it('should still throw an error when --allow-files is used but not --allow-relative-paths', () => {
         const cmd = () => helper.command.tagAllComponentsNew('--allow-files');
-        const error = new FailedLoadForTag(['foo'], []);
+        const error = new FailedLoadForTag(['foo'], [], []);
         helper.general.expectToThrow(cmd, error);
       });
       describe('when using both --allow-relative-paths and --allow-files', () => {

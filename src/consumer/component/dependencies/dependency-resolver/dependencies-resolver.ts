@@ -66,8 +66,9 @@ export type Issues = {
   missingDependenciesOnFs: {};
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
+  customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
   relativeComponents: {};
-  relativeComponentsAuthored: RelativeComponentsAuthoredIssues;
+  relativeComponentsAuthored: RelativeComponentsAuthoredIssues; // invalid on Harmony
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
@@ -123,6 +124,7 @@ export default class DependencyResolver {
       missingDependenciesOnFs: {},
       missingLinks: {},
       missingCustomModuleResolutionLinks: {},
+      customModuleResolutionUsed: {},
       relativeComponents: {},
       relativeComponentsAuthored: {},
       parseErrors: {},
@@ -161,7 +163,7 @@ export default class DependencyResolver {
     const allFiles = [...nonTestsFiles, ...testsFiles];
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
-      baseDir: bitDir,
+      componentDir: bitDir,
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
@@ -225,11 +227,30 @@ export default class DependencyResolver {
     });
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
+    this.addCustomResolvedIssues();
     this.combineIssues();
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
+  }
+
+  addCustomResolvedIssues() {
+    if (this.consumer.isLegacy) return;
+    const deps: Dependency[] = [...this.allDependencies.dependencies, ...this.allDependencies.devDependencies];
+    const customModulesDeps = deps.filter(dep => dep.relativePaths.some(r => r.isCustomResolveUsed));
+    if (customModulesDeps.length) {
+      const importSources = customModulesDeps.reduce((acc, current) => {
+        current.relativePaths.forEach(relativePath => {
+          if (relativePath.isCustomResolveUsed) {
+            // @ts-ignore
+            acc[relativePath.importSource] = current.id.toStringWithoutVersion();
+          }
+        });
+        return acc;
+      }, {});
+      this.issues.customModuleResolutionUsed = importSources;
+    }
   }
 
   removeIgnoredPackagesByOverrides() {
@@ -752,9 +773,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.packages)) return;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingPackages = missing.packages.filter(
         pkg => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
@@ -775,9 +794,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.bits)) return;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();

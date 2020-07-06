@@ -2,12 +2,16 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
+import { PublishCmd } from './publish.cmd';
 import { Packer, PackResult, PackOptions } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
 import { CLIExtension } from '../cli';
 import { IsolatorExtension } from '../isolator';
+import { Publisher } from './publisher';
+import { LoggerExt, Logger } from '../logger';
+import { PublishDryRunTask } from './publish-dry-run.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -29,21 +33,29 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
-  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension];
+  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExt];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs, isolator]: [CLIExtension, ScopeExtension, Environments, IsolatorExtension],
+    [cli, scope, envs, isolator, logger]: [CLIExtension, ScopeExtension, Environments, IsolatorExtension, Logger],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
+    const logPublisher = logger.createLogPublisher(PkgExtension.id);
     const packer = new Packer(isolator, scope?.legacyScope);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
+    const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope);
+    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
+
+    const postExportFunc = publisher.postExportListener.bind(publisher);
+    if (scope) scope.onPostExport(postExportFunc);
+
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
+    cli.register(new PublishCmd(publisher));
 
     return pkg;
   }
@@ -74,7 +86,9 @@ export class PkgExtension {
     /**
      * envs extension.
      */
-    private envs: Environments
+    private envs: Environments,
+
+    readonly dryRunTask: PublishDryRunTask
   ) {}
 
   /**
@@ -111,7 +125,7 @@ export class PkgExtension {
     let newProps = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
-      const propsFromEnv = await env.getPackageJsonProps();
+      const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);
     }
     const configuredIds = configuredExtensions.ids;

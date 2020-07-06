@@ -20,6 +20,8 @@ export const componentIssuesLabels = {
   relativeComponents: 'components with relative import statements found (use module paths for imported components)',
   relativeComponentsAuthored:
     'components with relative import statements found (replace to module paths or use "bit link --rewire" to replace)',
+  customModuleResolutionUsed:
+    'component is using an unsupported resolve-modules (aka aliases) feature, replace to module paths',
   parseErrors: 'error found while parsing the file (edit the file and fix the parsing error)',
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
@@ -115,6 +117,14 @@ export function formatMissing(missingComponent: Component) {
           missingComponent.issues[key],
           componentIssuesLabels[key],
           relativeComponentsAuthoredIssuesToString
+        );
+      }
+      if (key === 'customModuleResolutionUsed') {
+        return formatMissingStr(
+          key,
+          // @ts-ignore
+          missingComponent.issues[key],
+          componentIssuesLabels[key]
         );
       }
       if (key === 'missingPackagesDependenciesOnFs') {

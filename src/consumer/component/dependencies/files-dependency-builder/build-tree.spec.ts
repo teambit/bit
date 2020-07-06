@@ -11,7 +11,7 @@ describe('buildTree', () => {
     const filePaths: string[] = [];
     let visited: any;
     const dependencyTreeParams = {
-      baseDir: '.',
+      componentDir: '.',
       workspacePath: __dirname,
       filePaths,
       bindingPrefix: '@bit',

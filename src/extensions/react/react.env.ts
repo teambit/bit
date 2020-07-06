@@ -1,5 +1,5 @@
 import { Environment } from '../environments';
-import { Tester } from '../tester';
+import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
@@ -8,6 +8,7 @@ import { WebpackExtension } from '../webpack';
 import { DevServer, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import { Workspace } from '../workspace';
+import { PkgExtension } from '../pkg';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -37,7 +38,17 @@ export class ReactEnv implements Environment {
     /**
      * workspace extension.
      */
-    private workspace: Workspace
+    private workspace: Workspace,
+
+    /**
+     * pkg extension.
+     */
+    private pkg: PkgExtension,
+
+    /**
+     * tester extension
+     */
+    private tester: TesterExtension
   ) {}
 
   /**
@@ -86,6 +97,10 @@ export class ReactEnv implements Environment {
     return require.resolve('./mount');
   }
 
+  getPackageJsonProps() {
+    return TypescriptExtension.getPackageJsonProps();
+  }
+
   /**
    * adds dependencies to all configured components.
    */
@@ -111,6 +126,6 @@ export class ReactEnv implements Environment {
   getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return [this.compiler.task];
+    return [this.compiler.task, this.pkg.dryRunTask];
   }
 }
