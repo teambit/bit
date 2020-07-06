@@ -3,10 +3,10 @@ import Scope from './scope';
 import { resolveHomePath } from '../utils';
 import { ScopeNotFound } from './exceptions';
 
-export default function loadScope(currentPath?: string | null | undefined): Promise<Scope> {
+export default function loadScope(currentPath?: string | null | undefined, useCache = true): Promise<Scope> {
   if (!currentPath) currentPath = process.cwd();
   try {
-    return Scope.load(path.resolve(resolveHomePath(currentPath)));
+    return Scope.load(path.resolve(resolveHomePath(currentPath)), useCache);
   } catch (err) {
     return Promise.reject(err);
   }
@@ -14,10 +14,11 @@ export default function loadScope(currentPath?: string | null | undefined): Prom
 
 export async function loadScopeIfExist(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  currentPath?: string | null | undefined = process.cwd()
+  currentPath?: string | null | undefined = process.cwd(),
+  useCache = true
 ): Promise<Scope | undefined> {
   try {
-    return await loadScope(currentPath);
+    return await loadScope(currentPath, useCache);
   } catch (err) {
     if (err instanceof ScopeNotFound) {
       return undefined;
