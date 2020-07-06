@@ -57,8 +57,10 @@ export function Component({ navSlot, routeSlot }: ComponentProps) {
 
   return (
     <ComponentProvider component={component}>
-      <TopBar className={styles.topbar} navigationSlot={navSlot} currentTag={currentTag} />
-      {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      <div className={styles.container}>
+        <TopBar className={styles.topbar} navigationSlot={navSlot} currentTag={currentTag} />
+        {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      </div>
     </ComponentProvider>
   );
 }
