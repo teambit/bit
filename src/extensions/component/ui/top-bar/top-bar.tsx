@@ -13,17 +13,13 @@ export type TopBarProps = {
    * slot for top bar menu items
    */
   navigationSlot: NavigationSlot;
-  currentTag: {
-    version: string;
-    downloads: number;
-    likes: number;
-  };
+  version: string;
 };
 
 /**
  * top bar menu.
  */
-export function TopBar({ navigationSlot, className, currentTag }: TopBarProps) {
+export function TopBar({ navigationSlot, className, version }: TopBarProps) {
   const navLinks = navigationSlot.values();
 
   return (
@@ -35,14 +31,10 @@ export function TopBar({ navigationSlot, className, currentTag }: TopBarProps) {
       </nav>
       <div className={styles.rightSide}>
         <span>
-          <Icon className={classnames(themedText, styles.icon)} of="version-tag-stroke" /> {currentTag.version}
+          <Icon className={classnames(themedText, styles.icon)} of="version-tag-stroke" /> {version}
         </span>{' '}
-        <span>
-          <Icon className={styles.icon} of="download" /> <span>{currentTag.downloads}</span>
-        </span>{' '}
-        <span>
-          <Icon className={styles.icon} of="heartstroke" /> {currentTag.likes}
-        </span>
+        <span>{/* <Icon className={styles.icon} of="download" /> <span>{currentTag.downloads}</span> */}</span>{' '}
+        <span>{/* <Icon className={styles.icon} of="heartstroke" /> {currentTag.likes} */}</span>
         {/* <span>|</span>
         <Button>import ▾</Button>
         <Button>simulations </Button>

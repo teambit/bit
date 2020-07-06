@@ -6,11 +6,17 @@ export interface PreviewType {
 
   /**
    * preview render method.
+   * :TODO @uri type this properly
    */
-  render(componentId: string, linkedModules: { [key: string]: any }): void;
+  render(componentId: string, linkedModules: { [key: string]: any }, includedPreviews: any[]): void;
 
   /**
    * determine if this will be the default preview to render.
    */
   default?: boolean;
+
+  /**
+   * which other extension modules to include in the preview context.
+   */
+  include?: string[];
 }

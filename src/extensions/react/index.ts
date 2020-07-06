@@ -1,1 +1,1 @@
-export { React } from './react.extension';
+export { ReactExtension } from './react.extension';

@@ -26,7 +26,16 @@ export class Preview {
       throw new PreviewNotFound(previewName);
     }
 
-    return preview.render(componentId, PREVIEW_MODULES[name]);
+    const includes = preview.include
+      ? preview.include
+          .map(prevName => {
+            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
+            return PREVIEW_MODULES[prevName].componentMap[componentId][0];
+          })
+          .filter(module => !!module)
+      : [];
+
+    return preview.render(componentId, PREVIEW_MODULES[name], includes);
   }
 
   /**
