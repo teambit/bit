@@ -4,9 +4,24 @@ import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { Compile, CompileExt } from '../compiler';
 import { WebpackExtension } from '../webpack';
+import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
+import { GraphQLExtension } from '../graphql';
+import { reactSchema } from './react.graphql';
+import { PkgExtension } from '../pkg';
+import { TesterExtension } from '../tester';
 
-type ReactDeps = [Environments, JestExtension, TypescriptExtension, Compile, WebpackExtension, Workspace];
+type ReactDeps = [
+  Environments,
+  JestExtension,
+  TypescriptExtension,
+  Compile,
+  WebpackExtension,
+  Workspace,
+  GraphQLExtension,
+  PkgExtension,
+  TesterExtension
+];
 
 export type ReactConfig = {
   /**
@@ -27,7 +42,7 @@ export type ReactConfig = {
   reactVersion: string;
 };
 
-export class React {
+export class ReactExtension {
   static id = '@teambit/react';
 
   constructor(
@@ -47,11 +62,41 @@ export class React {
    */
   overrideJestConfig() {}
 
-  static dependencies = [Environments, JestExtension, TypescriptExtension, CompileExt, WebpackExtension, WorkspaceExt];
+  /**
+   * returns doc adjusted specifically for react components.
+   */
+  getDocs(component: Component) {
+    const docsArray = component.state._consumer.docs;
+    if (!docsArray || !docsArray[0]) {
+      return null;
+    }
 
-  static provider([envs, jest, ts, compile, webpack, workspace]: ReactDeps) {
-    const reactEnv = new ReactEnv(jest, ts, compile, webpack, workspace);
+    const docs = docsArray[0];
+
+    return {
+      abstract: docs.description,
+      filePath: docs.filePath,
+      properties: docs.properties
+    };
+  }
+
+  static dependencies = [
+    Environments,
+    JestExtension,
+    TypescriptExtension,
+    CompileExt,
+    WebpackExtension,
+    WorkspaceExt,
+    GraphQLExtension,
+    PkgExtension,
+    TesterExtension
+  ];
+
+  static provider([envs, jest, ts, compile, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
+    const reactEnv = new ReactEnv(jest, ts, compile, webpack, workspace, pkg, tester);
+    const react = new ReactExtension(reactEnv);
+    graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
-    return new React(reactEnv);
+    return react;
   }
 }

@@ -15,6 +15,7 @@ const GET_COMPONENT = gql`
       getComponent(id: $id) {
         id
         displayName
+        version
         server {
           env
           url
@@ -27,22 +28,16 @@ const GET_COMPONENT = gql`
   }
 `;
 
-// TEMP!
-const currentTag = {
-  version: '5.0.10',
-  downloads: 542,
-  likes: 86
-};
-
 export type ComponentProps = {
   navSlot: NavigationSlot;
   routeSlot: RouteSlot;
+  widgetSlot: NavigationSlot;
 };
 
 /**
  * main UI component of the Component extension.
  */
-export function Component({ navSlot, routeSlot }: ComponentProps) {
+export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
   const {
     params: { componentId }
   } = useRouteMatch();
@@ -58,7 +53,12 @@ export function Component({ navSlot, routeSlot }: ComponentProps) {
   return (
     <ComponentProvider component={component}>
       <div className={styles.container}>
-        <TopBar className={styles.topbar} navigationSlot={navSlot} currentTag={currentTag} />
+        <TopBar
+          className={styles.topbar}
+          navigationSlot={navSlot}
+          version={component.version}
+          widgetSlot={widgetSlot}
+        />
         {routeSlot && <SlotSubRouter slot={routeSlot} />}
       </div>
     </ComponentProvider>

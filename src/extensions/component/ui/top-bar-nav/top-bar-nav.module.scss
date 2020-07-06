@@ -1,23 +1,37 @@
 .topBarLink {
 	height: 100%;
+	position: relative;
 	padding: 0 8px;
 	
 	box-sizing: border-box;
 	
 	display: flex;
 	align-items: center;
-	
-	border-width: 4px 4px 0px 4px;
-	border-style: solid;
-	border-color: transparent;
 
 	color: inherit;
 	text-decoration: none;
 	
-	transition: all 300ms;
+	transition: color 300ms;
+	margin: 0 5px;
+	
+	&:after {
+		content:'';
+		position:absolute;
+		bottom:0;
+		left:0;
+		right:0;
+		background-color: transparent;
+		height:0;
+		border-radius: 10px;
+		transition: background-color 300ms, height 300ms;
+	}
 	
 	&.active {
-		border-bottom: 4px solid var(--base-color);
 		color: var(--base-color);
+
+		&:after {
+			background-color: var(--base-color);
+			height:4px;
+		}
 	}
 }

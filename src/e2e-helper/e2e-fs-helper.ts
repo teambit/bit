@@ -56,6 +56,10 @@ export default class FsHelper {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
 
+  appendFile(filePathRelativeToLocalScope: string, data = '\n'): void {
+    return fs.appendFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
+  }
+
   moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
     const src = path.join(this.scopes.localPath, srcPathRelativeToLocalScope);
     const dest = path.join(this.scopes.localPath, destPathRelativeToLocalScope);

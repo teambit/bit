@@ -1,5 +1,24 @@
-.input {
-	margin: 16px;
+.inputWrapper {
 	width: calc(100% - 32px);
-	box-sizing: border-box;
+	margin: 16px;
+	position: relative;
+
+	.input {
+		box-sizing: border-box;
+		width: 100%;
+		padding-left: 48px;
+		background-color: var(----bg-base);
+		color: var(--text-muted);
+		&:focus {
+			outline: none;
+		}
+	}
+
+	.searchIcon {
+		position: absolute;
+		font-size: 13px;
+		left: 17px;
+		top: 17px;
+		color: var(--text-muted);
+	}
 }

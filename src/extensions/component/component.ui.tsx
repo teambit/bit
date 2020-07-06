@@ -22,7 +22,7 @@ export type MenuItem = {
 const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
-  constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot) {}
+  constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot, private widgetSlot: NavigationSlot) {}
 
   /**
    * expose the route for a component.
@@ -31,7 +31,7 @@ export class ComponentUI {
     return {
       // trailing slash to avoid including '/' in componentId
       path: `/:componentId(${componentIdUrlRegex})/`,
-      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} />
+      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} widgetSlot={this.widgetSlot} />
     };
   }
 
@@ -43,13 +43,20 @@ export class ComponentUI {
   registerNavigation(nav: NavLinkProps) {
     this.navSlot.register(nav);
   }
+  registerWidget(widget: NavLinkProps) {
+    this.widgetSlot.register(widget);
+  }
 
   static dependencies = [WorkspaceUI];
 
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
 
-  static async provider([workspace]: [WorkspaceUI], config, [routeSlot, navSlot]: [RouteSlot, NavigationSlot]) {
-    const componentUI = new ComponentUI(routeSlot, navSlot);
+  static async provider(
+    [workspace]: [WorkspaceUI],
+    config,
+    [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]
+  ) {
+    const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);
     workspace.registerRoute(componentUI.componentRoute);
     return componentUI;
   }

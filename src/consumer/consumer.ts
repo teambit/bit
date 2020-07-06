@@ -637,13 +637,15 @@ export default class Consumer {
     if (this.isLegacy) {
       return components;
     }
-    let shouldReloadComponents;
+    let shouldReloadComponents = false;
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
+    const componentsWithCustomModuleResolution: string[] = [];
     components.forEach(component => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
       const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
+      const hasCustomModuleResolutions = component.issues && component.issues.missingCustomModuleResolutionLinks;
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
@@ -656,9 +658,16 @@ export default class Consumer {
       if (!componentMap.trackDir) {
         componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
       }
+      if (hasCustomModuleResolutions) {
+        componentsWithCustomModuleResolution.push(component.id.toStringWithoutVersion());
+      }
     });
     if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {
-      throw new FailedLoadForTag(componentsWithRelativePaths.sort(), componentsWithFilesNotDir.sort());
+      throw new FailedLoadForTag(
+        componentsWithRelativePaths.sort(),
+        componentsWithFilesNotDir.sort(),
+        componentsWithCustomModuleResolution.sort()
+      );
     }
     if (!shouldReloadComponents) return components;
     this.componentLoader.clearComponentsCache();

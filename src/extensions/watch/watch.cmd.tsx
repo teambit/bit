@@ -1,7 +1,7 @@
 import React from 'react';
 import { Color } from 'ink';
 import { Command, CommandOptions } from '../cli';
-import { Watch } from '.';
+import { WatcherExtension } from './watch.extension';
 
 export class WatchCommand implements Command {
   name = 'watch';
@@ -11,8 +11,14 @@ export class WatchCommand implements Command {
   shortDescription = '';
   options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
 
-  constructor(private watch: Watch) {}
+  constructor(
+    /**
+     * watcher extension.
+     */
+    private watch: WatcherExtension
+  ) {}
 
+  // :TODO we should only use `report` here. no reason for interactive.
   async render(cliArgs: [], { verbose = false }: { verbose?: boolean }): Promise<React.ReactElement> {
     await this.watch.watch({ verbose });
     return <Color>watcher terminated</Color>;
