@@ -1,8 +1,7 @@
 import React, { ReactNode } from 'react';
-import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import 'reset-css';
+
 import { SideBar } from '../side-bar';
 import styles from './workspace.module.scss';
 // import { Component } from '../../../component/component.ui';
@@ -10,7 +9,8 @@ import styles from './workspace.module.scss';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
-import { useLoaderApi, LoaderContext, LoaderRibbon, useLoader } from './global-loader';
+import { useDataQuery } from '../../../ui/ui/data/use-data-query';
+import { FullLoader } from '../../../../to-eject/full-loader';
 
 const WORKSPACE = gql`
   {
@@ -32,44 +32,36 @@ export type WorkspaceProps = {
  * main workspace component.
  */
 export function Workspace({ routeSlot }: WorkspaceProps) {
-  const { loading, error, data } = useQuery(WORKSPACE);
+  const { data } = useDataQuery(WORKSPACE);
 
-  useLoader(loading);
-
-  if (error) return <div>{error.message}</div>;
-
-  if (!data) return <div>loading...</div>;
+  if (!data) {
+    return (
+      <div className={styles.emptyContainer}>
+        <FullLoader />
+      </div>
+    );
+  }
 
   const workspace = WorkspaceModel.from(data.workspace);
 
   return (
-    <TopLevelContext>
-      <WorkspaceProvider workspace={workspace}>
-        <div className={styles.explorer}>
-          <div className={styles.scopeName}>
-            <span className={styles.avatar}>A</span> {workspace.name}
-          </div>
-          <SideBar className={styles.sideBar} components={workspace.components} />
+    <WorkspaceProvider workspace={workspace}>
+      <div className={styles.workspace}>
+        <Corner name={workspace.name} />
+        <SideBar className={styles.sideBar} components={workspace.components} />
+        <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
         </div>
-      </WorkspaceProvider>
-    </TopLevelContext>
+      </div>
+    </WorkspaceProvider>
   );
 }
 
-function TopLevelContext({ children }: { children: ReactNode }) {
-  const [loaderApi, isLoading] = useLoaderApi();
-
+function Corner({ name }: { name: string }) {
   return (
-    <>
-      <LoaderContext.Provider value={loaderApi}>
-        <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
-        <Theme>
-          <LoaderRibbon active={isLoading} />
-          {children}
-        </Theme>
-      </LoaderContext.Provider>
-    </>
+    <div className={styles.corner}>
+      <span className={styles.avatar}>A</span> {name}
+    </div>
   );
 }
 

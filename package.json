@@ -84,11 +84,13 @@
     "vue-components"
   ],
   "dependencies": {
+    "@apollo/react-common": "^3.1.4",
     "@apollo/react-hooks": "^3.1.5",
     "@babel/core": "^7.9.6",
     "@babel/preset-react": "^7.10.1",
     "@babel/runtime": "^7.8.4",
     "@bit/bit.base-ui.constants.storage": "^1.0.5",
+    "@bit/bit.base-ui.elements.dots-loader": "^0.0.2",
     "@bit/bit.base-ui.layout.breakpoints": "^1.0.7",
     "@bit/bit.base-ui.layout.grid-component": "^1.0.11",
     "@bit/bit.base-ui.text.muted-text": "^1.0.1",
@@ -124,6 +126,7 @@
     "ajv": "^6.11.0",
     "apollo-boost": "^0.4.9",
     "apollo-cache-inmemory": "^1.6.6",
+    "apollo-client": "^2.6.10",
     "apollo-link": "^1.2.14",
     "apollo-link-error": "^1.1.13",
     "apollo-link-http": "^1.5.17",
