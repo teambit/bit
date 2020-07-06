@@ -7,6 +7,8 @@ import { TopBar } from './top-bar';
 import styles from './component.module.scss';
 import { ComponentModel } from './component-model';
 import { NavigationSlot, RouteSlot, SlotSubRouter } from '../../react-router/slot-router';
+import { useLoader } from '../../workspace/ui/workspace/global-loader/use-loader';
+// import { KutnerQuery } from './KutnerQuery';
 
 const GET_COMPONENT = gql`
   query Component($id: String!) {
@@ -50,9 +52,9 @@ export function Component({ navSlot, routeSlot }: ComponentProps) {
     variables: { id: componentId }
   });
 
-  // :TODO @uri please add a proper loader with amir
-  if (loading) return <div>loading</div>;
+  useLoader(loading);
   if (error) throw error;
+  if (!data) return 'loading..';
 
   const component = ComponentModel.from(data.workspace.getComponent);
 

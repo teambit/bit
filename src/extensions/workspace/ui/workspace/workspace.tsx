@@ -10,6 +10,7 @@ import styles from './workspace.module.scss';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
+import { useLoaderApi, LoaderContext, LoaderRibbon, useLoader } from './global-loader';
 
 const WORKSPACE = gql`
   {
@@ -33,15 +34,17 @@ export type WorkspaceProps = {
 export function Workspace({ routeSlot }: WorkspaceProps) {
   const { loading, error, data } = useQuery(WORKSPACE);
 
-  if (loading) return <div>loading</div>;
+  useLoader(loading);
+
   if (error) return <div>{error.message}</div>;
+
+  if (!data) return <div>loading...</div>;
 
   const workspace = WorkspaceModel.from(data.workspace);
 
   return (
-    <WorkspaceProvider workspace={workspace}>
-      <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
-      <Theme>
+    <TopLevelContext>
+      <WorkspaceProvider workspace={workspace}>
         <div className={styles.explorer}>
           <div className={styles.scopeName}>
             <span className={styles.avatar}>A</span> {workspace.name}
@@ -49,8 +52,24 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
           <SideBar className={styles.sideBar} components={workspace.components} />
           <SlotRouter slot={routeSlot} />
         </div>
-      </Theme>
-    </WorkspaceProvider>
+      </WorkspaceProvider>
+    </TopLevelContext>
+  );
+}
+
+function TopLevelContext({ children }: { children: ReactNode }) {
+  const [loaderApi, isLoading] = useLoaderApi();
+
+  return (
+    <>
+      <LoaderContext.Provider value={loaderApi}>
+        <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
+        <Theme>
+          <LoaderRibbon active={isLoading} />
+          {children}
+        </Theme>
+      </LoaderContext.Provider>
+    </>
   );
 }
 
