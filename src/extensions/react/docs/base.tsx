@@ -46,10 +46,10 @@ const GET_COMPONENT = gql`
           description
           required
           type
-          defaultValue {
-            value
-            computed
-          }
+          # defaultValue {
+          #   value
+          #   computed
+          # }
         }
       }
     }
