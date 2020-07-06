@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { NavLink } from 'react-router-dom';
-
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
 import { getName } from '../utils/get-name';
 import { clickable } from '../../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
-
 import styles from './component-view.module.scss';
 
 export class ComponentView extends Component<TreeNodeProps> {
