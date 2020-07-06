@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
+import { /* ScopeView, */ NamespaceView } from './component-nodes';
+import { ComponentView } from './component-view';
 import { ComponentTreeContextProvider } from './component-tree-context';
-import { /* ScopeView, */ ComponentView, NamespaceView } from './component-nodes';
+
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 

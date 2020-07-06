@@ -16,8 +16,13 @@
 }
 
 .rightSide {
+	display: flex;
+	align-items: center;
 	> * {
-		margin-right: 8px;
+		margin-right: 12px;
+	}
+	.widget {
+		margin: 0 20px;
 	}
 }
 

@@ -30,12 +30,13 @@ const GET_COMPONENT = gql`
 export type ComponentProps = {
   navSlot: NavigationSlot;
   routeSlot: RouteSlot;
+  widgetSlot: NavigationSlot;
 };
 
 /**
  * main UI component of the Component extension.
  */
-export function Component({ navSlot, routeSlot }: ComponentProps) {
+export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
   const {
     params: { componentId }
   } = useRouteMatch();
@@ -52,7 +53,7 @@ export function Component({ navSlot, routeSlot }: ComponentProps) {
 
   return (
     <ComponentProvider component={component}>
-      <TopBar className={styles.topbar} navigationSlot={navSlot} version={component.version} />
+      <TopBar className={styles.topbar} navigationSlot={navSlot} version={component.version} widgetSlot={widgetSlot} />
       {routeSlot && <SlotSubRouter slot={routeSlot} />}
     </ComponentProvider>
   );

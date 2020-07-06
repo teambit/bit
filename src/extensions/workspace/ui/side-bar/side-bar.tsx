@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
+import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
 import { Component } from '../../../component/component.ui';
@@ -27,7 +28,10 @@ export function SideBar({ components, selected, onSelectComponent, ...rest }: Si
 
   return (
     <div {...rest}>
-      <Input placeholder="find components" error={false} className={styles.input} />
+      <div className={styles.inputWrapper}>
+        <Input placeholder="Find components" error={false} className={styles.input} />
+        <Icon of="discovery" className={styles.searchIcon} />
+      </div>
       <ComponentTree selected={selected} onSelect={handleSelect} components={componentIds} />
     </div>
   );
