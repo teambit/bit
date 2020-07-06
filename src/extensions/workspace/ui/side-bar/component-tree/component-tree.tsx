@@ -1,43 +1,33 @@
-import React, { Component } from 'react';
-import memoizeOne from 'memoize-one';
+import React, { useMemo } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
-import { ComponentTreeContext } from './component-tree-context';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
 import { ComponentView } from './component-view';
+import { ComponentTreeContextProvider } from './component-tree-context';
+
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 
 type ComponentTreeProps = {
-  onSelect: (id: string) => any;
+  onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   components: string[];
 };
 
-// :TODO @uri please refactor to a React hook.
-export class ComponentTree extends Component<ComponentTreeProps> {
-  getRootNode = memoizeOne((componentList: string[]) => {
-    return inflateToTree(componentList);
-  });
+export function ComponentTree(props: ComponentTreeProps) {
+  const { components, onSelect, selected } = props;
 
-  treeContext = memoizeOne((onSelect, selected) => {
-    return { onSelect, selected };
-  });
+  const rootNode = useMemo(() => inflateToTree(components), [components]);
 
-  render() {
-    const treeContext = this.treeContext(this.props.onSelect, this.props.selected);
-    const rootNode = this.getRootNode(this.props.components);
-
-    return (
-      <div className={styles.componentTree} style={indentStyle(0)}>
-        <TreeNodeContext.Provider value={getTreeNodeComponent}>
-          <ComponentTreeContext.Provider value={treeContext}>
-            <RootNode node={rootNode} />
-          </ComponentTreeContext.Provider>
-        </TreeNodeContext.Provider>
-      </div>
-    );
-  }
+  return (
+    <div className={styles.componentTree} style={indentStyle(0)}>
+      <TreeNodeContext.Provider value={getTreeNodeComponent}>
+        <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
+          <RootNode node={rootNode} />
+        </ComponentTreeContextProvider>
+      </TreeNodeContext.Provider>
+    </div>
+  );
 }
 
 function RootNode({ node }: { node: TreeNode }) {

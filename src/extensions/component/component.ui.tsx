@@ -19,7 +19,7 @@ export type MenuItem = {
   label: JSX.Element | string | null;
 };
 
-const componentIdUrlRegex = '[\\w/-]+';
+const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
   constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot, private widgetSlot: NavigationSlot) {}
@@ -29,7 +29,8 @@ export class ComponentUI {
    */
   get componentRoute() {
     return {
-      path: `/:componentId(${componentIdUrlRegex})`,
+      // trailing slash to avoid including '/' in componentId
+      path: `/:componentId(${componentIdUrlRegex})/`,
       children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} widgetSlot={this.widgetSlot} />
     };
   }

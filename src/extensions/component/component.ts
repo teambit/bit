@@ -4,7 +4,6 @@ import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
 // eslint-disable-next-line import/no-cycle
-import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 // eslint-disable-next-line import/no-cycle
@@ -29,12 +28,7 @@ export default class Component {
     /**
      * state of the component.
      */
-    readonly state: State,
-
-    /**
-     * list of all component tags
-     */
-    readonly tags: TagMap = new TagMap()
+    readonly state: State
   ) {}
 
   /**
@@ -74,7 +68,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags);
+    return new Component(this.id, snap, snap.state);
   }
 
   /**
@@ -82,7 +76,7 @@ export default class Component {
    */
   get displayName() {
     const tokens = this.id.name.split('-').map(token => capitalize(token));
-    return tokens.join('');
+    return tokens.join(' ');
   }
 
   /**
@@ -138,7 +132,7 @@ export default class Component {
 
   fromString(str: string) {
     const object = JSON.parse(str);
-    return new Component(object.name, null, object.state, object.tags);
+    return new Component(object.name, null, object.state);
   }
 
   /**

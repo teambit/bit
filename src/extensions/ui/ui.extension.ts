@@ -9,8 +9,9 @@ import { GraphQLExtension } from '../graphql';
 import { Component } from '../component';
 import { createWebpackConfig } from './webpack/webpack.config';
 import { BundlerExtension } from '../bundler/bundler.extension';
+import { WatcherExtension } from '../watch';
 
-type UIDeps = [CLIExtension, Environments, Workspace, GraphQLExtension, BundlerExtension];
+type UIDeps = [CLIExtension, Environments, Workspace, GraphQLExtension, BundlerExtension, WatcherExtension];
 export class UIExtension {
   constructor(
     /**
@@ -31,7 +32,12 @@ export class UIExtension {
     /**
      * bundler extension.
      */
-    private bundler: BundlerExtension
+    private bundler: BundlerExtension,
+
+    /**
+     * watcher extension.
+     */
+    private watcher: WatcherExtension
   ) {}
 
   static runtimes = {
@@ -50,6 +56,7 @@ export class UIExtension {
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
     const devServers = await this.bundler.devServer(components);
+    this.watcher.watchAll();
     return server;
   }
 
@@ -59,11 +66,11 @@ export class UIExtension {
     WorkspaceExt,
     GraphQLExtension,
     BundlerExtension,
-    BundlerExtension
+    WatcherExtension
   ];
 
-  static async provider([cli, envs, workspace, graphql, bundler]: UIDeps) {
-    const ui = new UIExtension(envs, graphql, workspace, bundler);
+  static async provider([cli, envs, workspace, graphql, bundler, watcher]: UIDeps) {
+    const ui = new UIExtension(envs, graphql, workspace, bundler, watcher);
     cli.register(new StartCmd(ui, workspace));
     return ui;
   }

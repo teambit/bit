@@ -14,6 +14,7 @@ const GET_COMPONENT = gql`
       getComponent(id: $id) {
         id
         displayName
+        version
         server {
           env
           url
@@ -25,13 +26,6 @@ const GET_COMPONENT = gql`
     }
   }
 `;
-
-// TEMP!
-const currentTag = {
-  version: '5.0.10',
-  downloads: 542,
-  likes: 86
-};
 
 export type ComponentProps = {
   navSlot: NavigationSlot;
@@ -52,14 +46,14 @@ export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
   });
 
   // :TODO @uri please add a proper loader with amir
-  if (loading) return <div>loading</div>;
+  if (loading) return <div></div>;
   if (error) throw error;
 
   const component = ComponentModel.from(data.workspace.getComponent);
 
   return (
     <ComponentProvider component={component}>
-      <TopBar className={styles.topbar} navigationSlot={navSlot} widgetSlot={widgetSlot} currentTag={currentTag} />
+      <TopBar className={styles.topbar} navigationSlot={navSlot} version={component.version} widgetSlot={widgetSlot} />
       {routeSlot && <SlotSubRouter slot={routeSlot} />}
     </ComponentProvider>
   );

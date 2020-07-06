@@ -13,14 +13,14 @@ import { InsightsExt } from '../insights';
 import { IsolatorExtension } from '../isolator';
 import { LoggerExt } from '../logger';
 import { PkgExtension } from '../pkg';
-import { React } from '../react';
+import { ReactExtension } from '../react';
 import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
 import { GraphQLExtension } from '../graphql';
-import { WatchExt } from '../watch';
+import { WatcherExtension } from '../watch';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
@@ -52,7 +52,7 @@ export const manifestsMap = {
   [LoggerExt.name]: LoggerExt,
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [React.name]: React,
+  [ReactExtension.name]: ReactExtension,
   [StencilExtension.name]: StencilExtension,
   [ReporterExt.name]: ReporterExt,
   [ScopeExtension.id]: ScopeExtension,
@@ -61,6 +61,6 @@ export const manifestsMap = {
   // TODO: take from the extension itself & change name to follow convention
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
-  [WatchExt.name]: WatchExt,
+  [WatcherExtension.name]: WatcherExtension,
   [WorkspaceExt.name]: WorkspaceExt
 };

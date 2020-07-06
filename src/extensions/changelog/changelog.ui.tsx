@@ -3,7 +3,6 @@ import React from 'react';
 import { versionsArray } from './ui/changelog.data';
 import { ChangeLogPage } from './ui/change-log-page';
 import { ComponentUI } from '../component/component.ui';
-import styles from './changelog.module.scss';
 import { ChangelogSection } from './changelog.section';
 
 export class ChangeLogUI {

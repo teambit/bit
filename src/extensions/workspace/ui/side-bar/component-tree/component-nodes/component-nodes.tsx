@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import classNames from 'classnames';
+import { NavLink } from 'react-router-dom';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { TreeNodeProps, TreeLayer } from '../recursive-tree';
 import { indentStyle, indentClass } from '../indent';
 import { getName } from '../utils/get-name';
 import { clickable } from '../../../../../../to-eject/css-components/clickable';
 import styles from './component-nodes.module.scss';
+import { ComponentTreeContext } from '../component-tree-context';
+import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
 
 export function ScopeView({ node, depth }: TreeNodeProps) {
   return (
@@ -34,5 +37,27 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
         {node.children && <TreeLayer childNodes={node.children} depth={depth} />}
       </div>
     </div>
+  );
+}
+
+export function ComponentView(props: TreeNodeProps) {
+  const { node } = props;
+  const { onSelect } = useContext(ComponentTreeContext);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+      onSelect && onSelect(node.id, event);
+    },
+    [onSelect, node.id]
+  );
+
+  return (
+    <NavLink
+      to={`/${node.id}`}
+      className={classNames(indentClass, clickable, hoverable, styles.component)}
+      activeClassName={styles.active}
+      onClick={handleClick}
+    >
+      {getName(node.id)}
+    </NavLink>
   );
 }

@@ -1,6 +1,13 @@
 import { Preview } from '../preview/preview.preview';
 
 export class CompositionsPreview {
+  constructor(
+    /**
+     * preview extension.
+     */
+    private preview: Preview
+  ) {}
+
   render(componentId: string, modules: any) {
     if (!modules.componentMap[componentId]) return;
     const composition = this.getActiveComposition(modules.componentMap[componentId][0]);
@@ -21,7 +28,7 @@ export class CompositionsPreview {
   static dependencies = [Preview];
 
   static async provider([preview]: [Preview]) {
-    const compPreview = new CompositionsPreview();
+    const compPreview = new CompositionsPreview(preview);
     preview.registerPreview({
       name: 'compositions',
       render: compPreview.render.bind(compPreview),

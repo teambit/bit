@@ -2,8 +2,10 @@ import { Composition, CompositionProps } from '../../../compositions/composition
 
 export type ComponentModelProps = {
   id: string;
+  version: string;
   server: ComponentServer;
   displayName: string;
+  packageName: string;
   compositions: CompositionProps[];
 };
 
@@ -20,9 +22,19 @@ export class ComponentModel {
     readonly id: string,
 
     /**
+     * version of the component.
+     */
+    readonly version: string,
+
+    /**
      * display name of the component.
      */
     readonly displayName: string,
+
+    /**
+     * package name of the component.
+     */
+    readonly packageName: string,
 
     /**
      * the component server.
@@ -38,11 +50,11 @@ export class ComponentModel {
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, server, displayName, compositions }: ComponentModelProps) {
-    return new ComponentModel(id, displayName, server, Composition.fromArray(compositions));
+  static from({ id, version, server, displayName, compositions, packageName }: ComponentModelProps) {
+    return new ComponentModel(id, version, displayName, packageName, server, Composition.fromArray(compositions));
   }
 
   static empty() {
-    return new ComponentModel('', '', { env: '', url: '' }, []);
+    return new ComponentModel('', '', '', '', { env: '', url: '' }, []);
   }
 }

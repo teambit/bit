@@ -3,7 +3,7 @@ import classnames from 'classnames';
 // import { NavLink, NavLinkProps, useRouteMatch } from 'react-router-dom';
 // import { Button } from '@bit/bit.evangelist.elements.button';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
-// import { themedText } from '@bit/bit.base-ui.text.themed-text';
+import { themedText } from '@bit/bit.base-ui.text.themed-text';
 
 // placeholder until we publish the component from react new project
 import { VersionTag } from '../../../stage-components/workspace-components/version-tag';
@@ -19,18 +19,13 @@ export type TopBarProps = {
    */
   navigationSlot: NavigationSlot;
   widgetSlot: NavigationSlot;
-
-  currentTag: {
-    version: string;
-    downloads: number;
-    likes: number;
-  };
+  version: string;
 };
 
 /**
  * top bar menu.
  */
-export function TopBar({ navigationSlot, widgetSlot, className, currentTag }: TopBarProps) {
+export function TopBar({ navigationSlot, widgetSlot, className, version }: TopBarProps) {
   const navLinks = navigationSlot.values();
   const widgetLinks = widgetSlot.values();
 
@@ -50,10 +45,15 @@ export function TopBar({ navigationSlot, widgetSlot, className, currentTag }: To
             <Icon className={classnames(styles.icon)} of="changelog" />
           </TopBarWidgetLink>
         ))}
-        <span>{currentTag.version}</span> <VersionTag className={styles.marginRight}>Latest</VersionTag>
+        <span>{version}</span> <VersionTag className={styles.marginRight}>Latest</VersionTag>
         <span>
           <Icon className={classnames(styles.icon)} of="more" />
         </span>
+        <span>
+          <Icon className={classnames(themedText, styles.icon)} of="version-tag-stroke" /> {version}
+        </span>{' '}
+        <span>{/* <Icon className={styles.icon} of="download" /> <span>{currentTag.downloads}</span> */}</span>{' '}
+        <span>{/* <Icon className={styles.icon} of="heartstroke" /> {currentTag.likes} */}</span>
         {/* <span>|</span>
         <Button>import ▾</Button>
         <Button>simulations </Button>

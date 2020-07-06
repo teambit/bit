@@ -9,6 +9,10 @@ export function compositionsSchema(compositions: CompositionsExtension): Schema 
         compositions: [Composition]
       }
 
+      type Subscription {
+        compositionAdded: Composition
+      }
+
       type Composition {
         filepath: String
         identifier: String
