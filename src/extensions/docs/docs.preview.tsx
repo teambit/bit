@@ -16,7 +16,7 @@ export class DocsPreview {
 
   render(componentId: string, modules: any, [compositions]: [any]) {
     if (!modules.componentMap[componentId]) {
-      modules.mainModule.default(this.graphql.getProvider, componentId);
+      modules.mainModule.default(this.graphql.getProvider, componentId, {}, compositions);
       return;
     }
 

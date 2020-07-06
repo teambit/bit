@@ -8,8 +8,10 @@ import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
 import { mutedText } from '@bit/bit.base-ui.text.muted-text';
-import { ConsumableLinks } from '@bit/bit.test-scope.ui.consumable-links';
-import { PropTable } from '@bit/bit.test-scope.ui.property-table';
+// import { ConsumableLinks } from '@bit/bit.test-scope.ui.consumable-links';
+// import { PropTable } from '@bit/bit.test-scope.ui.property-table';
+import { ConsumableLink } from '../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.consumable-link';
+import { PropTable } from '../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.property-table';
 import { gql } from 'apollo-boost';
 import { Playground } from './playground';
 import { ComponentModel } from '../../component/ui';
@@ -46,10 +48,10 @@ const GET_COMPONENT = gql`
           description
           required
           type
-          # defaultValue {
-          #   value
-          #   computed
-          # }
+          defaultValue {
+            value
+            computed
+          }
         }
       }
     }
@@ -63,7 +65,8 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   const { loading, error, data } = useQuery(GET_COMPONENT, {
     variables: { id: componentId }
   });
-
+  console.log('compositions', compositions);
+  console.log('data', data);
   // :TODO @uri please add a proper loader with amir
   if (loading) return <div></div>;
   if (error) throw error;
@@ -87,7 +90,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
         <Subtitle className={styles.marginBottom}>{abstract}</Subtitle>
         <LabelList className={styles.marginBottom}>{labels}</LabelList>
         <Separator className={styles.marginBottom} />
-        <ConsumableLinks data={[{ title: 'Package name', link: component.packageName }]}></ConsumableLinks>
+        <ConsumableLink title="Package name" link={component.packageName}></ConsumableLink>
         <Content />
         {docsModel.properties.length !== 0 && (
           <PropTable headings={['name', 'type', 'defaultValue', 'description']} rows={docsModel.properties} />
