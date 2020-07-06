@@ -13,7 +13,7 @@ export class TypescriptExtension {
   static id = '@teambit/typescript';
   static dependencies = [SchemaExtension];
 
-  static getPackageJsonProps() {
+  getPackageJsonProps() {
     return { main: 'dist/{main}.js' };
   }
 

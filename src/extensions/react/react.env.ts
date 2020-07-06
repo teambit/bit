@@ -97,8 +97,11 @@ export class ReactEnv implements Environment {
     return require.resolve('./mount');
   }
 
+  /**
+   * define the package json properties to add to each component.
+   */
   getPackageJsonProps() {
-    return TypescriptExtension.getPackageJsonProps();
+    return this.ts.getPackageJsonProps();
   }
 
   /**
