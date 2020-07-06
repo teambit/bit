@@ -4,9 +4,9 @@
 	align-items: center;
 	text-decoration: none;
 	transition: color 300ms;
-	margin: 0 5px;
 	padding: 10px 15px;
 	border-radius: 5px;
+	color: var(--text-highlight);
 	
 	&.active {
 		background-color: white;
