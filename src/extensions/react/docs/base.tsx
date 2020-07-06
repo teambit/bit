@@ -8,10 +8,8 @@ import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
 import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
 import { mutedText } from '@bit/bit.base-ui.text.muted-text';
-// import { ConsumableLinks } from '@bit/bit.test-scope.ui.consumable-links';
-// import { PropTable } from '@bit/bit.test-scope.ui.property-table';
-import { ConsumableLink } from '../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.consumable-link';
-import { PropTable } from '../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.property-table';
+import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
+import { PropTable } from '@bit/bit.test-scope.ui.property-table';
 import { gql } from 'apollo-boost';
 import { Playground } from './playground';
 import { ComponentModel } from '../../component/ui';
@@ -65,8 +63,6 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   const { loading, error, data } = useQuery(GET_COMPONENT, {
     variables: { id: componentId }
   });
-  console.log('compositions', compositions);
-  console.log('data', data);
   // :TODO @uri please add a proper loader with amir
   if (loading) return <div></div>;
   if (error) throw error;
