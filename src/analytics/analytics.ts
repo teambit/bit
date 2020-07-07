@@ -18,7 +18,8 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-  CFG_ANALYTICS_ENVIRONMENT_KEY
+  CFG_ANALYTICS_ENVIRONMENT_KEY,
+  BIT_VERSION
 } from '../constants';
 
 const LEVEL = {
@@ -130,11 +131,11 @@ class Analytics {
     if (!this.anonymous) return args;
     return args.map(arg => this._hashLightly(arg));
   }
-  static init(command: string, flags: Record<string, any>, args: string[], version) {
+  static init(command: string, flags: Record<string, any>, args: string[]) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
-    this.release = version;
+    this.release = BIT_VERSION;
     this.args = this._hashArgs(args);
     this.nodeVersion = process.version;
     this.os = process.platform;
