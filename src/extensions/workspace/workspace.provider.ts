@@ -71,9 +71,18 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
-        return workspace.loadExtensions(componentConfig.parseExtensions());
+      ConsumerComponent.registerOnComponentConfigLegacyLoading(
+        'workspace',
+        async (id, componentConfig: ComponentConfig) => {
+          return workspace.loadExtensions(componentConfig.extensions);
+        }
+      );
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
+        const wsComponentConfig = await workspace.workspaceComponentConfig(id);
+        await workspace.loadExtensions(wsComponentConfig.componentExtensions);
+        return wsComponentConfig;
       });
+
       graphql.register(workspaceSchema(workspace));
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));

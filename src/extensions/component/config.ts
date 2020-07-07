@@ -17,15 +17,10 @@ type LegacyConfigProps = {
 };
 
 /**
- * in-memory represnentation of the component configuration.
+ * in-memory representation of the component configuration.
  */
 export default class Config {
   constructor(
-    /**
-     * version main file
-     */
-    readonly main: PathLinux,
-
     /**
      * configured extensions
      */

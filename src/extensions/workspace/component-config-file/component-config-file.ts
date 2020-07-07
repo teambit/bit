@@ -7,7 +7,6 @@ import { BitId } from '../../../bit-id';
 import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
 import { PathOsBasedAbsolute } from '../../../utils/path';
-import { Consumer } from '../../../consumer';
 import GeneralError from '../../../error/general-error';
 
 interface ComponentConfigFileOptions {
@@ -23,6 +22,7 @@ interface ComponentConfigFileJson {
   componentId: any;
   extensions: any;
   propagate: boolean;
+  defaultScope?: string;
 }
 
 const DEFAULT_INDENT = 2;
@@ -33,11 +33,12 @@ export class ComponentConfigFile {
     public componentId: BitId,
     public extensions: ExtensionDataList,
     public propagate: boolean = false,
-    private options: ComponentConfigFileOptions = { indent: DEFAULT_INDENT, newLine: DEFAULT_NEWLINE }
+    private options: ComponentConfigFileOptions = { indent: DEFAULT_INDENT, newLine: DEFAULT_NEWLINE },
+    public defaultScope?: string
   ) {}
 
   // TODO: remove consumer from here
-  static async load(componentDir: PathOsBasedAbsolute, consumer: Consumer): Promise<ComponentConfigFile | undefined> {
+  static async load(componentDir: PathOsBasedAbsolute): Promise<ComponentConfigFile | undefined> {
     const filePath = ComponentConfigFile.composePath(componentDir);
     const isExist = await fs.pathExists(filePath);
     if (!isExist) {
@@ -48,9 +49,15 @@ export class ComponentConfigFile {
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
     const componentId = new BitId(parsed.componentId);
-    const extensions = ExtensionDataList.fromObject(parsed.extensions, consumer);
+    const extensions = ExtensionDataList.fromObject(parsed.extensions);
 
-    return new ComponentConfigFile(componentId, extensions, parsed.propagate, { indent, newLine });
+    return new ComponentConfigFile(
+      componentId,
+      extensions,
+      !!parsed.propagate,
+      { indent, newLine },
+      parsed.defaultScope
+    );
   }
 
   static composePath(componentRootFolder: string) {
@@ -71,6 +78,7 @@ export class ComponentConfigFile {
     return {
       componentId: this.componentId.serialize(),
       propagate: this.propagate,
+      defaultScope: this.defaultScope,
       extensions: this.extensions.toObject()
     };
   }

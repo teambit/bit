@@ -48,7 +48,6 @@ import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
@@ -118,9 +117,14 @@ export default class Component {
   static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     ComponentConfig.registerAddConfigAction(extId, func);
   }
-  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
+
+  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
+    ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
+  }
+
   static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
