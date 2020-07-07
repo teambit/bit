@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2809](https://github.com/teambit/bit/issues/2809) - fix legacy capsule exec to not hang on error
+
 ## [[14.8.6] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.6)
 
 - add an option to not use load scope from cache for pkg extension
