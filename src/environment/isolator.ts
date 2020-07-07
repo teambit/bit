@@ -1,4 +1,5 @@
 import R from 'ramda';
+import execa from 'execa';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
@@ -24,7 +25,6 @@ import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
 import { PackageManagerResults } from '../npm-client/npm-client';
-import execa from 'execa';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
