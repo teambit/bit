@@ -69,6 +69,7 @@ export class IsolatorExtension {
     const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
+    opts = Object.assign(opts || {}, { consumer });
     return this.createNetwork(seedersIds, graph, baseDir, opts);
   }
   async createNetworkFromScope(seeders: string[], scope: Scope, opts?: {}): Promise<Network> {
@@ -97,7 +98,14 @@ export class IsolatorExtension {
       },
       opts
     );
-    const components = findSuccessorsInGraph(graph, seeders);
+    const compsAndDeps = findSuccessorsInGraph(graph, seeders);
+    const filterNonWorkspaceComponents = () => {
+      // @ts-ignore @todo: fix this opts to have types
+      const consumer: Consumer = opts?.consumer;
+      if (!consumer) return compsAndDeps;
+      return compsAndDeps.filter(c => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true }));
+    };
+    const components = filterNonWorkspaceComponents();
     const capsules = await createCapsulesFromComponents(components, baseDir, config);
 
     const capsuleList = new CapsuleList(
@@ -108,13 +116,7 @@ export class IsolatorExtension {
     );
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await writeComponentsToCapsules(
-      components,
-      graph,
-      capsules,
-      capsuleList,
-      this.dependencyResolver.packageManagerName
-    );
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData

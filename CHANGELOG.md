@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.8.6] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.6)
+
+- add an option to not use load scope from cache for pkg extension
+
+## [[14.8.5] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.5)
+
+- [#2796](https://github.com/teambit/bit/issues/2796) - fix legacy compilers that use component.extensions to be build upon tag
+
+## [[14.8.4] - 2020-07-02](https://github.com/teambit/bit/releases/tag/v14.8.4)
+
 - add an option to not use cache when loading scope
 - do not use scope cache by default when loading scope programmatically
 
