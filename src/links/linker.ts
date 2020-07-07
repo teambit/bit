@@ -15,6 +15,7 @@ import { BitIds, BitId } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
@@ -24,6 +25,9 @@ export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] =
   return nodeModuleLinker.link();
 }
 
+/**
+ * Relevant for legacy components only (before Harmony).
+ */
 export async function getLinksInDistToWrite(
   component: Component,
   componentMap: ComponentMap,
@@ -34,6 +38,7 @@ export async function getLinksInDistToWrite(
   if (!componentWithDependencies && !consumer) {
     throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined');
   }
+  throwForNonLegacy(component.isLegacy, getLinksInDistToWrite.name);
   const nodeModuleLinker = new NodeModuleLinker([component], consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();

@@ -33,7 +33,14 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     this._wrkDir = container.wrkDir;
   }
 
+  /**
+   * @deprecated please use `this.path`
+   */
   get wrkDir(): string {
+    return this.path;
+  }
+
+  get path(): string {
     return realpathSync(this._wrkDir);
   }
 

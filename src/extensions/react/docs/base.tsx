@@ -13,7 +13,6 @@ import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { PropTable } from '@bit/bit.test-scope.ui.property-table';
 import { gql } from 'apollo-boost';
-import { Playground } from './playground';
 import { ComponentModel } from '../../component/ui';
 import { LabelList } from '../../stage-components/workspace-components/label';
 import { Separator } from '../../stage-components/workspace-components/separator';
@@ -75,10 +74,13 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
   const component = ComponentModel.from(data.workspace.getComponent);
   const docsModel = data.workspace.getDocs;
+
+  // @todo uri we should pass all this as props properly to the template.
   const Content = isFunction(docs.default) ? docs.default : () => <div></div>;
   const labels = docs.labels || [];
   const examples = docs.examples || [];
   const abstract = docs.abstract || docsModel.abstract || '';
+  const overviewCompositions = docs.compositions || compositions;
 
   return (
     <ClientContext>
@@ -104,7 +106,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
           {examples.length > 0 && (
             <LinkedHeading title="Examples" link="/~compositions" className={spacing.secondaryTitleMargin} />
           )}
-          {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />}
+          {/* {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />} */}
         </Section>
         {docsModel.properties.length !== 0 && (
           <Section className={spacing.sectionMargin}>

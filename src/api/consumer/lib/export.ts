@@ -23,6 +23,7 @@ import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_BINDINGS_
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
+import { publishComponentsToRegistry } from '../../../scope/component-ops/publish-during-export';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -38,10 +39,11 @@ export default (async function exportAction(params: {
   force: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-  const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
+  const { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote } = await exportComponents(params);
+  const publishResults = await publishComponentsToRegistry({ newIdsOnRemote, updatedIds });
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
-  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
+  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults, publishResults };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
   return exportResults;
 });
@@ -64,7 +66,13 @@ async function exportComponents({
   codemod: boolean;
   allVersions: boolean;
   force: boolean;
-}): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
+}): Promise<{
+  updatedIds: BitId[];
+  nonExistOnBitMap: BitId[];
+  missingScope: BitId[];
+  exported: BitId[];
+  newIdsOnRemote: BitId[];
+}> {
   const consumer: Consumer = await loadConsumer();
   const { idsToExport, missingScope, idsWithFutureScope } = await getComponentsToExport(
     ids,
@@ -73,9 +81,10 @@ async function exportComponents({
     includeNonStaged,
     force
   );
-  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
+  if (R.isEmpty(idsToExport))
+    return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [], newIdsOnRemote: [] };
   if (codemod) _throwForModified(consumer, idsToExport);
-  const { exported, updatedLocally } = await exportMany({
+  const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
     scope: consumer.scope,
     ids: idsToExport,
     remoteName: remote,
@@ -96,7 +105,7 @@ async function exportComponents({
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap, missingScope, exported };
+  return { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote };
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {

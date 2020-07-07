@@ -102,6 +102,7 @@ export default class Scope {
   }
 
   public onTag: Function[] = []; // enable extensions to hook during the tag process
+  public onPostExport: Function[] = []; // enable extensions to hook during the tag process
 
   /**
    * import components to the `Scope.
@@ -600,17 +601,28 @@ export default class Scope {
     return component.loadVersion(id.version, this.objects);
   }
 
-  async getComponentsAndVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
+  async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
-      const versionStr = componentObjects.id.getVersion().toString();
+      const getVersionStr = (): string => {
+        if (componentObjects.id.hasVersion()) return componentObjects.id.getVersion().toString();
+        if (!defaultToLatestVersion)
+          throw new Error(`getComponentsAndVersions expect ${componentObjects.id.toString()} to have a version`);
+        return componentObjects.component?.latest() as string;
+      };
+      const versionStr = getVersionStr();
       const version: Version = await component.loadVersion(versionStr, this.objects);
       return { component, version, versionStr };
     });
     const componentsAndVersions = await Promise.all(componentsAndVersionsP);
     return removeNils(componentsAndVersions);
+  }
+
+  async isComponentInScope(id: BitId): Promise<boolean> {
+    const comp = await this.sources.get(id);
+    return Boolean(comp);
   }
 
   async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
@@ -790,25 +802,27 @@ export default class Scope {
     Scope.scopeCache = {};
   }
 
-  static async load(absPath: string): Promise<Scope> {
+  static async load(absPath: string, useCache = true): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-    if (!Scope.scopeCache[scopePath]) {
-      const scopeJsonPath = getScopeJsonPath(scopePath);
-      const scopeJsonExist = fs.existsSync(scopeJsonPath);
-      let scopeJson;
-      if (scopeJsonExist) {
-        scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
-      } else {
-        scopeJson = Scope.ensureScopeJson(scopePath);
-      }
-      const objects = await Repository.load({ scopePath, scopeJson });
-      const scope = new Scope({ path: scopePath, scopeJson, objects });
-      Scope.scopeCache[scopePath] = scope;
+    if (useCache && Scope.scopeCache[scopePath]) {
+      logger.info(`taking scope at ${scopePath} from cache`);
+      return Scope.scopeCache[scopePath];
     }
-    return Scope.scopeCache[scopePath];
+    const scopeJsonPath = getScopeJsonPath(scopePath);
+    const scopeJsonExist = fs.existsSync(scopeJsonPath);
+    let scopeJson;
+    if (scopeJsonExist) {
+      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+    } else {
+      scopeJson = Scope.ensureScopeJson(scopePath);
+    }
+    const objects = await Repository.load({ scopePath, scopeJson });
+    const scope = new Scope({ path: scopePath, scopeJson, objects });
+    Scope.scopeCache[scopePath] = scope;
+    return scope;
   }
 }

@@ -6,8 +6,10 @@ import { Component, ComponentID } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
+type PostExportRegistry = SlotRegistry<OnPostExport>;
 
 export type OnTag = (ids: BitId[]) => Promise<any>;
+export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension {
   static id = '@teambit/scope';
@@ -21,7 +23,12 @@ export class ScopeExtension {
     /**
      * slot registry for subscribing to build
      */
-    private tagRegistry: TagRegistry
+    private tagRegistry: TagRegistry,
+
+    /**
+     * slot registry for subscribing to post-export
+     */
+    private postExportRegistry: PostExportRegistry
   ) {}
 
   /**
@@ -30,6 +37,14 @@ export class ScopeExtension {
   onTag(tagFn: OnTag) {
     this.legacyScope.onTag.push(tagFn);
     this.tagRegistry.register(tagFn);
+  }
+
+  /**
+   * register to the post-export slot.
+   */
+  onPostExport(postExportFn: OnPostExport) {
+    this.legacyScope.onPostExport.push(postExportFn);
+    this.postExportRegistry.register(postExportFn);
   }
 
   /**
@@ -61,14 +76,14 @@ export class ScopeExtension {
   /**
    * declare the slots of scope extension.
    */
-  static slots = [Slot.withType<OnTag>()];
+  static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static async provider(deps, config, [tagSlot]: [TagRegistry]) {
+  static async provider(deps, config, [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]) {
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;
     }
 
-    return new ScopeExtension(legacyScope, tagSlot);
+    return new ScopeExtension(legacyScope, tagSlot, postExportSlot);
   }
 }
