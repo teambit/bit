@@ -61,7 +61,7 @@ export default class Environment {
       override: opts.override,
       writePackageJson: opts.writePackageJson,
       writeConfig: opts.writeConfig,
-      writeBitDependencies: opts.writeBitDependencies,
+      ignoreBitDependencies: !opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
       writeDists: opts.writeDists,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
