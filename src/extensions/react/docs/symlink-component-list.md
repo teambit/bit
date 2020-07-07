@@ -7,7 +7,7 @@
 - @bit/bit.test-scope.ui.section
 
 ## examples:
-ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.consumable-link  ./node_modules/@bit/bit.test-scope.ui.consumable-link
+ln -s ~/dev/bit/react-new-project/node_modules/@bit/bit.test-scope.ui.consumable-link  ./node_modules/@bit/bit.test-scope.ui.consumable-link
 ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.property-table  ./node_modules/@bit/bit.test-scope.ui.property-table
 ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.linked-heading  ./node_modules/@bit/bit.test-scope.ui.linked-heading
-ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.section  ./node_modules/@bit/bit.test-scope.ui.consumable-link
+ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.section  ./node_modules/@bit/bit.test-scope.ui.ui.section
