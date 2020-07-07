@@ -9,6 +9,7 @@ export type ComponentCompositionProps = {
 };
 
 export function ComponentComposition({ component, composition }: ComponentCompositionProps) {
+  console.log(component, composition);
   return (
     <ComponentPreview
       component={component}

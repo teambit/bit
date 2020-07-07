@@ -19,12 +19,7 @@ import { Separator } from '../../stage-components/workspace-components/separator
 import { VersionTag } from '../../stage-components/workspace-components/version-tag';
 import { CompositionsOverview } from '../../compositions/ui/compositions-overview';
 import styles from './base.module.scss';
-
-// this is temporarily here to get the docs spacing styles
 import spacing from './docs-spacer.module.scss';
-
-// import { InstallMethods, InstallMethodsData } from '../../stage-components/workspace-components/install-methods';
-// import { Docs } from '../../docs/docs';
 
 export type DocsSectionProps = {
   docs: any;
@@ -92,25 +87,31 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
         <Subtitle className={styles.marginBottom}>{abstract}</Subtitle>
         <LabelList className={styles.marginBottom}>{labels}</LabelList>
         <Separator className={styles.marginBottom} />
-        <Section className={classNames(spacing.sectionMargin, spacing.maxWidth700)}>
+        <Section className={classNames(spacing.maxWidth700)}>
           <ConsumableLink title="Package name" link={component.packageName}></ConsumableLink>
         </Section>
         <Content />
         {overviewCompositions && Object.keys(overviewCompositions).length > 0 && (
-          <Section className={spacing.sectionMargin}>
-            <LinkedHeading title="Compositions" link="/~compositions" className={spacing.secondaryTitleMargin} />
-            <CompositionsOverview compositions={compositions} />
+          <Section>
+            <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
+              Compositions
+            </LinkedHeading>
+            <CompositionsOverview compositions={overviewCompositions} />
           </Section>
         )}
-        <Section className={spacing.sectionMargin}>
+        <Section>
           {examples.length > 0 && (
-            <LinkedHeading title="Examples" link="/~compositions" className={spacing.secondaryTitleMargin} />
+            <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
+              Examples
+            </LinkedHeading>
           )}
           {/* {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />} */}
         </Section>
         {docsModel.properties.length !== 0 && (
-          <Section className={spacing.sectionMargin}>
-            <LinkedHeading title="Properties" link="/~compositions" className={spacing.secondaryTitleMargin} />
+          <Section>
+            <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
+              Properties
+            </LinkedHeading>
             <PropTable headings={['name', 'type', 'defaultValue', 'description']} rows={docsModel.properties} />
           </Section>
         )}
