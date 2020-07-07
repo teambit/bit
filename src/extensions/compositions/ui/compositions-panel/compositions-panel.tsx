@@ -23,24 +23,17 @@ export function CompositionsPanel({ compositions, onCompositionSelect }: Composi
     onCompositionSelect(composition);
   };
   return (
-    <div className={styles.panelBox}>
-      <div className={styles.tabs}>
-        <div>compositions</div>
-        <div>properties</div>
-        <div>dependencies</div>
-      </div>
-      <ul className={styles.composition}>
-        {compositions.map((composition, key) => {
-          return (
-            <li key={key} className={classNames(styles.linkWrapper, { [styles.active]: active === key })}>
-              <span className={styles.box}>&#9632;</span>
-              <a className={styles.panelLink} onClick={() => onSelect(key, composition)}>
-                {composition.displayName}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className={styles.composition}>
+      {compositions.map((composition, key) => {
+        return (
+          <li key={key} className={classNames(styles.linkWrapper, { [styles.active]: active === key })}>
+            <span className={styles.box}>&#9632;</span>
+            <a className={styles.panelLink} onClick={() => onSelect(key, composition)}>
+              {composition.displayName}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
