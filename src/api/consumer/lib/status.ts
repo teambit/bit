@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
@@ -46,7 +47,10 @@ export default (async function status(): Promise<StatusResult> {
   const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    return Boolean(component.issues);
+    if (consumer.isLegacy && component.issues) {
+      delete component.issues.relativeComponentsAuthored;
+    }
+    return Boolean(component.issues) && !R.isEmpty(component.issues);
   });
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);

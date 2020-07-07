@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 // TODO: change to module path once types become a component
 import { LogPublisher } from '../types';
+import legacyLogger from '../../logger/logger';
 
 export enum LogLevel {
   INFO = 'info',
@@ -22,18 +23,22 @@ export default class Logger {
       this.subscribers.push(extensionName);
     }
     const emitter = this.eventEmitter;
+    const emitAndLogToFile = (componentId, messages, logLevel) => {
+      emitter.emit(extensionName, { componentId, messages, logLevel });
+      legacyLogger[logLevel](`${componentId}, ${messages}`);
+    };
     return {
       info(componentId, messages) {
-        emitter.emit(extensionName, { componentId, messages, logLevel: 'info' });
+        emitAndLogToFile(componentId, messages, 'info');
       },
       warn(componentId, messages) {
-        emitter.emit(extensionName, { componentId, messages, logLevel: 'warn' });
+        emitAndLogToFile(componentId, messages, 'warn');
       },
       error(componentId, messages) {
-        emitter.emit(extensionName, { componentId, messages, logLevel: 'error' });
+        emitAndLogToFile(componentId, messages, 'error');
       },
       debug(componentId, messages) {
-        emitter.emit(extensionName, { componentId, messages, logLevel: 'debug' });
+        emitAndLogToFile(componentId, messages, 'debug');
       }
     };
   }

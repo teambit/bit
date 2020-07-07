@@ -59,7 +59,7 @@ export default class Core {
    */
   async loadExtensions(extensions: ExtensionConfigList): Promise<void> {
     // TODO: remove this condition once scope implements ComponentHost
-    if (this.host.loadExtensions) {
+    if (this.host && this.host.loadExtensions) {
       return this.host.loadExtensions(extensions);
     }
     return undefined;
