@@ -1,3 +1,7 @@
+// polyfill for flat-map to support node10
+// https://babeljs.io/docs/en/v7-migration#remove-proposal-polyfills-in-babel-polyfill-https-githubcom-babel-babel-issues-8416
+// this is already imported in app.ts file
+import 'core-js/fn/array/flat-map';
 import harmony from '@teambit/harmony';
 import pWaitFor from 'p-wait-for';
 import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
