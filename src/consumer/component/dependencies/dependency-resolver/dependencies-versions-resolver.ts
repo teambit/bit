@@ -60,13 +60,15 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const getFromModel = () => idFromModel || null;
     const getFromPackageJson = () => idFromPackageJson || null;
     const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
+    const getCurrentVersion = () => (id.hasVersion() ? id.version : null);
     const strategies: Function[] = [
       getFromComponentConfig,
-      getFromDependentPackageJson,
-      getFromPackageJsonIfChanged,
+      // getFromDependentPackageJson,
+      // getFromPackageJsonIfChanged,
       getFromBitMap,
-      getFromModel,
-      getFromPackageJson
+      getCurrentVersion,
+      getFromModel
+      // getFromPackageJson
     ];
 
     for (const strategy of strategies) {
