@@ -39,25 +39,3 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
     </div>
   );
 }
-
-export function ComponentView(props: TreeNodeProps) {
-  const { node } = props;
-  const { onSelect } = useContext(ComponentTreeContext);
-  const handleClick = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-      onSelect && onSelect(node.id, event);
-    },
-    [onSelect, node.id]
-  );
-
-  return (
-    <NavLink
-      to={`/${node.id}`}
-      className={classNames(indentClass, clickable, hoverable, styles.component)}
-      activeClassName={styles.active}
-      onClick={handleClick}
-    >
-      {getName(node.id)}
-    </NavLink>
-  );
-}

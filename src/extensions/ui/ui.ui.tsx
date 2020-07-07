@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
 import { ReactRouterUI } from '../react-router/react-router.ui';
+import { ClientContext } from './ui/client-context';
+
 // import * as serviceWorker from './serviceWorker';
 
 // If you want your app to work offline and load faster, you can change
@@ -35,9 +37,9 @@ export class UIRuntimeExtension {
     const routes = this.router.renderRoutes();
 
     ReactDOM.render(
-      <React.StrictMode>
-        <GraphqlProvider>{routes}</GraphqlProvider>
-      </React.StrictMode>,
+      <GraphqlProvider>
+        <ClientContext>{routes}</ClientContext>
+      </GraphqlProvider>,
       document.getElementById('root')
     );
   }

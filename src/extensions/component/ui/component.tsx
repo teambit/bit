@@ -1,5 +1,4 @@
 import React from 'react';
-import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentProvider } from './context';
@@ -7,6 +6,8 @@ import { TopBar } from './top-bar';
 import styles from './component.module.scss';
 import { ComponentModel } from './component-model';
 import { NavigationSlot, RouteSlot, SlotSubRouter } from '../../react-router/slot-router';
+import { useDataQuery } from '../../ui/ui/data/use-data-query';
+import { FullLoader } from '../../../to-eject/full-loader';
 
 const GET_COMPONENT = gql`
   query Component($id: String!) {
@@ -41,20 +42,25 @@ export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
     params: { componentId }
   } = useRouteMatch();
 
-  const { loading, error, data } = useQuery(GET_COMPONENT, {
+  const { data } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId }
   });
 
-  // :TODO @uri please add a proper loader with amir
-  if (loading) return <div></div>;
-  if (error) throw error;
+  if (!data) return <FullLoader />;
 
   const component = ComponentModel.from(data.workspace.getComponent);
 
   return (
     <ComponentProvider component={component}>
-      <TopBar className={styles.topbar} navigationSlot={navSlot} version={component.version} widgetSlot={widgetSlot} />
-      {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      <div className={styles.container}>
+        <TopBar
+          className={styles.topbar}
+          navigationSlot={navSlot}
+          version={component.version}
+          widgetSlot={widgetSlot}
+        />
+        {routeSlot && <SlotSubRouter slot={routeSlot} />}
+      </div>
     </ComponentProvider>
   );
 }
