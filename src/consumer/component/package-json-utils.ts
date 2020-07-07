@@ -105,14 +105,15 @@ export function preparePackageJsonToWrite(
   component: Component,
   bitDir: string,
   override = true,
-  writeBitDependencies = false, // e.g. when it's a capsule
+  ignoreBitDependencies: BitIds | boolean = true,
   excludeRegistryPrefix?: boolean,
   packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
-    if (!writeBitDependencies) return {};
+    if (ignoreBitDependencies === true) return {};
     return dependencies.reduce((acc, depId: BitId) => {
+      if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
       const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
