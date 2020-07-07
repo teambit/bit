@@ -11,8 +11,7 @@ export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
   graph: Graph,
   capsules: Capsule[],
-  capsuleList: CapsuleList,
-  packageManager: string
+  capsuleList: CapsuleList
 ) {
   components = components.map(c => c.clone());
   const allIds = BitIds.fromArray(components.map(c => c.id));

@@ -116,13 +116,7 @@ export class IsolatorExtension {
     );
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await writeComponentsToCapsules(
-      components,
-      graph,
-      capsules,
-      capsuleList,
-      this.dependencyResolver.packageManagerName
-    );
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
