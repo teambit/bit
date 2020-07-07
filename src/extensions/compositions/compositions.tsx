@@ -14,7 +14,9 @@ export function Compositions() {
 
   return (
     <div className={styles.compositionsPage}>
-      <ComponentComposition component={component} composition={composition}></ComponentComposition>
+      <div className={styles.compositionPreview}>
+        <ComponentComposition component={component} composition={composition}></ComponentComposition>
+      </div>
       <CompositionsPanel onCompositionSelect={c => setComposition(c)} compositions={component.compositions} />
     </div>
   );
