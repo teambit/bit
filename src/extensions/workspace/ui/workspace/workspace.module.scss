@@ -1,20 +1,26 @@
 $topbarHeight: 64px;
 
-.explorer {
+.emptyContainer {
+	height: 100vh
+}
+
+.workspace {
 	display: grid;
 	height: 100vh;
 	
 	color: var(--text-highlight);
+	
+	overflow: hidden;
 
 	grid-template:
-		'scopeName header'
-		'navigation content';
+		'corner main'
+		'navigation main';
 
 	grid-template-columns: 264px 1fr;
 	grid-template-rows: auto 1fr;
 
 	> :nth-child(1) {
-		grid-area: scopeName;
+		grid-area: corner;
 	}
 	
 	> :nth-child(2) {
@@ -22,15 +28,11 @@ $topbarHeight: 64px;
 	}
 	
 	> :nth-child(3) {
-		grid-area: header;
-	}
-
-	> :nth-child(4) {
-		grid-area: content;
+		grid-area: main;
 	}
 }
 
-.scopeName {
+.corner {
 	display: flex;
 	align-items: center;
 	height: $topbarHeight;
@@ -61,4 +63,7 @@ $topbarHeight: 64px;
 
 .sideBar {
 	border-right: 1px solid #ededed;
+	flex: 1;
+	
+	overflow: auto;
 }

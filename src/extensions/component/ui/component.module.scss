@@ -1,8 +1,15 @@
 
 $topbarHeight: 64px;
 
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+}
+
 .topbar {
 	display: flex;
+	flex: none;
 	align-items: center;
 	
 	padding-left: 16px;

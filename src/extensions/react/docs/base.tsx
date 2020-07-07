@@ -96,9 +96,9 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
           <ConsumableLink title="Package name" link={component.packageName}></ConsumableLink>
         </Section>
         <Content />
-        {compositions && Object.keys(compositions).length > 0 && (
+        {overviewCompositions && Object.keys(overviewCompositions).length > 0 && (
           <Section className={spacing.sectionMargin}>
-            <LinkedHeading title="Simulations" link="/~compositions" className={spacing.secondaryTitleMargin} />
+            <LinkedHeading title="Compositions" link="/~compositions" className={spacing.secondaryTitleMargin} />
             <CompositionsOverview compositions={compositions} />
           </Section>
         )}
