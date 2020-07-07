@@ -2,15 +2,16 @@ import React, { useContext, useState } from 'react';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
+import styles from './compositions.module.scss';
 
 export function Compositions() {
   const component = useContext(ComponentContext);
   const [composition, setComposition] = useState(component.compositions[0]);
 
   return (
-    <div>
-      <CompositionsPanel onCompositionSelect={c => setComposition(c)} compositions={component.compositions} />
+    <div className={styles.compositionsPage}>
       <ComponentComposition component={component} composition={composition}></ComponentComposition>
+      <CompositionsPanel onCompositionSelect={c => setComposition(c)} compositions={component.compositions} />
     </div>
   );
 }
