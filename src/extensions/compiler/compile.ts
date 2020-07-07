@@ -75,7 +75,7 @@ export class Compile {
       if (!compilerInstance.compileFile) {
         throw new Error(`compiler ${compilerId.toString()} doesn't implement "compileFile" interface`);
       }
-      const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName(component);
       const packageDir = path.join('node_modules', packageName);
       const distDirName = DEFAULT_DIST_DIRNAME;
       const distDir = path.join(packageDir, distDirName);

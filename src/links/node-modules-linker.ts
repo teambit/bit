@@ -188,7 +188,8 @@ export default class NodeModuleLinker {
       component.bindingPrefix,
       componentId,
       true,
-      this._getDefaultScope(component)
+      this._getDefaultScope(component),
+      component.extensions
     );
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();

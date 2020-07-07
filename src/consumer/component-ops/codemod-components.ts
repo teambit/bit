@@ -63,7 +63,7 @@ function codemodComponent(component: Component): { files: SourceFile[]; warnings
         );
         return;
       }
-      const packageName = componentIdToPackageName(id, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({ ...component, id });
       const cssFamily = ['.css', '.scss', '.less', '.sass'];
       const isCss = cssFamily.includes(file.extname);
       const packageNameSupportCss = isCss ? `~${packageName}` : packageName;

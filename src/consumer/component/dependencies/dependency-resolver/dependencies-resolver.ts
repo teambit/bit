@@ -712,6 +712,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       } else if (bitDep.fullPath) {
         componentId = this.consumer.getComponentIdFromNodeModulesPath(bitDep.fullPath, this.component.bindingPrefix);
       } else {
+        // legacy components don't have componentId prop in the package.json
         componentId = packageNameToComponentId(this.consumer, bitDep.name, this.component.bindingPrefix);
       }
       if (componentId && version) {

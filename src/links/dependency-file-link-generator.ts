@@ -259,11 +259,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackageName() {
-    return componentIdToPackageName(
-      this.dependencyId,
-      this.dependencyComponent.bindingPrefix,
-      this.dependencyComponent.defaultScope
-    );
+    return componentIdToPackageName(this.dependencyComponent);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

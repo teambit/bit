@@ -32,7 +32,7 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
       throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
     }
     const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+    const packageName = componentIdToPackageName(component);
     acc[packageName] = locationAsUnixFormat;
     return acc;
   }, {});
@@ -87,11 +87,7 @@ export async function changeDependenciesToRelativeSyntax(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const dependencyPackageValue = getPackageDependencyValue(dependencyIdStr, componentMap, dependencyComponentMap);
         if (dependencyPackageValue) {
-          const packageName = componentIdToPackageName(
-            dependencyId,
-            dependencyComponent.bindingPrefix,
-            dependencyComponent.defaultScope
-          );
+          const packageName = componentIdToPackageName({ ...dependencyComponent, id: dependencyId });
           acc[packageName] = dependencyPackageValue;
         }
       }

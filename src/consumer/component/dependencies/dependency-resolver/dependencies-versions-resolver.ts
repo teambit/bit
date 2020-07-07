@@ -145,7 +145,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       return null;
     }
     const dependencyIdAsPackage = componentIdToPackageName(
-      componentId,
+      componentId, // this componentId is actually the dependencyId
       component.bindingPrefix,
       component.defaultScope
     );

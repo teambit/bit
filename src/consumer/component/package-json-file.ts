@@ -117,12 +117,7 @@ export default class PackageJsonFile {
     excludeRegistryPrefix? = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName(
-      component.id,
-      component.bindingPrefix,
-      component.defaultScope,
-      !excludeRegistryPrefix
-    );
+    const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
     const packageJsonObject = {
       name,
       version: component.version,

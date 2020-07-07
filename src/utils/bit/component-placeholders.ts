@@ -16,6 +16,17 @@ export function replacePlaceHolderWithComponentValue<T>(component: ConsumerCompo
   return format(template, values);
 }
 
+export function replacePlaceHolderForPackageName(
+  { name, scope }: { name: string; scope?: string | null },
+  template: string
+): string {
+  const values = {
+    name: () => replaceSlashesWithDots(name),
+    scope: () => scope
+  };
+  return format(template, values);
+}
+
 function getMainFileWithoutExtension(mainFile: string) {
   return mainFile.replace(new RegExp(`${path.extname(mainFile)}$`), ''); // makes sure it's the last occurrence
 }
