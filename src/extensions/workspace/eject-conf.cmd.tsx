@@ -6,10 +6,10 @@ import Workspace, { EjectConfOptions, EjectConfResult } from './workspace';
 
 type EjectConfArgs = [string];
 // From the cli we might get those as string in case we run it like --propagate true (return string) as opposed to only --propagate
-interface EjectConfOptionsCLI {
-  propagate: boolean | string | undefined;
-  override: boolean | string | undefined;
-}
+type EjectConfOptionsCLI = {
+  propagate: string | boolean | undefined;
+  override: string | boolean | undefined;
+};
 
 export default class EjectConfCmd implements Command {
   name = 'eject-conf [id]';
