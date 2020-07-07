@@ -393,13 +393,10 @@ export default class CommandHelper {
     return this.runCmd(`bit publish ${id} ${flags}`);
   }
   ejectConf(id = 'bar/foo', options?: Record<string, any>) {
-    const value = options
-      ? Object.keys(options) // $FlowFixMe
-          .map(key => `-${key} ${options[key]}`)
-          .join(' ')
-      : '';
-    return this.runCmd(`bit eject-conf ${id} ${value}`);
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
+
   injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
@@ -428,7 +425,8 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  parseOptions(options: Record<string, any>): string {
+  parseOptions(options?: Record<string, any>): string {
+    if (!options) return ' ';
     const value = Object.keys(options)
       .map(key => {
         const keyStr = key.length === 1 ? `-${key}` : `--${key}`;

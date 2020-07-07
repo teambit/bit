@@ -71,12 +71,7 @@ export class ScopeExtension {
    * @param id component ID
    */
   async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
-    const getBitId = (): BitId => {
-      if (id instanceof ComponentID) return id._legacy;
-      if (typeof id === 'string') return BitId.parse(id, true);
-      return id;
-    };
-    const componentId = getBitId();
+    const componentId = getBitId(id);
     // TODO: local scope should support getting a scope name
     componentId.changeScope(undefined);
     if (!componentId) return undefined;
@@ -84,6 +79,19 @@ export class ScopeExtension {
     const component = this.componentFactory.fromLegacyComponent(legacyComponent);
     return component;
   }
+
+  async getIfExist(id: string | BitId | ComponentID): Promise<Component | undefined> {
+    const componentId = getBitId(id);
+    // TODO: local scope should support getting a scope name
+    componentId.changeScope(undefined);
+    if (!componentId) return undefined;
+    const legacyComponent = await this.legacyScope.getConsumerComponentIfExist(componentId);
+    if (!legacyComponent) return undefined;
+    const component = this.componentFactory.fromLegacyComponent(legacyComponent);
+    return component;
+  }
+
+  getConsumerComponentIfExist;
 
   /**
    * declare the slots of scope extension.
@@ -98,4 +106,12 @@ export class ScopeExtension {
 
     return new ScopeExtension(legacyScope, componentFactory, tagSlot, postExportSlot);
   }
+}
+
+// TODO: handle this properly when we decide about using bitId vs componentId
+// if it's still needed we should move it other place, it will be used by many places
+function getBitId(id): BitId {
+  if (id instanceof ComponentID) return id._legacy;
+  if (typeof id === 'string') return BitId.parse(id, true);
+  return id;
 }

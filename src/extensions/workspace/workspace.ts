@@ -32,10 +32,10 @@ export type EjectConfResult = {
   configPath: string;
 };
 
-export type EjectConfOptions = {
+export interface EjectConfOptions {
   propagate?: boolean;
   override?: boolean;
-};
+}
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -159,12 +159,7 @@ export default class Workspace implements ComponentHost {
    * @param id component ID
    */
   async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
-    const getBitId = (): BitId => {
-      if (id instanceof ComponentID) return id._legacy;
-      if (typeof id === 'string') return this.consumer.getParsedId(id);
-      return id;
-    };
-    const componentId = getBitId();
+    const componentId = getBitId(id, this.consumer);
     if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
@@ -179,7 +174,7 @@ export default class Workspace implements ComponentHost {
 
   async ejectConfig(id: BitId | string, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
-    const component = await this.scope.get(componentId);
+    const component = await this.scope.getIfExist(componentId);
     const extensions = component?.config.extensions ?? new ExtensionDataList();
     const componentDir = this.componentDir(componentId, { ignoreVersion: true });
     if (!componentDir) {
@@ -413,4 +408,12 @@ export default class Workspace implements ComponentHost {
     }
     return this.defaultDirectory;
   }
+}
+
+// TODO: handle this properly when we decide about using bitId vs componentId
+// if it's still needed we should move it other place, it will be used by many places
+function getBitId(id, consumer): BitId {
+  if (id instanceof ComponentID) return id._legacy;
+  if (typeof id === 'string') return consumer.getParsedId(id);
+  return id;
 }

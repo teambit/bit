@@ -5,6 +5,11 @@ import { Command, CommandOptions } from '../cli';
 import Workspace, { EjectConfOptions, EjectConfResult } from './workspace';
 
 type EjectConfArgs = [string];
+// From the cli we might get those as string in case we run it like --propagate true (return string) as opposed to only --propagate
+interface EjectConfOptionsCLI {
+  propagate: boolean | string | undefined;
+  override: boolean | string | undefined;
+}
 
 export default class EjectConfCmd implements Command {
   name = 'eject-conf [id]';
@@ -21,26 +26,33 @@ export default class EjectConfCmd implements Command {
 
   // TODO: remove this ts-ignore
   // @ts-ignore
-  async render(args: EjectConfArgs, options: EjectConfOptions) {
+  async render(args: EjectConfArgs, options: EjectConfOptionsCLI) {
     const ejectResult = await this.json(args, options);
     const [componentId] = args;
     return (
       <Color green>
-        Successfully ejected config for component {componentId} in path {ejectResult.configPath}
+        successfully ejected config for component {componentId} in path {ejectResult.configPath}
       </Color>
     );
   }
 
-  async report(args: EjectConfArgs, options: EjectConfOptions): Promise<string> {
+  async report(args: EjectConfArgs, options: EjectConfOptionsCLI): Promise<string> {
     const ejectResult = await this.json(args, options);
     const [componentId] = args;
-    return `Successfully ejected config for component ${chalk.bold(componentId)} in path ${chalk.green(
+    return `successfully ejected config for component ${chalk.bold(componentId)} in path ${chalk.green(
       ejectResult.configPath
     )}`;
   }
 
-  async json([componentId]: EjectConfArgs, options: EjectConfOptions): Promise<EjectConfResult> {
-    const results = await this.workspace.ejectConfig(componentId, options);
+  async json([componentId]: EjectConfArgs, options: EjectConfOptionsCLI): Promise<EjectConfResult> {
+    const ejectOptions = options;
+    if (ejectOptions.propagate === 'true') {
+      ejectOptions.propagate = true;
+    }
+    if (ejectOptions.override === 'true') {
+      ejectOptions.override = true;
+    }
+    const results = await this.workspace.ejectConfig(componentId, ejectOptions as EjectConfOptions);
     return results;
   }
 }

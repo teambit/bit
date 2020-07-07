@@ -8,6 +8,7 @@ import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
 import { PathOsBasedAbsolute } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
+import { AlreadyExistsError } from './exceptions';
 
 interface ComponentConfigFileOptions {
   indent: number;
@@ -69,7 +70,7 @@ export class ComponentConfigFile {
     const filePath = ComponentConfigFile.composePath(componentDir);
     const isExist = await fs.pathExists(filePath);
     if (isExist && !options.override) {
-      throw new GeneralError(`config file at ${filePath} already exist. use override in case you want to override it`);
+      throw new AlreadyExistsError(filePath);
     }
     return fs.writeJsonSync(filePath, json, { spaces: this.options.indent, EOL: this.options.newLine });
   }

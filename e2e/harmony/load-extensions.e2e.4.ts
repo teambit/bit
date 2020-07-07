@@ -13,7 +13,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// Skipped until we implement the loading extensions from variants
 describe('load extensions', function() {
   this.timeout(0);
   let helper: Helper;
