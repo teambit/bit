@@ -20,6 +20,7 @@ export type PackOptions = {
   override?: boolean;
   keep?: boolean;
   useCapsule?: boolean;
+  loadScopeFromCache?: boolean;
 };
 
 export class Packer {
@@ -28,7 +29,10 @@ export class Packer {
 
   async packComponent(componentId: string, scopePath: string | undefined, options: PackOptions): Promise<PackResult> {
     this.options = options;
-    const scope = scopePath ? await LegacyScope.load(scopePath) : this.scope;
+    // By default do not load scope from cache when packing
+    const loadScopeFromCache =
+      options && options.loadScopeFromCache !== undefined ? !!options.loadScopeFromCache : false;
+    const scope = scopePath ? await LegacyScope.load(scopePath, loadScopeFromCache) : this.scope;
     if (!scope) {
       throw new ScopeNotFound(scopePath);
     }

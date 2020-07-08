@@ -21,6 +21,7 @@ import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Artifact } from '../component/sources/artifact';
 import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
+import { BitIds } from '../../bit-id';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -32,7 +33,7 @@ export type ComponentWriterProps = {
   origin: ComponentOrigin;
   consumer: Consumer | undefined;
   bitMap: BitMap;
-  writeBitDependencies?: boolean;
+  ignoreBitDependencies?: boolean | BitIds;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
@@ -49,7 +50,7 @@ export default class ComponentWriter {
   origin: ComponentOrigin;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
   bitMap: BitMap;
-  writeBitDependencies: boolean;
+  ignoreBitDependencies: boolean | BitIds;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
@@ -64,7 +65,7 @@ export default class ComponentWriter {
     origin,
     consumer,
     bitMap,
-    writeBitDependencies = false,
+    ignoreBitDependencies = true,
     deleteBitDirContent,
     existingComponentMap,
     excludeRegistryPrefix = false,
@@ -79,7 +80,7 @@ export default class ComponentWriter {
     this.origin = origin;
     this.consumer = consumer;
     this.bitMap = bitMap;
-    this.writeBitDependencies = writeBitDependencies;
+    this.ignoreBitDependencies = ignoreBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
@@ -152,7 +153,7 @@ export default class ComponentWriter {
         this.component,
         artifactsDir || this.writeToPath,
         this.override,
-        this.writeBitDependencies,
+        this.ignoreBitDependencies,
         this.excludeRegistryPrefix,
         packageManager
       );

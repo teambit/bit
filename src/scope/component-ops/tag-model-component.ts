@@ -219,9 +219,10 @@ export default (async function tagModelComponent({
   const legacyComps: Component[] = [];
   const nonLegacyComps: Component[] = [];
 
-  componentsToBuildAndTest.forEach(c =>
-    c.extensions && c.extensions.length ? nonLegacyComps.push(c) : legacyComps.push(c)
-  );
+  componentsToBuildAndTest.forEach(c => {
+    // @todo: change this condition to `c.isLegacy` once harmony-beta is merged.
+    c.extensions && c.extensions.length && !consumer.isLegacy ? nonLegacyComps.push(c) : legacyComps.push(c);
+  });
   if (legacyComps.length) {
     await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
   }

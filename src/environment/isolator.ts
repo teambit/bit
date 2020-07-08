@@ -104,7 +104,7 @@ export default class Isolator {
       override: opts.override,
       writePackageJson: opts.writePackageJson,
       writeConfig: opts.writeConfig,
-      writeBitDependencies: opts.writeBitDependencies,
+      ignoreBitDependencies: !opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.writeDists,
