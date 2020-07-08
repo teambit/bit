@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [14.8.7-dev.2] - 2020-07-08
+
+- fix post receive objects duplications
+
 ## [14.8.7-dev.1] - 2020-07-07
 
 - [#2809](https://github.com/teambit/bit/issues/2809) - fix legacy capsule exec to not hang on error
