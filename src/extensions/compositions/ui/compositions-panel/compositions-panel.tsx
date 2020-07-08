@@ -1,34 +1,29 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import classNames from 'classnames';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
 export type CompositionsPanelProps = {
   compositions: Composition[];
-  onCompositionSelect: (composition: Composition) => void;
+  onSelect: (composition: Composition) => void;
+  active?: Composition;
 };
-// TODO - this is WIP - move node component to compositions panel node
-export function CompositionsPanel({ compositions, onCompositionSelect }: CompositionsPanelProps) {
-  const [active, setActive] = useState(0);
-  const [prevComposition, setPrevComposition] = useState(compositions);
 
-  if (compositions !== prevComposition) {
-    setActive(0);
-    setPrevComposition(compositions);
-  }
+export function CompositionsPanel({ compositions, onSelect, active }: CompositionsPanelProps) {
+  const handleSelect = useCallback(
+    (selected: Composition) => {
+      onSelect && onSelect(selected);
+    },
+    [onSelect]
+  );
 
-  const onSelect = (nextActive, composition) => {
-    if (!onCompositionSelect) return;
-    setActive(nextActive);
-    onCompositionSelect(composition);
-  };
   return (
     <ul className={styles.composition}>
       {compositions.map((composition, key) => {
         return (
-          <li key={key} className={classNames(styles.linkWrapper, { [styles.active]: active === key })}>
+          <li key={key} className={classNames(styles.linkWrapper, composition === active && styles.active)}>
             <span className={styles.box}>&#9632;</span>
-            <a className={styles.panelLink} onClick={() => onSelect(key, composition)}>
+            <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
               {composition.displayName}
             </a>
           </li>

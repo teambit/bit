@@ -1,23 +1,26 @@
 import React, { useContext, useState, useEffect } from 'react';
+import head from 'lodash.head';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui/ui/tabs';
 import { PanelContainer, Panel } from '../panel-ui/ui/panel-container';
+
 import styles from './compositions.module.scss';
 
 export function Compositions() {
   const component = useContext(ComponentContext);
-  const [composition, setComposition] = useState(component.compositions[0]);
+  const [selected, selectComposition] = useState(head(component.compositions));
 
-  // make sure to update state upon component model change.
+  // reset selected composition when component changes.
+  // this does trigger rerender, but perf seems to be ok
   useEffect(() => {
-    setComposition(component.compositions[0]);
+    selectComposition(component.compositions[0]);
   }, [component]);
 
   return (
     <PanelContainer className={styles.compositionsPage}>
-      <ComponentComposition component={component} composition={composition}></ComponentComposition>
+      <ComponentComposition component={component} composition={selected}></ComponentComposition>
       <Panel>
         <TabContainer>
           <TabList>
@@ -26,7 +29,7 @@ export function Compositions() {
             <Tab>dependencies</Tab>
           </TabList>
           <TabPanel>
-            <CompositionsPanel onCompositionSelect={setComposition} compositions={component.compositions} />
+            <CompositionsPanel onSelect={selectComposition} compositions={component.compositions} active={selected} />
           </TabPanel>
           <TabPanel></TabPanel>
           <TabPanel></TabPanel>
