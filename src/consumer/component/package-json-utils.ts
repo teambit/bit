@@ -12,7 +12,6 @@ import getNodeModulesPathOfComponent from '../../utils/bit/component-node-module
 import { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import logger from '../../logger/logger';
 import JSONFile from './sources/json-file';
-import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
@@ -40,18 +39,6 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
-/**
- * Add given components with their versions to root package.json
- */
-// export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
-//   const componentsToAdd = R.fromPairs(
-//     componentsVersions.map(({ component, version }) => {
-//       const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
-//       return [packageName, version];
-//     })
-//   );
-//   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
-// }
 export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
     components.map(component => {
@@ -187,26 +174,26 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
   }
 }
 
-export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
+export async function removeComponentsFromWorkspacesAndDependencies(
+  consumer: Consumer,
+  components: Component[],
+  invalidComponents: BitId[] = []
+) {
+  const bitIds = [...components.map(c => c.id), ...invalidComponents];
   const rootDir = consumer.getPath();
-
   if (
     consumer.config._manageWorkspaces &&
     consumer.config.packageManager === 'yarn' &&
     consumer.config._useWorkspaces
   ) {
-    const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
+    const dirsToRemove = bitIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     if (dirsToRemove && dirsToRemove.length) {
       const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
       await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
     }
   }
-  await PackageJson.removeComponentsFromDependencies(
-    rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.
-    consumer.config._bindingPrefix || npmRegistryName(),
-    componentIds.map(id => id.toStringWithoutVersion())
-  );
-  await removeComponentsFromNodeModules(consumer, componentIds);
+  await PackageJson.removeComponentsFromDependencies(rootDir, components);
+  await removeComponentsFromNodeModules(consumer, components);
 }
 
 async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Record<string, any>) {
@@ -215,14 +202,12 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
   await packageJsonFile.write();
 }
 
-async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
-  logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
-  // @todo: fix. the registryPrefix should be retrieved from the component.
-  const registryPrefix = consumer.config._bindingPrefix || npmRegistryName();
+async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
+  logger.debug(`removeComponentsFromNodeModules: ${components.map(c => c.id.toString()).join(', ')}`);
   // paths without scope name, don't have a symlink in node-modules
-  const pathsToRemove = componentIds
-    .map(id => {
-      return id.scope ? getNodeModulesPathOfComponent(registryPrefix, id) : null;
+  const pathsToRemove = components
+    .map(c => {
+      return c.id.scope ? getNodeModulesPathOfComponent(c.bindingPrefix, c.id) : null;
     })
     .filter(a => a); // remove null
 
