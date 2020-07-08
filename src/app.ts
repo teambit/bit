@@ -1,7 +1,3 @@
-// polyfill for flat-map to support node10
-// https://babeljs.io/docs/en/v7-migration#remove-proposal-polyfills-in-babel-polyfill-https-githubcom-babel-babel-issues-8416
-// this is already imported in api.ts file
-import 'core-js/fn/array/flat-map';
 // import Bluebird from 'bluebird';
 import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
