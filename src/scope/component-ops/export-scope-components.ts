@@ -100,6 +100,7 @@ export async function exportMany({
     remoteNameStr: string,
     bitIds: BitIds
   ): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+    bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
