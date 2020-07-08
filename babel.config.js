@@ -9,7 +9,9 @@ module.exports = function(api) {
       {
         targets: {
           node: 8
-        }
+        },
+        useBuiltIns: 'usage',
+        corejs: 3
       }
     ]
   ];
