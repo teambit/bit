@@ -246,12 +246,8 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap | null | undefined,
-  capsuleMap?: any
+  dependencyComponentMap?: ComponentMap | null | undefined
 ): string | null | undefined {
-  if (capsuleMap && capsuleMap[dependencyId.toString()]) {
-    return capsuleMap[dependencyId.toString()].wrkdir;
-  }
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }

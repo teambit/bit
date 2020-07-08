@@ -111,12 +111,13 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
     const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component)
-    );
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -159,12 +160,13 @@ export default class NodeModuleLinker {
    */
   async _populateImportedNonLegacyComponentsLinks(component: Component) {
     const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
-      component.bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component)
-    );
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
+      bindingPrefix: component.bindingPrefix,
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     filesToBind.forEach(file => {
@@ -184,13 +186,13 @@ export default class NodeModuleLinker {
    */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
-      component.bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component),
-      component.extensions
-    );
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
+      bindingPrefix: component.bindingPrefix,
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -239,12 +241,13 @@ export default class NodeModuleLinker {
    */
   _deleteOldLinksOfIdWithoutScope(component: Component) {
     if (component.id.scope) {
-      const previousDest = getNodeModulesPathOfComponent(
-        component.bindingPrefix,
-        component.id.changeScope(null),
-        true,
-        this._getDefaultScope(component)
-      );
+      const previousDest = getNodeModulesPathOfComponent({
+        bindingPrefix: component.bindingPrefix,
+        id: component.id.changeScope(null),
+        allowNonScope: true,
+        defaultScope: this._getDefaultScope(component),
+        extensions: component.extensions
+      });
       this.dataToPersist.removePath(new RemovePath(previousDest));
     }
   }
