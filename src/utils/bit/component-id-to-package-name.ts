@@ -19,7 +19,7 @@ export default function componentIdToPackageName({
   bindingPrefix: string | null | undefined;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
   withPrefix?: boolean;
-  extensions: ExtensionDataList;
+  extensions?: ExtensionDataList;
 }): string {
   const fromExtensions = getNameFromExtensions(id, extensions);
   if (fromExtensions) return fromExtensions;
@@ -39,7 +39,8 @@ export default function componentIdToPackageName({
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }
 
-function getNameFromExtensions(id: BitId, extensions: ExtensionDataList): null | string {
+function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList): null | string {
+  if (!extensions) return null;
   const pkgExt = extensions.findExtension('@teambit/pkg');
   if (!pkgExt) return null;
   const name = pkgExt.config?.packageJson?.name;

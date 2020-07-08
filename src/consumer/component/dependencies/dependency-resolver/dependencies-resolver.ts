@@ -1,5 +1,6 @@
 import * as path from 'path';
 import R from 'ramda';
+import semver from 'semver';
 import * as RA from 'ramda-adjunct';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
@@ -706,7 +707,8 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!bits || R.isEmpty(bits)) return;
     let componentId;
     bits.forEach(bitDep => {
-      const version = bitDep.concreteVersion || bitDep.versionUsedByDependent;
+      const version =
+        this.getValidVersion(bitDep.concreteVersion) || this.getValidVersion(bitDep.versionUsedByDependent);
       if (bitDep.componentId) {
         componentId = bitDep.componentId;
       } else if (bitDep.fullPath) {
@@ -743,6 +745,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         this._pushToMissingBitsIssues(originFile, componentId);
       }
     });
+  }
+  getValidVersion(version: string | undefined) {
+    if (!version) return null;
+    if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
+    return version.replace(/[^0-9.]/g, '');
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {

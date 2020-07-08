@@ -166,18 +166,19 @@ export default class EjectComponents {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      const componentsVersions = await Promise.all(
-        this.componentsToEject.map(async bitId => {
-          const modelComponent = await this.consumer.scope.getModelComponent(bitId);
-          // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          return new ComponentVersion(modelComponent, bitId.version);
-        })
-      );
-      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, componentsVersions);
+      const { components } = await this.consumer.loadComponents(this.componentsToEject);
+      // const componentsVersions = await Promise.all(
+      //   this.componentsToEject.map(async bitId => {
+      //     const modelComponent = await this.consumer.scope.getModelComponent(bitId);
+      //     // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
+      //     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      //     return new ComponentVersion(modelComponent, bitId.version);
+      //   })
+      // );
+      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, components);
       this.notEjectedDependents.forEach(({ dependent, ejectedDependencies }) => {
         const dependenciesToReplace = ejectedDependencies.reduce((acc, dependency) => {
-          const packageName = componentIdToPackageName(dependency.id, dependency.bindingPrefix);
+          const packageName = componentIdToPackageName(dependency);
           acc[packageName] = dependency.version;
           return acc;
         }, {});

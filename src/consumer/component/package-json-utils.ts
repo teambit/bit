@@ -43,11 +43,20 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
 /**
  * Add given components with their versions to root package.json
  */
-export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
+// export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
+//   const componentsToAdd = R.fromPairs(
+//     componentsVersions.map(({ component, version }) => {
+//       const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
+//       return [packageName, version];
+//     })
+//   );
+//   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
+// }
+export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
-    componentsVersions.map(({ component, version }) => {
-      const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
-      return [packageName, version];
+    components.map(component => {
+      const packageName = componentIdToPackageName(component);
+      return [packageName, component.version];
     })
   );
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
