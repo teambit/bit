@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [14.8.7-dev.3] - 2020-07-08
+
+- fix export --all --include-dependencies flags to not duplicate components
+
 ## [14.8.7-dev.2] - 2020-07-08
 
 - fix post receive objects duplications
