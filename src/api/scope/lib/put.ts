@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { loadScope } from '../../../scope';
 import ComponentObjects from '../../../scope/component-objects';
 import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
@@ -30,11 +31,15 @@ export default (async function put(
   const clientIsOld = Boolean(headers && headers.version && isClientHasVersionBefore('14.1.1', headers.version));
   const componentsBitIds: BitIds = await exportManyBareScope(scope, componentObjects, clientIsOld);
   const componentsIds: string[] = componentsBitIds.map(id => id.toString());
+  let uniqComponentsIds = componentsIds;
+  if (componentsIds && componentsIds.length) {
+    uniqComponentsIds = R.uniq(componentsIds);
+  }
   await HooksManagerInstance.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
       componentObjects,
-      componentsIds,
+      componentsIds: uniqComponentsIds,
       scopePath: path,
       scopeName: scope.scopeJson.name
     },
