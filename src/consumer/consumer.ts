@@ -676,24 +676,21 @@ export default class Consumer {
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
-    const getPackageJsonDir = (
-      componentMap: ComponentMap,
-      bitId: BitId,
-      bindingPrefix: string
-    ): PathRelative | null | undefined => {
+    const getPackageJsonDir = (componentMap: ComponentMap, component: Component): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
+        return getNodeModulesPathOfComponent(component);
       }
       return componentMap.rootDir;
     };
 
-    const updateVersionsP = components.map(component => {
-      const id: BitId =
-        component instanceof ModelComponent ? component.toBitIdWithLatestVersionAllowNull() : component.id;
+    const updateVersionsP = components.map(async unknownComponent => {
+      const component =
+        unknownComponent instanceof Component ? unknownComponent : await this.loadComponent(unknownComponent.toBitId());
+      const id = component.id;
       this.bitMap.updateComponentId(id);
       const componentMap = this.bitMap.getComponent(id);
-      const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
+      const packageJsonDir = getPackageJsonDir(componentMap, component);
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
         : Promise.resolve();

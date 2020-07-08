@@ -362,7 +362,12 @@ export default class NodeModuleLinker {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(
-      getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true, this._getDefaultScope(component))
+      getNodeModulesPathOfComponent({
+        bindingPrefix: component.bindingPrefix,
+        id: component.id,
+        allowNonScope: true,
+        defaultScope: this._getDefaultScope(component)
+      })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toVinylFile());

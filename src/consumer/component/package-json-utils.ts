@@ -207,7 +207,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, components: C
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = components
     .map(c => {
-      return c.id.scope ? getNodeModulesPathOfComponent(c.bindingPrefix, c.id) : null;
+      return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
     })
     .filter(a => a); // remove null
 
