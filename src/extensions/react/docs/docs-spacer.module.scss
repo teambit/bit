@@ -1,0 +1,21 @@
+
+.docsStyles {
+    
+    .mainTitleMargin {
+        margin-bottom: 16px;
+    }
+    
+    .secondaryTitleMargin {
+        margin-bottom: 30px;
+    }
+    
+    .paragraphMargin {
+        &:not(:last-child) {
+            margin-bottom: 35px;
+        }
+    }
+    
+    .maxWidth700 {
+        max-width: 700px;
+    }
+}

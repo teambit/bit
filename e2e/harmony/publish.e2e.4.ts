@@ -109,12 +109,11 @@ describe('publish functionality', function() {
       });
     });
   });
-  describe('with custom package name', function() {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('with custom package name', function() {
     let randomStr: string;
     let publishOutput: string;
     let pkgName: string;
     before(async function() {
-      if (!supportNpmCiRegistryTesting) this.skip();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
@@ -130,7 +129,6 @@ describe('publish functionality', function() {
       pkgName = `react.${randomStr}.ui.button`;
     });
     after(() => {
-      if (!supportNpmCiRegistryTesting) return;
       npmCiRegistry.destroy();
     });
     it('should publish them successfully', () => {

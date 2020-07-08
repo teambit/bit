@@ -37,15 +37,19 @@ export function TopBar({ navigationSlot, widgetSlot, className, version }: TopBa
         ))}
       </nav>
       <div className={styles.rightSide}>
-        <span className={styles.widget}>
+        {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
-        </span>
+        </span> */}
         {widgetLinks.map((widget, index) => (
           <TopBarWidgetLink key={index} to={widget.to} className={styles.widget}>
             <Icon className={classnames(styles.icon)} of="changelog" />
           </TopBarWidgetLink>
         ))}
-        <span>{version}</span> <VersionTag className={styles.marginRight}>Latest</VersionTag>
+        {version === 'latest' ? (
+          <VersionTag className={classnames(styles.latest, styles.marginRight)}>Latest</VersionTag>
+        ) : (
+          { version }
+        )}
         <span>
           <Icon className={classnames(styles.icon)} of="more" />
         </span>

@@ -6,6 +6,7 @@ import { BitId } from '../../bit-id';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Symlink from '../../links/symlink';
 import { ComponentID } from '../component';
+import logger from '../../logger/logger';
 
 export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsuleList: CapsuleList) {
   await Promise.all(
@@ -23,11 +24,17 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
   const symlinks = allDeps.map((depId: BitId) => {
     const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
     const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(depId));
-    if (!devCapsule) throw new Error(`unable to find the capsule for ${depId.toStringWithoutVersion()}`);
+    if (!devCapsule) {
+      // happens when a dependency is not in the workspace. (it gets installed via the package manager)
+      logger.debug(
+        `symlinkComponentToCapsule: unable to find the capsule for ${depId.toStringWithoutVersion()}. skipping`
+      );
+      return null;
+    }
     const devCapsulePath = devCapsule.wrkDir;
     // @todo: this is a hack, the capsule should be the one responsible to symlink, this works only for FS capsules.
     const dest = path.join(componentCapsule.wrkDir, 'node_modules', packageName);
     return new Symlink(devCapsulePath, dest, component.id);
   });
-  await Promise.all(symlinks.map(symlink => symlink.write()));
+  await Promise.all(symlinks.map(symlink => symlink && symlink.write()));
 }
