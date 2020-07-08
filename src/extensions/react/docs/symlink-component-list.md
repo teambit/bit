@@ -1,13 +1,12 @@
-# necessary symlinks to create to run project
+# IMPORTANT - DELETE THIS FILE WHEN COMPONENTS ARE EXPORTED.
+
+To get the UI working we need to link some components from "react-new-project" repo.
+`cd` to this (Bit) repository's root directory and run the following command.
+```sh
+$ cd {path to react-new-project repo}
+$ bd link
+$ cd {path to bit repo}
+$ ln -s {path-to-react-new-project}/node_modules/@bit/bit.test-scope.* ./node_modules/@bit
+```
+
 ***or change imports in `base.tsx` to local clone of react-new-project***
-
-- @bit/bit.test-scope.ui.consumable-link
-- @bit/bit.test-scope.ui.property-table
-- @bit/bit.test-scope.ui.linked-heading
-- @bit/bit.test-scope.ui.section
-
-## examples:
-ln -s ~/dev/bit/react-new-project/node_modules/@bit/bit.test-scope.ui.consumable-link  ./node_modules/@bit/bit.test-scope.ui.consumable-link
-ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.property-table  ./node_modules/@bit/bit.test-scope.ui.property-table
-ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.linked-heading  ./node_modules/@bit/bit.test-scope.ui.linked-heading
-ln -s {path to react new project}/node_modules/@bit/bit.test-scope.ui.section  ./node_modules/@bit/bit.test-scope.ui.section
