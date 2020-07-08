@@ -1,12 +1,12 @@
 import React from 'react';
 import classNames from 'classnames';
-import { Section } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.section';
-import { H1 } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.heading';
-import { Subtitle } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.sub-title';
-import { VersionTag } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.version-tag';
-import { Separator } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.separator';
-import { ConsumableLink } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.consumable-link';
-import { LabelList } from '../../../../../../react-new-project/node_modules/@bit/bit.test-scope.ui.label-list';
+import { Section } from '@bit/bit.test-scope.ui.section';
+import { H1 } from '@bit/bit.test-scope.ui.heading';
+import { Subtitle } from '@bit/bit.test-scope.ui.sub-title';
+import { VersionTag } from '@bit/bit.test-scope.ui.version-tag';
+import { Separator } from '@bit/bit.test-scope.ui.separator';
+import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
+import { LabelList } from '@bit/bit.test-scope.ui.label-list';
 import styles from './component-details.module.scss';
 
 export type ComponentDetailsProps = {
