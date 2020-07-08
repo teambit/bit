@@ -4,8 +4,8 @@ import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { CompositionsOverview } from '../../../compositions/ui/compositions-overview';
 import spacing from '../docs-spacer.module.scss';
 
-export function CompositionsSummary({ overviewCompositions }: any) {
-  if (!overviewCompositions || Object.keys(overviewCompositions).length === 0) {
+export function CompositionsSummary({ compositions }: any) {
+  if (!compositions || Object.keys(compositions).length === 0) {
     return <div></div>;
   }
 
@@ -14,7 +14,7 @@ export function CompositionsSummary({ overviewCompositions }: any) {
       <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
         Compositions
       </LinkedHeading>
-      <CompositionsOverview compositions={overviewCompositions} />
+      <CompositionsOverview compositions={compositions} />
     </Section>
   );
 }

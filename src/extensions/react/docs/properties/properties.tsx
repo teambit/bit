@@ -5,7 +5,7 @@ import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import spacing from '../docs-spacer.module.scss';
 
 export function Properties({ properties }: any) {
-  if (properties.length !== 0) return <div></div>;
+  if (properties.length === 0) return <div></div>;
 
   return (
     <Section>

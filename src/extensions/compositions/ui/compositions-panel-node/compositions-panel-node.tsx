@@ -12,7 +12,7 @@ export function CompositionsPanelNode({ name, onClick, isActive, ...rest }: Comp
   return (
     <li {...rest}>
       <div className={classNames(styles.linkWrapper, { [styles.active]: isActive })}>
-        <a className={styles.panelLink} {...rest} onClick={onClick}>
+        <a className={styles.panelLink} onClick={onClick}>
           {name}
         </a>
       </div>
