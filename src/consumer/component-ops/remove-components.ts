@@ -117,7 +117,7 @@ async function removeLocal(
     );
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
-  const { components: componentsToRemove } = await consumer.loadComponents(idsToRemove);
+  const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const {
     removedComponentIds,
     missingComponents,
@@ -130,7 +130,12 @@ async function removeLocal(
     await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
-      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(consumer, removedComponents);
+      const invalidComponentsIds = invalidComponents.map(i => i.id);
+      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(
+        consumer,
+        removedComponents,
+        invalidComponentsIds
+      );
       await consumer.cleanFromBitMap(removedComponentIds, removedDependencies);
     }
   }

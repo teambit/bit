@@ -181,15 +181,19 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
   }
 }
 
-export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, components: Component[]) {
+export async function removeComponentsFromWorkspacesAndDependencies(
+  consumer: Consumer,
+  components: Component[],
+  invalidComponents: BitId[] = []
+) {
+  const bitIds = [...components.map(c => c.id), ...invalidComponents];
   const rootDir = consumer.getPath();
-
   if (
     consumer.config._manageWorkspaces &&
     consumer.config.packageManager === 'yarn' &&
     consumer.config._useWorkspaces
   ) {
-    const dirsToRemove = components.map(c => consumer.bitMap.getComponent(c.id, { ignoreVersion: true }).rootDir);
+    const dirsToRemove = bitIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     if (dirsToRemove && dirsToRemove.length) {
       const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
       await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
