@@ -1,5 +1,5 @@
 import * as path from 'path';
-import pMapSeries from 'p-map-series';
+import BluebirdPromise from 'bluebird';
 import Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -72,7 +72,7 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
     const allComponents = [];
-    await pMapSeries(idsToProcess, async (id: BitId) => {
+    await BluebirdPromise.mapSeries(idsToProcess, async (id: BitId) => {
       const component = await this.loadOne(id, throwOnFailure, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
