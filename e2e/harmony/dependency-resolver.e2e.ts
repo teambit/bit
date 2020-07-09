@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { Extensions } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -118,6 +119,49 @@ describe('dependency-resolver extension', function() {
       });
       describe.skip('conflict between extension and user policies ', function() {
         it.skip('should prefer user config', function() {});
+      });
+    });
+  });
+  // @todo: once extensions are loaded on imported components, make sure the following:
+  // import and validated that package.json has correct pkg names.
+  describe('saving dependencies package names', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents(4);
+      const name = `ui.{name}`;
+      const pkg = {
+        packageJson: {
+          name
+        }
+      };
+      helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
+      helper.bitJsonc.addDefaultScope();
+      // @todo: this is a hack, we need to figure out how to get this ext to auto-load for all components
+      helper.bitJsonc.addToVariant(undefined, '*', Extensions.dependencyResolver, {});
+      helper.command.linkAndRewire();
+      helper.command.tagAllComponents();
+    });
+    it('should save the packageName data into the dependencyResolver extension in the model', () => {
+      const comp2 = helper.command.catComponent('comp2@latest');
+      const depResolverExt = comp2.extensions.find(e => e.name === Extensions.dependencyResolver);
+      expect(depResolverExt).to.be.ok;
+      expect(depResolverExt.data).to.have.property('dependencies');
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
+      expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
+      expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
+      expect(depResolverExt.data.dependencies[0].packageName).to.equal(`@bit/${helper.scopes.remote}.comp3`);
+    });
+    describe('exporting the component', () => {
+      before(() => {
+        helper.command.exportAllComponents();
+      });
+      it('should change the component id to include the scope name', () => {
+        const comp2 = helper.command.catComponent('comp2@latest');
+        const depResolverExt = comp2.extensions.find(e => e.name === Extensions.dependencyResolver);
+        expect(depResolverExt.data.dependencies[0].componentId.scope).to.equal(helper.scopes.remote);
+        expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
+        expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
+        expect(depResolverExt.data.dependencies[0].packageName).to.equal(`@bit/${helper.scopes.remote}.comp3`);
       });
     });
   });

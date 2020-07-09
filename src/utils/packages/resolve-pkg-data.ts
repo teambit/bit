@@ -6,7 +6,7 @@ import { BitId } from '../../bit-id';
 
 export interface ResolvedPackageData {
   fullPath?: PathLinuxAbsolute;
-  name: string;
+  name: string; // package name
   concreteVersion?: string; // Version from the package.json of the package itself
   versionUsedByDependent?: string; // Version from the dependent package.json
   componentId?: BitId; // add the component id in case it's a bit component
