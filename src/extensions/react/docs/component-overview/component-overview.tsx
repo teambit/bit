@@ -7,9 +7,9 @@ import { VersionTag } from '@bit/bit.test-scope.ui.version-tag';
 import { Separator } from '@bit/bit.test-scope.ui.separator';
 import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
 import { LabelList } from '@bit/bit.test-scope.ui.label-list';
-import styles from './component-details.module.scss';
+import styles from './component-overview.module.scss';
 
-export type ComponentDetailsProps = {
+export type ComponentOverviewProps = {
   displayName: string;
   abstract: string;
   version: string;
@@ -17,15 +17,14 @@ export type ComponentDetailsProps = {
   packageName: string;
 };
 
-export function ComponentDetails({
+export function ComponentOverview({
   displayName,
   abstract,
   version,
   labels,
   packageName,
   ...rest
-}: ComponentDetailsProps) {
-  console.log('labels', labels);
+}: ComponentOverviewProps) {
   return (
     <Section {...rest}>
       <div className={styles.topRow}>

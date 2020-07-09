@@ -3,15 +3,15 @@ import { useQuery } from '@apollo/react-hooks';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
+import { gql } from 'apollo-boost';
 import { Section } from '@bit/bit.test-scope.ui.section';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
-import { gql } from 'apollo-boost';
 import { ComponentModel } from '../../component/ui';
 import { Playground } from './playground';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
 import { ThemeContext } from './theme-context';
-import { ComponentDetails } from './component-details';
+import { ComponentOverview } from './component-overview';
 import styles from './base.module.scss';
 import spacing from './docs-spacer.module.scss';
 
@@ -74,7 +74,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   return (
     <ThemeContext>
       <div className={classNames(styles.docsMainBlock, spacing.docsStyles)} {...rest}>
-        <ComponentDetails
+        <ComponentOverview
           displayName={component.displayName}
           version={component.version}
           abstract={abstract}
