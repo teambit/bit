@@ -182,6 +182,7 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
     const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
+
     let legacyWorkspaceConfigToMerge = {};
     if (plainWorkspaceConfig) {
       legacyWorkspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
@@ -330,7 +331,7 @@ export default class ComponentConfig extends AbstractConfig {
       componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
       componentConfig.packageJsonFile = packageJsonFile;
 
-      await this.runOnLegacyLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
+      await this.runOnLegacyLoadEvent(this.componentConfigLegacyLoadingRegistry, componentId, componentConfig);
     }
 
     const extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
