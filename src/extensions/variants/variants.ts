@@ -80,15 +80,3 @@ export class Variants {
     return result;
   }
 }
-
-function transformConfigToLegacy(config: Record<string, any> | undefined): ConsumerOverridesOfComponent {
-  if (!config) {
-    return {};
-  }
-  // TODO: handle specific fields from the extensions like taking deps from the dependency-resolver
-  // and scope / owner from somewhere
-  const res = {
-    extensions: config
-  };
-  return res;
-}

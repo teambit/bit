@@ -1,4 +1,4 @@
-import { parse, stringify, assign } from 'comment-json';
+import { stringify, assign } from 'comment-json';
 import * as path from 'path';
 import fs from 'fs-extra';
 import ScopesData from './e2e-scopes';

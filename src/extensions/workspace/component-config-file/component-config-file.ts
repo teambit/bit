@@ -7,7 +7,6 @@ import { BitId } from '../../../bit-id';
 import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
 import { PathOsBasedAbsolute } from '../../../utils/path';
-import GeneralError from '../../../error/general-error';
 import { AlreadyExistsError } from './exceptions';
 
 interface ComponentConfigFileOptions {
