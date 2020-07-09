@@ -13,7 +13,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { Remotes, Remote } from '../../remotes';
 import Scope from '../scope';
-import { LATEST } from '../../constants';
+import { LATEST, Extensions } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
@@ -407,6 +407,16 @@ async function convertToCorrectScope(
           hasChanged = true;
           ext.extensionId = updatedScope;
         }
+      }
+      if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
+        ext.data.dependencies.forEach(dep => {
+          const id = new BitId(dep.componentId);
+          const updatedScope = getIdWithUpdatedScope(id);
+          if (!updatedScope.isEqual(id)) {
+            hasChanged = true;
+            dep.componentId = updatedScope;
+          }
+        });
       }
     });
     return hasChanged;

@@ -421,3 +421,8 @@ export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
+
+export enum Extensions {
+  dependencyResolver = '@teambit/dependency-resolver',
+  pkg = '@teambit/pkg'
+}
