@@ -43,8 +43,11 @@ export default class ConsumerOverrides {
     const overrideValues = matches.map(match => R.clone(this.overrides[match]));
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
-      if (stopPropagation) return acc;
+      if (stopPropagation) {
+        return acc;
+      }
       if (!current.propagate) {
+        acc.propagate = false;
         stopPropagation = true;
       }
       this._updateSpecificOverridesWithGeneralOverrides(current, acc);
