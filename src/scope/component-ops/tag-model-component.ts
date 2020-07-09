@@ -11,43 +11,44 @@ import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
 import { pathJoinLinux } from '../../utils';
-import { BitIds } from '../../bit-id';
+import { BitIds, BitId } from '../../bit-id';
 import ValidationError from '../../error/validation-error';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { PathLinux } from '../../utils/path';
-import { Dependency } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
-import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
-    const foundDependency = componentsToTag.find(component =>
-      component.id.isEqualWithoutVersion(dependency[idFieldName])
-    );
-    if (foundDependency) {
-      dependency[idFieldName] = dependency[idFieldName].changeVersion(foundDependency.version);
-      return true;
-    }
-    return false;
+  const getNewDependencyVersion = (id: BitId): BitId | null => {
+    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(id));
+    return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
   componentsToTag.forEach(oneComponentToTag => {
-    oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
+    oneComponentToTag.getAllDependencies().forEach(dependency => {
+      const newDepId = getNewDependencyVersion(dependency.id);
+      if (newDepId) dependency.id = newDepId;
+    });
     // TODO: in case there are core extensions they should be excluded here
     oneComponentToTag.extensions.forEach(extension => {
+      if (extension.name === Extensions.dependencyResolver && extension.data && extension.data.dependencies) {
+        extension.data.dependencies.forEach(dep => {
+          const newDepId = getNewDependencyVersion(dep.componentId);
+          if (newDepId) dep.componentId = newDepId;
+        });
+      }
       // For core extensions there won't be an extensionId but name
       // We only want to add version to external extensions not core extensions
-      if (extension.extensionId) {
-        const wasDependencyFound = updateDependencyVersion(extension, 'extensionId');
-        if (!wasDependencyFound && !extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
-          throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
+      if (!extension.extensionId) return;
+      const newDepId = getNewDependencyVersion(extension.extensionId);
+      if (newDepId) extension.extensionId = newDepId;
+      else if (!extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
+        throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
 this extension was not included in the tag command.`);
-        }
       }
     });
   });
