@@ -300,12 +300,22 @@ export default class Workspace implements ComponentHost {
       // Put it in the start to make sure the config file is stronger
       extensionsToMerge.unshift(wsDefaultExtensions);
     }
+    // TODO: do not require if for tagged components that already has a real scope
     if (!defaultScope) {
       throw new GeneralError(`component ${componentId.toString()} must have a default scope`);
     }
     const splittedScope = defaultScope.split('.');
     const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
     const mergedExtensions = ExtensionDataList.merge(extensionsToMerge);
+
+    // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
+    // TODO: then it should be just deleted. for now we want to make sure we are aligned with the bitmap entries
+    mergedExtensions.forEach(extensionEntry => {
+      const stringId = extensionEntry.extensionId?.toStringWithoutScope();
+      const foundId = getBitId(stringId, this.consumer);
+      extensionEntry.extensionId = foundId;
+    });
+
     return {
       componentExtensions: mergedExtensions,
       componentWorkspaceMetaData: {

@@ -4,6 +4,7 @@ import { BitId } from '../../bit-id';
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IExtensionConfigList {
   ids: string[];
+  extensionsBitIds: BitId[];
 }
 
 export interface ExtensionConfigEntry {
@@ -14,6 +15,10 @@ export interface ExtensionConfigEntry {
 export class ExtensionConfigList extends Array<ExtensionConfigEntry> implements IExtensionConfigList {
   get ids(): string[] {
     return this.map(entry => entry.id);
+  }
+
+  get extensionsBitIds(): BitId[] {
+    return [];
   }
 
   findExtension(extensionId: string, ignoreVersion = false): ExtensionConfigEntry | undefined {

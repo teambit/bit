@@ -90,10 +90,42 @@ describe('component config', function() {
           expect(alignedOutput).to.have.string(getSuccessEjectMsg('bar/foo', componentJsonPath));
         });
       });
+      describe('when there are variant extensions defined', () => {
+        let componentJson;
+        const config = { key: 'val' };
+        before(() => {
+          helper.componentJson.deleteIfExist('bar');
+          helper.fixtures.copyFixtureExtensions('dummy-extension');
+          helper.command.addComponent('dummy-extension');
+          helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+          helper.command.ejectConf('bar/foo');
+          componentJson = helper.componentJson.read('bar');
+        });
+        it('should not have extensions from models in component.json', () => {
+          expect(componentJson.extensions).to.be.empty;
+        });
+      });
     });
     describe('eject for tagged component', () => {
-      it('', () => {});
+      let componentJson;
+      const config = { key: 'val' };
+      before(() => {
+        helper.componentJson.deleteIfExist('bar');
+        helper.fixtures.copyFixtureExtensions('dummy-extension');
+        helper.command.addComponent('dummy-extension');
+        helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+        helper.command.tagAllComponents();
+        helper.command.ejectConf('bar/foo');
+        componentJson = helper.componentJson.read('bar');
+      });
+      it('should have extensions from models in component.json', () => {
+        expect(componentJson.extensions).to.deep.equal({ 'dummy-extension@0.0.1': config });
+      });
     });
+  });
+  describe('import --conf', () => {});
+  describe('creating a capsule', () => {
+    // Make sure the component.json is written into capsule
   });
   describe('propagation', () => {
     describe('stop on component.json', () => {
