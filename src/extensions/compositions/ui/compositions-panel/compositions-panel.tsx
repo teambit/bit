@@ -32,3 +32,7 @@ export function CompositionsPanel({ compositions, onSelect, active }: Compositio
     </ul>
   );
 }
+
+CompositionsPanel.defaultProps = {
+  compositions: []
+} as Partial<CompositionsPanelProps>;

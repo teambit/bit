@@ -9,6 +9,10 @@ export type ComponentCompositionProps = {
 };
 
 export function ComponentComposition({ component, composition }: ComponentCompositionProps) {
+  if (!component?.server?.url) {
+    return <div>No compositions to show</div>;
+  }
+
   return (
     <ComponentPreview
       component={component}

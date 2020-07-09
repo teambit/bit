@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'reset-css';
+
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
 import { ReactRouterUI } from '../react-router/react-router.ui';

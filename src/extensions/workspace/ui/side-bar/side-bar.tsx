@@ -3,16 +3,14 @@ import { useHistory } from 'react-router-dom';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
-import { Component } from '../../../component/component.ui';
 import styles from './styles.module.scss';
+import { ComponentModel } from '../../../component/ui';
 
 type SideBarProps = {
-  components: Component[];
-  selected?: string;
-  onSelectComponent?: (component: Component) => void;
+  components: ComponentModel[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function SideBar({ components, selected, onSelectComponent, ...rest }: SideBarProps) {
+export function SideBar({ components, ...rest }: SideBarProps) {
   const componentIds = useMemo(() => components.map(x => x.id), [components]);
   const history = useHistory();
 
@@ -32,7 +30,7 @@ export function SideBar({ components, selected, onSelectComponent, ...rest }: Si
         <Input placeholder="Find components" error={false} className={styles.input} />
         <Icon of="discovery" className={styles.searchIcon} />
       </div>
-      <ComponentTree selected={selected} onSelect={handleSelect} components={componentIds} />
+      <ComponentTree onSelectItem={handleSelect} components={componentIds} />
     </div>
   );
 }

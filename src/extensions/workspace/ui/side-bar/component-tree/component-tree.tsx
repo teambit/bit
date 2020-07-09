@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import classNames from 'classnames';
+
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
@@ -9,20 +11,26 @@ import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 
 type ComponentTreeProps = {
-  onSelect?: (id: string, event?: React.MouseEvent) => void;
-  selected?: string;
+  /** component ids. These will be split by path segments and rendered as a tree */
   components: string[];
-};
+  /** triggered when a component is selected from the tree */
+  onSelectItem?: (
+    /** id of selected component */
+    id: string,
+    /** the event which triggered selection. Use `event.preventDefault()` to avoid automatic redirect */
+    event?: React.MouseEvent
+  ) => void;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentTree(props: ComponentTreeProps) {
-  const { components, onSelect, selected } = props;
+  const { components, onSelectItem, /* selected, */ className, ...rest } = props;
 
   const rootNode = useMemo(() => inflateToTree(components), [components]);
 
   return (
-    <div className={styles.componentTree} style={indentStyle(0)}>
+    <div {...rest} className={classNames(styles.componentTree, className)} style={indentStyle(0)}>
       <TreeNodeContext.Provider value={getTreeNodeComponent}>
-        <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
+        <ComponentTreeContextProvider onSelect={onSelectItem} /* selected={selected} */>
           <RootNode node={rootNode} />
         </ComponentTreeContextProvider>
       </TreeNodeContext.Provider>

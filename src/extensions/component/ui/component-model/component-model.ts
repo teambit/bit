@@ -2,16 +2,16 @@ import { Composition, CompositionProps } from '../../../compositions/composition
 
 export type ComponentModelProps = {
   id: string;
-  version: string;
-  server: ComponentServer;
-  displayName: string;
-  packageName: string;
-  compositions: CompositionProps[];
+  version?: string;
+  server?: ComponentServer;
+  displayName?: string;
+  packageName?: string;
+  compositions?: CompositionProps[];
 };
 
 export type ComponentServer = {
-  env: string;
-  url: string;
+  env?: string;
+  url?: string;
 };
 
 export class ComponentModel {
@@ -24,34 +24,41 @@ export class ComponentModel {
     /**
      * version of the component.
      */
-    readonly version: string,
+    readonly version?: string,
 
     /**
      * display name of the component.
      */
-    readonly displayName: string,
+    readonly displayName?: string,
 
     /**
      * package name of the component.
      */
-    readonly packageName: string,
+    readonly packageName?: string,
 
     /**
      * the component server.
      */
-    readonly server: ComponentServer,
+    readonly server?: ComponentServer,
 
     /**
      * array of compositions
      */
-    readonly compositions: Composition[]
+    readonly compositions?: Composition[]
   ) {}
 
   /**
    * create an instance of a component from a plain object.
    */
   static from({ id, version, server, displayName, compositions, packageName }: ComponentModelProps) {
-    return new ComponentModel(id, version, displayName, packageName, server, Composition.fromArray(compositions));
+    return new ComponentModel(
+      id,
+      version,
+      displayName,
+      packageName,
+      server,
+      compositions && Composition.fromArray(compositions)
+    );
   }
 
   static empty() {
