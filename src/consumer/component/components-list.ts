@@ -211,7 +211,7 @@ export default class ComponentsList {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
-    return BitIds.fromArray(nonNewComponents.map(c => c.id));
+    return BitIds.fromArray(nonNewComponents.map(c => c.id.changeVersion(undefined)));
   }
 
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {

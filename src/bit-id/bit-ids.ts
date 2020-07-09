@@ -151,6 +151,16 @@ export default class BitIds extends Array<BitId> {
     return BitIds.fromArray(uniq);
   }
 
+  throwForDuplicationIgnoreVersion() {
+    this.forEach(bitId => {
+      const found = this.filterWithoutVersion(bitId);
+      if (found.length > 1) {
+        throw new Error(`bitIds has "${bitId.toStringWithoutVersion()}" duplicated as following:
+${found.map(id => id.toString()).join('\n')}`);
+      }
+    });
+  }
+
   clone(): BitIds {
     const cloneIds = this.map(id => id.clone());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

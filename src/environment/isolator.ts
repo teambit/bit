@@ -1,4 +1,5 @@
 import R from 'ramda';
+import execa from 'execa';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
@@ -237,7 +238,7 @@ export default class Isolator {
   }
 
   async _getNpmVersion() {
-    const { stdout: versionString } = await this.capsuleExec('npm --version');
+    const { stdout: versionString } = await this.capsuleExecUsingExeca('npm', ['--version']);
     const validVersion = semver.coerce(versionString);
     return validVersion ? validVersion.raw : null;
   }
@@ -245,7 +246,7 @@ export default class Isolator {
   async installPackagesOnRoot(modules: string[] = []) {
     await this._throwForOldNpmVersion();
     const args = ['install', ...modules, '--no-save'];
-    return this.capsuleExec(`npm ${args.join(' ')}`, { cwd: this.componentRootDir });
+    return this.capsuleExecUsingExeca('npm', args, this.componentRootDir);
   }
 
   async _throwForOldNpmVersion() {
@@ -263,6 +264,11 @@ export default class Isolator {
       );
     }
     this._npmVersionHasValidated = true;
+  }
+
+  async capsuleExecUsingExeca(pkgManager: string, args: string[], dir = ''): Promise<PackageManagerResults> {
+    const cwd = path.join(this.capsule.wrkDir, dir);
+    return execa(pkgManager, args, { cwd });
   }
 
   async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<PackageManagerResults> {
@@ -328,14 +334,18 @@ export default class Isolator {
   }
 
   async _getNpmListOutput(packageManager: string): Promise<string> {
-    const args = [packageManager, 'list', '-j'];
+    const args = ['list', '-j'];
     try {
-      const { stdout, stderr } = await this.capsuleExec(args.join(' '), { cwd: this.componentRootDir });
+      const { stdout, stderr } = await this.capsuleExecUsingExeca(packageManager, args, this.componentRootDir);
       if (stderr && stderr.startsWith('{')) return stderr;
       return stdout;
     } catch (err) {
-      if (err && err.startsWith('{')) return err; // it's probably a valid json with errors, that's fine, parse it.
-      throw err;
+      if (err.stdout && err.stdout.startsWith('{')) {
+        // it's probably a valid json with errors, that's fine, parse it.
+        return err.stdout;
+      }
+      logger.error('npm-client got an error', err);
+      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
 }
