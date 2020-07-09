@@ -2,7 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
-import { BitIds, BitId } from '../../bit-id';
+import { BitIds } from '../../bit-id';
 import { filterObject } from '../../utils';
 import { ExtensionOptions } from '../../legacy-extensions/extension';
 import { EnvExtensionOptions, EnvType } from '../../legacy-extensions/env-extension-types';
@@ -109,17 +109,6 @@ export default class AbstractConfig {
 
   setTester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
-  }
-
-  addDependencies(bitIds: BitId[]): this {
-    const idObjects = R.mergeAll(bitIds.map(bitId => bitId.toObject()));
-    this.dependencies = R.merge(this.dependencies, idObjects);
-    return this;
-  }
-
-  addDependency(bitId: BitId): this {
-    this.dependencies = R.merge(this.dependencies, bitId.toObject());
-    return this;
   }
 
   hasCompiler(): boolean {

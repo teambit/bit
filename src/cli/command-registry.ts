@@ -47,7 +47,7 @@ function getOpts(c, opts: CommandOptions): { [key: string]: boolean | string } {
 export async function execAction(command: Command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
-  Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
+  Analytics.init(concrete.name(), flags, relevantArgs);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
     args: relevantArgs,
     flags

@@ -116,18 +116,26 @@ async function removeLocal(
       })
     );
   }
+  const idsToRemove = force ? bitIds : nonModifiedComponents;
+  const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const {
     removedComponentIds,
     missingComponents,
     dependentBits,
     removedDependencies
-  } = await consumer.scope.removeMany(force ? bitIds : nonModifiedComponents, force, true, consumer);
+  } = await consumer.scope.removeMany(idsToRemove, force, true, consumer);
 
   if (!R.isEmpty(removedComponentIds)) {
+    const removedComponents = componentsToRemove.filter(c => removedComponentIds.hasWithoutVersion(c.id));
     await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
-      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(consumer, removedComponentIds);
+      const invalidComponentsIds = invalidComponents.map(i => i.id);
+      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(
+        consumer,
+        removedComponents,
+        invalidComponentsIds
+      );
       await consumer.cleanFromBitMap(removedComponentIds, removedDependencies);
     }
   }
