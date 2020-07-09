@@ -23,6 +23,7 @@ module.exports = {
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
     'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
