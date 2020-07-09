@@ -29,6 +29,9 @@ type ConfigLoadRegistry = { [extId: string]: Function };
 type ConfigLegacyLoadRegistry = { [extId: string]: Function };
 type AddConfigRegistry = { [extId: string]: Function };
 
+// TODO: take for some other place like config
+const ignoreLoadingExtensionsErrors = false;
+
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   defaultScope: string | undefined;
@@ -357,6 +360,9 @@ export default class ComponentConfig extends AbstractConfig {
         return func(id, config);
       });
     } catch (err) {
+      if (!ignoreLoadingExtensionsErrors) {
+        throw err;
+      }
       // TODO: improve texts
       logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
       // TODO: this show an ugly error, we should somehow show a proper errors
@@ -383,6 +389,9 @@ export default class ComponentConfig extends AbstractConfig {
       });
       return res;
     } catch (err) {
+      if (!ignoreLoadingExtensionsErrors) {
+        throw err;
+      }
       // TODO: improve texts
       logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
       // TODO: this show an ugly error, we should somehow show a proper errors
