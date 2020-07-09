@@ -59,10 +59,6 @@ export default class Dependencies {
     return !this.dependencies.length;
   }
 
-  asWritableObject() {
-    return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
-  }
-
   cloneAsString(): Record<string, any>[] {
     return this.dependencies.map(dependency => {
       const dependencyClone = R.clone(dependency);

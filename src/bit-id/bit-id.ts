@@ -121,13 +121,6 @@ export default class BitId {
     return obj;
   }
 
-  toObject() {
-    const key = this.scope ? [this.scope, this.name].join('/') : this.name;
-    const value = this.version;
-
-    return { [key]: value };
-  }
-
   toFullPath(): PathOsBased {
     if (!this.scope || !this.version) {
       throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version');

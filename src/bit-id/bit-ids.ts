@@ -8,10 +8,6 @@ export default class BitIds extends Array<BitId> {
     return this.map(bitId => bitId.toString());
   }
 
-  toObject(): Record<string, any> {
-    return R.mergeAll(this.map(bitId => bitId.toObject()));
-  }
-
   /**
    * Resolve an id with latest to specific version
    * This used to get the real version from the flatten deps by the deps ids
