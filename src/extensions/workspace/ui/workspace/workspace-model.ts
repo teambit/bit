@@ -1,9 +1,10 @@
-import { Component } from '../../../component/component.ui';
+// import { ComponentMeta } from '../../../component/component.ui';
+import { ComponentID } from '../../../component/id';
 
 export type WorkspaceProps = {
   name: string;
   path: string;
-  components: Component[];
+  components: any[];
 };
 
 export class Workspace {
@@ -21,10 +22,14 @@ export class Workspace {
     /**
      * components container in the workspace.
      */
-    readonly components: Component[]
+    readonly components: ComponentID[]
   ) {}
 
   static from({ name, path, components }: WorkspaceProps) {
-    return new Workspace(name, path, components);
+    return new Workspace(
+      name,
+      path,
+      components.map(value => ComponentID.fromObject(value.id))
+    );
   }
 }

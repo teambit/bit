@@ -186,7 +186,10 @@ export default class BitId {
     const { scope, name } = getScopeAndName();
 
     if (!isValidIdChunk(name)) throw new InvalidName(name);
-    if (scope && !isValidScopeName(scope)) throw new InvalidScopeName(scope);
+    if (scope && !isValidScopeName(scope)) {
+      console.log('scope', scope);
+      throw new InvalidScopeName(scope);
+    }
 
     return new BitId({
       scope,

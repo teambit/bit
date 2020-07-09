@@ -1,4 +1,5 @@
 import { Composition, CompositionProps } from '../../../compositions/composition';
+import { ComponentID } from '../../id';
 
 export type ComponentModelProps = {
   id: string;
@@ -19,12 +20,7 @@ export class ComponentModel {
     /**
      * id of the component
      */
-    readonly id: string,
-
-    /**
-     * version of the component.
-     */
-    readonly version: string,
+    readonly id: ComponentID,
 
     /**
      * display name of the component.
@@ -47,14 +43,25 @@ export class ComponentModel {
     readonly compositions: Composition[]
   ) {}
 
+  get version() {
+    if (!this.id.version) return 'new';
+    return this.id.version;
+  }
+
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, version, server, displayName, compositions, packageName }: ComponentModelProps) {
-    return new ComponentModel(id, version, displayName, packageName, server, Composition.fromArray(compositions));
+  static from({ id, server, displayName, compositions, packageName }: ComponentModelProps) {
+    return new ComponentModel(
+      ComponentID.fromObject(id),
+      displayName,
+      packageName,
+      server,
+      Composition.fromArray(compositions)
+    );
   }
 
   static empty() {
-    return new ComponentModel('', '', '', '', { env: '', url: '' }, []);
+    return new ComponentModel(ComponentID.fromObject({ name: 'root' }), '', '', { env: '', url: '' }, []);
   }
 }

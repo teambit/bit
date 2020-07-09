@@ -30,7 +30,7 @@ export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
         <TopBar
           className={styles.topbar}
           navigationSlot={navSlot}
-          version={component.version}
+          version={component.id.version || 'new'}
           widgetSlot={widgetSlot}
         />
         {routeSlot && <SlotSubRouter slot={routeSlot} />}

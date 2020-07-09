@@ -3,17 +3,17 @@ import { useHistory } from 'react-router-dom';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
-import { Component } from '../../../component/component.ui';
 import styles from './styles.module.scss';
+import { ComponentID } from '../../../component';
 
 type SideBarProps = {
-  components: Component[];
+  components: ComponentID[];
   selected?: string;
-  onSelectComponent?: (component: Component) => void;
+  onSelectComponent?: (component: ComponentID) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function SideBar({ components, selected, onSelectComponent, ...rest }: SideBarProps) {
-  const componentIds = useMemo(() => components.map(x => x.id), [components]);
+export function SideBar({ components, selected, ...rest }: SideBarProps) {
+  const componentIds = useMemo(() => components.map(id => id.fullName), [components]);
   const history = useHistory();
 
   const handleSelect = useCallback(

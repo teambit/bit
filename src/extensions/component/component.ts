@@ -4,7 +4,7 @@ import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
 // eslint-disable-next-line import/no-cycle
-import ComponentID from './id';
+import { ComponentID } from './id';
 import State from './state';
 // eslint-disable-next-line import/no-cycle
 import Snap, { Author } from './snap';

@@ -1,3 +1,4 @@
+import { resolve, join } from 'path';
 import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
@@ -63,8 +64,11 @@ export class ReactEnv implements Environment {
    */
   getCompiler(): Compiler {
     // eslint-disable-next-line global-require
-    const tsConfig = require('./typescript/tsconfig.json');
-    return this.ts.createCompiler(tsConfig);
+    const tsconfig = require('./typescript/tsconfig.json');
+    return this.ts.createCompiler({
+      tsconfig,
+      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')]
+    });
   }
 
   /**

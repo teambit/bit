@@ -4,8 +4,14 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 export function componentSchema() {
   return {
     typeDefs: `
+      type ComponentID {
+        name: String
+        version: String
+        scope: String
+      }
+
       type Component {
-        id: String
+        id: ComponentID
         version: String
         displayName: String
         versions(limit: Int): [String]
@@ -15,17 +21,17 @@ export function componentSchema() {
       }
 
       type ComponentMeta {
-        id: String
+        id: ComponentID
         displayName: String
       }
   `,
     resolvers: {
       ComponentMeta: {
-        id: (component: Component) => component.id.toString(),
+        id: (component: Component) => component.id._legacy.serialize(),
         displayName: (component: Component) => component.displayName
       },
       Component: {
-        id: (component: Component) => component.id.toString(),
+        id: (component: Component) => component.id._legacy.serialize(),
         displayName: (component: Component) => component.displayName,
         version: (component: Component) => component.state.version,
         isNew: (component: Component) => component.isNew(),

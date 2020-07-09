@@ -25,7 +25,6 @@ export function ComponentDetails({
   packageName,
   ...rest
 }: ComponentDetailsProps) {
-  console.log('labels', labels);
   return (
     <Section {...rest}>
       <div className={styles.topRow}>

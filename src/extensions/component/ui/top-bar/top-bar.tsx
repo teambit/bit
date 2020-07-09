@@ -45,11 +45,7 @@ export function TopBar({ navigationSlot, widgetSlot, className, version }: TopBa
             <Icon className={classnames(styles.icon)} of="changelog" />
           </TopBarWidgetLink>
         ))}
-        {version === 'latest' ? (
-          <VersionTag className={classnames(styles.latest, styles.marginRight)}>Latest</VersionTag>
-        ) : (
-          { version }
-        )}
+        <VersionTag className={classnames(styles.latest, styles.marginRight)}>{version}</VersionTag>
         <span>
           <Icon className={classnames(styles.icon)} of="more" />
         </span>

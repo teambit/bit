@@ -166,7 +166,7 @@ export default class Workspace implements ComponentHost {
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
-  // @gilad needs to implment on variants
+  // @gilad needs to implement on variants
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async byPattern(pattern: string): Promise<Component[]> {
     // @todo: this is a naive implementation, replace it with a real one.

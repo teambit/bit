@@ -1,6 +1,6 @@
 import { BitId } from '../../bit-id';
 
-export default class ComponentID {
+export class ComponentID {
   constructor(
     /**
      * legacy bit component id
@@ -32,6 +32,13 @@ export default class ComponentID {
   }
 
   /**
+   * retrieves the full name of the component including its namespace.
+   */
+  get fullName() {
+    return this._legacy.name;
+  }
+
+  /**
    * resolves the name of the component.
    */
   get name() {
@@ -55,6 +62,10 @@ export default class ComponentID {
    */
   static fromString(idStr: string) {
     return new ComponentID(BitId.parse(idStr));
+  }
+
+  static fromObject(object: any) {
+    return ComponentID.fromLegacy(new BitId(object));
   }
 
   /**
