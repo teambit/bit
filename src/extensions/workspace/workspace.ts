@@ -165,9 +165,9 @@ export default class Workspace implements ComponentHost {
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
-  getDefaultExtensions(): ExtensionDataList | undefined {
+  getDefaultExtensions(): ExtensionDataList {
     if (!this.config.extensions) {
-      return undefined;
+      return new ExtensionDataList();
     }
     return ExtensionDataList.fromObject(this.config.extensions);
   }
@@ -296,7 +296,9 @@ export default class Workspace implements ComponentHost {
       extensionsToMerge.unshift(variantsExtensions);
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
-    if (wsDefaultExtensions && continuePropagating) {
+    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
+    const isDefaultExtension = wsDefaultExtensions.findExtension(componentId.toString(), true, true);
+    if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
       // Put it in the start to make sure the config file is stronger
       extensionsToMerge.unshift(wsDefaultExtensions);
     }

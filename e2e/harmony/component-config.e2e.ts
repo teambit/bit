@@ -128,14 +128,74 @@ describe('component config', function() {
     // Make sure the component.json is written into capsule
   });
   describe('propagation', () => {
-    describe('stop on component.json', () => {
-      it('', () => {});
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateExtensions(5);
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      const defaultWsExtensions = {
+        'my-scope/ext1': { key: 'val-ws-defaults' },
+        'my-scope/ext2': { key: 'val-ws-defaults' },
+        'my-scope/ext5': { key: 'val-ws-defaults' }
+      };
+      helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
+      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext3', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext4', { key: 'val-variant' });
+      helper.command.ejectConf('bar/foo');
+      helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
+      helper.componentJson.setExtension('my-scope/ext5', { key: 'val-component-json' });
     });
-    describe('stop on variant', () => {
-      it('', () => {});
+    describe('stop on component.json - component.json propagate false', () => {
+      before(() => {
+        helper.componentJson.setPropagate(false);
+        output = helper.command.showComponentParsed('bar/foo');
+      });
+      it('should only has extensions defined in component.json', () => {
+        expect(output.extensions).to.be.length(2);
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext4', { key: 'val-component-json' }));
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext5', { key: 'val-component-json' }));
+      });
     });
-    describe('propagate all the way', () => {
-      it('', () => {});
+    describe('stop on variant - component.json propagate true and variant propagate false', () => {
+      before(() => {
+        helper.componentJson.setPropagate(true);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', false);
+        output = helper.command.showComponentParsed('bar/foo');
+      });
+      it('should not contain extension from workspace defaults', () => {
+        expect(output.extensions).to.be.length(4);
+      });
+      it('should prefer config from component json when there is conflict', () => {
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext4', { key: 'val-component-json' }));
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext5', { key: 'val-component-json' }));
+      });
+      it('should has extensions from the variant', () => {
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext2', { key: 'val-variant' }));
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext3', { key: 'val-variant' }));
+      });
+    });
+    describe('propagate all the way - component.json propagate true and variant propagate true', () => {
+      before(() => {
+        helper.componentJson.setPropagate(true);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', true);
+        output = helper.command.showComponentParsed('bar/foo');
+      });
+      it('should contain extension from all sources', () => {
+        expect(output.extensions).to.be.length(5);
+      });
+      it('should prefer config from component json when there is conflicts with variant or with workspace defaults', () => {
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext4', { key: 'val-component-json' }));
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext5', { key: 'val-component-json' }));
+      });
+      it('should prefer config from variant when there is conflicts with workspace defaults', () => {
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext2', { key: 'val-variant' }));
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext3', { key: 'val-variant' }));
+      });
+      it('should has extensions from the workspace defaults', () => {
+        expect(output.extensions).to.deep.include(getExtensionEntry('ext1', { key: 'val-ws-defaults' }));
+      });
     });
     // TODO: implement once vendor is implemented
     describe.skip('vendor component', () => {
@@ -146,4 +206,13 @@ describe('component config', function() {
 
 function getSuccessEjectMsg(compId: string, componentJsonPath: string): string {
   return `successfully ejected config for component ${compId} in path ${componentJsonPath}`;
+}
+
+function getExtensionEntry(extensionId: string, config: any): any {
+  return {
+    extensionId,
+    config,
+    data: {},
+    artifacts: []
+  };
 }

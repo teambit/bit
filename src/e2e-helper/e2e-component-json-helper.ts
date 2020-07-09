@@ -46,6 +46,10 @@ export default class ComponentJsonHelper {
     this.addKeyVal('extensions', extensions, componentRelativeDir);
   }
 
+  setPropagate(propagateVal: boolean, componentRelativeDir = 'bar') {
+    this.addKeyVal('propagate', propagateVal, componentRelativeDir);
+  }
+
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyVal('defaultScope', scope);
   }

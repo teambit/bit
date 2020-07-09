@@ -74,12 +74,18 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     return BitIds.fromArray(bitIds);
   }
 
-  findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
+  findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
     return this.find(extEntry => {
-      if (!ignoreVersion) {
-        return extEntry.stringId === extensionId;
+      if (ignoreVersion && ignoreScope) {
+        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
       }
-      return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
+      if (ignoreVersion) {
+        return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
+      }
+      if (ignoreScope) {
+        return extEntry.extensionId?.toStringWithoutScope() === extensionId;
+      }
+      return extEntry.stringId === extensionId;
     });
   }
 

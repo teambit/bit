@@ -158,6 +158,42 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
+  /**
+   * This will populate extensions that does nothing
+   * its purpose is to check different config merges
+   *
+   * @param {number} [numOfExtensions=3]
+   * @returns {string}
+   * @memberof FixtureHelper
+   */
+  populateExtensions(numOfExtensions = 3): void {
+    const getImp = index => {
+      return `
+      class MyExtension {
+        constructor(config) {
+          this.config = config;
+        }
+
+        printName() {
+          console.log(MyExtension.id)
+        }
+      }
+      MyExtension.prototype.id = 'MyExtension${index}';
+      MyExtension.prototype.dependencies = [];
+      MyExtension.prototype.provider = (deps, config) => {
+        return new MyExtension(config);
+      };
+      module.exports = {
+        MyExtension
+      }
+      `;
+    };
+    for (let i = 1; i <= numOfExtensions; i += 1) {
+      this.fs.outputFile(path.join(`ext${i}`, `index.js`), getImp(i));
+      this.command.addComponent(`ext${i}`);
+    }
+  }
+
   populateComponentsTS(numOfComponents = 3, owner = '@bit'): string {
     const getImp = index => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;

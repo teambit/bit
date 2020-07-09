@@ -30,6 +30,7 @@ type ConfigLegacyLoadRegistry = { [extId: string]: Function };
 type AddConfigRegistry = { [extId: string]: Function };
 
 // TODO: take for some other place like config
+// TODO: unify this and the same in src/extensions/utils/load-extensions/load-resolved-extensions.ts
 const ignoreLoadingExtensionsErrors = false;
 
 export default class ComponentConfig extends AbstractConfig {
