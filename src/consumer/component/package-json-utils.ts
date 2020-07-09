@@ -15,7 +15,6 @@ import JSONFile from './sources/json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
-import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
 import PackageJson from './package-json';
@@ -107,7 +106,11 @@ export function preparePackageJsonToWrite(
     return dependencies.reduce((acc, depId: BitId) => {
       if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
-      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({
+        ...component,
+        id: depId,
+        isDependency: true
+      });
       acc[packageName] = packageDependency;
       return acc;
     }, {});

@@ -17,7 +17,6 @@ import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import PackageJsonFile from '../component/package-json-file';
-import ComponentVersion from '../../scope/component-version';
 import deleteComponentsFiles from './delete-component-files';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import Component from '../component/consumer-component';

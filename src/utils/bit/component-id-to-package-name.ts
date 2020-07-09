@@ -1,5 +1,5 @@
 import npmRegistryName from './npm-registry-name';
-import { NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
+import { NODE_PATH_COMPONENT_SEPARATOR, Extensions } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { replacePlaceHolderForPackageName } from './component-placeholders';
@@ -13,15 +13,17 @@ export default function componentIdToPackageName({
   bindingPrefix,
   defaultScope,
   withPrefix = true,
-  extensions
+  extensions,
+  isDependency = false
 }: {
   id: BitId;
   bindingPrefix: string | null | undefined;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
   withPrefix?: boolean;
   extensions?: ExtensionDataList;
+  isDependency?: boolean;
 }): string {
-  const fromExtensions = getNameFromExtensions(id, extensions);
+  const fromExtensions = getNameFromExtensions(id, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
@@ -39,9 +41,15 @@ export default function componentIdToPackageName({
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }
 
-function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList): null | string {
+function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDependency?: boolean): null | string {
   if (!extensions) return null;
-  const pkgExt = extensions.findExtension('@teambit/pkg');
+  if (isDependency) {
+    const dependencyResolverExt = extensions.findExtension(Extensions.dependencyResolver);
+    if (!dependencyResolverExt || !dependencyResolverExt.data.dependencies) return null;
+    const dep = dependencyResolverExt.data.dependencies.find(d => d.componentId.isEqual(id));
+    return dep ? dep.packageName : null;
+  }
+  const pkgExt = extensions.findExtension(Extensions.pkg);
   if (!pkgExt) return null;
   const name = pkgExt.config?.packageJson?.name;
   if (!name) return null;

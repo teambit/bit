@@ -321,14 +321,16 @@ export default class NodeModuleLinker {
       if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
-      dependenciesLinks.push(this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix));
+      dependenciesLinks.push(
+        this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix, component)
+      );
       if (this.consumer && !this.consumer.shouldDistsBeInsideTheComponent()) {
         // when dists are written outside the component, it doesn't matter whether a component
         // has dists files or not, in case it doesn't have, the files are copied from the component
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
-        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix);
+        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix, component);
         distSymlink.forDistOutsideComponentsDir = true;
         dependenciesLinks.push(distSymlink);
       }
@@ -343,9 +345,16 @@ export default class NodeModuleLinker {
     parentRootDir: PathOsBasedRelative,
     bitId: BitId,
     rootDir: PathOsBasedRelative,
-    bindingPrefix: string
+    bindingPrefix: string,
+    component: Component
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this._getDefaultScope());
+    const relativeDestPath = getNodeModulesPathOfComponent({
+      ...component,
+      id: bitId,
+      allowNonScope: true,
+      bindingPrefix,
+      isDependency: true
+    });
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
