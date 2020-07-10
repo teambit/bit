@@ -41,41 +41,41 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   updateExtensions(component.extensions);
 
   function resolveVersion(id: BitId): string | undefined {
-    // $FlowFixMe component.componentFromModel is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore component.componentFromModel is set
     const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
-    const idFromPackageJson = getIdFromPackageJson(id);
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
-    const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
-
-    // get from packageJson when it was changed from the model or when there is no model.
-    const getFromPackageJsonIfChanged = () => {
-      if (!idFromPackageJson) return null;
-      if (!idFromModel) return idFromPackageJson;
-      if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
-      return null;
-    };
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     const getFromModel = () => idFromModel || null;
-    const getFromPackageJson = () => idFromPackageJson || null;
-    const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
-    const getCurrentVersion = () => (id.hasVersion() ? id.version : null);
 
-    const legacyStrategies: Function[] = [
-      getFromComponentConfig,
-      getFromDependentPackageJson,
-      getFromPackageJsonIfChanged,
-      getFromBitMap,
-      getFromModel,
-      getFromPackageJson
-    ];
+    let strategies: Function[];
+    if (consumer.isLegacy) {
+      const idFromPackageJson = getIdFromPackageJson(id);
+      const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
+      // get from packageJson when it was changed from the model or when there is no model.
+      const getFromPackageJsonIfChanged = () => {
+        if (!idFromPackageJson) return null;
+        if (!idFromModel) return idFromPackageJson;
+        if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
+        return null;
+      };
+      const getFromPackageJson = () => idFromPackageJson || null;
+      const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
 
-    // @todo: change this once vendors feature is in.
-    const nonLegacyStrategies: Function[] = [getFromComponentConfig, getCurrentVersion, getFromBitMap, getFromModel];
-
-    const strategies = component.isLegacy ? legacyStrategies : nonLegacyStrategies;
+      strategies = [
+        getFromComponentConfig,
+        getFromDependentPackageJson,
+        getFromPackageJsonIfChanged,
+        getFromBitMap,
+        getFromModel,
+        getFromPackageJson
+      ];
+    } else {
+      // @todo: change this once vendors feature is in.
+      const getCurrentVersion = () => (id.hasVersion() ? id.version : null);
+      strategies = [getFromComponentConfig, getCurrentVersion, getFromBitMap, getFromModel];
+    }
 
     for (const strategy of strategies) {
       const strategyId = strategy();

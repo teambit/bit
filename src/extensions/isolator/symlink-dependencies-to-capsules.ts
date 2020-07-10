@@ -30,7 +30,8 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
       );
       return null;
     }
-    const packageName = componentIdToPackageName(devCapsule.component.state._consumer);
+    // @ts-ignore fix once the capsule has the correct component. change to devCapsule.component.state._consumer
+    const packageName = componentIdToPackageName(devCapsule.component as ConsumerComponent);
     const devCapsulePath = devCapsule.wrkDir;
     // @todo: this is a hack, the capsule should be the one responsible to symlink, this works only for FS capsules.
     const dest = path.join(componentCapsule.wrkDir, 'node_modules', packageName);
