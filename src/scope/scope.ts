@@ -797,7 +797,7 @@ export default class Scope {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
     if (useCache && Scope.scopeCache[scopePath]) {
-      logger.info(`taking scope at ${scopePath} from cache`);
+      logger.debug(`scope.load, found scope at ${scopePath} from cache`);
       return Scope.scopeCache[scopePath];
     }
     const scopeJsonPath = getScopeJsonPath(scopePath);
