@@ -132,7 +132,7 @@ class BitLogger {
       msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
     }
     this.logger[level](msg);
-    await waitForLogger();
+    await waitForLogger(code);
     process.exit(code);
   }
 
@@ -219,13 +219,13 @@ export const printWarning = (msg: string) => {
  * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
  * it solves an issue when exiting the code explicitly and the log file is not written
  */
-async function waitForLogger() {
+async function waitForLogger(code: number) {
   // don't change it to `logger.on('finish'`, otherwise, it won't finish writing when exporting
   // lots of components (~300)
-  const loggerDone = new Promise(resolve => logger.logger.on('close', resolve));
+  const loggerDone = new Promise(resolve => logger.logger.on(code ? 'finish' : 'close', resolve));
   // unclear when this is needed. in some occasions (exporting 3,000 components via the e2e-tests)
   // this causes an error of "write after end"
-  // logger.logger.end();
+  if (code) logger.logger.end();
   return loggerDone;
 }
 
