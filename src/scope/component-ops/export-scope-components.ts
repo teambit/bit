@@ -500,8 +500,9 @@ async function convertToCorrectScope(
           return; // because only --rewire is permitted to change from scope-a to scope-b.
         }
         // dists can change no-scope to scope without --rewire flag. if this is not a dist file
-        // and the file needs to change from no-scope to scope, it needs to --rewire flag
-        if (!isDist && fileString.includes(pkgNameWithOldScope)) {
+        // and the file needs to change from no-scope to scope, it needs to --rewire flag.
+        // for non-legacy the no-scope is not possible, so no need to check for it.
+        if (!isDist && fileString.includes(pkgNameWithOldScope) && version.isLegacy) {
           throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
             file.relativePath
           }" file of ${componentId.toString()},

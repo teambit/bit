@@ -372,10 +372,9 @@ export default class NodeModuleLinker {
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(
       getNodeModulesPathOfComponent({
-        bindingPrefix: component.bindingPrefix,
+        ...component,
         id: component.id,
-        allowNonScope: true,
-        defaultScope: this._getDefaultScope(component)
+        allowNonScope: true
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);

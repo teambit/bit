@@ -133,7 +133,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const rootDir: PathLinux | null | undefined = component.componentMap.rootDir;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    const packagePath = getNodeModulesPathOfComponent({ id: componentId, bindingPrefix: component.bindingPrefix });
+    const packagePath = getNodeModulesPathOfComponent({
+      ...component,
+      id: componentId
+    });
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
@@ -155,9 +158,9 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       return null;
     }
     const dependencyIdAsPackage = componentIdToPackageName({
+      ...component,
       id: componentId, // this componentId is actually the dependencyId
-      bindingPrefix: component.bindingPrefix,
-      defaultScope: component.defaultScope
+      isDependency: true
     });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];

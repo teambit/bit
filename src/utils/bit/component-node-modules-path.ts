@@ -17,7 +17,7 @@ export default function getNodeModulesPathOfComponent({
   id: BitId;
   allowNonScope?: boolean;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
-  extensions?: ExtensionDataList;
+  extensions: ExtensionDataList;
   isDependency?: boolean;
 }): PathOsBasedRelative {
   if (!id.scope && !allowNonScope) {

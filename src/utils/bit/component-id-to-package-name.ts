@@ -20,7 +20,7 @@ export default function componentIdToPackageName({
   bindingPrefix: string | null | undefined;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
   withPrefix?: boolean;
-  extensions?: ExtensionDataList;
+  extensions: ExtensionDataList;
   isDependency?: boolean;
 }): string {
   const fromExtensions = getNameFromExtensions(id, extensions, isDependency);
