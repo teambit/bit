@@ -166,7 +166,7 @@ export default class DependencyResolver {
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
       resolveModulesConfig: this.consumer.config._resolveModules,
-      cacheResolvedDependencies,
+      visited: cacheResolvedDependencies,
       cacheProjectAst
     });
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,

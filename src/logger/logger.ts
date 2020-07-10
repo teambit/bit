@@ -220,8 +220,12 @@ export const printWarning = (msg: string) => {
  * it solves an issue when exiting the code explicitly and the log file is not written
  */
 async function waitForLogger() {
-  const loggerDone = new Promise(resolve => logger.logger.on('finish', resolve));
-  logger.logger.end();
+  // don't change it to `logger.on('finish'`, otherwise, it won't finish writing when exporting
+  // lots of components (~300)
+  const loggerDone = new Promise(resolve => logger.logger.on('close', resolve));
+  // unclear when this is needed. in some occasions (exporting 3,000 components via the e2e-tests)
+  // this causes an error of "write after end"
+  // logger.logger.end();
   return loggerDone;
 }
 
