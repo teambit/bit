@@ -679,7 +679,7 @@ export default class Consumer {
     const getPackageJsonDir = (componentMap: ComponentMap, component: Component): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(component);
+        return getNodeModulesPathOfComponent({ ...component, id: component.id, allowNonScope: true });
       }
       return componentMap.rootDir;
     };
