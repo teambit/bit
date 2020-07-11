@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [14.8.8-dev.1] - 2020-07-09
+## [14.8.8-dev.2] - 2020-07-11
+
+- fix ssh command by reverting another fix of "write after end" error
+
+## [14.8.8-dev.1] - 2020-07-10
 
 - resolve performance regression by fixing the dependency resolution cache
-- fix "write after end" error
 - facilitate debugging by showing the entire stacktrace formatted when BIT_LOG is set
 
 ## [[14.8.7] - 2020-07-09](https://github.com/teambit/bit/releases/tag/v14.8.7)
