@@ -1030,8 +1030,7 @@ export default class Component {
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromString(str: string): Component {
+  static async fromString(str: string): Promise<Component> {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 

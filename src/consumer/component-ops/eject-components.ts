@@ -17,7 +17,6 @@ import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import PackageJsonFile from '../component/package-json-file';
-import ComponentVersion from '../../scope/component-version';
 import deleteComponentsFiles from './delete-component-files';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import Component from '../component/consumer-component';
@@ -171,18 +170,10 @@ export default class EjectComponents {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      const componentsVersions = await Promise.all(
-        this.idsToEject.map(async bitId => {
-          const modelComponent = await this.consumer.scope.getModelComponent(bitId);
-          // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          return new ComponentVersion(modelComponent, bitId.version);
-        })
-      );
-      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, componentsVersions);
+      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
       this.notEjectedDependents.forEach(({ dependent, ejectedDependencies }) => {
         const dependenciesToReplace = ejectedDependencies.reduce((acc, dependency) => {
-          const packageName = componentIdToPackageName(dependency.id, dependency.bindingPrefix);
+          const packageName = componentIdToPackageName(dependency);
           acc[packageName] = dependency.version;
           return acc;
         }, {});
