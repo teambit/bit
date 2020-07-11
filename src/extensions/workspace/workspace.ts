@@ -263,6 +263,7 @@ export default class Workspace implements ComponentHost {
     const extensionsIds = extensions.ids;
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
+    if (!extensionsToLoad.length) return;
     let resolvedExtensions: ResolvedComponent[] = [];
     resolvedExtensions = await this.load(extensionsToLoad);
     // TODO: change to use the new reporter API, in order to implement this
@@ -271,7 +272,7 @@ export default class Workspace implements ComponentHost {
     // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
     // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
     // level passed to it).
-    return loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+    await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
   /**

@@ -35,6 +35,20 @@ const maxFlattenedDependencies = 100;
  * status 3,000 with maxFlattenedDependencies of 100 => 46 sec
  * export 3,000 with maxFlattenedDependencies of 100 => 90 sec
  * import 3,000 with maxFlattenedDependencies of 100 => 475 sec
+ *
+ * v14.8.7 (with node v12.7.0)
+ * add 3,000 with maxFlattenedDependencies of 100 => 10 sec
+ * tag 3,000 with maxFlattenedDependencies of 100 => 269 sec
+ * status 3,000 with maxFlattenedDependencies of 100 => 203 sec
+ * export 3,000 with maxFlattenedDependencies of 100 => 125 sec + an error "got an error from the logger Error: write after end"
+ * import 3,000 with maxFlattenedDependencies of 100 => 949 sec
+ *
+ * v14.8.8 (with node v12.7.0)
+ * add 3,000 with maxFlattenedDependencies of 100 => 7 sec
+ * tag 3,000 with maxFlattenedDependencies of 100 => 88 sec
+ * status 3,000 with maxFlattenedDependencies of 100 => 47 sec
+ * export 3,000 with maxFlattenedDependencies of 100 => 94 sec
+ * import 3,000 with maxFlattenedDependencies of 100 => 736 sec
  */
 describe('many components', function() {
   this.timeout(0);

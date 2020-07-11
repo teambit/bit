@@ -94,13 +94,9 @@ function serializeErrAndExit(err, commandName: string) {
 }
 
 export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
-  logger.error(
-    `got an error from command ${commandName}: ${err}. Error serialized: ${JSON.stringify(
-      err,
-      Object.getOwnPropertyNames(err)
-    )}`
-  );
   loader.off();
+  logger.error(`got an error from command ${commandName}: ${err}`);
+  logger.error(err.stack || '<no error stack was found>');
   const { message, error } = defaultHandleError(err);
   if (shouldSerialize) return serializeErrAndExit(error, commandName);
   return logErrAndExit(message, commandName);

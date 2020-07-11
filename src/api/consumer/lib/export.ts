@@ -173,24 +173,22 @@ async function getComponentsToExport(
     loader.start(loaderMsg);
     return filterNonScopeIfNeeded(componentsToExport);
   }
-  const idsToExportP = ids.map(async id => {
-    const parsedId = await getParsedId(consumer, id);
-    const status = await consumer.getComponentStatusById(parsedId);
+  loader.start(BEFORE_EXPORT); // show single export
+  const parsedIds = await Promise.all(ids.map(id => getParsedId(consumer, id)));
+  const statuses = await consumer.getManyComponentsStatuses(parsedIds);
+  statuses.forEach(({ id, status }) => {
     if (status.nested) {
       throw new GeneralError(
-        `unable to export "${parsedId.toString()}", the component is not fully available. please use "bit import" first`
+        `unable to export "${id.toString()}", the component is not fully available. please use "bit import" first`
       );
     }
     // don't allow to re-export an exported component unless it's being exported to another scope
-    if (remote && !status.staged && parsedId.scope === remote) {
-      throw new IdExportedAlready(parsedId.toString(), remote);
+    if (remote && !status.staged && id.scope === remote) {
+      throw new IdExportedAlready(id.toString(), remote);
     }
-    return parsedId;
   });
-  loader.start(BEFORE_EXPORT); // show single export
-  const idsToExport = await Promise.all(idsToExportP);
-  await promptForFork(idsToExport);
-  return filterNonScopeIfNeeded(BitIds.fromArray(idsToExport));
+  await promptForFork(parsedIds);
+  return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
 }
 
 function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
@@ -301,9 +299,8 @@ async function cleanOldComponents(consumer: Consumer, updatedIds: BitIds, compon
 }
 
 async function _throwForModified(consumer: Consumer, ids: BitIds) {
-  await pMapSeries(ids, async id => {
-    const status = consumer.getComponentStatusById(id);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const statuses = await consumer.getManyComponentsStatuses(ids);
+  statuses.forEach(({ id, status }) => {
     if (status.modified) {
       throw new GeneralError(
         `unable to perform rewire on "${id.toString()}" because it is modified, please tag or discard your changes before re-trying`
