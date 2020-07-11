@@ -693,9 +693,10 @@ export default class Consumer {
         unknownComponent instanceof ModelComponent
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
+      this.bitMap.updateComponentId(id);
       const component =
         unknownComponent instanceof Component ? unknownComponent : await this.loadComponent(unknownComponent.toBitId());
-      this.bitMap.updateComponentId(id);
+
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, component, id);
       return packageJsonDir // if it has package.json, it's imported, which must have a version
