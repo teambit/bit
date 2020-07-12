@@ -74,6 +74,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+    if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
+      return this.findCoreExtension(extensionId);
+    }
     return this.find(extEntry => {
       if (ignoreVersion && ignoreScope) {
         return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
