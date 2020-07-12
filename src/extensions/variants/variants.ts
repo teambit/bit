@@ -1,5 +1,5 @@
 import R from 'ramda';
-import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
+import ConsumerOverrides from '../../consumer/config/consumer-overrides';
 import { BitId } from '../../bit-id';
 import { Config } from '../config';
 import { ExtensionDataList } from '../../consumer/config/extension-data';

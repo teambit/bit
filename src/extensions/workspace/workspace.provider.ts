@@ -9,7 +9,6 @@ import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
-import ComponentConfig from '../../consumer/config';
 import { GraphQLExtension } from '../graphql';
 import workspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
