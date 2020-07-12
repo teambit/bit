@@ -1165,7 +1165,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
-    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
+    const defaultScope = componentConfig.defaultScope || null;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
       return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
