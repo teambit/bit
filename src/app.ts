@@ -3,7 +3,7 @@ import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
 import { handleErrorAndExit, handleUnhandledRejection } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
-import { BitExt } from './extensions/bit';
+import { BitExt, registerCoreExtensions } from './extensions/bit';
 import { CLIExtension } from './extensions/cli';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
@@ -20,6 +20,7 @@ initApp();
 
 async function initApp() {
   try {
+    registerCoreExtensions();
     HooksManager.init();
     await harmony.run(ConfigExt);
     await harmony.set([BitExt]);

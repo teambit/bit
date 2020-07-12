@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import R, { forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
-import { ExtensionConfigList, IExtensionConfigList } from './extension-config-list';
 import { AbstractVinyl } from '../component/sources';
 import { Source } from '../../scope/models';
 import { Artifact } from '../component/sources/artifact';
@@ -50,7 +49,7 @@ export class ExtensionDataEntry {
   }
 }
 
-export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExtensionConfigList {
+export class ExtensionDataList extends Array<ExtensionDataEntry> {
   static coreExtensionsNames: Map<string, string> = new Map();
   static registerCoreExtensionName(name: string) {
     ExtensionDataList.coreExtensionsNames.set(name, '');
@@ -101,20 +100,10 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     );
   }
 
-  toObject() {
+  toConfigObject() {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
     return res;
-  }
-
-  toExtensionConfigList(): ExtensionConfigList {
-    const arr = this.map(entry => {
-      return {
-        id: entry.stringId,
-        config: entry.config
-      };
-    });
-    return ExtensionConfigList.fromArray(arr);
   }
 
   clone(): ExtensionDataList {
@@ -126,7 +115,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     return ExtensionDataList.fromArray(this.filter(ext => !ext.isLegacy));
   }
 
-  static fromObject(obj: { [extensionId: string]: any }): ExtensionDataList {
+  static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
     const arr: ExtensionDataEntry[] = [];
     forEachObjIndexed((config, id) => {
       const isCore = ExtensionDataList.coreExtensionsNames.has(id);
@@ -161,9 +150,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
    * @returns {ExtensionDataList}
    * @memberof ExtensionDataList
    */
-  static merge(list: ExtensionDataList[]): ExtensionDataList {
-    const objectsList = list.map(extensions => extensions.toObject());
+  static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
+    const objectsList = list.map(extensions => extensions.toConfigObject());
     const merged = R.mergeAll(objectsList);
-    return ExtensionDataList.fromObject(merged);
+    return ExtensionDataList.fromConfigObject(merged);
   }
 }

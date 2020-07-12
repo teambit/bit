@@ -57,7 +57,7 @@ export class Variants {
     const config = this.legacy()?.getOverrideComponentData(componentId) || {};
     const defaultScope = config.defaultScope;
     const rawExtensions = R.omit(INTERNAL_FIELDS, config);
-    const extensions = ExtensionDataList.fromObject(rawExtensions);
+    const extensions = ExtensionDataList.fromConfigObject(rawExtensions);
     const result: VariantsComponentConfig = {
       propagate: config.propagate ?? true,
       componentExtensions: extensions,

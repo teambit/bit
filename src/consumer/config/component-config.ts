@@ -109,7 +109,7 @@ export default class ComponentConfig extends AbstractConfig {
       if (Array.isArray(extensions)) {
         parsedExtensions = ExtensionDataList.fromArray(extensions);
       } else {
-        parsedExtensions = ExtensionDataList.fromObject(extensions);
+        parsedExtensions = ExtensionDataList.fromConfigObject(extensions);
       }
     }
     return new ComponentConfig({
@@ -200,7 +200,7 @@ export default class ComponentConfig extends AbstractConfig {
       componentConfigFromWorkspaceToMerge,
       componentConfig
     ]);
-    mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions);
+    mergedObject.extensions = ExtensionDataList.fromConfigObject(mergedObject.extensions);
     // Do not try to load extension for itself (usually happen when using '*' pattern)
     mergedObject.extensions = mergedObject.extensions.remove(componentId);
     mergedObject.defaultScope = componentConfigFromWorkspaceToMerge?.defaultScope || workspaceConfig?.defaultScope;

@@ -13,7 +13,6 @@ import { ResolvedComponent } from '../utils/resolved-component/resolved-componen
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { IExtensionConfigList } from '../../consumer/config';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig, WorkspaceComponentConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
@@ -169,7 +168,7 @@ export default class Workspace implements ComponentHost {
     if (!this.config.extensions) {
       return new ExtensionDataList();
     }
-    return ExtensionDataList.fromObject(this.config.extensions);
+    return ExtensionDataList.fromConfigObject(this.config.extensions);
   }
 
   async ejectConfig(id: BitId | string, options: EjectConfOptions): Promise<EjectConfResult> {
@@ -308,7 +307,7 @@ export default class Workspace implements ComponentHost {
     }
     const splittedScope = defaultScope.split('.');
     const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-    let mergedExtensions = ExtensionDataList.merge(extensionsToMerge);
+    let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
     let componentIdWithScope = componentId;
     if (!componentIdWithScope.hasScope()) {
       componentIdWithScope = componentId.clone().changeScope(defaultScope);
@@ -371,14 +370,21 @@ export default class Workspace implements ComponentHost {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: IExtensionConfigList): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
     const extensionsIds: string[] = [];
     // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
     // TODO: then it should be replace by "const extensionsIds = extensions.ids";. for now we want to make sure we are aligned with the bitmap entries
     extensions.forEach(extensionEntry => {
-      const stringId = extensionEntry.extensionId?.toStringWithoutScope();
-      const foundId = getBitId(stringId, this.consumer);
-      extensionsIds.push(foundId.toString());
+      let extensionIdString;
+      // Core extension
+      if (!extensionEntry.extensionId) {
+        extensionIdString = extensionEntry.stringId;
+      } else {
+        const stringId = extensionEntry.extensionId?.toStringWithoutScope();
+        const foundId = getBitId(stringId, this.consumer);
+        extensionIdString = foundId.toString();
+      }
+      extensionsIds.push(extensionIdString);
     });
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);

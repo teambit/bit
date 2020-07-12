@@ -17,7 +17,7 @@ import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { isFeatureEnabled, HARMONY_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
-import { ILegacyWorkspaceConfig, ExtensionConfigList } from '../../consumer/config';
+import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
@@ -116,8 +116,8 @@ export class WorkspaceConfig implements HostConfig {
     this._path = configPath;
   }
 
-  get extensions(): ExtensionConfigList {
-    const res = ExtensionConfigList.fromObject(this._extensions);
+  get extensions(): ExtensionDataList {
+    const res = ExtensionDataList.fromConfigObject(this._extensions);
     return res;
   }
 
@@ -420,7 +420,7 @@ export class WorkspaceConfig implements HostConfig {
       _resolveModules: this._legacyProps?.resolveModules,
       _manageWorkspaces: this.extension('@teambit/dependency-resolver', true)?.manageWorkspaces,
       defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
-      extensions: this.extensions.toObject(),
+      extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
       _getEnvsByType,

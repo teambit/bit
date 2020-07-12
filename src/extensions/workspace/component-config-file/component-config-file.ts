@@ -49,7 +49,7 @@ export class ComponentConfigFile {
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
     const componentId = new BitId(parsed.componentId);
-    const extensions = ExtensionDataList.fromObject(parsed.extensions);
+    const extensions = ExtensionDataList.fromConfigObject(parsed.extensions);
 
     return new ComponentConfigFile(
       componentId,
@@ -79,7 +79,7 @@ export class ComponentConfigFile {
       componentId: this.componentId.serialize(),
       propagate: this.propagate,
       defaultScope: this.defaultScope,
-      extensions: this.extensions.toObject()
+      extensions: this.extensions.toConfigObject()
     };
   }
 

@@ -7,7 +7,7 @@ import {
   ComponentsConfigFn,
   ComponentConfigFn
 } from './workspace-config';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config';
 
 // export type ConfigProps = {
 //   workspaceConfig: WorkspaceConfig;
@@ -68,11 +68,11 @@ export class Config {
     return new Config(workspaceConfig);
   }
 
-  get extensions(): ExtensionConfigList | undefined {
+  get extensions(): ExtensionDataList | undefined {
     return this.config?.extensions;
   }
 
-  extension(extensionId: string, ignoreVersion: boolean): ExtensionConfigEntry | undefined {
+  extension(extensionId: string, ignoreVersion: boolean): ExtensionDataEntry | undefined {
     return this.config?.extension(extensionId, ignoreVersion);
   }
 

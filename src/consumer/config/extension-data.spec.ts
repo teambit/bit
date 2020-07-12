@@ -5,7 +5,7 @@ describe('ExtensionDataList', () => {
   describe('merge lists', () => {
     let mergedAsObject;
     before(() => {
-      const list1 = ExtensionDataList.fromObject({
+      const list1 = ExtensionDataList.fromConfigObject({
         'my-scope/ext1': {
           conf1: 'val1',
           conf3: 'val3'
@@ -14,7 +14,7 @@ describe('ExtensionDataList', () => {
           conf1: 'val1'
         }
       });
-      const list2 = ExtensionDataList.fromObject({
+      const list2 = ExtensionDataList.fromConfigObject({
         'my-scope/ext1': {
           conf1: 'val2',
           conf2: 'val2'
@@ -23,7 +23,7 @@ describe('ExtensionDataList', () => {
           conf1: 'val1'
         }
       });
-      const list3 = ExtensionDataList.fromObject({
+      const list3 = ExtensionDataList.fromConfigObject({
         'my-scope/ext1': {
           conf1: 'val2',
           conf4: 'val4'
@@ -32,8 +32,8 @@ describe('ExtensionDataList', () => {
           conf1: 'val1'
         }
       });
-      const merged = ExtensionDataList.merge([list1, list2, list3]);
-      mergedAsObject = merged.toObject();
+      const merged = ExtensionDataList.mergeConfigs([list1, list2, list3]);
+      mergedAsObject = merged.toConfigObject();
     });
     it('should take the last occurrence of an extension', () => {
       expect(mergedAsObject['my-scope/ext1']).to.deep.equal({
