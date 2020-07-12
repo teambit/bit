@@ -57,7 +57,7 @@ const _loadExtension = (consumerPath: string | null | undefined, scopePath: stri
  */
 export default async function loadExtensions(): Promise<Extension[]> {
   try {
-    logger.debug('start loading extensions');
+    logger.debug('legacy-extensions.extensions-loader, start loading extensions');
     const getConsumer = async (): Promise<Consumer | null | undefined> => {
       try {
         const consumer = await loadConsumer();

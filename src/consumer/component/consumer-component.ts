@@ -1008,8 +1008,7 @@ export default class Component {
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromString(str: string): Component {
+  static async fromString(str: string): Promise<Component> {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
@@ -1087,7 +1086,7 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    logger.debug(`consumer-component.loadFromFileSystem, start loading config ${id.toString()}`);
+    logger.silly(`consumer-component.loadFromFileSystem, start loading config ${id.toString()}`);
     const componentConfig = await ComponentConfig.load({
       consumer,
       componentId: id,
@@ -1095,7 +1094,7 @@ export default class Component {
       workspaceDir: consumerPath,
       workspaceConfig
     });
-    logger.debug(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
+    logger.silly(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {

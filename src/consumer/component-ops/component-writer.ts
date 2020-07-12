@@ -217,12 +217,7 @@ export default class ComponentWriter {
     // if not, remove the "this.consumer.isLegacy" part in the condition below
     if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
-    return getNodeModulesPathOfComponent(
-      this.consumer.config._bindingPrefix,
-      this.component.id,
-      true,
-      this.component.defaultScope
-    );
+    return getNodeModulesPathOfComponent({ ...this.component, id: this.component.id, allowNonScope: true });
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
@@ -447,9 +442,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
-        const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
-          : null;
+        const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath
             ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))
