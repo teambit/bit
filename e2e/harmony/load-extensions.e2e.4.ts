@@ -44,13 +44,24 @@ describe('load extensions', function() {
         helper.fixtures.copyFixtureExtensions('non-requireable-extension');
         helper.command.addComponent('non-requireable-extension');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
-        output = helper.command.status();
       });
-      it('should show the workspace status without exception', () => {
-        expect(output).to.have.string('new components');
+      it('when config set to throw error on failed extensions', () => {
+        const func = () => helper.command.status();
+        const error = new Error('error by purpose');
+        helper.general.expectToThrow(func, error);
       });
-      it('should show a warning about the problematic extension', () => {
-        expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
+      // TODO: implement
+      describe.skip('when config set to ignore error on failed extensions', () => {
+        before(() => {
+          // TODO: set config to ignore errors and restore it in the end
+          output = helper.command.status();
+        });
+        it('should show the workspace status without exception', () => {
+          expect(output).to.have.string('new components');
+        });
+        it('should show a warning about the problematic extension', () => {
+          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
+        });
       });
     });
     describe('extension with provider error', () => {
@@ -105,15 +116,26 @@ describe('load extensions', function() {
     describe('non requireable extension', () => {
       before(() => {
         helper.extensions.setExtensionToVariant('affected/*', 'my-scope/non-requireable-extension', config);
-        output = helper.command.showComponent('affected/comp1');
       });
-      it('should load the component with problematic extension without error', () => {
-        expect(output).to.have.string('Id');
-        expect(output).to.have.string('Language');
-        expect(output).to.have.string('Main File');
+      it('when config set to throw error on failed extensions', () => {
+        const func = () => helper.command.showComponent('affected/comp1');
+        const error = new Error('error by purpose');
+        helper.general.expectToThrow(func, error);
       });
-      it('should show a warning about the problematic extension', () => {
-        expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
+      // TODO: implement
+      describe.skip('when config set to ignore error on failed extensions', () => {
+        before(() => {
+          // TODO: set config to ignore errors and restore it in the end
+          output = helper.command.status();
+        });
+        it('should load the component with problematic extension without error', () => {
+          expect(output).to.have.string('Id');
+          expect(output).to.have.string('Language');
+          expect(output).to.have.string('Main File');
+        });
+        it('should show a warning about the problematic extension', () => {
+          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
+        });
       });
     });
     describe('extension with provider error', () => {
