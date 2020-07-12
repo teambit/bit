@@ -31,7 +31,7 @@ describe('load extensions', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToWorkspace('dummy-extension', config);
+        helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
       });
       it('should load the extension when loading the workspace', () => {
         output = helper.command.status();
@@ -43,7 +43,7 @@ describe('load extensions', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.copyFixtureExtensions('non-requireable-extension');
         helper.command.addComponent('non-requireable-extension');
-        helper.extensions.addExtensionToWorkspace('non-requireable-extension', config);
+        helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
         output = helper.command.status();
       });
       it('should show the workspace status without exception', () => {
@@ -58,7 +58,7 @@ describe('load extensions', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.copyFixtureExtensions('extension-provider-error');
         helper.command.addComponent('extension-provider-error');
-        helper.extensions.addExtensionToWorkspace('extension-provider-error', config);
+        helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
         output = helper.command.status();
       });
       it('should show the workspace status without exception', () => {
@@ -89,7 +89,7 @@ describe('load extensions', function() {
     describe('loading simple extension', () => {
       before(() => {
         // helper.extensions.addExtensionToVariant('affected/*', 'dummy-extension', config);
-        helper.extensions.setExtensionToVariant('affected/*', 'dummy-extension', config);
+        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/dummy-extension', config);
       });
 
       it('should load the extension when loading an affected component', () => {
@@ -104,7 +104,7 @@ describe('load extensions', function() {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'non-requireable-extension', config);
+        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/non-requireable-extension', config);
         output = helper.command.showComponent('affected/comp1');
       });
       it('should load the component with problematic extension without error', () => {
@@ -118,7 +118,7 @@ describe('load extensions', function() {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'extension-provider-error', config);
+        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/extension-provider-error', config);
         output = helper.command.showComponent('affected/comp1');
       });
       it('should load the component with problematic extension without error', () => {
