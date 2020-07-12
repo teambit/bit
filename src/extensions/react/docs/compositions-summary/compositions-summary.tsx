@@ -4,7 +4,11 @@ import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { CompositionsOverview } from '../../../compositions/ui/compositions-overview';
 import spacing from '../docs-spacer.module.scss';
 
-export function CompositionsSummary({ compositions }: any) {
+export type CompositionsSummaryProps = {
+  compositions: {};
+};
+
+export function CompositionsSummary({ compositions }: CompositionsSummaryProps) {
   if (!compositions || Object.keys(compositions).length === 0) {
     return <div></div>;
   }

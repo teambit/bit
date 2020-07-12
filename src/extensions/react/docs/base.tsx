@@ -14,6 +14,7 @@ import { ThemeContext } from './theme-context';
 import { ComponentOverview } from './component-overview';
 import styles from './base.module.scss';
 import spacing from './docs-spacer.module.scss';
+import { ExamplesOverview } from './examples-overview';
 
 export type DocsSectionProps = {
   docs: any;
@@ -86,14 +87,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
         <CompositionsSummary compositions={overviewCompositions} />
 
-        <Section>
-          {examples.length > 0 && (
-            <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
-              Examples
-            </LinkedHeading>
-          )}
-          {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />}
-        </Section>
+        <ExamplesOverview examples={examples} />
         <Properties properties={docsModel.properties} />
       </div>
     </ThemeContext>

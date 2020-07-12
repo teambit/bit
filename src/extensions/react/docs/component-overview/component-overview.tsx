@@ -13,7 +13,7 @@ export type ComponentOverviewProps = {
   displayName: string;
   abstract: string;
   version: string;
-  labels: string;
+  labels: string[];
   packageName: string;
 };
 
