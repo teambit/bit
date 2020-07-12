@@ -1,0 +1,15 @@
+.notificationCenter {
+	position: fixed;
+	right: 16;
+	bottom: 8;
+}
+
+.notification {
+	margin: 8px 0;
+	
+	button {
+		border: none;
+		background: inherit;
+		float: right;
+	}
+}
