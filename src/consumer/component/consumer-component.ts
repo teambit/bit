@@ -1109,6 +1109,10 @@ export default class Component {
       workspaceDir: consumerPath
     };
 
+    // TODO: change this once we want to support change export by changing the default scope
+    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
+    const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const overrides = await ComponentOverrides.loadFromConsumer(
       id,
@@ -1175,7 +1179,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: componentConfig.lang,
-      bindingPrefix: componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
