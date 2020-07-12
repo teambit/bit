@@ -72,7 +72,7 @@ describe('pkg extension', function() {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant('bar/foo', 'simple-config', config);
+        helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/simple-config', config);
         barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
         isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
       });
