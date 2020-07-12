@@ -1,6 +1,5 @@
 // covers also ci-update command
 
-import * as path from 'path';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
