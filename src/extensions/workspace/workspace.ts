@@ -372,7 +372,14 @@ export default class Workspace implements ComponentHost {
    * @param extensions list of extensions with config to load
    */
   async loadExtensions(extensions: IExtensionConfigList): Promise<void> {
-    const extensionsIds = extensions.ids;
+    const extensionsIds: string[] = [];
+    // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
+    // TODO: then it should be replace by "const extensionsIds = extensions.ids";. for now we want to make sure we are aligned with the bitmap entries
+    extensions.forEach(extensionEntry => {
+      const stringId = extensionEntry.extensionId?.toStringWithoutScope();
+      const foundId = getBitId(stringId, this.consumer);
+      extensionsIds.push(foundId.toString());
+    });
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
