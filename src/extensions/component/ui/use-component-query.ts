@@ -9,9 +9,12 @@ const GET_COMPONENT = gql`
   query Component($id: String!) {
     workspace {
       getComponent(id: $id) {
-        id
+        id {
+          name
+          version
+          scope
+        }
         displayName
-        version
         server {
           env
           url

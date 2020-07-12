@@ -5,7 +5,7 @@ import Component from '../component';
  */
 export class ComponentMap<T> extends Map<string, [Component, T]> {
   byComponent(component: Component) {
-    return super.get(component.id.toString());
+    return super.get(component.id.fullName);
   }
 
   /**
@@ -21,7 +21,7 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
   map<NewType>(predicate: (value: T) => NewType): ComponentMap<NewType> {
     const tuples = this.toArray().map(([component, value]) => {
       const newValue = predicate(value);
-      return [component.id.toString(), [component, newValue]];
+      return [component.id.fullName, [component, newValue]];
     });
 
     // @ts-ignore :TODO understand why this type error is occurring.
@@ -47,7 +47,7 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
     });
 
     const asMap = tuples.map(([component, value]) => {
-      return [component.id.toString(), [component, value]];
+      return [component.id.fullName, [component, value]];
     });
 
     // @ts-ignore
@@ -61,7 +61,7 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
    */
   static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
     const tuples = components.map(component => {
-      return [component.id.toString(), [component, predicate(component)]];
+      return [component.id.fullName, [component, predicate(component)]];
     });
 
     // @ts-ignore

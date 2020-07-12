@@ -26,9 +26,12 @@ const GET_COMPONENT = gql`
   query($id: String!) {
     workspace {
       getComponent(id: $id) {
-        id
+        id {
+          name
+          version
+          scope
+        }
         displayName
-        version
         packageName
         compositions {
           identifier

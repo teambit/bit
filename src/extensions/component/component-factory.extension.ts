@@ -3,7 +3,7 @@ import { IsolatorExtension } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
-import ComponentID from './id';
+import { ComponentID } from './id';
 import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
 

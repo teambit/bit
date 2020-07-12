@@ -10,9 +10,8 @@ export type Server = {
   url: string;
 };
 
-export type Component = {
+export type ComponentMeta = {
   id: string;
-  server: Server;
 };
 
 export type MenuItem = {
@@ -43,6 +42,7 @@ export class ComponentUI {
   registerNavigation(nav: NavLinkProps) {
     this.navSlot.register(nav);
   }
+
   registerWidget(widget: NavLinkProps) {
     this.widgetSlot.register(widget);
   }

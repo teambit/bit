@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
 import 'reset-css';
-
 import { SideBar } from '../side-bar';
 import styles from './workspace.module.scss';
 // import { Component } from '../../../component/component.ui';
@@ -18,7 +17,11 @@ const WORKSPACE = gql`
       name
       path
       components {
-        id
+        id {
+          name
+          version
+          scope
+        }
       }
     }
   }

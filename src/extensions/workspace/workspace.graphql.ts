@@ -22,6 +22,7 @@ export default (workspace: Workspace) => {
           return ws.list();
         },
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
+          console.log(id);
           return ws.get(id);
         }
       },
