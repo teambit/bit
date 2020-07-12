@@ -194,11 +194,12 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     }
   }
 
-  populateComponentsTS(numOfComponents = 3, owner = '@bit'): string {
+  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {
+    const nmPathPrefix = isHarmony ? `@${this.scopes.remote}/` : `${owner}/${this.scopes.remote}.`;
     const getImp = index => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;
       const nextComp = `comp${index + 1}`;
-      return `import ${nextComp} from '${owner}/${this.scopes.remote}.${nextComp}';
+      return `import ${nextComp} from '${nmPathPrefix}${nextComp}';
 export default () => 'comp${index} and ' + ${nextComp}();`;
     };
     for (let i = 1; i <= numOfComponents; i += 1) {
@@ -206,10 +207,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       this.command.addComponent(`comp${i}`);
     }
     this.command.link();
-    this.fs.outputFile(
-      'app.js',
-      `const comp1 = require('${owner}/${this.scopes.remote}.comp1').default;\nconsole.log(comp1())`
-    );
+    this.fs.outputFile('app.js', `const comp1 = require('${nmPathPrefix}comp1').default;\nconsole.log(comp1())`);
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)
