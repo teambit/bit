@@ -8,6 +8,7 @@ import { Separator } from '@bit/bit.test-scope.ui.separator';
 import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
 import { LabelList } from '@bit/bit.test-scope.ui.label-list';
 import styles from './component-overview.module.scss';
+import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
 
 export type ComponentOverviewProps = {
   displayName: string;
@@ -28,11 +29,13 @@ export function ComponentOverview({
   return (
     <Section {...rest}>
       <div className={styles.topRow}>
-        <H1 className={classNames(styles.maxWidth, styles.marginRight)}>{displayName}</H1>
+        <H1 size={PossibleSizes.lg} className={classNames(styles.maxWidth, styles.marginRight)}>
+          {displayName}
+        </H1>
         <VersionTag className={styles.marginRight}>{version}</VersionTag>
       </div>
       <Subtitle className={styles.marginBottom}>{abstract}</Subtitle>
-      <LabelList className={styles.marginBottom}>{labels}</LabelList>
+      <LabelList className={styles.smallMarginBottom}>{labels}</LabelList>
       <Separator className={styles.marginBottom} />
       <Section className={classNames(styles.maxWidth)}>
         <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
