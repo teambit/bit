@@ -308,8 +308,13 @@ export default class Workspace implements ComponentHost {
     }
     const splittedScope = defaultScope.split('.');
     const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-    const mergedExtensions = ExtensionDataList.merge(extensionsToMerge);
-
+    let mergedExtensions = ExtensionDataList.merge(extensionsToMerge);
+    let componentIdWithScope = componentId;
+    if (!componentIdWithScope.hasScope()) {
+      componentIdWithScope = componentId.clone().changeScope(defaultScope);
+    }
+    // Remove self from the list to prevent infinite loops (usually happen when using * as variant)
+    mergedExtensions = mergedExtensions.remove(componentIdWithScope);
     // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
     // TODO: then it should be just deleted. for now we want to make sure we are aligned with the bitmap entries
     mergedExtensions.forEach(extensionEntry => {
