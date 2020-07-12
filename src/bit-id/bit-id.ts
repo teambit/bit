@@ -162,7 +162,7 @@ export default class BitId {
     const getScopeAndName = () => {
       if (hasScope) {
         const delimiterIndex = id.indexOf('/');
-        if (delimiterIndex < 0) throw new InvalidBitId();
+        if (delimiterIndex < 0) throw new InvalidBitId(id);
         const scope = id.substring(0, delimiterIndex);
         const name = id.substring(delimiterIndex + 1);
         return {
@@ -233,7 +233,7 @@ export default class BitId {
       });
     }
 
-    throw new InvalidBitId();
+    throw new InvalidBitId(id);
   }
 
   /**
