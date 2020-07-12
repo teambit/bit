@@ -288,18 +288,6 @@ describe('bit test command', function() {
         expect(output).to.have.string('npm WARN');
       });
     });
-    describe('import with --conf', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
-        helper.command.importComponent('utils/is-type --conf');
-      });
-      it('should save the tester with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.read(path.join(helper.scopes.localPath, 'components/utils/is-type'));
-        expect(bitJson).to.have.property('env');
-        expect(bitJson.env).to.have.property('tester');
-        expect(bitJson.env.tester).to.have.string('testers/mocha');
-      });
-    });
   });
   describe('bit component with es6 syntax without building before testing', () => {
     const testWithEs6 = `import {expect} from 'chai';

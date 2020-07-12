@@ -679,7 +679,8 @@ describe.skip('envs', function() {
       });
     });
 
-    describe('with ejecting (--conf)', () => {
+    // Skipped since --conf is disabled for legacy projects
+    describe.skip('with ejecting (--conf)', () => {
       let fullComponentFolder;
       let bitJsonPath;
 

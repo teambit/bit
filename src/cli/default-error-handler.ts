@@ -105,6 +105,7 @@ import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-di
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 import { PaperError } from '../extensions/cli';
+import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -412,6 +413,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
   ],
   [ConfigKeyNotFound, err => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
+  [FlagHarmonyOnly, err => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
