@@ -266,10 +266,11 @@ export default class Workspace implements ComponentHost {
    * defaults extensions from workspace config
    * @param componentId
    */
-  async componentConfig(componentId: BitId): Promise<ComponentConfig> {
+  async componentExtensions(componentId: BitId): Promise<ExtensionDataList> {
     const data = await this.workspaceComponentConfig(componentId);
-    const config = new ComponentConfig(data.componentExtensions);
-    return config;
+    // const config = new ComponentConfig(data.componentExtensions);
+    // return config;
+    return data.componentExtensions;
   }
 
   async workspaceComponentConfig(componentId: BitId): Promise<WorkspaceComponentConfig> {
