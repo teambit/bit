@@ -47,7 +47,7 @@ const maxFlattenedDependencies = 100;
  * add 3,000 with maxFlattenedDependencies of 100 => 7 sec
  * tag 3,000 with maxFlattenedDependencies of 100 => 88 sec
  * status 3,000 with maxFlattenedDependencies of 100 => 47 sec
- * export 3,000 with maxFlattenedDependencies of 100 => 94 sec
+ * export 3,000 with maxFlattenedDependencies of 100 => 94 sec + an error "got an error from the logger Error: write after end"
  * import 3,000 with maxFlattenedDependencies of 100 => 736 sec
  *
  */
@@ -83,8 +83,8 @@ describe('many components', function() {
         [addTimeInSeconds] = process.hrtime(start);
         console.log('addTimeInSeconds', addTimeInSeconds);
       });
-      it('should take less then 1 minutes to complete', () => {
-        expect(addTimeInSeconds).to.be.lessThan(1 * 60);
+      it('should take less then 30 seconds to complete', () => {
+        expect(addTimeInSeconds).to.be.lessThan(0.5 * 60);
       });
       describe('tag command', () => {
         let tagTimeInSeconds;
@@ -94,8 +94,8 @@ describe('many components', function() {
           [tagTimeInSeconds] = process.hrtime(start);
           console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
-        it('should take less then 5 minutes to complete', () => {
-          expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
+        it('should take less then 4 minutes to complete', () => {
+          expect(tagTimeInSeconds).to.be.lessThan(4 * 60);
         });
         describe('status command after tag', () => {
           let statusTimeInSeconds;
@@ -128,8 +128,8 @@ describe('many components', function() {
               [importTimeInSeconds] = process.hrtime(start);
               console.log('importTimeInSeconds', importTimeInSeconds);
             });
-            it('should take less then 20 minutes to complete', () => {
-              expect(importTimeInSeconds).to.be.lessThan(20 * 60);
+            it('should take less then 15 minutes to complete', () => {
+              expect(importTimeInSeconds).to.be.lessThan(15 * 60);
             });
           });
         });
