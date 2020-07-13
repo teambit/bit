@@ -49,6 +49,7 @@ const maxFlattenedDependencies = 100;
  * status 3,000 with maxFlattenedDependencies of 100 => 47 sec
  * export 3,000 with maxFlattenedDependencies of 100 => 94 sec
  * import 3,000 with maxFlattenedDependencies of 100 => 736 sec
+ *
  */
 describe('many components', function() {
   this.timeout(0);
