@@ -116,6 +116,9 @@ jobs:
         attach_workspace:
           at: ./
       -
+        restore_cache:
+          key: bitsrc-registry3
+      -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
@@ -496,8 +499,8 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         restore_cache:
           keys:
@@ -640,8 +643,8 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         restore_cache:
           keys:
@@ -746,6 +749,10 @@ jobs:
         attach_workspace:
           at: .
       -
+        restore_cache:
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
+      -
         run:
           name: 'Install npm dependencies'
           command: 'cd bit; npm install'
@@ -801,7 +808,8 @@ jobs:
           key: windows_bitsrc-ssh-key-v1
       -
         restore_cache:
-          key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
       # -
       #   restore_cache:
       #     keys:
