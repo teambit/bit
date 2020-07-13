@@ -167,34 +167,24 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
    * @memberof FixtureHelper
    */
   populateExtensions(numOfExtensions = 3): void {
-    // const getImp = index => {
-    //   return `
-    //   class MyExtension {
-    //     constructor(config) {
-    //       this.config = config;
-    //     }
-
-    //     printName() {
-    //       console.log(MyExtension.id)
-    //     }
-    //   }
-    //   MyExtension.id = 'MyExtension${index}';
-    //   MyExtension.dependencies = [];
-    //   MyExtension.provider = (deps, config) => {
-    //     return new MyExtension(config);
-    //   };
-    //   module.MyExtension = MyExtension;
-    //   `;
-    // };
-    // TODO: change the syntax of the populated extension to new format (see comment above)
-    // TODO: the syntax above is not valid, need to fix it a bit
     const getImp = index => {
       return `
-        module.exports = {
-          name: 'MyExtension${index}',
-          dependencies: [],
-          provider: async () => {}
-      };`;
+      class MyExtension {
+        constructor(config) {
+          this.config = config;
+        }
+
+        printName() {
+          console.log(MyExtension.id)
+        }
+      }
+      MyExtension.id = 'MyExtension${index}';
+      MyExtension.dependencies = [];
+      MyExtension.provider = (deps, config) => {
+        return new MyExtension(config);
+      };
+      module.exports = MyExtension;
+      `;
     };
     for (let i = 1; i <= numOfExtensions; i += 1) {
       this.fs.outputFile(path.join(`ext${i}`, `index.js`), getImp(i));
