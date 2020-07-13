@@ -551,6 +551,7 @@ jobs:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
+          no_output_timeout: '25m'
       -
         store_test_results:
           path: bit/junit
