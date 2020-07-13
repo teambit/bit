@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -145,6 +146,35 @@ describe('custom module resolutions', function() {
           expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
             `@bit/${helper.scopes.remote}.utils.is-string`
           );
+        });
+      });
+      describe('importing the component into Harmony workspace', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('bar/foo');
+          fs.outputFileSync(
+            path.join(helper.scopes.localPath, 'app.js'),
+            fixtures.appPrintBarFooModulePath(helper.scopes.remote)
+          );
+        });
+        it('should generate the non-relative links correctly', () => {
+          const result = helper.command.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        describe('changing the component', () => {
+          before(() => {
+            helper.fs.appendFile('components/bar/foo/foo.js');
+          });
+          it('bit status should indicate that it is not supported anymore', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
+          });
+          it('bit tag should prevent tagging it this way', () => {
+            const output = helper.general.runWithTryCatch('bit tag -a');
+            expect(output).to.have.string(componentIssuesLabels.customModuleResolutionUsed);
+            expect(output).to.have.string(`utils/is-string -> ${helper.scopes.remote}/utils/is-string`);
+          });
         });
       });
     });

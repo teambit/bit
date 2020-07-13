@@ -134,7 +134,7 @@ describe('bit watch command', function() {
           await watchRunner.waitForWatchToRebuildComponent();
         });
         it('should write the dists on node_modules correctly', () => {
-          const distContent = helper.fs.readFile('node_modules/@bit/comp1/dist/index.js');
+          const distContent = helper.fs.readFile('node_modules/@my-scope/comp1/dist/index.js');
           expect(distContent).to.have.string('hello');
         });
       });

@@ -558,13 +558,15 @@ export default class Consumer {
     if (this.isLegacy) {
       return components;
     }
-    let shouldReloadComponents;
+    let shouldReloadComponents = false;
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
+    const componentsWithCustomModuleResolution: string[] = [];
     components.forEach(component => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
       const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
+      const hasCustomModuleResolutions = component.issues && component.issues.missingCustomModuleResolutionLinks;
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
@@ -577,9 +579,16 @@ export default class Consumer {
       if (!componentMap.trackDir) {
         componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
       }
+      if (hasCustomModuleResolutions) {
+        componentsWithCustomModuleResolution.push(component.id.toStringWithoutVersion());
+      }
     });
     if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {
-      throw new FailedLoadForTag(componentsWithRelativePaths.sort(), componentsWithFilesNotDir.sort());
+      throw new FailedLoadForTag(
+        componentsWithRelativePaths.sort(),
+        componentsWithFilesNotDir.sort(),
+        componentsWithCustomModuleResolution.sort()
+      );
     }
     if (!shouldReloadComponents) return components;
     this.componentLoader.clearComponentsCache();
@@ -590,22 +599,27 @@ export default class Consumer {
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
     const getPackageJsonDir = (
       componentMap: ComponentMap,
-      bitId: BitId,
-      bindingPrefix: string
+      component: Component,
+      id: BitId
     ): PathRelative | null | undefined => {
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         if (componentMap.hasRootDir()) return null; // no package.json in this case
-        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
+        return getNodeModulesPathOfComponent({ ...component, id, allowNonScope: true });
       }
       return componentMap.rootDir;
     };
 
-    const updateVersionsP = components.map(component => {
+    const updateVersionsP = components.map(async unknownComponent => {
       const id: BitId =
-        component instanceof ModelComponent ? component.toBitIdWithLatestVersionAllowNull() : component.id;
+        unknownComponent instanceof ModelComponent
+          ? unknownComponent.toBitIdWithLatestVersionAllowNull()
+          : unknownComponent.id;
       this.bitMap.updateComponentId(id);
+      const component =
+        unknownComponent instanceof Component ? unknownComponent : await this.loadComponent(unknownComponent.toBitId());
+
       const componentMap = this.bitMap.getComponent(id);
-      const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
+      const packageJsonDir = getPackageJsonDir(componentMap, component, id);
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
         : Promise.resolve();
@@ -822,11 +836,6 @@ export default class Consumer {
       c.component.toConsumer(this.scope.objects, manipulateDirData)
     );
     return Promise.all(dependentComponentsP);
-  }
-
-  async ejectConf(componentId: BitId) {
-    const component = await this.loadComponent(componentId);
-    return component.writeConfig(this);
   }
 
   async injectConf(componentId: BitId, force: boolean) {

@@ -3,7 +3,7 @@ import { Workspace } from '../workspace';
 import { ScopeExtension } from '../scope';
 import { Config } from '../config';
 import { LogPublisher } from '../logger';
-import { ExtensionConfigList } from '../../consumer/config';
+import { ExtensionDataList } from '../../consumer/config';
 import { ComponentHost } from '../types';
 
 export default class Core {
@@ -57,7 +57,7 @@ export default class Core {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionConfigList): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
     // TODO: remove this condition once scope implements ComponentHost
     if (this.host && this.host.loadExtensions) {
       return this.host.loadExtensions(extensions);

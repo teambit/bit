@@ -11,7 +11,8 @@ import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import Dependency from '../dependency';
 import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
-import { resolveModulePath, resolveNodePackage } from '../files-dependency-builder';
+import { resolvePackagePath, resolvePackageData } from '../../../../utils/packages';
+import { throwForNonLegacy } from '../../component-schema';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -40,34 +41,41 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   updateExtensions(component.extensions);
 
   function resolveVersion(id: BitId): string | undefined {
-    // $FlowFixMe component.componentFromModel is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore component.componentFromModel is set
     const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
-    const idFromPackageJson = getIdFromPackageJson(id);
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
-    const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
-
-    // get from packageJson when it was changed from the model or when there is no model.
-    const getFromPackageJsonIfChanged = () => {
-      if (!idFromPackageJson) return null;
-      if (!idFromModel) return idFromPackageJson;
-      if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
-      return null;
-    };
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     const getFromModel = () => idFromModel || null;
-    const getFromPackageJson = () => idFromPackageJson || null;
-    const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
-    const strategies: Function[] = [
-      getFromComponentConfig,
-      getFromDependentPackageJson,
-      getFromPackageJsonIfChanged,
-      getFromBitMap,
-      getFromModel,
-      getFromPackageJson
-    ];
+
+    let strategies: Function[];
+    if (consumer.isLegacy) {
+      const idFromPackageJson = getIdFromPackageJson(id);
+      const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
+      // get from packageJson when it was changed from the model or when there is no model.
+      const getFromPackageJsonIfChanged = () => {
+        if (!idFromPackageJson) return null;
+        if (!idFromModel) return idFromPackageJson;
+        if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
+        return null;
+      };
+      const getFromPackageJson = () => idFromPackageJson || null;
+      const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
+
+      strategies = [
+        getFromComponentConfig,
+        getFromDependentPackageJson,
+        getFromPackageJsonIfChanged,
+        getFromBitMap,
+        getFromModel,
+        getFromPackageJson
+      ];
+    } else {
+      // @todo: change this once vendors feature is in.
+      const getCurrentVersion = () => (id.hasVersion() ? id.version : null);
+      strategies = [getFromComponentConfig, getCurrentVersion, getFromBitMap, getFromModel];
+    }
 
     for (const strategy of strategies) {
       const strategyId = strategy();
@@ -112,25 +120,28 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   /**
-   * the logic of finding the dependency version in the package.json is mostly done in the driver
-   * resolveNodePackage method.
+   * the logic of finding the dependency version in the package.json is mostly done in
+   * resolvePackageData function.
    * it first searches in the dependent package.json and propagate up to the consumer root, if not
    * found it goes to the dependency package.json.
    */
   function getIdFromPackageJson(componentId: BitId): BitId | null | undefined {
+    throwForNonLegacy(component.isLegacy, getIdFromPackageJson.name);
     if (!componentId.scope) return null;
     // $FlowFixMe component.componentMap is set
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const rootDir: PathLinux | null | undefined = component.componentMap.rootDir;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-    const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
+    const packagePath = getNodeModulesPathOfComponent({
+      ...component,
+      id: componentId
+    });
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modulePath = resolveModulePath(packageName, basePath, consumerPath);
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageObject = resolveNodePackage(basePath, modulePath);
+    const packageObject = resolvePackageData(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
     const version = packageObject[packageId];
@@ -140,16 +151,17 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   function getIdFromDependentPackageJson(componentId: BitId): BitId | null | undefined {
+    throwForNonLegacy(component.isLegacy, getIdFromDependentPackageJson.name);
     // for author, there is not package.json of a component
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
     }
-    const dependencyIdAsPackage = componentIdToPackageName(
-      componentId,
-      component.bindingPrefix,
-      component.defaultScope
-    );
+    const dependencyIdAsPackage = componentIdToPackageName({
+      ...component,
+      id: componentId, // this componentId is actually the dependencyId
+      isDependency: true
+    });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component

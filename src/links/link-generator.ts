@@ -12,12 +12,12 @@ import { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import { ComponentWithDependencies } from '../scope';
 import Component from '../consumer/component/consumer-component';
-import { Dependency, Dependencies } from '../consumer/component/dependencies';
+import { Dependency } from '../consumer/component/dependencies';
 import { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
 import Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
-import { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
+import { PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS, EXTENSIONS_NOT_SUPPORT_DIRS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
@@ -28,6 +28,7 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import Symlink from './symlink';
 import getWithoutExt from '../utils/fs/fs-no-ext';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 type SymlinkType = {
   source: PathOsBasedAbsolute; // symlink is pointing to this path
@@ -55,6 +56,8 @@ function getComponentLinks({
   createNpmLinkFiles: boolean;
   bitMap: BitMap;
 }): DataToPersist {
+  const dataToPersist = new DataToPersist();
+  if (!component.isLegacy) return dataToPersist;
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
@@ -85,7 +88,6 @@ function getComponentLinks({
     });
     return R.flatten(dependencyLinks);
   });
-  const dataToPersist = new DataToPersist();
   const internalCustomResolvedLinks = component.customResolvedPaths.length
     ? getInternalCustomResolvedLinks(component, componentMap, createNpmLinkFiles)
     : [];
@@ -196,6 +198,8 @@ function groupLinks(
 }
 
 /**
+ * Relevant for legacy components only (before Harmony).
+ *
  * The following scenario will help understanding why links are needed.
  * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
  * While importing component A, it knows about the B dependency and it saves it under 'dependencies' directory of A.
@@ -301,6 +305,7 @@ function getInternalCustomResolvedLinks(
   componentMap: ComponentMap,
   createNpmLinkFiles: boolean
 ): LinkFileType[] {
+  throwForNonLegacy(component.isLegacy, getInternalCustomResolvedLinks.name);
   const componentDir = component.writtenPath || componentMap.rootDir;
   if (!componentDir) {
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
@@ -338,7 +343,7 @@ function getInternalCustomResolvedLinks(
     const linkContent = getLinkToFileContent(destRelative);
 
     const postInstallSymlink = createNpmLinkFiles && !linkContent;
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+    const packageName = componentIdToPackageName(component);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
     const getSymlink = () => {
       if (linkContent) return undefined;
@@ -361,6 +366,7 @@ function getInternalCustomResolvedLinks(
  * @see postInstallTemplate() JSDoc to understand better why this postInstall script is needed
  */
 function generatePostInstallScript(component: Component, postInstallLinks = [], postInstallSymlinks = []): LinkFile {
+  throwForNonLegacy(component.isLegacy, generatePostInstallScript.name);
   // $FlowFixMe todo: is it possible that writtenPath is empty here?
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentDir: string = component.writtenPath;
@@ -400,6 +406,7 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
 }
 
 /**
+ * Not relevant for Harmony.
  * Relevant for IMPORTED and NESTED only
  */
 function getEntryPointsForComponent(
@@ -407,6 +414,7 @@ function getEntryPointsForComponent(
   consumer: Consumer | null | undefined,
   bitMap: BitMap
 ): LinkFile[] {
+  if (!component.isLegacy) return [];
   const componentMap = bitMap.getComponent(component.id);
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
@@ -466,58 +474,10 @@ function _isAngularComponent(component: Component): boolean {
   );
 }
 
-/**
- * used for writing compiler and tester dependencies to the directory of their configuration file
- * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
- * this methods write the environment dependency links no matter where the directory located on the workspace
- */
-async function getLinksByDependencies(
-  targetDir: PathOsBased,
-  component: Component,
-  dependencies: Dependencies,
-  consumer: Consumer | null | undefined,
-  bitMap: BitMap,
-  componentWithDependencies?: ComponentWithDependencies
-): Promise<LinkFile[]> {
-  const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const getDependencyComponent = async (): Promise<Component | null | undefined> => {
-      if (componentWithDependencies) {
-        return componentWithDependencies.allDependencies.find(d => d.id.isEqual(dependency.id));
-      }
-      if (!consumer) {
-        throw new Error('getLinksByDependencies expects to get Consumer or componentWithDependencies');
-      }
-      return consumer.loadComponentFromModel(dependency.id);
-    };
-    const dependencyComponent = await getDependencyComponent();
-    if (!dependencyComponent) throw new Error(`getLinksByDependencies failed finding ${dependency.id}`);
-    const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
-      const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-        consumer,
-        bitMap,
-        component,
-        relativePath,
-        dependencyComponent,
-        createNpmLinkFiles: false,
-        targetDir
-      });
-      return dependencyFileLinkGenerator.generate();
-    });
-    return R.flatten(dependencyLinks);
-  });
-  const links = await Promise.all(linksP);
-
-  const flattenLinks = R.flatten(links);
-  const { linksToWrite } = groupLinks(flattenLinks);
-  // $FlowFixMe base is optional
-  return linksToWrite.map(link => LinkFile.load(link));
-}
-
 export {
-  getComponentLinks,
-  getEntryPointsForComponent,
-  getComponentsDependenciesLinks,
-  getIndexFileName,
-  getLinksByDependencies,
+  getComponentLinks, // irrelevant for Harmony
+  getEntryPointsForComponent, // irrelevant for Harmony
+  getComponentsDependenciesLinks, // irrelevant if all components use Harmony
+  getIndexFileName, // irrelevant for Harmony
   getEntryPointForAngularComponent
 };

@@ -8,7 +8,6 @@ export async function provideVariants([hostConfig]: VariantsDeps, config: Patter
   // TODO: fix when config become maybe
   if (hostConfig.type) {
     hostConfig.registerGetVariantsConfig(variants.legacy.bind(variants));
-    hostConfig.registerGetVariantConfig(variants.legacyById.bind(variants));
   }
   return variants;
 }

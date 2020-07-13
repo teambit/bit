@@ -1,8 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import R, { find, forEachObjIndexed } from 'ramda';
+import R, { forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
-import Consumer from '../consumer';
-import { ExtensionConfigList, IExtensionConfigList } from './extension-config-list';
 import { AbstractVinyl } from '../component/sources';
 import { Source } from '../../scope/models';
 import { Artifact } from '../component/sources/artifact';
@@ -51,7 +49,17 @@ export class ExtensionDataEntry {
   }
 }
 
-export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExtensionConfigList {
+export class ExtensionDataList extends Array<ExtensionDataEntry> {
+  static coreExtensionsNames: Map<string, string> = new Map();
+  static registerCoreExtensionName(name: string) {
+    ExtensionDataList.coreExtensionsNames.set(name, '');
+  }
+  static registerManyCoreExtensionNames(names: string[]) {
+    names.forEach(name => {
+      ExtensionDataList.coreExtensionsNames.set(name, '');
+    });
+  }
+
   get ids(): string[] {
     const list = this.map(entry => entry.stringId);
     return list;
@@ -65,19 +73,26 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     return BitIds.fromArray(bitIds);
   }
 
-  findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {
-    return find((extEntry: ExtensionDataEntry) => {
-      if (!ignoreVersion) {
-        return extEntry.stringId === extensionId;
+  findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
+    if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
+      return this.findCoreExtension(extensionId);
+    }
+    return this.find(extEntry => {
+      if (ignoreVersion && ignoreScope) {
+        return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
       }
-      return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
-    }, this);
+      if (ignoreVersion) {
+        return extEntry.extensionId?.toStringWithoutVersion() === extensionId;
+      }
+      if (ignoreScope) {
+        return extEntry.extensionId?.toStringWithoutScope() === extensionId;
+      }
+      return extEntry.stringId === extensionId;
+    });
   }
 
   findCoreExtension(extensionId: string): ExtensionDataEntry | undefined {
-    return find((extEntry: ExtensionDataEntry) => {
-      return extEntry.name === extensionId;
-    }, this);
+    return this.find(extEntry => extEntry.name === extensionId);
   }
 
   remove(id: BitId) {
@@ -88,20 +103,10 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     );
   }
 
-  toObject() {
+  toConfigObject() {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
     return res;
-  }
-
-  toExtensionConfigList(): ExtensionConfigList {
-    const arr = this.map(entry => {
-      return {
-        id: entry.stringId,
-        config: entry.config
-      };
-    });
-    return ExtensionConfigList.fromArray(arr);
   }
 
   clone(): ExtensionDataList {
@@ -113,12 +118,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
     return ExtensionDataList.fromArray(this.filter(ext => !ext.isLegacy));
   }
 
-  static fromObject(obj: { [extensionId: string]: any }, consumer: Consumer): ExtensionDataList {
+  static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
     const arr: ExtensionDataEntry[] = [];
     forEachObjIndexed((config, id) => {
-      const parsedId = consumer.getParsedIdIfExist(id);
+      const isCore = ExtensionDataList.coreExtensionsNames.has(id);
       let entry;
-      if (parsedId) {
+      if (!isCore) {
+        const parsedId = BitId.parse(id, true);
         entry = new ExtensionDataEntry(undefined, parsedId, undefined, config, undefined);
       } else {
         entry = new ExtensionDataEntry(undefined, undefined, id, config, undefined);
@@ -133,5 +139,23 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> implements IExt
       return new ExtensionDataList();
     }
     return new ExtensionDataList(...entries);
+  }
+
+  /**
+   * Merge a list of ExtensionDataList into one ExtensionDataList
+   * In case of entry with the same id appear in more than one list
+   * the later in the list will be taken
+   * see unit tests for examples
+   *
+   *
+   * @static
+   * @param {ExtensionDataList[]} list
+   * @returns {ExtensionDataList}
+   * @memberof ExtensionDataList
+   */
+  static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
+    const objectsList = list.map(extensions => extensions.toConfigObject());
+    const merged = R.mergeAll(objectsList);
+    return ExtensionDataList.fromConfigObject(merged);
   }
 }

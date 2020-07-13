@@ -12,11 +12,9 @@ import getNodeModulesPathOfComponent from '../../utils/bit/component-node-module
 import { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import logger from '../../logger/logger';
 import JSONFile from './sources/json-file';
-import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
-import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
 import PackageJson from './package-json';
@@ -32,7 +30,7 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
       throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
     }
     const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+    const packageName = componentIdToPackageName(component);
     acc[packageName] = locationAsUnixFormat;
     return acc;
   }, {});
@@ -40,14 +38,11 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
-/**
- * Add given components with their versions to root package.json
- */
-export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
+export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
-    componentsVersions.map(({ component, version }) => {
-      const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
-      return [packageName, version];
+    components.map(component => {
+      const packageName = componentIdToPackageName(component);
+      return [packageName, component.version];
     })
   );
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
@@ -87,11 +82,7 @@ export async function changeDependenciesToRelativeSyntax(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const dependencyPackageValue = getPackageDependencyValue(dependencyIdStr, componentMap, dependencyComponentMap);
         if (dependencyPackageValue) {
-          const packageName = componentIdToPackageName(
-            dependencyId,
-            dependencyComponent.bindingPrefix,
-            dependencyComponent.defaultScope
-          );
+          const packageName = componentIdToPackageName({ ...dependencyComponent, id: dependencyId });
           acc[packageName] = dependencyPackageValue;
         }
       }
@@ -105,16 +96,21 @@ export function preparePackageJsonToWrite(
   component: Component,
   bitDir: string,
   override = true,
-  writeBitDependencies = false, // e.g. when it's a capsule
+  ignoreBitDependencies: BitIds | boolean = true,
   excludeRegistryPrefix?: boolean,
   packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
-    if (!writeBitDependencies) return {};
+    if (ignoreBitDependencies === true) return {};
     return dependencies.reduce((acc, depId: BitId) => {
+      if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
-      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({
+        ...component,
+        id: depId,
+        isDependency: true
+      });
       acc[packageName] = packageDependency;
       return acc;
     }, {});
@@ -181,26 +177,26 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
   }
 }
 
-export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
+export async function removeComponentsFromWorkspacesAndDependencies(
+  consumer: Consumer,
+  components: Component[],
+  invalidComponents: BitId[] = []
+) {
+  const bitIds = [...components.map(c => c.id), ...invalidComponents];
   const rootDir = consumer.getPath();
-
   if (
     consumer.config._manageWorkspaces &&
     consumer.config.packageManager === 'yarn' &&
     consumer.config._useWorkspaces
   ) {
-    const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
+    const dirsToRemove = bitIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     if (dirsToRemove && dirsToRemove.length) {
       const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
       await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
     }
   }
-  await PackageJson.removeComponentsFromDependencies(
-    rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.
-    consumer.config._bindingPrefix || npmRegistryName(),
-    componentIds.map(id => id.toStringWithoutVersion())
-  );
-  await removeComponentsFromNodeModules(consumer, componentIds);
+  await PackageJson.removeComponentsFromDependencies(rootDir, components);
+  await removeComponentsFromNodeModules(consumer, components);
 }
 
 async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Record<string, any>) {
@@ -209,14 +205,12 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
   await packageJsonFile.write();
 }
 
-async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
-  logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
-  // @todo: fix. the registryPrefix should be retrieved from the component.
-  const registryPrefix = consumer.config._bindingPrefix || npmRegistryName();
+async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
+  logger.debug(`removeComponentsFromNodeModules: ${components.map(c => c.id.toString()).join(', ')}`);
   // paths without scope name, don't have a symlink in node-modules
-  const pathsToRemove = componentIds
-    .map(id => {
-      return id.scope ? getNodeModulesPathOfComponent(registryPrefix, id) : null;
+  const pathsToRemove = components
+    .map(c => {
+      return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
     })
     .filter(a => a); // remove null
 
@@ -240,12 +234,8 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap | null | undefined,
-  capsuleMap?: any
+  dependencyComponentMap?: ComponentMap | null | undefined
 ): string | null | undefined {
-  if (capsuleMap && capsuleMap[dependencyId.toString()]) {
-    return capsuleMap[dependencyId.toString()].wrkdir;
-  }
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }

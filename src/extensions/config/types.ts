@@ -1,5 +1,5 @@
 import { PathOsBased } from '../../utils/path';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config';
 
 /**
  * An interface implemented by component host (workspace / scope) config file
@@ -11,9 +11,9 @@ export interface HostConfig {
    */
   path: PathOsBased;
 
-  extensions: ExtensionConfigList;
+  extensions: ExtensionDataList;
 
-  extension: (extensionId: string, ignoreVersion: boolean) => ExtensionConfigEntry;
+  extension: (extensionId: string, ignoreVersion: boolean) => ExtensionDataEntry;
 }
 
 export type ConfigType = 'workspace' | 'scope';

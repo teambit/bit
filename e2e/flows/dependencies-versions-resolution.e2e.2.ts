@@ -58,7 +58,8 @@ describe('dependencies versions resolution', function() {
         );
       });
     });
-    describe('when bit.json overrides the version', () => {
+    // Skipped since --conf is disabled for legacy projects
+    describe.skip('when bit.json overrides the version', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
         helper.command.importComponent('bar/foo --conf');
@@ -167,7 +168,7 @@ describe('dependencies versions resolution', function() {
       it('should strip those characters and get the exact version', () => {});
     });
     describe('when the the dependents has package.json file but it does not contain the dependency and the root package.json does', () => {
-      // @todo: this should be fixed in bit-javascript resolveNodePackage() to work this way
+      // @todo: this should be fixed in resolvePackageData() to work this way
       // currently if it finds package.json in the dependents it stops there, doesn't find the
       // dependency and goes directly to the dependency directory.
       it('should find the dependency version from the root package.json', () => {});

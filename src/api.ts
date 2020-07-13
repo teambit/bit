@@ -5,7 +5,7 @@ import { AddProps } from './consumer/component-ops/add-components/add-components
 import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
 import { ConfigExt } from './extensions/config';
-import { BitExt } from './extensions/bit';
+import { BitExt, registerCoreExtensions } from './extensions/bit';
 import { manifestsMap as coreExtensions } from './extensions/bit';
 
 export * from '@teambit/harmony';
@@ -88,6 +88,7 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
   if (options.cwd) {
     process.chdir(options.cwd);
   }
+  registerCoreExtensions();
   await harmony.run(ConfigExt);
   await harmony.set([BitExt]);
   process.chdir(originalCwd);

@@ -7,6 +7,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../cons
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
+import { PublishResults } from '../../../scope/component-ops/publish-during-export';
 
 export default class Export implements LegacyCommand {
   name = 'export [remote] [id...]';
@@ -85,6 +86,7 @@ export default class Export implements LegacyCommand {
     nonExistOnBitMap,
     missingScope,
     ejectResults,
+    publishResults,
     remote,
     includeDependencies
   }: {
@@ -92,6 +94,7 @@ export default class Export implements LegacyCommand {
     nonExistOnBitMap: BitId[];
     missingScope: BitId[];
     ejectResults: EjectResults | null | undefined;
+    publishResults: PublishResults;
     remote: string;
     includeDependencies: boolean;
   }): string {
@@ -127,7 +130,25 @@ export default class Export implements LegacyCommand {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const publishOutput = () => {
+      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
+      const failedCompsStr = publishResults.failedComponents
+        .map(failed => {
+          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
+        })
+        .join('\n\n');
+      const successCompsStr = publishResults.publishedComponents
+        .map(success => {
+          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
+        })
+        .join('\n');
+      const failedTitle = `\n\n${chalk.red('failed publishing the following components\n')}`;
+      const successTitle = `\n\n${chalk.green('published the following component(s) successfully\n')}`;
+      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
+      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
+      return successOutput + failedOutput;
+    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + publishOutput() + ejectOutput();
   }
 }

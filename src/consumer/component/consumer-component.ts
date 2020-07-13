@@ -12,9 +12,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
-import { getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
-import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -50,7 +48,6 @@ import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
@@ -69,6 +66,7 @@ import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import IncorrectRootDir from './exceptions/incorrect-root-dir';
 import { ExtensionDataList } from '../config/extension-data';
+import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA, SchemaName } from './component-schema';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -107,6 +105,7 @@ export type ComponentProps = {
   deprecated?: boolean;
   origin: ComponentOrigin;
   log?: Log;
+  schema?: string;
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
   extensionsAddedConfig: any;
@@ -118,9 +117,14 @@ export default class Component {
   static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     ComponentConfig.registerAddConfigAction(extId, func);
   }
-  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
+
+  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
+    ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
+  }
+
   static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
@@ -161,6 +165,7 @@ export default class Component {
   _wasOriginallySharedDirStripped: boolean | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: PathLinux | undefined; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
+  schema?: string;
   componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -215,6 +220,7 @@ export default class Component {
     testerPackageDependencies,
     componentFromModel,
     overrides,
+    schema,
     defaultScope,
     packageJsonFile,
     packageJsonChangedProps,
@@ -267,6 +273,7 @@ export default class Component {
     this.extensions = extensions || [];
     this.extensionsAddedConfig = extensionsAddedConfig || {};
     this.componentFromModel = componentFromModel;
+    this.schema = schema;
   }
 
   validateComponent() {
@@ -353,32 +360,8 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(consumer: Consumer): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap);
-    if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
-    await ejectConfData.dataToPersist.persistAllToFS();
-    return ejectConfData;
-  }
-
-  async getConfigToWrite(consumer: Consumer, bitMap: BitMap): Promise<EjectConfData> {
-    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
-    const componentMap = this.componentMap;
-    if (!componentMap) {
-      throw new GeneralError('could not find component in the .bitmap file');
-    }
-
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      const isCompilerDetached = await this.getDetachedCompiler(consumer);
-      const isTesterDetached = await this.getDetachedTester(consumer);
-      if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
-    }
-
-    const res = await getEjectConfDataToPersist(this, consumer);
-    return res;
-  }
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<EjectConfResult> {
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<any> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -476,14 +459,11 @@ export default class Component {
    * already relative to the sharedDir rather than the author workspace.
    */
   get ignoreSharedDir(): boolean {
-    if (!this.componentMap) {
-      // @todo: this happens when isolating via capsule. needs to decide what should be the behavior.
-      return !this.originallySharedDir;
-    }
-    return (
-      Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
-      Boolean(this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED && !this.componentMap.originallySharedDir)
-    );
+    return !isSchemaSupport(SchemaFeature.sharedDir, this.schema);
+  }
+
+  get isLegacy(): boolean {
+    return !this.schema || this.schema === SchemaName.Legacy;
   }
 
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
@@ -1028,8 +1008,7 @@ export default class Component {
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromString(str: string): Component {
+  static async fromString(str: string): Promise<Component> {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
@@ -1130,6 +1109,10 @@ export default class Component {
       workspaceDir: consumerPath
     };
 
+    // TODO: change this once we want to support change export by changing the default scope
+    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
+    const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const overrides = await ComponentOverrides.loadFromConsumer(
       id,
@@ -1185,14 +1168,18 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
-    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
+    const defaultScope = componentConfig.defaultScope || null;
+    const getSchema = () => {
+      if (componentFromModel) return componentFromModel.schema;
+      return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
+    };
 
     return new Component({
       name: id.name,
       scope: id.scope,
       version: id.version,
       lang: componentConfig.lang,
-      bindingPrefix: componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1212,6 +1199,7 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       overrides,
+      schema: getSchema(),
       defaultScope,
       packageJsonFile,
       packageJsonChangedProps,

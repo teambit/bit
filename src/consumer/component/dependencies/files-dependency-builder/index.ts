@@ -1,5 +1,5 @@
-import { getDependencyTree, resolveNodePackage, resolveModulePath } from './build-tree';
+import { getDependencyTree } from './build-tree';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import getDependenciesFromSource from './precinct';
 
-export { resolveNodePackage, resolveModulePath, getDependencyTree, getDependenciesFromSource };
+export { getDependencyTree, getDependenciesFromSource };

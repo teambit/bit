@@ -328,16 +328,6 @@ describe('bit checkout command', function() {
           expect(path.join(helper.scopes.localPath, 'components/bar/foo', 'package-lock.json')).to.not.be.a.path();
         });
       });
-      describe('switching a version with --conf flag', () => {
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);
-          helper.command.importComponent('bar/foo');
-          helper.command.checkoutVersion('0.0.1', 'bar/foo', '--conf');
-        });
-        it('should write the bit.json file', () => {
-          expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).to.be.a.path();
-        });
-      });
       describe('switching a version with --ignore-package-json flag', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);

@@ -17,7 +17,7 @@ import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { isFeatureEnabled, HARMONY_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
 import { InvalidBitJson } from '../../consumer/config/exceptions';
-import { ILegacyWorkspaceConfig, ExtensionConfigList } from '../../consumer/config';
+import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
@@ -116,8 +116,8 @@ export class WorkspaceConfig implements HostConfig {
     this._path = configPath;
   }
 
-  get extensions(): ExtensionConfigList {
-    const res = ExtensionConfigList.fromObject(this._extensions);
+  get extensions(): ExtensionDataList {
+    const res = ExtensionDataList.fromConfigObject(this._extensions);
     return res;
   }
 
@@ -141,12 +141,12 @@ export class WorkspaceConfig implements HostConfig {
     return undefined;
   }
 
-  getVariantConfig(componentId: BitId): ConsumerOverridesOfComponent | undefined {
-    if (this._getVariantConfig && typeof this._getVariantConfig === 'function') {
-      return this._getVariantConfig(componentId);
-    }
-    return undefined;
-  }
+  // getVariantConfig(componentId: BitId): ConsumerOverridesOfComponent | undefined {
+  //   if (this._getVariantConfig && typeof this._getVariantConfig === 'function') {
+  //     return this._getVariantConfig(componentId);
+  //   }
+  //   return undefined;
+  // }
 
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config
@@ -420,7 +420,7 @@ export class WorkspaceConfig implements HostConfig {
       _resolveModules: this._legacyProps?.resolveModules,
       _manageWorkspaces: this.extension('@teambit/dependency-resolver', true)?.manageWorkspaces,
       defaultOwner: this.extension('@teambit/workspace', true)?.defaultOwner,
-      extensions: this.extensions.toObject(),
+      extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
       _getEnvsByType,
@@ -428,7 +428,9 @@ export class WorkspaceConfig implements HostConfig {
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.getVariantsConfig(),
-      getComponentConfig: this.getVariantConfig.bind(this),
+      getComponentConfig: this.legacyConfig
+        ? this.legacyConfig?.overrides.getOverrideComponentData.bind(this.legacyConfig?.overrides)
+        : () => undefined,
       _legacyPlainObject: this.legacyConfig
         ? this.legacyConfig?.toPlainObject.bind(this.legacyConfig)
         : () => undefined,

@@ -25,6 +25,7 @@ import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
 import { PackageManagerResults } from '../npm-client/npm-client';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -81,6 +82,7 @@ export default class Isolator {
     const loaderPrefix = `isolating component - ${componentId.name}`;
     loader.setText(loaderPrefix);
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
+    throwForNonLegacy(componentWithDependencies.component.isLegacy, 'evn/Isolator.isolate');
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
@@ -103,7 +105,7 @@ export default class Isolator {
       override: opts.override,
       writePackageJson: opts.writePackageJson,
       writeConfig: opts.writeConfig,
-      writeBitDependencies: opts.writeBitDependencies,
+      ignoreBitDependencies: !opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.writeDists,
@@ -220,7 +222,7 @@ export default class Isolator {
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
       const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
       const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
-      const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName(component);
       acc[packageName] = locationAsUnixFormat;
       return acc;
     }, {});

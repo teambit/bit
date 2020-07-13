@@ -23,7 +23,7 @@ describe('compile extension', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
-      appOutput = helper.fixtures.populateComponentsTS();
+      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       const environments = {
         env: '@teambit/react',
         config: {}
@@ -43,8 +43,10 @@ describe('compile extension', function() {
       it('should write the dists files inside the node-modules of the component', () => {
         const nmComponent = path.join(
           helper.scopes.localPath,
-          'node_modules/@bit',
-          `${helper.scopes.remote}.comp1/dist`
+          'node_modules',
+          `@${helper.scopes.remote}`,
+          'comp1',
+          'dist'
         );
         expect(nmComponent).to.be.a.directory();
         expect(path.join(nmComponent, 'index.js')).to.be.a.file();
@@ -75,7 +77,6 @@ describe('compile extension', function() {
       describe('export and import to another scope', () => {
         before(() => {
           helper.command.exportAllComponents();
-
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp1');
@@ -84,11 +85,7 @@ describe('compile extension', function() {
           helper.command.expectStatusToBeClean();
         });
         it('should save the artifacts and package.json on node_modules', () => {
-          const artifactsPath = path.join(
-            helper.scopes.localPath,
-            'node_modules/@bit',
-            `${helper.scopes.remote}.comp1`
-          );
+          const artifactsPath = path.join(helper.scopes.localPath, 'node_modules', `@${helper.scopes.remote}`, 'comp1');
           expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
           expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
         });
@@ -106,8 +103,9 @@ describe('compile extension', function() {
           it('should generate dists also after deleting the dists from the workspace', () => {
             const distPath = path.join(
               helper.scopes.localPath,
-              'node_modules/@bit',
-              `${helper.scopes.remote}.comp1`,
+              'node_modules',
+              `@${helper.scopes.remote}`,
+              'comp1',
               'dist'
             );
             fs.removeSync(distPath);
@@ -124,7 +122,8 @@ describe('compile extension', function() {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
-        helper.bitJsonc.addToVariant(undefined, 'bar', 'extensions', {});
+        helper.bitJsonc.setVariant(undefined, 'bar', {});
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
         output = helper.command.tagAllComponents();
       });
       // a guard for Flows bug that exits unexpectedly
