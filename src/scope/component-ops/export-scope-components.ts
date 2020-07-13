@@ -489,15 +489,20 @@ async function convertToCorrectScope(
         return; // nothing to do, the remote has not changed
       }
       const idWithNewScope = id.changeScope(remoteScope);
-      const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
+      const pkgNameWithOldScope = componentIdToPackageName({
+        id,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
       if (!codemod) {
         // use did not enter --rewire flag
         if (id.hasScope()) {
           return; // because only --rewire is permitted to change from scope-a to scope-b.
         }
         // dists can change no-scope to scope without --rewire flag. if this is not a dist file
-        // and the file needs to change from no-scope to scope, it needs to --rewire flag
-        if (!isDist && fileString.includes(pkgNameWithOldScope)) {
+        // and the file needs to change from no-scope to scope, it needs to --rewire flag.
+        // for non-legacy the no-scope is not possible, so no need to check for it.
+        if (!isDist && fileString.includes(pkgNameWithOldScope) && version.isLegacy) {
           throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
             file.relativePath
           }" file of ${componentId.toString()},
@@ -506,7 +511,11 @@ the current import/require module has no scope-name, which result in an invalid 
       }
       // at this stage, we know that either 1) --rewire was used. 2) it's dist and id doesn't have scope-name
       // in both cases, if the file has the old package-name, it should be replaced to the new one.
-      const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
+      const pkgNameWithNewScope = componentIdToPackageName({
+        id: idWithNewScope,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
       // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
       // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);

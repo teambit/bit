@@ -34,11 +34,7 @@ export default class Import implements LegacyCommand {
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['j', 'json', 'return the output as JSON'],
     ['', 'ignore-dist', "skip writing the component's build files during import"],
-    [
-      '',
-      'conf [path]',
-      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)'
-    ],
+    ['', 'conf', 'write the configuration file (component.json) of the component (harmony components only)'],
     [
       '',
       'skip-npm-install',

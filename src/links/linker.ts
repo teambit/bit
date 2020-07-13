@@ -100,7 +100,7 @@ export async function reLinkDependents(consumer: Consumer, components: Component
 
 /**
  * needed for the following cases:
- * 1) user is importing a component directly which was a dependency before. (before: IMPORTED, now: NESTED).
+ * 1) user is importing a component directly which was a dependency before. (before: NESTED, now: IMPORTED).
  * 2) user used bit-move to move a dependency to another directory.
  * as a result of the cases above, the link from the dependent to the dependency is broken.
  * find the dependents components and re-link them

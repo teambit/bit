@@ -58,7 +58,8 @@ describe('dependencies versions resolution', function() {
         );
       });
     });
-    describe('when bit.json overrides the version', () => {
+    // Skipped since --conf is disabled for legacy projects
+    describe.skip('when bit.json overrides the version', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
         helper.command.importComponent('bar/foo --conf');

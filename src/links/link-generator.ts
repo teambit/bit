@@ -343,7 +343,7 @@ function getInternalCustomResolvedLinks(
     const linkContent = getLinkToFileContent(destRelative);
 
     const postInstallSymlink = createNpmLinkFiles && !linkContent;
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+    const packageName = componentIdToPackageName(component);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
     const getSymlink = () => {
       if (linkContent) return undefined;

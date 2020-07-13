@@ -283,16 +283,7 @@ describe('bit merge command', function() {
           });
         });
       });
-      describe('merging a version when import included bit.json file', () => {
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);
-          helper.command.importComponent('bar/foo --conf');
-          helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
-        });
-        it('should not delete the bit.json file', () => {
-          expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).to.be.a.path();
-        });
-      });
+
       describe('merging a version when import did not write package.json file', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);

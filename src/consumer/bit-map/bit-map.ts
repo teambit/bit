@@ -15,6 +15,10 @@ import ShowDoctorError from '../../error/show-doctor-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
+export type GetBitMapComponentOptions = {
+  ignoreVersion?: boolean;
+  ignoreScopeAndVersion?: boolean;
+};
 
 export default class BitMap {
   projectRoot: string;
@@ -262,13 +266,7 @@ export default class BitMap {
    */
   getComponent(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
     return this.components.find(c => c.id.isEqual(existingBitId)) as ComponentMap;

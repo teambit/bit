@@ -99,7 +99,7 @@ describe('dependency-resolver extension', function() {
         before(() => {
           helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-          helper.extensions.addExtensionToVariant('bar/foo', 'extension-add-dependencies', config);
+          helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/extension-add-dependencies', config);
           barFooOutput = helper.command.showComponentParsed('bar/foo');
           isTypeOutput = helper.command.showComponentParsed('utils/is-type');
         });
@@ -149,7 +149,7 @@ describe('dependency-resolver extension', function() {
       expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
-      expect(depResolverExt.data.dependencies[0].packageName).to.equal(`@bit/${helper.scopes.remote}.comp3`);
+      expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
     });
     describe('exporting the component', () => {
       before(() => {
@@ -161,7 +161,7 @@ describe('dependency-resolver extension', function() {
         expect(depResolverExt.data.dependencies[0].componentId.scope).to.equal(helper.scopes.remote);
         expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
         expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
-        expect(depResolverExt.data.dependencies[0].packageName).to.equal(`@bit/${helper.scopes.remote}.comp3`);
+        expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
       });
     });
   });

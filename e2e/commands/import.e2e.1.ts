@@ -101,18 +101,6 @@ describe('bit import', function() {
       });
     });
 
-    describe('with --conf flag', () => {
-      before(() => {
-        helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('global/simple --conf');
-      });
-      it('should write the bit.json file of the component', () => {
-        const expectedLocation = path.join(helper.scopes.localPath, 'components', 'global', 'simple', 'bit.json');
-        expect(fs.existsSync(expectedLocation)).to.be.true;
-      });
-    });
-
     describe('when the default component directory already exist', () => {
       let componentFileLocation;
       let componentDir;
@@ -1261,19 +1249,6 @@ console.log(barFoo.default());`;
         expect(outputAll).to.have.string('no modified components');
         const outputBarFoo = helper.general.runWithTryCatch('bit diff bar/foo');
         expect(outputBarFoo).to.have.string('no diff for');
-      });
-    });
-    describe('import with --conf', () => {
-      before(() => {
-        helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('bar/foo --conf');
-      });
-      it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
-        expect(bitJson).to.have.property('env');
-        expect(bitJson.env).to.have.property('compiler');
-        expect(bitJson.env.compiler).to.equal(`${helper.scopes.env}/compilers/babel@0.0.1`);
       });
     });
   });

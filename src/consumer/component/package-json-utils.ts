@@ -15,7 +15,6 @@ import JSONFile from './sources/json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
-import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
 import PackageJson from './package-json';
@@ -31,7 +30,7 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
       throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
     }
     const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
+    const packageName = componentIdToPackageName(component);
     acc[packageName] = locationAsUnixFormat;
     return acc;
   }, {});
@@ -39,14 +38,11 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
-/**
- * Add given components with their versions to root package.json
- */
-export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
+export async function addComponentsWithVersionToRoot(consumer: Consumer, components: Component[]) {
   const componentsToAdd = R.fromPairs(
-    componentsVersions.map(({ component, version }) => {
-      const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
-      return [packageName, version];
+    components.map(component => {
+      const packageName = componentIdToPackageName(component);
+      return [packageName, component.version];
     })
   );
   await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
@@ -86,11 +82,7 @@ export async function changeDependenciesToRelativeSyntax(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const dependencyPackageValue = getPackageDependencyValue(dependencyIdStr, componentMap, dependencyComponentMap);
         if (dependencyPackageValue) {
-          const packageName = componentIdToPackageName(
-            dependencyId,
-            dependencyComponent.bindingPrefix,
-            dependencyComponent.defaultScope
-          );
+          const packageName = componentIdToPackageName({ ...dependencyComponent, id: dependencyId });
           acc[packageName] = dependencyPackageValue;
         }
       }
@@ -114,7 +106,11 @@ export function preparePackageJsonToWrite(
     return dependencies.reduce((acc, depId: BitId) => {
       if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
-      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({
+        ...component,
+        id: depId,
+        isDependency: true
+      });
       acc[packageName] = packageDependency;
       return acc;
     }, {});
@@ -214,7 +210,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, components: C
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = components
     .map(c => {
-      return c.id.scope ? getNodeModulesPathOfComponent(c.bindingPrefix, c.id) : null;
+      return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
     })
     .filter(a => a); // remove null
 
@@ -238,12 +234,8 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap | null | undefined,
-  capsuleMap?: any
+  dependencyComponentMap?: ComponentMap | null | undefined
 ): string | null | undefined {
-  if (capsuleMap && capsuleMap[dependencyId.toString()]) {
-    return capsuleMap[dependencyId.toString()].wrkdir;
-  }
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }

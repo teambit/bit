@@ -57,7 +57,7 @@ export default class GeneralHelper {
     return output;
   }
 
-  static alignOutput(str?: string | null | undefined): string | null | undefined {
+  static alignOutput(str?: string | undefined): string | undefined {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

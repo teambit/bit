@@ -18,6 +18,7 @@ describe('relative paths flow (components requiring each other by relative paths
     let appOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope(helper.scopes.remote);
       appOutput = helper.fixtures.populateComponents(2);
     });
     it('bit status should show it as an invalid component', () => {
@@ -77,7 +78,7 @@ describe('relative paths flow (components requiring each other by relative paths
           it('app should work', () => {
             helper.fs.outputFile(
               'app.js',
-              `const comp1 = require('@bit/${helper.scopes.remote}.comp1');\nconsole.log(comp1())`
+              `const comp1 = require('@${helper.scopes.remote}/comp1');\nconsole.log(comp1())`
             );
             const result = helper.command.runCmd('node app.js');
             expect(result).to.have.string(appOutput);

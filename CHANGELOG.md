@@ -5,8 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [[14.8.8] - 2020-07-13](https://github.com/teambit/bit/releases/tag/v14.8.8)
+
+### Bug Fixes
+
+- resolve performance regression by fixing the dependency resolution cache
+- fix ssh command by reverting another fix of "write after end" error
+- facilitate debugging by showing the entire stacktrace formatted when BIT_LOG is set
 
 ## [[14.8.7] - 2020-07-09](https://github.com/teambit/bit/releases/tag/v14.8.7)
+
+### Bug Fixes
 
 - [#2809](https://github.com/teambit/bit/issues/2809) - fix legacy capsule exec to not hang on error
 - fix export --all --include-dependencies flags to not duplicate components
@@ -14,13 +23,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [[14.8.6] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.6)
 
+### Internal
+
 - add an option to not use load scope from cache for pkg extension
 
 ## [[14.8.5] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.5)
 
+### Bug Fixes
+
 - [#2796](https://github.com/teambit/bit/issues/2796) - fix legacy compilers that use component.extensions to be build upon tag
 
 ## [[14.8.4] - 2020-07-02](https://github.com/teambit/bit/releases/tag/v14.8.4)
+
+### Internal
 
 - add an option to not use cache when loading scope
 - do not use scope cache by default when loading scope programmatically

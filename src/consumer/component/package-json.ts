@@ -186,7 +186,7 @@ export default class PackageJson {
     const pkg = await PackageJson.getPackageJson(rootDir);
     if (pkg && pkg.dependencies) {
       components.forEach(c => {
-        delete pkg.dependencies[componentIdToPackageName(c.id, c.bindingPrefix, c.defaultScope)];
+        delete pkg.dependencies[componentIdToPackageName(c)];
       });
       await PackageJson.saveRawObject(rootDir, pkg);
     }

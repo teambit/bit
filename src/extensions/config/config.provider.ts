@@ -28,7 +28,7 @@ export default async function provideConfig(_deps, _config, _slots, harmony: Har
   if (config.extensions) {
     // Send all configs to harmony
     config?.extensions.forEach(extension => {
-      harmony.config.set(extension.id, extension.config);
+      harmony.config.set(extension.stringId, extension.config);
     });
   }
   return config;

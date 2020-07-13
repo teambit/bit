@@ -27,6 +27,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   };
   const {
     lang,
+    bindingPrefix,
     compiler,
     tester,
     dependencies,
@@ -73,6 +74,8 @@ export function componentToPrintableForDiff(component: Component): Record<string
   obj.compilerFiles = parseEnvFiles(compiler);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.language = lang || null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  obj.bindingPrefix = bindingPrefix || null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.tester = tester ? tester.name : null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

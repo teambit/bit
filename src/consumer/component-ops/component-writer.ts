@@ -136,10 +136,12 @@ export default class ComponentWriter {
     this.component.files.map(file => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
-    if (this.writeConfig && this.consumer) {
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
-      this.component.dataToPersist.merge(configToWrite.dataToPersist);
-    }
+    // TODO: change to new eject config
+    // if (this.writeConfig && this.consumer) {
+    //   const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
+    //   this.component.dataToPersist.merge(configToWrite.dataToPersist);
+    // }
+
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
@@ -215,12 +217,7 @@ export default class ComponentWriter {
     // if not, remove the "this.consumer.isLegacy" part in the condition below
     if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
-    return getNodeModulesPathOfComponent(
-      this.consumer.config._bindingPrefix,
-      this.component.id,
-      true,
-      this.component.defaultScope
-    );
+    return getNodeModulesPathOfComponent({ ...this.component, id: this.component.id, allowNonScope: true });
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
@@ -445,9 +442,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
-        const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
-          : null;
+        const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath
             ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))
