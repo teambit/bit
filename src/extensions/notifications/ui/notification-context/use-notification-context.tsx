@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useReducer } from 'react';
 import { v1 } from 'uuid';
 
-import { NotificationApi, Message, MessageLevel } from './notification-context';
+import { NotificationApi, Message, MessageLevel } from '.';
 
 export function useNotifications(): [NotificationApi, Message[]] {
   const [messages, dispatch] = useReducer(notificationReducer, []);
