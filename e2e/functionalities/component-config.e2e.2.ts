@@ -131,19 +131,6 @@ describe('component config', function() {
         });
       });
     });
-    describe('importing with --conf flag', () => {
-      before(() => {
-        helper.command.importComponent('bar/foo --conf -O');
-      });
-      it('should write the configuration data also to bit.json file', () => {
-        expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).to.be.a.file();
-      });
-      it('bit.json should not include the "dependencies" property anymore', () => {
-        const bitJson = helper.bitJson.read('components/bar/foo');
-        expect(bitJson).to.not.have.property('dependencies');
-        expect(bitJson).to.not.have.property('packageDependencies');
-      });
-    });
   });
   describe('a component with overrides settings', () => {
     before(() => {

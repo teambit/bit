@@ -35,16 +35,19 @@ export default class ConsumerOverrides {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ConsumerOverrides(overrides);
   }
-  getOverrideComponentData(bitId: BitId): ConsumerOverridesOfComponent | null | undefined {
+  getOverrideComponentData(bitId: BitId): ConsumerOverridesOfComponent | undefined {
     const matches = this._getAllRulesMatchedById(bitId);
     if (!matches.length) {
-      return null;
+      return undefined;
     }
     const overrideValues = matches.map(match => R.clone(this.overrides[match]));
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
-      if (stopPropagation) return acc;
+      if (stopPropagation) {
+        return acc;
+      }
       if (!current.propagate) {
+        acc.propagate = false;
         stopPropagation = true;
       }
       this._updateSpecificOverridesWithGeneralOverrides(current, acc);

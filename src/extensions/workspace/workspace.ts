@@ -4,7 +4,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { ScopeExtension } from '../scope';
-import { Component, ComponentFactory, ComponentID } from '../component';
+import { Component, ComponentFactory, ComponentID, ComponentConfig } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
 import { IsolatorExtension } from '../isolator';
@@ -13,16 +13,30 @@ import { ResolvedComponent } from '../utils/resolved-component/resolved-componen
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { IExtensionConfigList } from '../../consumer/config';
 import { DependencyResolverExtension } from '../dependency-resolver';
-import { WorkspaceExtConfig } from './types';
+import { WorkspaceExtConfig, WorkspaceComponentConfig } from './types';
 import { ComponentHost, LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
-import LegacyComponentConfig from '../../consumer/config';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
+import { ComponentConfigFile } from './component-config-file';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
+import GeneralError from '../../error/general-error';
+import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
+import { pathIsInside } from '../../utils';
+
+export type EjectConfResult = {
+  configPath: string;
+};
+
+export interface EjectConfOptions {
+  propagate?: boolean;
+  override?: boolean;
+}
+
+const DEFAULT_VENDOR_DIR = 'vendor';
 
 /**
  * API of the Bit Workspace
@@ -64,7 +78,6 @@ export default class Workspace implements ComponentHost {
     private harmony: Harmony
   ) {
     this.owner = this.config?.defaultOwner;
-    this.componentsScopeDirsMap = this.config?.components || [];
   }
 
   /**
@@ -155,15 +168,32 @@ export default class Workspace implements ComponentHost {
    * @param id component ID
    */
   async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
-    const getBitId = (): BitId => {
-      if (id instanceof ComponentID) return id._legacy;
-      if (typeof id === 'string') return this.consumer.getParsedId(id);
-      return id;
-    };
-    const componentId = getBitId();
+    const componentId = getBitId(id, this.consumer);
     if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
+  }
+
+  getDefaultExtensions(): ExtensionDataList {
+    if (!this.config.extensions) {
+      return new ExtensionDataList();
+    }
+    return ExtensionDataList.fromConfigObject(this.config.extensions);
+  }
+
+  async ejectConfig(id: BitId | string, options: EjectConfOptions): Promise<EjectConfResult> {
+    const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+    const component = await this.scope.getIfExist(componentId);
+    const extensions = component?.config.extensions ?? new ExtensionDataList();
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true });
+    if (!componentDir) {
+      throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
+    }
+    const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
+    await componentConfigFile.write(componentDir, { override: options.override });
+    return {
+      configPath: ComponentConfigFile.composePath(componentDir)
+    };
   }
 
   // @gilad needs to implement on variants
@@ -212,10 +242,14 @@ export default class Workspace implements ComponentHost {
    * @param componentId
    * @param relative return the path relative to the workspace or full path
    */
-  componentDir(componentId: BitId, relative = false): PathOsBased | undefined {
-    const componentMap = this.consumer.bitMap.getComponent(componentId);
+  componentDir(
+    componentId: BitId,
+    bitMapOptions: GetBitMapComponentOptions,
+    options = { relative: false }
+  ): PathOsBased | undefined {
+    const componentMap = this.consumer.bitMap.getComponent(componentId, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
-    if (relative) {
+    if (options.relative) {
       return relativeComponentDir;
     }
 
@@ -225,54 +259,146 @@ export default class Workspace implements ComponentHost {
     return undefined;
   }
 
-  // TODO: gilad - add return value
   /**
-   * Calculate the component config based on the component.json file in the component folder and the matching
-   * pattern in the variants config
+   * Calculate the component config based on:
+   * the component.json file in the component folder
+   * matching pattern in the variants config
+   * defaults extensions from workspace config
    * @param componentId
    */
-  // componentConfig(componentId: BitId) {
-  // TODO: read the component.json file and merge it inside
-  // const inlineConfig = this.inlineComponentConfig(componentId);
-  // const variantConfig = this.variants.getComponentConfig(componentId);
-  // For legacy configs it will be undefined.
-  // This should be changed once we have basic dependnecy-resolver and pkg extensions see more at src/extensions/config/workspace-config.ts
-  // under transformLegacyPropsToExtensions
-  // if (!variantConfig) {
-  // }
-  // }
-
-  // TODO: gilad - add return value
-  /**
-   * return the component config from its folder (bit.json / package.json / component.json)
-   * @param componentId
-   */
-  private inlineComponentConfig(componentId: BitId) {
-    // TODO: Load from component.json file
-    const legacyConfigProps = LegacyComponentConfig.loadConfigFromFolder({
-      workspaceDir: this.path,
-      componentDir: this.componentDir(componentId)
-    });
-    // TODO: make sure it's a new format
-    return legacyConfigProps;
+  async componentConfig(componentId: BitId): Promise<ComponentConfig> {
+    const data = await this.workspaceComponentConfig(componentId);
+    const config = new ComponentConfig(data.componentExtensions);
+    return config;
   }
 
-  // async loadComponentExtensions(componentId: BitId): Promise<void> {
-  //   const config = this.componentConfig(componentId);
-  //   const extensions = config.extensions
-  //     ? ExtensionConfigList.fromObject(config.extensions)
-  //     : ExtensionConfigList.fromArray([]);
-  //   return this.loadExtensions(extensions);
-  // }
+  async workspaceComponentConfig(componentId: BitId): Promise<WorkspaceComponentConfig> {
+    // TODO: consider caching this result
+    let defaultScope;
+    let configFileExtensions;
+    let variantsExtensions;
+    let wsDefaultExtensions;
+
+    const componentConfigFile = await this.componentConfigFile(componentId);
+    if (componentConfigFile) {
+      configFileExtensions = componentConfigFile.extensions;
+      defaultScope = componentConfigFile.defaultScope;
+    }
+    const variantConfig = this.variants.byId(componentId);
+    if (variantConfig) {
+      variantsExtensions = variantConfig.componentExtensions;
+      defaultScope = defaultScope || variantConfig.componentWorkspaceMetaData.defaultScope;
+    }
+    const isVendor = this.isVendorComponent(componentId);
+    if (!isVendor) {
+      wsDefaultExtensions = this.getDefaultExtensions();
+      defaultScope = defaultScope || this.config.defaultScope;
+    }
+    // We don't stop on each step because we want to merge the default scope even if propagate=false but the default scope is not defined
+    const extensionsToMerge: ExtensionDataList[] = [];
+    if (configFileExtensions) {
+      extensionsToMerge.push(configFileExtensions);
+    }
+    let continuePropagating = componentConfigFile?.propagate ?? true;
+    if (variantsExtensions && continuePropagating) {
+      // Put it in the start to make sure the config file is stronger
+      extensionsToMerge.unshift(variantsExtensions);
+    }
+    continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
+    // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
+    const isDefaultExtension = wsDefaultExtensions.findExtension(componentId.toString(), true, true);
+    if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
+      // Put it in the start to make sure the config file is stronger
+      extensionsToMerge.unshift(wsDefaultExtensions);
+    }
+    // TODO: do not require if for tagged components that already has a real scope
+    if (!defaultScope) {
+      throw new GeneralError(`component ${componentId.toString()} must have a default scope`);
+    }
+    const splittedScope = defaultScope.split('.');
+    const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
+    let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
+    let componentIdWithScope = componentId;
+    if (!componentIdWithScope.hasScope()) {
+      componentIdWithScope = componentId.clone().changeScope(defaultScope);
+    }
+    // Remove self from the list to prevent infinite loops (usually happen when using * as variant)
+    mergedExtensions = mergedExtensions.remove(componentIdWithScope);
+    // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
+    // TODO: then it should be just deleted. for now we want to make sure we are aligned with the bitmap entries
+    mergedExtensions.forEach(extensionEntry => {
+      const stringId = extensionEntry.extensionId?.toStringWithoutScope();
+      const foundId = getBitId(stringId, this.consumer);
+      extensionEntry.extensionId = foundId;
+    });
+
+    return {
+      componentExtensions: mergedExtensions,
+      componentWorkspaceMetaData: {
+        defaultScope,
+        defaultOwner
+      }
+    };
+  }
+
+  /**
+   * Check if a component is vendor component in the workspace
+   *
+   * @private
+   * @param {BitId} componentId
+   * @returns {boolean}
+   * @memberof Workspace
+   */
+  private isVendorComponent(componentId: BitId): boolean {
+    const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    // Shouldn't happen for harmony workspaces
+    if (!relativeComponentDir) {
+      return false;
+    }
+    const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
+    if (pathIsInside(relativeComponentDir, vendorDir)) {
+      return true;
+    }
+    // TODO: implement
+    return false;
+  }
+
+  /**
+   * return the component config from its folder (component.json)
+   * @param componentId
+   */
+  private async componentConfigFile(componentId: BitId): Promise<ComponentConfigFile | undefined> {
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true });
+    let componentConfigFile;
+    if (componentDir) {
+      componentConfigFile = await ComponentConfigFile.load(componentDir);
+    }
+    return componentConfigFile;
+  }
 
   /**
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: IExtensionConfigList): Promise<void> {
-    const extensionsIds = extensions.ids;
+  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
+    const extensionsIds: string[] = [];
+    // TODO: this is a very very ugly hack until we register everything with the scope name to bitmap (even new components)
+    // TODO: then it should be replace by "const extensionsIds = extensions.ids";. for now we want to make sure we are aligned with the bitmap entries
+    extensions.forEach(extensionEntry => {
+      let extensionIdString;
+      // Core extension
+      if (!extensionEntry.extensionId) {
+        extensionIdString = extensionEntry.stringId;
+      } else {
+        const stringId = extensionEntry.extensionId?.toStringWithoutScope();
+        const foundId = getBitId(stringId, this.consumer);
+        extensionIdString = foundId.toString();
+      }
+      extensionsIds.push(extensionIdString);
+    });
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
+    if (!extensionsToLoad.length) return;
     let resolvedExtensions: ResolvedComponent[] = [];
     resolvedExtensions = await this.load(extensionsToLoad);
     // TODO: change to use the new reporter API, in order to implement this
@@ -281,7 +407,7 @@ export default class Workspace implements ComponentHost {
     // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
     // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
     // level passed to it).
-    return loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+    await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
   /**
@@ -323,4 +449,12 @@ export default class Workspace implements ComponentHost {
     }
     return this.defaultDirectory;
   }
+}
+
+// TODO: handle this properly when we decide about using bitId vs componentId
+// if it's still needed we should move it other place, it will be used by many places
+function getBitId(id, consumer): BitId {
+  if (id instanceof ComponentID) return id._legacy;
+  if (typeof id === 'string') return consumer.getParsedId(id);
+  return id;
 }

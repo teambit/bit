@@ -12,6 +12,7 @@ import { ImportOptions } from '../../../consumer/component-ops/import-components
 import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 import ImportComponents from '../../../consumer/component-ops/import-components';
+import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 
 const key = R.compose(R.head, R.keys);
 
@@ -57,6 +58,9 @@ export default (async function importAction(
   consumer.packageManagerArgs = packageManagerArgs;
   if (environmentOptions.tester || environmentOptions.compiler) {
     return importEnvironment(consumer);
+  }
+  if (importOptions.writeConfig && consumer.config.isLegacy) {
+    throw new FlagHarmonyOnly('--conf');
   }
   const importComponents = new ImportComponents(consumer, importOptions);
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();

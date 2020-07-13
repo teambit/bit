@@ -111,12 +111,13 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
     const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component)
-    );
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -159,12 +160,13 @@ export default class NodeModuleLinker {
    */
   async _populateImportedNonLegacyComponentsLinks(component: Component) {
     const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
-      component.bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component)
-    );
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
+      bindingPrefix: component.bindingPrefix,
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     filesToBind.forEach(file => {
@@ -184,12 +186,13 @@ export default class NodeModuleLinker {
    */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
-      component.bindingPrefix,
-      componentId,
-      true,
-      this._getDefaultScope(component)
-    );
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
+      bindingPrefix: component.bindingPrefix,
+      id: componentId,
+      allowNonScope: true,
+      defaultScope: this._getDefaultScope(component),
+      extensions: component.extensions
+    });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -238,12 +241,13 @@ export default class NodeModuleLinker {
    */
   _deleteOldLinksOfIdWithoutScope(component: Component) {
     if (component.id.scope) {
-      const previousDest = getNodeModulesPathOfComponent(
-        component.bindingPrefix,
-        component.id.changeScope(null),
-        true,
-        this._getDefaultScope(component)
-      );
+      const previousDest = getNodeModulesPathOfComponent({
+        bindingPrefix: component.bindingPrefix,
+        id: component.id.changeScope(null),
+        allowNonScope: true,
+        defaultScope: this._getDefaultScope(component),
+        extensions: component.extensions
+      });
       this.dataToPersist.removePath(new RemovePath(previousDest));
     }
   }
@@ -317,14 +321,16 @@ export default class NodeModuleLinker {
       if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
-      dependenciesLinks.push(this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix));
+      dependenciesLinks.push(
+        this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, bindingPrefix, component)
+      );
       if (this.consumer && !this.consumer.shouldDistsBeInsideTheComponent()) {
         // when dists are written outside the component, it doesn't matter whether a component
         // has dists files or not, in case it doesn't have, the files are copied from the component
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
-        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix);
+        const distSymlink = this._getDependencyLink(from, dependency.id, to, bindingPrefix, component);
         distSymlink.forDistOutsideComponentsDir = true;
         dependenciesLinks.push(distSymlink);
       }
@@ -339,9 +345,16 @@ export default class NodeModuleLinker {
     parentRootDir: PathOsBasedRelative,
     bitId: BitId,
     rootDir: PathOsBasedRelative,
-    bindingPrefix: string
+    bindingPrefix: string,
+    component: Component
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this._getDefaultScope());
+    const relativeDestPath = getNodeModulesPathOfComponent({
+      ...component,
+      id: bitId,
+      allowNonScope: true,
+      bindingPrefix,
+      isDependency: true
+    });
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
@@ -358,7 +371,11 @@ export default class NodeModuleLinker {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(
-      getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true, this._getDefaultScope(component))
+      getNodeModulesPathOfComponent({
+        ...component,
+        id: component.id,
+        allowNonScope: true
+      })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toVinylFile());

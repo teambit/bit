@@ -377,6 +377,8 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
 
+export const COMPONENT_CONFIG_FILE_NAME = 'component.json';
+
 export const COMPILER_ENV_TYPE = 'compiler';
 
 export const TESTER_ENV_TYPE = 'tester';
@@ -420,3 +422,8 @@ export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
+
+export enum Extensions {
+  dependencyResolver = '@teambit/dependency-resolver',
+  pkg = '@teambit/pkg'
+}

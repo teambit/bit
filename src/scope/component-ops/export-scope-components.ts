@@ -13,7 +13,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { Remotes, Remote } from '../../remotes';
 import Scope from '../scope';
-import { LATEST } from '../../constants';
+import { LATEST, Extensions } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
@@ -101,6 +101,7 @@ export async function exportMany({
     remoteNameStr: string,
     bitIds: BitIds
   ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
+    bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
@@ -407,6 +408,16 @@ async function convertToCorrectScope(
           ext.extensionId = updatedScope;
         }
       }
+      if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
+        ext.data.dependencies.forEach(dep => {
+          const id = new BitId(dep.componentId);
+          const updatedScope = getIdWithUpdatedScope(id);
+          if (!updatedScope.isEqual(id)) {
+            hasChanged = true;
+            dep.componentId = updatedScope;
+          }
+        });
+      }
     });
     return hasChanged;
   }
@@ -478,15 +489,20 @@ async function convertToCorrectScope(
         return; // nothing to do, the remote has not changed
       }
       const idWithNewScope = id.changeScope(remoteScope);
-      const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
+      const pkgNameWithOldScope = componentIdToPackageName({
+        id,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
       if (!codemod) {
         // use did not enter --rewire flag
         if (id.hasScope()) {
           return; // because only --rewire is permitted to change from scope-a to scope-b.
         }
         // dists can change no-scope to scope without --rewire flag. if this is not a dist file
-        // and the file needs to change from no-scope to scope, it needs to --rewire flag
-        if (!isDist && fileString.includes(pkgNameWithOldScope)) {
+        // and the file needs to change from no-scope to scope, it needs to --rewire flag.
+        // for non-legacy the no-scope is not possible, so no need to check for it.
+        if (!isDist && fileString.includes(pkgNameWithOldScope) && version.isLegacy) {
           throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
             file.relativePath
           }" file of ${componentId.toString()},
@@ -495,7 +511,11 @@ the current import/require module has no scope-name, which result in an invalid 
       }
       // at this stage, we know that either 1) --rewire was used. 2) it's dist and id doesn't have scope-name
       // in both cases, if the file has the old package-name, it should be replaced to the new one.
-      const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
+      const pkgNameWithNewScope = componentIdToPackageName({
+        id: idWithNewScope,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
       // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
       // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);

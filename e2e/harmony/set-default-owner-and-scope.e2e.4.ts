@@ -23,21 +23,20 @@ describe('set default owner and scope', function() {
   });
   describe('author components', () => {
     let parsedLinkOutput;
+    let scopeWithoutOwner;
     let defaultOwner;
     let defaultScope;
-    let fullScope;
     let componentId;
     let componentPackageName;
     before(() => {
       helper.scopeHelper.initWorkspaceAndRemoteScope();
       const remoteScopeParts = helper.scopes.remote.split('.');
       defaultOwner = remoteScopeParts[0];
-      defaultScope = remoteScopeParts[1];
-      fullScope = `${defaultOwner}.${defaultScope}`;
-      componentId = `${fullScope}/utils/is-type`;
-      componentPackageName = `@${defaultOwner}/${defaultScope}.utils.is-type`;
+      scopeWithoutOwner = remoteScopeParts[1];
+      defaultScope = helper.scopes.remote;
+      componentId = `${defaultScope}/utils/is-type`;
+      componentPackageName = `@${defaultOwner}/${scopeWithoutOwner}.utils.is-type`;
       const workspaceExtConfig = {
-        defaultOwner,
         defaultScope
       };
       helper.extensions.addExtensionToWorkspace('@teambit/workspace', workspaceExtConfig);
@@ -62,7 +61,7 @@ describe('set default owner and scope', function() {
       });
       it('should export the component to correct scope', () => {
         expect(exportOutput).to.have.string('exported 1 components');
-        expect(exportOutput).to.have.string(`${defaultOwner}.${defaultScope}`);
+        expect(exportOutput).to.have.string(defaultScope);
       });
       describe('validate models data', () => {
         let compModel;
@@ -72,7 +71,7 @@ describe('set default owner and scope', function() {
           versionModel = helper.command.catComponent(`utils/is-type@latest`);
         });
         it('should store scope name with the format owner.scope in the models', () => {
-          expect(compModel.scope).to.equal(`${fullScope}`);
+          expect(compModel.scope).to.equal(defaultScope);
         });
         it('should store scope name with the format owner.scope in the models', () => {
           expect(compModel.bindingPrefix).to.equal(`@${defaultOwner}`);
@@ -106,7 +105,7 @@ describe('set default owner and scope', function() {
             expect(parsedJson.name).to.equal(componentPackageName);
           });
           it('should have the component id in package.json', () => {
-            expect(parsedJson.componentId.scope).to.equal(`${defaultOwner}.${defaultScope}`);
+            expect(parsedJson.componentId.scope).to.equal(defaultScope);
             expect(parsedJson.componentId.name).to.equal('utils/is-type');
             expect(parsedJson.componentId.version).to.equal('0.0.1');
           });

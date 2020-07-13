@@ -1,5 +1,5 @@
 import * as path from 'path';
-import pMapSeries from 'p-map-series';
+import BluebirdPromise from 'bluebird';
 import Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -13,7 +13,7 @@ import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export default class ComponentLoader {
-  _componentsCache: Record<string, any> = {}; // cache loaded components
+  _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
   _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
@@ -48,7 +48,7 @@ export default class ComponentLoader {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString()
     });
-    const alreadyLoadedComponents = [];
+    const alreadyLoadedComponents: Component[] = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id: BitId) => {
@@ -58,28 +58,26 @@ export default class ComponentLoader {
       const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
       const idStr = idWithVersion.toString();
       if (this._componentsCache[idStr]) {
-        logger.debugAndAddBreadCrumb(
-          'ComponentLoader',
-          'the component {idStr} has been already loaded, use the cached component',
-          { idStr }
-        );
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         alreadyLoadedComponents.push(this._componentsCache[idStr]);
       } else {
         idsToProcess.push(idWithVersion);
       }
     });
+    logger.debugAndAddBreadCrumb(
+      'ComponentLoader',
+      `the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. {idsStr}`,
+      { idsStr: alreadyLoadedComponents.map(c => c.id.toString()).join(', ') }
+    );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
-    const allComponents = [];
-    await pMapSeries(idsToProcess, async (id: BitId) => {
+    const allComponents: Component[] = [];
+    await BluebirdPromise.mapSeries(idsToProcess, async (id: BitId) => {
       const component = await this.loadOne(id, throwOnFailure, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
           id: component.id.toString()
         });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         allComponents.push(component);
       }
     });

@@ -11,10 +11,14 @@ import { LATEST } from '../../../constants';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 
 export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
+  if (checkoutProps.writeConfig && consumer.config.isLegacy) {
+    throw new FlagHarmonyOnly('--conf');
+  }
   await parseValues(consumer, values, checkoutProps);
   const checkoutResults = await checkoutVersion(consumer, checkoutProps);
   await consumer.onDestroy();
