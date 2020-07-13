@@ -32,23 +32,6 @@ export class WebpackExtension {
     return configFactory(this.workspace.path, context.entry);
   }
 
-  private getEntries(components: Component[]) {
-    // :TODO load all component files.
-    const paths = components.map(component => {
-      const path = join(
-        // :TODO check how it works with david. Feels like a side-effect.
-        // @ts-ignore
-        component.state._consumer.componentMap?.getComponentDir(),
-        // @ts-ignore
-        component.config.main
-      );
-
-      return path;
-    });
-
-    return paths;
-  }
-
   static slots = [];
 
   static dependencies = [WorkspaceExt];

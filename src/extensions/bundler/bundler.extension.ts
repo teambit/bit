@@ -93,7 +93,7 @@ export class BundlerExtension {
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const bundler = new BundlerExtension(workspace, envs, new DevServerService(runtimeSlot), runtimeSlot);
+    const bundler = new BundlerExtension(workspace, envs, new DevServerService(runtimeSlot, workspace), runtimeSlot);
     graphql.register(devServerSchema(bundler));
     return bundler;
   }

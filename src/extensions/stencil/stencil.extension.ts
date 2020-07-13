@@ -5,7 +5,7 @@ import { StencilEnv } from './stencil.env';
 import { CompileExt, Compile } from '../compiler';
 import { StencilTester } from './stencil.tester';
 import { WorkspaceExt, Workspace } from '../workspace';
-import { StencilDevServer } from './stencil.dev-server';
+// import { StencilDevServer } from './stencil.dev-server';
 import { WebpackExtension } from '../webpack';
 
 export class StencilExtension {
@@ -27,7 +27,7 @@ export class StencilExtension {
   }
 
   createDevServer() {
-    return new StencilDevServer({}, this.workspace);
+    // return new StencilDevServer({}, this.workspace);
   }
 
   static dependencies = [Environments, CompileExt, WorkspaceExt, WebpackExtension];

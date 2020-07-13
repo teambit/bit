@@ -1,19 +1,22 @@
 import { SemVer } from 'semver';
 import { AnyFS } from '@teambit/any-fs';
-import { NothingToSnap } from './exceptions';
+// import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
+import { ComponentFactory } from './component-factory';
 // eslint-disable-next-line import/no-cycle
 import { ComponentID } from './id';
-import State from './state';
+import { TagMap } from './tag-map';
+import { State } from './state';
 // eslint-disable-next-line import/no-cycle
-import Snap, { Author } from './snap';
+import { Snap } from './snap';
+// import { Author } from './types';
 import { capitalize } from '../utils/capitalize';
 
 /**
  * in-memory representation of a component.
  */
-export default class Component {
+export class Component {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
@@ -28,8 +31,26 @@ export default class Component {
     /**
      * state of the component.
      */
-    readonly state: State
+    private _state: State,
+
+    /**
+     * tags of the component.
+     */
+    readonly tags: TagMap = new TagMap(),
+
+    /**
+     * the component factory
+     */
+    private factory: ComponentFactory
   ) {}
+
+  get state(): State {
+    return this._state;
+  }
+
+  set state(state: State) {
+    this._state = state;
+  }
 
   /**
    * component configuration which is later generated to a component `package.json` and `bit.json`.
@@ -45,31 +66,27 @@ export default class Component {
     return this.state.filesystem;
   }
 
+  get headTag() {
+    if (!this.head) return undefined;
+    return this.tags.byHash(this.head.hash);
+  }
+
   stringify(): string {
     return JSON.stringify({
       id: this.id,
       head: this.head
-      // TODO - laly add stringify of this.state and this.tags
     });
-  }
-
-  /**
-   * dependency graph of the component current. ideally package dependencies would be also placed
-   * here through an external extension.
-   */
-  async graph() {
-    return this.state.dependencyGraph();
   }
 
   /**
    * record component changes in the `Scope`.
    */
-  snap(author: Author, message = '') {
-    if (!this.isModified()) throw new NothingToSnap();
-    const snap = Snap.create(this, author, message);
+  // snap(author: Author, message = '') {
+  // if (!this.isModified()) throw new NothingToSnap();
+  // const snap = new Snap(this, author, message);
 
-    return new Component(this.id, snap, snap.state);
-  }
+  // return new Component(this.id, snap, snap.state);
+  // }
 
   /**
    * display name of the component.
@@ -104,13 +121,16 @@ export default class Component {
     return this.head === null;
   }
 
+  // TODO: @david after snap we need to make sure to refactor here.
+  loadState(snapId: string) {
+    this.factory.getState(this.id, snapId);
+  }
+
   /**
    * checkout the component to a different version in its working tree.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  checkout(version: SemVer) {
-    // const version = this.tags.get(version);
-  }
+  checkout(version: SemVer) {}
 
   /**
    * examine difference between two components.
@@ -130,11 +150,6 @@ export default class Component {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   write(path: string, fs?: AnyFS) {}
 
-  fromString(str: string) {
-    const object = JSON.parse(str);
-    return new Component(object.name, null, object.state);
-  }
-
   /**
    *
    * Check if 2 components are equal
@@ -147,3 +162,5 @@ export default class Component {
     return component.id.toString() === this.id.toString();
   }
 }
+
+export default Component;

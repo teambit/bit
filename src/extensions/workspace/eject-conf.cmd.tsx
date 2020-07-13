@@ -3,6 +3,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CommandOptions } from '../cli';
 import Workspace, { EjectConfOptions, EjectConfResult } from './workspace';
+import { ComponentID } from '../component';
 
 type EjectConfArgs = [string];
 // From the cli we might get those as string in case we run it like --propagate true (return string) as opposed to only --propagate
@@ -52,7 +53,10 @@ export default class EjectConfCmd implements Command {
     if (ejectOptions.override === 'true') {
       ejectOptions.override = true;
     }
-    const results = await this.workspace.ejectConfig(componentId, ejectOptions as EjectConfOptions);
+
+    const id = ComponentID.fromString(componentId);
+
+    const results = await this.workspace.ejectConfig(id, ejectOptions as EjectConfOptions);
     return results;
   }
 }

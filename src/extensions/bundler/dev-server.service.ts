@@ -1,4 +1,4 @@
-import { AddressInfo } from 'net';
+// import { AddressInfo } from 'net';
 import { join } from 'path';
 import { EnvService, ExecutionContext } from '../environments';
 import { DevServer } from './dev-server';
@@ -7,13 +7,19 @@ import { ComponentServer } from './component-server';
 import { BindError } from './exceptions';
 import { BrowserRuntimeSlot } from './bundler.extension';
 import { DevServerContext } from './dev-server-context';
+import { Workspace } from '../workspace';
 
 export class DevServerService implements EnvService {
   constructor(
     /**
      * browser runtime slot
      */
-    private runtimeSlot: BrowserRuntimeSlot
+    private runtimeSlot: BrowserRuntimeSlot,
+
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace
   ) {}
 
   async run(context: ExecutionContext) {
@@ -44,7 +50,8 @@ export class DevServerService implements EnvService {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
         // @ts-ignore
-        component.state._consumer.componentMap?.getComponentDir(),
+        // component.state._consumer.componentMap?.getComponentDir()
+        this.workspace.componentDir(component.id, {}, { relative: true }),
         // @ts-ignore
         component.config.main
       );

@@ -1,7 +1,7 @@
 import { Harmony } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
-import { ComponentFactory } from '../component';
+import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
 import { Logger } from '../logger';
@@ -18,7 +18,7 @@ import EjectConfCmd from './eject-conf.cmd';
 export type WorkspaceDeps = [
   CLIExtension,
   ScopeExtension,
-  ComponentFactory,
+  ComponentExtension,
   IsolatorExtension,
   DependencyResolverExtension,
   Variants,
