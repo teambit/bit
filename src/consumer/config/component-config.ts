@@ -21,28 +21,39 @@ type ConfigProps = {
   tester?: string | Testers;
   bindingPrefix: string;
   extensions?: ExtensionDataList;
+  defaultScope?: string;
   overrides?: ComponentOverridesData;
 };
 
 type ConfigLoadRegistry = { [extId: string]: Function };
+type ConfigLegacyLoadRegistry = { [extId: string]: Function };
 type AddConfigRegistry = { [extId: string]: Function };
+
+// TODO: take for some other place like config
+// TODO: unify this and the same in src/extensions/utils/load-extensions/load-resolved-extensions.ts
+const ignoreLoadingExtensionsErrors = false;
 
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
+  defaultScope: string | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
   static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
-  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
+  }
+  static componentConfigLegacyLoadingRegistry: ConfigLegacyLoadRegistry = {};
+  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
+    this.componentConfigLegacyLoadingRegistry[extId] = func;
   }
   static addConfigRegistry: AddConfigRegistry = {};
   static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     this.addConfigRegistry[extId] = func;
   }
 
-  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
     super({
       compiler,
       tester,
@@ -50,6 +61,7 @@ export default class ComponentConfig extends AbstractConfig {
       bindingPrefix,
       extensions
     });
+    this.defaultScope = defaultScope;
     this.overrides = overrides;
     this.writeToBitJson = true; // will be changed later to work similar to workspace-config
   }
@@ -92,11 +104,19 @@ export default class ComponentConfig extends AbstractConfig {
 
   static fromPlainObject(object: Record<string, any>): ComponentConfig {
     const { env, lang, bindingPrefix, extensions, overrides } = object;
-
+    let parsedExtensions = new ExtensionDataList();
+    if (!(extensions instanceof ExtensionDataList)) {
+      if (Array.isArray(extensions)) {
+        parsedExtensions = ExtensionDataList.fromArray(extensions);
+      } else {
+        parsedExtensions = ExtensionDataList.fromConfigObject(extensions);
+      }
+    }
     return new ComponentConfig({
       compiler: env ? R.prop('compiler', env) : undefined,
       tester: env ? R.prop('tester', env) : undefined,
-      extensions,
+      extensions: parsedExtensions,
+      defaultScope: object.defaultScope,
       lang,
       bindingPrefix,
       overrides
@@ -162,6 +182,7 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceConfig: ILegacyWorkspaceConfig | undefined
   ): ComponentConfig {
     const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
+
     let legacyWorkspaceConfigToMerge = {};
     if (plainWorkspaceConfig) {
       legacyWorkspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
@@ -179,9 +200,10 @@ export default class ComponentConfig extends AbstractConfig {
       componentConfigFromWorkspaceToMerge,
       componentConfig
     ]);
-    mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
+    mergedObject.extensions = ExtensionDataList.fromConfigObject(mergedObject.extensions);
     // Do not try to load extension for itself (usually happen when using '*' pattern)
     mergedObject.extensions = mergedObject.extensions.remove(componentId);
+    mergedObject.defaultScope = componentConfigFromWorkspaceToMerge?.defaultScope || workspaceConfig?.defaultScope;
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 
@@ -280,46 +302,69 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceDir: PathOsBasedRelative;
     workspaceConfig: ILegacyWorkspaceConfig;
   }): Promise<ComponentConfig> {
-    const { config, bitJsonPath, packageJsonFile, componentHasWrittenConfig } = await this.loadConfigFromFolder({
-      componentDir,
-      workspaceDir
-    });
-    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(
-      consumer,
-      componentId,
-      config,
-      workspaceConfig
-    );
+    let componentConfig;
+    // Harmony project
+    // TODO: consider loading legacy components in vendor folder as legacy instead of as harmony components
+    if (!workspaceConfig.isLegacy) {
+      const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
+      const wsComponentConfig = onLoadResults[0];
+      const defaultScope = wsComponentConfig.componentWorkspaceMetaData.defaultScope;
+      const defaultOwner = wsComponentConfig.componentWorkspaceMetaData.defaultOwner;
+      let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
+      if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
+        bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
+      }
+      componentConfig = new ComponentConfig({
+        extensions: wsComponentConfig.componentExtensions,
+        defaultScope,
+        bindingPrefix
+      });
+      // Legacy project
+    } else {
+      const { config, bitJsonPath, packageJsonFile, componentHasWrittenConfig } = await this.loadConfigFromFolder({
+        componentDir,
+        workspaceDir
+      });
+      componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(consumer, componentId, config, workspaceConfig);
 
-    componentConfig.path = bitJsonPath;
+      componentConfig.path = bitJsonPath;
+      componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
+      componentConfig.packageJsonFile = packageJsonFile;
 
-    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
+      await this.runOnLegacyLoadEvent(this.componentConfigLegacyLoadingRegistry, componentId, componentConfig);
+    }
+
     const extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
 
     componentConfig.extensionsAddedConfig = extensionsAddedConfig;
 
-    componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
-    componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
 
   /**
-   * Run all subscribers to the component config load event
+   * Run all subscribers to the component config legacy load event
    *
    * @static
-   * @param {ConfigLoadRegistry} componentConfigLoadingRegistry
+   * @param {ConfigLegacyLoadRegistry} subscribers
    * @param {BitId} id
    * @param {*} config
    * @memberof ComponentConfig
    */
-  static async runOnLoadEvent(componentConfigLoadingRegistry: ConfigLoadRegistry, id: BitId, config: any) {
+  static async runOnLegacyLoadEvent(subscribers: ConfigLegacyLoadRegistry, id: BitId, config: any) {
+    logger.debugAndAddBreadCrumb(
+      'componentConfigLegacyLoad',
+      `running on legacy load even for component ${id.toString()}`
+    );
     try {
-      await pMapSeries(Object.keys(componentConfigLoadingRegistry), async (extId: string) => {
-        const func = componentConfigLoadingRegistry[extId];
+      await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+        const func = subscribers[extId];
         return func(id, config);
       });
     } catch (err) {
+      if (!ignoreLoadingExtensionsErrors) {
+        throw err;
+      }
       // TODO: improve texts
       logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
       // TODO: this show an ugly error, we should somehow show a proper errors
@@ -327,6 +372,36 @@ export default class ComponentConfig extends AbstractConfig {
       logger.console('the error has been ignored', 'warn', 'yellow');
       logger.warn('extension on load event throw an error', err);
     }
+  }
+
+  /**
+   * Run all subscribers to the component config load event
+   *
+   * @static
+   * @param {ConfigLoadRegistry} subscribers
+   * @param {BitId} id
+   * @memberof ComponentConfig
+   */
+  static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: BitId): Promise<any[]> {
+    logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);
+    try {
+      const res = await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+        const func = subscribers[extId];
+        return func(id);
+      });
+      return res;
+    } catch (err) {
+      if (!ignoreLoadingExtensionsErrors) {
+        throw err;
+      }
+      // TODO: improve texts
+      logger.console(`\nfailed loading an extension for component ${id.toString()}, error is:`, 'warn', 'yellow');
+      // TODO: this show an ugly error, we should somehow show a proper errors
+      logger.console(err, 'warn', 'yellow');
+      logger.console('the error has been ignored', 'warn', 'yellow');
+      logger.warn('extension on load event throw an error', err);
+    }
+    return [];
   }
 }
 

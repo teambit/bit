@@ -12,9 +12,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
-import { getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
-import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -50,7 +48,6 @@ import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
@@ -120,9 +117,14 @@ export default class Component {
   static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
     ComponentConfig.registerAddConfigAction(extId, func);
   }
-  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
+
+  static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
+    ComponentConfig.registerOnComponentConfigLegacyLoading(extId, func);
+  }
+
   static registerOnComponentOverridesLoading(extId, func: (id, config) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
@@ -358,32 +360,8 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(consumer: Consumer): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap);
-    if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
-    await ejectConfData.dataToPersist.persistAllToFS();
-    return ejectConfData;
-  }
-
-  async getConfigToWrite(consumer: Consumer, bitMap: BitMap): Promise<EjectConfData> {
-    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
-    const componentMap = this.componentMap;
-    if (!componentMap) {
-      throw new GeneralError('could not find component in the .bitmap file');
-    }
-
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      const isCompilerDetached = await this.getDetachedCompiler(consumer);
-      const isTesterDetached = await this.getDetachedTester(consumer);
-      if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
-    }
-
-    const res = await getEjectConfDataToPersist(this, consumer);
-    return res;
-  }
-
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<EjectConfResult> {
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<any> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -1131,6 +1109,10 @@ export default class Component {
       workspaceDir: consumerPath
     };
 
+    // TODO: change this once we want to support change export by changing the default scope
+    // TODO: when we do this, we need to think how we distinct if this is the purpose of the user, or he just didn't changed it
+    const bindingPrefix = componentFromModel?.bindingPrefix || componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const overrides = await ComponentOverrides.loadFromConsumer(
       id,
@@ -1186,7 +1168,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
-    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
+    const defaultScope = componentConfig.defaultScope || null;
     const getSchema = () => {
       if (componentFromModel) return componentFromModel.schema;
       return consumer.isLegacy ? undefined : CURRENT_SCHEMA;
@@ -1197,7 +1179,7 @@ export default class Component {
       scope: id.scope,
       version: id.version,
       lang: componentConfig.lang,
-      bindingPrefix: componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

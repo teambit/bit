@@ -4,6 +4,7 @@ import logger from '../../../logger/logger';
 import BitId from '../../../bit-id/bit-id';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import Isolator, { IsolateOptions } from '../../../environment/isolator';
+import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 
 export interface WorkspaceIsolateOptions extends IsolateOptions {
   useCapsule: boolean;
@@ -29,6 +30,9 @@ export default (async function isolate(
   // If a scope path was not provided we will get the consumer's scope
   const consumer = await loadConsumer();
   scope = consumer.scope;
+  if (opts.writeConfig && consumer.config.isLegacy) {
+    throw new FlagHarmonyOnly('--conf');
+  }
   const bitId = consumer.getParsedId(componentId);
   return isolateComponent(scope, bitId, opts);
 });

@@ -40,7 +40,7 @@ export default class State {
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
     return new State(
-      new Config(consumerComponent.mainFile, consumerComponent.extensions),
+      new Config(consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       Store.fromArray([]),
       consumerComponent.dependencies,

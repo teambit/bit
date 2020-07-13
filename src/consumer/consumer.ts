@@ -838,11 +838,6 @@ export default class Consumer {
     return Promise.all(dependentComponentsP);
   }
 
-  async ejectConf(componentId: BitId) {
-    const component = await this.loadComponent(componentId);
-    return component.writeConfig(this);
-  }
-
   async injectConf(componentId: BitId, force: boolean) {
     const component = await this.loadComponent(componentId);
     return component.injectConfig(this.getPath(), this.bitMap, force);

@@ -24,7 +24,6 @@ import link from './lib/link';
 import checkout from './lib/checkout';
 import merge from './lib/merge';
 import diff from './lib//diff';
-import ejectConf from './lib/eject-conf';
 import injectConf from './lib/inject-conf';
 import migrate from './lib/migrate';
 import ejectAction from './lib/eject';
@@ -66,7 +65,6 @@ export {
   checkout,
   merge,
   diff,
-  ejectConf,
   injectConf,
   migrate,
   ejectAction,

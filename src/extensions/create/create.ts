@@ -102,8 +102,8 @@ export class Registry {
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
     // TODO: is this really needed? maybe it's just a template name and not must be a real extension id / manifest?
     // TODO: why we need to fetch it from harmony at all?
-    const extensionConfig = this.harmony.config.get(manifest.name);
-    if (!extensionConfig) throw new Error(manifest.name);
+    // const extensionConfig = this.harmony.config.get(manifest.name);
+    // if (!extensionConfig) throw new Error(manifest.name);
     if (!this.templates[manifest.name]) this.templates[manifest.name] = {};
     this.templates[manifest.name] = templateFunc;
     return this;

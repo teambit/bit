@@ -2,7 +2,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
 import { BitIds as ComponentsIds, BitId } from '../../bit-id';
-import { Component, ComponentID } from '../component';
+import { Component, ComponentID, ComponentFactoryExt, ComponentFactory } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
@@ -13,12 +13,15 @@ export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension {
   static id = '@teambit/scope';
+  static dependencies = [ComponentFactoryExt];
 
   constructor(
     /**
      * legacy scope
      */
     readonly legacyScope: LegacyScope,
+
+    readonly componentFactory: ComponentFactory,
 
     /**
      * slot registry for subscribing to build
@@ -67,23 +70,48 @@ export class ScopeExtension {
    * get a component from scope
    * @param id component ID
    */
-  async get(id: string | ComponentID): Promise<Component | undefined> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
-    return undefined;
+  async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
+    const componentId = getBitId(id);
+    // TODO: local scope should support getting a scope name
+    componentId.changeScope(undefined);
+    if (!componentId) return undefined;
+    const legacyComponent = await this.legacyScope.getConsumerComponent(componentId);
+    const component = this.componentFactory.fromLegacyComponent(legacyComponent);
+    return component;
   }
+
+  async getIfExist(id: string | BitId | ComponentID): Promise<Component | undefined> {
+    const componentId = getBitId(id);
+    // TODO: local scope should support getting a scope name
+    componentId.changeScope(undefined);
+    if (!componentId) return undefined;
+    const legacyComponent = await this.legacyScope.getConsumerComponentIfExist(componentId);
+    if (!legacyComponent) return undefined;
+    const component = this.componentFactory.fromLegacyComponent(legacyComponent);
+    return component;
+  }
+
+  getConsumerComponentIfExist;
 
   /**
    * declare the slots of scope extension.
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static async provider(deps, config, [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]) {
+  static async provider([componentFactory], config, [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]) {
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;
     }
 
-    return new ScopeExtension(legacyScope, tagSlot, postExportSlot);
+    return new ScopeExtension(legacyScope, componentFactory, tagSlot, postExportSlot);
   }
+}
+
+// TODO: handle this properly when we decide about using bitId vs componentId
+// if it's still needed we should move it other place, it will be used by many places
+function getBitId(id): BitId {
+  if (id instanceof ComponentID) return id._legacy;
+  if (typeof id === 'string') return BitId.parse(id, true);
+  return id;
 }

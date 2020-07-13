@@ -1,17 +1,25 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { generateRandomStr } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
+const defaultOwner = 'ci';
+
 describe('publish functionality', function() {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
-    helper = new Helper();
+    const helperOptions: HelperOptions = {
+      scopesOptions: {
+        remoteScopeWithDot: true,
+        remoteScopePrefix: defaultOwner
+      }
+    };
+    helper = new Helper(helperOptions);
     helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
@@ -19,14 +27,14 @@ describe('publish functionality', function() {
   });
   describe('workspace with TS components', () => {
     let appOutput: string;
-    let owner: string;
     let scopeBeforeTag: string;
+    let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      owner = '@ci';
       helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.addDefaultOwner(owner);
-      appOutput = helper.fixtures.populateComponentsTS(3, owner);
+      const remoteScopeParts = helper.scopes.remote.split('.');
+      scopeWithoutOwner = remoteScopeParts[1];
+      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       const environments = {
         env: '@teambit/react',
         config: {}
@@ -58,7 +66,7 @@ describe('publish functionality', function() {
       });
       it('should allow when --dry-run is specified', () => {
         const output = helper.command.publish('comp1', '--dry-run');
-        expect(output).to.have.string(`+ @ci/${helper.scopes.remote}.comp1@0.0.1`);
+        expect(output).to.have.string(`+ @${defaultOwner}/${scopeWithoutOwner}.comp1@0.0.1`);
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {
@@ -77,10 +85,10 @@ describe('publish functionality', function() {
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScope();
           helper.npm.initNpm();
-          helper.npm.installNpmPackage(`${owner}/${helper.scopes.remote}.comp1`, '0.0.1');
+          helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
             'app.js',
-            `const comp1 = require('${owner}/${helper.scopes.remote}.comp1').default;\nconsole.log(comp1())`
+            `const comp1 = require('@${defaultOwner}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
           );
           const output = helper.command.runCmd('node app.js');
           expect(output.trim()).to.be.equal(appOutput.trim());
@@ -98,10 +106,10 @@ describe('publish functionality', function() {
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScope();
           helper.npm.initNpm();
-          helper.npm.installNpmPackage(`${owner}/${helper.scopes.remote}.comp1`, '2.0.0');
+          helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '2.0.0');
           helper.fs.outputFile(
             'app.js',
-            `const comp1 = require('${owner}/${helper.scopes.remote}.comp1').default;\nconsole.log(comp1())`
+            `const comp1 = require('@${defaultOwner}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
           );
           const output = helper.command.runCmd('node app.js');
           expect(output.trim()).to.be.equal(appOutput.trim());
