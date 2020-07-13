@@ -1066,6 +1066,7 @@ workflows:
                 - prod
     jobs:
       - checkout_code
+      - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
