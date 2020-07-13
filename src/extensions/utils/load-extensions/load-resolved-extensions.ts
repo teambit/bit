@@ -19,7 +19,7 @@ export async function loadResolvedExtensions(
     const compId = resolvedExtension.component.id.toString();
     try {
       const manifest = resolvedExtension.require();
-      manifest.name = compId;
+      manifest.id = compId;
       return manifest;
     } catch (e) {
       const warning = UNABLE_TO_LOAD_EXTENSION(compId);
