@@ -4,17 +4,14 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
-import { Section } from '@bit/bit.test-scope.ui.section';
-import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { ComponentModel } from '../../component/ui';
-import { Playground } from './playground';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
 import { ThemeContext } from './theme-context';
 import { ComponentOverview } from './component-overview';
+import { ExamplesOverview } from './examples-overview';
 import styles from './base.module.scss';
 import spacing from './docs-spacer.module.scss';
-import { ExamplesOverview } from './examples-overview';
 
 export type DocsSectionProps = {
   docs: any;
@@ -91,6 +88,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
         <CompositionsSummary compositions={overviewCompositions} />
 
         <ExamplesOverview examples={examples} />
+
         <Properties properties={docsModel.properties} />
       </div>
     </ThemeContext>
