@@ -6,6 +6,7 @@ import { generateRandomStr } from '../utils';
 
 export type ScopesOptions = {
   remoteScopeWithDot?: boolean;
+  remoteScopePrefix?: string;
 };
 export default class ScopesData {
   e2eDir: string;
@@ -26,7 +27,7 @@ export default class ScopesData {
   constructor(scopesOptions?: ScopesOptions) {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
-    this.setRemoteScope(scopesOptions?.remoteScopeWithDot);
+    this.setRemoteScope(scopesOptions?.remoteScopeWithDot, scopesOptions?.remoteScopePrefix);
     this.setEnvScope();
     this.globalRemote = 'global-remote';
     this.globalRemotePath = path.join(this.e2eDir, this.globalRemote);
@@ -36,9 +37,9 @@ export default class ScopesData {
     this.localPath = path.join(this.e2eDir, this.local);
     fs.ensureDirSync(this.localPath);
   }
-  setRemoteScope(remoteScopeWithDot = false) {
+  setRemoteScope(remoteScopeWithDot = false, prefix = generateRandomStr()) {
     if (remoteScopeWithDot) {
-      this.remote = `${generateRandomStr()}.${generateRandomStr()}-remote`;
+      this.remote = `${prefix}.${generateRandomStr()}-remote`;
     } else {
       this.remote = `${generateRandomStr()}-remote`;
     }
