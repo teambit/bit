@@ -1,10 +1,10 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { ApolloError } from 'apollo-client';
 import { useQuery, QueryHookOptions } from '@apollo/react-hooks';
 import { OperationVariables, QueryResult } from '@apollo/react-common';
 import { DocumentNode } from 'graphql';
 import { useLoader } from '../global-loader';
-import { NotificationContext } from '../../../notifications/ui';
+import { NotificationContext } from '../../../notifications/ui/notification-context';
 
 // @TODO derive props from useQuery
 // (couldn't figure out how to use Parameters<typeof useQuery<..>>)
@@ -14,13 +14,13 @@ export function useDataQuery<TData = any, TVariables = OperationVariables>(
   options?: QueryHookOptions<TData, TVariables>
 ): QueryResult<TData, TVariables> {
   const res = useQuery(query, options);
-  const notificationApi = useContext(NotificationContext);
+  const notifications = useContext(NotificationContext);
 
   const { loading, error } = res;
   useLoader(loading);
 
   if (error) {
-    notificationApi.error(apolloErrorToString(error));
+    notifications.error(apolloErrorToString(error));
   }
 
   return res;
