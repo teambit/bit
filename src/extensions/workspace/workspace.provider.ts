@@ -77,7 +77,8 @@ export default async function provideWorkspace(
       //   }
       // );
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
-        const wsComponentConfig = await workspace.workspaceComponentConfig(id);
+        const componentId = await workspace.resolveComponentId(id);
+        const wsComponentConfig = await workspace.workspaceComponentConfig(componentId);
         await workspace.loadExtensions(wsComponentConfig.componentExtensions);
         return wsComponentConfig;
       });
