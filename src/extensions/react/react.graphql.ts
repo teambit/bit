@@ -30,7 +30,8 @@ export function reactSchema(react: ReactExtension) {
     resolvers: {
       Workspace: {
         getDocs: async (ws: Workspace, { id }: { id: string }) => {
-          const component = await ws.get(id);
+          const componentId = ws.resolveComponentId(id);
+          const component = await ws.get(componentId);
           const empty = {
             abstract: '',
             filePath: '',

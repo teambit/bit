@@ -1,5 +1,6 @@
 // import { AddressInfo } from 'net';
 import { join } from 'path';
+import { AddressInfo } from 'net';
 import { EnvService, ExecutionContext } from '../environments';
 import { DevServer } from './dev-server';
 import { selectPort } from './select-port';

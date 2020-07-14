@@ -4,7 +4,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 
 export function componentSchema() {
   return {
-    typeDefs: gql`
+    typeDefs: `
       type ComponentID {
         name: String
         version: String

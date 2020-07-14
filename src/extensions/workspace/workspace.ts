@@ -194,8 +194,8 @@ export default class Workspace implements ComponentFactory {
   }
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
-    const componentId = getBitId(id, this.consumer);
-    const component = await this.scope.getIfExist(componentId);
+    const componentId = this.resolveComponentId(id);
+    const component = await this.scope.get(componentId);
     const extensions = component?.config.extensions ?? new ExtensionDataList();
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     if (!componentDir) {

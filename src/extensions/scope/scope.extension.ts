@@ -18,6 +18,7 @@ import { Version, ModelComponent } from '../../scope/models';
 import Config from '../component/config';
 import { TagMap } from '../component/tag-map';
 import { Ref } from '../../scope/objects';
+import { ExtensionDataList } from '../../consumer/config';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -83,24 +84,14 @@ export class ScopeExtension implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  /**
-   * get a component from scope
-   * @param id component ID
-   */
-  async getX(id: string | BitId | ComponentID): Promise<Component | undefined> {
-    const componentId = getBitId(id);
-    // TODO: local scope should support getting a scope name
-    componentId.changeScope(undefined);
-    if (!componentId) return undefined;
-    const legacyComponent = await this.legacyScope.getConsumerComponent(componentId);
-    const component = this.componentExtension.fromLegacyComponent(legacyComponent);
-    return component;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
+    // TODO: implement
   }
-
-  loadExtensions() {}
 
   async get(id: ComponentID): Promise<Component | undefined> {
     const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
     const latest = modelComponent.latest();
@@ -159,19 +150,6 @@ export class ScopeExtension implements ComponentFactory {
     );
   }
 
-  async getIfExist(id: string | BitId | ComponentID): Promise<Component | undefined> {
-    const componentId = getBitId(id);
-    // TODO: local scope should support getting a scope name
-    componentId.changeScope(undefined);
-    if (!componentId) return undefined;
-    const legacyComponent = await this.legacyScope.getConsumerComponentIfExist(componentId);
-    if (!legacyComponent) return undefined;
-    const component = this.componentExtension.fromLegacyComponent(legacyComponent);
-    return component;
-  }
-
-  getConsumerComponentIfExist;
-
   /**
    * declare the slots of scope extension.
    */
@@ -185,12 +163,4 @@ export class ScopeExtension implements ComponentFactory {
 
     return new ScopeExtension(legacyScope, componentFactory, tagSlot, postExportSlot);
   }
-}
-
-// TODO: handle this properly when we decide about using bitId vs componentId
-// if it's still needed we should move it other place, it will be used by many places
-function getBitId(id): BitId {
-  if (id instanceof ComponentID) return id._legacy;
-  if (typeof id === 'string') return BitId.parse(id, true);
-  return id;
 }
