@@ -193,6 +193,8 @@ jobs:
       -
         run: cd bit && ls -l node_modules/@bit
       -
+        run: cd bit && ls -l node_modules/@bit/bit.test-scope.theme.client-context
+      -
         persist_to_workspace:
           root: .
           paths:
@@ -540,11 +542,13 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
-      -
         run: cd bit && ls -l node_modules/@bit
+      -
+        run: cd bit && ls -l node_modules/@bit/bit.test-scope.theme.client-context
+      # -
+      #   run:
+      #     name: 'link components from react-new-proejct to bit'
+      #     command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'run TSC'
