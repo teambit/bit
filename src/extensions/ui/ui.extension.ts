@@ -56,7 +56,7 @@ export class UIExtension {
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
     await this.bundler.devServer(components);
-    //const devServers = await this.bundler.devServer(components);
+    // const devServers = await this.bundler.devServer(components);
     this.watcher.watchAll();
     return server;
   }

@@ -10,6 +10,8 @@ export class StencilDevServer implements DevServer {
     private workspace: Workspace
   ) {}
 
+  // TODO: remove this ts-ignore once implement server correctly
+  // @ts-ignore
   async listen(port: number) {
     const stencilCompiler = await createCompiler({
       devServer: {

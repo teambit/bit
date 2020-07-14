@@ -14,6 +14,7 @@ export function useDataQuery<TData = any, TVariables = OperationVariables>(
 
   const { loading, error } = res;
   useLoader(loading);
+  // eslint-disable-next-line no-console
   if (error) console.error(error); // WIP
 
   return res;
