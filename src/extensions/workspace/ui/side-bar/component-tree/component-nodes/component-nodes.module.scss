@@ -8,10 +8,10 @@
 
 .namespace {
 	position: relative;
-	height: 40px;
-	line-height: 40px;
+	height: 32px;
 	user-select: none;
 	font-weight: bold;
+	font-size: inherit;
 	
 	> .arrow {
 		position: absolute; //only used to not take space
@@ -30,6 +30,7 @@
 	max-height: 0;
 	overflow: hidden;
 	transition: max-height	400ms ease-in-out;
+	font-size: 14px;
 	&.open {
 		max-height: 100vh;
 	}

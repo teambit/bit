@@ -4,14 +4,14 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
+import { ClientContext as ThemeContext } from '@bit/bit.test-scope.theme.client-context';
 import { ComponentModel } from '../../component/ui';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
-import { ThemeContext } from './theme-context';
+// import { ThemeContext } from './theme-context';
 import { ComponentOverview } from './component-overview';
 import { ExamplesOverview } from './examples-overview';
 import styles from './base.module.scss';
-import spacing from './docs-spacer.module.scss';
 
 export type DocsSectionProps = {
   docs: any;
@@ -74,7 +74,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
   return (
     <ThemeContext>
-      <div className={classNames(styles.docsMainBlock, spacing.docsStyles)} {...rest}>
+      <div className={classNames(styles.docsMainBlock)} {...rest}>
         <ComponentOverview
           displayName={component.displayName}
           version={component.version}
