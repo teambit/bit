@@ -991,17 +991,17 @@ workflows:
       #   pack:
       #     requires:
       #       - build
-      -
-        e2e_test:
-          filters:
-            branches:
-              ignore:
-                - performance-tests
-                - bit-hub-tests
-          requires:
-            - set_ssh_key
-            - set_bitsrc_registry
-            - configure-bit
+      # -
+        # e2e_test:
+        #   filters:
+        #     branches:
+        #       ignore:
+        #         - performance-tests
+        #         - bit-hub-tests
+        #   requires:
+        #     - set_ssh_key
+        #     - set_bitsrc_registry
+        #     - configure-bit
             # - pack
       -
         performance_e2e_test:
