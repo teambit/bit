@@ -191,6 +191,8 @@ jobs:
           name: 'link components from react-new-proejct to bit'
           command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
+        run: cd bit && ls -l node_modules/@bit
+      -
         persist_to_workspace:
           root: .
           paths:
@@ -537,6 +539,12 @@ jobs:
       -
         attach_workspace:
           at: ./
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        run: cd bit && ls -l node_modules/@bit
       -
         run:
           name: 'run TSC'
