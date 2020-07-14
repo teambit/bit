@@ -1,5 +1,4 @@
 import React from 'react';
-import classNames from 'classnames';
 import { Section } from '@bit/bit.test-scope.ui.section';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { Playground } from '../playground';
