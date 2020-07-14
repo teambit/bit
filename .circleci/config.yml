@@ -75,6 +75,9 @@ jobs:
           name: 'checkout react new project'
           command: 'git clone https://github.com/teambit/react-new-project.git'
       -
+        restore_cache:
+          key: bitsrc-registry3
+      -
         run:
           name: 'install dependencies'
           command: 'cd react-new-project && npm i'
@@ -925,7 +928,10 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_bitsrc_registry
-      - setup_react_new_project
+      -
+        setup_react_new_project:
+          requires:
+            - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
