@@ -192,7 +192,7 @@ jobs:
           command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         persist_to_workspace:
-          root: /home/circleci
+          root: .
           paths:
             - react-new-project
             - bit/node_modules
