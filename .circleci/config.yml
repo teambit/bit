@@ -191,10 +191,6 @@ jobs:
           name: 'link components from react-new-proejct to bit'
           command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
-        run: cd bit && ls -l node_modules/@bit
-      -
-        run: cd bit && ls -l node_modules/@bit/bit.test-scope.theme.client-context
-      -
         persist_to_workspace:
           root: .
           paths:
@@ -541,10 +537,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      -
-        run: cd bit && ls -l node_modules/@bit
-      -
-        run: cd bit && ls -l node_modules/@bit/bit.test-scope.theme.client-context
       # -
       #   run:
       #     name: 'link components from react-new-proejct to bit'
@@ -991,17 +983,17 @@ workflows:
       #   pack:
       #     requires:
       #       - build
-      # -
-        # e2e_test:
-        #   filters:
-        #     branches:
-        #       ignore:
-        #         - performance-tests
-        #         - bit-hub-tests
-        #   requires:
-        #     - set_ssh_key
-        #     - set_bitsrc_registry
-        #     - configure-bit
+      -
+        e2e_test:
+          filters:
+            branches:
+              ignore:
+                - performance-tests
+                - bit-hub-tests
+          requires:
+            - set_ssh_key
+            - set_bitsrc_registry
+            - configure-bit
             # - pack
       -
         performance_e2e_test:
