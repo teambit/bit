@@ -67,6 +67,25 @@ jobs:
           root: /home/circleci
           paths:
             - bit
+  setup_react_new_project:
+    <<: *defaults
+    steps:
+      -
+        run:
+          name: 'checkout react new project'
+          command: 'git clone https://github.com/teambit/react-new-project.git'
+      -
+        restore_cache:
+          key: bitsrc-registry3
+      -
+        run:
+          name: 'install dependencies'
+          command: 'cd react-new-project && npm i'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - react-new-project
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -145,6 +164,38 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
+  link_react_new_project:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        restore_cache:
+          key: bit-global-config-v1
+      -
+        run:
+          name: 'bit link in react-new-project'
+          command: 'cd react-new-project && bit link'
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - react-new-project
+            - bit/node_modules
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -186,6 +237,44 @@ jobs:
           root: .
           paths:
             - bit/dist
+  configure-bit:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      -
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        run: 'bit config set hub_domain hub.bit.dev'
+        # uncomment to configure circle to run against stg environment
+        # -
+          # run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run: 'cat ~/Library/Caches/Bit/config/config.json'
+      -
+        save_cache:
+          key: bit-global-config-v1
+          paths:
+            - ~/Library/Caches/Bit/config/config.json
   pack:
     <<: *defaults
     steps:
@@ -448,6 +537,10 @@ jobs:
       -
         attach_workspace:
           at: ./
+      # -
+      #   run:
+      #     name: 'link components from react-new-proejct to bit'
+      #     command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'run TSC'
@@ -496,15 +589,14 @@ jobs:
       #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
+          key: bit-global-config-v1
+      -
+        restore_cache:
           key: bitsrc-ssh-key3
       -
         restore_cache:
           key: bitsrc-registry3
           # key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -522,29 +614,6 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        # do not change this one, it's important to use the production for getting components bit use for running
-        # if you want the tests to work with stage, you should change the hub domain few lines below
-        run: 'bit config set hub_domain hub.bit.dev'
-      # -
-      #   run:
-      #     name: 'bit import'
-      #     command: 'cd bit && bit import'
-      # -
-      #   run:
-      #     name: 'npm install'
-      #     command: 'cd bit && bit install'
-      -
-        # uncomment to configure circle to run against stg environment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run:
           name: 'Run e2e tests'
@@ -645,10 +714,6 @@ jobs:
         restore_cache:
           key: bitsrc-registry3
           # key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -871,6 +936,10 @@ workflows:
       - set_ssh_key
       - set_bitsrc_registry
       -
+        setup_react_new_project:
+          requires:
+            - set_bitsrc_registry
+      -
         install_npm_deps:
           requires:
             - checkout_code
@@ -880,21 +949,30 @@ workflows:
           requires:
             - install_npm_deps
       -
+        configure-bit:
+          requires:
+            - build
+      -
+        link_react_new_project:
+          requires:
+            - configure-bit
+            - setup_react_new_project
+      -
         unit_test:
           requires:
             - build
       -
         lint:
           requires:
-            - install_npm_deps
+            - link_react_new_project
       -
         check_types:
           requires:
-            - install_npm_deps
+            - link_react_new_project
       -
         generate_types:
           requires:
-            - build
+            - link_react_new_project
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -915,7 +993,7 @@ workflows:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
-            - build
+            - configure-bit
             # - pack
       -
         performance_e2e_test:
