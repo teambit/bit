@@ -150,8 +150,6 @@ jobs:
       #     name: 'install pkg to support local build'
       #     command: 'sudo npm install -g pkg@4.4.3'
       -
-        run: 'cd bit && pwd'
-      -
         run:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
@@ -191,7 +189,7 @@ jobs:
       -
         run:
           name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run: cd bit && ls -l node_modules/@bit
       -
