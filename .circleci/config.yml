@@ -228,7 +228,6 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-    parallelism: 25
     steps:
       -
         attach_workspace:
@@ -259,10 +258,10 @@ jobs:
         # -
           # run: 'bit config set hub_domain hub-stg.bit.dev'
       -
-        run: 'cat Library/Caches/Bit/config/config.json'
+        run: 'cat /home/circleci/Library/Caches/Bit/config/config.json'
       -
         persist_to_workspace:
-          root: .
+          root: /home/circleci
           paths:
             - Library/Caches/Bit/config/config.json
   pack:
