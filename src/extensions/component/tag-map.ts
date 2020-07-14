@@ -8,7 +8,7 @@ export class TagMap extends Map<SemVer, Tag> {
   // }
 
   byHash(hash: Hash) {
-    const tag = Array.from(this.values()).find(tag => tag.snap.hash === hash);
+    const tag = Array.from(this.values()).find(currTag => currTag.snap.hash === hash);
     return tag;
   }
 }

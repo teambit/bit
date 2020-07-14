@@ -1,5 +1,4 @@
 import Config from './config';
-import { Store } from './store';
 import ComponentFS from './component-fs';
 
 export class State {

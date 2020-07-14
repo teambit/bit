@@ -159,7 +159,7 @@ export default class Workspace implements ComponentFactory {
     return ret;
   }
 
-  /**\
+  /**
    * get a component from workspace
    * @param id component ID
    */

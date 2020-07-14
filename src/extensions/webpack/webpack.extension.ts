@@ -1,11 +1,9 @@
 import webpack from 'webpack';
-import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
 import merge from 'webpack-merge';
 import { DevServer, DevServerContext } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.config';
-import { Component } from '../component';
 
 export class WebpackExtension {
   constructor(

@@ -1,5 +1,3 @@
-// eslint-disable-next-line import/no-cycle
-import { Component } from '../component'; // todo: change to "import type" once babel supports it
 import { Author } from '../types';
 
 /**

@@ -1,4 +1,3 @@
-import gql from 'graphql-tag';
 import { Component } from './component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
