@@ -2,8 +2,11 @@ import { Component } from './component';
 import { ComponentID } from './id';
 import { State } from './state';
 import { ExtensionDataList } from '../../consumer/config';
+import { BitId } from '../../bit-id';
 
 export interface ComponentFactory {
+  resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
+
   /**
    * returns a component by ID.
    */

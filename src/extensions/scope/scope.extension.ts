@@ -111,6 +111,11 @@ export class ScopeExtension implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    const legacyId = await this.legacyScope.getParsedId(id.toString());
+    return ComponentID.fromLegacy(legacyId);
+  }
+
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
 

@@ -141,7 +141,9 @@ export default class Workspace implements ComponentFactory {
    * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const components = await this.getMany(ids.map(id => this.resolveComponentId(id)));
+    const componentIdsP = ids.map(this.resolveComponentId);
+    const componentIds = await Promise.all(componentIdsP);
+    const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
       this.consumer,
@@ -194,7 +196,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
-    const componentId = this.resolveComponentId(id);
+    const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
     const extensions = component?.config.extensions ?? new ExtensionDataList();
     const componentDir = this.componentDir(id, { ignoreVersion: true });
@@ -465,7 +467,7 @@ export default class Workspace implements ComponentFactory {
     return this.defaultDirectory;
   }
 
-  resolveComponentId(id: string | ComponentID | BitId): ComponentID {
+  async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     // TODO: @gilad make sure to check and remove default scope.
     const legacyId = this.consumer.getParsedId(id.toString());
     return ComponentID.fromLegacy(legacyId);
