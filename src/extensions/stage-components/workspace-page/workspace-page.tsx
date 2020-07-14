@@ -23,6 +23,8 @@ export type WorkSpacePageProps = {} & HTMLAttributes<HTMLDivElement>;
  * A full, responsive page, detailing Bit's offering for support.
  * @name WorkSpacePage
  */
+// TODO: remove this once use props
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function WorkSpacePage(props: WorkSpacePageProps) {
   return (
     <div>

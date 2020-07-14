@@ -14,7 +14,7 @@ export class StencilDevServer implements DevServer {
     const stencilCompiler = await createCompiler({
       devServer: {
         reloadStrategy: 'pageReload',
-        port: 4444,
+        port: port || 4444,
         basePath: this.workspace.path
       },
       outputTargets: [

@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import styles from './compositions-panel.module.scss';
+import styles from './compositions-panel-node.module.scss';
 
 export type CompositionsPanelNodeProps = {
   name: string;

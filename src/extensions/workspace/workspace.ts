@@ -4,7 +4,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { ScopeExtension } from '../scope';
-import { Component, ComponentFactory, ComponentID, ComponentConfig } from '../component';
+import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
 import { IsolatorExtension } from '../isolator';

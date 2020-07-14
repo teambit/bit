@@ -1,14 +1,11 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
-import { NavLink } from 'react-router-dom';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { TreeNodeProps, TreeLayer } from '../recursive-tree';
 import { indentStyle, indentClass } from '../indent';
 import { getName } from '../utils/get-name';
 import { clickable } from '../../../../../../to-eject/css-components/clickable';
 import styles from './component-nodes.module.scss';
-import { ComponentTreeContext } from '../component-tree-context';
-import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
 
 export function ScopeView({ node, depth }: TreeNodeProps) {
   return (
