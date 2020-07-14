@@ -166,6 +166,9 @@ jobs:
             - bit/releases
   link_react_new_project:
     <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       -
         attach_workspace:
