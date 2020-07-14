@@ -180,6 +180,9 @@ jobs:
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
+        restore_cache:
+          key: bit-global-config-v1
+      -
         run:
           name: 'bit link in react-new-project'
           command: 'cd react-new-project && bit link'
