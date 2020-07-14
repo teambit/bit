@@ -83,7 +83,7 @@ jobs:
           command: 'cd react-new-project && npm i'
       -
         persist_to_workspace:
-          root: /home/circleci
+          root: .
           paths:
             - react-new-project
   set_ssh_key:
