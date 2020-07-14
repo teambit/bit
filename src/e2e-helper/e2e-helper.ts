@@ -20,6 +20,7 @@ import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import GitHelper from './e2e-git-helper';
 import BitJsoncHelper from './e2e-bit-jsonc-helper';
+import ComponentJsonHelper from './e2e-component-json-helper';
 
 export type HelperOptions = {
   scopesOptions?: ScopesOptions;
@@ -30,6 +31,7 @@ export default class Helper {
   bitJson: BitJsonHelper;
   scopeJson: ScopeJsonHelper;
   bitJsonc: BitJsoncHelper;
+  componentJson: ComponentJsonHelper;
   fs: FsHelper;
   command: CommandHelper;
   config: ConfigHelper;
@@ -48,6 +50,7 @@ export default class Helper {
     this.bitJson = new BitJsonHelper(this.scopes);
     this.scopeJson = new ScopeJsonHelper(this.scopes);
     this.bitJsonc = new BitJsoncHelper(this.scopes);
+    this.componentJson = new ComponentJsonHelper(this.scopes);
     this.packageJson = new PackageJsonHelper(this.scopes);
     this.fs = new FsHelper(this.scopes);
     this.command = new CommandHelper(this.scopes, this.debugMode);

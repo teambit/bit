@@ -94,16 +94,22 @@ function serializeErrAndExit(err, commandName: string) {
 }
 
 export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
-  logger.error(
-    `got an error from command ${commandName}: ${err}. Error serialized: ${JSON.stringify(
-      err,
-      Object.getOwnPropertyNames(err)
-    )}`
-  );
   loader.off();
+  logger.error(`got an error from command ${commandName}: ${err}`);
+  logger.error(err.stack || '<no error stack was found>');
   const { message, error } = defaultHandleError(err);
   if (shouldSerialize) return serializeErrAndExit(error, commandName);
   return logErrAndExit(message, commandName);
+}
+
+export function handleUnhandledRejection(err: Error | null | undefined | {}) {
+  // eslint-disable-next-line no-console
+  console.error('** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **');
+  if (err instanceof Error) {
+    return handleErrorAndExit(err, process.argv[2]);
+  }
+  console.error(err); // eslint-disable-line
+  return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
 export function logErrAndExit(err: Error | string, commandName: string) {

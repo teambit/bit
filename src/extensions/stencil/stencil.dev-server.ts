@@ -10,11 +10,13 @@ export class StencilDevServer implements DevServer {
     private workspace: Workspace
   ) {}
 
+  // TODO: remove this ts-ignore once implement server correctly
+  // @ts-ignore
   async listen(port: number) {
     const stencilCompiler = await createCompiler({
       devServer: {
         reloadStrategy: 'pageReload',
-        port: 4444,
+        port: port || 4444,
         basePath: this.workspace.path
       },
       outputTargets: [
@@ -29,11 +31,12 @@ export class StencilDevServer implements DevServer {
       tsconfig: require.resolve('./typescript/tsconfig'),
       taskQueue: 'async',
       // cwd: this.workspace.path,
-      srcDir: this.workspace.path + '/web-components'
+      srcDir: `${this.workspace.path}/web-components`
       // includeSrc: [this.workspace.path + '']
     });
     const watcher = await stencilCompiler.createWatcher();
-    const watcherClose = await watcher.start();
+    // const watcherClose = await watcher.start();
+    await watcher.start();
 
     return {
       listen: () => {}

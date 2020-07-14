@@ -9,7 +9,6 @@ import { InvalidComponent } from '../component/consumer-component';
 import { BitId, BitIds } from '../../bit-id';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
-import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
@@ -88,8 +87,11 @@ export default class ComponentsList {
   async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
-      this._modifiedComponents = await filterAsync(fileSystemComponents, component => {
-        return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
+      const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map(f => f.id));
+      this._modifiedComponents = fileSystemComponents.filter(component => {
+        const status = componentStatuses.find(s => s.id.isEqual(component.id));
+        if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
+        return status.status.modified;
       });
     }
     if (load) return this._modifiedComponents;
@@ -211,7 +213,7 @@ export default class ComponentsList {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
-    return BitIds.fromArray(nonNewComponents.map(c => c.id));
+    return BitIds.fromArray(nonNewComponents.map(c => c.id.changeVersion(undefined)));
   }
 
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
@@ -243,7 +245,7 @@ export default class ComponentsList {
     return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
 
-  idsFromBitMap(origin?: string): BitId[] {
+  idsFromBitMap(origin?: ComponentOrigin): BitId[] {
     const fromBitMap = this.getFromBitMap(origin);
     return fromBitMap;
   }
@@ -254,7 +256,7 @@ export default class ComponentsList {
    * of that directory. The bit.map is used to find them all
    * If they are on bit.map but not on the file-system, populate them to _invalidComponents property
    */
-  async getFromFileSystem(origin?: string): Promise<Component[]> {
+  async getFromFileSystem(origin?: ComponentOrigin): Promise<Component[]> {
     const cacheKeyName = origin || 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);

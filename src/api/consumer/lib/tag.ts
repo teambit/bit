@@ -172,5 +172,5 @@ function _validateVersion(version) {
     if (semver.prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
     return validVersion;
   }
-  return null;
+  return undefined;
 }

@@ -213,7 +213,11 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
   const getBitDependencies = (dependencies: BitIds) => {
     return dependencies.reduce((acc, depId: BitId) => {
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
-      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({
+        ...component,
+        id: depId,
+        isDependency: true
+      });
       acc[packageName] = packageDependency;
       return acc;
     }, {});

@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from '../ui/node_modules/react-dom';
+import ReactDOM from 'react-dom';
 
 // let docs = [];
 

@@ -22,7 +22,6 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
   if (!componentCapsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
   const allDeps = component.getAllDependenciesIds();
   const symlinks = allDeps.map((depId: BitId) => {
-    const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
     const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(depId));
     if (!devCapsule) {
       // happens when a dependency is not in the workspace. (it gets installed via the package manager)
@@ -31,6 +30,8 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
       );
       return null;
     }
+    // @ts-ignore fix once the capsule has the correct component. change to devCapsule.component.state._consumer
+    const packageName = componentIdToPackageName(devCapsule.component as ConsumerComponent);
     const devCapsulePath = devCapsule.wrkDir;
     // @todo: this is a hack, the capsule should be the one responsible to symlink, this works only for FS capsules.
     const dest = path.join(componentCapsule.wrkDir, 'node_modules', packageName);

@@ -4,12 +4,11 @@ import parents from 'parents';
 import path from 'path';
 import { PACKAGE_JSON } from '../../constants';
 import { BitId } from '../../bit-id';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import ConsumerComponent from '.';
 
 function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
-}
-function convertComponentsIdToValidPackageName(registryPrefix: string, id: string): string {
-  return `${registryPrefix}/${id.replace(/\//g, '.')}`;
 }
 
 export type PackageJsonProps = {
@@ -183,11 +182,11 @@ export default class PackageJson {
   /*
    * remove components from package.json dependencies
    */
-  static async removeComponentsFromDependencies(rootDir: string, registryPrefix, componentIds: string[]) {
+  static async removeComponentsFromDependencies(rootDir: string, components: ConsumerComponent[]) {
     const pkg = await PackageJson.getPackageJson(rootDir);
     if (pkg && pkg.dependencies) {
-      componentIds.forEach(id => {
-        delete pkg.dependencies[convertComponentsIdToValidPackageName(registryPrefix, id)];
+      components.forEach(c => {
+        delete pkg.dependencies[componentIdToPackageName(c)];
       });
       await PackageJson.saveRawObject(rootDir, pkg);
     }

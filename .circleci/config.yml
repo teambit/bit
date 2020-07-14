@@ -89,19 +89,19 @@ jobs:
     <<: *defaults
     steps:
       # prod registry
-      # -
-        # run: npm config set @bit:registry https://node.bit.dev
-      # -
-        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      -
+        run: npm config set @bit:registry https://node.bit.dev
+      -
+        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      -
-        run: 'npm config set @bit:registry https://node-stg.bit.dev'
-      -
-        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
+      # -
+        # run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      # -
+        # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
   install_npm_deps:
@@ -115,6 +115,9 @@ jobs:
       -
         attach_workspace:
           at: ./
+      -
+        restore_cache:
+          key: bitsrc-registry3
       -
         run:
           name: 'save SHA to a file'
@@ -496,8 +499,8 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         restore_cache:
           keys:
@@ -640,8 +643,8 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         restore_cache:
           keys:
@@ -720,18 +723,19 @@ jobs:
     <<: *windows_defaults
     steps:
       # prod registry
-      # -
-        # run: npm config set @bit:registry https://node.bit.dev
-      # -
-        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      -
+        run: npm config set @bit:registry https://node.bit.dev
+      -
+        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      -
-        run: 'npm config set @bit:registry https://node-stg.bit.dev'
-      -
-        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
+      # -
+      #   run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      # -
+      #   run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
       -
         save_cache:
-          key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
           paths:
             - .npmrc
   windows_install_npm_deps:
@@ -744,6 +748,10 @@ jobs:
       -
         attach_workspace:
           at: .
+      -
+        restore_cache:
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
       -
         run:
           name: 'Install npm dependencies'
@@ -800,7 +808,8 @@ jobs:
           key: windows_bitsrc-ssh-key-v1
       -
         restore_cache:
-          key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
       # -
       #   restore_cache:
       #     keys:
@@ -865,6 +874,7 @@ workflows:
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:
@@ -941,6 +951,7 @@ workflows:
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code
+            - windows_set_bitsrc_registry
       - windows_build:
           requires:
             - windows_install_npm_deps
@@ -1063,10 +1074,12 @@ workflows:
                 - prod
     jobs:
       - checkout_code
+      - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:
@@ -1091,6 +1104,7 @@ workflows:
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:

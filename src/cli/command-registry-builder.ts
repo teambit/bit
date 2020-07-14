@@ -27,7 +27,6 @@ import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
-import EjectConf from './commands/public-cmds/eject-conf-cmd';
 import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
 import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
@@ -101,8 +100,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Fetch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Build(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new EjectConf(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new InjectConf(),
       new DescribeScope(),

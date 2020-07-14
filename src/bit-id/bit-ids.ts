@@ -8,10 +8,6 @@ export default class BitIds extends Array<BitId> {
     return this.map(bitId => bitId.toString());
   }
 
-  toObject(): Record<string, any> {
-    return R.mergeAll(this.map(bitId => bitId.toObject()));
-  }
-
   /**
    * Resolve an id with latest to specific version
    * This used to get the real version from the flatten deps by the deps ids
@@ -149,6 +145,16 @@ export default class BitIds extends Array<BitId> {
   static uniqFromArray(bitIds: BitId[]): BitIds {
     const uniq = R.uniqBy(JSON.stringify, bitIds);
     return BitIds.fromArray(uniq);
+  }
+
+  throwForDuplicationIgnoreVersion() {
+    this.forEach(bitId => {
+      const found = this.filterWithoutVersion(bitId);
+      if (found.length > 1) {
+        throw new Error(`bitIds has "${bitId.toStringWithoutVersion()}" duplicated as following:
+${found.map(id => id.toString()).join('\n')}`);
+      }
+    });
   }
 
   clone(): BitIds {

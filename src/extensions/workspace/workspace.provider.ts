@@ -9,11 +9,11 @@ import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
-import ComponentConfig from '../../consumer/config';
 import { GraphQLExtension } from '../graphql';
 import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
+import EjectConfCmd from './eject-conf.cmd';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -70,12 +70,22 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id, componentConfig: ComponentConfig) => {
-        return workspace.loadExtensions(componentConfig.parseExtensions());
+      // ConsumerComponent.registerOnComponentConfigLegacyLoading(
+      //   'workspace',
+      //   async (id, componentConfig: ComponentConfig) => {
+      //     return workspace.loadExtensions(componentConfig.extensions);
+      //   }
+      // );
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
+        const wsComponentConfig = await workspace.workspaceComponentConfig(id);
+        await workspace.loadExtensions(wsComponentConfig.componentExtensions);
+        return wsComponentConfig;
       });
+
       const workspaceSchema = getWorkspaceSchema(workspace);
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
+      cli.register(new EjectConfCmd(workspace));
 
       return workspace;
     }

@@ -15,7 +15,7 @@ export type FoundPackages = {
   bits: ResolvedPackageData[];
 };
 
-export class GroupMissing {
+export class MissingHandler {
   constructor(
     private missing: Missing,
     private componentDir: string,
@@ -27,7 +27,7 @@ export class GroupMissing {
    * Run over each entry in the missing array and transform the missing from list of paths
    * to object with missing types
    */
-  doGroup(): { missingGroups: MissingGroupItem[]; foundPackages: FoundPackages } {
+  groupAndFindMissing(): { missingGroups: MissingGroupItem[]; foundPackages: FoundPackages } {
     const missingGroups: MissingGroupItem[] = this.groupMissingByType();
     missingGroups.forEach((group: MissingGroupItem) => {
       if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);

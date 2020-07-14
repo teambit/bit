@@ -13,7 +13,7 @@ import {
   ResolveModulesConfig
 } from './types/dependency-tree-type';
 import { PathOsBased } from '../../../../utils/path';
-import { MissingGroupItem, GroupMissing, FoundPackages } from './group-missing';
+import { MissingGroupItem, MissingHandler, FoundPackages } from './missing-handler';
 import { resolvePackageData, ResolvedPackageData } from '../../../../utils/packages';
 
 export type LinkFile = {
@@ -32,7 +32,7 @@ interface SimpleGroupedDependencies {
  * @param {any} dependencies list of dependencies paths to group
  * @returns {Function} function which group the dependencies
  */
-const byType = (list, bindingPrefix): SimpleGroupedDependencies => {
+const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
   const grouped = R.groupBy(item => {
     if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
       return 'bits';
@@ -55,10 +55,10 @@ interface GroupedDependenciesResolved {
  * {dependencyName: version} (like in package.json)
  *
  * @param {any} list of dependencies paths
- * @param {any} cwd root of working directory (used for node packages version calculation)
+ * @param {any} componentDir root of working directory (used for node packages version calculation)
  * @returns {Object} object with the dependencies groups
  */
-function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResolved {
+function groupDependencyList(list, componentDir: string, bindingPrefix: string): GroupedDependenciesResolved {
   const groups = byType(list, bindingPrefix);
   const resultGroups: GroupedDependenciesResolved = {
     bits: [],
@@ -70,19 +70,18 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
   if (groups.packages) {
     const packages = {};
     groups.packages.forEach(packagePath => {
-      const resolvedPackage = resolvePackageData(cwd, path.join(cwd, packagePath));
+      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
+        const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
+        if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
         if (resolvedPackage.componentId) {
           resultGroups.bits.push(resolvedPackage);
         } else {
-          const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
-          if (version) {
-            const packageWithVersion = {
-              [resolvedPackage.name]: version
-            };
-            Object.assign(packages, packageWithVersion);
-          }
+          const packageWithVersion = {
+            [resolvedPackage.name]: version
+          };
+          Object.assign(packages, packageWithVersion);
         }
       } else unidentifiedPackages.push(packagePath);
     });
@@ -90,7 +89,7 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
   }
   if (groups.bits) {
     groups.bits.forEach(packagePath => {
-      const resolvedPackage = resolvePackageData(cwd, path.join(cwd, packagePath));
+      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
         resultGroups.bits.push(resolvedPackage);
@@ -112,15 +111,13 @@ interface GroupedDependenciesTree {
  * Run over each entry in the tree and transform the dependencies from list of paths
  * to object with dependencies types
  *
- * @param {any} tree
- * @param {any} cwd the working directory path
  * @returns new tree with grouped dependencies
  */
-function groupDependencyTree(tree, cwd, bindingPrefix): GroupedDependenciesTree {
+function groupDependencyTree(tree: any, componentDir: string, bindingPrefix: string): GroupedDependenciesTree {
   const result = {};
   Object.keys(tree).forEach(key => {
     if (tree[key] && !R.isEmpty(tree[key])) {
-      result[key] = groupDependencyList(tree[key], cwd, bindingPrefix);
+      result[key] = groupDependencyList(tree[key], componentDir, bindingPrefix);
     } else {
       result[key] = {};
     }
@@ -296,12 +293,12 @@ export async function getDependencyTree({
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
   // @ts-ignore
   const tree: Tree = groupDependencyTree(madgeTree, componentDir, bindingPrefix);
-  const { missingGroups, foundPackages } = new GroupMissing(
+  const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
     workspacePath,
     bindingPrefix
-  ).doGroup();
+  ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
   if (errors) mergeErrorsToTree(componentDir, errors, tree);

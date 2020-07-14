@@ -244,7 +244,7 @@ async function getManipulateDirItemFromComponentVersion(
   const componentMap: ComponentMap | undefined = isDependency
     ? bitMap.getComponentIfExist(id)
     : bitMap.getComponentPreferNonNested(id);
-  const bitmapOrigin = componentMap ? componentMap.origin : null;
+  const bitmapOrigin = componentMap ? componentMap.origin : undefined;
   const origin = getComponentOrigin(bitmapOrigin, isDependency);
   const version: Version = await componentVersion.getVersion(repository);
   const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
