@@ -321,6 +321,7 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.27",
     "@types/open": "^6.2.1",
+    "@types/puppeteer": "^3.0.1",
     "@types/react-router-dom": "^5.1.5",
     "@types/react-tabs": "^2.3.2",
     "@types/socket.io-client": "^1.4.33",
