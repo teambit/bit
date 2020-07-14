@@ -3,7 +3,6 @@ import { resolve, join } from 'path';
 import { generateLink } from './generate-link';
 import { ComponentMap } from '../component/component-map';
 import { BundlerExtension } from '../bundler';
-import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class PreviewExtension {
   static dependencies = [BundlerExtension];

@@ -180,7 +180,6 @@ export default class BitId {
 
     if (!isValidIdChunk(name)) throw new InvalidName(name);
     if (scope && !isValidScopeName(scope)) {
-      console.log('scope', scope);
       throw new InvalidScopeName(scope);
     }
 

@@ -19,6 +19,8 @@ export class StencilCompiler implements Compiler {
     ];
   }
 
+  // TODO: remove this once use context
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   compileOnCapsules(context: BuildContext): Promise<BuildResults> {
     throw new Error('Method not implemented.');
   }

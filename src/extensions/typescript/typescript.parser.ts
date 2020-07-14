@@ -1,10 +1,4 @@
-import ts, {
-  SourceFile,
-  VariableDeclaration,
-  VariableStatement,
-  isVariableStatement,
-  isFunctionDeclaration
-} from 'typescript';
+import ts, { SourceFile, VariableStatement, isVariableStatement, isFunctionDeclaration } from 'typescript';
 import { readFileSync } from 'fs';
 import { Parser, Module, Export } from '../schema';
 
