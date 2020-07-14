@@ -59,6 +59,8 @@ jobs:
     steps:
       - checkout
       -
+        run: cd bit && pwd
+      -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
