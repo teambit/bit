@@ -238,10 +238,6 @@ jobs:
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
-      -
         run:
           name: 'npm link bit to global'
           command: cd bit && npm link
@@ -583,10 +579,6 @@ jobs:
           key: bitsrc-registry3
           # key: bitsrc-registry-stg-v2
       -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
-      -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       -
@@ -703,10 +695,6 @@ jobs:
         restore_cache:
           key: bitsrc-registry3
           # key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
