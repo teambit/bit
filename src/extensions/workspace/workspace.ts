@@ -181,7 +181,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   private newComponentFromState(state: State): Component {
-    return new Component(state._consumer.id, null, state, new TagMap(), this);
+    return new Component(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -223,9 +223,10 @@ export default class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const components = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       return this.get(id);
     });
+    const components = await componentsP;
 
     return components;
   }
