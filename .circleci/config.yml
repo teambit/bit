@@ -257,12 +257,12 @@ jobs:
         # -
           # run: 'bit config set hub_domain hub-stg.bit.dev'
       -
-        run: 'cat /home/circleci/Library/Caches/Bit/config/config.json'
+        run: 'cat ~/Library/Caches/Bit/config/config.json'
       -
-        persist_to_workspace:
-          root: /home/circleci
+        save_cache:
+          key: bit-global-config-v1
           paths:
-            - Library/Caches/Bit/config/config.json
+            - ~/Library/Caches/Bit/config/config.json
   pack:
     <<: *defaults
     steps:
@@ -571,6 +571,9 @@ jobs:
       #   run:
       #     name: 'create global npm directory (to avoid using sudo for npm link)'
       #     command: 'mkdir ~/.npm-global'
+      -
+        restore_cache:
+          key: bit-global-config-v1
       -
         restore_cache:
           key: bitsrc-ssh-key3
@@ -937,6 +940,7 @@ workflows:
         link_react_new_project:
           requires:
             - configure-bit
+            - setup_react_new_project
       -
         unit_test:
           requires:
