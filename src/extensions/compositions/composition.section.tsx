@@ -8,12 +8,7 @@ export class CompositionsSection implements Section {
     /**
      * simulations ui extension.
      */
-    private compositions: CompositionsUI,
-
-    /**
-     * panels extension.
-     */
-    private panels: PanelsExtension
+    private compositions: CompositionsUI
   ) {}
 
   navigationLink = {
