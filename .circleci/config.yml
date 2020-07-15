@@ -792,9 +792,15 @@ jobs:
     steps:
       # prod registry
       -
+        run: Get-Content -Path C:\Users\circleci\.npmrc
+      -
         run: npm config set @bit:registry https://node.bit.dev
       -
-        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+        run: Get-Content -Path C:\Users\circleci\.npmrc
+      -
+        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=%registryProdToken%'
+      -
+        run: Get-Content -Path C:\Users\circleci\.npmrc
       # stage registry
       # -
       #   run: 'npm config set @bit:registry https://node-stg.bit.dev'
