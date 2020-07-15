@@ -821,6 +821,8 @@ jobs:
           key: windows_bitsrc-registry-v1
           # key: windows_bitsrc-registry-stg-v1
       -
+        run: 'npm config list'
+      -
         run:
           name: 'Install npm dependencies'
           command: 'cd bit; npm install'
