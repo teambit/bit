@@ -363,7 +363,8 @@ export default class ComponentWriter {
     };
     if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       const envsChanged = await areEnvsChanged();
-      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
+      const componentsConfig = this.consumer?.config?.componentsConfig;
+      componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
     }
   }
 
