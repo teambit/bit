@@ -769,6 +769,7 @@ jobs:
           root: C:\Users\circleci\project
           paths:
             - bit
+  # TODO: make it powershell if you want to use it
   windows_set_ssh_key:
     <<: *windows_defaults
     working_directory: C:\Users\circleci\.ssh
@@ -792,31 +793,23 @@ jobs:
     steps:
       # prod registry
       # -
-      #   run: Get-Content -Path C:\Users\circleci\.npmrc
-      # -
         # run: npm config set @bit:registry https://node.bit.dev
       -
         run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
-      -
-        run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+      #   run: Get-Content -Path C:\Users\circleci\.npmrc
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
-        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:CIRCLE_PROJECT_REPONAME"
-      -
-        run: Add-Content C:\Users\circleci\.npmrc  "222=$($Env:CIRCLE_PROJECT_REPONAME)"
-      -
-        run: Add-Content C:\Users\circleci\.npmrc  "333=($Env:CIRCLE_PROJECT_REPONAME)"
-      -
-        run: Get-Content -Path C:\Users\circleci\.npmrc
+        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
       # stage registry
       # -
-      #   run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
       # -
-      #   run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
-          key: windows_bitsrc-registry-v2
+          key: windows_bitsrc-registry-v3
           # key: windows_bitsrc-registry-stg-v1
           paths:
             - C:\Users\circleci\.npmrc
@@ -832,7 +825,7 @@ jobs:
           at: .
       -
         restore_cache:
-          key: windows_bitsrc-registry-v2
+          key: windows_bitsrc-registry-v3
           # key: windows_bitsrc-registry-stg-v1
       -
         run: 'npm config list'
