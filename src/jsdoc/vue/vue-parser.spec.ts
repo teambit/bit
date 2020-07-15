@@ -66,7 +66,7 @@ describe('Vue docs Parser', () => {
         expect(methodDef)
           .to.have.property('name')
           .that.equals('uncommentedMethod');
-        expect(methodDef).to.have.property('description').that.is.null;
+        expect(methodDef).to.have.property('description').that.is.empty;
       });
     });
 
@@ -76,7 +76,7 @@ describe('Vue docs Parser', () => {
           .to.have.property('properties')
           .that.is.an('array')
           .that.have.lengthOf(5);
-        expect(doclet.properties[0].name).to.equal('v-model');
+        expect(doclet.properties[0].name).to.equal('model');
         expect(doclet.properties[0].type).to.equal('Array');
         expect(doclet.properties[0].description).to.equal('The checkbox model');
         expect(doclet.properties[0].required).to.equal(true);

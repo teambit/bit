@@ -149,8 +149,9 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
-      const jsonFiles = await this.consumer.config.toVinyl(this.consumer.getPath());
+    const componentsConfig = this.consumer?.config?.componentsConfig;
+    if (componentsConfig?.hasChanged) {
+      const jsonFiles = await this.consumer?.config.toVinyl(this.consumer.getPath());
       if (jsonFiles) {
         dataToPersist.addManyFiles(jsonFiles);
       }
