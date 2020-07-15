@@ -799,8 +799,14 @@ jobs:
         run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
       -
         run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
-        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
+        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:CIRCLE_PROJECT_REPONAME"
+      -
+        run: Add-Content C:\Users\circleci\.npmrc  "222=$($Env:CIRCLE_PROJECT_REPONAME)"
+      -
+        run: Add-Content C:\Users\circleci\.npmrc  "333=($Env:CIRCLE_PROJECT_REPONAME)"
       -
         run: Get-Content -Path C:\Users\circleci\.npmrc
       # stage registry
