@@ -800,7 +800,7 @@ jobs:
       -
         run: Get-Content -Path C:\Users\circleci\.npmrc
       -
-        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=%registryProdToken%'
+        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
         run: Get-Content -Path C:\Users\circleci\.npmrc
       # stage registry
