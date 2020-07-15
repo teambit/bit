@@ -793,8 +793,10 @@ jobs:
       # prod registry
       # -
       #   run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+        # run: npm config set @bit:registry https://node.bit.dev
       -
-        run: npm config set @bit:registry https://node.bit.dev
+        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
       -
         run: Get-Content -Path C:\Users\circleci\.npmrc
       -
@@ -808,10 +810,10 @@ jobs:
       #   run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
       -
         save_cache:
-          key: windows_bitsrc-registry-v1
+          key: windows_bitsrc-registry-v2
           # key: windows_bitsrc-registry-stg-v1
           paths:
-            - ~/.npmrc
+            - C:\Users\circleci\.npmrc
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
@@ -824,7 +826,7 @@ jobs:
           at: .
       -
         restore_cache:
-          key: windows_bitsrc-registry-v1
+          key: windows_bitsrc-registry-v2
           # key: windows_bitsrc-registry-stg-v1
       -
         run: 'npm config list'
