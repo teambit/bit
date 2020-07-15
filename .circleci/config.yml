@@ -933,89 +933,89 @@ jobs:
       #     path: ~/Library/Caches/Bit/logs/debug.log
 workflows:
   version: 2
-  build_and_test:
-    jobs:
-      - checkout_code
-      - set_ssh_key
-      - set_bitsrc_registry
-      -
-        setup_react_new_project:
-          requires:
-            - set_bitsrc_registry
-      -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_bitsrc_registry
-      -
-        build:
-          requires:
-            - install_npm_deps
-      -
-        configure-bit:
-          requires:
-            - build
-      -
-        link_react_new_project:
-          requires:
-            - configure-bit
-            - setup_react_new_project
-      -
-        unit_test:
-          requires:
-            - build
-      -
-        lint:
-          requires:
-            - link_react_new_project
-      -
-        check_types:
-          requires:
-            - link_react_new_project
-      -
-        generate_types:
-          requires:
-            - link_react_new_project
-      -
-        generate_docs:
-          <<: *semver_tags_only_filters
-          requires:
-            - build
-      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
-      # -
-      #   pack:
-      #     requires:
-      #       - build
-      -
-        e2e_test:
-          filters:
-            branches:
-              ignore:
-                - performance-tests
-                - bit-hub-tests
-          requires:
-            - set_ssh_key
-            - set_bitsrc_registry
-            - configure-bit
-            # - pack
-      -
-        performance_e2e_test:
-          filters:
-            branches:
-              only:
-                - performance-tests
-          requires:
-            - build
-      -
-        bit_hub_e2e_test:
-          filters:
-            branches:
-              only:
-                - bit-hub-tests
-          requires:
-            - build
-            - set_ssh_key
-            - set_bitsrc_registry
+  # build_and_test:
+  #   jobs:
+  #     - checkout_code
+  #     - set_ssh_key
+  #     - set_bitsrc_registry
+  #     -
+  #       setup_react_new_project:
+  #         requires:
+  #           - set_bitsrc_registry
+  #     -
+  #       install_npm_deps:
+  #         requires:
+  #           - checkout_code
+  #           - set_bitsrc_registry
+  #     -
+  #       build:
+  #         requires:
+  #           - install_npm_deps
+  #     -
+  #       configure-bit:
+  #         requires:
+  #           - build
+  #     -
+  #       link_react_new_project:
+  #         requires:
+  #           - configure-bit
+  #           - setup_react_new_project
+  #     -
+  #       unit_test:
+  #         requires:
+  #           - build
+  #     -
+  #       lint:
+  #         requires:
+  #           - link_react_new_project
+  #     -
+  #       check_types:
+  #         requires:
+  #           - link_react_new_project
+  #     -
+  #       generate_types:
+  #         requires:
+  #           - link_react_new_project
+  #     -
+  #       generate_docs:
+  #         <<: *semver_tags_only_filters
+  #         requires:
+  #           - build
+  #     # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
+  #     # -
+  #     #   pack:
+  #     #     requires:
+  #     #       - build
+  #     -
+  #       e2e_test:
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - performance-tests
+  #               - bit-hub-tests
+  #         requires:
+  #           - set_ssh_key
+  #           - set_bitsrc_registry
+  #           - configure-bit
+  #           # - pack
+  #     -
+  #       performance_e2e_test:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - performance-tests
+  #         requires:
+  #           - build
+  #     -
+  #       bit_hub_e2e_test:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - bit-hub-tests
+  #         requires:
+  #           - build
+  #           - set_ssh_key
+  #           - set_bitsrc_registry
   windows_e2e:
     jobs:
       - windows_approval_job:
