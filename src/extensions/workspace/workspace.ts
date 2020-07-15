@@ -470,7 +470,7 @@ export default class Workspace implements ComponentFactory {
 
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     // TODO: @gilad make sure to check and remove default scope.
-    const legacyId = this.consumer.getParsedId(id.toString());
+    const legacyId = this.consumer.getParsedId(id.toString(), true);
     return ComponentID.fromLegacy(legacyId);
   }
 }
