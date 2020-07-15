@@ -791,8 +791,8 @@ jobs:
     <<: *windows_defaults
     steps:
       # prod registry
-      -
-        run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+      #   run: Get-Content -Path C:\Users\circleci\.npmrc
       -
         run: npm config set @bit:registry https://node.bit.dev
       -
@@ -1031,9 +1031,9 @@ workflows:
       - windows_checkout_code:
           requires:
             - windows_approval_job
-      - windows_set_ssh_key:
-          requires:
-            - windows_approval_job
+      # - windows_set_ssh_key:
+      #     requires:
+      #       - windows_approval_job
       - windows_set_bitsrc_registry:
           requires:
             - windows_approval_job
@@ -1047,7 +1047,7 @@ workflows:
       - windows_e2e_test:
           requires:
             - windows_build
-            - windows_set_ssh_key
+            # - windows_set_ssh_key
             - windows_set_bitsrc_registry
   deploy:
     jobs:
