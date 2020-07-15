@@ -3,17 +3,15 @@ import { useQuery } from '@apollo/react-hooks';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
-import { Section } from '@bit/bit.test-scope.ui.section';
-import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { gql } from 'apollo-boost';
+import { ClientContext as ThemeContext } from '@bit/bit.test-scope.theme.client-context';
 import { ComponentModel } from '../../component/ui';
-import { Playground } from './playground';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
-import { ThemeContext } from './theme-context';
-import { ComponentDetails } from './component-details';
+// import { ThemeContext } from './theme-context';
+import { ComponentOverview } from './component-overview';
+import { ExamplesOverview } from './examples-overview';
 import styles from './base.module.scss';
-import spacing from './docs-spacer.module.scss';
 
 export type DocsSectionProps = {
   docs: any;
@@ -76,8 +74,8 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
   return (
     <ThemeContext>
-      <div className={classNames(styles.docsMainBlock, spacing.docsStyles)} {...rest}>
-        <ComponentDetails
+      <div className={classNames(styles.docsMainBlock)} {...rest}>
+        <ComponentOverview
           displayName={component.displayName}
           version={component.version}
           abstract={abstract}
@@ -89,14 +87,8 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
 
         <CompositionsSummary compositions={overviewCompositions} />
 
-        <Section>
-          {examples.length > 0 && (
-            <LinkedHeading link="/~compositions" className={spacing.secondaryTitleMargin}>
-              Examples
-            </LinkedHeading>
-          )}
-          {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />}
-        </Section>
+        <ExamplesOverview examples={examples} />
+
         <Properties properties={docsModel.properties} />
       </div>
     </ThemeContext>
