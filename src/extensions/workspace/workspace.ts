@@ -141,7 +141,7 @@ export default class Workspace implements ComponentFactory {
    * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const componentIdsP = ids.map(this.resolveComponentId);
+    const componentIdsP = ids.map(id => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
