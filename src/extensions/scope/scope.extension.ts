@@ -11,12 +11,12 @@ import {
   State,
   Snap,
   ComponentFS,
-  Tag
+  Tag,
+  TagMap
 } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
 import Config from '../component/config';
-import { TagMap } from '../component/tag-map';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
 
@@ -96,10 +96,11 @@ export class ScopeExtension implements ComponentFactory {
     // :TODO move to head snap once we have it merged, for now using `latest`.
     const latest = modelComponent.latest();
     const version = await modelComponent.loadVersion(latest, this.legacyScope.objects);
+    const snap = this.createSnapFromVersion(version);
 
     return new Component(
       id,
-      this.createSnapFromVersion(version),
+      snap,
       await this.createStateFromVersion(id, version),
       await this.getTagMap(modelComponent),
       this
@@ -122,8 +123,8 @@ export class ScopeExtension implements ComponentFactory {
     await Promise.all(
       Object.keys(modelComponent.versions).map(async (versionStr: string) => {
         const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-
-        const tag = new Tag(this.createSnapFromVersion(version), new SemVer(versionStr));
+        const snap = this.createSnapFromVersion(version);
+        const tag = new Tag(snap, new SemVer(versionStr));
 
         tagMap.set(tag.version, tag);
       })

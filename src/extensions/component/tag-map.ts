@@ -1,7 +1,7 @@
 import { SemVer } from 'semver';
 // eslint-disable-next-line import/no-cycle
 import { Tag } from './tag';
-import { Hash } from './types';
+import { Hash } from './hash';
 
 export class TagMap extends Map<SemVer, Tag> {
   // byRange(range: Semver) {

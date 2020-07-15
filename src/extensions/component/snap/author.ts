@@ -1,8 +1,11 @@
+/**
+ * author type.
+ */
 export type Author = {
   /**
    * author full name (for example: "Ran Mizrahi")
    */
-  name: string;
+  displayName: string;
 
   /**
    * author email in a proper format (e.g. "ran@bit.dev")

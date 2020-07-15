@@ -1,4 +1,4 @@
-import { Author } from '../types';
+import { Author } from './author';
 
 /**
  * `Snap` represents a sealed state of the component in the working tree.
@@ -31,5 +31,3 @@ export class Snap {
     readonly message: string
   ) {}
 }
-
-export default Snap;
