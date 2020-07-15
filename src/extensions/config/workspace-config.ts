@@ -427,7 +427,7 @@ export class WorkspaceConfig implements HostConfig {
       isLegacy: this.isLegacy,
       write: this.write.bind(this),
       toVinyl: this.toVinyl.bind(this),
-      componentsConfig: this.legacyConfig ? this.legacyConfig?.overrides : () => undefined,
+      componentsConfig: this.legacyConfig ? this.legacyConfig?.overrides : undefined,
       getComponentConfig: this.legacyConfig
         ? this.legacyConfig?.overrides.getOverrideComponentData.bind(this.legacyConfig?.overrides)
         : () => undefined,
