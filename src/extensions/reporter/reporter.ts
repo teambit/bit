@@ -100,6 +100,7 @@ export default class Reporter {
   subscribeAll() {
     this.logger.subscribeAll(this.loggerCallback.bind(this));
   }
+
   unsubscribe(extensionName) {
     this.logger.unsubscribe(extensionName);
   }

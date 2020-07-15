@@ -4,7 +4,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { ScopeExtension } from '../scope';
-import { Component, ComponentFactory, ComponentID, ComponentConfig } from '../component';
+import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitIds, BitId } from '../../bit-id';
 import { IsolatorExtension } from '../isolator';
@@ -53,7 +53,7 @@ export default class Workspace implements ComponentHost {
     public consumer: Consumer,
 
     /**
-     * access to the Workspace's `Scope` instance
+     * access to the workspace `Scope` instance
      */
     readonly scope: ScopeExtension,
 
@@ -85,6 +85,16 @@ export default class Workspace implements ComponentHost {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /**
+   * name of the workspace as configured in either `workspace.json`.
+   * defaults to workspace root directory name.
+   */
+  get name() {
+    if (this.config.name) return this.config.name;
+    const tokenizedPath = this.path.split('/');
+    return tokenizedPath[tokenizedPath.length - 1];
   }
 
   /**
@@ -186,7 +196,7 @@ export default class Workspace implements ComponentHost {
     };
   }
 
-  // @gilad needs to implment on variants
+  // @gilad needs to implement on variants
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async byPattern(pattern: string): Promise<Component[]> {
     // @todo: this is a naive implementation, replace it with a real one.
@@ -256,10 +266,11 @@ export default class Workspace implements ComponentHost {
    * defaults extensions from workspace config
    * @param componentId
    */
-  async componentConfig(componentId: BitId): Promise<ComponentConfig> {
+  async componentExtensions(componentId: BitId): Promise<ExtensionDataList> {
     const data = await this.workspaceComponentConfig(componentId);
-    const config = new ComponentConfig(data.componentExtensions);
-    return config;
+    // const config = new ComponentConfig(data.componentExtensions);
+    // return config;
+    return data.componentExtensions;
   }
 
   async workspaceComponentConfig(componentId: BitId): Promise<WorkspaceComponentConfig> {

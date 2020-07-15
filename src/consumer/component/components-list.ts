@@ -245,7 +245,7 @@ export default class ComponentsList {
     return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
 
-  idsFromBitMap(origin?: string): BitId[] {
+  idsFromBitMap(origin?: ComponentOrigin): BitId[] {
     const fromBitMap = this.getFromBitMap(origin);
     return fromBitMap;
   }
@@ -256,7 +256,7 @@ export default class ComponentsList {
    * of that directory. The bit.map is used to find them all
    * If they are on bit.map but not on the file-system, populate them to _invalidComponents property
    */
-  async getFromFileSystem(origin?: string): Promise<Component[]> {
+  async getFromFileSystem(origin?: ComponentOrigin): Promise<Component[]> {
     const cacheKeyName = origin || 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);

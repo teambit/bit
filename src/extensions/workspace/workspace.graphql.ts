@@ -1,35 +1,33 @@
-import { GraphQLModule } from '@graphql-modules/core';
 import Workspace from './workspace';
 
 export default (workspace: Workspace) => {
-  return new GraphQLModule({
+  return {
     typeDefs: `
       type Workspace {
+        name: String
         path: String
-        components: [Component]
-      }
-
-      type Component {
-        id: String
+        components: [ComponentMeta]
+        getComponent(id: String!): Component
       }
 
       type Query {
         workspace: Workspace
-      } 
+      }
     `,
     resolvers: {
-      Component: {
-        id: component => component.id.toString()
-      },
       Workspace: {
         path: ws => ws.path,
+        name: ws => ws.name,
         components: async (ws: Workspace) => {
           return ws.list();
+        },
+        getComponent: async (ws: Workspace, { id }: { id: string }) => {
+          return ws.get(id);
         }
       },
       Query: {
         workspace: () => workspace
       }
     }
-  });
+  };
 };

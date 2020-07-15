@@ -4,9 +4,9 @@ import { ApolloProvider } from '@apollo/react-hooks';
 
 export type GraphQLProviderProps = {
   client: ApolloClient<any>;
-  root: JSX.Element;
+  children: JSX.Element;
 };
 
-export function GraphQLProvider({ client, root }: GraphQLProviderProps) {
-  return <ApolloProvider client={client}>{root}</ApolloProvider>;
+export function GraphQLProvider({ client, children }: GraphQLProviderProps) {
+  return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }

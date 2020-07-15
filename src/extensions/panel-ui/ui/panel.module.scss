@@ -1,0 +1,16 @@
+$panelBg: #fafafa;
+
+.container {
+  display: flex;
+  
+  & > :not(:last-child) {
+    border-right: 1px solid var(--border-color); // #e4e6ea
+  }
+}
+
+.panel {
+  background: $panelBg;
+  width: 400px;
+  max-width: 61%;
+  height: 100%;
+}

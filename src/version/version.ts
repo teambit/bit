@@ -35,6 +35,9 @@ export default class Version {
     if (!this.versionNum || this.versionNum === LATEST) {
       return true;
     }
+    if (!otherVersion.versionNum || otherVersion.versionNum === LATEST) {
+      return false;
+    }
     return semver.gt(this.versionNum, otherVersion.versionNum);
   }
 }

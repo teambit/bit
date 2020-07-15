@@ -1,32 +1,46 @@
 import React from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import { RouteProps } from 'react-router-dom';
 import { Workspace } from './ui';
+import { ReactRouterUI } from '../react-router/react-router.ui';
+import { RouteSlot } from '../react-router/slot-router';
 
 export type MenuItem = {
-  label: string;
-  onClick: () => void;
+  label: JSX.Element | string | null;
 };
 
-export type TopBarSlotRegistry = SlotRegistry<MenuItem>;
-
 export class WorkspaceUI {
-  constructor(private topBarSlot: TopBarSlotRegistry) {}
+  constructor(
+    /**
+     * route slot.
+     */
+    private routeSlot: RouteSlot
+  ) {}
 
   /**
-   * register a new menu item.
+   * register a route to the workspace.
    */
-  registerMenuItem(menuItem: MenuItem) {
-    this.topBarSlot.register(menuItem);
+  registerRoute(route: RouteProps) {
+    this.routeSlot.register(route);
     return this;
   }
 
-  getMain(): JSX.Element {
-    return <Workspace topBarSlot={this.topBarSlot} />;
+  get workspaceRoute() {
+    return {
+      path: '/',
+      children: <Workspace routeSlot={this.routeSlot} />
+    };
   }
 
-  static slots = [Slot.withType<MenuItem>()];
+  static dependencies = [ReactRouterUI];
 
-  static async provider(deps, config, [topBarSlot]: [TopBarSlotRegistry]) {
-    return new WorkspaceUI(topBarSlot);
+  static slots = [Slot.withType<RouteProps>()];
+
+  static async provider([router]: [ReactRouterUI], config, [routeSlot]: [RouteSlot]) {
+    const workspaceUI = new WorkspaceUI(routeSlot);
+
+    router.register(workspaceUI.workspaceRoute);
+
+    return workspaceUI;
   }
 }

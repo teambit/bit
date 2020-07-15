@@ -10,7 +10,7 @@ import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import { GraphQLExtension } from '../graphql';
-import workspaceSchema from './workspace.graphql';
+import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
@@ -82,7 +82,8 @@ export default async function provideWorkspace(
         return wsComponentConfig;
       });
 
-      graphql.register(workspaceSchema(workspace));
+      const workspaceSchema = getWorkspaceSchema(workspace);
+      graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
 

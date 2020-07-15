@@ -38,6 +38,7 @@ export default function componentIdToPackageName({
   if (nameWithoutPrefix.startsWith(registryPrefixWithDotWithoutAt) && registryPrefix !== '@bit') {
     nameWithoutPrefix = nameWithoutPrefix.replace(registryPrefixWithDotWithoutAt, '');
   }
+
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }
 

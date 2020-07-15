@@ -1,13 +1,16 @@
-import { WorkspaceUI } from '../workspace/workspace.ui';
+import { ComponentUI } from '../component/component.ui';
+import { OverviewSection } from './overview.section';
 
 export class DocsUI {
-  static dependencies = [WorkspaceUI];
+  static dependencies = [ComponentUI];
 
-  static async provider([workspace]: [WorkspaceUI]) {
-    workspace.registerMenuItem({
-      label: 'Overview',
-      onClick: () => {}
-    });
-    return new DocsUI();
+  static async provider([component]: [ComponentUI]) {
+    const docs = new DocsUI();
+    const section = new OverviewSection(docs);
+
+    component.registerRoute(section.route);
+    component.registerNavigation(section.navigationLink);
+
+    return docs;
   }
 }

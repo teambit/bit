@@ -29,6 +29,11 @@ export interface WorkspaceExtConfig {
    * All component extensions applied by default on all components in the workspace (except vendor components)
    */
   extensions: { [extensionsId: string]: string };
+
+  /**
+   * name of the workspace.
+   */
+  name: string;
 }
 
 export type ComponentWorkspaceMetaData = {

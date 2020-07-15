@@ -1,3 +1,4 @@
+import { PathLinux } from '../../utils/path';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Compilers, Testers } from '../../consumer/config/abstract-config';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
@@ -20,6 +21,11 @@ type LegacyConfigProps = {
  */
 export default class Config {
   constructor(
+    /**
+     * version main file
+     */
+    readonly main: PathLinux,
+
     /**
      * configured extensions
      */

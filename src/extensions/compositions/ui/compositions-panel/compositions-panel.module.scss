@@ -1,0 +1,54 @@
+
+.linkWrapper {
+  padding: 12px;
+  &.active {
+    display: flex;
+    align-items: center;
+    background-color: var(--base-color);
+    color: var(--bg-base);
+    border-radius: 8px;
+  }
+}
+
+.box {
+  margin-right: 11px;
+}
+.panelLink {
+  cursor: pointer;
+  width: 100%;
+}
+
+.composition {
+  padding: 0 8px;
+}
+
+
+.tabs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 17px;
+  > div {
+    position: relative;
+    padding: 8px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    &:not(:first-child) {
+      color: #878c9a;
+    }
+
+    &:first-child {
+      &:before {
+        content:'';
+        position:absolute;
+        top: 0;
+        left:0;
+        right:0;
+        background-color: var(--base-color);
+        height: 3px;
+        border-radius: 10px;
+        transition: background-color 300ms, height 300ms;
+      }
+    }
+  }
+}

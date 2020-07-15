@@ -11,6 +11,11 @@ export default class State {
     readonly config: Config,
 
     /**
+     * version of the component.
+     */
+    readonly version: string,
+
+    /**
      * in-memory representation of the component current filesystem.
      */
     readonly filesystem: ComponentFS,
@@ -40,7 +45,8 @@ export default class State {
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
     return new State(
-      new Config(consumerComponent.extensions),
+      new Config(consumerComponent.mainFile, consumerComponent.extensions),
+      consumerComponent.version || 'new',
       ComponentFS.fromVinyls(consumerComponent.files),
       Store.fromArray([]),
       consumerComponent.dependencies,

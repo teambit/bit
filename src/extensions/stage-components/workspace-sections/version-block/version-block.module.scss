@@ -1,0 +1,21 @@
+@import '~@bit/bit.base-ui.theme.colors';
+@import '~@bit/bit.base-ui.layout.breakpoints';
+@import '~@bit/bit.base-ui.constants.storage/_storage.module.scss';
+
+.versionBlock {
+	padding-left: 50px;
+	margin-bottom: 30px;
+	.heading {
+		margin-bottom: unset;
+	}
+}
+
+.topRow {
+	display: flex;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.marginRight {
+	margin-right: 10px;
+}

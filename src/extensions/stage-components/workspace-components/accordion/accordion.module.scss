@@ -1,0 +1,13 @@
+.closed {
+	height: 0;
+	overflow: hidden;
+	visibility: hidden;
+
+	transition: height 300ms, visibility 300ms ease-in-out;
+}
+.open {
+	transition: height 300ms, visibility 300ms ease-in-out;
+	height: 100%;
+	overflow: unset;
+	visibility: unset;
+}
