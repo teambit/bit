@@ -805,7 +805,7 @@ jobs:
           key: windows_bitsrc-registry-v1
           # key: windows_bitsrc-registry-stg-v1
           paths:
-            - .npmrc
+            - ~/.npmrc
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
