@@ -468,8 +468,17 @@ export default class Workspace implements ComponentFactory {
     return this.defaultDirectory;
   }
 
+  /**
+   * Transform the id to ComponentId and get the exact id as appear in bitmap
+   *
+   * @param {(string | ComponentID | BitId)} id
+   * @returns {Promise<ComponentID>}
+   * @memberof Workspace
+   */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     // TODO: @gilad make sure to check and remove default scope.
+    // TODO: we pass here true as second args (for case of we use this to resolve to capsule)
+    // This might need to be passed with false in some cases. so need to improve it.
     const legacyId = this.consumer.getParsedId(id.toString(), true);
     return ComponentID.fromLegacy(legacyId);
   }
