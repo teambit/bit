@@ -1,2 +1,2 @@
 export { Author } from './author';
-export { Snap } from './snap';
+export { Snap, SnapProps } from './snap';

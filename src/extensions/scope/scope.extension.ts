@@ -135,8 +135,8 @@ export class ScopeExtension implements ComponentFactory {
 
   private createSnapFromVersion(version: Version): Snap {
     return new Snap(
-      version.hash.toString(),
-      new Date(version.log.date),
+      version.hash().toString(),
+      new Date(parseInt(version.log.date)),
       [],
       {
         displayName: version.log.username || 'unknown',

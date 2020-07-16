@@ -1,7 +1,9 @@
+import { DocumentNode } from 'graphql';
+
 /**
  * graphql schema for an extension.
  */
 export type Schema = {
-  typeDefs?: string;
+  typeDefs?: string | DocumentNode;
   resolvers?: { [key: string]: any };
 };
