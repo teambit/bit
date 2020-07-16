@@ -1,5 +1,8 @@
 import { Composition, CompositionProps } from '../../../compositions/composition';
 import { ComponentID } from '../../id';
+import { TagMap } from '../../tag-map';
+import { Tag } from '../../tag';
+// import { Snap } from '../../snap';
 
 export type ComponentModelProps = {
   id: string;
@@ -8,6 +11,7 @@ export type ComponentModelProps = {
   displayName: string;
   packageName: string;
   compositions: CompositionProps[];
+  tags: any[];
 };
 
 export type ComponentServer = {
@@ -40,7 +44,12 @@ export class ComponentModel {
     /**
      * array of compositions
      */
-    readonly compositions: Composition[]
+    readonly compositions: Composition[],
+
+    /**
+     * tags of the component.
+     */
+    readonly tags: TagMap
   ) {}
 
   get version() {
@@ -51,17 +60,25 @@ export class ComponentModel {
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, server, displayName, compositions, packageName }: ComponentModelProps) {
+  static from({ id, server, displayName, compositions, packageName, tags }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
       displayName,
       packageName,
       server,
-      Composition.fromArray(compositions)
+      Composition.fromArray(compositions),
+      TagMap.fromArray(tags.map(tag => Tag.fromObject(tag)))
     );
   }
 
   static empty() {
-    return new ComponentModel(ComponentID.fromObject({ name: 'root' }), '', '', { env: '', url: '' }, []);
+    return new ComponentModel(
+      ComponentID.fromObject({ name: 'root' }),
+      '',
+      '',
+      { env: '', url: '' },
+      [],
+      TagMap.empty()
+    );
   }
 }

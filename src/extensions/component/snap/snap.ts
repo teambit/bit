@@ -1,5 +1,13 @@
 import { Author } from './author';
 
+export type SnapProps = {
+  hash: string;
+  timestamp: string;
+  parents: SnapProps[];
+  author: Author;
+  message: string;
+};
+
 /**
  * `Snap` represents a sealed state of the component in the working tree.
  */
@@ -30,4 +38,26 @@ export class Snap {
      */
     readonly message: string
   ) {}
+
+  static fromObject(snapObject: SnapProps) {
+    const parents = snapObject.parents || [];
+
+    return new Snap(
+      snapObject.hash,
+      new Date(parseInt(snapObject.timestamp)),
+      parents.map(props => Snap.fromObject(props)),
+      snapObject.author,
+      snapObject.message
+    );
+  }
+
+  toObject(): SnapProps {
+    return {
+      timestamp: this.timestamp.getTime().toString(),
+      hash: this.hash,
+      author: this.author,
+      message: this.message,
+      parents: this.parents.map(snap => snap.toObject())
+    };
+  }
 }
