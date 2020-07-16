@@ -229,7 +229,8 @@ export default (async function tagModelComponent({
   }
   if (nonLegacyComps.length) {
     const ids = componentsToBuildAndTest.map(c => c.id);
-    await Promise.all(scope.onTag.map(func => func(ids)));
+    const results: any[] = await Promise.all(scope.onTag.map(func => func(ids)));
+    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
   }
 
   logger.debug('scope.putMany: sequentially test all components');
@@ -308,4 +309,63 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
   components.forEach(component => {
     component.schema = CURRENT_SCHEMA;
   });
+}
+
+/**
+ * This will take a result from the tag hook, and apply it on the components
+ * (usually take the result extensions and set them on the components)
+ *
+ * @param {Component[]} components
+ * @returns
+ */
+function updateComponentsByTagResult(components: Component[]) {
+  return (envsResult: any[]) => {
+    if (!envsResult || envsResult.length === 0) return;
+    envsResult.map(updateComponentsByTagEnvResultsComponents(components));
+  };
+}
+
+/**
+ * This will take a specific env tag result and apply it on the components
+ *
+ * @param {Component[]} componentsToUpdate
+ * @returns
+ */
+function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component[]) {
+  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.res?.components);
+}
+
+/**
+ * This will take the components to update and the modified components by the env service and apply the changes on the component to update
+ *
+ * @param {Component[]} componentsToUpdate
+ * @param {any[]} [envTagResultComponents]
+ * @returns
+ */
+function updateComponentsByTagResultsComponents(componentsToUpdate: Component[], envTagResultComponents?: any[]) {
+  if (
+    !envTagResultComponents ||
+    envTagResultComponents.length === 0 ||
+    !envTagResultComponents[0] ||
+    !envTagResultComponents[0].length
+  )
+    return;
+  // Since all the services changes the same components we will only use the first service
+  // This might create bugs in the future. so if you have a service which return something else, here is the place to fix it.
+  envTagResultComponents[0].map(updateComponentsByTagResultsComponent(componentsToUpdate));
+}
+
+/**
+ * This will take the components to update and apply specific modified component on the matching component to update
+ *
+ * @param {Component[]} componentsToUpdate
+ * @returns
+ */
+function updateComponentsByTagResultsComponent(componentsToUpdate: Component[]) {
+  return (tagResultComponent: any) => {
+    const matchingComponent = componentsToUpdate.find(component => component.id.isEqual(tagResultComponent.id._legacy));
+    if (matchingComponent) {
+      matchingComponent.extensions = tagResultComponent.config.extensions;
+    }
+  };
 }
