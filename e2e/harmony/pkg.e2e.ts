@@ -25,7 +25,7 @@ describe('pkg extension', function() {
     let isTypeCapsuleDir;
 
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
@@ -47,6 +47,20 @@ describe('pkg extension', function() {
     it('should not have the updated config in the package.json of another component in capsule', function() {
       const packageJson = helper.packageJson.read(isTypeCapsuleDir);
       expect(packageJson).to.not.have.property('some-key');
+    });
+    describe('after import', () => {
+      before(() => {
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('bar/foo');
+      });
+      it('should have the updated config in the package.json of the configured component in capsule', () => {
+        barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
+        const packageJson = helper.packageJson.read(barFooCapsuleDir);
+        expect(packageJson).to.have.property('some-key', 'some-val');
+      });
     });
   });
   // TODO: implement once we can extend a specific env with new methods (to apply config changes)

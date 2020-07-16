@@ -78,9 +78,16 @@ export default async function provideWorkspace(
       // );
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
         const componentId = await workspace.resolveComponentId(id);
-        const wsComponentConfig = await workspace.workspaceComponentConfig(componentId);
-        await workspace.loadExtensions(wsComponentConfig.componentExtensions);
-        return wsComponentConfig;
+        // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
+        // which in turn run this event, which will make and infinite loop
+        const componentFromScope = await workspace.scope.get(componentId);
+        const extensions = await workspace.componentExtensions(componentId, componentFromScope);
+        const defaultScope = await workspace.componentDefaultScope(componentId);
+        await workspace.loadExtensions(extensions);
+        return {
+          defaultScope,
+          extensions: extensions
+        };
       });
 
       const workspaceSchema = getWorkspaceSchema(workspace);

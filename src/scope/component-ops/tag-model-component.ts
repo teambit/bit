@@ -25,7 +25,9 @@ import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
-    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(id));
+    const foundDependency = componentsToTag.find(
+      component => component.id.isEqualWithoutVersion(id) || component.id.isEqualWithoutScopeAndVersion(id)
+    );
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
   componentsToTag.forEach(oneComponentToTag => {
@@ -46,7 +48,7 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
       if (!extension.extensionId) return;
       const newDepId = getNewDependencyVersion(extension.extensionId);
       if (newDepId) extension.extensionId = newDepId;
-      else if (!extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
+      else if (!extension.extensionId.hasScope() || !extension.extensionId.hasVersion()) {
         throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
 this extension was not included in the tag command.`);
       }
