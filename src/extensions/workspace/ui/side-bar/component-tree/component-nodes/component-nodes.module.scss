@@ -1,0 +1,37 @@
+@import '~@bit/bit.base-ui.theme.colors';
+
+.scope {
+	//TBD
+	user-select: none;
+	display: none;
+}
+
+.namespace {
+	position: relative;
+	height: 32px;
+	user-select: none;
+	font-weight: bold;
+	font-size: inherit;
+	
+	> .arrow {
+		position: absolute; //only used to not take space
+		line-height: inherit;
+		transform: translate(-20px, 0px);
+		transition: all 300ms;
+
+		[data-collapsed="true"] & {
+			transform: translate(-20px, 1px) rotate(-0.25turn);
+		}
+	}
+}
+
+
+.componentTree {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height	400ms ease-in-out;
+	font-size: 14px;
+	&.open {
+		max-height: 100vh;
+	}
+}

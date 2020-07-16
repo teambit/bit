@@ -1,6 +1,6 @@
 import { BitId } from '../../bit-id';
 
-export default class ComponentID {
+export class ComponentID {
   constructor(
     /**
      * legacy bit component id
@@ -26,11 +26,24 @@ export default class ComponentID {
     return this.legacyComponentId.version;
   }
 
+  get namespace() {
+    const arr = this.legacyComponentId.name.split('/');
+    return arr.splice(-1, 1).join('/');
+  }
+
+  /**
+   * retrieves the full name of the component including its namespace.
+   */
+  get fullName() {
+    return this._legacy.name;
+  }
+
   /**
    * resolves the name of the component.
    */
   get name() {
-    return this.legacyComponentId.name;
+    const arr = this.legacyComponentId.name.split('/');
+    return arr[arr.length - 1];
   }
 
   isEqual(id: ComponentID): boolean {
@@ -44,11 +57,19 @@ export default class ComponentID {
     return this.legacyComponentId.toString();
   }
 
+  toObject() {
+    return this.legacyComponentId.serialize();
+  }
+
   /**
    * generate a component ID from a string.
    */
   static fromString(idStr: string) {
     return new ComponentID(BitId.parse(idStr));
+  }
+
+  static fromObject(object: any) {
+    return ComponentID.fromLegacy(new BitId(object));
   }
 
   /**

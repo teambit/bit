@@ -11,6 +11,7 @@ let compressResponse;
 export default class Fetch implements LegacyCommand {
   name = '_fetch <path> <args>';
   private = true;
+  internal = true;
   description = 'fetch components(s) from a scope';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

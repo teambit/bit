@@ -1,5 +1,6 @@
-interface ComponentScopeDir {
-  defaultScope: string;
+import { ExtensionDataList } from '../../consumer/config/extension-data';
+
+interface VendorConfig {
   directory: string;
 }
 
@@ -22,5 +23,25 @@ export interface WorkspaceExtConfig {
   /**
    * set the default structure of components in your project
    */
-  components: ComponentScopeDir[];
+  vendor: VendorConfig;
+
+  /**
+   * All component extensions applied by default on all components in the workspace (except vendor components)
+   */
+  extensions: { [extensionsId: string]: string };
+
+  /**
+   * name of the workspace.
+   */
+  name: string;
 }
+
+export type ComponentWorkspaceMetaData = {
+  defaultScope?: string;
+  defaultOwner?: string;
+};
+
+export type WorkspaceComponentConfig = {
+  componentExtensions: ExtensionDataList;
+  componentWorkspaceMetaData: ComponentWorkspaceMetaData;
+};

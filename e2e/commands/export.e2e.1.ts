@@ -1149,6 +1149,20 @@ describe('bit export command', function() {
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
+          describe('without --rewire flag', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(localBeforeFork);
+              helper.scopeHelper.reInitRemoteScope(forkScopePath);
+              helper.command.export(`${forkScope} --set-current-scope`);
+            });
+            it('should not change the dists objects locally because --rewire was not used', () => {
+              const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              const fileHash = barFoo.dists[0].file;
+              const fileContent = helper.command.catObject(fileHash);
+              expect(fileContent).to.have.string(helper.scopes.remote);
+              expect(fileContent).to.not.have.string(forkScope);
+            });
+          });
           describe('as imported', () => {
             let output;
             before(() => {

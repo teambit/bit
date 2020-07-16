@@ -17,6 +17,7 @@ import {
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 export type LinkFileType = {
   linkPath: string;
@@ -69,6 +70,7 @@ export default class DependencyFileLinkGenerator {
     createNpmLinkFiles: boolean;
     targetDir?: string;
   }) {
+    throwForNonLegacy(component.isLegacy, DependencyFileLinkGenerator.name);
     this.consumer = consumer;
     this.bitMap = bitMap;
     this.component = component; // $FlowFixMe componentMap should be set here
@@ -257,11 +259,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackageName() {
-    return componentIdToPackageName(
-      this.dependencyId,
-      this.dependencyComponent.bindingPrefix,
-      this.dependencyComponent.defaultScope
-    );
+    return componentIdToPackageName(this.dependencyComponent);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

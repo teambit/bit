@@ -13,7 +13,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { Remotes, Remote } from '../../remotes';
 import Scope from '../scope';
-import { LATEST, DEFAULT_LANE } from '../../constants';
+import { LATEST, DEFAULT_LANE, Extensions } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
@@ -82,7 +82,7 @@ export async function exportMany({
   lanesObjects?: Lane[];
   allVersions: boolean;
   idsWithFutureScope: BitIds;
-}): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+}): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
   if (lanesObjects.length && !remoteName) {
@@ -106,6 +106,7 @@ export async function exportMany({
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
   return {
+    newIdsOnRemote: R.flatten(results.map(r => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
   };
@@ -114,7 +115,8 @@ export async function exportMany({
     remoteNameStr: string,
     bitIds: BitIds,
     lanes: Lane[] = []
-  ): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+  ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
+    bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
@@ -228,10 +230,12 @@ export async function exportMany({
     }
 
     await scope.objects.persist();
+    const newIdsOnRemote = exportedIds.map(id => BitId.parse(id, true));
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(undefined));
+    const idsWithRemoteScope: BitId[] = newIdsOnRemote.map(id => id.changeVersion(undefined));
     const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
+      newIdsOnRemote,
       exported: idsWithRemoteScopeUniq,
       updatedLocally: BitIds.fromArray(
         idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))
@@ -497,6 +501,16 @@ async function convertToCorrectScope(
           ext.extensionId = updatedScope;
         }
       }
+      if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
+        ext.data.dependencies.forEach(dep => {
+          const id = new BitId(dep.componentId);
+          const updatedScope = getIdWithUpdatedScope(id);
+          if (!updatedScope.isEqual(id)) {
+            hasChanged = true;
+            dep.componentId = updatedScope;
+          }
+        });
+      }
     });
     return hasChanged;
   }
@@ -535,6 +549,20 @@ async function convertToCorrectScope(
     await Promise.all((version.dists || []).map(file => processFile(file, true)));
     return hasVersionChanged;
   }
+  /**
+   * in the following cases it is needed to change files content:
+   * 1. fork. exporting components of scope-a to scope-b. requirement: 1) --rewire flag. 2) id must have scope.
+   * 2. dists. changing no-scope to current scope. requirement: 1) id should not have scope.
+   * 3. no-scope. changing src no-scope to current scope. requirement: 1) --rewire flag. 2) id should not have scope.
+   *
+   * according to these three. if --rewire was not used and id has scope, no need to do anything.
+   *
+   * in the following conditions the process should stop and ask for --rewire flag:
+   * 1. --rewire flag was not entered.
+   * 2. id does not have scope.
+   * 3. the file is not a dist file.
+   * 4. the file content has pkg name without scope-name.
+   */
   async function _createNewFileIfNeeded(
     version: Version,
     file: Record<string, any>,
@@ -554,16 +582,36 @@ async function convertToCorrectScope(
         return; // nothing to do, the remote has not changed
       }
       const idWithNewScope = id.changeScope(remoteScope);
-      const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
-      const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
+      const pkgNameWithOldScope = componentIdToPackageName({
+        id,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
+      if (!codemod) {
+        // use did not enter --rewire flag
+        if (id.hasScope()) {
+          return; // because only --rewire is permitted to change from scope-a to scope-b.
+        }
+        // dists can change no-scope to scope without --rewire flag. if this is not a dist file
+        // and the file needs to change from no-scope to scope, it needs to --rewire flag.
+        // for non-legacy the no-scope is not possible, so no need to check for it.
+        if (!isDist && fileString.includes(pkgNameWithOldScope) && version.isLegacy) {
+          throw new GeneralError(`please use "--rewire" flag to fix the import/require statements "${pkgNameWithOldScope}" in "${
+            file.relativePath
+          }" file of ${componentId.toString()},
+the current import/require module has no scope-name, which result in an invalid module path upon import`);
+        }
+      }
+      // at this stage, we know that either 1) --rewire was used. 2) it's dist and id doesn't have scope-name
+      // in both cases, if the file has the old package-name, it should be replaced to the new one.
+      const pkgNameWithNewScope = componentIdToPackageName({
+        id: idWithNewScope,
+        bindingPrefix: componentsObjects.component.bindingPrefix,
+        extensions: version.extensions
+      });
       // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
       // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
-      if (!id.scope && !codemod && newFileString !== fileString && !isDist) {
-        // if this is a dist file, no need for the --rewire flag, it should replace them regardless
-        throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" is requiring "${id.toString()}" with relative path
-the current import/require module has no scope-name, which result in an invalid module path upon import`);
-      }
     });
     if (newFileString !== fileString) {
       return Source.from(Buffer.from(newFileString));

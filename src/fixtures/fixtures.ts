@@ -62,6 +62,8 @@ export const appPrintIsTypeCapsule = "const isType = require('.'); console.log(i
 export const appPrintIsString = "const isString = require('./components/utils/is-string'); console.log(isString());";
 export const appPrintIsStringCapsule = "const isString = require('.'); console.log(isString());";
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+export const appPrintBarFooModulePath = remoteScope =>
+  `const barFoo = require('@bit/${remoteScope}.bar.foo'); console.log(barFoo());`;
 export const appPrintBarFooCapsule = "const barFoo = require('.'); console.log(barFoo());";
 export const appPrintBarFooES6 = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
 export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";

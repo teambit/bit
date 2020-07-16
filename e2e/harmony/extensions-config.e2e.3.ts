@@ -54,9 +54,10 @@ describe('harmony extension config', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
+        helper.bitJsonc.addDefaultScope();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
+        helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
         localBeforeTag = helper.scopeHelper.cloneLocalScope();
       });
       describe('extension is new component on the workspace', () => {

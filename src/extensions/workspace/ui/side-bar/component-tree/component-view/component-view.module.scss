@@ -1,0 +1,29 @@
+@import '~@bit/bit.base-ui.theme.colors';
+
+.component {
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-right: 16px;
+	font-size: inherit;
+	
+	//TODO - move to a link component
+	text-decoration: none;
+	color: inherit;
+	
+	box-sizing: border-box;
+	border-left: 0px solid transparent;
+
+	> span {
+		color: $y70;
+	}
+	
+	&.active {
+		color: $w10;
+        background: $p50;
+        &:hover {
+            background: $p50;
+        }
+	}
+}

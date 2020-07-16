@@ -3,7 +3,6 @@ import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
 import { PathOsBased } from './utils/path';
-import { ComponentOrigin } from './consumer/bit-map/component-map';
 
 const userHome = require('user-home');
 const packageFile = require('../package.json');
@@ -46,10 +45,13 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
+// Hack to prevent reference from constants to component map
+type origins = 'IMPORTED' | 'AUTHORED' | 'NESTED';
+
 export const COMPONENT_ORIGINS = {
-  IMPORTED: 'IMPORTED' as ComponentOrigin,
-  AUTHORED: 'AUTHORED' as ComponentOrigin,
-  NESTED: 'NESTED' as ComponentOrigin // which is a nested dependency
+  IMPORTED: 'IMPORTED' as origins,
+  AUTHORED: 'AUTHORED' as origins,
+  NESTED: 'NESTED' as origins
 };
 
 export const TESTS_FORK_LEVEL = {
@@ -382,6 +384,8 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
 
+export const COMPONENT_CONFIG_FILE_NAME = 'component.json';
+
 export const COMPILER_ENV_TYPE = 'compiler';
 
 export const TESTER_ENV_TYPE = 'tester';
@@ -431,3 +435,8 @@ export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
+
+export enum Extensions {
+  dependencyResolver = '@teambit/dependency-resolver',
+  pkg = '@teambit/pkg'
+}

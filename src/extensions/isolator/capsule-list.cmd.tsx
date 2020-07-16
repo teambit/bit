@@ -2,7 +2,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, PaperOptions } from '../cli';
+import { Command, CommandOptions } from '../cli';
 import { IsolatorExtension, ListResults } from './isolator.extension';
 import { loadConsumerIfExist } from '../../consumer';
 
@@ -11,8 +11,9 @@ export class CapsuleListCmd implements Command {
   description = `list all capsules`;
   shortDescription = 'list all capsules';
   group = 'capsules';
+  private = true;
   alias = '';
-  options = [['j', 'json', 'json format']] as PaperOptions;
+  options = [['j', 'json', 'json format']] as CommandOptions;
 
   constructor(private isolator: IsolatorExtension) {}
 

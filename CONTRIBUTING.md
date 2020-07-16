@@ -63,9 +63,17 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
 ```bash
   npm run e2e-test --bit_bin=bit-dev
 ```
-Use `--debug` flag to watch the running commands and the output. It might be a useful tool for debugging failed e2e tests.
 
-Use `--with_ssh` flag to switch from exporting by using file-system to SSH approach. Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
+- run e2e-tests for debugging (shows output and doesn't delete the workspaces)
+```bash
+  npm run e2e-test:debug
+```
+
+- run e2e-tests for SSH (switch from exporting by using file-system to SSH approach). Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
+```bash
+  npm run e2e-test:ssh
+  npm run e2e-test:ssh-debug
+```
 
 When adding end to end tests please make sure new test files are created in the following name convention: ```name.e2e.[number].js``` where number should be 1/2/3. This was made in order to batch work in appveyor.
 

@@ -33,7 +33,7 @@ export interface ManyComponentsWriterParams {
   writePackageJson?: boolean;
   saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
-  writeBitDependencies?: boolean;
+  ignoreBitDependencies?: boolean;
   createNpmLinkFiles?: boolean;
   writeDists?: boolean;
   installNpmPackages?: boolean;
@@ -64,7 +64,7 @@ export default class ManyComponentsWriter {
   override: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
-  writeBitDependencies: boolean;
+  ignoreBitDependencies: boolean | undefined;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
   installNpmPackages: boolean;
@@ -95,7 +95,7 @@ export default class ManyComponentsWriter {
     this.isolated = this._setBooleanDefault(params.isolated, false);
     this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
     this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
-    this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
+    this.ignoreBitDependencies = params.ignoreBitDependencies;
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
     this.installPeerDependencies = this._setBooleanDefault(params.installPeerDependencies, false);
@@ -152,8 +152,9 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
-      const jsonFiles = await this.consumer.config.toVinyl(this.consumer.getPath());
+    const componentsConfig = this.consumer?.config?.componentsConfig;
+    if (componentsConfig?.hasChanged) {
+      const jsonFiles = await this.consumer?.config.toVinyl(this.consumer.getPath());
       if (jsonFiles) {
         dataToPersist.addManyFiles(jsonFiles);
       }
@@ -217,7 +218,10 @@ export default class ManyComponentsWriter {
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
       writeConfig: this.writeConfig,
-      writeBitDependencies: this.writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
+      ignoreBitDependencies:
+        typeof this.ignoreBitDependencies === 'boolean'
+          ? this.ignoreBitDependencies
+          : componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
       ...getParams()
     };
   }

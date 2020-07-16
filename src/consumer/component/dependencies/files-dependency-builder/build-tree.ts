@@ -1,11 +1,7 @@
-// @flow
-// TODO: This should be exported as a bit component
-
-import fs from 'fs';
 import path from 'path';
 import R from 'ramda';
-import { partition, set } from 'lodash';
-import generateTree, { processPath } from './generate-tree-madge';
+import { set } from 'lodash';
+import generateTree from './generate-tree-madge';
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
 import { PathMapItem } from './path-map';
@@ -14,12 +10,11 @@ import {
   FileObject,
   ImportSpecifier,
   DependencyTreeParams,
-  ResolveModulesConfig,
-  ResolvedNodePackage
+  ResolveModulesConfig
 } from './types/dependency-tree-type';
-import PackageJson from '../../package-json';
-import { PathOsBased, PathLinuxAbsolute } from '../../../../utils/path';
-import { BitId } from '../../../../bit-id';
+import { PathOsBased } from '../../../../utils/path';
+import { MissingGroupItem, MissingHandler, FoundPackages } from './missing-handler';
+import { resolvePackageData, ResolvedPackageData } from '../../../../utils/packages';
 
 export type LinkFile = {
   file: string;
@@ -37,7 +32,7 @@ interface SimpleGroupedDependencies {
  * @param {any} dependencies list of dependencies paths to group
  * @returns {Function} function which group the dependencies
  */
-const byType = (list, bindingPrefix): SimpleGroupedDependencies => {
+const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
   const grouped = R.groupBy(item => {
     if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
       return 'bits';
@@ -47,95 +42,8 @@ const byType = (list, bindingPrefix): SimpleGroupedDependencies => {
   return grouped(list);
 };
 
-/**
- * Get a path to node package and return the name and version
- *
- * @param {any} packageFullPath full path to the package
- * @returns {Object} name and version of the package
- */
-export function resolveNodePackage(cwd: string, packageFullPath: PathLinuxAbsolute): ResolvedNodePackage | undefined {
-  const NODE_MODULES = 'node_modules';
-  const result: ResolvedNodePackage = {
-    fullPath: packageFullPath,
-    name: '',
-    componentId: undefined
-  };
-  // Start by searching in the component dir and up from there
-  // If not found search in package dir itself.
-  // We are doing this, because the package.json inside the package dir contain exact version
-  // And the component/consumer package.json might contain semver like ^ or ~
-  // We want to have this semver as dependency and not the exact version, otherwise it will be considered as modified all the time
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const packageJsonInfo = PackageJson.findPackage(cwd);
-  if (packageJsonInfo) {
-    // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
-    const packageRelativePath = packageFullPath.substring(
-      packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1,
-      packageFullPath.length
-    );
-
-    const packageName = resolvePackageNameByPath(packageRelativePath);
-    const packageNameNormalized = packageName.replace('\\', '/');
-    const packageVersion =
-      R.path(['dependencies', packageNameNormalized], packageJsonInfo) ||
-      R.path(['devDependencies', packageNameNormalized], packageJsonInfo) ||
-      R.path(['peerDependencies', packageNameNormalized], packageJsonInfo);
-    if (packageVersion) {
-      result.name = packageNameNormalized;
-      result.versionUsedByDependent = packageVersion;
-    }
-  }
-
-  // Get the package relative path to the node_modules dir
-  const packageDir = resolvePackageDirFromFilePath(packageFullPath);
-
-  // don't propagate here since loading a package.json of another folder and taking the version from it will result wrong version
-  // This for example happen in the following case:
-  // if you have 2 authored component which one dependent on the other
-  // we will look for the package.json on the dependency but won't find it
-  // if we propagate we will take the version from the root's package json which has nothing with the component version
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const packageInfo = PackageJson.loadSync(packageDir);
-
-  // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
-  // or when using custom-module-resolution it may be empty or the name/version are empty
-  if (!packageInfo || !packageInfo.name || !packageInfo.version) {
-    if (!result.name) {
-      return undefined;
-    }
-    return result;
-  }
-  result.name = packageInfo.name;
-  result.concreteVersion = packageInfo.version;
-  if (packageInfo.componentId) {
-    result.componentId = new BitId(packageInfo.componentId);
-  }
-  return result;
-}
-
-/**
- * given the full path of a package file, returns the root dir of the package, so then we could
- * find the package.json in that directory.
- *
- * example of a normal package:
- * absolutePackageFilePath: /user/workspace/node_modules/lodash.isboolean/index.js
- * returns: /user/workspace/node_modules/lodash.isboolean
- *
- * example of a scoped package:
- * absolutePackageFilePath: /user/workspace/node_modules/@babel/core/lib/index.js
- * returns: /user/workspace/node_modules/@babel/core
- */
-function resolvePackageDirFromFilePath(absolutePackageFilePath: string): string {
-  const NODE_MODULES = 'node_modules';
-  const indexOfLastNodeModules = absolutePackageFilePath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1;
-  const pathInsideNodeModules = absolutePackageFilePath.substring(indexOfLastNodeModules);
-  const packageName = resolvePackageNameByPath(pathInsideNodeModules);
-  const pathUntilNodeModules = absolutePackageFilePath.substring(0, indexOfLastNodeModules);
-  return pathUntilNodeModules + packageName;
-}
-
 interface GroupedDependenciesResolved {
-  bits: Array<ResolvedNodePackage>;
+  bits: Array<ResolvedPackageData>;
   packages: PackageDependency;
   files: string[];
   unidentifiedPackages: PathOsBased[];
@@ -147,10 +55,10 @@ interface GroupedDependenciesResolved {
  * {dependencyName: version} (like in package.json)
  *
  * @param {any} list of dependencies paths
- * @param {any} cwd root of working directory (used for node packages version calculation)
+ * @param {any} componentDir root of working directory (used for node packages version calculation)
  * @returns {Object} object with the dependencies groups
  */
-function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResolved {
+function groupDependencyList(list, componentDir: string, bindingPrefix: string): GroupedDependenciesResolved {
   const groups = byType(list, bindingPrefix);
   const resultGroups: GroupedDependenciesResolved = {
     bits: [],
@@ -162,19 +70,18 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
   if (groups.packages) {
     const packages = {};
     groups.packages.forEach(packagePath => {
-      const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
+      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
+        const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
+        if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
         if (resolvedPackage.componentId) {
           resultGroups.bits.push(resolvedPackage);
         } else {
-          const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
-          if (version) {
-            const packageWithVersion = {
-              [resolvedPackage.name]: version
-            };
-            Object.assign(packages, packageWithVersion);
-          }
+          const packageWithVersion = {
+            [resolvedPackage.name]: version
+          };
+          Object.assign(packages, packageWithVersion);
         }
       } else unidentifiedPackages.push(packagePath);
     });
@@ -182,7 +89,7 @@ function groupDependencyList(list, cwd, bindingPrefix): GroupedDependenciesResol
   }
   if (groups.bits) {
     groups.bits.forEach(packagePath => {
-      const resolvedPackage = resolveNodePackage(cwd, path.join(cwd, packagePath));
+      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
         resultGroups.bits.push(resolvedPackage);
@@ -204,15 +111,13 @@ interface GroupedDependenciesTree {
  * Run over each entry in the tree and transform the dependencies from list of paths
  * to object with dependencies types
  *
- * @param {any} tree
- * @param {any} cwd the working directory path
  * @returns new tree with grouped dependencies
  */
-function groupDependencyTree(tree, cwd, bindingPrefix): GroupedDependenciesTree {
+function groupDependencyTree(tree: any, componentDir: string, bindingPrefix: string): GroupedDependenciesTree {
   const result = {};
   Object.keys(tree).forEach(key => {
     if (tree[key] && !R.isEmpty(tree[key])) {
-      result[key] = groupDependencyList(tree[key], cwd, bindingPrefix);
+      result[key] = groupDependencyList(tree[key], componentDir, bindingPrefix);
     } else {
       result[key] = {};
     }
@@ -221,185 +126,8 @@ function groupDependencyTree(tree, cwd, bindingPrefix): GroupedDependenciesTree 
   return result;
 }
 
-/**
- * return the package name by the import statement path to node package
- *
- * @param {string} packagePath import statement path
- * @returns {string} name of the package
- */
-function resolvePackageNameByPath(packagePath): string {
-  const packagePathArr = packagePath.split(path.sep); // TODO: make sure this is working on windows
-  // Regular package without path. example - import _ from 'lodash'
-  if (packagePathArr.length === 1) return packagePath;
-  // Scoped package. example - import getSymbolIterator from '@angular/core/src/util.d.ts';
-  if (packagePathArr[0].startsWith('@')) return path.join(packagePathArr[0], packagePathArr[1]);
-  // Regular package with internal path. example import something from 'mypackage/src/util/isString'
-  return packagePathArr[0];
-}
-
-/**
- * Recursively search for node module inside node_modules dir
- * This function propagate up until it gets to the root provided then stops
- *
- * @param {string} nmPath - package name
- * @param {string} workingDir - dir to start searching of
- * @param {string} root - path to dir to stop the search
- * @returns The resolved path for the package directory
- */
-export function resolveModulePath(nmPath: string, workingDir: string, root: string): PathOsBased | undefined {
-  const pathToCheck = path.resolve(workingDir, 'node_modules', nmPath);
-
-  if (fs.existsSync(pathToCheck)) {
-    return pathToCheck;
-  }
-
-  if (workingDir === root) {
-    return undefined;
-  }
-
-  const parentWorkingDir = path.dirname(workingDir);
-  if (parentWorkingDir === workingDir) return undefined;
-
-  return resolveModulePath(nmPath, parentWorkingDir, root);
-}
-
 interface PackageDependency {
   [dependencyId: string]: string;
-}
-
-interface PackageDependenciesTypes {
-  dependencies?: PackageDependency;
-  devDependencies?: PackageDependency;
-  peerDependencies?: PackageDependency;
-}
-interface FindPackagesResult {
-  foundPackages: {
-    [packageName: string]: PackageDependenciesTypes;
-  };
-  missingPackages: string[];
-}
-
-/**
- * Resolve package dependencies from package.json according to package names
- *
- * @param {Object} packageJson
- * @param {string []} packagesNames
- * @returns new object with found and missing
- */
-function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNames: string[]): FindPackagesResult {
-  const { dependencies, devDependencies, peerDependencies } = packageJson;
-  const foundPackages = {};
-  const mergedDependencies = Object.assign({}, dependencies, devDependencies, peerDependencies);
-  if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
-    const [foundPackagesPartition, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
-    foundPackagesPartition.forEach(pack => (foundPackages[pack] = mergedDependencies[pack]));
-    return { foundPackages, missingPackages };
-  }
-  return { foundPackages: {}, missingPackages: packagesNames };
-}
-
-type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
-type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
-type FoundPackages = { packages: { [packageName: string]: string }; bits: Array<ResolvedNodePackage> };
-/**
- * Run over each entry in the missing array and transform the missing from list of paths
- * to object with missing types
- *
- * @param {Array} missing
- * @param {string} cwd
- * @param {string} workspacePath
- * @param {string} bindingPrefix
- * @returns new object with grouped missing
- */
-function groupMissing(
-  missing: Missing,
-  cwd,
-  workspacePath,
-  bindingPrefix
-): { missingGroups: MissingGroupItem[]; foundPackages: FoundPackages } {
-  // temporarily disable this functionality since it cause few bugs: explanation below (on using the packageJson)
-  // const packageJson = PackageJson.findPackage(cwd);
-
-  /**
-   * Group missing dependencies by types (files, bits, packages)
-   * @param {Array} missing list of missing paths to group
-   * @returns {Function} function which group the dependencies
-   */
-  const byPathType = R.groupBy(item => {
-    if (item.startsWith(`${bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
-    return item.startsWith('.') ? 'files' : 'packages';
-  });
-  const groups: MissingGroupItem[] = Object.keys(missing).map(key =>
-    Object.assign({ originFile: processPath(key, {}, cwd) }, byPathType(missing[key], bindingPrefix))
-  );
-  groups.forEach((group: MissingGroupItem) => {
-    if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
-    if (group.bits) group.bits = group.bits.map(resolvePackageNameByPath);
-  });
-  // This is a hack to solve problems that madge has with packages for type script files
-  // It see them as missing even if they are exists
-  const foundPackages: FoundPackages = {
-    packages: {},
-    bits: []
-  };
-  const packageJson = PackageJson.findPackage(cwd);
-  groups.forEach((group: MissingGroupItem) => {
-    const missingPackages: string[] = [];
-    if (group.packages) {
-      group.packages.forEach(packageName => {
-        // Don't try to resolve the same package twice
-        if (R.contains(packageName, missingPackages)) return;
-        const resolvedPath = resolveModulePath(packageName, cwd, workspacePath);
-        if (!resolvedPath) {
-          missingPackages.push(packageName);
-          return;
-        }
-        const resolvedPackage = resolveNodePackage(cwd, resolvedPath);
-
-        // If the package is actually a component add it to the components (bits) list
-        if (resolvedPackage) {
-          if (resolvedPackage.componentId) {
-            foundPackages.bits.push(resolvedPackage);
-          } else {
-            const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
-            if (version) {
-              const packageWithVersion = {
-                [resolvedPackage.name]: version
-              };
-              Object.assign(foundPackages.packages, packageWithVersion);
-            }
-          }
-        } else {
-          missingPackages.push(packageName);
-        }
-      });
-    }
-    // this was disabled since it cause these bugs:
-    // (as part of 9ddeb61aa29c170cd58df0c2cc1cc30db1ebded8 of bit-javascript)
-    // https://github.com/teambit/bit/issues/635
-    // https://github.com/teambit/bit/issues/690
-    // later it re-enabled by this commit (d192a295632255dba9f0d62232fb237feeb8f33a of bit-javascript)
-    // we should think if we really want it
-    if (packageJson) {
-      const result = findPackagesInPackageJson(packageJson, missingPackages);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      groups.packages = result.missingPackages;
-      Object.assign(foundPackages.packages, result.foundPackages);
-
-      if (group.bits) {
-        const foundBits = findPackagesInPackageJson(packageJson, group.bits);
-        R.forEachObjIndexed((version, name) => {
-          const resolvedFoundBit: ResolvedNodePackage = {
-            name,
-            versionUsedByDependent: version
-          };
-          foundPackages.bits.push(resolvedFoundBit);
-        }, foundBits.foundPackages);
-      }
-    }
-  });
-
-  return { missingGroups: groups, foundPackages };
 }
 
 /**
@@ -532,10 +260,9 @@ function mergeErrorsToTree(baseDir, errors, tree: Tree) {
  * @param workspacePath
  * @param filePaths path of the file to calculate the dependencies
  * @param bindingPrefix
- * @return {Promise<{missing, tree}>}
  */
 export async function getDependencyTree({
-  baseDir,
+  componentDir, // component rootDir, for legacy-authored it's the same as workspacePath
   workspacePath,
   filePaths,
   bindingPrefix,
@@ -545,7 +272,7 @@ export async function getDependencyTree({
 }: DependencyTreeParams): Promise<{ tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
-    baseDir,
+    baseDir: componentDir,
     includeNpm: true,
     requireConfig: null,
     webpackConfig: null,
@@ -557,21 +284,26 @@ export async function getDependencyTree({
   // This is important because without this, madge won't know to resolve files if we run the
   // CMD not from the root dir
   const fullPaths = filePaths.map(filePath => {
-    if (filePath.startsWith(baseDir)) {
+    if (filePath.startsWith(componentDir)) {
       return filePath;
     }
-    return path.resolve(baseDir, filePath);
+    return path.resolve(componentDir, filePath);
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
   // @ts-ignore
-  const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
-  const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, workspacePath, bindingPrefix);
+  const tree: Tree = groupDependencyTree(madgeTree, componentDir, bindingPrefix);
+  const { missingGroups, foundPackages } = new MissingHandler(
+    skipped,
+    componentDir,
+    workspacePath,
+    bindingPrefix
+  ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
-  if (errors) mergeErrorsToTree(baseDir, errors, tree);
+  if (errors) mergeErrorsToTree(componentDir, errors, tree);
   if (missingGroups) mergeMissingToTree(missingGroups, tree);
-  if (pathMap) updateTreeWithPathMap(tree, pathMap, baseDir);
+  if (pathMap) updateTreeWithPathMap(tree, pathMap, componentDir);
 
   return { tree };
 }

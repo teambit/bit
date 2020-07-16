@@ -40,6 +40,15 @@ semver_tags_only_filters: &semver_tags_only_filters
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
 
+dev_tag_only_filters: &dev_tag_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /^dev$/
+
 version: 2.1
 
 orbs:
@@ -58,6 +67,25 @@ jobs:
           root: /home/circleci
           paths:
             - bit
+  setup_react_new_project:
+    <<: *defaults
+    steps:
+      -
+        run:
+          name: 'checkout react new project'
+          command: 'git clone https://github.com/teambit/react-new-project.git'
+      -
+        restore_cache:
+          key: bitsrc-registry3
+      -
+        run:
+          name: 'install dependencies'
+          command: 'cd react-new-project && npm i'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - react-new-project
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -80,19 +108,19 @@ jobs:
     <<: *defaults
     steps:
       # prod registry
-      # -
-        # run: npm config set @bit:registry https://node.bit.dev
-      # -
-        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      -
+        run: npm config set @bit:registry https://node.bit.dev
+      -
+        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      -
-        run: 'npm config set @bit:registry https://node-stg.bit.dev'
-      -
-        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
+      # -
+        # run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      # -
+        # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
   install_npm_deps:
@@ -106,6 +134,9 @@ jobs:
       -
         attach_workspace:
           at: ./
+      -
+        restore_cache:
+          key: bitsrc-registry3
       -
         run:
           name: 'save SHA to a file'
@@ -133,6 +164,38 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
+  link_react_new_project:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        restore_cache:
+          key: bit-global-config-v1
+      -
+        run:
+          name: 'bit link in react-new-project'
+          command: 'cd react-new-project && bit link'
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - react-new-project
+            - bit/node_modules
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -174,6 +237,47 @@ jobs:
           root: .
           paths:
             - bit/dist
+  configure-bit:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        restore_cache:
+          key: bitsrc-registry3
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      -
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        run: 'bit config set hub_domain hub.bit.dev'
+        # uncomment to configure circle to run against stg environment
+        # -
+          # run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run: 'cat ~/Library/Caches/Bit/config/config.json'
+      -
+        save_cache:
+          key: bit-global-config-v1
+          paths:
+            - ~/Library/Caches/Bit/config/config.json
   pack:
     <<: *defaults
     steps:
@@ -242,6 +346,17 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
+  github-pre-release:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      # - run:
+      #     name: set GitHub token
+      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      -
+        run: 'cd bit && npm run pre-release:circle'
   build-debian:
     <<: *defaults
     docker:
@@ -304,6 +419,33 @@ jobs:
         run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+  # this should be unified with the prod version and get params for dev
+  publish_to_jfrog_dev:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: print bit version
+          command: cd bit && cat ./package.json | jq .version -r
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: Install jFrog CLI
+          command: curl -fL https://getcli.jfrog.io | sh
+      - run:
+          name: Configure jfrog auth
+          command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
+      -
+        run:
+          name: Upload debian file
+          command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
+      -
+        run:
+          name: Upload rpm file
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   generate_docs:
     <<: *defaults
     steps:
@@ -398,6 +540,10 @@ jobs:
       -
         attach_workspace:
           at: ./
+      # -
+      #   run:
+      #     name: 'link components from react-new-proejct to bit'
+      #     command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'run TSC'
@@ -446,15 +592,14 @@ jobs:
       #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
+          key: bit-global-config-v1
+      -
+        restore_cache:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -472,29 +617,6 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        # do not change this one, it's important to use the production for getting components bit use for running
-        # if you want the tests to work with stage, you should change the hub domain few lines below
-        run: 'bit config set hub_domain hub.bit.dev'
-      # -
-      #   run:
-      #     name: 'bit import'
-      #     command: 'cd bit && bit import'
-      # -
-      #   run:
-      #     name: 'npm install'
-      #     command: 'cd bit && bit install'
-      -
-        # uncomment to configure circle to run against stg environment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run:
           name: 'Run e2e tests'
@@ -593,12 +715,8 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          # key: bitsrc-registry2
-          key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          keys:
-            - 'builded-{{ checksum ".circle-sha" }}'
+          key: bitsrc-registry3
+          # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -651,6 +769,7 @@ jobs:
           root: C:\Users\circleci\project
           paths:
             - bit
+  # TODO: make it powershell if you want to use it
   windows_set_ssh_key:
     <<: *windows_defaults
     working_directory: C:\Users\circleci\.ssh
@@ -675,18 +794,25 @@ jobs:
       # prod registry
       # -
         # run: npm config set @bit:registry https://node.bit.dev
+      -
+        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
       # -
-        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      #   run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
+      -
+        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
       # stage registry
-      -
-        run: 'npm config set @bit:registry https://node-stg.bit.dev'
-      -
-        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
+      # -
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
+      # -
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
-          key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v3
+          # key: windows_bitsrc-registry-stg-v1
           paths:
-            - .npmrc
+            - C:\Users\circleci\.npmrc
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
@@ -697,6 +823,12 @@ jobs:
       -
         attach_workspace:
           at: .
+      -
+        restore_cache:
+          key: windows_bitsrc-registry-v3
+          # key: windows_bitsrc-registry-stg-v1
+      # -
+      #   run: 'npm config list'
       -
         run:
           name: 'Install npm dependencies'
@@ -753,7 +885,8 @@ jobs:
           key: windows_bitsrc-ssh-key-v1
       -
         restore_cache:
-          key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v1
       # -
       #   restore_cache:
       #     keys:
@@ -815,13 +948,27 @@ workflows:
       - set_ssh_key
       - set_bitsrc_registry
       -
+        setup_react_new_project:
+          requires:
+            - set_bitsrc_registry
+      -
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:
             - install_npm_deps
+      -
+        configure-bit:
+          requires:
+            - build
+      -
+        link_react_new_project:
+          requires:
+            - configure-bit
+            - setup_react_new_project
       -
         unit_test:
           requires:
@@ -829,13 +976,18 @@ workflows:
       -
         lint:
           requires:
-            - install_npm_deps
+            - link_react_new_project
       -
         check_types:
           requires:
-            - install_npm_deps
+            - link_react_new_project
       -
         generate_types:
+          requires:
+            - link_react_new_project
+      -
+        generate_docs:
+          <<: *semver_tags_only_filters
           requires:
             - build
       # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
@@ -853,7 +1005,7 @@ workflows:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
-            - build
+            - configure-bit
             # - pack
       -
         performance_e2e_test:
@@ -880,22 +1032,23 @@ workflows:
       - windows_checkout_code:
           requires:
             - windows_approval_job
-      - windows_set_ssh_key:
-          requires:
-            - windows_approval_job
+      # - windows_set_ssh_key:
+      #     requires:
+      #       - windows_approval_job
       - windows_set_bitsrc_registry:
           requires:
             - windows_approval_job
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code
+            - windows_set_bitsrc_registry
       - windows_build:
           requires:
             - windows_install_npm_deps
       - windows_e2e_test:
           requires:
             - windows_build
-            - windows_set_ssh_key
+            # - windows_set_ssh_key
             - windows_set_bitsrc_registry
   deploy:
     jobs:
@@ -961,6 +1114,46 @@ workflows:
             - publish_to_jfrog
             - github-release
             - npm-publish
+  deploy_dev:
+    jobs:
+      - checkout_code:
+          <<: *dev_tag_only_filters
+      -
+        install_npm_deps:
+          <<: *dev_tag_only_filters
+          requires:
+            - checkout_code
+      -
+        build:
+          <<: *dev_tag_only_filters
+          requires:
+            - install_npm_deps
+      -
+        pack:
+          <<: *dev_tag_only_filters
+          requires:
+            - build
+      -
+        github-pre-release:
+          <<: *dev_tag_only_filters
+          requires:
+            - pack
+      -
+        build-rpm:
+          <<: *dev_tag_only_filters
+          requires:
+            - pack
+      -
+        build-debian:
+          <<: *dev_tag_only_filters
+          requires:
+            - pack
+      -
+        publish_to_jfrog_dev:
+          <<: *dev_tag_only_filters
+          requires:
+            - build-debian
+            - build-rpm
   performance_tests:
     triggers:
       - schedule:
@@ -971,10 +1164,12 @@ workflows:
                 - prod
     jobs:
       - checkout_code
+      - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:
@@ -999,6 +1194,7 @@ workflows:
         install_npm_deps:
           requires:
             - checkout_code
+            - set_bitsrc_registry
       -
         build:
           requires:

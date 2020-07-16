@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
+import { ReactRouterUI } from '../react-router/react-router.ui';
+import { ClientContext } from './ui/client-context';
+
 // import * as serviceWorker from './serviceWorker';
 
 // If you want your app to work offline and load faster, you can change
@@ -13,10 +15,6 @@ import { GraphQlUI } from '../graphql/graphql.ui';
  * extension
  */
 export class UIRuntimeExtension {
-  static dependencies = [WorkspaceUI, GraphQlUI];
-
-  static slots = [Slot.withType()];
-
   constructor(
     /**
      * workspace UI extension.
@@ -26,17 +24,29 @@ export class UIRuntimeExtension {
     /**
      * GraphQL extension.
      */
-    private graphql: GraphQlUI
+    private graphql: GraphQlUI,
+
+    /**
+     * react-router extension.
+     */
+    private router: ReactRouterUI
   ) {}
 
   render() {
+    const GraphqlProvider = this.graphql.getProvider;
+    const routes = this.router.renderRoutes();
+
     ReactDOM.render(
-      <React.StrictMode>{this.graphql.getProvider(this.workspace.getMain())}</React.StrictMode>,
+      <GraphqlProvider>
+        <ClientContext>{routes}</ClientContext>
+      </GraphqlProvider>,
       document.getElementById('root')
     );
   }
 
-  static async provider([workspace, graphql]: [WorkspaceUI, GraphQlUI]) {
-    return new UIRuntimeExtension(workspace, graphql);
+  static dependencies = [WorkspaceUI, GraphQlUI, ReactRouterUI];
+
+  static async provider([workspace, graphql, router]: [WorkspaceUI, GraphQlUI, ReactRouterUI]) {
+    return new UIRuntimeExtension(workspace, graphql, router);
   }
 }

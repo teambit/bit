@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
-import { Command } from '../command';
+import { Command } from '../../../cli/command';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {
     const help: HelpProps = Object.entries(commands)
-      .filter(([_name, command]) => !command.private && (command.shortDescription || command.description))
+      .filter(([, command]) => !command.private && (command.shortDescription || command.description))
       .reduce(function(partialHelp, [id, command]) {
         partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},
@@ -21,7 +20,7 @@ export function Help(Renderer = DefaultHelpRender) {
 }
 
 export type HelpProps = {
-  [name: string]: {
+  [groupName: string]: {
     commands: { [cmdName: string]: string };
     description: string;
   };
@@ -31,18 +30,18 @@ function DefaultHelpRender(props: HelpProps) {
   const element = (
     <Box key="help" flexDirection="column">
       <HelpHeader />
-      {Object.entries(props).map(function([name, group]) {
+      {Object.entries(props).map(([groupName, group]) => {
         return (
-          <Box key={name} flexDirection="column" marginBottom={1}>
-            <Text bold underline key={`group_${name}`}>
+          <Box key={groupName} flexDirection="column" marginBottom={1}>
+            <Text bold underline key={`group_${groupName}`}>
               {group.description}
             </Text>
             <Box flexDirection="column">
-              {Object.entries(group.commands).map(function([command, description]) {
+              {Object.entries(group.commands).map(([commandName, description]) => {
                 return (
-                  <Text key={command}>
+                  <Text key={commandName}>
                     {'  '}
-                    <Color blue>{alignCommandName(command)}</Color>
+                    <Text bold>{alignCommandName(commandName)}</Text>
                     {description}
                   </Text>
                 );
@@ -67,10 +66,10 @@ function HelpHeader() {
 }
 
 function HelpFooter() {
-  const m = `please use 'bit <command> --help' for more information and guides on specific commands.`;
+  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.`;
   return (
     <Box>
-      <Color grey>{m}</Color>
+      <Color grey>{footer}</Color>
     </Box>
   );
 }

@@ -107,6 +107,8 @@ import { AddingIndividualFiles } from '../consumer/component-ops/add-components/
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
+import { PaperError } from '../extensions/cli';
+import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -161,7 +163,10 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-  [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],
+  [
+    InvalidBitId,
+    err => `error: component ID "${chalk.bold(err.id)}" is invalid, please use the following format: [scope]/<name>`
+  ],
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
@@ -435,6 +440,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
   ],
   [ConfigKeyNotFound, err => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
+  [FlagHarmonyOnly, err => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
@@ -638,7 +644,7 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
  * in which case, it loses its class and has only the fields.
  */
-function sendToAnalyticsAndSentry(err: Error) {
+export function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -661,16 +667,25 @@ function handleNonBitCustomErrors(err: Error): string {
   return chalk.red(err.message || err);
 }
 
-export default (err: Error): string | undefined => {
+export default (err: Error): { message: string; error: Error } => {
   const errorDefinition = findErrorDefinition(err);
+  const getErrMsg = (): string => {
+    if (err instanceof PaperError) {
+      return err.report();
+    }
+    if (!errorDefinition) {
+      return handleNonBitCustomErrors(err);
+    }
+    const func = getErrorFunc(errorDefinition);
+    const errorMessage = getErrorMessage(err, func) || 'unknown error';
+    err.message = errorMessage;
+    return errorMessage;
+  };
   sendToAnalyticsAndSentry(err);
-  if (!errorDefinition) {
-    return handleNonBitCustomErrors(err);
-  }
-  const func = getErrorFunc(errorDefinition);
-  const errorMessage = getErrorMessage(err, func) || 'unknown error';
-  err.message = errorMessage;
+  const errorMessage = getErrMsg();
   logger.error(`user gets the following error: ${errorMessage}`);
   logger.silly(err.stack);
-  return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
+  // eslint-disable-next-line no-console
+  if (process.env.BIT_DEBUG) console.error(err); // todo: remove once we have a good mechanism to handle it
+  return { message: chalk.red(errorMessage), error: err };
 };

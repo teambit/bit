@@ -17,6 +17,10 @@ import WorkspaceLane from './workspace-lane';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
+export type GetBitMapComponentOptions = {
+  ignoreVersion?: boolean;
+  ignoreScopeAndVersion?: boolean;
+};
 
 export const LANE_KEY = '_bit_lane';
 
@@ -98,10 +102,9 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    componentMap[propName] = val;
+    (componentMap as any)[propName] = val;
     this.markAsChanged();
     return componentMap;
   }
@@ -316,13 +319,7 @@ export default class BitMap {
    */
   getComponent(
     bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false
-    }: {
-      ignoreVersion?: boolean;
-      ignoreScopeAndVersion?: boolean;
-    } = {}
+    { ignoreVersion = false, ignoreScopeAndVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
     return this.components.find(c => c.id.isEqual(existingBitId)) as ComponentMap;

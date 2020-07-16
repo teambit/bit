@@ -176,6 +176,8 @@ export default class OverridesDependencies {
     idsFromModel: BitIds
   ): BitId | null | undefined {
     if (field === 'peerDependencies') return null;
+    // TODO: fix this, it's not relevant any more
+    // We should go to package.json and check if it's a component
     if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return null;
     const compIds = this.component.overrides._getComponentNamesFromPackages(dependency);
     for (const compId of [...compIds, dependency]) {

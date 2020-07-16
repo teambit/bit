@@ -1,0 +1,14 @@
+.widgetLink {
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+	transition: color 300ms;
+	padding: 12px 15px;
+	border-radius: 5px;
+	color: var(--text-highlight);
+	
+	&.active {
+		background-color: white;
+	}
+}

@@ -22,6 +22,7 @@ import { isHash } from '../../version/version-parser';
 import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import { EnvPackages } from '../../legacy-extensions/env-extension';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
+import { SchemaFeature, isSchemaSupport, SchemaName } from '../../consumer/component/component-schema';
 
 type CiProps = {
   error: Record<string, any>;
@@ -74,7 +75,7 @@ export type VersionProps = {
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
-  ignoreSharedDir?: boolean;
+  schema?: string;
   customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
@@ -109,7 +110,7 @@ export default class Version extends BitObject {
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
   bindingPrefix: string | undefined;
-  ignoreSharedDir: boolean | undefined;
+  schema: string | undefined;
   customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
@@ -139,7 +140,7 @@ export default class Version extends BitObject {
     this.compilerPackageDependencies = props.compilerPackageDependencies || {};
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
-    this.ignoreSharedDir = props.ignoreSharedDir;
+    this.schema = props.schema;
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
@@ -347,7 +348,7 @@ export default class Version extends BitObject {
         mainDistFile: this.mainDistFile,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
-        ignoreSharedDir: this.ignoreSharedDir,
+        schema: this.schema,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
@@ -415,7 +416,7 @@ export default class Version extends BitObject {
       files,
       compiler,
       bindingPrefix,
-      ignoreSharedDir,
+      schema,
       tester,
       log,
       docs,
@@ -515,7 +516,7 @@ export default class Version extends BitObject {
       mainDistFile,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
-      ignoreSharedDir: ignoreSharedDir || undefined,
+      schema: schema || undefined,
       tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
@@ -641,7 +642,7 @@ export default class Version extends BitObject {
       ),
       flattenedDependencies,
       flattenedDevDependencies,
-      ignoreSharedDir: component.ignoreSharedDir,
+      schema: component.schema,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -660,6 +661,14 @@ export default class Version extends BitObject {
   setNewHash() {
     // @todo: after v15 is deployed, this can be changed to generate a random uuid
     this._hash = this.calculateHash().toString();
+  }
+
+  get ignoreSharedDir(): boolean {
+    return !isSchemaSupport(SchemaFeature.sharedDir, this.schema);
+  }
+
+  get isLegacy(): boolean {
+    return !this.schema || this.schema === SchemaName.Legacy;
   }
 
   setSpecsResults(specsResults: Results | undefined) {

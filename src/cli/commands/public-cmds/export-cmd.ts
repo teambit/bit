@@ -9,6 +9,7 @@ import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
 import { Lane } from '../../../scope/models';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { PublishResults } from '../../../scope/component-ops/publish-during-export';
 
 export default class Export implements LegacyCommand {
   name = 'export [remote] [id...]';
@@ -93,6 +94,7 @@ export default class Export implements LegacyCommand {
     missingScope,
     exportedLanes,
     ejectResults,
+    publishResults,
     remote,
     includeDependencies
   }: {
@@ -101,6 +103,7 @@ export default class Export implements LegacyCommand {
     missingScope: BitId[];
     exportedLanes: Lane[];
     ejectResults: EjectResults | null | undefined;
+    publishResults: PublishResults;
     remote: string;
     includeDependencies: boolean;
   }): string {
@@ -144,6 +147,27 @@ ${exportedLanes.map(l => `${chalk.bold(l.name)} (${l.components.length} componen
       );
     };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + ejectOutput();
+    const publishOutput = () => {
+      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
+      const failedCompsStr = publishResults.failedComponents
+        .map(failed => {
+          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
+        })
+        .join('\n\n');
+      const successCompsStr = publishResults.publishedComponents
+        .map(success => {
+          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
+        })
+        .join('\n');
+      const failedTitle = `\n\n${chalk.red('failed publishing the following components\n')}`;
+      const successTitle = `\n\n${chalk.green('published the following component(s) successfully\n')}`;
+      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
+      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
+      return successOutput + failedOutput;
+    };
+
+    return (
+      nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + publishOutput() + ejectOutput()
+    );
   }
 }

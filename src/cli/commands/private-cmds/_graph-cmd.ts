@@ -11,6 +11,7 @@ let compressResponse;
 export default class _Graph implements LegacyCommand {
   name = '_graph <path> <args>';
   private = true;
+  internal = true;
   description = 'returns scope graph or sub-graph when component id is given';
   alias = '';
   opts = [];

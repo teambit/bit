@@ -6,7 +6,18 @@ import { Network } from '../isolator';
 import { BuildResults } from '../builder';
 
 export class TypescriptCompiler implements Compiler {
-  constructor(readonly tsConfig: Record<string, any>) {}
+  constructor(
+    /**
+     * typescript config.
+     */
+    readonly tsConfig: Record<string, any>,
+
+    /**
+     * path for .d.ts files to include during build.
+     */
+    private types: string[]
+  ) {}
+
   compileFile(
     fileContent: string,
     options: { componentDir: string; filePath: string }
@@ -18,8 +29,10 @@ export class TypescriptCompiler implements Compiler {
     }
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
+      // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
       throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
     }
+
     const compilerOptions = compilerOptionsFromTsconfig.options;
     compilerOptions.sourceRoot = options.componentDir;
     const result = ts.transpileModule(fileContent, {
@@ -36,6 +49,7 @@ export class TypescriptCompiler implements Compiler {
       };
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
+      // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
       throw new Error(error);
     }
 
@@ -50,12 +64,17 @@ export class TypescriptCompiler implements Compiler {
     }
     return outputFiles;
   }
+
   async compileOnCapsules({ capsuleGraph }: { capsuleGraph: Network }): Promise<BuildResults> {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
-    capsuleDirs.forEach(capsuleDir =>
-      fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2))
-    );
+
+    capsuleDirs.forEach(capsuleDir => {
+      fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2));
+
+      this.writeTypes(capsuleDir);
+    });
+
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
@@ -75,10 +94,15 @@ export class TypescriptCompiler implements Compiler {
       getNewLine: () => ts.sys.newLine
     };
     const componentsErrors = diagnostics.map(diagnostic => {
-      if (!diagnostic.file) throw new Error(`diagnostic has no file. ${JSON.stringify(diagnostic)}`);
+      const errorStr = process.stdout.isTTY
+        ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
+        : ts.formatDiagnostic(diagnostic, formatHost);
+      if (!diagnostic.file) {
+        // this happens for example if one of the components and is not TS
+        throw new Error(errorStr);
+      }
       const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName);
       if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
-      const errorStr = ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost);
       return { componentId, error: errorStr };
     });
     const components = capsules.map(capsule => {
@@ -88,5 +112,14 @@ export class TypescriptCompiler implements Compiler {
     });
 
     return { artifacts: [{ dirName: 'dist' }], components };
+  }
+
+  private writeTypes(rootDir: string) {
+    this.types.forEach(typePath => {
+      const contents = fs.readFileSync(typePath, 'utf8');
+      const filename = path.basename(typePath);
+
+      fs.outputFile(path.join(rootDir, 'types', filename), contents);
+    });
   }
 }

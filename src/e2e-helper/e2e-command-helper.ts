@@ -281,6 +281,20 @@ export default class CommandHelper {
     return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
+  /**
+   * returns the capsule dir
+   */
+  createCapsuleHarmony(id: string): string {
+    const output = this.runCmd(`bit capsule-create ${id} --json`);
+    const capsules = JSON.parse(output);
+    const capsule = capsules.find(c => c.id === id);
+    if (!capsule)
+      throw new Error(
+        `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map(c => c.id).join(', ')}`
+      );
+    return capsule.path;
+  }
+
   getCapsuleOfComponent(id: string) {
     const capsulesJson = this.runCmd('bit capsule-list -j');
     const capsules = JSON.parse(capsulesJson);
@@ -328,6 +342,13 @@ export default class CommandHelper {
   expectStatusToBeClean() {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach(key => {
+      expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
+    });
+  }
+
+  expectStatusToNotHaveIssues() {
+    const statusJson = this.statusJson();
+    ['componentsWithMissingDeps', 'invalidComponents'].forEach(key => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -412,6 +433,13 @@ export default class CommandHelper {
   }
 
   packComponent(id: string, options: Record<string, any>, extract = false) {
+    const defaultOptions = {
+      o: '',
+      p: '',
+      k: '',
+      j: ''
+    };
+    options = { ...defaultOptions, ...options };
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -439,15 +467,14 @@ export default class CommandHelper {
     }
     return result;
   }
-
-  ejectConf(id = 'bar/foo', options?: Record<string, any>) {
-    const value = options
-      ? Object.keys(options) // $FlowFixMe
-          .map(key => `-${key} ${options[key]}`)
-          .join(' ')
-      : '';
-    return this.runCmd(`bit eject-conf ${id} ${value}`);
+  publish(id: string, flags = '') {
+    return this.runCmd(`bit publish ${id} ${flags}`);
   }
+  ejectConf(id = 'bar/foo', options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
+  }
+
   injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
@@ -476,7 +503,8 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  parseOptions(options: Record<string, any>): string {
+  parseOptions(options?: Record<string, any>): string {
+    if (!options) return ' ';
     const value = Object.keys(options)
       .map(key => {
         const keyStr = key.length === 1 ? `-${key}` : `--${key}`;

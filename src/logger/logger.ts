@@ -102,7 +102,8 @@ class BitLogger {
   console(msg: string | Error, level = 'info', color?: string) {
     let actualMessage = msg;
     if (msg instanceof Error) {
-      actualMessage = defaultHandleError(msg) || msg;
+      const { message } = defaultHandleError(msg);
+      actualMessage = message;
     }
     if (!this.shouldWriteToConsole) {
       this[level](actualMessage);
@@ -217,6 +218,25 @@ export const printWarning = (msg: string) => {
 /**
  * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
  * it solves an issue when exiting the code explicitly and the log file is not written
+ *
+ * there are still two issues though.
+ * 1. sometimes, an error is thrown "write after end". can be reproduced by running the
+ * performance e2e-test on 3,000 components, 100 dependencies, on export.
+ * 2. sometimes, it doesn't write all messages to the log. can be reproduced by the same method as
+ * above, but even with 300 components and 10 dependencies.
+ *
+ * if you try to fix these issues, please make sure that after your fix, the following are working:
+ * 1. the two cases should work.
+ * 2. when error is thrown, it exists successfully with the correct error-code. (the standard
+ * e2e-tests cover this multiple times).
+ * 3. the ssh is working. (not covered by the e2e-tests). run a simple export to an ssh and make
+ * sure it doesn't hang.
+ *
+ * for the record, the following was working for #1 and #2 but not for #3.
+ * ```
+ * const loggerDone = new Promise(resolve => logger.logger.on(code ? 'finish' : 'close', resolve));
+ * if (code) logger.logger.end();
+ * ```
  */
 async function waitForLogger() {
   const loggerDone = new Promise(resolve => logger.logger.on('finish', resolve));

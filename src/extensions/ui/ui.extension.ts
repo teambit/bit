@@ -1,3 +1,4 @@
+import getPort from 'get-port';
 import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
 import { CLIExtension } from '../cli';
@@ -6,11 +7,12 @@ import { Environments } from '../environments';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { GraphQLExtension } from '../graphql';
 import { Component } from '../component';
-import createWebpackConfig from './webpack/webpack.config';
+import { createWebpackConfig } from './webpack/webpack.config';
+import { BundlerExtension } from '../bundler/bundler.extension';
+import { WatcherExtension } from '../watch';
 
+type UIDeps = [CLIExtension, Environments, Workspace, GraphQLExtension, BundlerExtension, WatcherExtension];
 export class UIExtension {
-  static dependencies = [CLIExtension, Environments, WorkspaceExt, GraphQLExtension];
-
   constructor(
     /**
      * envs extension.
@@ -25,7 +27,17 @@ export class UIExtension {
     /**
      * workspace extension.
      */
-    private workspace: Workspace
+    private workspace: Workspace,
+
+    /**
+     * bundler extension.
+     */
+    private bundler: BundlerExtension,
+
+    /**
+     * watcher extension.
+     */
+    private watcher: WatcherExtension
   ) {}
 
   static runtimes = {
@@ -33,24 +45,33 @@ export class UIExtension {
     cli: ''
   };
 
-  private createDevServer() {}
-
-  private selectPort() {
-    return 3000;
+  private async selectPort() {
+    return getPort({ port: getPort.makeRange(3000, 3200) });
   }
 
   async createRuntime(components?: Component[]) {
     const server = this.graphql.listen();
-    components;
     const config = createWebpackConfig(this.workspace.path, [require.resolve('./ui.runtime')]);
     const compiler = webpack(config);
-    const devServer = new WebpackDevServer(compiler);
-    devServer.listen(this.selectPort());
+    const devServer = new WebpackDevServer(compiler, config.devServer);
+    devServer.listen(await this.selectPort());
+    await this.bundler.devServer(components);
+    // const devServers = await this.bundler.devServer(components);
+    this.watcher.watchAll();
     return server;
   }
 
-  static async provider([cli, envs, workspace, graphql]: [CLIExtension, Environments, Workspace, GraphQLExtension]) {
-    const ui = new UIExtension(envs, graphql, workspace);
+  static dependencies = [
+    CLIExtension,
+    Environments,
+    WorkspaceExt,
+    GraphQLExtension,
+    BundlerExtension,
+    WatcherExtension
+  ];
+
+  static async provider([cli, envs, workspace, graphql, bundler, watcher]: UIDeps) {
+    const ui = new UIExtension(envs, graphql, workspace, bundler, watcher);
     cli.register(new StartCmd(ui, workspace));
     return ui;
   }

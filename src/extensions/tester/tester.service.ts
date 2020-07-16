@@ -2,9 +2,11 @@ import { join } from 'path';
 import { EnvService, ExecutionContext } from '../environments';
 import { Tester, TestResults } from './tester';
 import { detectTestFiles } from './utils';
+import { Workspace } from '../workspace';
 
 export class TesterService implements EnvService {
   constructor(
+    readonly workspace: Workspace,
     /**
      * regex used to identify which files to test.
      */
@@ -17,7 +19,7 @@ export class TesterService implements EnvService {
 
     const testMatch = components.reduce((acc: string[], component: any) => {
       const specs = component.specs.map(specFile =>
-        join(context.workspace.path, component.state._consumer.componentMap?.getComponentDir(), specFile)
+        join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: true }) || '', specFile)
       );
 
       acc = acc.concat(specs);
@@ -27,7 +29,8 @@ export class TesterService implements EnvService {
     const testerContext = Object.assign(context, {
       release: false,
       specFiles: testMatch,
-      rootPath: context.workspace.path
+      rootPath: this.workspace.path,
+      workspace: this.workspace
     });
 
     return tester.test(testerContext);

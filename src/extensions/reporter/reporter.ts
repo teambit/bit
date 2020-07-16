@@ -23,7 +23,11 @@ export default class Reporter {
   suppressOutput() {
     this.outputShouldBeSuppressed = true;
   }
-  setStatusText(text) {
+  /**
+   * this text always shows in the bottom of the capsule. once it is called, it replaces the
+   * previous text. as a result, at any given time only one message is shown.
+   */
+  setStatusText(text: string) {
     this.statusLine.reRender(text);
   }
   title(...messages) {
@@ -40,7 +44,7 @@ export default class Reporter {
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.hex(stc(componentId))(line));
+          console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(line);
         }
@@ -55,7 +59,7 @@ export default class Reporter {
       .forEach(line => {
         // console.log(chalk.yellow('warn:'), chalk.hex(stc(id))(line));
         if (componentId) {
-          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(line));
+          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(chalk.yellow('warn:'), line);
         }
@@ -69,7 +73,7 @@ export default class Reporter {
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(line));
+          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(chalk.red('error:'), line);
         }
@@ -83,7 +87,7 @@ export default class Reporter {
       .filter(line => line.replace(/\s+/, '').length > 0)
       .forEach(line => {
         if (componentId) {
-          console.log(chalk.hex(stc(componentId))(line));
+          console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
           console.log(line);
         }
@@ -91,31 +95,36 @@ export default class Reporter {
     this.statusLine.startSpinner();
   }
   subscribe(extensionName) {
-    this.logger.subscribe(extensionName, (logEntry: LogEntry) => {
-      const { componentId, messages } = logEntry;
-      switch (logEntry.logLevel) {
-        case LogLevel.INFO:
-          this.info(componentId, messages);
-          break;
-        case LogLevel.WARN:
-          this.warn(componentId, messages);
-          break;
-        case LogLevel.ERROR:
-          this.error(componentId, messages);
-          break;
-        case LogLevel.DEBUG:
-          this.debug(componentId, messages);
-          break;
-        default:
-          break;
-      }
-    });
+    this.logger.subscribe(extensionName, this.loggerCallback.bind(this));
   }
+  subscribeAll() {
+    this.logger.subscribeAll(this.loggerCallback.bind(this));
+  }
+
   unsubscribe(extensionName) {
     this.logger.unsubscribe(extensionName);
   }
   end() {
     this.statusLine.clear();
+  }
+  private loggerCallback(logEntry: LogEntry) {
+    const { componentId, messages } = logEntry;
+    switch (logEntry.logLevel) {
+      case LogLevel.INFO:
+        this.info(componentId, messages);
+        break;
+      case LogLevel.WARN:
+        this.warn(componentId, messages);
+        break;
+      case LogLevel.ERROR:
+        this.error(componentId, messages);
+        break;
+      case LogLevel.DEBUG:
+        this.debug(componentId, messages);
+        break;
+      default:
+        break;
+    }
   }
   private get shouldWriteOutput() {
     return !this.outputShouldBeSuppressed;

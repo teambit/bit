@@ -12,43 +12,45 @@ import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
 import { pathJoinLinux } from '../../utils';
-import { BitIds } from '../../bit-id';
+import { BitIds, BitId } from '../../bit-id';
 import ValidationError from '../../error/validation-error';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { PathLinux } from '../../utils/path';
-import { Dependency } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { sha1 } from '../../utils';
-import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
+import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
-    const foundDependency = componentsToTag.find(component =>
-      component.id.isEqualWithoutVersion(dependency[idFieldName])
-    );
-    if (foundDependency) {
-      dependency[idFieldName] = dependency[idFieldName].changeVersion(foundDependency.version);
-      return true;
-    }
-    return false;
+  const getNewDependencyVersion = (id: BitId): BitId | null => {
+    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(id));
+    return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
   componentsToTag.forEach(oneComponentToTag => {
-    oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
+    oneComponentToTag.getAllDependencies().forEach(dependency => {
+      const newDepId = getNewDependencyVersion(dependency.id);
+      if (newDepId) dependency.id = newDepId;
+    });
     // TODO: in case there are core extensions they should be excluded here
     oneComponentToTag.extensions.forEach(extension => {
+      if (extension.name === Extensions.dependencyResolver && extension.data && extension.data.dependencies) {
+        extension.data.dependencies.forEach(dep => {
+          const newDepId = getNewDependencyVersion(dep.componentId);
+          if (newDepId) dep.componentId = newDepId;
+        });
+      }
       // For core extensions there won't be an extensionId but name
       // We only want to add version to external extensions not core extensions
-      if (extension.extensionId) {
-        const wasDependencyFound = updateDependencyVersion(extension, 'extensionId');
-        if (!wasDependencyFound && !extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
-          throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
+      if (!extension.extensionId) return;
+      const newDepId = getNewDependencyVersion(extension.extensionId);
+      if (newDepId) extension.extensionId = newDepId;
+      else if (!extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
+        throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
 this extension was not included in the tag command.`);
-        }
       }
     });
   });
@@ -63,7 +65,7 @@ function setHashes(componentsToTag: Component[]): void {
 async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
-  releaseType: ReleaseType,
+  releaseType: ReleaseType | undefined,
   exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
@@ -231,15 +233,17 @@ export default async function tagModelComponent({
   const legacyComps: Component[] = [];
   const nonLegacyComps: Component[] = [];
 
-  componentsToBuildAndTest.forEach(c =>
-    c.extensions && c.extensions.length ? nonLegacyComps.push(c) : legacyComps.push(c)
-  );
+  componentsToBuildAndTest.forEach(c => {
+    // @todo: change this condition to `c.isLegacy` once harmony-beta is merged.
+    c.extensions && c.extensions.length && !consumer.isLegacy ? nonLegacyComps.push(c) : legacyComps.push(c);
+  });
   if (legacyComps.length) {
     await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
   }
   if (nonLegacyComps.length) {
     const ids = componentsToBuildAndTest.map(c => c.id);
-    await Promise.all(scope.onTag.map(func => func(ids)));
+    const results: any[] = await Promise.all(scope.onTag.map(func => func(ids)));
+    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
   }
 
   logger.debug('scope.putMany: sequentially test all components');
@@ -269,6 +273,7 @@ export default async function tagModelComponent({
 
   // go through all components and find the future versions for them
   isSnap ? setHashes(componentsToTag) : await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
+  setCurrentSchema(componentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
@@ -313,4 +318,70 @@ export default async function tagModelComponent({
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedResults };
+}
+
+function setCurrentSchema(components: Component[], consumer: Consumer) {
+  if (consumer.isLegacy) return;
+  components.forEach(component => {
+    component.schema = CURRENT_SCHEMA;
+  });
+}
+
+/**
+ * This will take a result from the tag hook, and apply it on the components
+ * (usually take the result extensions and set them on the components)
+ *
+ * @param {Component[]} components
+ * @returns
+ */
+function updateComponentsByTagResult(components: Component[]) {
+  return (envsResult: any[]) => {
+    if (!envsResult || envsResult.length === 0) return;
+    envsResult.map(updateComponentsByTagEnvResultsComponents(components));
+  };
+}
+
+/**
+ * This will take a specific env tag result and apply it on the components
+ *
+ * @param {Component[]} componentsToUpdate
+ * @returns
+ */
+function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component[]) {
+  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.res?.components);
+}
+
+/**
+ * This will take the components to update and the modified components by the env service and apply the changes on the component to update
+ *
+ * @param {Component[]} componentsToUpdate
+ * @param {any[]} [envTagResultComponents]
+ * @returns
+ */
+function updateComponentsByTagResultsComponents(componentsToUpdate: Component[], envTagResultComponents?: any[]) {
+  if (
+    !envTagResultComponents ||
+    envTagResultComponents.length === 0 ||
+    !envTagResultComponents[0] ||
+    !envTagResultComponents[0].length
+  )
+    return;
+  // Since all the services changes the same components we will only use the first service
+  // This might create bugs in the future. so if you have a service which return something else, here is the place to fix it.
+  envTagResultComponents[0].map(updateComponentsByTagResultsComponent(componentsToUpdate));
+}
+
+/**
+ * This will take the components to update and apply specific modified component on the matching component to update
+ *
+ * @param {Component[]} componentsToUpdate
+ * @returns
+ */
+function updateComponentsByTagResultsComponent(componentsToUpdate: Component[]) {
+  return (tagResultComponent: any) => {
+    const matchingComponent = componentsToUpdate.find(component => component.id.isEqual(tagResultComponent.id._legacy));
+    if (matchingComponent) {
+      matchingComponent.extensions = tagResultComponent.config.extensions;
+    }
+  };
 }

@@ -1,6 +1,4 @@
-import { Component } from '../../component';
-import { Workspace } from '../../workspace';
-import { Runtime } from '../runtime';
+import { Runtime, EnvRuntime } from '../runtime';
 
 export type ServiceMap<T> = {
   [env: string]: T;
@@ -9,36 +7,40 @@ export type ServiceMap<T> = {
 export class ExecutionContext {
   constructor(
     /**
-     * extension ID of the environment
-     */
-    readonly id: string,
-
-    /**
      * upper scope of all environment contexts.
      */
-    readonly envRuntime: Runtime,
+    readonly upper: Runtime,
 
     /**
-     * instance of the env
+     * runtime instance of the environment.
      */
-    readonly env: any,
-
-    /**
-     * components for the environment context
-     */
-    readonly components: Component[],
-
-    /**
-     * component workspace.
-     */
-    readonly workspace: Workspace
+    readonly envRuntime: EnvRuntime
   ) {}
 
-  // applyAll<T>(name: string, args: any[]): ServiceMap<T> {}
+  /**
+   * extension ID of the environment
+   */
+  get id() {
+    return this.envRuntime.id;
+  }
+
+  /**
+   * components applied in the execution context.
+   */
+  get components() {
+    return this.envRuntime.components;
+  }
+
+  /**
+   * environment instance.
+   */
+  get env(): any {
+    return this.envRuntime.env;
+  }
 
   apply<T>(name: string, args: any[]): T {
     if (!this.env[name]) {
-      throw new Error(`method ${name} not implmented`);
+      throw new Error(`method ${name} not implemented`);
     }
 
     return this.env[name].apply(this.env, ...args);

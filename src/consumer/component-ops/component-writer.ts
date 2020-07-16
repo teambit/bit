@@ -20,6 +20,8 @@ import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Artifact } from '../component/sources/artifact';
+import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
+import { BitIds } from '../../bit-id';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -31,7 +33,7 @@ export type ComponentWriterProps = {
   origin: ComponentOrigin;
   consumer: Consumer | undefined;
   bitMap: BitMap;
-  writeBitDependencies?: boolean;
+  ignoreBitDependencies?: boolean | BitIds;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
@@ -49,7 +51,7 @@ export default class ComponentWriter {
   origin: ComponentOrigin;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
   bitMap: BitMap;
-  writeBitDependencies: boolean;
+  ignoreBitDependencies: boolean | BitIds;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
@@ -65,7 +67,7 @@ export default class ComponentWriter {
     origin,
     consumer,
     bitMap,
-    writeBitDependencies = false,
+    ignoreBitDependencies = true,
     deleteBitDirContent,
     existingComponentMap,
     excludeRegistryPrefix = false,
@@ -81,7 +83,7 @@ export default class ComponentWriter {
     this.origin = origin;
     this.consumer = consumer;
     this.bitMap = bitMap;
-    this.writeBitDependencies = writeBitDependencies;
+    this.ignoreBitDependencies = ignoreBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
@@ -138,10 +140,12 @@ export default class ComponentWriter {
     this.component.files.map(file => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
-    if (this.writeConfig && this.consumer) {
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
-      this.component.dataToPersist.merge(configToWrite.dataToPersist);
-    }
+    // TODO: change to new eject config
+    // if (this.writeConfig && this.consumer) {
+    //   const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
+    //   this.component.dataToPersist.merge(configToWrite.dataToPersist);
+    // }
+
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
@@ -155,7 +159,7 @@ export default class ComponentWriter {
         this.component,
         artifactsDir || this.writeToPath,
         this.override,
-        this.writeBitDependencies,
+        this.ignoreBitDependencies,
         this.excludeRegistryPrefix,
         packageManager
       );
@@ -213,14 +217,11 @@ export default class ComponentWriter {
   }
 
   private getArtifactsDir() {
-    if (!this.consumer || this.consumer.isLegacy) return null;
+    // @todo: decide whether new components are allowed to be imported to a legacy workspace
+    // if not, remove the "this.consumer.isLegacy" part in the condition below
+    if (!this.consumer || this.consumer.isLegacy || this.component.isLegacy) return this.component.writtenPath;
     if (this.origin === COMPONENT_ORIGINS.NESTED) return this.component.writtenPath;
-    return getNodeModulesPathOfComponent(
-      this.consumer.config._bindingPrefix,
-      this.component.id,
-      true,
-      this.component.defaultScope
-    );
+    return getNodeModulesPathOfComponent({ ...this.component, id: this.component.id, allowNonScope: true });
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
@@ -252,7 +253,12 @@ export default class ComponentWriter {
     const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
     if (!this.component.extensionsAddedConfig || R.isEmpty(this.component.extensionsAddedConfig)) return;
     const valuesToMerge = R.omit(specialKeys, this.component.extensionsAddedConfig);
-    packageJson.mergePackageJsonObject(valuesToMerge);
+    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
+      const value = replacePlaceHolderWithComponentValue(this.component, valuesToMerge[current]);
+      acc[current] = value;
+      return acc;
+    }, {});
+    packageJson.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   /**
@@ -362,7 +368,8 @@ export default class ComponentWriter {
     };
     if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       const envsChanged = await areEnvsChanged();
-      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
+      const componentsConfig = this.consumer?.config?.componentsConfig;
+      componentsConfig?.updateOverridesIfChanged(this.component, envsChanged);
     }
   }
 
@@ -441,9 +448,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
-        const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config._bindingPrefix, this.component.id)
-          : null;
+        const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath
             ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))

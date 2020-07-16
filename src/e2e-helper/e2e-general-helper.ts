@@ -2,7 +2,7 @@ import * as path from 'path';
 import tar from 'tar';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../constants';
+import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
 import defaultErrorHandler from '../cli/default-error-handler';
 import { removeChalkCharacters, generateRandomStr } from '../utils';
 import { ensureAndWriteJson } from './e2e-helper';
@@ -64,7 +64,7 @@ export default class GeneralHelper {
     return output;
   }
 
-  static alignOutput(str?: string | null | undefined): string | null | undefined {
+  static alignOutput(str?: string | undefined): string | undefined {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -79,8 +79,12 @@ export default class GeneralHelper {
       output = err.toString();
     }
 
-    const errorString = defaultErrorHandler(error);
+    const { message: errorString } = defaultErrorHandler(error);
     expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString) as string);
+  }
+
+  isProjectNew() {
+    return fs.existsSync(path.join(this.scopes.localPath, WORKSPACE_JSONC));
   }
 
   getRequireBitPath(box: string, name: string) {

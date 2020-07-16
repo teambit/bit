@@ -2,11 +2,16 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
-import { Packer, PackResult } from './pack';
+import { PublishCmd } from './publish.cmd';
+import { Packer, PackResult, PackOptions } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
 import { Environments } from '../environments';
 import { CLIExtension } from '../cli';
+import { IsolatorExtension } from '../isolator';
+import { Publisher } from './publisher';
+import { LoggerExt, Logger } from '../logger';
+import { PublishDryRunTask } from './publish-dry-run.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -28,7 +33,33 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
-  static dependencies = [CLIExtension, ScopeExtension, Environments];
+  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExt];
+  static slots = [Slot.withType<PackageJsonProps>()];
+  static defaultConfig = {};
+
+  static provider(
+    [cli, scope, envs, isolator, logger]: [CLIExtension, ScopeExtension, Environments, IsolatorExtension, Logger],
+    config: PkgExtensionConfig,
+    [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
+  ) {
+    const logPublisher = logger.createLogPublisher(PkgExtension.id);
+    const packer = new Packer(isolator, scope?.legacyScope);
+    const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope);
+    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
+
+    const postExportFunc = publisher.postExportListener.bind(publisher);
+    if (scope) scope.onPostExport(postExportFunc);
+
+    // TODO: maybe we don't really need the id here any more
+    ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));
+    // TODO: consider passing the pkg instead of packer
+    cli.register(new PackCmd(packer));
+    cli.register(new PublishCmd(publisher));
+
+    return pkg;
+  }
+
   /**
    *Creates an instance of PkgExtension.
    * @param {PkgExtensionConfig} config
@@ -55,7 +86,9 @@ export class PkgExtension {
     /**
      * envs extension.
      */
-    private envs: Environments
+    private envs: Environments,
+
+    readonly dryRunTask: PublishDryRunTask
   ) {}
 
   /**
@@ -77,15 +110,8 @@ export class PkgExtension {
    * @returns {Promise<PackResult>}
    * @memberof PkgExtension
    */
-  async packComponent(
-    componentId: string,
-    scopePath: string | undefined,
-    outDir: string,
-    prefix = false,
-    override = false,
-    keep = false
-  ): Promise<PackResult> {
-    return this.packer.packComponent(componentId, scopePath, outDir, prefix, override, keep);
+  async packComponent(componentId: string, scopePath: string | undefined, options: PackOptions): Promise<PackResult> {
+    return this.packer.packComponent(componentId, scopePath, options);
   }
 
   /**
@@ -95,7 +121,7 @@ export class PkgExtension {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  mergePackageJsonProps(configuredExtensions: ExtensionDataList): PackageJsonProps {
+  async mergePackageJsonProps(configuredExtensions: ExtensionDataList): Promise<PackageJsonProps> {
     let newProps = {};
     const env = this.envs.getEnvFromExtensions(configuredExtensions);
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
@@ -116,24 +142,5 @@ export class PkgExtension {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
     return newProps;
-  }
-
-  static slots = [Slot.withType<PackageJsonProps>()];
-
-  static defaultConfig = {};
-
-  static provider(
-    [cli, scope, envs]: [CLIExtension, ScopeExtension, Environments],
-    config: PkgExtensionConfig,
-    [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
-  ) {
-    const packer = new Packer(scope?.legacyScope);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs);
-    // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction('PkgExtension', pkg.mergePackageJsonProps.bind(pkg));
-    // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-
-    return pkg;
   }
 }

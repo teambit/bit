@@ -5,59 +5,110 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [[14.8.8] - 2020-07-13](https://github.com/teambit/bit/releases/tag/v14.8.8)
 
-## [[14.7.7-dev.9] - 2020-06-02]
+### Bug Fixes
 
-- wait for the next event loop before exit child process in bit test
+- resolve performance regression by fixing the dependency resolution cache
+- fix ssh command by reverting another fix of "write after end" error
+- facilitate debugging by showing the entire stacktrace formatted when BIT_LOG is set
 
-## [[14.7.7-dev.8] - 2020-06-01]
+## [[14.8.7] - 2020-07-09](https://github.com/teambit/bit/releases/tag/v14.8.7)
 
-## [[14.7.7-dev.7] - 2020-06-01]
+### Bug Fixes
 
-- fix importing compilers and testers for old node versions
+- [#2809](https://github.com/teambit/bit/issues/2809) - fix legacy capsule exec to not hang on error
+- fix export --all --include-dependencies flags to not duplicate components
+- fix post receive objects duplications
 
-## [[14.7.7-dev.6] - 2020-06-01]
+## [[14.8.6] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.6)
 
-- add specFileRelativePath to the tester API (context)
+### Internal
 
-## [[14.7.7-dev.5] - 2020-05-27]
+- add an option to not use load scope from cache for pkg extension
 
-- add componentRootDir to the tester API (context)
+## [[14.8.5] - 2020-07-05](https://github.com/teambit/bit/releases/tag/v14.8.5)
 
-## [[14.7.7-dev.4] - 2020-05-19]
+### Bug Fixes
 
-- upgrade typescript to 3.8.3
-- [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
-- [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
-- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+- [#2796](https://github.com/teambit/bit/issues/2796) - fix legacy compilers that use component.extensions to be build upon tag
+
+## [[14.8.4] - 2020-07-02](https://github.com/teambit/bit/releases/tag/v14.8.4)
+
+### Internal
+
+- add an option to not use cache when loading scope
+- do not use scope cache by default when loading scope programmatically
+
+## [[14.8.3] - 2020-07-01](https://github.com/teambit/bit/releases/tag/v14.8.3)
+
+### Bug Fixes
+
+- [#2780](https://github.com/teambit/bit/issues/2780) - fix dists codemod of changing one scope to another to not be triggered without --rewire flag
+- add timeout option for load core extension via api
+
+### Internal
+
+- wait for harmony to load if you load it many times in parallel via the api
+- expose extensions declarations and instances from api
+
+## [[14.8.2] - 2020-06-29](https://github.com/teambit/bit/releases/tag/v14.8.2)
+
+### Bug Fixes
+
+- do not show loader for internal commands
+- fix error when trying to load extension in a folder which is not a workspace or scope
+
+## [[14.8.1] - 2020-06-29](https://github.com/teambit/bit/releases/tag/v14.8.1)
+
+### Bug Fixes
+
+- fix dependency detection for css/scss files
+- improve error handling
+
+## [[14.8.0] - 2020-06-28](https://github.com/teambit/bit/releases/tag/v14.8.0)
+
+### New
+
+- release pre-alpha version of [Harmony](https://github.com/teambit/bit/issues/2280) hidden behind a feature-flag
+- drop support for node 8
+- introduce `bit link --rewire` to change relative paths in the source code to module paths
 - support running `bit link` for specific components
+- support hooks for persist and read bit objects into scope
+- support react-docs of multiple exports
+- add componentRootDir to the tester API (context)
+- add specFileRelativePath to the tester API (context)
+- add a way to run `bit pack` with a capsule
+
+### Changes
+
+- deprecate files overrides (using file:// prefix)
+
+### Bug Fixes
+
+- [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+- [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
 - fix capsule to not hang forever when running build/tag/isolate and npm emits errors
 - [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
+- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
+- fix components dependencies detection to resolve from package.json if not exist on the fs
+- fix importing compilers and testers for old node versions
+
+### Internal
+
+- upgrade typescript to 3.8.3
+- internal changes to command registration and interfaces
 - stabilize capsule by writing the same paths as the workspace relative to the component rootDir
 - stabilize Bit by eliminating the removal of shared directory upon import and having rootDir for authored components
-- fix `bit link --rewire` for css/sass/less files
-- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
 - add infrastructure for feature-toggle
-- deprecate files overrides (using file:// prefix)
-- disallow adding individual files by `bit add` unless `--allow-files` flag is used
-- introduce `bit link --rewire` to change relative paths in the source code to module paths
-- prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
-- prevent exporting components when import/require uses a module path with no scope-name
-
-## [[14.7.7-dev.3] - 2020-03-31]
-
-- support react-docs of multiple exports
-
-## [[14.7.7-dev.2] - 2020-03-31]
-
-- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
-
-## [[14.7.7-dev.1] - 2020-03-24]
-
-- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
-- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
-- fix components dependencies detection to resolve from package.json if not exist on the fs
+- wait for the next event loop before exit child process in bit test
+- prevent exporting components when import/require uses a module path with no scope-name (harmony only)
+- prevent tagging components that require each other by relative paths (harmony only)
+- disallow adding individual files (harmony only)
+- new dependency resolver extension (harmony only)
 
 ## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)
 

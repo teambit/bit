@@ -37,10 +37,8 @@ describe('pkg extension', function() {
         }
       };
       helper.extensions.addExtensionToVariant('bar/foo', '@teambit/pkg', pkgConfig);
-      barFooCapsuleDir = helper.general.generateRandomTmpDirName();
-      isTypeCapsuleDir = helper.general.generateRandomTmpDirName();
-      helper.command.isolateComponentWithCapsule('bar/foo', barFooCapsuleDir);
-      helper.command.isolateComponentWithCapsule('utils/is-type', isTypeCapsuleDir);
+      barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
+      isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
     });
     it('should have the updated config in the package.json of the configured component in capsule', function() {
       const packageJson = helper.packageJson.read(barFooCapsuleDir);
@@ -74,11 +72,9 @@ describe('pkg extension', function() {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant('bar/foo', 'simple-config', config);
-        barFooCapsuleDir = helper.general.generateRandomTmpDirName();
-        isTypeCapsuleDir = helper.general.generateRandomTmpDirName();
-        helper.command.isolateComponentWithCapsule('bar/foo', barFooCapsuleDir);
-        helper.command.isolateComponentWithCapsule('utils/is-type', isTypeCapsuleDir);
+        helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/simple-config', config);
+        barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
+        isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
       });
       it('should have the updated config in the package.json of the component with the defined extension in capsule', function() {
         const packageJson = helper.packageJson.read(barFooCapsuleDir);
@@ -90,9 +86,15 @@ describe('pkg extension', function() {
       });
       it.skip('should have the updated config in another extension asks for the component', function() {});
     });
-    describe.skip('conflict between few extensions on simple config', function() {});
-    describe.skip('conflict between extension and user overrides ', function() {});
-    describe.skip('extensions that add dependencies', function() {});
-    describe.skip('extensions that add dependencies overrides', function() {});
+    describe.skip('conflict between few extensions on simple config', function() {
+      it.skip('should merge them', function() {});
+    });
+    describe.skip('conflict between extension and user overrides ', function() {
+      it.skip('should prefer user config', function() {});
+    });
+    describe.skip('extensions that add protected fields', function() {
+      // dependencies, devDeps, peerDeps, overrides, name, main file
+      it.skip('should ignore all protected fields', function() {});
+    });
   });
 });

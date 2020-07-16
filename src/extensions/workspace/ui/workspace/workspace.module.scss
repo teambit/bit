@@ -1,0 +1,69 @@
+$topbarHeight: 64px;
+
+.emptyContainer {
+	height: 100vh
+}
+
+.workspace {
+	display: grid;
+	height: 100vh;
+	
+	color: var(--text-highlight);
+	
+	overflow: hidden;
+
+	grid-template:
+		'corner main'
+		'navigation main';
+
+	grid-template-columns: 264px 1fr;
+	grid-template-rows: auto 1fr;
+
+	> :nth-child(1) {
+		grid-area: corner;
+	}
+	
+	> :nth-child(2) {
+		grid-area: navigation;
+	}
+	
+	> :nth-child(3) {
+		grid-area: main;
+	}
+}
+
+.corner {
+	display: flex;
+	align-items: center;
+	height: $topbarHeight;
+	background: #ededed;
+	padding: 16px;
+	
+	box-sizing: border-box;
+	// TODO - add color to pallete
+	border-right: 1px solid #e4e6ea;
+
+	
+	.avatar {
+		margin-right: 8px;
+		width: 32px;
+		height: 32px;
+		background: white;
+
+		border-radius: 50%;
+		
+		line-height: 32px;
+		text-align: center;
+	}
+	
+	> b {
+		font-weight: bold;
+	}
+}
+
+.sideBar {
+	border-right: 1px solid #ededed;
+	flex: 1;
+	
+	overflow: auto;
+}

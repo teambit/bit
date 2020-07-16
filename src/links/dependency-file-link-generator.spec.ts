@@ -20,6 +20,7 @@ import barFooSass from '../../fixtures/consumer-components/sass/bar-foo.json';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import utilsIsStringSass from '../../fixtures/consumer-components/sass/utils-is-string.json';
 import * as globalConfig from '../api/consumer/lib/global-config';
+import { ExtensionDataList } from '../consumer/config/extension-data';
 
 const mockBitMap = () => {
   return {
@@ -53,6 +54,12 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
   return consumer;
 };
 
+const mockComponent = async (componentJson): Promise<Component> => {
+  const component = await Component.fromString(JSON.stringify(componentJson));
+  component.extensions = new ExtensionDataList();
+  return component;
+};
+
 const mockGetSync = () => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   globalConfig.getSync = () => '@bit';
@@ -76,10 +83,10 @@ describe('DependencyFileLinkGenerator', () => {
       let dependencyFileLinkGenerator;
       let linkResult;
       before(async () => {
-        const component = await Component.fromString(JSON.stringify(barFoo));
+        const component = await mockComponent(barFoo);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.componentMap = getComponentMap();
-        const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
+        const dependencyComponent = await mockComponent(utilsIsString);
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           consumer: mockConsumer(),
@@ -109,10 +116,10 @@ describe('DependencyFileLinkGenerator', () => {
         let dependencyFileLinkGenerator;
         let linkResults;
         before(async () => {
-          const component = await Component.fromString(JSON.stringify(barFooEs6));
+          const component = await mockComponent(barFooEs6);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           component.componentMap = getComponentMap();
-          const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
+          const dependencyComponent = await mockComponent(utilsIsStringEs6);
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             consumer: mockConsumer(),
@@ -164,10 +171,10 @@ describe('DependencyFileLinkGenerator', () => {
         let dependencyFileLinkGenerator;
         let linkResults;
         before(async () => {
-          const component = await Component.fromString(JSON.stringify(barFooEs6));
+          const component = await mockComponent(barFooEs6);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           component.componentMap = getComponentMap();
-          const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
+          const dependencyComponent = await mockComponent(utilsIsStringEs6);
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             consumer: mockConsumer(false),
@@ -222,10 +229,10 @@ describe('DependencyFileLinkGenerator', () => {
         let linkResults;
         let linkResult;
         before(async () => {
-          const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
+          const component = await mockComponent(barFooCustomResolved);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           component.componentMap = getComponentMap();
-          const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
+          const dependencyComponent = await mockComponent(utilsIsStringCustomResolved);
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             consumer: mockConsumer(),
@@ -275,10 +282,10 @@ describe('DependencyFileLinkGenerator', () => {
         let dependencyFileLinkGenerator;
         let linkResults;
         before(async () => {
-          const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
+          const component = await mockComponent(barFooCustomResolved);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           component.componentMap = getComponentMap();
-          const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
+          const dependencyComponent = await mockComponent(utilsIsStringCustomResolved);
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             consumer: mockConsumer(false),
@@ -332,10 +339,10 @@ describe('DependencyFileLinkGenerator', () => {
       let dependencyFileLinkGenerator;
       let linkResult;
       before(async () => {
-        const component = await Component.fromString(JSON.stringify(barFooSass));
+        const component = await mockComponent(barFooSass);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.componentMap = getComponentMap();
-        const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringSass));
+        const dependencyComponent = await mockComponent(utilsIsStringSass);
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           consumer: mockConsumer(),

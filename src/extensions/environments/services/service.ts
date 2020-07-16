@@ -1,8 +1,6 @@
-import { Workspace } from '../../workspace';
 import { Component } from '../../component';
 
 export type EnvContext = {
-  workspace: Workspace;
   components: Component[];
 };
 

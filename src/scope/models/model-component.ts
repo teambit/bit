@@ -254,6 +254,7 @@ export default class Component extends BitObject {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
     // backward compatibility. components created before v15 have master without head
+    // @ts-ignore
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
@@ -622,6 +623,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
+      schema: version.schema,
       extensions
     });
     if (manipulateDirData) {

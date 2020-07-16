@@ -11,6 +11,7 @@ import logger from '../../logger/logger';
 import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonVinyl from './package-json-vinyl';
+import { Capsule } from '../../extensions/isolator';
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
@@ -98,6 +99,17 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir });
   }
 
+  static loadFromCapsuleSync(capsule: Capsule) {
+    const filePath = composePath(capsule.wrkDir);
+    const filePathAbsolute = filePath;
+    const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
+    if (!packageJsonStr) {
+      throw new Error(`capsule ${capsule.wrkDir} is missing package.json`);
+    }
+    const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, filePath);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir: capsule.wrkDir });
+  }
+
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
@@ -105,12 +117,7 @@ export default class PackageJsonFile {
     excludeRegistryPrefix? = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
-    const name = componentIdToPackageName(
-      component.id,
-      component.bindingPrefix,
-      component.defaultScope,
-      !excludeRegistryPrefix
-    );
+    const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
     const packageJsonObject = {
       name,
       version: component.version,

@@ -16,7 +16,6 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
-// @ts-ignore
 export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
 
 export type ComponentMapFile = {

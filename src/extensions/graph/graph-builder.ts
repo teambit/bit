@@ -21,7 +21,7 @@ export class GraphBuilder {
       const ids = (await this.workspace.list()).map(comp => comp.id);
       const bitIds = ids.map(id => id._legacy);
       const initialGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
-      const graph = ComponentGraph.buildFromLegacy(initialGraph, this.componentFactory);
+      const graph = await ComponentGraph.buildFromLegacy(initialGraph, this.componentFactory);
       this._graph = graph;
       this._initialized = true;
       return this._graph;

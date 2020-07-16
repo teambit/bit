@@ -37,6 +37,7 @@ export class TaskProcess {
       await this.saveArtifactsToComponent(component);
     });
     await Promise.all(resultsP);
+    return components;
   }
 
   private saveDataToComponent(component: Component) {
@@ -55,6 +56,7 @@ export class TaskProcess {
       const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
       const files = await this.getFilesByArtifacts(capsule);
+
       const artifactsVinyl = files.map(file => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));
       extensionDataEntry.artifacts = artifactsVinyl;
     }
@@ -85,6 +87,6 @@ export class TaskProcess {
  * returns the paths inside the capsule
  */
 async function getFilesFromCapsule(capsule: Capsule, dir: string): Promise<string[]> {
-  const files = glob.sync('*', { cwd: path.join(capsule.wrkDir, dir) });
+  const files = glob.sync('*', { cwd: path.join(capsule.wrkDir, dir), nodir: true });
   return files.map(file => path.join(dir, file));
 }

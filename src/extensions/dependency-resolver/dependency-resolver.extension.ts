@@ -1,16 +1,26 @@
-import { RawComponentState, DependenciesDefinition, DependencyResolverWorkspaceConfig, installOpts } from './types';
-import { LoggerExt, Logger } from '../logger';
+import R from 'ramda';
+import { SlotRegistry, Slot } from '@teambit/harmony';
+import {
+  DependenciesPolicy,
+  DependencyResolverVariantConfig,
+  DependencyResolverWorkspaceConfig,
+  installOpts
+} from './types';
+import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { Environments } from '../environments';
+import { Logger } from '../logger';
 import PackageManager from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { Capsule } from '../isolator';
+import ConsumerComponent from '../../consumer/component';
 
-// TODO: add example of exposing a hook once its API is final by harmony
-// export const Dependencies = Hooks.create();
-// export const FileDependencies = Hooks.create();
+export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
-  static dependencies = [LoggerExt];
+  static dependencies = [Environments, Logger];
+  static slots = [Slot.withType<DependenciesPolicy>()];
   static defaultConfig: DependencyResolverWorkspaceConfig = {
     /**
      * default package manager.
@@ -21,13 +31,21 @@ export class DependencyResolverExtension {
     strictPeerDependencies: true
   };
   static async provider(
-    [logger]: [Logger],
-    config: DependencyResolverWorkspaceConfig
-    // TODO: add slots
+    [envs, logger]: [Environments, Logger],
+    config: DependencyResolverWorkspaceConfig,
+    [policiesRegistry]: [PoliciesRegistry]
   ) {
     const packageManager = new PackageManager(config.packageManager, logger);
-    const DependencyResolver = new DependencyResolverExtension(config, packageManager);
-    return DependencyResolver;
+    const dependencyResolver = new DependencyResolverExtension(config, packageManager, policiesRegistry, envs);
+    ConsumerComponent.registerOnComponentOverridesLoading(
+      DependencyResolverExtension.id,
+      async (configuredExtensions: ExtensionDataList) => {
+        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
+        return transformPoliciesToLegacyDepsOverrides(policies);
+      }
+    );
+
+    return dependencyResolver;
   }
 
   constructor(
@@ -39,11 +57,28 @@ export class DependencyResolverExtension {
     /**
      * package manager client.
      */
-    private packageManager: PackageManager
+    private packageManager: PackageManager,
+
+    /**
+     * Registry for changes by other extensions.
+     */
+    private policiesRegistry: PoliciesRegistry,
+
+    /**
+     * envs extension.
+     */
+    private envs: Environments
   ) {}
 
   get packageManagerName(): string {
     return this.config.packageManager;
+  }
+
+  /**
+   * register new dependencies policies
+   */
+  registerDependenciesPolicies(policy: DependenciesPolicy): void {
+    return this.policiesRegistry.register(policy);
   }
 
   async capsulesInstall(capsules: Capsule[], opts: installOpts = { packageManager: this.packageManagerName }) {
@@ -55,22 +90,50 @@ export class DependencyResolverExtension {
   }
 
   /**
-   * Will return the final dependencies of the component after all calculation
-   * @param rawComponent
-   * @param dependencyResolverWorkspaceConfig
+   * Merge the dependencies provided by:
+   * 1. envs configured in the component - via dependencies method
+   * 2. extensions that registered to the registerDependencyPolicy slot (and configured for the component)
+   * 3. props defined by the user (they are the strongest one)
+   * @param configuredExtensions
    */
-  // TODO: remove this rule upon implementation
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getDependencies(
-    // TODO: remove this rule upon implementation
-    // eslint-disable-next-line
-    rawComponent: RawComponentState,
-    // TODO: remove this rule upon implementation
-    // eslint-disable-next-line
-    dependencyResolverWorkspaceConfig: DependencyResolverWorkspaceConfig
-  ): DependenciesDefinition {
-    // TODO: remove this rule upon implementation
-    // @ts-ignore eslint-disable-next-line
-    return undefined;
+  async mergeDependencies(configuredExtensions: ExtensionDataList): Promise<DependenciesPolicy> {
+    let policiesFromEnv: DependenciesPolicy = {};
+    let policiesFromHooks: DependenciesPolicy = {};
+    let policiesFromConfig: DependenciesPolicy = {};
+    const env = this.envs.getEnvFromExtensions(configuredExtensions);
+    if (env?.getDependencies && typeof env.getDependencies === 'function') {
+      policiesFromEnv = await env.getDependencies();
+    }
+    const configuredIds = configuredExtensions.ids;
+    configuredIds.forEach(extId => {
+      // Only get props from configured extensions on this specific component
+      const currentPolicy = this.policiesRegistry.get(extId);
+      if (currentPolicy) {
+        policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
+      }
+    });
+    const currentExtension = configuredExtensions.findExtension(DependencyResolverExtension.id);
+    const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
+    if (currentConfig && currentConfig.policy) {
+      policiesFromConfig = currentConfig.policy;
+    }
+    const result = mergePolices([policiesFromEnv, policiesFromHooks, policiesFromConfig]);
+    return result;
   }
+}
+
+function mergePolices(policies: DependenciesPolicy[]) {
+  const result: DependenciesPolicy = {
+    dependencies: {},
+    devDependencies: {},
+    peerDependencies: {}
+  };
+  return R.reduce(R.mergeDeepRight, result, policies);
+}
+
+function transformPoliciesToLegacyDepsOverrides(policy: DependenciesPolicy): DependenciesOverridesData {
+  // TODO: once we support DetailedDependencyPolicy in the object we should do here something
+  // TODO: it might be that we will have to return it as is, and handle it in the legacy
+  // TODO: since we don't have enough info about handle force here
+  return policy;
 }

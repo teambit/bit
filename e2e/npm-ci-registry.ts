@@ -36,10 +36,12 @@ export default class NpmCiRegistry {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;
+  ciRegistry = 'http://localhost:4873';
+  ciDefaultScope = '@ci';
   constructor(helper: Helper) {
     this.helper = helper;
   }
-  async init(scopes: string[] = ['@ci']) {
+  async init(scopes: string[] = [this.ciDefaultScope]) {
     await this._establishRegistry();
     this._addDefaultUser();
     this._registerScopes(scopes);
@@ -75,7 +77,7 @@ export default class NpmCiRegistry {
 
   _addDefaultUser() {
     const addUser = `expect <<EOD
-spawn npm adduser --registry http://localhost:4873 --scope=@ci
+spawn npm adduser --registry ${this.ciRegistry} --scope=${this.ciDefaultScope}
 expect {
 "Username:" {send "ci\r"; exp_continue}
 "Password:" {send "secret\r"; exp_continue}
@@ -94,7 +96,7 @@ EOD`;
   // TODO: improve this to only write it to project level npmrc instead of global one
   _registerScopes(scopes: string[] = ['@ci']) {
     scopes.forEach(scope => {
-      this.helper.command.runCmd(`npm config set ${scope}:registry http://localhost:4873`);
+      this.helper.command.runCmd(`npm config set ${scope}:registry ${this.ciRegistry}`);
     });
   }
 
@@ -103,9 +105,13 @@ EOD`;
    * them later on into @ci scope of Verdaccio registry
    */
   setCiScopeInBitJson() {
-    const bitJson = this.helper.bitJson.read();
-    bitJson.bindingPrefix = '@ci';
-    this.helper.bitJson.write(bitJson);
+    if (this.helper.general.isProjectNew()) {
+      this.helper.bitJsonc.addDefaultOwner('@ci');
+    } else {
+      const bitJson = this.helper.bitJson.read();
+      bitJson.bindingPrefix = '@ci';
+      this.helper.bitJson.write(bitJson);
+    }
   }
 
   /**
@@ -125,16 +131,44 @@ EOD`;
       : `${this.helper.scopes.remote}/${componentName}`;
     const componentId = `${componentFullName}@${componentVersion}`;
     const options = {
-      o: '',
-      k: '',
-      p: '',
-      j: '',
       d: packDir
     };
+    if (this.helper.general.isProjectNew()) {
+      // @ts-ignore
+      options.c = '';
+    }
     this.helper.command.packComponent(componentId, options, true);
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
+  }
+
+  configureCiInPackageJsonHarmony() {
+    const pkg = {
+      packageJson: {
+        publishConfig: {
+          scope: this.ciDefaultScope,
+          registry: this.ciRegistry
+        }
+      }
+    };
+    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+  }
+
+  configureCustomNameInPackageJsonHarmony(name: string) {
+    const pkg = {
+      packageJson: {
+        name,
+        publishConfig: {
+          registry: this.ciRegistry
+        }
+      }
+    };
+    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+  }
+
+  installPackage(pkgName: string) {
+    this.helper.command.runCmd(`npm install ${pkgName} --registry=${this.ciRegistry}`);
   }
 
   unpublishComponent(packageName: string) {

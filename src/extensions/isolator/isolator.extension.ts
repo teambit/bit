@@ -9,19 +9,20 @@ import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
-import { loadScope } from '../../scope';
+import { Scope } from '../../scope';
 import CapsuleList from './capsule-list';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId, BitIds } from '../../bit-id';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { buildOneGraphForComponents, buildOneGraphForComponentsUsingScope } from '../../scope/graph/components-graph';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import logger from '../../logger/logger';
 import { CLIExtension } from '../cli';
 import { DEPENDENCIES_FIELDS } from '../../constants';
+import { Network } from './network';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -29,10 +30,6 @@ export type IsolatorDeps = [DependencyResolverExtension, CLIExtension];
 export type ListResults = {
   workspace: string;
   capsules: string[];
-};
-export type Network = {
-  capsules: CapsuleList;
-  components: Graph;
 };
 
 async function createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
@@ -44,7 +41,7 @@ async function createCapsulesFromComponents(components: any[], baseDir, orchOpti
   return capsules;
 }
 
-function findSuccessorsInGraph(graph, seeders) {
+function findSuccessorsInGraph(graph: Graph, seeders: string[]) {
   const dependenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
   const components: ConsumerComponent[] = filter(
     val => val,
@@ -72,15 +69,27 @@ export class IsolatorExtension {
     const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
-    return this.createNetwork(seeders, graph, baseDir, opts);
+    opts = Object.assign(opts || {}, { consumer });
+    return this.createNetwork(seedersIds, graph, baseDir, opts);
   }
-  async createNetworkFromScope(seeders: string[], opts?: {}): Promise<Network> {
-    const scope = await loadScope(process.cwd());
-    const graph = await Graph.buildGraphFromScope(scope);
+  async createNetworkFromScope(seeders: string[], scope: Scope, opts?: {}): Promise<Network> {
+    logger.debug(`isolatorExt, createNetworkFromScope ${seeders.join(', ')}`);
+    const seedersIds = await Promise.all(seeders.map(seeder => scope.getParsedId(seeder)));
+    const graph = await buildOneGraphForComponentsUsingScope(seedersIds, scope);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(scope.path)); // TODO: move this logic elsewhere
-    return this.createNetwork(seeders, graph, baseDir, opts);
+    return this.createNetwork(seedersIds, graph, baseDir, opts);
   }
-  async createNetwork(seeders: string[], graph: Graph, baseDir, opts?: {}) {
+  private getBitIdsIncludeVersionsFromGraph(seedersIds: BitId[], graph: Graph): BitId[] {
+    const components: ConsumerComponent[] = graph.nodes().map(n => graph.node(n));
+    return seedersIds.map(seederId => {
+      const component = components.find(c => c.id.isEqual(seederId) || c.id.isEqualWithoutVersion(seederId));
+      if (!component) throw new Error(`unable to find ${seederId.toString()} in the graph`);
+      return component.id;
+    });
+  }
+  private async createNetwork(seedersIds: BitId[], graph: Graph, baseDir, opts?: {}) {
+    const seederIds = this.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
+    const seeders = seederIds.map(s => s.toString());
     const config = Object.assign(
       {},
       {
@@ -89,7 +98,14 @@ export class IsolatorExtension {
       },
       opts
     );
-    const components = findSuccessorsInGraph(graph, seeders);
+    const compsAndDeps = findSuccessorsInGraph(graph, seeders);
+    const filterNonWorkspaceComponents = () => {
+      // @ts-ignore @todo: fix this opts to have types
+      const consumer: Consumer = opts?.consumer;
+      if (!consumer) return compsAndDeps;
+      return compsAndDeps.filter(c => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true }));
+    };
+    const components = filterNonWorkspaceComponents();
     const capsules = await createCapsulesFromComponents(components, baseDir, config);
 
     const capsuleList = new CapsuleList(
@@ -98,15 +114,10 @@ export class IsolatorExtension {
         return { id, capsule: c };
       })
     );
-    const capsulesWithPackagesData = await getCapsulesPackageJsonData(capsules);
+    const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await writeComponentsToCapsules(
-      components,
-      graph,
-      capsules,
-      capsuleList,
-      this.dependencyResolver.packageManagerName
-    );
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
+    updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
         .filter(capsuleWithPackageData => {
@@ -129,10 +140,11 @@ export class IsolatorExtension {
       );
     });
 
-    return {
-      capsules: capsuleList,
-      components: graph
-    };
+    return new Network(
+      capsuleList,
+      graph,
+      seederIds.map(s => new ComponentID(s))
+    );
   }
   async list(consumer: Consumer): Promise<ListResults> {
     const workspacePath = consumer.getPath();
@@ -155,45 +167,57 @@ export class IsolatorExtension {
 
 type CapsulePackageJsonData = {
   capsule: Capsule;
-  currentPackageJson: Record<string, any>;
+  currentPackageJson?: Record<string, any>;
   previousPackageJson: Record<string, any> | null;
 };
 
 function wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
   const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
   if (!previousPackageJson) return true;
+  // @ts-ignore at this point, currentPackageJson is set
   return DEPENDENCIES_FIELDS.some(field => !equals(previousPackageJson[field], currentPackageJson[field]));
 }
 
-async function getCapsulesPackageJsonData(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
+async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
   return Promise.all(
     capsules.map(async capsule => {
       const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
       let previousPackageJson: any = null;
-      // @ts-ignore this capsule.component thing MUST BE FIXED, once done, if it doesn't have the ConsumerComponent, use the "component" var above
-      const currentPackageJson = getCurrentPackageJson(capsule.component as ConsumerComponent);
-      const result: CapsulePackageJsonData = {
-        capsule,
-        currentPackageJson: currentPackageJson.packageJsonObject,
-        previousPackageJson: null
-      };
       try {
-        previousPackageJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
-        result.previousPackageJson = JSON.parse(previousPackageJson);
+        const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
+        previousPackageJson = JSON.parse(previousPackageJsonRaw);
       } catch (e) {
         // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
       }
-      return result;
+      return {
+        capsule,
+        previousPackageJson
+      };
     })
   );
 }
 
-function getCurrentPackageJson(component: ConsumerComponent): PackageJsonFile {
+function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
+  capsules.forEach(capsule => {
+    // @ts-ignore
+    const component: ConsumerComponent = capsule.component as ConsumerComponent;
+    const packageJson = getCurrentPackageJson(component, capsule);
+    const found = capsulesWithPackagesData.find(c => c.capsule.component.id.isEqual(capsule.component.id));
+    if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
+    found.currentPackageJson = packageJson.packageJsonObject;
+  });
+}
+
+function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): PackageJsonFile {
   const newVersion = '0.0.1-new';
   const getBitDependencies = (dependencies: BitIds) => {
     return dependencies.reduce((acc, depId: BitId) => {
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
-      const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
+      const packageName = componentIdToPackageName({
+        ...component,
+        id: depId,
+        isDependency: true
+      });
       acc[packageName] = packageDependency;
       return acc;
     }, {});
@@ -201,7 +225,13 @@ function getCurrentPackageJson(component: ConsumerComponent): PackageJsonFile {
   const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
   const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
   const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
-  const packageJson = PackageJsonFile.createFromComponent('.', component, false);
+
+  // unfortunately, component.packageJsonFile is not available here.
+  // the reason is that `writeComponentsToCapsules` clones the component before writing them
+  // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
+  // such as postInstall scripts for custom-module-resolution.
+  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule);
+
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
     packageJsonFile.addDependencies(bitDependencies);
     packageJsonFile.addDevDependencies({

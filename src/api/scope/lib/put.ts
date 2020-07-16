@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { loadScope } from '../../../scope';
 import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
@@ -39,11 +40,15 @@ export default (async function put(
     compsAndLanesObjects.laneObjects
   );
   const componentsIds: string[] = componentsBitIds.map(id => id.toString());
+  let uniqComponentsIds = componentsIds;
+  if (componentsIds && componentsIds.length) {
+    uniqComponentsIds = R.uniq(componentsIds);
+  }
   await HooksManagerInstance.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
       componentObjects: compsAndLanesObjects.componentsObjects,
-      componentsIds,
+      componentsIds: uniqComponentsIds,
       scopePath: path,
       scopeName: scope.scopeJson.name
     },

@@ -1,0 +1,24 @@
+.copyBox {
+	border: 1px solid black;
+	border-radius: 6px;
+	background: #f6f6f6;
+	border: 1px solid #ededed;
+	display: flex;
+	justify-content: space-between;
+	
+	padding: 4px 11px;
+
+	> div {
+		user-select: all;
+		overflow: scroll;
+		white-space: pre;
+		margin-right: 20px;
+		// font-family: monospace;
+	}
+
+	> button {
+		line-height: inherit;
+		box-sizing: border-box;
+		border: none;
+	}
+}

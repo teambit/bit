@@ -172,11 +172,54 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       .join(' and ');
   }
 
-  populateComponentsTS(numOfComponents = 3): string {
+  /**
+   * This will populate extensions that does nothing
+   * its purpose is to check different config merges
+   *
+   * @param {number} [numOfExtensions=3]
+   * @returns {string}
+   * @memberof FixtureHelper
+   */
+  populateExtensions(numOfExtensions = 3): void {
+    const getImp = index => {
+      return `
+      class MyExtension {
+        constructor(config) {
+          this.config = config;
+        }
+
+        printName() {
+          console.log(MyExtension.id)
+        }
+      }
+      MyExtension.id = 'MyExtension${index}';
+      MyExtension.dependencies = [];
+      MyExtension.provider = (deps, config) => {
+        return new MyExtension(config);
+      };
+      module.exports = MyExtension;
+      `;
+    };
+    for (let i = 1; i <= numOfExtensions; i += 1) {
+      this.fs.outputFile(path.join(`ext${i}`, `index.js`), getImp(i));
+      this.command.addComponent(`ext${i}`);
+    }
+  }
+
+  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {
+    let nmPathPrefix = `${owner}/${this.scopes.remote}.`;
+    if (isHarmony) {
+      const remoteSplit = this.scopes.remote.split('.');
+      if (remoteSplit.length === 1) {
+        nmPathPrefix = `@${this.scopes.remote}/`;
+      } else {
+        nmPathPrefix = `@${remoteSplit[0]}/${remoteSplit[1]}.`;
+      }
+    }
     const getImp = index => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;
       const nextComp = `comp${index + 1}`;
-      return `import ${nextComp} from '@bit/${this.scopes.remote}.${nextComp}';
+      return `import ${nextComp} from '${nmPathPrefix}${nextComp}';
 export default () => 'comp${index} and ' + ${nextComp}();`;
     };
     for (let i = 1; i <= numOfComponents; i += 1) {
@@ -184,10 +227,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       this.command.addComponent(`comp${i}`);
     }
     this.command.link();
-    this.fs.outputFile(
-      'app.js',
-      `const comp1 = require('@bit/${this.scopes.remote}.comp1').default;\nconsole.log(comp1())`
-    );
+    this.fs.outputFile('app.js', `const comp1 = require('${nmPathPrefix}comp1').default;\nconsole.log(comp1())`);
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)

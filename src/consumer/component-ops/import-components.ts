@@ -9,7 +9,7 @@ import { ComponentWithDependencies, Scope } from '../../scope';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
-import { filterAsync, pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
@@ -152,7 +152,7 @@ export default class ImportComponents {
           c.component.id.isEqualWithoutVersion(comp.component.id) &&
           isTag(c.component.id.version) &&
           isTag(comp.component.id.version) &&
-          semver.gt(c.component.id.version, comp.component.id.version)
+          semver.gt(c.component.id.version as string, comp.component.id.version as string)
       );
       return !sameIdHigherVersion;
     });
@@ -334,10 +334,10 @@ export default class ImportComponents {
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
     if (this.options.override || this.options.objectsOnly || this.options.merge) return;
-    // $FlowFixMe BitIds is an array
-    const modifiedComponents = await filterAsync(ids, id => {
-      return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
-    });
+    const componentsStatuses = await this.consumer.getManyComponentsStatuses(ids);
+    const modifiedComponents = componentsStatuses
+      .filter(({ status }) => status.modified || status.newlyCreated)
+      .map(c => c.id);
     if (modifiedComponents.length) {
       throw new GeneralError(
         chalk.yellow(
