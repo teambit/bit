@@ -15,10 +15,14 @@ export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridPro
         {components.map((component, index) => {
           return (
             <div key={index}>
-              <ComponentCard id={component.id.name} />
-              {component.compositions.length > 0 && (
-                <ComponentComposition component={component} composition={component.compositions[0]} />
-              )}
+              <ComponentCard
+                id={component.id.name}
+                preview={
+                  component.compositions.length > 0 && (
+                    <ComponentComposition component={component} composition={component.compositions[0]} />
+                  )
+                }
+              />
             </div>
           );
         })}
