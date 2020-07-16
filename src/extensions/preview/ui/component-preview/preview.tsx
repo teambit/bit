@@ -27,6 +27,9 @@ export type ComponentPreviewProps = {
  * renders a preview of a component.
  */
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
+  // TODO - fix this - this is to not break the app when these props are undefined
+  if (!component?.server?.url) return null;
+  if (!component?.id?.fullName) return null;
   const url = `${component.server.url}/#${component.id.fullName}${`?preview=${previewName}&${queryParams &&
     queryParams}` || ''}`;
 

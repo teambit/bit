@@ -10,6 +10,7 @@ import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
+import { WorkspaceComponentGrid } from './workspace-grid/workspace-grid';
 
 const WORKSPACE = gql`
   {
@@ -21,6 +22,15 @@ const WORKSPACE = gql`
           name
           version
           scope
+          fullName
+        }
+        server {
+          env
+          url
+        }
+        compositions {
+          filepath
+          identifier
         }
       }
     }
@@ -54,6 +64,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
+          <WorkspaceComponentGrid components={data.workspace.components} />
         </div>
       </div>
     </WorkspaceProvider>

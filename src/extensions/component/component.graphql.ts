@@ -8,6 +8,7 @@ export function componentSchema() {
         name: String
         version: String
         scope: String
+        fullName: String
       }
 
       type Component {
@@ -31,7 +32,10 @@ export function componentSchema() {
         displayName: (component: Component) => component.displayName
       },
       Component: {
-        id: (component: Component) => component.id._legacy.serialize(),
+        id: (component: Component) => ({
+          fullName: component.id._legacy.toString(false, true),
+          ...component.id._legacy.serialize()
+        }),
         displayName: (component: Component) => component.displayName,
         version: (component: Component) => component.state.version,
         isNew: (component: Component) => component.isNew(),
