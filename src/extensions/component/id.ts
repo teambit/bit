@@ -57,6 +57,10 @@ export class ComponentID {
     return this.legacyComponentId.toString();
   }
 
+  toObject() {
+    return this.legacyComponentId.serialize();
+  }
+
   /**
    * generate a component ID from a string.
    */

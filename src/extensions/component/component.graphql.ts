@@ -1,4 +1,4 @@
-import Component from './component';
+import { Component } from './component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export function componentSchema() {
@@ -10,9 +10,28 @@ export function componentSchema() {
         scope: String
       }
 
+      type Tag {
+        version: String
+        snap: Snap
+      }
+
+      type Snap {
+        hash: String!
+        timestamp: String
+        parents: [Snap]
+        author: Author
+        message: String
+      }
+
+      type Author {
+        displayName: String
+        email: String
+      }
+
       type Component {
         id: ComponentID
-        version: String
+        head: Snap
+        headTag: Tag
         displayName: String
         versions(limit: Int): [String]
         isNew: Boolean
@@ -24,7 +43,7 @@ export function componentSchema() {
         id: ComponentID
         displayName: String
       }
-  `,
+    `,
     resolvers: {
       ComponentMeta: {
         id: (component: Component) => component.id._legacy.serialize(),
@@ -33,7 +52,7 @@ export function componentSchema() {
       Component: {
         id: (component: Component) => component.id._legacy.serialize(),
         displayName: (component: Component) => component.displayName,
-        version: (component: Component) => component.state.version,
+        headTag: (component: Component) => component.headTag,
         isNew: (component: Component) => component.isNew(),
         isModified: (component: Component) => component.isModified(),
         /**

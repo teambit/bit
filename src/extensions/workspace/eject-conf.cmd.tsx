@@ -52,7 +52,10 @@ export default class EjectConfCmd implements Command {
     if (ejectOptions.override === 'true') {
       ejectOptions.override = true;
     }
-    const results = await this.workspace.ejectConfig(componentId, ejectOptions as EjectConfOptions);
+
+    const id = await this.workspace.resolveComponentId(componentId);
+
+    const results = await this.workspace.ejectConfig(id, ejectOptions as EjectConfOptions);
     return results;
   }
 }

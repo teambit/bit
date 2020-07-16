@@ -1,8 +1,14 @@
 import { SemVer } from 'semver';
 // eslint-disable-next-line import/no-cycle
-import Snap from './snap'; // todo: change to "import type" once babel supports it
+import { Tag } from './tag';
+import { Hash } from './hash';
 
-export default class TagMap extends Map<SemVer, Snap> {
+export class TagMap extends Map<SemVer, Tag> {
   // byRange(range: Semver) {
   // }
+
+  byHash(hash: Hash) {
+    const tag = Array.from(this.values()).find(currTag => currTag.snap.hash === hash);
+    return tag;
+  }
 }

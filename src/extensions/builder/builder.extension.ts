@@ -1,7 +1,7 @@
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { BuilderCmd } from './run.cmd';
-import { Component } from '../component';
+import { Component, ComponentID } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
@@ -54,7 +54,8 @@ export class BuilderExtension {
 
   async tagListener(ids: BitId[]) {
     // @todo: some processes needs dependencies/dependents of the given ids
-    const components = await this.workspace.getMany(ids);
+    const componentIds = ids.map(ComponentID.fromLegacy);
+    const components = await this.workspace.getMany(componentIds);
     return this.build(components);
   }
 

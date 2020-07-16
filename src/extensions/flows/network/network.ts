@@ -109,7 +109,7 @@ export class Network {
       return fullGraph;
     }
 
-    const components = await this.workspace.getMany(this.seeders.map(seed => seed._legacy));
+    const components = await this.workspace.getMany(this.seeders);
     const subGraph = createSubGraph(components, options, fullGraph);
     return subGraph;
   }

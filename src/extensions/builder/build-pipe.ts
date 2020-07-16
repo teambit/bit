@@ -25,8 +25,8 @@ export class BuildPipe {
       const taskProcess = new TaskProcess(task, taskResult, buildContext);
       taskProcess.throwIfErrorsFound();
       this.logger.info(task.extensionId, `task "${task.extensionId}" has completed successfully`);
-      await taskProcess.saveTaskResults();
-      // @todo: return summery results?
+      const components = await taskProcess.saveTaskResults();
+      return components;
     });
   }
 

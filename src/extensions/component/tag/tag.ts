@@ -1,10 +1,10 @@
 import { SemVer } from 'semver';
-import Snap from './snap';
+import { Snap } from '../snap/snap';
 
 /**
  * `Tag` provides a sematic reference to a specific state `Snap` in the working tree.
  */
-export default class Tag {
+export class Tag {
   constructor(
     /**
      * hash of the component `Snap`.

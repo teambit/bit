@@ -41,8 +41,8 @@ export class BuilderService implements EnvService {
       )
     });
 
-    const results = await buildPipe.execute(buildContext);
+    const components = await buildPipe.execute(buildContext);
 
-    return { id: context.id, results };
+    return { id: context.id, components };
   }
 }

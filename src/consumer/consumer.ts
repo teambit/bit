@@ -233,11 +233,14 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getParsedId(id: BitIdStr): BitId {
+  getParsedId(id: BitIdStr, useVersionFromBitmap = false): BitId {
     // @ts-ignore (we know it will never be undefined since it pass throw=true)
     const bitId: BitId = this.bitMap.getExistingBitId(id, true);
-    const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version || LATEST);
+    if (!useVersionFromBitmap) {
+      const version = BitId.getVersionOnlyFromString(id);
+      return bitId.changeVersion(version || LATEST);
+    }
+    return bitId;
   }
 
   getParsedIdIfExist(id: BitIdStr): BitId | undefined {
