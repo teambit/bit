@@ -392,7 +392,8 @@ describe('bit export command', function() {
       } catch (err) {
         isType = err.toString();
       }
-      expect(isType).to.have.string('ComponentNotFound');
+      expect(isType).to.have.string('component');
+      expect(isType).to.have.string('was not found');
     });
     describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
       before(() => {
