@@ -14,7 +14,7 @@ import {
   SSHInvalidResponse,
   OldClientVersion
 } from '../exceptions';
-import { BitIds, BitId } from '../../../bit-id';
+import { BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { ScopeDescriptor } from '../../scope';
@@ -33,8 +33,11 @@ import CustomError from '../../../error/custom-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import DependencyGraph from '../../graph/scope-graph';
 import globalFlags from '../../../cli/global-flags';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { ComponentLogs } from '../../models/model-component';
+import { LaneData } from '../../lanes/lanes';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -348,8 +351,11 @@ export default class SSH implements Network {
         return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
-      case 131:
-        return new MergeConflictOnRemote(parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : []);
+      case 131: {
+        const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
+        const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
+        return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
+      }
       case 132:
         return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
       case 133:
@@ -373,10 +379,10 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[], context?: Record<string, any>): Promise<string[]> {
+  pushMany(compsAndLanesObjects: CompsAndLanesObjects, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
+    return this.exec('_put', compsAndLanesObjects.toString(), context).then((data: string) => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return payload.ids;
@@ -386,13 +392,15 @@ export default class SSH implements Network {
   deleteMany(
     ids: string[],
     force: boolean,
-    context?: Record<string, any>
+    context?: Record<string, any>,
+    idsAreLanes?: boolean
   ): Promise<ComponentObjects[] | RemovedObjects> {
     return this.exec(
       '_delete',
       {
         bitIds: ids,
-        force
+        force,
+        lanes: idsAreLanes
       },
       context
     ).then((data: string) => {
@@ -424,9 +432,6 @@ export default class SSH implements Network {
       return payload;
     });
   }
-  push(componentObjects: ComponentObjects): Promise<string[]> {
-    return this.pushMany([componentObjects]);
-  }
 
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
@@ -449,6 +454,17 @@ export default class SSH implements Network {
       });
       return payload;
     });
+  }
+
+  async listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    const options = mergeData ? '--merge-data' : '';
+    const str = await this.exec(`_lanes ${options}`, name);
+    const { payload, headers } = this._unpack(str);
+    checkVersionCompatibility(headers.version);
+    return payload.map(result => ({
+      ...result,
+      components: result.components.map(component => ({ id: new BitId(component.id), head: component.head }))
+    }));
   }
 
   latestVersions(componentIds: BitId[]): Promise<string[]> {
@@ -493,10 +509,16 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(ids: BitIds, noDeps = false, context?: Record<string, any>): Promise<ComponentObjects[]> {
+  async fetch(
+    ids: Array<BitId | RemoteLaneId>,
+    noDeps = false,
+    idsAreLanes = false,
+    context?: Record<string, any>
+  ): Promise<CompsAndLanesObjects> {
     let options = '';
-    const idsStr = ids.serialize();
+    const idsStr = ids.map(id => id.toString());
     if (noDeps) options = '--no-dependencies';
+    if (idsAreLanes) options += ' --lanes';
     return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
       const parseResponse = () => {
         try {
@@ -508,7 +530,7 @@ export default class SSH implements Network {
       };
       const { payload, headers } = parseResponse();
       checkVersionCompatibility(headers.version);
-      const componentObjects = ComponentObjects.manyFromString(payload);
+      const componentObjects = CompsAndLanesObjects.fromString(payload);
       return componentObjects;
     });
   }

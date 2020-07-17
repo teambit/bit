@@ -4,7 +4,7 @@ import RemovedObjects from '../removed-components';
 import logger from '../../logger/logger';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
-import { ModelComponent } from '../models';
+import { ModelComponent, Lane } from '../models';
 import { Symlink } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
@@ -16,6 +16,7 @@ export default class RemoveModelComponents {
   force: boolean;
   removeSameOrigin = false;
   consumer: Consumer | null | undefined;
+  currentLane: Lane | null = null;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;
@@ -24,20 +25,27 @@ export default class RemoveModelComponents {
     this.consumer = consumer;
   }
 
+  async setCurrentLane() {
+    this.currentLane = await this.scope.lanes.getCurrentLaneObject();
+  }
+
   async remove(): Promise<RemovedObjects> {
     const { missingComponents, foundComponents } = await this.scope.filterFoundAndMissingComponents(this.bitIds);
+    await this.setCurrentLane();
     const dependentBits = await this.scope.findDependentBits(foundComponents);
     if (R.isEmpty(dependentBits) || this.force) {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
       const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
+      if (this.currentLane) await this.scope.lanes.saveLane(this.currentLane);
       await this.scope.objects.persist();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const ids = new BitIds(...removedComponents.map(x => x.bitId));
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
-      return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
+      const removedFromLane = Boolean(this.currentLane);
+      return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies, removedFromLane });
     }
     // some of the components have dependents, don't remove them
     return new RemovedObjects({ missingComponents, dependentBits });
@@ -88,9 +96,13 @@ export default class RemoveModelComponents {
       );
       let isNested = true;
       if (this.consumer) {
-        const componentMap = this.consumer.bitMap.getComponentIfExist(dependencyId);
-        if (componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
-          isNested = false;
+        const componentMapIgnoreVersion = this.consumer.bitMap.getComponentIfExist(dependencyId, {
+          ignoreVersion: true
+        });
+        const componentMapExact = this.consumer.bitMap.getComponentIfExist(dependencyId);
+        const componentMap = componentMapExact || componentMapIgnoreVersion;
+        if (componentMap) {
+          isNested = componentMap.origin === COMPONENT_ORIGINS.NESTED;
         }
       }
       if (
@@ -111,6 +123,11 @@ export default class RemoveModelComponents {
   }
 
   async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>) {
+    if (this.currentLane) {
+      const result = this.currentLane.removeComponent(id);
+      if (!result) throw new Error(`failed deleting ${id.toString()}, the component was not found on the lane`);
+      return;
+    }
     const symlink = componentList.filter(
       component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );

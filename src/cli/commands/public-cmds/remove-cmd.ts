@@ -1,4 +1,5 @@
 import yn from 'yn';
+import chalk from 'chalk';
 import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { remove } from '../../../api/consumer';
 import RemovedObjects from '../../../scope/removed-components';
@@ -7,6 +8,7 @@ import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
@@ -28,7 +30,8 @@ export default class Remove implements LegacyCommand {
       'force [boolean]',
       'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
-    ['s', 'silent [boolean]', 'skip confirmation']
+    ['s', 'silent [boolean]', 'skip confirmation'],
+    ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane']
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -41,9 +44,11 @@ export default class Remove implements LegacyCommand {
       remote = false,
       track = false,
       deleteFiles = false,
-      silent = false
-    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean }
+      silent = false,
+      lane = false
+    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; lane: boolean }
   ): Promise<any> {
+    if (lane) throwForUsingLaneIfDisabled();
     if (!silent) {
       const removePromptResult = await removePrompt();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -52,15 +57,20 @@ export default class Remove implements LegacyCommand {
       }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ ids, remote, force, track, deleteFiles });
+    return remove({ ids, remote, force, track, deleteFiles, lane });
   }
   report({
     localResult,
-    remoteResult = []
+    remoteResult = [],
+    laneResults = []
   }: {
     localResult: RemovedLocalObjects;
     remoteResult: RemovedObjects[];
+    laneResults: string[];
   }): string {
+    if (laneResults.length) {
+      return chalk.green(`successfully removed the following lane(s): ${chalk.bold(laneResults.join(', '))}`);
+    }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

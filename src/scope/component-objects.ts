@@ -1,9 +1,6 @@
 import BitObject from './objects/object';
-import Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
-import { typesObj } from './object-registrar';
 import ModelComponent from './models/model-component';
-// import logger from '../logger/logger';
 
 export default class ComponentObjects {
   component: Buffer;
@@ -23,7 +20,7 @@ export default class ComponentObjects {
 
   // Used mainly by server side hooks
   getParsedComponent(): BitObject {
-    const component = BitObject.parseSync(this.component, typesObj);
+    const component = BitObject.parseSync(this.component);
     return component;
   }
 
@@ -52,21 +49,21 @@ export default class ComponentObjects {
   /**
    * prefer using `this.toObjectsAsync()` if not must to be sync.
    */
-  toObjects(repo: Repository): { component: ModelComponent; objects: BitObject[] } {
+  toObjects(): { component: ModelComponent; objects: BitObject[] } {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component: BitObject.parseSync(this.component, repo.types),
-      objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
+      component: BitObject.parseSync(this.component),
+      objects: this.objects.map(obj => BitObject.parseSync(obj))
     };
   }
   /**
    * see `this.toObject()` for the sync version
    */
-  async toObjectsAsync(repo: Repository): Promise<{ component: ModelComponent; objects: BitObject[] }> {
+  async toObjectsAsync(): Promise<{ component: ModelComponent; objects: BitObject[] }> {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component: await BitObject.parseObject(this.component, repo.types),
-      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj, repo.types)))
+      component: await BitObject.parseObject(this.component),
+      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj)))
     };
   }
 }

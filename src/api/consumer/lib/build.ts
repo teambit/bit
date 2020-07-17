@@ -21,7 +21,10 @@ export async function build(
 
 export async function buildAll(noCache: boolean, verbose: boolean): Promise<Record<string, any>> {
   const consumer: Consumer = await loadConsumer();
-  const authoredAndImportedIds = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+  const authoredAndImportedIds = consumer.bitMap.getAllIdsAvailableOnLane([
+    COMPONENT_ORIGINS.IMPORTED,
+    COMPONENT_ORIGINS.AUTHORED
+  ]);
   if (R.isEmpty(authoredAndImportedIds)) {
     return {};
   }

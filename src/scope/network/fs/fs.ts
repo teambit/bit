@@ -1,9 +1,8 @@
 import loadScope from '../../scope-loader';
 import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
-import { BitIds, BitId } from '../../../bit-id';
+import { BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
-import { flatten } from '../../../utils';
 import Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
 import { Network } from '../network';
@@ -12,6 +11,9 @@ import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 import { ComponentLogs } from '../../models/model-component';
+import { LaneData } from '../../lanes/lanes';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 import Component from '../../../consumer/component/consumer-component';
 
 export default class Fs implements Network {
@@ -41,12 +43,17 @@ export default class Fs implements Network {
 
   pushMany(components: ComponentObjects[]): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return put({ path: this.scopePath, componentObjects: components });
+    return put({ path: this.scopePath, compsAndLanesObjects: components });
   }
 
-  deleteMany(ids: string[], force: boolean): Promise<ComponentObjects[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any>,
+    idsAreLanes?: boolean
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ path: this.scopePath, ids, force });
+    return remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
   }
 
   deprecateMany(ids: string[]): Promise<ComponentObjects[]> {
@@ -59,12 +66,13 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  fetch(bitIds: BitIds, noDependencies = false): Promise<ComponentObjects[]> {
-    const idsStr = bitIds.serialize();
+  fetch(ids: Array<BitId | RemoteLaneId>, noDependencies = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {
+    const idsStr = ids.map(id => id.toString());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return fetch(this.scopePath, idsStr, noDependencies).then(bitsMatrix => {
-      if (noDependencies) return bitsMatrix;
-      return flatten(bitsMatrix);
+    return fetch(this.scopePath, idsStr, noDependencies, idsAreLanes).then(bitsMatrix => {
+      // if (noDependencies) return bitsMatrix;
+      // return flatten(bitsMatrix); // todo: check when this flatten is needed
+      return bitsMatrix;
     });
   }
 
@@ -89,6 +97,10 @@ export default class Fs implements Network {
 
   log(bitId: BitId): Promise<ComponentLogs> {
     return this.getScope().loadComponentLogs(bitId);
+  }
+
+  listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
   }
 
   async graph(bitId?: BitId): Promise<DependencyGraph> {

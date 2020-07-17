@@ -7,6 +7,7 @@ import MergeConflict from './merge-conflict';
 import MergeConflictOnRemote from './merge-conflict-on-remote';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
+import ParentNotFound from './parent-not-found';
 import VersionAlreadyExists from './version-already-exists';
 import HashNotFound from './hash-not-found';
 import ResolutionException from './resolution-exception';
@@ -16,6 +17,7 @@ import CyclicDependencies from './cyclic-dependencie';
 import HashMismatch from './hash-mismatch';
 import InvalidIndexJson from './invalid-index-json';
 import OutdatedIndexJson from './outdated-index-json';
+import HeadNotFound from './head-not-found';
 
 export {
   ScopeNotFound,
@@ -26,6 +28,7 @@ export {
   MergeConflict,
   MergeConflictOnRemote,
   VersionNotFound,
+  ParentNotFound,
   VersionAlreadyExists,
   ScopeAlreadyExists,
   BitNotInScope,
@@ -35,5 +38,6 @@ export {
   CorruptedComponent,
   CyclicDependencies,
   InvalidIndexJson,
-  OutdatedIndexJson
+  OutdatedIndexJson,
+  HeadNotFound
 };

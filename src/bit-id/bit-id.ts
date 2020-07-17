@@ -8,7 +8,7 @@ import isValidIdChunk from '../utils/is-valid-id-chunk';
 import isValidScopeName from '../utils/is-valid-scope-name';
 import { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
-import versionParser from '../version/version-parser';
+import versionParser, { isHash } from '../version/version-parser';
 
 export type BitIdProps = {
   scope?: string | null | undefined;
@@ -126,6 +126,10 @@ export default class BitId {
       throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version');
     }
     return path.join(this.name, this.scope, this.version);
+  }
+
+  isVersionSnap() {
+    return isHash(this.version);
   }
 
   /**
@@ -281,6 +285,11 @@ export default class BitId {
   }
 
   static isValidVersion(version: string): boolean {
+    // a version can be a tag (semver) or a snap (hash)
+    return BitId.isValidSemver(version) || isHash(version);
+  }
+
+  static isValidSemver(version: string): boolean {
     return Boolean(semver.valid(version));
   }
 }

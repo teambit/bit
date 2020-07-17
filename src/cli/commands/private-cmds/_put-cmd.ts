@@ -30,7 +30,7 @@ export default class Put implements LegacyCommand {
           const scopePath = fromBase64(path);
           return migrate(scopePath, false)
             .then(() => {
-              return put({ componentObjects: data, path: fromBase64(path) }, headers);
+              return put({ compsAndLanesObjects: data, path: fromBase64(path) }, headers);
             })
             .then(resolve)
             .catch(reject);

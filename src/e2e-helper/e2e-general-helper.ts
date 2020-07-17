@@ -2,7 +2,7 @@ import * as path from 'path';
 import tar from 'tar';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import { BIT_VERSION, WORKSPACE_JSONC } from '../constants';
+import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
 import defaultErrorHandler from '../cli/default-error-handler';
 import { removeChalkCharacters, generateRandomStr } from '../utils';
 import { ensureAndWriteJson } from './e2e-helper';
@@ -26,8 +26,15 @@ export default class GeneralHelper {
   getIndexJson() {
     return fs.readJsonSync(this.indexJsonPath());
   }
-  writeIndexJson(indexJson: Record<string, any>) {
-    return ensureAndWriteJson(this.indexJsonPath(), indexJson);
+  getComponentsFromIndexJson(): any[] {
+    const indexJson = this.getIndexJson();
+    return indexJson.components;
+  }
+  writeIndexJson(components: any[] = [], lanes: any[] = []) {
+    return ensureAndWriteJson(this.indexJsonPath(), { components, lanes });
+  }
+  getRemoteRefPath(lane = DEFAULT_LANE, remote = this.scopes.remote) {
+    return path.join(this.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, remote, lane);
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

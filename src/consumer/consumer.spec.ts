@@ -8,7 +8,7 @@ describe('Consumer', function() {
   let sandbox;
   const getConsumerInstance = () => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const consumer = new Consumer({ projectPath: '', config: {} });
+    const consumer = new Consumer({ projectPath: '', config: {}, scope: { lanes: { getCurrentLaneName: () => '' } } });
     return consumer;
   };
   describe('getComponentIdFromNodeModulesPath', () => {

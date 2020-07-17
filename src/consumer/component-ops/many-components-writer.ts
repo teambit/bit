@@ -42,6 +42,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
+  saveOnLane?: boolean;
   applyExtensionsAddedConfig?: boolean;
 }
 
@@ -80,6 +81,7 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
+  saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
   // Apply config added by extensions
   applyExtensionsAddedConfig?: boolean;
@@ -105,6 +107,7 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
+    this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
     this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
@@ -205,7 +208,8 @@ export default class ManyComponentsWriter {
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
         origin,
-        existingComponentMap: componentMap
+        existingComponentMap: componentMap,
+        saveOnLane: this.saveOnLane
       };
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -27,7 +27,7 @@ export async function tagAction(args: {
   releaseType: semver.ReleaseType;
   force: boolean | undefined;
   verbose?: boolean;
-  ignoreUnresolvedDependencies?: boolean;
+  ignoreUnresolvedDependencies: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
   skipAutoTag: boolean;
@@ -39,7 +39,7 @@ export async function tagAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreUnresolvedDependencies,
+    ignoreUnresolvedDependencies = false,
     ignoreNewestVersion,
     skipTests,
     skipAutoTag
@@ -96,7 +96,7 @@ export async function tagAllAction(args: {
   releaseType: semver.ReleaseType;
   force?: boolean;
   verbose?: boolean;
-  ignoreUnresolvedDependencies?: boolean;
+  ignoreUnresolvedDependencies: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
   scope?: string;

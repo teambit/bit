@@ -37,6 +37,7 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
+  saveOnLane?: boolean;
   applyExtensionsAddedConfig?: boolean;
 };
 
@@ -54,6 +55,7 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
+  saveOnLane: boolean;
   applyExtensionsAddedConfig?: boolean;
   constructor({
     component,
@@ -69,6 +71,7 @@ export default class ComponentWriter {
     deleteBitDirContent,
     existingComponentMap,
     excludeRegistryPrefix = false,
+    saveOnLane = false,
     applyExtensionsAddedConfig = false
   }: ComponentWriterProps) {
     this.component = component;
@@ -84,6 +87,7 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
+    this.saveOnLane = saveOnLane;
     this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
   }
 
@@ -236,7 +240,8 @@ export default class ComponentWriter {
       origin: this.origin,
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
-      wrapDir: this.component.wrapDir
+      wrapDir: this.component.wrapDir,
+      onLanesOnly: this.saveOnLane
     });
   }
 

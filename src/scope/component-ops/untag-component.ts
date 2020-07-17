@@ -4,6 +4,7 @@ import logger from '../../logger/logger';
 import { Scope } from '..';
 import GeneralError from '../../error/general-error';
 import ComponentsList from '../../consumer/component/components-list';
+import { getAllVersionsObjects } from './traverse-versions';
 
 export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
 
@@ -21,8 +22,11 @@ export async function removeLocalVersion(
   const localVersions = component.getLocalVersions();
   const idStr = id.toString();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
-  if (version && !component.hasVersion(version)) {
-    throw new GeneralError(`unable to untag ${idStr}, the version ${version} does not exist`);
+  if (version) {
+    const hasVersion = await component.hasVersion(version, scope.objects);
+    if (!hasVersion) {
+      throw new GeneralError(`unable to untag ${idStr}, the version ${version} does not exist`);
+    }
   }
   if (version && !localVersions.includes(version)) {
     throw new GeneralError(`unable to untag ${idStr}, the version ${version} was exported already`);
@@ -45,7 +49,8 @@ export async function removeLocalVersion(
     });
   }
 
-  scope.sources.removeComponentVersions(component, versionsToRemove);
+  const allVersionsObjects = await getAllVersionsObjects(component, scope.objects);
+  scope.sources.removeComponentVersions(component, versionsToRemove, allVersionsObjects);
 
   return { id, versions: versionsToRemove, component };
 }

@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import pathlib from 'path';
 import { writeFile, cleanObject } from '../utils';
 import { Remote } from '../remotes';
-import { SCOPE_JSON } from '../constants';
+import { SCOPE_JSON, DEFAULT_LANE } from '../constants';
 import BitId from '../bit-id/bit-id';
 import GeneralError from '../error/general-error';
 import { ScopeJsonNotFound } from './exceptions';
@@ -20,7 +20,10 @@ export type ScopeJsonProps = {
   license?: string;
   groupName: string | null | undefined;
   remotes?: { name: string; url: string };
+  lanes?: { current: string; tracking: TrackLane[] };
 };
+
+export type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
 
 export class ScopeJson {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -31,8 +34,10 @@ export class ScopeJson {
   license: string | null | undefined;
   remotes: { [key: string]: string };
   groupName: string;
+  lanes: { current: string; tracking: TrackLane[] };
+  hasChanged = false;
 
-  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes }: ScopeJsonProps) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
@@ -40,6 +45,7 @@ export class ScopeJson {
     this.license = license;
     this.remotes = remotes || {};
     this.groupName = groupName || '';
+    this.lanes = lanes || { current: DEFAULT_LANE, tracking: [] };
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -60,7 +66,8 @@ export class ScopeJson {
       resolverPath: this.resolverPath,
       license: this.license,
       groupName: this.groupName,
-      version: this.version
+      version: this.version,
+      lanes: this.lanes
     });
   }
 
@@ -101,6 +108,26 @@ export class ScopeJson {
 
   async write(path: string) {
     return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
+  }
+
+  trackLane(trackLaneData: TrackLane) {
+    this.lanes.tracking.push({
+      localLane: trackLaneData.localLane,
+      remoteLane: trackLaneData.remoteLane,
+      remoteScope: trackLaneData.remoteScope
+    });
+    this.hasChanged = true;
+  }
+  setCurrentLane(laneName: string): void {
+    if (this.lanes.current !== laneName) {
+      this.lanes.current = laneName;
+      this.hasChanged = true;
+    }
+  }
+  async writeIfChanged(path: string) {
+    if (this.hasChanged) {
+      await this.write(path);
+    }
   }
 
   static loadFromJson(json: string): ScopeJson {
