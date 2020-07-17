@@ -2,7 +2,7 @@ import { Environments } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compile, CompileExt } from '../compiler';
+import { Compile, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
@@ -76,7 +76,7 @@ export class ReactExtension {
     return {
       abstract: docs.description,
       filePath: docs.filePath,
-      properties: docs.properties,
+      properties: docs.properties
     };
   }
 
@@ -84,12 +84,12 @@ export class ReactExtension {
     Environments,
     JestExtension,
     TypescriptExtension,
-    CompileExt,
+    CompilerExtension,
     WebpackExtension,
     WorkspaceExt,
     GraphQLExtension,
     PkgExtension,
-    TesterExtension,
+    TesterExtension
   ];
 
   static provider([envs, jest, ts, compile, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
