@@ -15,11 +15,11 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
 module.exports = {
-  createWebpackConfig
+  createWebpackConfig,
 };
 
 function createWebpackConfig(workspaceDir, entryFiles) {
-  const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
+  const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
   const host = process.env.HOST || 'localhost';
@@ -35,7 +35,7 @@ function createWebpackConfig(workspaceDir, entryFiles) {
 
     // Entry point of app
     entry: {
-      main: entryFiles
+      main: entryFiles,
       // preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
     },
 
@@ -54,11 +54,11 @@ function createWebpackConfig(workspaceDir, entryFiles) {
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
-      devtoolModuleFilenameTemplate: info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolModuleFilenameTemplate: (info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this'
+      globalObject: 'this',
     },
 
     devServer: {
@@ -84,7 +84,7 @@ function createWebpackConfig(workspaceDir, entryFiles) {
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath
+        index: publicUrlOrPath,
       },
 
       sockHost,
@@ -113,11 +113,11 @@ function createWebpackConfig(workspaceDir, entryFiles) {
       },
 
       // Public path is root of content base
-      publicPath: publicUrlOrPath.slice(0, -1)
+      publicPath: publicUrlOrPath.slice(0, -1),
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['.ts', '.tsx', '.js'],
     },
 
     module: {
@@ -126,7 +126,7 @@ function createWebpackConfig(workspaceDir, entryFiles) {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
-          use: [require.resolve('source-map-loader')]
+          use: [require.resolve('source-map-loader')],
         },
         {
           test: /\.(js|jsx|tsx|ts)$/,
@@ -136,10 +136,10 @@ function createWebpackConfig(workspaceDir, entryFiles) {
           options: {
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app')
+              require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')]
-          }
+            plugins: [require.resolve('react-refresh/babel')],
+          },
         },
         {
           test: /\.module\.s(a|c)ss$/,
@@ -149,18 +149,18 @@ function createWebpackConfig(workspaceDir, entryFiles) {
               loader: require.resolve('css-loader'),
               options: {
                 modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]'
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
                 },
-                sourceMap: true
-              }
+                sourceMap: true,
+              },
             },
             {
               loader: require.resolve('sass-loader'),
               options: {
-                sourceMap: true
-              }
-            }
-          ]
+                sourceMap: true,
+              },
+            },
+          ],
         },
         {
           test: /\.s(a|c)ss$/,
@@ -171,17 +171,17 @@ function createWebpackConfig(workspaceDir, entryFiles) {
             {
               loader: require.resolve('sass-loader'),
               options: {
-                sourceMap: true
-              }
-            }
-          ]
+                sourceMap: true,
+              },
+            },
+          ],
         },
         {
           test: /\.css$/,
           exclude: /\.(s(a|c)ss)$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')]
-        }
-      ]
+          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+        },
+      ],
     },
 
     plugins: [
@@ -193,13 +193,13 @@ function createWebpackConfig(workspaceDir, entryFiles) {
         inject: true,
         templateContent: html('My component workspace'),
         chunks: ['main'],
-        filename: 'index.html'
-      })
+        filename: 'index.html',
+      }),
       // new HtmlWebpackPlugin({
       //   templateContent: html('Component preview'),
       //   chunks: ['preview'],
       //   filename: 'preview.html'
       // })
-    ]
+    ],
   };
 }
