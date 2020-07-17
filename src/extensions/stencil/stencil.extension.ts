@@ -2,7 +2,7 @@ import { TranspileOptions } from '@stencil/core/compiler';
 import { StencilCompiler } from './stencil.compiler';
 import { Environments } from '../environments';
 import { StencilEnv } from './stencil.env';
-import { CompileExt, Compile } from '../compiler';
+import { CompilerExtension, Compile } from '../compiler';
 import { StencilTester } from './stencil.tester';
 import { WorkspaceExt, Workspace } from '../workspace';
 // import { StencilDevServer } from './stencil.dev-server';
@@ -30,7 +30,7 @@ export class StencilExtension {
     // return new StencilDevServer({}, this.workspace);
   }
 
-  static dependencies = [Environments, CompileExt, WorkspaceExt, WebpackExtension];
+  static dependencies = [Environments, CompilerExtension, WorkspaceExt, WebpackExtension];
 
   static async provider([envs, compiler, workspace, webpack]: [Environments, Compile, Workspace, WebpackExtension]) {
     const stencil = new StencilExtension(workspace);

@@ -5,7 +5,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { WatchCommand } from './watch.cmd';
-import { CompileExt } from '../compiler';
+import { CompilerExtension } from '../compiler';
 import { CLIExtension } from '../cli';
 /* eslint no-console: 0 */
 import loader from '../../cli/loader';
@@ -197,7 +197,7 @@ export class WatcherExtension {
     return R.flatten(paths);
   }
 
-  static dependencies = [CLIExtension, CompileExt, WorkspaceExt];
+  static dependencies = [CLIExtension, CompilerExtension, WorkspaceExt];
 
   static slots = [Slot.withType<Watcher>()];
 

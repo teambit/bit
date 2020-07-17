@@ -8,9 +8,9 @@ module.exports = {
   process(src, filename) {
     const result = transform(src, {
       filename,
-      presets: [presetEnv, reactPreset, typescriptPreset, jestPreset]
+      presets: [presetEnv, reactPreset, typescriptPreset, jestPreset],
     });
 
     return result ? result.code : src;
-  }
+  },
 };

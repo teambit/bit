@@ -13,8 +13,8 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function(workspaceDir, entryFiles) {
-  const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
+module.exports = function (workspaceDir, entryFiles) {
+  const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
   const host = process.env.HOST || 'localhost';
@@ -30,7 +30,7 @@ module.exports = function(workspaceDir, entryFiles) {
 
     // Entry point of app
     entry: {
-      entry: entryFiles.map(filePath => resolveWorkspacePath(filePath))
+      entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
     },
 
     output: {
@@ -48,11 +48,11 @@ module.exports = function(workspaceDir, entryFiles) {
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
-      devtoolModuleFilenameTemplate: info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolModuleFilenameTemplate: (info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this'
+      globalObject: 'this',
     },
 
     devServer: {
@@ -78,7 +78,7 @@ module.exports = function(workspaceDir, entryFiles) {
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath
+        index: publicUrlOrPath,
       },
 
       sockHost,
@@ -107,18 +107,18 @@ module.exports = function(workspaceDir, entryFiles) {
       },
 
       // Public path is root of content base
-      publicPath: publicUrlOrPath.slice(0, -1)
+      publicPath: publicUrlOrPath.slice(0, -1),
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['.ts', '.tsx', '.js'],
     },
 
     plugins: [
       new HtmlWebpackPlugin({
         templateContent: html('Component preview'),
-        filename: 'index.html'
-      })
-    ]
+        filename: 'index.html',
+      }),
+    ],
   };
 };

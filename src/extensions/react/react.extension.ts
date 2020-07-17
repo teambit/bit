@@ -2,7 +2,7 @@ import { Environments } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compile, CompileExt } from '../compiler';
+import { Compile, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
@@ -84,7 +84,7 @@ export class ReactExtension {
     Environments,
     JestExtension,
     TypescriptExtension,
-    CompileExt,
+    CompilerExtension,
     WebpackExtension,
     WorkspaceExt,
     GraphQLExtension,

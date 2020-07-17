@@ -8,7 +8,7 @@ function handleError(error) {
   process.exit(1);
 }
 
-const pathToTask = process.argv.find(function(value, index, arr) {
+const pathToTask = process.argv.find(function (value, index, arr) {
   if (!index) {
     return false;
   }
@@ -30,8 +30,8 @@ if (typeof toExecute === 'function') {
     return executed && executed.then ? executed : Promise.resolve(executed);
   };
   getPromisedResult()
-    .then(userTaskResult => {
-      process.on('beforeExit', async code => {
+    .then((userTaskResult) => {
+      process.on('beforeExit', async (code) => {
         const toSend = userTaskResult || { exitCode: code };
         process.send ? process.send(toSend) : Promise.resolve();
       });

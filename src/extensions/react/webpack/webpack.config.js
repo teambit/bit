@@ -1,6 +1,6 @@
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
-module.exports = function(workspaceDir) {
+module.exports = function (workspaceDir) {
   return {
     module: {
       rules: [
@@ -8,7 +8,7 @@ module.exports = function(workspaceDir) {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
-          use: [require.resolve('source-map-loader')]
+          use: [require.resolve('source-map-loader')],
         },
         {
           test: /\.(js|jsx|tsx|ts)$/,
@@ -18,10 +18,10 @@ module.exports = function(workspaceDir) {
           options: {
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
-              require.resolve('babel-preset-react-app')
+              require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')]
-          }
+            plugins: [require.resolve('react-refresh/babel')],
+          },
         },
         {
           test: /\.module\.s(a|c)ss$/,
@@ -31,18 +31,18 @@ module.exports = function(workspaceDir) {
               loader: require.resolve('css-loader'),
               options: {
                 modules: {
-                  localIdentName: '[name]__[local]--[hash:base64:5]'
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
                 },
-                sourceMap: true
-              }
+                sourceMap: true,
+              },
             },
             {
               loader: require.resolve('sass-loader'),
               options: {
-                sourceMap: true
-              }
-            }
-          ]
+                sourceMap: true,
+              },
+            },
+          ],
         },
         {
           test: /\.s(a|c)ss$/,
@@ -53,30 +53,30 @@ module.exports = function(workspaceDir) {
             {
               loader: require.resolve('sass-loader'),
               options: {
-                sourceMap: true
-              }
-            }
-          ]
+                sourceMap: true,
+              },
+            },
+          ],
         },
         {
           test: /\.css$/,
           exclude: /\.(s(a|c)ss)$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')]
-        }
-      ]
+          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+        },
+      ],
     },
     resolve: {
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
-        'react-dom': require.resolve('react-dom')
-      }
+        'react-dom': require.resolve('react-dom'),
+      },
     },
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        overlay: true
-      })
-    ]
+        overlay: true,
+      }),
+    ],
   };
 };

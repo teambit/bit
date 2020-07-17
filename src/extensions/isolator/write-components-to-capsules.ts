@@ -1,18 +1,11 @@
 import ConsumerComponent from '../../consumer/component';
-import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
-import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import ComponentWriter, { ComponentWriterProps } from '../../consumer/component-ops/component-writer';
 import BitMap from '../../consumer/bit-map';
 
-export default async function writeComponentsToCapsules(
-  components: ConsumerComponent[],
-  graph: Graph,
-  capsules: Capsule[],
-  capsuleList: CapsuleList
-) {
+export default async function writeComponentsToCapsules(components: ConsumerComponent[], capsuleList: CapsuleList) {
   components = components.map((c) => c.clone());
   const allIds = BitIds.fromArray(components.map((c) => c.id));
   await Promise.all(
@@ -25,7 +18,6 @@ export default async function writeComponentsToCapsules(
       await component.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
     })
   );
-  // return manyComponentsWriter.writtenComponents;
 }
 
 function getComponentWriteParams(component: ConsumerComponent, ids: BitIds): ComponentWriterProps {

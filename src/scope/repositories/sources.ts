@@ -2,7 +2,7 @@ import R from 'ramda';
 import { BitObject, Ref } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, COMPONENT_ORIGINS } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
@@ -237,7 +237,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const isCompileSet = Boolean(
       consumerComponent.compiler ||
         clonedComponent.extensions.some(
-          (e) => e.name === 'compile' || e.name === 'bit.core/compile' || e.name === '@teambit/envs'
+          (e) => e.name === Extensions.compiler || e.name === 'bit.core/compile' || e.name === Extensions.envs
         )
     );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
