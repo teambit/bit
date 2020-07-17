@@ -48,14 +48,14 @@ describe('ComponentList', function() {
     const scope = {};
     before(() => {
       const bitMap = { getAuthoredAndImportedBitIds: () => new BitIds() };
-      const consumer = { scope, bitMap };
+      const consumer = { scope, bitMap, getCurrentLaneId: () => {} };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentList = new ComponentsList(consumer);
     });
     it('should return results with the correct id', async () => {
       const modelComponent = getModelComponent();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      scope.list = async () => [modelComponent];
+      scope.listIncludeRemoteHead = async () => [modelComponent];
       const results = await componentList.listScope(false, true);
       const result = results[0];
       expect(result).to.have.property('id');

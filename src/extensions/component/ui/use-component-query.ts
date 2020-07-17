@@ -22,6 +22,14 @@ const GET_COMPONENT = gql`
         compositions {
           identifier
         }
+        tags {
+          version
+          snap {
+            hash
+            timestamp
+            message
+          }
+        }
       }
     }
   }

@@ -4,6 +4,7 @@ import fetch from './lib/fetch';
 import describeScope from './lib/describe-scope';
 import catObject from './lib/cat-object';
 import catComponent from './lib/cat-component';
+import catLane from './lib/cat-lane';
 import scopeList from './lib/scope-list';
 import scopeShow from './lib/scope-show';
 import graph from './lib/graph';
@@ -22,6 +23,7 @@ import { deprecate, undeprecate } from './lib/deprecation';
 export {
   catObject,
   catComponent,
+  catLane,
   describeScope,
   initScope,
   testInScope,

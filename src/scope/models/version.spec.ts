@@ -7,7 +7,7 @@ import GeneralError from '../../error/general-error';
 import { SchemaName } from '../../consumer/component/component-schema';
 
 const getVersionWithDepsFixture = () => {
-  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
+  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '');
 };
 
 describe('Version', () => {
@@ -107,19 +107,19 @@ describe('Version', () => {
     });
   });
   describe('hash()', () => {
-    let version;
+    let version: Version;
     let hash;
     const versionFixtureHash = '693679c1c397ca3c42f6f3486ce1ed042787886a';
     before(() => {
       // @ts-ignore
       version = new Version(versionFixture);
-      hash = version.hash();
+      hash = version.calculateHash();
     });
     it('should have a correct hash string', () => {
       expect(hash.toString()).to.equal(versionFixtureHash);
     });
     it('should have a the same hash string also when loading the version from contents', () => {
-      const versionFromContent = Version.parse(JSON.stringify(versionFixture));
+      const versionFromContent = Version.parse(JSON.stringify(versionFixture), hash.toString());
       expect(versionFromContent.hash().toString()).to.equal(versionFixtureHash);
     });
   });

@@ -76,10 +76,11 @@ export default class Checkout implements LegacyCommand {
       reset,
       all,
       verbose,
+      isLane: false,
       skipNpmInstall,
+      ignoreDist,
       ignorePackageJson,
-      writeConfig: !!conf,
-      ignoreDist
+      writeConfig: !!conf
     };
     return checkout(values, checkoutProps);
   }

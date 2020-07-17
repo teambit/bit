@@ -5,6 +5,7 @@ import Component from '../consumer/component/consumer-component';
 import { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 import { SpecsResultsWithComponentId, SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
+import { isHash } from '../version/version-parser';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
@@ -75,8 +76,9 @@ export const paintLog = ({
   username: string | null | undefined;
   email: string | null | undefined;
 }): string => {
+  const type = isHash(tag) ? 'snap' : 'tag';
   return (
-    c.yellow(`tag ${tag}\n`) +
+    c.yellow(`${type} ${tag}\n`) +
     paintAuthor(email, username) +
     (date ? c.white(`date: ${date}\n`) : '') +
     (message ? c.white(`\n      ${message}\n`) : '')

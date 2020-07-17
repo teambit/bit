@@ -7,12 +7,15 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../cons
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
+import { Lane } from '../../../scope/models';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { PublishResults } from '../../../scope/component-ops/publish-during-export';
 
 export default class Export implements LegacyCommand {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
+  bit export <remote> <lane...> => export the specified lanes to the specified remote
   bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
   bit export => export all staged components to their current scope
   https://${BASE_DOCS_DOMAIN}/docs/export
@@ -36,8 +39,9 @@ export default class Export implements LegacyCommand {
       'rewire',
       'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope'
     ],
-    ['', 'all-versions', 'export not only staged versions but all of them'],
-    ['f', 'force', 'force changing a component remote without asking for a confirmation']
+    ['f', 'force', 'force changing a component remote without asking for a confirmation'],
+    ['l', 'lanes', 'EXPERIMENTAL. export lanes'],
+    ['', 'all-versions', 'export not only staged versions but all of them']
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -52,9 +56,11 @@ export default class Export implements LegacyCommand {
       all = false,
       allVersions = false,
       force = false,
-      rewire = false
+      rewire = false,
+      lanes = false
     }: any
   ): Promise<any> {
+    if (lanes) throwForUsingLaneIfDisabled();
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
@@ -73,7 +79,8 @@ export default class Export implements LegacyCommand {
       includeNonStaged: all || allVersions,
       allVersions: allVersions || all,
       codemod: rewire,
-      force
+      force,
+      lanes
     }).then(results => ({
       ...results,
       remote,
@@ -85,6 +92,7 @@ export default class Export implements LegacyCommand {
     componentsIds,
     nonExistOnBitMap,
     missingScope,
+    exportedLanes,
     ejectResults,
     publishResults,
     remote,
@@ -93,6 +101,7 @@ export default class Export implements LegacyCommand {
     componentsIds: BitId[];
     nonExistOnBitMap: BitId[];
     missingScope: BitId[];
+    exportedLanes: Lane[];
     ejectResults: EjectResults | null | undefined;
     publishResults: PublishResults;
     remote: string;
@@ -130,6 +139,14 @@ export default class Export implements LegacyCommand {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const lanesOutput = () => {
+      if (!exportedLanes.length) return '';
+      return chalk.green(
+        `exported the following ${exportedLanes.length} lane(s):
+${exportedLanes.map(l => `${chalk.bold(l.name)} (${l.components.length} components)`).join('\n')}\n\n`
+      );
+    };
+
     const publishOutput = () => {
       if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
       const failedCompsStr = publishResults.failedComponents
@@ -149,6 +166,8 @@ export default class Export implements LegacyCommand {
       return successOutput + failedOutput;
     };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + publishOutput() + ejectOutput();
+    return (
+      nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + publishOutput() + ejectOutput()
+    );
   }
 }

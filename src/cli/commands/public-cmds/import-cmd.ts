@@ -12,6 +12,7 @@ import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';
@@ -51,7 +52,12 @@ export default class Import implements LegacyCommand {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    [
+      '',
+      'skip-lane',
+      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master'
+    ]
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -74,6 +80,7 @@ export default class Import implements LegacyCommand {
       skipNpmInstall = false,
       ignorePackageJson = false,
       merge,
+      skipLane = false,
       dependencies = false,
       dependents = false
     }: {
@@ -91,11 +98,13 @@ export default class Import implements LegacyCommand {
       skipNpmInstall?: boolean;
       ignorePackageJson?: boolean;
       merge?: MergeStrategy;
+      skipLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
     },
     packageManagerArgs: string[]
   ): Promise<any> {
+    if (skipLane) throwForUsingLaneIfDisabled();
     if (tester && compiler) {
       throw new GeneralError('you cant use tester and compiler flags combined');
     }
@@ -131,6 +140,7 @@ export default class Import implements LegacyCommand {
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
+      skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents
     };

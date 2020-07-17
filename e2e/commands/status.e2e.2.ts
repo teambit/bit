@@ -634,7 +634,7 @@ describe('bit status command', function() {
       // an intermediate step, make sure bar/foo is before utils/is-string
       // so then when bit-javascript resolves dependencies of utils/is-string it finds them in the
       // cache
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       const components = Object.keys(bitMap);
       expect(components[0]).to.equal('bar/foo');
       expect(components[1]).to.equal('utils/is-string');

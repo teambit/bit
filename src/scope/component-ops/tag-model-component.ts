@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { v4 } from 'uuid';
 import { ReleaseType } from 'semver';
 import * as RA from 'ramda-adjunct';
 import pMapSeries from 'p-map-series';
@@ -20,6 +21,7 @@ import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { sha1 } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
@@ -56,10 +58,16 @@ this extension was not included in the tag command.`);
   });
 }
 
+function setHashes(componentsToTag: Component[]): void {
+  componentsToTag.forEach(componentToTag => {
+    componentToTag.version = sha1(v4());
+  });
+}
+
 async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
-  releaseType: ReleaseType,
+  releaseType: ReleaseType | undefined,
   exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
@@ -141,7 +149,7 @@ function validateDirManipulation(components: Component[]): void {
   components.forEach(component => validateComponent(component));
 }
 
-export default (async function tagModelComponent({
+export default async function tagModelComponent({
   consumerComponents,
   scope,
   message,
@@ -152,19 +160,23 @@ export default (async function tagModelComponent({
   ignoreNewestVersion = false,
   skipTests = false,
   verbose = false,
-  skipAutoTag
+  skipAutoTag,
+  resolveUnmerged,
+  isSnap = false
 }: {
   consumerComponents: Component[];
   scope: Scope;
   message: string;
-  exactVersion: string | null | undefined;
-  releaseType: ReleaseType;
+  exactVersion?: string | null | undefined;
+  releaseType?: ReleaseType;
   force: boolean | null | undefined;
   consumer: Consumer;
-  ignoreNewestVersion: boolean;
+  ignoreNewestVersion?: boolean;
   skipTests: boolean;
   verbose?: boolean;
   skipAutoTag: boolean;
+  resolveUnmerged?: boolean;
+  isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
@@ -191,12 +203,13 @@ export default (async function tagModelComponent({
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
 
   // check for each one of the components whether it is using an old version
-  if (!ignoreNewestVersion) {
+  if (!ignoreNewestVersion && !isSnap) {
     const newestVersionsP = componentsToBuildAndTest.map(async component => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
         if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
+        if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
         const latest = modelComponent.latest();
         if (latest !== component.version) {
           return {
@@ -261,7 +274,7 @@ export default (async function tagModelComponent({
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
 
   // go through all components and find the future versions for them
-  await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
+  isSnap ? setHashes(componentsToTag) : await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
   setCurrentSchema(componentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
@@ -270,6 +283,7 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
+  const lane = await consumer.getCurrentLaneObject();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
@@ -292,7 +306,9 @@ export default (async function tagModelComponent({
       flattenedDependencies,
       flattenedDevDependencies,
       message,
-      specsResults: testResult ? testResult.specs : undefined
+      lane,
+      specsResults: testResult ? testResult.specs : undefined,
+      resolveUnmerged
     });
     return consumerComponent;
   };
@@ -300,11 +316,11 @@ export default (async function tagModelComponent({
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
+  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedResults };
-});
+}
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {
   if (consumer.isLegacy) return;

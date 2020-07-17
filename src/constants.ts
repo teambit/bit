@@ -106,6 +106,10 @@ export const LATEST_BIT_VERSION = 'latest';
 
 export const OBJECTS_DIR = 'objects';
 
+export const REMOTE_REFS_DIR = path.join('refs', 'remotes');
+
+export const WORKSPACE_LANES_DIR = path.join('workspace', 'lanes');
+
 export const NULL_BYTE = '\u0000';
 
 export const SPACE_DELIMITER = ' ';
@@ -413,6 +417,12 @@ export const CURRENT_UPSTREAM = 'current';
 
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
 
+export const HASH_SIZE = 40;
+
+// @todo: decide how the delimiter should look like
+export const LANE_REMOTE_DELIMITER = '/';
+
+export const DEFAULT_LANE = 'master';
 const MISSING_DEPS_SPACE_COUNT = 10;
 export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);

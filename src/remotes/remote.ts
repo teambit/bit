@@ -2,13 +2,16 @@ import { isBitUrl, cleanBang } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { Network } from '../scope/network/network';
 import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
 import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import { ComponentLogs } from '../scope/models/model-component';
+import { LaneData } from '../scope/lanes/lanes';
+import { RemoteLaneId } from '../lane-id/lane-id';
 
 /**
  * @ctx bit, primary, remote
@@ -72,13 +75,14 @@ export default class Remote {
   }
 
   fetch(
-    bitIds: BitIds,
+    ids: BitId[] | RemoteLaneId[],
     withoutDeps: boolean,
     context?: Record<string, any>,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ComponentObjects[]> {
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
+    idsAreLanes = false
+  ): Promise<CompsAndLanesObjects> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, context));
+    return this.connect(strategiesNames).then(network => network.fetch(ids, withoutDeps, idsAreLanes, context));
   }
 
   latestVersions(
@@ -98,17 +102,18 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[], context: Record<string, any> | null | undefined): Promise<string[]> {
+  pushMany(components: CompsAndLanesObjects, context: Record<string, any> | null | undefined): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }
   deleteMany(
     ids: string[],
     force: boolean,
-    context: Record<string, any> | null | undefined
-  ): Promise<Record<string, any>[]> {
+    context: Record<string, any> | null | undefined,
+    idsAreLanes = false
+  ): Promise<Record<string, any>> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return connect(this.host).then(network => network.deleteMany(ids, force, context));
+    return connect(this.host).then(network => network.deleteMany(ids, force, context, idsAreLanes));
   }
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
@@ -118,6 +123,9 @@ export default class Remote {
   }
   log(id: BitId): Promise<ComponentLogs> {
     return connect(this.host).then(network => network.log(id));
+  }
+  listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    return connect(this.host).then(network => network.listLanes(name, mergeData));
   }
 
   static load(name: string, host: string): Remote {

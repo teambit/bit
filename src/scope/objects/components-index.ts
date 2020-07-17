@@ -1,28 +1,74 @@
+/* eslint max-classes-per-file: 0 */
 import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import BitId from '../../bit-id/bit-id';
 import { ModelComponent, Symlink } from '../models';
 import { BitObject, Ref } from '.';
 import logger from '../../logger/logger';
 import InvalidIndexJson from '../exceptions/invalid-index-json';
+import Lane from '../models/lane';
+import LaneId from '../../lane-id/lane-id';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-type IndexItem = { id: { scope: string | null | undefined; name: string }; isSymlink: boolean; hash: string };
+interface IndexItem {
+  hash: string;
+  toIdentifierString(): string;
+}
 
-export default class ComponentsIndex {
+export class ComponentItem implements IndexItem {
+  constructor(public id: { scope: string | null; name: string }, public isSymlink: boolean, public hash: string) {}
+
+  toIdentifierString(): string {
+    const scope = this.id.scope ? `${this.id.scope}/` : '';
+    return `component "${scope}${this.id.name}"`;
+  }
+}
+
+export class LaneItem implements IndexItem {
+  constructor(public id: { name: string }, public hash: string) {}
+
+  toIdentifierString() {
+    return `lane "${this.id.name}"`;
+  }
+
+  toLaneId(): LaneId {
+    return new LaneId({ name: this.id.name });
+  }
+}
+
+export enum IndexType {
+  components = 'components',
+  lanes = 'lanes'
+}
+
+type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneItem[] };
+
+export default class ScopeIndex {
   indexPath: string;
-  index: IndexItem[];
-  constructor(indexPath: string, index: IndexItem[] = []) {
+  index: Index;
+  constructor(indexPath: string, index: Index = { [IndexType.components]: [], [IndexType.lanes]: [] }) {
     this.indexPath = indexPath;
     this.index = index;
   }
-  static async load(basePath: string): Promise<ComponentsIndex> {
+  static async load(basePath: string): Promise<ScopeIndex> {
     const indexPath = this._composePath(basePath);
     try {
-      const index = await fs.readJson(indexPath);
-      return new ComponentsIndex(indexPath, index);
+      const indexRaw = await fs.readJson(indexPath);
+      const getIndexWithBackwardCompatibility = (): Index => {
+        if (Array.isArray(indexRaw)) {
+          return { [IndexType.components]: indexRaw, [IndexType.lanes]: [] };
+        }
+        return indexRaw;
+      };
+      const indexObject = getIndexWithBackwardCompatibility();
+      const index = {
+        [IndexType.components]: indexObject[IndexType.components].map(
+          c => new ComponentItem(c.id, c.isSymlink, c.hash)
+        ),
+        [IndexType.lanes]: indexObject[IndexType.lanes].map(l => new LaneItem(l.id, l.hash))
+      };
+      return new ScopeIndex(indexPath, index);
     } catch (err) {
       if (err.message.includes('Unexpected token')) {
         throw new InvalidIndexJson(indexPath, err.message);
@@ -30,9 +76,9 @@ export default class ComponentsIndex {
       throw err;
     }
   }
-  static create(basePath: string): ComponentsIndex {
+  static create(basePath: string): ScopeIndex {
     const indexPath = this._composePath(basePath);
-    return new ComponentsIndex(indexPath);
+    return new ScopeIndex(indexPath);
   }
   static async reset(basePath: string) {
     const indexPath = this._composePath(basePath);
@@ -42,40 +88,42 @@ export default class ComponentsIndex {
   async write() {
     return fs.writeJson(this.indexPath, this.index, { spaces: 2 });
   }
-  getIds(): BitId[] {
-    return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => this.indexItemToBitId(indexItem));
+  getAll(): IndexItem[] {
+    return R.flatten(Object.values(this.index));
   }
-  getIdsIncludesSymlinks(): BitId[] {
-    return this.index.map(indexItem => this.indexItemToBitId(indexItem));
+
+  getHashes(indexType: IndexType): string[] {
+    // @ts-ignore how to tell TS that all this.index.prop are array?
+    return this.index[indexType].map(indexItem => indexItem.hash);
   }
-  getIdByHash(hash: string): BitId | null | undefined {
-    const foundIndexItem = this.index.find(indexItem => indexItem.hash === hash);
-    if (!foundIndexItem) return null;
-    return this.indexItemToBitId(foundIndexItem);
-  }
-  getHashes(): string[] {
-    return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => indexItem.hash);
+  getHashesByQuery(indexType: IndexType, filter: Function): string[] {
+    // @ts-ignore how to tell TS that all this.index.prop are array?
+    return this.index[indexType].filter(filter).map(indexItem => indexItem.hash);
   }
   getHashesIncludeSymlinks(): string[] {
-    return this.index.map(indexItem => indexItem.hash);
-  }
-  indexItemToBitId(indexItem: IndexItem) {
-    // $FlowFixMe box is not needed
-    return new BitId(indexItem.id);
+    return this.index.components.map(indexItem => indexItem.hash);
   }
   addMany(bitObjects: BitObject[]): boolean {
     const added = bitObjects.map(bitObject => this.addOne(bitObject));
     return added.some(oneAdded => oneAdded); // return true if one of the objects was added
   }
   addOne(bitObject: BitObject): boolean {
-    if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink)) return false;
+    if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink) && !(bitObject instanceof Lane))
+      return false;
     const hash = bitObject.hash().toString();
     if (this._exist(hash)) return false;
-    this.index.push({
-      id: { scope: bitObject.scope || null, name: bitObject.name },
-      isSymlink: bitObject instanceof Symlink,
-      hash
-    });
+    if (bitObject instanceof ModelComponent || bitObject instanceof Symlink) {
+      const componentItem = new ComponentItem(
+        { scope: bitObject.scope || null, name: bitObject.name },
+        bitObject instanceof Symlink,
+        hash
+      );
+      this.index.components.push(componentItem);
+    } else if (bitObject instanceof Lane) {
+      const laneItem = new LaneItem({ name: bitObject.name }, hash);
+      this.index.lanes.push(laneItem);
+    }
+
     return true;
   }
   removeMany(refs: Ref[]): boolean {
@@ -83,10 +131,14 @@ export default class ComponentsIndex {
     return removed.some(removedOne => removedOne); // return true if one of the objects was removed
   }
   removeOne(hash: string): boolean {
-    const found = this._find(hash);
-    if (!found) return false;
-    this.index = R.without([found], this.index);
-    return true;
+    for (const entity of Object.keys(IndexType)) {
+      const found = this.index[entity].find(indexItem => indexItem.hash === hash);
+      if (found) {
+        this.index[entity] = R.without([found], this.index[entity]);
+        return true;
+      }
+    }
+    return false;
   }
   async deleteFile() {
     logger.debug(`ComponentsIndex, deleting the index file at ${this.indexPath}`);
@@ -104,11 +156,15 @@ export default class ComponentsIndex {
   isFileOnBitHub() {
     return this.indexPath.includes('/bithub/');
   }
-  _find(hash: string): IndexItem | null | undefined {
-    return this.index.find(indexItem => indexItem.hash === hash);
+  find(hash: string): IndexItem | null {
+    for (const entity of Object.keys(IndexType)) {
+      const found = this.index[entity].find(indexItem => indexItem.hash === hash);
+      if (found) return found;
+    }
+    return null;
   }
   _exist(hash: string): boolean {
-    return Boolean(this._find(hash));
+    return Boolean(this.find(hash));
   }
   static _composePath(basePath: string): string {
     return path.join(basePath, COMPONENTS_INDEX_FILENAME);
