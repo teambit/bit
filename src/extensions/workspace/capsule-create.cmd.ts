@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import _ from 'lodash';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension } from './isolator.extension';
-import { loadConsumer } from '../../consumer';
-import CapsuleList from './capsule-list';
+import { Workspace } from '.';
+import CapsuleList from '../isolator/capsule-list';
 
 type CreateOpts = {
   baseDir?: string;
@@ -27,7 +26,7 @@ export class CapsuleCreateCmd implements Command {
     ['d', 'installPackages', 'install packages in capsule with npm'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorExtension) {}
+  constructor(private workspace: Workspace) {}
 
   async create(
     [componentIds]: [string[]],
@@ -35,10 +34,8 @@ export class CapsuleCreateCmd implements Command {
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
-    // TODO: remove this consumer loading from here. it shouldn't be here
-    const consumer = await loadConsumer();
     const capsuleOptions = _.omitBy({ baseDir, installPackages, alwaysNew, name: id }, _.isNil);
-    const isolatedEnvironment = await this.isolator.createNetworkFromConsumer(componentIds, consumer, capsuleOptions);
+    const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
     const capsules = isolatedEnvironment.capsules;
     return capsules;
   }

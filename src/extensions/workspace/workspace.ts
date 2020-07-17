@@ -27,7 +27,6 @@ import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
-import logger from '../../logger/logger';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 export type EjectConfResult = {
@@ -133,7 +132,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
-    logger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
+    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
     opts = Object.assign(opts || {}, { consumer: this.consumer });

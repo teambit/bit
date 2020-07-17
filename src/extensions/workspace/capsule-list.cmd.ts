@@ -1,9 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color } from 'ink';
+import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension, ListResults } from './isolator.extension';
+import { IsolatorExtension, ListResults } from '../isolator/isolator.extension';
 import { loadConsumerIfExist } from '../../consumer';
 
 export class CapsuleListCmd implements Command {
@@ -26,16 +23,10 @@ export class CapsuleListCmd implements Command {
     return results;
   }
 
-  // TODO: remove this ts-ignore
-  // @ts-ignore
-  async render() {
+  async report() {
     const list = await this.getList();
     // TODO: improve output
-    return (
-      <Color green>
-        found {list.capsules.length} capsule(s) for workspace {list.workspace}
-      </Color>
-    );
+    return chalk.green(`found ${list.capsules.length} capsule(s) for workspace ${list.workspace}`);
   }
 
   async json() {

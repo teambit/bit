@@ -3,15 +3,13 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component, ComponentID } from '../component';
+import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
 import CapsuleList from './capsule-list';
-import { CapsuleListCmd } from './capsule-list.cmd';
-import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { BitId, BitIds } from '../../bit-id';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
@@ -38,14 +36,10 @@ async function createCapsulesFromComponents(components: Component[], baseDir: st
 
 export class IsolatorExtension {
   static id = '@teambit/isolator';
-  static dependencies = [DependencyResolverExtension, CLIExtension];
+  static dependencies = [DependencyResolverExtension];
   static defaultConfig = {};
-  static async provide([dependencyResolver, cli]: IsolatorDeps) {
+  static async provide([dependencyResolver]: IsolatorDeps) {
     const isolator = new IsolatorExtension(dependencyResolver);
-    const capsuleListCmd = new CapsuleListCmd(isolator);
-    const capsuleCreateCmd = new CapsuleCreateCmd(isolator);
-    cli.register(capsuleListCmd);
-    cli.register(capsuleCreateCmd);
     return isolator;
   }
   constructor(private dependencyResolver: DependencyResolverExtension) {}
