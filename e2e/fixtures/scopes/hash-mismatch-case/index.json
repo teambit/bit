@@ -1,0 +1,10 @@
+[
+  {
+    "id": {
+      "scope": "hash-mismatch-case",
+      "name": "foo"
+    },
+    "isSymlink": false,
+    "hash": "b2eef1ea7be63c86e6cd6942125df6c1413958f7"
+  }
+]

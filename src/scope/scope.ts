@@ -16,6 +16,7 @@ import {
   COMPONENT_ORIGINS,
   NODE_PATH_SEPARATOR,
   CURRENT_UPSTREAM,
+  DEFAULT_LANE,
   LATEST
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
@@ -24,7 +25,7 @@ import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject, BitRawObject } from './objects';
-import SourcesRepository from './repositories/sources';
+import SourcesRepository, { ComponentTree } from './repositories/sources';
 import Consumer from '../consumer/consumer';
 import loader from '../cli/loader';
 import { MigrationResult } from '../migration/migration-helper';
@@ -44,7 +45,13 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
+import { IndexType, ComponentItem } from './objects/components-index';
+import Lane from './models/lane';
+import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
+import CompsAndLanesObjects from './comps-and-lanes-objects';
 import { ComponentLogs } from './models/model-component';
+import Lanes from './lanes/lanes';
+import { getAllVersionHashes } from './component-ops/traverse-versions';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
 
@@ -90,6 +97,7 @@ export default class Scope {
   objects: Repository;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
+  lanes: Lanes;
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -98,6 +106,7 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects;
+    this.lanes = new Lanes(this.objects, this.scopeJson);
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
@@ -239,18 +248,34 @@ export default class Scope {
   }
 
   async list(): Promise<ModelComponent[]> {
+    const filter = (comp: ComponentItem) => !comp.isSymlink;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listComponents();
+    return this.objects.listObjectsFromIndex(IndexType.components, filter);
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listComponentsIncludeSymlinks();
+    return this.objects.listObjectsFromIndex(IndexType.components);
+  }
+
+  async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
+    const components = await this.list();
+    const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
+    await Promise.all(components.map(component => component.populateLocalAndRemoteHeads(this.objects, laneId, lane)));
+    return components;
   }
 
   async listLocal(): Promise<ModelComponent[]> {
     const listResults = await this.list();
     return listResults.filter(result => !result.scope || result.scope === this.name);
+  }
+
+  async listLanes(): Promise<Lane[]> {
+    return this.lanes.listLanes();
+  }
+
+  async loadLane(id: LaneId): Promise<Lane | null> {
+    return this.lanes.loadLane(id);
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
@@ -386,27 +411,57 @@ export default class Scope {
    * Writes a component as an object into the 'objects' directory
    */
   writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects(this.objects);
+    const objects = componentObjects.toObjects();
     logger.debugAndAddBreadCrumb(
       'writeComponentToModel',
       'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
       { id: objects.component.id().toString() }
     );
-    return this.sources.merge(objects).then(() => this.objects.persist());
+    return this.mergeModelComponent(objects).then(() => this.objects.persist());
   }
 
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist = true): Promise<any> {
+  async writeManyComponentsToModel(
+    compsAndLanesObjects: CompsAndLanesObjects,
+    persist = true,
+    ids: BitId[]
+  ): Promise<any> {
     logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
-      `total componentsObjects ${componentsObjects.length}`
+      `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
     );
-    await pMapSeries(componentsObjects, componentObjects =>
-      componentObjects.toObjectsAsync(this.objects).then(objects => this.sources.merge(objects))
+    await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
+      componentObjects.toObjectsAsync().then(objects => this.mergeModelComponent(objects))
     );
-    return persist ? this.objects.persist() : Promise.resolve();
+    let nonLaneIds: BitId[] = ids;
+    await Promise.all(
+      compsAndLanesObjects.laneObjects.map(async laneBuffers => {
+        const laneObjects = await laneBuffers.toObjectsAsync();
+        const lane = laneObjects.lane;
+        if (!lane.scope) {
+          throw new Error(`writeManyComponentsToModel scope is missing from a lane ${lane.name}`);
+        }
+        await this.objects.remoteLanes.syncWithLaneObject(lane.scope, lane);
+        nonLaneIds = nonLaneIds.filter(id => id.name !== lane.name || id.scope !== lane.scope);
+        nonLaneIds.push(...lane.components.map(c => c.id));
+      })
+    );
+    if (persist) await this.objects.persist();
+    return nonLaneIds;
+  }
+
+  async mergeModelComponent(componentTree: ComponentTree) {
+    const { mergedComponent } = await this.sources.merge(componentTree);
+    if (mergedComponent.remoteHead) {
+      // when importing a component, save the remote head into the remote master ref file
+      await this.objects.remoteLanes.addEntry(
+        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
+        mergedComponent.toBitId(),
+        mergedComponent.remoteHead
+      );
+    }
   }
 
   getObject(hash: string): Promise<BitObject> {
@@ -418,7 +473,14 @@ export default class Scope {
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
-    return this.sources.get(id);
+    const modelComponent = await this.sources.get(id);
+    if (modelComponent) {
+      // @todo: what about the remote head
+      // @todo: what about other places the model-component is loaded
+      const currentLane = await this.lanes.getCurrentLaneObject();
+      modelComponent.setLaneHeadLocal(currentLane);
+    }
+    return modelComponent;
   }
 
   /**
@@ -449,9 +511,10 @@ export default class Scope {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
+        const allRefs = await getAllVersionHashes(component, this.objects, false);
         const loadedVersions = await Promise.all(
-          Object.keys(component.versions).map(async version => {
-            const componentVersion = await component.loadVersion(version, this.objects);
+          allRefs.map(async ref => {
+            const componentVersion = await component.loadVersion(ref.toString(), this.objects);
             if (!componentVersion) return null;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();
@@ -542,7 +605,9 @@ export default class Scope {
    */
   async getModelComponent(id: BitId): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
-    if (component) return component;
+    if (component) {
+      return component;
+    }
     throw new ComponentNotFound(id.toString());
   }
 

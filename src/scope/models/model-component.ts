@@ -1,10 +1,11 @@
 import * as semver from 'semver';
-import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
+import { v4 } from 'uuid';
+import { equals, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, filterObject, getStringifyArgs } from '../../utils';
+import { forEach, empty, mapObject, filterObject, getStringifyArgs, sha1 } from '../../utils';
 import Version from './version';
 import {
   DEFAULT_LANGUAGE,
@@ -24,11 +25,18 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import versionParser from '../../version/version-parser';
+import { getDivergeData } from '../component-ops/get-diverge-data';
+import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
+import findDuplications from '../../utils/array/find-duplications';
+import { Lane } from '.';
+import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
+import { DivergeData } from '../component-ops/diverge-data';
+import { getAllVersionsInfo, getAllVersionHashes } from '../component-ops/traverse-versions';
 import { Artifact } from '../../consumer/component/sources/artifact';
 
 type State = {
@@ -59,6 +67,7 @@ export type ComponentProps = {
   local?: boolean; // get deleted after export
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
+  head?: Ref;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -79,6 +88,11 @@ export default class Component extends BitObject {
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
+  head?: Ref;
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
+  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
     super();
@@ -92,11 +106,36 @@ export default class Component extends BitObject {
     this.local = props.local;
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
+    this.head = props.head;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get versionArray(): Ref[] {
     return Object.values(this.versions);
+  }
+
+  getRef(version: string): Ref | null {
+    if (isHash(version)) {
+      return new Ref(version);
+    }
+    return this.versions[version];
+  }
+
+  getHeadStr(): string | null {
+    return this.head ? this.head.toString() : null;
+  }
+
+  getHead(): Ref | undefined {
+    return this.head;
+  }
+
+  hasHead() {
+    return Boolean(this.head);
+  }
+
+  setHead(head: Ref | undefined) {
+    if (!isLaneEnabled()) return;
+    this.head = head;
   }
 
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
@@ -109,7 +148,13 @@ export default class Component extends BitObject {
     return versions.sort(semver.compare).reverse();
   }
 
-  hasVersion(version: string): boolean {
+  async hasVersion(version: string, repo: Repository): Promise<boolean> {
+    if (isTag(version)) return this.hasTag(version);
+    const allHashes = await getAllVersionHashes(this, repo, false);
+    return allHashes.some(hash => hash.toString() === version);
+  }
+
+  hasTag(version: string): boolean {
     return Boolean(this.versions[version]);
   }
 
@@ -124,6 +169,43 @@ export default class Component extends BitObject {
     }
     if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
       this.scopesList.push(scopeListItem);
+    }
+  }
+
+  async setDivergeData(repo: Repository, throws = true): Promise<void> {
+    if (!this.divergeData) {
+      const remoteHead = this.laneHeadRemote || this.remoteHead || null;
+      this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
+    }
+  }
+
+  getDivergeData(): DivergeData {
+    if (!this.divergeData)
+      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+    return this.divergeData;
+  }
+
+  async populateLocalAndRemoteHeads(
+    repo: Repository,
+    laneId: LaneId,
+    lane: Lane | null,
+    remoteLaneId = laneId,
+    remoteScopeName = this.scope
+  ) {
+    // @todo: this doesn't take into account a case when local and remote have different names.
+    this.setLaneHeadLocal(lane);
+    if (remoteScopeName) {
+      // otherwise, it was never exported, so no remote head
+      this.laneHeadRemote = await repo.remoteLanes.getRef(
+        RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
+        this.toBitId()
+      );
+    }
+  }
+
+  setLaneHeadLocal(lane: Lane | null) {
+    if (lane) {
+      this.laneHeadLocal = lane.getComponentHead(this.toBitId());
     }
   }
 
@@ -161,10 +243,66 @@ export default class Component extends BitObject {
     );
   }
 
+  isEmpty() {
+    return empty(this.versions) && !this.hasHead();
+  }
+
   latest(): string {
+    if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
+    const head = this.laneHeadLocal || this.getHead();
+    if (head) {
+      return this.getTagOfRefIfExists(head) || head.toString();
+    }
+    // backward compatibility. components created before v15 have master without head
+    // @ts-ignore
+    return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
+  /**
+   * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
+   * may be populated.
+   * `this.head` may not be populated, e.g. when a component was created on
+   * this lane and never got snapped on master.
+   * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
+   * on master, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
+   */
+  async latestIncludeRemote(repo: Repository): Promise<string> {
+    const latestLocally = this.latest();
+    const remoteHead = this.laneHeadRemote;
+    if (!remoteHead) return latestLocally;
+    if (!this.laneHeadLocal && !this.hasHead()) {
+      return remoteHead.toString(); // user never merged the remote version, so remote is the latest
+    }
+    // either a user is on master or a lane, check whether the remote is ahead of the local
+    const allLocalHashes = await getAllVersionHashes(this, repo, false);
+    const isRemoteHeadExistsLocally = allLocalHashes.find(localHash => localHash.isEqual(remoteHead));
+    if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
+    return remoteHead.toString(); // remote is ahead
+  }
+
+  latestVersion(): string {
     if (empty(this.versions)) return VERSION_ZERO;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return semver.maxSatisfying(this.listVersions(), '*')!;
+  }
+
+  // @todo: make it readable, it's a mess
+  isLatestGreaterThan(version: string | null | undefined): boolean {
+    if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
+    const latest = this.latest();
+    if (this.isEmpty()) return false; // in case a snap was created on another lane
+    if (isTag(latest) && isTag(version)) {
+      return semver.gt(latest, version);
+    }
+    if (latest === version) return false;
+    const latestRef = this.getRef(latest);
+    if (!latestRef) throw new Error('isLatestGreaterThan, latestRef was not found');
+    const latestHash = latestRef.toString();
+    const versionRef = this.getRef(version);
+    if (!versionRef) return true; // probably a child
+    const versionHash = versionRef.toString();
+    if (latestHash === versionHash) return false;
+    return true;
   }
 
   /**
@@ -190,21 +328,15 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(
-    repo: Repository
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  ): Promise<ComponentLogs> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versions: Version[] = await repo.findMany(this.versionArray);
-    const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
-    const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
-    return indexedLogs;
+  async collectLogs(repo: Repository): Promise<ComponentLogs> {
+    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false });
+    return versionsInfo.reduce((acc, current) => {
+      const log = current.version ? current.version.log : { message: '<no-data-available>' };
+      acc[current.tag || current.ref.toString()] = log;
+      return acc;
+    }, {});
   }
 
-  /**
-   * when bitMap is passed, it got called from the consumer and as such it strips the sharedDir
-   */
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map(versionNum => {
@@ -212,6 +344,14 @@ export default class Component extends BitObject {
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
+  }
+
+  getTagOfRefIfExists(ref: Ref): string | undefined {
+    return Object.keys(this.versions).find(versionRef => this.versions[versionRef].isEqual(ref));
+  }
+
+  switchHashesWithTagsIfExist(refs: Ref[]): string[] {
+    return refs.map(ref => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**
@@ -227,14 +367,53 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
-  addVersion(version: Version, versionToAdd: string): string {
-    this.versions[versionToAdd] = version.hash();
+  getSnapToAdd() {
+    return sha1(v4());
+  }
+
+  addVersion(version: Version, versionToAdd: string, lane: Lane | null, repo: Repository): string {
+    if (lane) {
+      if (isTag(versionToAdd)) {
+        throw new GeneralError(
+          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+        );
+      }
+      const versionToAddRef = Ref.from(versionToAdd);
+      const existingComponentInLane = lane.getComponentByName(this.toBitId());
+      const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
+      if (currentHead && !currentHead.isEqual(versionToAddRef)) {
+        version.addAsOnlyParent(currentHead);
+      }
+      lane.addComponent({ id: this.toBitId(), head: versionToAddRef });
+      repo.add(lane);
+      this.laneHeadLocal = versionToAddRef;
+      return versionToAdd;
+    }
+    // user on master
+    const head = this.getHead();
+    if (
+      head &&
+      head.toString() !== versionToAdd && // happens with auto-snap
+      !this.hasTag(versionToAdd)
+    ) {
+      // happens with auto-tag
+      // if this is a tag and this tag exists, the same version was added before with a different hash.
+      // adding the current head into the parent will result in a non-exist hash in the parent.
+      // if this is a hash and it's the same hash as the current head, adding it as a parent
+      // results in a parent and a version has the same hash.
+      // @todo: fix it in a more elegant way
+      version.addAsOnlyParent(head);
+    }
+    this.setHead(version.hash());
+    if (isTag(versionToAdd)) {
+      this.versions[versionToAdd] = version.hash();
+    }
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
   }
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
-    const latest = this.latest();
+    const latest = this.latestVersion();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (latest) return semver.inc(latest, releaseType)!;
     return DEFAULT_BIT_VERSION;
@@ -279,19 +458,22 @@ export default class Component extends BitObject {
     if (this.local) componentObject.local = this.local;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
+    const headStr = this.getHeadStr();
+    // @ts-ignore
+    if (headStr) componentObject.head = headStr;
 
     return componentObject;
   }
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
-    const versionRef: Ref = this.versions[version];
+    const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.load(repository);
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
-    const versionRef: Ref = this.versions[version];
+    const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
@@ -335,17 +517,18 @@ export default class Component extends BitObject {
    * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
    */
   removeVersion(version: string): Ref {
-    const objectRef = this.versions[version];
-    delete this.versions[version];
+    const objectRef = this.getRef(version);
+    if (!objectRef) throw new Error(`removeVersion failed finding version ${version}`);
+    if (objectRef) delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
-    return objectRef;
+    return objectRef || Ref.from(version);
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = versionParser(versionStr).resolve(this.listVersions());
-
+    const versionParsed = versionParser(versionStr);
+    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (!this.versions[versionNum!]) {
+    if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
@@ -451,8 +634,11 @@ export default class Component extends BitObject {
     return consumerComponent;
   }
 
+  // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head
   refs(): Ref[] {
-    return Object.values(this.versions);
+    const versions = Object.values(this.versions);
+    if (this.head) versions.push(this.head);
+    return versions;
   }
 
   replaceRef(oldRef: Ref, newRef: Ref) {
@@ -490,7 +676,6 @@ export default class Component extends BitObject {
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.state.versions[version]) this.state.versions[version] = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.state.versions[version].local = true;
@@ -503,11 +688,32 @@ export default class Component extends BitObject {
     return Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
   }
 
-  isLocallyChanged(): boolean {
-    if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (isEmpty(this.state) || isEmpty(this.state.versions)) return false;
+  getLocalTagsOrHashes(): string[] {
     const localVersions = this.getLocalVersions();
-    return localVersions.length > 0;
+    if (!this.divergeData) return localVersions;
+    const divergeData = this.getDivergeData();
+    const localHashes = divergeData.snapsOnLocalOnly;
+    if (!localHashes.length) return localVersions;
+    // @todo: this doesn't make sense when creating a new lane locally.
+    // the laneHeadRemote is not set. it needs to be compare to the head
+    if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
+    return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
+  }
+
+  async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
+    if (lane) {
+      if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
+      await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
+      await this.setDivergeData(repo);
+      return this.getDivergeData().isLocalAhead();
+    }
+    // when on master, no need to traverse the parents because local snaps/tags are saved in the
+    // component object and retrieved by `this.getLocalVersions()`.
+    if (this.local) return true; // backward compatibility for components created before 0.12.6
+    const localVersions = this.getLocalVersions();
+    if (localVersions.length) return true;
+    if (this.laneHeadLocal && !this.laneHeadRemote) return true;
+    return false;
   }
 
   static parse(contents: string): Component {
@@ -521,7 +727,8 @@ export default class Component extends BitObject {
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      scopesList: rawComponent.remotes
+      scopesList: rawComponent.remotes,
+      head: rawComponent.head ? Ref.from(rawComponent.head) : undefined
     });
   }
 
@@ -543,10 +750,14 @@ export default class Component extends BitObject {
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
       Object.keys(this.state.versions).forEach(version => {
-        if (!this.versions[version]) {
+        if (isTag(version) && !this.hasTag(version)) {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }
       });
+    }
+    const hashDuplications = findDuplications(this.versionArray.map(v => v.toString()));
+    if (hashDuplications.length) {
+      throw new ValidationError(`${message}, the following hash(es) are duplicated ${hashDuplications.join(', ')}`);
     }
   }
 }

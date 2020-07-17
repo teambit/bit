@@ -30,7 +30,11 @@ export default function determineMainFile(
     }
   }
   const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-  throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
+  throw new MissingMainFile(
+    componentIdStr,
+    mainFileString,
+    files.map(file => path.normalize(file.relativePath))
+  );
 
   /**
    * user didn't enter mainFile but the component already exists with mainFile
@@ -48,7 +52,11 @@ export default function determineMainFile(
     if (mainFile) {
       const foundMainFile = _searchMainFile(pathNormalizeToLinux(mainFile));
       if (foundMainFile) return foundMainFile;
-      throw new MissingMainFile(componentIdStr, mainFile, files.map(file => path.normalize(file.relativePath)));
+      throw new MissingMainFile(
+        componentIdStr,
+        mainFile,
+        files.map(file => path.normalize(file.relativePath))
+      );
     }
     return null;
   }

@@ -54,7 +54,7 @@ module.exports = {
     'promise/always-return': 'off',
     'promise/no-nesting': 'off',
     // END ERRORS OF 'plugin:promise/recommended'
-
+    'import/prefer-default-export': 'off', // typescript works better without default export
     'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'prefer-object-spread': 'off',
     'import/no-duplicates': 'off',

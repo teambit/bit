@@ -122,10 +122,11 @@ async function removeLocal(
     removedComponentIds,
     missingComponents,
     dependentBits,
+    removedFromLane,
     removedDependencies
   } = await consumer.scope.removeMany(idsToRemove, force, true, consumer);
 
-  if (!R.isEmpty(removedComponentIds)) {
+  if (!R.isEmpty(removedComponentIds) && !removedFromLane) {
     const removedComponents = componentsToRemove.filter(c => removedComponentIds.hasWithoutVersion(c.id));
     await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
@@ -144,6 +145,7 @@ async function removeLocal(
     missingComponents,
     modifiedComponents,
     removedDependencies,
-    dependentBits
+    dependentBits,
+    removedFromLane
   );
 }

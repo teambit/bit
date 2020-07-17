@@ -1,6 +1,6 @@
 import semver from 'semver';
 import Version from './version';
-import { LATEST, LATEST_TESTED_MARK } from '../constants';
+import { LATEST, LATEST_TESTED_MARK, HASH_SIZE } from '../constants';
 import { InvalidVersion } from './exceptions';
 
 function isLatest(versionStr: string): boolean {
@@ -34,8 +34,30 @@ function returnLatest(): Version {
   return new Version(null, true);
 }
 
+function returnSnap(hash: string): Version {
+  return new Version(hash, false);
+}
+
 function convertToSemVer(versionStr: number) {
   return returnRegular(`0.0.${versionStr}`);
+}
+
+export function isHash(str: string | null | undefined): boolean {
+  return typeof str === 'string' && str.length === HASH_SIZE;
+}
+
+/**
+ * a component version can be a tag (semver) or a snap (hash)
+ */
+export function isTag(str: string | null | undefined): boolean {
+  return !isHash(str);
+}
+
+/**
+ * a component version can be a tag (semver) or a snap (hash)
+ */
+export function isSnap(str: string | null | undefined): boolean {
+  return isHash(str);
 }
 
 export default function versionParser(versionStr: string | number | null | undefined): Version {
@@ -44,6 +66,7 @@ export default function versionParser(versionStr: string | number | null | undef
   if (typeof versionStr === 'string' && isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (typeof versionStr === 'string' && isRegular(versionStr)) return returnRegular(versionStr);
   if (typeof versionStr !== 'string' && Number.isInteger(versionStr)) return convertToSemVer(versionStr);
-
+  // @ts-ignore
+  if (isHash(versionStr)) return returnSnap(versionStr);
   throw new InvalidVersion(versionStr.toString());
 }

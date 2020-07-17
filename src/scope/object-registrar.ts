@@ -1,7 +1,7 @@
-import { Source, ModelComponent, Version, ScopeMeta, Symlink } from './models';
+import { Source, ModelComponent, Version, ScopeMeta, Symlink, Lane } from './models';
 
 export default function types() {
-  return [Source, ModelComponent, Version, ScopeMeta, Symlink];
+  return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane];
 }
 
 function typesToObject(typesArr: Function[]) {

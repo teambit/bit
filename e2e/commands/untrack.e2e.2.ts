@@ -50,7 +50,7 @@ describe('bit untrack command', function() {
       helper.fs.createFile('bar', 'foo2.js');
       helper.command.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.command.untrackComponent('bar/foo');
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2');
     });
@@ -59,7 +59,7 @@ describe('bit untrack command', function() {
       helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.command.tagComponent('bar/foo');
       const output = helper.command.untrackComponent('bar/foo');
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(output).to.have.string('error: unable to untrack bar/foo, please use the bit remove command.');
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo@0.0.1');
@@ -68,7 +68,7 @@ describe('bit untrack command', function() {
       helper.fs.createFile('bar', 'foo.js');
       helper.command.addComponent(path.normalize('bar/foo.js'), { i: 'bar' });
       helper.command.untrackComponent('bar');
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(Object.keys(bitMap)).to.be.ofSize(0);
     });
     it('Should remove 2 new components and keep tagged component', () => {
@@ -80,7 +80,7 @@ describe('bit untrack command', function() {
       helper.fs.createFile('bar', 'foo3.js');
       helper.command.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.command.untrackComponent('bar/foo bar/foo3');
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2@0.0.1');
     });
@@ -93,7 +93,7 @@ describe('bit untrack command', function() {
       helper.fs.createFile('bar', 'foo3.js');
       helper.command.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.command.untrackComponent('', true);
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2@0.0.1');
     });

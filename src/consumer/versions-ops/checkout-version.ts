@@ -29,8 +29,9 @@ export type CheckoutProps = {
   reset: boolean; // remove local changes. if set, the version is undefined.
   all: boolean; // checkout all ids
   ignoreDist: boolean;
+  isLane: boolean;
 };
-type ComponentStatus = {
+export type ComponentStatus = {
   componentFromFS?: ConsumerComponent;
   componentFromModel?: Version;
   id: BitId;
@@ -90,9 +91,8 @@ export default (async function checkoutVersion(
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
-      const componentsStatus = await Promise.all(
-        components.map(component => getComponentStatus(consumer, component, checkoutProps))
-      );
+      const componentsStatusP = components.map(component => getComponentStatus(consumer, component, checkoutProps));
+      const componentsStatus = await Promise.all(componentsStatusP);
       await tmp.clear();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return componentsStatus;
@@ -118,6 +118,12 @@ async function getComponentStatus(
   if (!componentModel) {
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
+  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  if (!reset && unmerged && unmerged.resolved === false) {
+    return returnFailure(
+      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+    );
+  }
   const getNewVersion = (): string => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
@@ -126,8 +132,10 @@ async function getComponentStatus(
     return latestVersion ? componentModel.latest() : version;
   };
   const newVersion = getNewVersion();
-  if (version && !latestVersion && !componentModel.hasVersion(version)) {
-    return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
+  if (version && !latestVersion) {
+    const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+    if (!hasVersion)
+      return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
@@ -152,14 +160,14 @@ async function getComponentStatus(
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherVersion: currentlyUsedVersion,
+      otherLabel: `${currentlyUsedVersion} modified`,
       currentComponent,
-      currentVersion: newVersion,
+      currentLabel: newVersion,
       baseComponent
     });
   }
-  const versionRef = componentModel.versions[newVersion];
+  const versionRef = componentModel.getRef(newVersion);
+  // @ts-ignore
   const componentVersion = await consumer.scope.getObject(versionRef.hash);
   const newId = component.id.changeVersion(newVersion);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -183,16 +191,21 @@ async function getComponentStatus(
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
  * Added file => if files are not in used version but in the modified one, they'll be under mergeResults.addFiles
  */
-async function applyVersion(
+export async function applyVersion(
   consumer: Consumer,
   id: BitId,
-  componentFromFS: ConsumerComponent,
+  componentFromFS: ConsumerComponent | null, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
 ): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {
+  if (!checkoutProps.isLane && !componentFromFS)
+    throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy } = checkoutProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+    // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
+    // otherwise it's impossible to have conflicts
+    if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
     componentFromFS.files.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
@@ -201,9 +214,9 @@ async function applyVersion(
     return { applyVersionResult: { id, filesStatus } };
   }
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
-  const componentMap = componentFromFS.componentMap;
-  if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
+  const componentMap = componentFromFS && componentFromFS.componentMap;
+  if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
+  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
   }

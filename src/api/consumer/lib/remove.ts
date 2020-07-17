@@ -8,39 +8,47 @@ import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 import removeComponents from '../../../consumer/component-ops/remove-components';
 import { getRemoteBitIdsByWildcards } from './list-scope';
+import removeLanes from '../../../consumer/lanes/remove-lanes';
 
 export default (async function remove({
   ids,
   force,
   remote,
   track,
-  deleteFiles
+  deleteFiles,
+  lane
 }: {
   ids: string[];
   force: boolean;
   remote: boolean;
   track: boolean;
   deleteFiles: boolean;
+  lane: boolean;
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
-  const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
-  const removeResults = await removeComponents({
-    consumer,
-    ids: BitIds.fromArray(bitIds),
-    force,
-    remote,
-    track,
-    deleteFiles
-  });
+  const consumer: Consumer | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
+  let removeResults;
+  if (lane) {
+    removeResults = await removeLanes(consumer, ids, remote, force);
+  } else {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
+    removeResults = await removeComponents({
+      consumer,
+      ids: BitIds.fromArray(bitIds),
+      force,
+      remote,
+      track,
+      deleteFiles
+    });
+  }
   if (consumer) await consumer.onDestroy();
   return removeResults;
 });
 
 async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {
-    const allIds = consumer.bitMap.getAllBitIds();
+    const allIds = consumer.bitMap.getAllIdsAvailableOnLane();
     const bitIds = ComponentsList.filterComponentsByWildcard(allIds, ids);
     if (!bitIds.length) throw new NoIdMatchWildcard(ids);
     return bitIds;

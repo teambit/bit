@@ -18,6 +18,8 @@ import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
+import { isHash } from '../../version/version-parser';
+import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import { EnvPackages } from '../../legacy-extensions/env-extension';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { SchemaFeature, isSchemaSupport, SchemaName } from '../../consumer/component/component-schema';
@@ -65,12 +67,9 @@ export type VersionProps = {
   flattenedDependencies?: BitIds;
   flattenedDevDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   compilerPackageDependencies?: EnvPackages;
@@ -80,6 +79,8 @@ export type VersionProps = {
   customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
+  hash?: string;
+  parents?: Ref[];
   extensions?: ExtensionDataList;
 };
 
@@ -104,11 +105,7 @@ export default class Version extends BitObject {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
@@ -117,6 +114,8 @@ export default class Version extends BitObject {
   customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
+  _hash: string; // reason for the underscore prefix is that we already have hash as a method
+  parents: Ref[];
   extensions: ExtensionDataList;
 
   constructor(props: VersionProps) {
@@ -145,6 +144,9 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
+    // @ts-ignore yes, props.hash can be undefined here, but it gets populated as soon as Version is created
+    this._hash = props.hash;
+    this.parents = props.parents || [];
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.validateVersion();
   }
@@ -221,6 +223,17 @@ export default class Version extends BitObject {
     );
   }
 
+  calculateHash(): Ref {
+    return new Ref(BitObject.makeHash(this.id()));
+  }
+
+  hash(): Ref {
+    if (!this._hash) {
+      throw new Error('hash is missing from a Version object');
+    }
+    return new Ref(this._hash);
+  }
+
   get extensionDependencies() {
     return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
   }
@@ -272,6 +285,11 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
+    const withoutParents = this.refsWithoutParents();
+    return [...this.parents, ...withoutParents].filter(ref => ref);
+  }
+
+  refsWithoutParents(): Ref[] {
     const extractRefsFromFiles = files => {
       const refs = files ? files.map(file => file.file) : [];
       return refs;
@@ -280,6 +298,11 @@ export default class Version extends BitObject {
     const dists = extractRefsFromFiles(this.dists);
     const artifacts = extractRefsFromFiles(R.flatten(this.extensions.map(e => e.artifacts)));
     return [...dists, ...files, ...artifacts].filter(ref => ref);
+  }
+
+  async collectRawWithoutParents(repo: Repository): Promise<Buffer[]> {
+    const refs = this.refsWithoutParents();
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
   }
 
   toObject() {
@@ -360,7 +383,8 @@ export default class Version extends BitObject {
         testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
-        packageJsonChangedProps: this.packageJsonChangedProps
+        packageJsonChangedProps: this.packageJsonChangedProps,
+        parents: this.parents.map(p => p.toString())
       },
       val => !!val
     );
@@ -368,7 +392,7 @@ export default class Version extends BitObject {
 
   validateBeforePersisting(versionStr: string): void {
     logger.silly(`validating version object, hash: ${this.hash().hash}`);
-    const version = Version.parse(versionStr);
+    const version = Version.parse(versionStr, this._hash);
     version.validate();
   }
 
@@ -383,7 +407,8 @@ export default class Version extends BitObject {
   /**
    * used by the super class BitObject
    */
-  static parse(contents: string): Version {
+  static parse(contents: string, hash: string): Version {
+    const contentParsed = JSON.parse(contents);
     const {
       mainFile,
       dists,
@@ -409,8 +434,10 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
-    } = JSON.parse(contents);
+      extensions,
+      parents
+    } = contentParsed;
+
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
@@ -512,6 +539,8 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
+      hash,
+      parents: parents ? parents.map(p => Ref.from(p)) : [],
       extensions: _getExtensions(extensions)
     });
   }
@@ -519,8 +548,8 @@ export default class Version extends BitObject {
   /**
    * used by raw-object.toRealObject()
    */
-  static from(versionProps: VersionProps): Version {
-    return Version.parse(JSON.stringify(versionProps));
+  static from(versionProps: VersionProps, hash: string): Version {
+    return Version.parse(JSON.stringify(versionProps), hash);
   }
 
   /**
@@ -581,7 +610,7 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
-    return new Version({
+    const version = new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : undefined,
@@ -620,6 +649,18 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: parseComponentExtensions()
     });
+    if (isHash(component.version)) {
+      version._hash = component.version as string;
+    } else {
+      version.setNewHash();
+    }
+
+    return version;
+  }
+
+  setNewHash() {
+    // @todo: after v15 is deployed, this can be changed to generate a random uuid
+    this._hash = this.calculateHash().toString();
   }
 
   get ignoreSharedDir(): boolean {
@@ -646,6 +687,27 @@ export default class Version extends BitObject {
 
   setCIProps(ci: CiProps) {
     this.ci = ci;
+  }
+
+  hasParent(ref: Ref) {
+    return this.parents.find(p => p.toString() === ref.toString());
+  }
+
+  addParent(ref: Ref) {
+    if (!isLaneEnabled()) return;
+    if (this.hasParent(ref)) {
+      return; // make sure to not add twice
+    }
+    this.parents.push(ref);
+  }
+
+  addAsOnlyParent(ref: Ref) {
+    if (!isLaneEnabled()) return;
+    this.parents = [ref];
+  }
+
+  removeParent(ref: Ref) {
+    this.parents = this.parents.filter(p => p.toString() !== ref.toString());
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {

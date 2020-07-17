@@ -4,13 +4,15 @@ import { Commands } from '../legacy-extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
+import ScopeLanesList from './commands/private-cmds/_lanes-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
 import ScopeLog from './commands/private-cmds/_log-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
-import Commit from './commands/public-cmds/tag-cmd';
+import Tag from './commands/public-cmds/tag-cmd';
+import Snap from './commands/public-cmds/snap-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
@@ -22,9 +24,10 @@ import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
+import CatLane from './commands/private-cmds/cat-lane-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import Put from './commands/private-cmds/_put-cmd';
-import Fetch from './commands/private-cmds/_fetch-cmd';
+import _Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import InjectConf from './commands/public-cmds/inject-conf-cmd';
@@ -53,6 +56,9 @@ import Logout from './commands/public-cmds/logout-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
+import Lane from './commands/public-cmds/lane-cmd';
+import Switch from './commands/public-cmds/switch-cmd';
+import Fetch from './commands/public-cmds/fetch-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -65,7 +71,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Isolate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Commit(),
+      new Tag(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Snap(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Import(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -82,6 +90,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new CatObject(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatComponent(),
+      new CatLane(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -97,7 +106,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new ScopeShow(),
       new ScopeGraph(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Fetch(),
+      new _Fetch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Build(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -145,7 +154,15 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Doctor(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Graph()
+      new Graph(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Lane(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Switch(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Fetch(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new ScopeLanesList()
     ],
     extensionsCommands
   );

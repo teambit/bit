@@ -55,7 +55,11 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 
-  async toObjects(repo: Repository, clientVersion: string | null | undefined): Promise<ComponentObjects> {
+  async toObjects(
+    repo: Repository,
+    clientVersion: string | null | undefined,
+    collectParents: boolean
+  ): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
@@ -67,14 +71,17 @@ Please upgrade your bit client to version >= v14.1.0`);
     try {
       const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
         this.component.asRaw(repo),
-        version.collectRaw(repo),
+        // version.collectRawWithoutParents(repo),
+        // version.collectRaw(repo),
+        collectParents ? version.collectRaw(repo) : version.collectRawWithoutParents(repo),
         version.asRaw(repo),
         repo.getScopeMetaObject()
       ]);
       return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
     } catch (err) {
       logger.error('component-version.toObjects got an error', err);
-      const originalVersionHash = this.component.versions[this.version].toString();
+      // @ts-ignore
+      const originalVersionHash = this.component.getRef(this.version).toString();
       const currentVersionHash = version.hash().toString();
       if (originalVersionHash !== currentVersionHash) {
         throw new HashMismatch(this.component.id(), this.version, originalVersionHash, currentVersionHash);

@@ -10,7 +10,8 @@ import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
-import { CURRENT_UPSTREAM } from '../constants';
+import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
+import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
@@ -102,6 +103,10 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return parse ? JSON.parse(result) : result;
   }
+  catLane(id: string, cwd?: string): Record<string, any> {
+    const result = this.runCmd(`bit cat-lane ${id}`, cwd);
+    return JSON.parse(result);
+  }
   addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
       typeof options === 'string'
@@ -156,11 +161,62 @@ export default class CommandHelper {
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }
+  snapComponent(id: string, tagMsg = 'snap-message', options = '') {
+    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+  }
+  snapAllComponents(options = '', assertSnapped = true) {
+    const result = this.runCmd(`bit snap -a ${options} `);
+    if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
+    return result;
+  }
+  createLane(laneName = 'dev') {
+    return this.runCmd(`bit switch ${laneName} --create`);
+  }
+  removeLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
+  }
+  removeRemoteLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
+  }
+  showLanes(options = '') {
+    const results = this.runCmd(`bit lane ${options}`);
+    return removeChalkCharacters(results) as string;
+  }
+  showOneLane(name: string) {
+    return this.runCmd(`bit lane ${name}`);
+  }
+  showLanesParsed(options = '') {
+    const results = this.runCmd(`bit lane ${options} --json`);
+    return JSON.parse(results);
+  }
+  showRemoteLanesParsed(options = '') {
+    const results = this.runCmd(`bit lane --remote ${this.scopes.remote} ${options} --json`);
+    return JSON.parse(results);
+  }
+  showOneLaneParsed(name: string) {
+    const results = this.runCmd(`bit lane ${name} --json`);
+    const parsed = JSON.parse(results);
+    return parsed.lanes[0];
+  }
+  getHead(id: string) {
+    const comp = this.catComponent(id);
+    return comp.head;
+  }
+  getHeadOfLane(laneName: string, componentName: string) {
+    const lane = this.catLane(laneName);
+    const component = lane.components.find(c => c.id.name === componentName);
+    return component.head;
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
     const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
+    if (assert) expect(result).to.not.have.string('nothing to export');
+    return result;
+  }
+  exportLane(laneName: string, scope: string = this.scopes.remote, assert = true) {
+    const result = this.runCmd(`bit export ${scope} ${laneName} --force --lanes`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
@@ -190,7 +246,15 @@ export default class CommandHelper {
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
-
+  fetchLane(id: string) {
+    return this.runCmd(`bit fetch ${id} --lanes`);
+  }
+  fetchRemoteLane(id: string) {
+    return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
+  }
+  fetchAllLanes() {
+    return this.runCmd(`bit fetch --lanes`);
+  }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);
     return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
@@ -322,9 +386,23 @@ export default class CommandHelper {
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
   }
+  switchLocalLane(lane: string, flags?: string) {
+    return this.runCmd(`bit switch ${lane} ${flags || ''}`);
+  }
+  switchRemoteLane(lane: string, flags?: string, getAll = true) {
+    const getAllFlag = getAll ? '--get-all' : '';
+    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
+  }
 
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
+  }
+
+  merge(values: string) {
+    return this.runCmd(`bit merge ${values}`);
+  }
+  mergeLane(laneName: string, options = '') {
+    return this.runCmd(`bit merge ${laneName} ${options} --lane`);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
