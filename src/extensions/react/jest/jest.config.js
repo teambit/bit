@@ -16,14 +16,14 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': require.resolve('./transformer'),
     '^.+\\.css$': require.resolve('./css-transform.js'),
-    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./file-transform.js')
+    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': require.resolve('./file-transform.js'),
   },
   transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$', '^.+\\.module\\.(css|sass|scss)$'],
   modulePaths: [],
   moduleNameMapper: {
     '^react-native$': require.resolve('react-native-web'),
-    '^.+\\.module\\.(css|sass|scss)$': require.resolve('identity-obj-proxy')
+    '^.+\\.module\\.(css|sass|scss)$': require.resolve('identity-obj-proxy'),
   },
   moduleFileExtensions: ['web.js', 'js', 'web.ts', 'ts', 'web.tsx', 'tsx', 'json', 'web.jsx', 'jsx', 'node'],
-  watchPlugins: [require.resolve('jest-watch-typeahead/filename'), require.resolve('jest-watch-typeahead/testname')]
+  watchPlugins: [require.resolve('jest-watch-typeahead/filename'), require.resolve('jest-watch-typeahead/testname')],
 };
