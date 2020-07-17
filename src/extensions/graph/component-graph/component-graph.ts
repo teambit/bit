@@ -20,7 +20,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
   static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
-    const setNodeP = legacyGraph.nodes().map(async nodeId => {
+    const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
       const componentId = await componentFactory.resolveComponentId(nodeId);
       const component = await componentFactory.get(componentId);
       if (component) {
@@ -28,7 +28,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
       }
     });
     await Promise.all(setNodeP);
-    legacyGraph.edges().forEach(edgeId => {
+    legacyGraph.edges().forEach((edgeId) => {
       const source = edgeId.v;
       const target = edgeId.w;
       const edgeObj =
@@ -40,8 +40,8 @@ export class ComponentGraph extends Graph<Component, Dependency> {
   }
 
   static async build(workspace: Workspace, componentFactory: ComponentFactory) {
-    const ids = (await workspace.list()).map(comp => comp.id);
-    const bitIds = ids.map(id => id._legacy);
+    const ids = (await workspace.list()).map((comp) => comp.id);
+    const bitIds = ids.map((id) => id._legacy);
     const initialGraph = await buildOneGraphForComponents(bitIds, workspace.consumer);
     return this.buildFromLegacy(initialGraph, componentFactory);
   }
@@ -51,15 +51,15 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     for (const [compFullName, versions] of this.versionMap) {
       if (versions.allVersionNodes.length > 1) {
         const versionSubgraphs: VersionSubgraph[] = [];
-        const notLatestVersions = versions.allVersionNodes.filter(version => version !== versions.latestVersionNode);
-        notLatestVersions.forEach(version => {
+        const notLatestVersions = versions.allVersionNodes.filter((version) => version !== versions.latestVersionNode);
+        notLatestVersions.forEach((version) => {
           const predecessors = this.predecessorsSubgraph(version);
           const immediatePredecessors = [...this.predecessors(version).keys()];
           const subGraph = this.buildFromCleargraph(predecessors);
           const versionSubgraph: VersionSubgraph = {
             versionId: version,
             subGraph,
-            immediateDependents: immediatePredecessors
+            immediateDependents: immediatePredecessors,
           };
           versionSubgraphs.push(versionSubgraph);
         });
@@ -79,7 +79,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     for (const [nodeId, node] of graph.nodes.entries()) {
       newGraphNodes.push({
         id: nodeId,
-        node
+        node,
       });
     }
     for (const [edgeId, edge] of graph.edges.entries()) {
@@ -88,7 +88,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
         newGraphEdges.push({
           sourceId,
           targetId,
-          edge
+          edge,
         });
       }
     }
@@ -104,7 +104,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
       if (!versionMap.has(compFullName)) {
         versionMap.set(compFullName, {
           allVersionNodes: [compKey],
-          latestVersionNode: compKey
+          latestVersionNode: compKey,
         });
       } else {
         const value = versionMap.get(compFullName);

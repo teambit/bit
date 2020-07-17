@@ -6,5 +6,5 @@ import { ConfigExt } from '../config';
 export const Variants: ExtensionManifest = {
   name: EXT_NAME,
   dependencies: [ConfigExt],
-  provider: provideVariants
+  provider: provideVariants,
 };

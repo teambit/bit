@@ -52,7 +52,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     const idsHasWildcard = hasWildcard(ids);
     checkoutProps.ids = idsHasWildcard
       ? getIdsMatchedByWildcard(consumer, checkoutProps, ids)
-      : ids.map(id => consumer.getParsedId(id));
+      : ids.map((id) => consumer.getParsedId(id));
   }
 }
 
@@ -75,7 +75,7 @@ function getIdsMatchedByWildcard(consumer: Consumer, checkoutProps: CheckoutProp
 
 function getCandidateIds(consumer: Consumer, checkoutProps: CheckoutProps): BitId[] {
   const idsFromBitMap = consumer.bitMap.getAuthoredAndImportedBitIds();
-  return idsFromBitMap.map(bitId => {
+  return idsFromBitMap.map((bitId) => {
     const version = checkoutProps.latestVersion ? LATEST : bitId.version;
     return bitId.changeVersion(version);
   });

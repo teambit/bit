@@ -22,7 +22,7 @@ export default class ScopeMeta extends BitObject {
   toObject(): Record<string, any> {
     return {
       license: this.license,
-      name: this.name
+      name: this.name,
     };
   }
 

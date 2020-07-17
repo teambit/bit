@@ -14,11 +14,11 @@ export default class Log implements LegacyCommand {
   skipWorkspace = true;
 
   action([id]: [string], { remote = false }: { remote: boolean }): Promise<any> {
-    return getComponentLogs(id, remote).then(logs => {
-      Object.keys(logs).forEach(key => (logs[key].tag = key));
+    return getComponentLogs(id, remote).then((logs) => {
+      Object.keys(logs).forEach((key) => (logs[key].tag = key));
       return R.reverse(R.values(logs)).map(
         R.evolve({
-          date: n => new Date(parseInt(n)).toLocaleString()
+          date: (n) => new Date(parseInt(n)).toLocaleString(),
         })
       );
     });

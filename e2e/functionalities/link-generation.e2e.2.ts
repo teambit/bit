@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('link generation', function() {
+describe('link generation', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

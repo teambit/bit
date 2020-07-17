@@ -61,7 +61,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: this.relative,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      content: this.contents.toString()
+      content: this.contents.toString(),
     };
   }
 
@@ -74,7 +74,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
       cwd: parsedString._cwd,
       path: parsedString.history[parsedString.history.length - 1],
       base: parsedString._base,
-      contents
+      contents,
     };
   }
 

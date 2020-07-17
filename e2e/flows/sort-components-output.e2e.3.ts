@@ -12,7 +12,7 @@ function expectComponentsToBeSortedAlphabetically(output, start = 0) {
   expect(output.indexOf('utils/is-string', start)).to.be.below(output.indexOf('utils/is-type', start));
 }
 
-describe('basic flow with dependencies', function() {
+describe('basic flow with dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

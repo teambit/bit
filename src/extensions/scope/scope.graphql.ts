@@ -3,6 +3,6 @@ export function scopeSchema() {
     typeDef: `
       
     `,
-    resolvers: {}
+    resolvers: {},
   };
 }

@@ -27,9 +27,9 @@ export function builderSchema(builder: BuilderExtension) {
       Component: {
         getArtifacts: async (component: Component, { hash }: { hash: string }) => {
           const artifacts = await builder.getArtifacts(component.id, hash);
-          return artifacts.map(artifact => artifact.toObject());
-        }
-      }
-    }
+          return artifacts.map((artifact) => artifact.toObject());
+        },
+      },
+    },
   };
 }

@@ -7,7 +7,7 @@ export const docsMock = {
     { title: 'install package', content: '@google.material-ui/radio' },
     {
       title: 'Import from CDN',
-      content: 'https://esm.bit.dev/@google/material-ui/radio/'
-    }
-  ]
+      content: 'https://esm.bit.dev/@google/material-ui/radio/',
+    },
+  ],
 };

@@ -82,7 +82,7 @@ function _generateChooseEnvQ(
     name: propName,
     message,
     when: whenWithFetch,
-    choices
+    choices,
   };
 
   return selectEnv;
@@ -95,14 +95,14 @@ function _generateChooseCustomEnvQ(
   propToCheck: string,
   valToCheck: string
 ) {
-  const when = answers => {
+  const when = (answers) => {
     return answers[propToCheck] === valToCheck;
   };
   const customEnv = {
     type: 'input',
     name: propName,
     message,
-    when
+    when,
   };
 
   return customEnv;
@@ -135,9 +135,9 @@ async function _fetchComps(scopeName: string, namespaces: string[] = []) {
     showRemoteVersion: true,
     namespacesUsingWildcards,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    strategiesNames
+    strategiesNames,
   });
-  const ids = listScopeResults.map(result => result.id.toString());
+  const ids = listScopeResults.map((result) => result.id.toString());
   return ids;
 }
 
@@ -146,7 +146,7 @@ async function _buildQuestions() {
     type: 'list',
     name: 'packageManager',
     message: PACKAGE_MANAGER_MSG_Q,
-    choices: ['npm', 'yarn']
+    choices: ['npm', 'yarn'],
   };
 
   // TODO: 1. the suggestOnly is the opposite, this is a bug in https://github.com/mokkabonna/inquirer-autocomplete-prompt/blob/master/index.js
@@ -154,7 +154,7 @@ async function _buildQuestions() {
   const componentsDirQ = {
     type: 'fuzzypath',
     name: 'componentsDefaultDirectory',
-    excludePath: nodePath => {
+    excludePath: (nodePath) => {
       return nodePath.startsWith('node_modules') || nodePath.startsWith('.bit') || nodePath.startsWith('.git');
     },
     // excludePath :: (String) -> Bool
@@ -169,7 +169,7 @@ async function _buildQuestions() {
     // Root search directory
     message: DEFAULT_DIR_MSG_Q,
     default: DEFAULT_LOCATION_ANS,
-    suggestOnly: false
+    suggestOnly: false,
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
   };
@@ -223,7 +223,7 @@ export default (async function initInteractive() {
       addedGitHooks,
       existingGitHooks,
       reset: false,
-      resetHard: false
+      resetHard: false,
     };
   });
 });

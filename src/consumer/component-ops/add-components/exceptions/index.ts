@@ -23,5 +23,5 @@ export {
   MainFileIsDir,
   MissingMainFileMultipleComponents,
   TestIsDirectory,
-  PathOutsideConsumer
+  PathOutsideConsumer,
 };

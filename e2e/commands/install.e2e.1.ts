@@ -11,7 +11,7 @@ chai.use(require('chai-fs'));
 // bring back these tests once other flows tested here (namely import) also support the new "harmony" paradigm
 //
 // right now this isn't working because if we init the workspace with librarian, importing components doesn't work properly
-describe.skip('run bit install', function() {
+describe.skip('run bit install', function () {
   if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
     // for some reason, on AppVeyor it throws an error:
     // ```

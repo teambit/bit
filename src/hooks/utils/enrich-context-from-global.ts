@@ -8,7 +8,7 @@ import {
   CFG_SSH_KEY_FILE_KEY,
   DEFAULT_SSH_KEY_FILE,
   CFG_USER_TOKEN_KEY,
-  CFG_REPOSITORY_REPORTING_KEY
+  CFG_REPOSITORY_REPORTING_KEY,
 } from '../../constants';
 import logger from '../../logger/logger';
 

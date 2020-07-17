@@ -13,7 +13,7 @@ const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };";
 const successOutput = 'successfully merged components';
 
-describe('bit merge command', function() {
+describe('bit merge command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -240,7 +240,7 @@ describe('bit merge command', function() {
             // In another place of the error in circle we have <<<<<
             // So we want to make sure the << is also in the relevant error line
             const splitted = result.split('\n');
-            const line = splitted.find(l => l.includes('SyntaxError:'));
+            const line = splitted.find((l) => l.includes('SyntaxError:'));
             expect(line).to.have.string('SyntaxError: Unexpected token');
             expect(line).to.have.string('<<');
           });

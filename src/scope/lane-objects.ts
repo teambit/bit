@@ -14,7 +14,7 @@ export default class LaneObjects {
   toString(): string {
     return JSON.stringify({
       lane: toBase64ArrayBuffer(this.lane),
-      objects: this.objects.map(toBase64ArrayBuffer)
+      objects: this.objects.map(toBase64ArrayBuffer),
     });
   }
 
@@ -34,7 +34,7 @@ export default class LaneObjects {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lane: BitObject.parseSync(this.lane),
-      objects: this.objects.map(obj => BitObject.parseSync(obj))
+      objects: this.objects.map((obj) => BitObject.parseSync(obj)),
     };
   }
   /**
@@ -44,7 +44,7 @@ export default class LaneObjects {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lane: await BitObject.parseObject(this.lane),
-      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj)))
+      objects: await Promise.all(this.objects.map((obj) => BitObject.parseObject(obj))),
     };
   }
 }

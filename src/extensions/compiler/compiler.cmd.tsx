@@ -12,7 +12,7 @@ export class CompileCmd implements Command {
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],
-    ['j', 'json', 'return the compile results in json format']
+    ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
 
   constructor(private compile: Compile) {}
@@ -32,7 +32,7 @@ export class CompileCmd implements Command {
     return {
       data: compileResults,
       // @todo: fix the code once compile is ready.
-      code: 0
+      code: 0,
     };
   }
 }

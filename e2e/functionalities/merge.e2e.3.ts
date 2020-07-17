@@ -3,7 +3,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import { MergeConflict, MergeConflictOnRemote } from '../../src/scope/exceptions';
 import * as fixtures from '../../src/fixtures/fixtures';
 
-describe('merge functionality', function() {
+describe('merge functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -43,7 +43,7 @@ describe('merge functionality', function() {
       const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
       const idsAndVersions = [
         { id: `${helper.scopes.remote}/bar/foo`, versions: ['0.0.2'] },
-        { id: `${helper.scopes.remote}/bar2/foo2`, versions: ['0.0.2'] }
+        { id: `${helper.scopes.remote}/bar2/foo2`, versions: ['0.0.2'] },
       ];
       const error = new MergeConflictOnRemote(idsAndVersions, []);
       helper.general.expectToThrow(exportFunc, error);
@@ -80,7 +80,7 @@ describe('merge functionality', function() {
     });
     it('the second import should not override the previously imported component', () => {
       const catScope = helper.command.catScope();
-      const isTypeObject = catScope.find(c => c.name === 'utils/is-type');
+      const isTypeObject = catScope.find((c) => c.name === 'utils/is-type');
       expect(Object.keys(isTypeObject.versions).length).to.equal(2);
       expect(isTypeObject.versions).to.have.property('0.0.2');
     });

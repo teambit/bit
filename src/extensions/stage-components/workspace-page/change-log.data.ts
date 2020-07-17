@@ -18,7 +18,7 @@ export enum JobStatus {
   fail = 'fail',
   pass = 'pass',
   running = 'running',
-  pending = 'pending'
+  pending = 'pending',
 }
 
 export type Component = {
@@ -48,7 +48,7 @@ export type AccountObj = {
 export enum AccountTypes {
   org = 'organization',
   user = 'user',
-  default = 'default'
+  default = 'default',
 }
 
 // export const versionExample1: Version = {

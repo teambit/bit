@@ -3,7 +3,7 @@ import { checkVersionCompatibilityOnTheServer } from './check-version-compatibil
 import * as constants from '../../constants';
 import { OldClientVersion } from './exceptions';
 
-const setServerVersion = serverVersion => {
+const setServerVersion = (serverVersion) => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   constants.BIT_VERSION = serverVersion;
 };

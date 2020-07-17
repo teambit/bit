@@ -10,7 +10,7 @@ export default function testInScope({
   verbose, // gets called during CI, verbose is always true
   scopePath,
   directory,
-  keep
+  keep,
 }: {
   id: string;
   save?: boolean;
@@ -37,26 +37,26 @@ export default function testInScope({
       verbose,
       isolated: true,
       directory,
-      keep
+      keep,
     });
   }
 
   function loadFromConsumer() {
-    return loadConsumer().then(consumer => {
+    return loadConsumer().then((consumer) => {
       const bitId = consumer.getParsedId(id);
       return consumer.scope.runComponentSpecs({
         consumer,
         bitId,
         save,
         verbose,
-        isolated: true
+        isolated: true,
       });
     });
   }
 
   if (scopePath) return loadFromScope();
 
-  return loadFromConsumer().catch(err => {
+  return loadFromConsumer().catch((err) => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadFromScope(err);
   });

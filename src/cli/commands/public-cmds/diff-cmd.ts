@@ -22,15 +22,15 @@ export default class Diff implements LegacyCommand {
 
   report(diffResults: DiffResults[]): string {
     return diffResults
-      .map(diffResult => {
+      .map((diffResult) => {
         if (diffResult.hasDiff) {
           const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
           const titleSeparator = new Array(titleStr.length).fill('-').join('');
           const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const filesWithDiff = diffResult.filesDiff.filter(file => file.diffOutput);
-          const files = filesWithDiff.map(fileDiff => fileDiff.diffOutput).join('\n');
-          const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map(field => field.diffOutput).join('\n') : '';
+          const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
+          const files = filesWithDiff.map((fileDiff) => fileDiff.diffOutput).join('\n');
+          const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map((field) => field.diffOutput).join('\n') : '';
           return `${title}\n${files}\n${fields}`;
         }
         return `no diff for ${chalk.bold(diffResult.id.toString())}`;

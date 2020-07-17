@@ -102,9 +102,9 @@ export default class BitRawObject {
       return R.values(this.parsedContent.versions);
     }
     if (this.type === 'Version') {
-      const files = this.parsedContent.files ? this.parsedContent.files.map(file => file.file) : [];
-      const dists = this.parsedContent.dists ? this.parsedContent.dists.map(dist => dist.file) : [];
-      return [...dists, ...files].filter(ref => ref);
+      const files = this.parsedContent.files ? this.parsedContent.files.map((file) => file.file) : [];
+      const dists = this.parsedContent.dists ? this.parsedContent.dists.map((dist) => dist.file) : [];
+      return [...dists, ...files].filter((ref) => ref);
     }
 
     return [];
@@ -116,7 +116,7 @@ export default class BitRawObject {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): Promise<BitObject> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return inflate(fileContents).then(buffer => new BitRawObject(buffer, ref));
+    return inflate(fileContents).then((buffer) => new BitRawObject(buffer, ref));
   }
 
   /**

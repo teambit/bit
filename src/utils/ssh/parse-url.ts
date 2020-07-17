@@ -53,6 +53,6 @@ export default function parseSSHUrl(str: string): SSHUrl {
     host,
     path,
     port,
-    username: user
+    username: user,
   };
 }

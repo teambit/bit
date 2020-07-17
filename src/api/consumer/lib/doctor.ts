@@ -47,7 +47,7 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
   registerCoreAndExtensionsDiagnoses();
   runningTimeStamp = _getTimeStamp();
   const doctorRegistrar = DoctorRegistrar.getInstance();
-  const examineP = doctorRegistrar.diagnoses.map(diagnosis => diagnosis.examine());
+  const examineP = doctorRegistrar.diagnoses.map((diagnosis) => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
   const envMeta = await _getEnvMeta();
   const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
@@ -56,7 +56,7 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
 
 export async function runOne({
   diagnosisName,
-  filePath
+  filePath,
 }: {
   diagnosisName: string;
   filePath?: string;
@@ -98,8 +98,8 @@ async function _saveExamineResultsToFile(
 
   packStream.pipe(yourTarball);
 
-  return new Promise(resolve => {
-    yourTarball.on('close', function() {
+  return new Promise((resolve) => {
+    yourTarball.on('close', function () {
       logger.info(`wrote a file by bit doctor, file path: ${finalFilePath}`);
       resolve(finalFilePath);
       // fs.stat(finalFilePath, function (err, stats) {
@@ -175,7 +175,7 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     bitVersion: BIT_VERSION,
     npmVersion: await npmClient.getNpmVersion(),
     yarnVersion: await npmClient.getYarnVersion(),
-    userDetails: _getUserDetails()
+    userDetails: _getUserDetails(),
   };
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

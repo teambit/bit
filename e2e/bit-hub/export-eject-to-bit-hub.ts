@@ -8,7 +8,7 @@ chai.use(require('chai-fs'));
 
 (supportTestingOnBitsrc ? describe : describe.skip)(
   `export --eject functionality using ${BASE_WEB_DOMAIN}`,
-  function() {
+  function () {
     this.timeout(0);
     let helper: Helper;
     before(() => {
@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
       return bitsrcTester
         .loginToBitSrc()
         .then(() => bitsrcTester.createScope())
-        .then(scope => {
+        .then((scope) => {
           scopeName = scope;
         });
     });
@@ -45,7 +45,7 @@ chai.use(require('chai-fs'));
       });
       it('should delete the component from bit.map', () => {
         const bitMap = helper.bitMap.read();
-        Object.keys(bitMap).forEach(id => {
+        Object.keys(bitMap).forEach((id) => {
           expect(id).not.to.have.string('foo');
         });
       });

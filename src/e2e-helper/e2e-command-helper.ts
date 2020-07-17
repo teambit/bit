@@ -112,7 +112,7 @@ export default class CommandHelper {
       typeof options === 'string'
         ? options
         : Object.keys(options)
-            .map(key => `-${key} ${options[key]}`)
+            .map((key) => `-${key} ${options[key]}`)
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
@@ -204,7 +204,7 @@ export default class CommandHelper {
   }
   getHeadOfLane(laneName: string, componentName: string) {
     const lane = this.catLane(laneName);
-    const component = lane.components.find(c => c.id.name === componentName);
+    const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
   untag(id: string) {
@@ -256,13 +256,13 @@ export default class CommandHelper {
     return this.runCmd(`bit fetch --lanes`);
   }
   importManyComponents(ids: string[]) {
-    const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);
+    const idsWithRemote = ids.map((id) => `${this.scopes.remote}/${id}`);
     return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
   }
 
   importComponentWithOptions(id = 'bar/foo.js', options: Record<string, any>) {
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit import ${this.scopes.remote}/${id} ${value}`);
   }
@@ -273,7 +273,7 @@ export default class CommandHelper {
 
   isolateComponent(id: string, flags: string): string {
     const isolatedEnvOutput = this.runCmd(`bit isolate ${this.scopes.remote}/${id} ${this.scopes.remotePath} ${flags}`);
-    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter(str => str);
+    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter((str) => str);
     return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
   }
 
@@ -287,10 +287,10 @@ export default class CommandHelper {
   createCapsuleHarmony(id: string): string {
     const output = this.runCmd(`bit capsule-create ${id} --json`);
     const capsules = JSON.parse(output);
-    const capsule = capsules.find(c => c.id === id);
+    const capsule = capsules.find((c) => c.id === id);
     if (!capsule)
       throw new Error(
-        `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map(c => c.id).join(', ')}`
+        `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map((c) => c.id).join(', ')}`
       );
     return capsule.path;
   }
@@ -298,7 +298,7 @@ export default class CommandHelper {
   getCapsuleOfComponent(id: string) {
     const capsulesJson = this.runCmd('bit capsule-list -j');
     const capsules = JSON.parse(capsulesJson);
-    const capsulePath = capsules.capsules.find(c => c.endsWith(id));
+    const capsulePath = capsules.capsules.find((c) => c.endsWith(id));
     if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
     return capsulePath;
   }
@@ -314,7 +314,7 @@ export default class CommandHelper {
 
   buildComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit build ${id} ${value}`, cwd);
   }
@@ -325,7 +325,7 @@ export default class CommandHelper {
 
   testComponentWithOptions(id = '', options: Record<string, any>, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
@@ -341,14 +341,14 @@ export default class CommandHelper {
 
   expectStatusToBeClean() {
     const statusJson = this.statusJson();
-    Object.keys(statusJson).forEach(key => {
+    Object.keys(statusJson).forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
 
   expectStatusToNotHaveIssues() {
     const statusJson = this.statusJson();
-    ['componentsWithMissingDeps', 'invalidComponents'].forEach(key => {
+    ['componentsWithMissingDeps', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -374,7 +374,7 @@ export default class CommandHelper {
 
   showComponentWithOptions(id = 'bar/foo', options: Record<string, any>) {
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit show ${id} ${value}`);
   }
@@ -437,11 +437,11 @@ export default class CommandHelper {
       o: '',
       p: '',
       k: '',
-      j: ''
+      j: '',
     };
     options = { ...defaultOptions, ...options };
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     const result = this.runCmd(`bit pack ${id} ${value}`);
     if (extract) {
@@ -478,7 +478,7 @@ export default class CommandHelper {
   injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
-          .map(key => `-${key} ${options[key]}`)
+          .map((key) => `-${key} ${options[key]}`)
           .join(' ')
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
@@ -506,7 +506,7 @@ export default class CommandHelper {
   parseOptions(options?: Record<string, any>): string {
     if (!options) return ' ';
     const value = Object.keys(options)
-      .map(key => {
+      .map((key) => {
         const keyStr = key.length === 1 ? `-${key}` : `--${key}`;
         return `${keyStr} ${options[key]}`;
       })
@@ -519,13 +519,13 @@ export default class CommandHelper {
     inputs = [],
     // Options for the process (execa)
     processOpts = {
-      cwd: this.scopes.localPath
+      cwd: this.scopes.localPath,
     },
     // opts for interactive
     opts = {
       defaultIntervalBetweenInputs: DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS,
-      verbose: false
-    }
+      verbose: false,
+    },
   }: {
     args: string[];
     inputs: InteractiveInputs;

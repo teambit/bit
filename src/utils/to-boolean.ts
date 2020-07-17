@@ -5,9 +5,7 @@ export default (function toBoolean(value: boolean | null | undefined | string, d
   if (value === null || value === undefined) {
     return defaultValue;
   }
-  const valueAsString = String(value)
-    .trim()
-    .toLowerCase();
+  const valueAsString = String(value).trim().toLowerCase();
   if (valueAsString === 'true') {
     return true;
   }

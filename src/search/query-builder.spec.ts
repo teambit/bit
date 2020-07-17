@@ -3,7 +3,7 @@ import buildQuery from '../search/query-builder';
 
 describe('query-builder', () => {
   describe('buildQuery', () => {
-    const queryToObject = query => query.reduce((acc, val) => Object.assign(acc, val.AND), {});
+    const queryToObject = (query) => query.reduce((acc, val) => Object.assign(acc, val.AND), {});
 
     it('should produce a clause for the name field as is', () => {
       const query = queryToObject(buildQuery('is-string'));

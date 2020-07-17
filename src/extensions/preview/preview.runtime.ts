@@ -14,6 +14,6 @@ harmony
     const uiExtension = harmony.get<Preview>('Preview');
     uiExtension.render();
   })
-  .catch(err => {
+  .catch((err) => {
     throw err;
   });

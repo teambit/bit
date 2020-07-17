@@ -52,7 +52,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return this.typedExec(
       {
         command: ['node', executable, ...(args.args || [])],
-        cwd: ''
+        cwd: '',
       },
       exec
     );
@@ -79,7 +79,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     const config = Object.assign(
       {
         alwaysNew: false,
-        name: undefined
+        name: undefined,
       },
       opts
     );

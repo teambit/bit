@@ -32,7 +32,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
   const { ids } = switchProps;
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
-    component => component.mergeResults && component.mergeResults.hasConflicts
+    (component) => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict) {
     if (!checkoutProps.promptMergeOptions && !checkoutProps.mergeStrategy) {
@@ -44,10 +44,10 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
-    .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .filter((componentStatus) => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
+    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
 
-  const succeededComponents = allComponentsStatus.filter(componentStatus => !componentStatus.failureMessage);
+  const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
@@ -55,7 +55,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
   });
   await saveLanesData();
 
-  const componentsWithDependencies = componentsResults.map(c => c.component).filter(c => c);
+  const componentsWithDependencies = componentsResults.map((c) => c.component).filter((c) => c);
 
   const manyComponentsWriter = new ManyComponentsWriter({
     consumer,
@@ -65,18 +65,18 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     verbose: checkoutProps.verbose,
     writeDists: !checkoutProps.ignoreDist,
     writeConfig: checkoutProps.writeConfig,
-    writePackageJson: !checkoutProps.ignorePackageJson
+    writePackageJson: !checkoutProps.ignorePackageJson,
   });
   await manyComponentsWriter.writeAll();
 
-  const appliedVersionComponents = componentsResults.map(c => c.applyVersionResult);
+  const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
   return { components: appliedVersionComponents, failedComponents };
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
-      const componentsStatusP = (ids as BitId[]).map(id => getComponentStatus(consumer, id, switchProps));
+      const componentsStatusP = (ids as BitId[]).map((id) => getComponentStatus(consumer, id, switchProps));
       const componentsStatus = await Promise.all(componentsStatusP);
       await tmp.clear();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -92,7 +92,7 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
       remoteLaneName: switchProps.remoteLaneName,
       localLaneName: switchProps.localLaneName,
       addTrackingInfo: !switchProps.localTrackedLane,
-      laneComponents: switchProps.remoteLaneComponents
+      laneComponents: switchProps.remoteLaneComponents,
     });
   }
 }
@@ -121,7 +121,7 @@ async function saveCheckedOutLaneInfo(
   };
   const throwIfLaneExists = async () => {
     const allLanes = await consumer.scope.listLanes();
-    if (allLanes.find(l => l.name === opts.localLaneName)) {
+    if (allLanes.find((l) => l.name === opts.localLaneName)) {
       throw new GeneralError(`unable to checkout to lane "${opts.localLaneName}".
 the lane already exists. please switch to the lane and merge`);
     }
@@ -134,7 +134,7 @@ the lane already exists. please switch to the lane and merge`);
       consumer.scope.lanes.trackLane({
         localLane: opts.localLaneName as string,
         remoteLane: opts.remoteLaneName as string,
-        remoteScope: opts.remoteLaneScope as string
+        remoteScope: opts.remoteLaneScope as string,
       });
     }
   }
@@ -209,7 +209,7 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
       otherLabel: `${currentlyUsedVersion} modified`,
       currentComponent,
       currentLabel: version,
-      baseComponent
+      baseComponent,
     });
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

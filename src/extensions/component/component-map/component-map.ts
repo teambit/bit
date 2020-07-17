@@ -60,7 +60,7 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
    * @param predicate predicate for returning desired value.
    */
   static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
-    const tuples = components.map(component => {
+    const tuples = components.map((component) => {
       return [component.id.fullName, [component, predicate(component)]];
     });
 

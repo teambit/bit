@@ -19,7 +19,9 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toString = bareResult.data.brokenSymlinks
-      .map(brokenSymlink => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`)
+      .map(
+        (brokenSymlink) => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`
+      )
       .join('\n');
     return `the following symlinks points to non-existing paths\n${toString}`;
   }
@@ -27,7 +29,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const toString = R.uniq(bareResult.data.brokenSymlinks.map(b => b.pathToDelete)).join('\n');
+    const toString = R.uniq(bareResult.data.brokenSymlinks.map((b) => b.pathToDelete)).join('\n');
     return `please delete the following paths:\n${toString}`;
   }
 
@@ -35,9 +37,9 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     const consumer = await loadConsumer();
     const envComponentsDir = path.join(consumer.scope.getPath(), Scope.getComponentsRelativePath());
     const potentialSymlinks = glob.sync('**/node_modules/@bit/**', { cwd: envComponentsDir });
-    const potentialSymlinksAbs = potentialSymlinks.map(p => path.join(envComponentsDir, p));
+    const potentialSymlinksAbs = potentialSymlinks.map((p) => path.join(envComponentsDir, p));
     const brokenSymlinks: BrokenSymlink[] = [];
-    const results = potentialSymlinksAbs.map(async potentialSymlink => {
+    const results = potentialSymlinksAbs.map(async (potentialSymlink) => {
       const link = await this._getLinkIfExist(potentialSymlink);
       if (!link) return;
       const exists = await fs.pathExists(link);
@@ -45,7 +47,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
       const brokenSymlink = {
         symlinkPath: potentialSymlink,
         brokenPath: link,
-        pathToDelete: this._getPathToDelete(potentialSymlink)
+        pathToDelete: this._getPathToDelete(potentialSymlink),
       };
       brokenSymlinks.push(brokenSymlink);
     });
@@ -53,8 +55,8 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     return {
       valid: brokenSymlinks.length === 0,
       data: {
-        brokenSymlinks
-      }
+        brokenSymlinks,
+      },
     };
   }
 

@@ -8,7 +8,7 @@ import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('binary files', function() {
+describe('binary files', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -73,11 +73,11 @@ describe('binary files', function() {
     it('should not create any other file in node_modules/@bit other than the binary file itself and package.json', () => {
       const files = glob.sync(path.normalize('**/*'), {
         cwd: path.join(helper.scopes.localPath, 'node_modules/@bit'),
-        nodir: true
+        nodir: true,
       });
       expect(files).to.be.lengthOf(2);
-      expect(files.some(f => f.includes('png_fixture.png'))).to.be.true;
-      expect(files.some(f => f.includes('package.json'))).to.be.true;
+      expect(files.some((f) => f.includes('png_fixture.png'))).to.be.true;
+      expect(files.some((f) => f.includes('package.json'))).to.be.true;
     });
     it('should create the file in node_modules/@bit as a symlink', () => {
       const symlinkPath = path.join(

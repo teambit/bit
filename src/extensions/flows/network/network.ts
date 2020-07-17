@@ -40,14 +40,14 @@ export class Network {
 
     networkStream.next({
       type: 'network:start',
-      startTime
+      startTime,
     });
     const graph = await this.createGraph(options);
 
     const createCapsuleStartTime = new Date();
     networkStream.next({
       type: 'network:capsules:start',
-      startTime: createCapsuleStartTime
+      startTime: createCapsuleStartTime,
     });
 
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
@@ -55,7 +55,7 @@ export class Network {
     networkStream.next({
       type: 'network:capsules:end',
       startTime: createCapsuleStartTime,
-      duration: new Date().getTime() - createCapsuleStartTime.getTime()
+      duration: new Date().getTime() - createCapsuleStartTime.getTime(),
     });
 
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
@@ -73,10 +73,10 @@ export class Network {
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
     from(sorted)
       .pipe(
-        mergeMap(level =>
+        mergeMap((level) =>
           from(
-            level.map(flowId =>
-              getFlow(visitedCache[flowId].capsule).then(flow => {
+            level.map((flowId) =>
+              getFlow(visitedCache[flowId].capsule).then((flow) => {
                 visitedCache[flowId].visited = true;
                 return flow.execute(visitedCache[flowId].capsule);
               })
@@ -84,14 +84,14 @@ export class Network {
           )
         ),
         concatAll(),
-        map(flowStream => {
+        map((flowStream) => {
           stream.next(flowStream);
           return flowStream;
         }),
         mergeAll(),
         filter((data: any) => data.type === 'flow:result'),
-        tap(data => (visitedCache[data.id.toString()].result = data)),
-        tap(data => handlePostFlow(postFlow, visitedCache[data.id.toString()]))
+        tap((data) => (visitedCache[data.id.toString()].result = data)),
+        tap((data) => handlePostFlow(postFlow, visitedCache[data.id.toString()]))
       )
       .subscribe({
         complete() {
@@ -99,7 +99,7 @@ export class Network {
         },
         error(err: any) {
           handleNetworkError(err.id, graph, visitedCache, err);
-        }
+        },
       });
   }
 
@@ -129,7 +129,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
     value: Object.entries(visitedCache).reduce((accum, [key, val]) => {
       accum[key] = {
         result: val.result,
-        visited: val.visited
+        visited: val.visited,
       };
       return accum;
     }, {}),
@@ -137,7 +137,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
     code: !!~Object.entries(visitedCache).findIndex(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([_k, value]: [string, CacheValue]) => !value.visited || value.result instanceof Error
-    )
+    ),
   };
   network.next(endMessage);
   network.complete();
@@ -146,11 +146,11 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
 function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: any) {
   const dependents = getNeighborsByDirection(seed, graph);
   dependents
-    .map(dependent => {
+    .map((dependent) => {
       visitedCache[dependent].result = new Error(`Error due to ${seed}`);
       return dependent;
     })
-    .forEach(dependent => graph.removeNode(dependent));
+    .forEach((dependent) => graph.removeNode(dependent));
   visitedCache[seed].result = err;
   graph.removeNode(seed);
 }
@@ -161,7 +161,7 @@ async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Prom
     accum[curr.component.id.toString()] = {
       visited: false,
       capsule: curr,
-      result: null
+      result: null,
     };
     return accum;
   }, {});

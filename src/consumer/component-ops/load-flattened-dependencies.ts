@@ -22,7 +22,7 @@ export default async function loadFlattenedDependenciesForCapsule(
     component,
     dependencies,
     devDependencies,
-    extensionDependencies
+    extensionDependencies,
   });
 
   async function loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
@@ -53,17 +53,17 @@ export default async function loadFlattenedDependenciesForCapsule(
   }
 
   async function loadFlattenedFromModel(deps: Component[]) {
-    const dependenciesFromModel = deps.filter(d => !d.loadedFromFileSystem);
-    const flattenedIdsFromModel = dependenciesFromModel.map(d => d.flattenedDependencies);
+    const dependenciesFromModel = deps.filter((d) => !d.loadedFromFileSystem);
+    const flattenedIdsFromModel = dependenciesFromModel.map((d) => d.flattenedDependencies);
     const flattenedFromModel = await loadManyDependencies(R.flatten(flattenedIdsFromModel));
     deps.push(...flattenedFromModel);
   }
 
   async function loadFlattenedFromFsRecursively(components: Component[]) {
-    const currentIds = BitIds.fromArray(components.map(c => c.id));
-    const ids = R.flatten(components.filter(c => c.loadedFromFileSystem).map(c => c.getAllDependenciesIds()));
+    const currentIds = BitIds.fromArray(components.map((c) => c.id));
+    const ids = R.flatten(components.filter((c) => c.loadedFromFileSystem).map((c) => c.getAllDependenciesIds()));
     const idsUniq = BitIds.uniqFromArray(ids);
-    const newIds = idsUniq.filter(id => !currentIds.has(id));
+    const newIds = idsUniq.filter((id) => !currentIds.has(id));
     if (R.isEmpty(newIds)) return;
     const deps = await loadManyDependencies(newIds);
     if (R.isEmpty(deps)) return;

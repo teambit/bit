@@ -30,7 +30,7 @@ export class ComponentUI {
     return {
       // trailing slash to avoid including '/' in componentId
       path: `/:componentId(${componentIdUrlRegex})/`,
-      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} widgetSlot={this.widgetSlot} />
+      children: <Component navSlot={this.navSlot} routeSlot={this.routeSlot} widgetSlot={this.widgetSlot} />,
     };
   }
 

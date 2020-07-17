@@ -6,10 +6,10 @@ import { Section } from '../component/section';
 export class DependenciesSection implements Section {
   route = {
     path: '~dependencies',
-    children: <DependenciesPage />
+    children: <DependenciesPage />,
   };
   navigationLink = {
     to: '~dependencies',
-    children: 'Dependencies'
+    children: 'Dependencies',
   };
 }

@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('dependency-resolver extension', function() {
+describe('dependency-resolver extension', function () {
   let helper: Helper;
   this.timeout(0);
   before(() => {
@@ -20,8 +20,8 @@ describe('dependency-resolver extension', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('policies changes', function() {
-    describe('policies added by the user', function() {
+  describe('policies changes', function () {
+    describe('policies added by the user', function () {
       let barFooOutput;
       let isTypeOutput;
 
@@ -35,26 +35,26 @@ describe('dependency-resolver extension', function() {
         const depResolverConfig = {
           policy: {
             dependencies: {
-              'lodash.get': '1.0.0'
+              'lodash.get': '1.0.0',
             },
             devDependencies: {
-              'lodash.words': '1.0.0'
+              'lodash.words': '1.0.0',
             },
             peerDependencies: {
-              'lodash.set': '1.0.0'
-            }
-          }
+              'lodash.set': '1.0.0',
+            },
+          },
         };
         helper.extensions.addExtensionToVariant('bar/foo', '@teambit/dependency-resolver', depResolverConfig);
         barFooOutput = helper.command.showComponentParsed('bar/foo');
         isTypeOutput = helper.command.showComponentParsed('utils/is-type');
       });
-      it('should have the updated dependencies for bar/foo', function() {
+      it('should have the updated dependencies for bar/foo', function () {
         expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '1.0.0');
         expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
         expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
       });
-      it('should have the updated dependencies for utils/is-type', function() {
+      it('should have the updated dependencies for utils/is-type', function () {
         expect(isTypeOutput.packageDependencies).to.be.empty;
         expect(isTypeOutput.devPackageDependencies).to.be.empty;
         expect(isTypeOutput.peerPackageDependencies).to.be.empty;
@@ -62,7 +62,7 @@ describe('dependency-resolver extension', function() {
     });
     // TODO: implement once we can extend a specific env with new methods (to apply config changes)
     // and maybe to also apply custom compiler which add deps
-    describe('policies added by an env', function() {
+    describe('policies added by an env', function () {
       let barFooOutput;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
@@ -71,16 +71,16 @@ describe('dependency-resolver extension', function() {
         // TODO: use custom env with versions provided from outside in the config by the user
         helper.extensions.addExtensionToVariant('bar/foo', '@teambit/envs', {
           env: '@teambit/react',
-          config: {}
+          config: {},
         });
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
-      it('should have the updated dependencies for bar/foo from the env', function() {
+      it('should have the updated dependencies for bar/foo from the env', function () {
         expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.12.0');
         expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.9.17');
       });
     });
-    describe('policies added by extension', function() {
+    describe('policies added by extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
@@ -92,7 +92,7 @@ describe('dependency-resolver extension', function() {
         helper.command.addComponent('utils', { i: 'utils/is-type' });
       });
 
-      describe('extension that add simple dependency policy', function() {
+      describe('extension that add simple dependency policy', function () {
         let barFooOutput;
         let isTypeOutput;
 
@@ -103,22 +103,22 @@ describe('dependency-resolver extension', function() {
           barFooOutput = helper.command.showComponentParsed('bar/foo');
           isTypeOutput = helper.command.showComponentParsed('utils/is-type');
         });
-        it('should have the updated dependencies for bar/foo', function() {
+        it('should have the updated dependencies for bar/foo', function () {
           expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '1.0.0');
           expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
           expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
         });
-        it('should have the updated dependencies for utils/is-type', function() {
+        it('should have the updated dependencies for utils/is-type', function () {
           expect(isTypeOutput.packageDependencies).to.be.empty;
           expect(isTypeOutput.devPackageDependencies).to.be.empty;
           expect(isTypeOutput.peerPackageDependencies).to.be.empty;
         });
       });
-      describe.skip('conflict between few extensions policies', function() {
-        it.skip('should merge them', function() {});
+      describe.skip('conflict between few extensions policies', function () {
+        it.skip('should merge them', function () {});
       });
-      describe.skip('conflict between extension and user policies ', function() {
-        it.skip('should prefer user config', function() {});
+      describe.skip('conflict between extension and user policies ', function () {
+        it.skip('should prefer user config', function () {});
       });
     });
   });
@@ -131,8 +131,8 @@ describe('dependency-resolver extension', function() {
       const name = `ui.{name}`;
       const pkg = {
         packageJson: {
-          name
-        }
+          name,
+        },
       };
       helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
       helper.bitJsonc.addDefaultScope();
@@ -143,7 +143,7 @@ describe('dependency-resolver extension', function() {
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
-      const depResolverExt = comp2.extensions.find(e => e.name === Extensions.dependencyResolver);
+      const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
       expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
@@ -157,7 +157,7 @@ describe('dependency-resolver extension', function() {
       });
       it('should change the component id to include the scope name', () => {
         const comp2 = helper.command.catComponent('comp2@latest');
-        const depResolverExt = comp2.extensions.find(e => e.name === Extensions.dependencyResolver);
+        const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
         expect(depResolverExt.data.dependencies[0].componentId.scope).to.equal(helper.scopes.remote);
         expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
         expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');

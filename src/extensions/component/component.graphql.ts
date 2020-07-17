@@ -83,15 +83,15 @@ export function componentSchema() {
     resolvers: {
       ComponentMeta: {
         id: (component: Component) => component.id._legacy.serialize(),
-        displayName: (component: Component) => component.displayName
+        displayName: (component: Component) => component.displayName,
       },
       Component: {
         id: (component: Component) => component.id._legacy.serialize(),
         displayName: (component: Component) => component.displayName,
         headTag: (component: Component) => component.headTag,
-        tags: component => {
+        tags: (component) => {
           // graphql doesn't support map types
-          return component.tags.toArray().map(tag => tag.toObject());
+          return component.tags.toArray().map((tag) => tag.toObject());
         },
         isNew: (component: Component) => component.isNew(),
         isModified: (component: Component) => component.isModified(),
@@ -105,10 +105,10 @@ export function componentSchema() {
             defaultScope: component.state._consumer.defaultScope,
             withPrefix: true,
             extensions: component.config.extensions,
-            isDependency: false
+            isDependency: false,
           });
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

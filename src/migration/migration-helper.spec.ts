@@ -12,23 +12,23 @@ describe('migration helper', () => {
     const bitVersion = '0.0.6';
     const migratonManifest = {
       '0.0.5': {
-        Version: []
+        Version: [],
       },
       '0.0.3': {
-        Version: []
+        Version: [],
       },
       '0.0.4': {
-        Version: []
+        Version: [],
       },
       '0.0.6': {
-        Version: []
+        Version: [],
       },
       '0.0.7': {
-        Version: []
-      }
+        Version: [],
+      },
     };
     migrationVersions = getMigrationVersions(bitVersion, storeVersion, migratonManifest);
-    versionsNumbers = migrationVersions.map(migrationVersion => Object.keys(migrationVersion)[0]);
+    versionsNumbers = migrationVersions.map((migrationVersion) => Object.keys(migrationVersion)[0]);
   });
   it('should sort the version in ascending order', () => {
     expect(versionsNumbers).include.ordered.members(['0.0.4', '0.0.5', '0.0.6']);

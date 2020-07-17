@@ -55,7 +55,7 @@ export default class Diagnosis {
     return {
       category: this.category,
       name: this.name,
-      description: this.description
+      description: this.description,
     };
   }
 
@@ -66,7 +66,7 @@ export default class Diagnosis {
         diagnosisMetaData: this.getMeta(),
         bareResult,
         formattedSymptoms: '',
-        formattedManualTreat: ''
+        formattedManualTreat: '',
       };
     }
     const formattedSymptoms = this._formatSymptoms(bareResult);
@@ -75,7 +75,7 @@ export default class Diagnosis {
       diagnosisMetaData: this.getMeta(),
       bareResult,
       formattedSymptoms,
-      formattedManualTreat
+      formattedManualTreat,
     };
   }
 }

@@ -11,11 +11,11 @@ function buildRemote(url: string): Remote {
 
 export function add(url: string, global: boolean) {
   const remote = buildRemote(url);
-  return remote.scope().then(scopeDesc => {
+  return remote.scope().then((scopeDesc) => {
     remote.name = scopeDesc.name;
 
     if (global) {
-      return GlobalRemotes.load().then(globalRemotes => {
+      return GlobalRemotes.load().then((globalRemotes) => {
         return globalRemotes
           .addRemote(remote)
           .write()
@@ -24,7 +24,7 @@ export function add(url: string, global: boolean) {
     }
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return loadScope().then(scope => {
+    return loadScope().then((scope) => {
       return scope.scopeJson
         .addRemote(remote)
         .write(scope.getPath())
@@ -60,12 +60,12 @@ export async function remove(name: string, global: boolean) {
 
 export function list(global: boolean) {
   if (global) {
-    return GlobalRemotes.load().then(globalRemotes => globalRemotes.toPlainObject());
+    return GlobalRemotes.load().then((globalRemotes) => globalRemotes.toPlainObject());
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return loadScope().then(scope => {
-    return getScopeRemotes(scope).then(remotes => remotes.toPlainObject());
+  return loadScope().then((scope) => {
+    return getScopeRemotes(scope).then((remotes) => remotes.toPlainObject());
   });
 }
 

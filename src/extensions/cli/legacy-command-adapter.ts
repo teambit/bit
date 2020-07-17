@@ -30,7 +30,7 @@ export class LegacyCommandAdapter implements Command {
     this.private = cmd.private;
     this.migration = cmd.migration;
     this.internal = cmd.internal;
-    this.commands = (cmd.commands || []).map(sub => new LegacyCommandAdapter(sub, cliExtension));
+    this.commands = (cmd.commands || []).map((sub) => new LegacyCommandAdapter(sub, cliExtension));
   }
 
   private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
@@ -44,7 +44,7 @@ export class LegacyCommandAdapter implements Command {
     const report = this.cmd.report(data, params, options);
     return {
       code,
-      report
+      report,
     };
   }
 
@@ -57,7 +57,7 @@ export class LegacyCommandAdapter implements Command {
     const actionResult = await this.action(params, options);
     return {
       data: JSON.parse(actionResult.report),
-      code: actionResult.code
+      code: actionResult.code,
     };
   }
 }
@@ -67,7 +67,7 @@ export function findLegacyDetails(name: string, p: CLIExtension) {
   let group = '';
   let summery = '';
   for (let i = 0; i < allHelp.length; i += 1) {
-    const index = allHelp[i].commands.findIndex(command => command.name === name);
+    const index = allHelp[i].commands.findIndex((command) => command.name === name);
     // eslint-disable-next-line no-bitwise
     if (~index) {
       group = allHelp[i].group;

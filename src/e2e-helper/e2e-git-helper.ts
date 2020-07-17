@@ -38,7 +38,7 @@ export default class GitHelper {
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
     const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
-    directories.forEach(dir => {
+    directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }

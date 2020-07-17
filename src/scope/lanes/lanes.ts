@@ -47,13 +47,13 @@ export default class Lanes {
 
   getLocalTrackedLaneByRemoteName(remoteLane: string, remoteScope: string): string | null {
     const trackedLane = this.scopeJson.lanes.tracking.find(
-      t => t.remoteLane === remoteLane && t.remoteScope === remoteScope
+      (t) => t.remoteLane === remoteLane && t.remoteScope === remoteScope
     );
     return trackedLane ? trackedLane.localLane : null;
   }
 
   getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
-    return this.scopeJson.lanes.tracking.find(t => t.localLane === localLane);
+    return this.scopeJson.lanes.tracking.find((t) => t.localLane === localLane);
   }
 
   trackLane(trackLaneData: TrackLane) {
@@ -62,17 +62,17 @@ export default class Lanes {
 
   async removeLanes(scope: Scope, lanes: string[], force: boolean): Promise<string[]> {
     const existingLanes = await this.listLanes();
-    const lanesToRemove: Lane[] = lanes.map(laneName => {
+    const lanesToRemove: Lane[] = lanes.map((laneName) => {
       if (laneName === DEFAULT_LANE) throw new GeneralError(`unable to remove the default lane "${DEFAULT_LANE}"`);
       if (laneName === this.getCurrentLaneName())
         throw new GeneralError(`unable to remove the currently used lane "${laneName}"`);
-      const existingLane = existingLanes.find(l => l.name === laneName);
+      const existingLane = existingLanes.find((l) => l.name === laneName);
       if (!existingLane) throw new GeneralError(`lane ${laneName} was not found in scope`);
       return existingLane;
     });
     if (!force) {
       await Promise.all(
-        lanesToRemove.map(async laneObj => {
+        lanesToRemove.map(async (laneObj) => {
           const isFullyMerged = await laneObj.isFullyMerged(scope);
           if (!isFullyMerged) {
             // @todo: this error comes pretty ugly to the client when removing from a lane from remote using ssh
@@ -83,7 +83,7 @@ export default class Lanes {
         })
       );
     }
-    this.objects.removeManyObjects(lanesToRemove.map(l => l.hash()));
+    this.objects.removeManyObjects(lanesToRemove.map((l) => l.hash()));
     await this.objects.persist();
     return lanes;
   }
@@ -95,8 +95,8 @@ export default class Lanes {
       return {
         name: laneName,
         remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
-        components: laneObject.components.map(c => ({ id: c.id, head: c.head.toString() })),
-        isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null
+        components: laneObject.components.map((c) => ({ id: c.id, head: c.head.toString() })),
+        isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null,
       };
     };
     if (name) {

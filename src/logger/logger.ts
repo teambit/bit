@@ -26,7 +26,7 @@ export const baseFileTransportOpts = {
   maxFiles: 10,
   // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
   // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-  tailable: true
+  tailable: true,
 };
 
 export function getFormat() {
@@ -37,7 +37,7 @@ export function getFormat() {
     winston.format.splat(), // does nothing?
     winston.format.errors({ stack: true }),
     winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-    winston.format.printf(info => customPrint(info))
+    winston.format.printf((info) => customPrint(info))
   );
 
   function customPrint(info) {
@@ -54,7 +54,7 @@ export function getFormat() {
 }
 
 const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
-  filename: path.join(GLOBAL_LOGS, 'exceptions.log')
+  filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
 });
 
 class BitLogger {
@@ -68,7 +68,7 @@ class BitLogger {
 
   constructor(logger: Logger) {
     this.logger = logger;
-    logger.on('error', err => {
+    logger.on('error', (err) => {
       // eslint-disable-next-line no-console
       console.log('got an error from the logger', err);
     });
@@ -176,7 +176,7 @@ class BitLogger {
 const winstonLogger = winston.createLogger({
   transports: [new winston.transports.File(baseFileTransportOpts)],
   exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
-  exitOnError: false
+  exitOnError: false,
 });
 
 const logger = new BitLogger(winstonLogger);
@@ -196,12 +196,12 @@ export const createExtensionLogger = (extensionName: string) => {
   }
   const extensionFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
     filename: path.join(GLOBAL_LOGS, 'extensions.log'),
-    label: extensionName
+    label: extensionName,
   });
   const extLogger = winston.createLogger({
     transports: [new winston.transports.File(extensionFileTransportOpts)],
     exceptionHandlers: [new winston.transports.File(extensionFileTransportOpts)],
-    exitOnError: false
+    exitOnError: false,
   });
   extensionsLoggers.set(extensionName, extLogger);
   return extLogger;
@@ -239,14 +239,14 @@ export const printWarning = (msg: string) => {
  * ```
  */
 async function waitForLogger() {
-  const loggerDone = new Promise(resolve => logger.logger.on('finish', resolve));
+  const loggerDone = new Promise((resolve) => logger.logger.on('finish', resolve));
   logger.logger.end();
   return loggerDone;
 }
 
 function addBreadCrumb(category: string, message: string, data: Record<string, any> = {}, extraData) {
   const hashedData = {};
-  Object.keys(data).forEach(key => (hashedData[key] = Analytics.hashData(data[key])));
+  Object.keys(data).forEach((key) => (hashedData[key] = Analytics.hashData(data[key])));
   const messageWithHashedData = format(message, hashedData);
   extraData = extraData instanceof Error ? serializeError(extraData) : extraData;
   Analytics.addBreadCrumb(category, messageWithHashedData, extraData);
@@ -263,9 +263,9 @@ if (process.env.BIT_LOG) {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
   const isLevel = levels.includes(process.env.BIT_LOG);
   const prefixes = process.env.BIT_LOG.split(',');
-  const filterPrefix = winston.format(info => {
+  const filterPrefix = winston.format((info) => {
     if (isLevel) return info;
-    if (prefixes.some(prefix => info.message.startsWith(prefix))) return info;
+    if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
     return false;
   });
   logger.logger.add(
@@ -273,8 +273,8 @@ if (process.env.BIT_LOG) {
       level: isLevel ? process.env.BIT_LOG : 'silly',
       format: winston.format.combine(
         filterPrefix(),
-        winston.format.printf(info => info.message)
-      )
+        winston.format.printf((info) => info.message)
+      ),
     })
   );
 }
@@ -284,8 +284,8 @@ if (process.env.BIT_LOG) {
  * it's better than using `console.log` because, this way, it's possible to turn it on/off
  */
 winston.loggers.add('consoleOnly', {
-  format: winston.format.combine(winston.format.printf(info => info.message)),
-  transports: [new winston.transports.Console({ level: 'silly' })]
+  format: winston.format.combine(winston.format.printf((info) => info.message)),
+  transports: [new winston.transports.Console({ level: 'silly' })],
 });
 
 export default logger;

@@ -90,7 +90,7 @@ export default class SpecsResults {
       stats: this.stats,
       pass: this.pass,
       failures: this.failures,
-      specFile: this.specFile
+      specFile: this.specFile,
     };
   }
 
@@ -100,7 +100,7 @@ export default class SpecsResults {
 
   static createFromRaw(rawResults: RawTestsResults): SpecsResults {
     const hasFailures = rawResults.failures && rawResults.failures.length;
-    const pass = rawResults.pass || (!hasFailures && rawResults.tests.every(test => test.pass));
+    const pass = rawResults.pass || (!hasFailures && rawResults.tests.every((test) => test.pass));
     let failures;
 
     const calcDuration = (endDateString, startDateString) => {
@@ -118,10 +118,10 @@ export default class SpecsResults {
     const stats = {
       start,
       end,
-      duration
+      duration,
     };
 
-    const tests = rawResults.tests.map(result => {
+    const tests = rawResults.tests.map((result) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       result.duration = parseInt(result.duration);
       return result;
@@ -129,7 +129,7 @@ export default class SpecsResults {
 
     if (hasFailures) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      failures = rawResults.failures.map(failure => {
+      failures = rawResults.failures.map((failure) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         return failure;

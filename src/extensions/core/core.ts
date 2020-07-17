@@ -55,7 +55,7 @@ export default class Core {
 
     return {
       id,
-      icon
+      icon,
     };
   }
 

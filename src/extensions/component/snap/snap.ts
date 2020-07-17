@@ -45,7 +45,7 @@ export class Snap {
     return new Snap(
       snapObject.hash,
       new Date(parseInt(snapObject.timestamp)),
-      parents.map(props => Snap.fromObject(props)),
+      parents.map((props) => Snap.fromObject(props)),
       snapObject.author,
       snapObject.message
     );
@@ -57,7 +57,7 @@ export class Snap {
       hash: this.hash,
       author: this.author,
       message: this.message,
-      parents: this.parents.map(snap => snap.toObject())
+      parents: this.parents.map((snap) => snap.toObject()),
     };
   }
 }

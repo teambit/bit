@@ -6,5 +6,5 @@ export {
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
   RawComponentState,
-  DependencyType
+  DependencyType,
 } from './types';

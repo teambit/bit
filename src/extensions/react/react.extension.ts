@@ -76,7 +76,7 @@ export class ReactExtension {
     return {
       abstract: docs.description,
       filePath: docs.filePath,
-      properties: docs.properties
+      properties: docs.properties,
     };
   }
 
@@ -89,7 +89,7 @@ export class ReactExtension {
     WorkspaceExt,
     GraphQLExtension,
     PkgExtension,
-    TesterExtension
+    TesterExtension,
   ];
 
   static provider([envs, jest, ts, compile, webpack, workspace, graphql, pkg, tester]: ReactDeps) {

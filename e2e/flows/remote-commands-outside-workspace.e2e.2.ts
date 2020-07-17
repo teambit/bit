@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { ConsumerNotFound } from '../../src/consumer/exceptions';
 
-describe('bit remote command', function() {
+describe('bit remote command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('dynamic namespaces', function() {
+describe('dynamic namespaces', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -15,7 +15,7 @@ describe('dynamic namespaces', function() {
   });
   const veryLongName = 'this/is/a/very/large/name/for/a/component';
   const veryShortName = 'short';
-  [veryLongName, veryShortName].forEach(componentName => {
+  [veryLongName, veryShortName].forEach((componentName) => {
     describe(`long and short namespaces. using name "${componentName}"`, () => {
       let tagOutput;
       let catComp;

@@ -4,7 +4,7 @@ import { MissingAbortFn } from './exceptions';
 
 describe('AbortablePromise', () => {
   describe('abort()', () => {
-    it('abort a native promise by executing given abort fn', done => {
+    it('abort a native promise by executing given abort fn', (done) => {
       function abortFn() {
         expect(true).to.eq(true);
         done();

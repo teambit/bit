@@ -19,7 +19,7 @@ export default class List implements LegacyCommand {
     ['r', 'raw', 'show raw output (only components ids, no styling)'],
     ['o', 'outdated', 'show latest versions from remotes'],
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
+    ['n', 'namespace <string>', 'show only specified namespace by using wildcards'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -35,7 +35,7 @@ export default class List implements LegacyCommand {
       raw = false,
       json = false,
       outdated = false,
-      namespace
+      namespace,
     }: {
       ids?: boolean;
       scope?: boolean;
@@ -56,13 +56,13 @@ export default class List implements LegacyCommand {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       params.namespacesUsingWildcards = namespaceWithWildcard;
     }
-    return listScope(params).then(listScopeResults => ({
+    return listScope(params).then((listScopeResults) => ({
       listScopeResults,
       scope: scopeName,
       ids,
       raw,
       json,
-      outdated
+      outdated,
     }));
   }
 
@@ -72,7 +72,7 @@ export default class List implements LegacyCommand {
     ids,
     raw,
     json,
-    outdated
+    outdated,
   }: {
     listScopeResults: ListScopeResult[];
     scope: string | null | undefined;
@@ -91,7 +91,7 @@ export default class List implements LegacyCommand {
       return chalk.white(json ? '[]' : `${decideHeaderSentence()}`);
     }
 
-    if (ids) return JSON.stringify(listScopeResults.map(result => result.id.toString()));
+    if (ids) return JSON.stringify(listScopeResults.map((result) => result.id.toString()));
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
     return (
       decideHeaderSentence() +

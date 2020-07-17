@@ -13,7 +13,7 @@ export default async function lane({
   remote,
   merged,
   showDefaultLane,
-  notMerged
+  notMerged,
 }: {
   name: string;
   remote?: string;
@@ -44,8 +44,8 @@ export default async function lane({
     return {
       name: DEFAULT_LANE,
       remote: null,
-      components: bitIds.map(bitId => ({ id: bitId, head: bitId.version as string })),
-      isMerged: null
+      components: bitIds.map((bitId) => ({ id: bitId, head: bitId.version as string })),
+      isMerged: null,
     };
   }
 }

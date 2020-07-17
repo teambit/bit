@@ -22,11 +22,11 @@ const defaultOptions = {
   defaultIndentation: 2,
   noColor: false,
   noAlign: false,
-  stringColor: null
+  stringColor: null,
 };
 
 // Helper function to detect if an object can be directly serializable
-const isSerializable = function(input: any, onlyPrimitives: boolean, options: Options) {
+const isSerializable = function (input: any, onlyPrimitives: boolean, options: Options) {
   if (
     typeof input === 'boolean' ||
     typeof input === 'number' ||
@@ -49,7 +49,7 @@ const isSerializable = function(input: any, onlyPrimitives: boolean, options: Op
   return false;
 };
 
-const addColorToData = function(input, options) {
+const addColorToData = function (input, options) {
   if (options.noColor) {
     return input;
   }
@@ -84,15 +84,15 @@ const addColorToData = function(input, options) {
   return sInput;
 };
 
-const indentLines = function(string, spaces) {
+const indentLines = function (string, spaces) {
   let lines = string.split('\n');
-  lines = lines.map(function(line) {
+  lines = lines.map(function (line) {
     return Utils.indent(spaces) + line;
   });
   return lines.join('\n');
 };
 
-const renderToArray = function(data: any, options: Options = defaultOptions, indentation = 2) {
+const renderToArray = function (data: any, options: Options = defaultOptions, indentation = 2) {
   if (isSerializable(data, false, options)) {
     return [Utils.indent(indentation) + addColorToData(data, options)];
   }
@@ -102,7 +102,7 @@ const renderToArray = function(data: any, options: Options = defaultOptions, ind
     return [
       `${Utils.indent(indentation)}"""`,
       indentLines(data, indentation + options.defaultIndentation),
-      `${Utils.indent(indentation)}"""`
+      `${Utils.indent(indentation)}"""`,
     ];
   }
 
@@ -114,7 +114,7 @@ const renderToArray = function(data: any, options: Options = defaultOptions, ind
 
     const outputArray: any[] = [];
 
-    data.forEach(function(element) {
+    data.forEach(function (element) {
       // Prepend the dash at the begining of each array's element line
       let line: any = '- ';
       if (!options.noColor) {
@@ -145,7 +145,7 @@ const renderToArray = function(data: any, options: Options = defaultOptions, ind
       {
         message: data.message,
         // @ts-ignore
-        stack: data.stack.split('\n')
+        stack: data.stack.split('\n'),
       },
       options,
       indentation
@@ -158,7 +158,7 @@ const renderToArray = function(data: any, options: Options = defaultOptions, ind
   let key;
   const output = [];
 
-  Object.getOwnPropertyNames(data).forEach(function(i) {
+  Object.getOwnPropertyNames(data).forEach(function (i) {
     // Prepend the index at the beginning of the line
     key = `${i}: `;
     if (!options.noColor) {

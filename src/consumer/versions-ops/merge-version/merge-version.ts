@@ -24,7 +24,7 @@ export const FileStatus = {
   updated: chalk.green('updated'),
   added: chalk.green('added'),
   overridden: chalk.yellow('overridden'),
-  unchanged: chalk.green('unchanged')
+  unchanged: chalk.green('unchanged'),
 };
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
@@ -52,7 +52,7 @@ export async function mergeVersion(
 ): Promise<ApplyVersionResults> {
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
   const allComponentsStatus = await getAllComponentsStatus();
-  const componentWithConflict = allComponentsStatus.find(component => component.mergeResults.hasConflicts);
+  const componentWithConflict = allComponentsStatus.find((component) => component.mergeResults.hasConflicts);
   if (componentWithConflict && !mergeStrategy) {
     mergeStrategy = await getMergeStrategyInteractive();
   }
@@ -67,7 +67,7 @@ export async function mergeVersion(
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        components.map(component => getComponentStatus(consumer, component, version))
+        components.map((component) => getComponentStatus(consumer, component, version))
       );
       await tmp.clear();
       return componentsStatus;
@@ -105,7 +105,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
     otherVersion: version,
     currentComponent: component, // $FlowFixMe
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    currentVersion: currentlyUsedVersion
+    currentVersion: currentlyUsedVersion,
   });
   return { componentFromFS: component, id: component.id, mergeResults };
 }
@@ -136,7 +136,7 @@ async function applyVersion(
 ): Promise<ApplyVersionResult> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
-    componentFromFS.files.forEach(file => {
+    componentFromFS.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
@@ -149,7 +149,7 @@ async function applyVersion(
   const files = componentFromFS.files;
   component.files = files;
 
-  files.forEach(file => {
+  files.forEach((file) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
   });
@@ -166,7 +166,7 @@ async function applyVersion(
     origin: componentMap.origin,
     consumer,
     bitMap: consumer.bitMap,
-    existingComponentMap: componentMap
+    existingComponentMap: componentMap,
   });
   await componentWriter.write();
 
@@ -184,10 +184,10 @@ function applyModifiedVersion(
   mergeStrategy: MergeStrategy | null | undefined
 ): Record<string, any> {
   const filesStatus = {};
-  mergeResults.modifiedFiles.forEach(file => {
+  mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
@@ -208,7 +208,7 @@ function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  mergeResults.addFiles.forEach(file => {
+  mergeResults.addFiles.forEach((file) => {
     const otherFile: SourceFile = file.otherFile;
     componentFiles.push(otherFile);
     filesStatus[file.filePath] = FileStatus.added;

@@ -14,8 +14,8 @@ export class StencilCompiler implements Compiler {
     return [
       {
         outputText: output.code,
-        outputPath: path.join('.')
-      }
+        outputPath: path.join('.'),
+      },
     ];
   }
 

@@ -8,7 +8,7 @@ const TITLE_LEFT_SPACES_NUMBER = 2;
 const COMMAND_LEFT_SPACES_NUMBER = 4;
 const NAME_WITH_SPACES_LENGTH = 15;
 
-const baseTemplate = commands => {
+const baseTemplate = (commands) => {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
   ${chalk.grey(
@@ -44,12 +44,12 @@ function commandsTemplate(commands) {
   return res;
 }
 
-module.exports = function(extensionsCommands) {
+module.exports = function (extensionsCommands) {
   if (extensionsCommands && extensionsCommands.length) {
     allCommands.push({
       group: 'extensions',
       title: 'extensions commands',
-      commands: extensionsCommands
+      commands: extensionsCommands,
     });
   }
   return baseTemplate(allCommands);

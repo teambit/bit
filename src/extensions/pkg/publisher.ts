@@ -32,17 +32,17 @@ export class Publisher {
   }
 
   async postExportListener(ids: BitId[]): Promise<PublishPostExportResult[]> {
-    const componentIds = ids.map(id => id.toString());
+    const componentIds = ids.map((id) => id.toString());
     const components = await this.publish(componentIds, {});
-    return components.map(c => ({
+    return components.map((c) => ({
       id: c.id.legacyComponentId,
       data: c.data,
-      errors: c.errors as string[]
+      errors: c.errors as string[],
     }));
   }
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
-    const resultsP = capsules.map(capsule => this.publishOneCapsule(capsule));
+    const resultsP = capsules.map((capsule) => this.publishOneCapsule(capsule));
     return Promise.all(resultsP);
   }
 
@@ -93,18 +93,13 @@ export class Publisher {
    * should be published. ignore the rest.
    */
   private async getIdsToPublish(componentIds: string[]): Promise<string[]> {
-    const bitIds = await Promise.all(componentIds.map(id => this.scope.getParsedId(id)));
+    const bitIds = await Promise.all(componentIds.map((id) => this.scope.getParsedId(id)));
     await this.throwForNonStagedOrTaggedComponents(bitIds);
     const ids = BitIds.fromArray(bitIds);
     const components = await this.scope.getComponentsAndVersions(ids, true);
     return components
-      .filter(c => this.shouldPublish(c.version.extensions))
-      .map(c =>
-        c.component
-          .toBitId()
-          .changeVersion(c.versionStr)
-          .toString()
-      );
+      .filter((c) => this.shouldPublish(c.version.extensions))
+      .map((c) => c.component.toBitId().changeVersion(c.versionStr).toString());
   }
 
   public shouldPublish(extensions: ExtensionDataList): boolean {
@@ -114,7 +109,7 @@ export class Publisher {
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
-    const idsWithoutScope = bitIds.filter(id => !id.hasScope());
+    const idsWithoutScope = bitIds.filter((id) => !id.hasScope());
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
       throw new GeneralError(
@@ -125,7 +120,7 @@ export class Publisher {
     }
     const missingFromScope: BitId[] = [];
     await Promise.all(
-      idsWithoutScope.map(async id => {
+      idsWithoutScope.map(async (id) => {
         const inScope = await this.scope.isComponentInScope(id);
         if (!inScope) {
           missingFromScope.push(id);

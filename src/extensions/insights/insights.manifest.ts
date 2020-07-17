@@ -7,7 +7,7 @@ export default {
   name: 'insights',
   dependencies: [ComponentGraphExt, CLIExtension],
   config: {
-    silence: false
+    silence: false,
   },
-  provider: provide
+  provider: provide,
 } as ExtensionManifest;

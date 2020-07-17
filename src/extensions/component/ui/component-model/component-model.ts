@@ -69,7 +69,7 @@ export class ComponentModel {
       packageName,
       server,
       Composition.fromArray(compositions),
-      TagMap.fromArray(tagsArray.map(tag => Tag.fromObject(tag)))
+      TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag)))
     );
   }
 

@@ -6,8 +6,8 @@ function updateImportSpecifiers(versionModel: Record<string, any>): Record<strin
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.dependencies || !versionModel.dependencies.length) return versionModel;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  versionModel.dependencies.forEach(dependency => {
-    dependency.relativePaths.forEach(relativePath => {
+  versionModel.dependencies.forEach((dependency) => {
+    dependency.relativePaths.forEach((relativePath) => {
       if (relativePath.importSpecifier) {
         relativePath.importSpecifiers = [relativePath.importSpecifier];
         delete relativePath.importSpecifier;
@@ -19,5 +19,5 @@ function updateImportSpecifiers(versionModel: Record<string, any>): Record<strin
 
 export default {
   name: 'change ImportSpecifier from Object to Array',
-  migrate: updateImportSpecifiers
+  migrate: updateImportSpecifiers,
 };

@@ -6,7 +6,7 @@ export class ExtensionArtifact {
 
   toObject() {
     return {
-      extensionDescriptor: this.extensionDescriptor
+      extensionDescriptor: this.extensionDescriptor,
     };
   }
 }

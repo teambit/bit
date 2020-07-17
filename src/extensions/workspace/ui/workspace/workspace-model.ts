@@ -29,7 +29,7 @@ export class Workspace {
     return new Workspace(
       name,
       path,
-      components.map(value => ComponentID.fromObject(value.id))
+      components.map((value) => ComponentID.fromObject(value.id))
     );
   }
 }

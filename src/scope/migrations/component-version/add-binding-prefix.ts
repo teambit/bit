@@ -15,7 +15,7 @@ function addBindingPrefix(versionModel: Record<string, any>): Record<string, any
 
 const addBindingPrefixDeclartaion = {
   name: 'add binding prefix',
-  migrate: addBindingPrefix
+  migrate: addBindingPrefix,
 };
 
 export default addBindingPrefixDeclartaion;

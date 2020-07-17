@@ -4,5 +4,5 @@ export default {
   name: 'config',
   dependencies: [],
   config: {},
-  provider: configProvider
+  provider: configProvider,
 };

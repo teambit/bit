@@ -19,7 +19,7 @@ export default async function fetch(
   headers: Record<string, any> | null | undefined
 ): Promise<CompsAndLanesObjects> {
   const bitIds: BitIds = idsAreLanes ? new BitIds() : BitIds.deserialize(ids);
-  const laneIds: RemoteLaneId[] = idsAreLanes ? ids.map(id => RemoteLaneId.parse(id)) : [];
+  const laneIds: RemoteLaneId[] = idsAreLanes ? ids.map((id) => RemoteLaneId.parse(id)) : [];
 
   // @todo: should add "laneIds" to args?
   const args = { path, bitIds, noDependencies };
@@ -33,14 +33,14 @@ export default async function fetch(
   let lanesObjects: LaneObjects[] = [];
   if (idsAreLanes) {
     const lanes = await scope.listLanes();
-    const lanesToFetch = laneIds.map(laneId => {
-      const laneToFetch = lanes.find(lane => lane.name === laneId.name);
+    const lanesToFetch = laneIds.map((laneId) => {
+      const laneToFetch = lanes.find((lane) => lane.name === laneId.name);
       // @todo: throw LaneNotFound, make sure it shows correctly on the client using ssh
       if (!laneToFetch) throw new Error(`lane ${laneId.name} was not found in scope ${scope.name}`);
       return laneToFetch;
     });
     lanesObjects = await Promise.all(
-      lanesToFetch.map(async laneToFetch => {
+      lanesToFetch.map(async (laneToFetch) => {
         laneToFetch.scope = scope.name;
         const laneBuffer = await laneToFetch.compress();
         return new LaneObjects(laneBuffer, []);
@@ -69,7 +69,7 @@ export default async function fetch(
         componentObjects,
         scopePath: path,
         componentsIds: bitIds.serialize(),
-        scopeName: scope.scopeJson.name
+        scopeName: scope.scopeJson.name,
       },
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       headers

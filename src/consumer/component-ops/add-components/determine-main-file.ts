@@ -13,14 +13,14 @@ export default function determineMainFile(
 ): PathLinux {
   const mainFile = addedComponent.mainFile;
   const componentIdStr = addedComponent.componentId.toString();
-  const files = addedComponent.files.filter(file => !file.test);
+  const files = addedComponent.files.filter((file) => !file.test);
   const rootDir = existingComponentMap && existingComponentMap.rootDir;
   const strategies: Function[] = [
     getExistingIfNotChanged,
     getUserSpecifiedMainFile,
     onlyOneFileEnteredUseIt,
     searchForFileNameIndex,
-    searchForSameFileNameAsImmediateDir
+    searchForSameFileNameAsImmediateDir,
   ];
 
   for (const strategy of strategies) {
@@ -33,7 +33,7 @@ export default function determineMainFile(
   throw new MissingMainFile(
     componentIdStr,
     mainFileString,
-    files.map(file => path.normalize(file.relativePath))
+    files.map((file) => path.normalize(file.relativePath))
   );
 
   /**
@@ -55,7 +55,7 @@ export default function determineMainFile(
       throw new MissingMainFile(
         componentIdStr,
         mainFile,
-        files.map(file => path.normalize(file.relativePath))
+        files.map((file) => path.normalize(file.relativePath))
       );
     }
     return null;
@@ -102,14 +102,14 @@ export default function determineMainFile(
 
   function _searchMainFile(baseMainFile: PathLinux): PathLinux | null | undefined {
     // search for an exact relative-path
-    let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
+    let mainFileFromFiles = files.find((file) => file.relativePath === baseMainFile);
     if (mainFileFromFiles) return baseMainFile;
     if (rootDir) {
-      const mainFileUsingRootDir = files.find(file => pathJoinLinux(rootDir, file.relativePath) === baseMainFile);
+      const mainFileUsingRootDir = files.find((file) => pathJoinLinux(rootDir, file.relativePath) === baseMainFile);
       if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
     }
     // search for a file-name
-    const potentialMainFiles = files.filter(file => file.name === baseMainFile);
+    const potentialMainFiles = files.filter((file) => file.name === baseMainFile);
     if (!potentialMainFiles.length) return null;
     // when there are several files that met the criteria, choose the closer to the root
     const sortByNumOfDirs = (a, b) =>

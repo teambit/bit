@@ -78,5 +78,5 @@ export {
   paintGraph,
   lane,
   switchAction,
-  fetch
+  fetch,
 };

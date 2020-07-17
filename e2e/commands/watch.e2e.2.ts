@@ -8,7 +8,7 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
-describe('bit watch command', function() {
+describe('bit watch command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -57,7 +57,7 @@ describe('bit watch command', function() {
         });
       });
     });
-    describe('as imported', function() {
+    describe('as imported', function () {
       if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
         // @ts-ignore
@@ -115,7 +115,7 @@ describe('bit watch command', function() {
 
       const environments = {
         env: '@teambit/react',
-        config: {}
+        config: {},
       };
       helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
     });

@@ -5,5 +5,5 @@ export default {
   name: 'Reporter',
   dependencies: [LoggerExt],
   config: {},
-  provider: provideReporter
+  provider: provideReporter,
 };

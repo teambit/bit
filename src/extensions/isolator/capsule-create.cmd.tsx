@@ -24,7 +24,7 @@ export class CapsuleCreateCmd implements Command {
     ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
-    ['d', 'installPackages', 'install packages in capsule with npm']
+    ['d', 'installPackages', 'install packages in capsule with npm'],
   ] as CommandOptions;
 
   constructor(private isolator: IsolatorExtension) {}
@@ -47,7 +47,7 @@ export class CapsuleCreateCmd implements Command {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     const capsuleOutput = capsules
-      .map(capsule => `${chalk.bold(capsule.id.toString())} - ${capsule.capsule.path}`)
+      .map((capsule) => `${chalk.bold(capsule.id.toString())} - ${capsule.capsule.path}`)
       .join('\n');
     const title = `${capsules.length} capsule(s) were created successfully`;
     return `${chalk.green(title)}\n${capsuleOutput}`;
@@ -56,9 +56,9 @@ export class CapsuleCreateCmd implements Command {
   async json([componentIds]: [string[]], opts: CreateOpts) {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
-    return capsules.map(c => ({
+    return capsules.map((c) => ({
       id: c.id.toString(),
-      path: c.capsule.path
+      path: c.capsule.path,
     }));
   }
 }

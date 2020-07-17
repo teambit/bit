@@ -7,8 +7,8 @@ import Diagnosis from '../../doctor/diagnosis';
 
 const tableColumnConfig = {
   columnDefault: {
-    alignment: 'left'
-  }
+    alignment: 'left',
+  },
 };
 
 type DiagnosisRow = [string, string, string];

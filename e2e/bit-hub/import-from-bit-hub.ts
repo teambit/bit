@@ -8,7 +8,7 @@ import { BASE_WEB_DOMAIN } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-(supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_WEB_DOMAIN}`, function() {
+(supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_WEB_DOMAIN}`, function () {
   this.timeout(0);
   let helper: Helper;
   let bitsrcTester;
@@ -25,7 +25,7 @@ chai.use(require('chai-fs'));
     return bitsrcTester
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())
-      .then(scope => {
+      .then((scope) => {
         scopeName = scope;
         scopeId = `${username}.${scopeName}`;
         helper.scopeHelper.reInitLocalScope();
@@ -103,7 +103,7 @@ chai.use(require('chai-fs'));
     it('should save the imported component as a dependency in the package.json of the project', () => {
       const barFooPackageJson = helper.packageJson.read();
       expect(barFooPackageJson.dependencies).to.deep.include({
-        [`@bit/${scopeId}.bar.foo`]: 'file:./components/bar/foo'
+        [`@bit/${scopeId}.bar.foo`]: 'file:./components/bar/foo',
       });
     });
   });
@@ -270,7 +270,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       packageJsonAfterImport = helper.packageJson.read();
     });
     it('should not remove any property of the package.json created by npm', () => {
-      Object.keys(packageJsonBeforeImport).forEach(prop => expect(packageJsonAfterImport).to.have.property(prop));
+      Object.keys(packageJsonBeforeImport).forEach((prop) => expect(packageJsonAfterImport).to.have.property(prop));
     });
     it('should update the root package.json and change the dependency from a package to a local path', () => {
       expect(packageJsonBeforeImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('0.0.1');

@@ -56,7 +56,7 @@ describe('filing-cabinet', () => {
         '.sass',
         '.styl',
         '.less',
-        '.vue'
+        '.vue',
       ]);
     });
 
@@ -64,7 +64,7 @@ describe('filing-cabinet', () => {
       const resolvedFile = cabinet({
         dependency: './bar',
         filename: 'js/commonjs/foo.baz',
-        directory: 'js/commonjs/'
+        directory: 'js/commonjs/',
       });
       assert.ok(resolvedFile.endsWith('bar.baz'));
     });
@@ -77,7 +77,7 @@ describe('filing-cabinet', () => {
           dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/',
-          ast
+          ast,
         });
         assert.ok(result.endsWith('es6/bar.js'));
       });
@@ -87,7 +87,7 @@ describe('filing-cabinet', () => {
           dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/',
-          ast: mockAST
+          ast: mockAST,
         });
         assert.equal(result, path.join(mockRootDir, 'js/es6/bar.js'));
       });
@@ -98,7 +98,7 @@ describe('filing-cabinet', () => {
         const options = {
           dependency: './bar',
           filename: 'js/es6/foo.js',
-          directory: 'js/es6/'
+          directory: 'js/es6/',
         };
 
         const result = cabinet(options);
@@ -114,7 +114,7 @@ describe('filing-cabinet', () => {
         cabinet({
           dependency: './bar',
           filename: 'js/es6/foo.js',
-          directory: 'js/es6/'
+          directory: 'js/es6/',
         });
 
         assert.ok(stub.called);
@@ -128,7 +128,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './bar',
           filename: 'js/es6/foo.jsx',
-          directory: 'js/es6/'
+          directory: 'js/es6/',
         });
 
         assert.equal(result, `${path.join(mockRootDir, 'js/es6/bar.js')}`);
@@ -140,7 +140,7 @@ describe('filing-cabinet', () => {
         const resolvedFile = cabinet({
           dependency: './bar',
           filename: 'js/amd/foo.js',
-          directory: 'js/amd/'
+          directory: 'js/amd/',
         });
         assert.ok(resolvedFile.endsWith('amd/bar.js'));
       });
@@ -156,7 +156,7 @@ describe('filing-cabinet', () => {
           config,
           configPath: 'config.js',
           filename: 'js/amd/foo.js',
-          directory: 'js/amd/'
+          directory: 'js/amd/',
         });
 
         const args = stub.getCall(0).args[0];
@@ -181,7 +181,7 @@ describe('filing-cabinet', () => {
         cabinet({
           dependency: './bar',
           filename: 'js/commonjs/foo.js',
-          directory: 'js/commonjs/'
+          directory: 'js/commonjs/',
         });
 
         assert.ok(stub.called);
@@ -193,7 +193,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'foobar',
           filename: 'js/commonjs/foo.js',
-          directory: 'js/commonjs/'
+          directory: 'js/commonjs/',
         });
 
         assert.equal(result, '');
@@ -204,12 +204,12 @@ describe('filing-cabinet', () => {
         cabinet({
           dependency: 'foobar',
           filename: 'js/commonjs/foo.js',
-          directory
+          directory,
         });
 
         assert.ok(
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          require.main.paths.some(function(p) {
+          require.main.paths.some(function (p) {
             return p.indexOf(path.normalize(directory)) !== -1;
           })
         );
@@ -222,7 +222,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './bar',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.join(path.resolve(directory), 'bar.js'));
@@ -235,7 +235,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: '../',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.join(path.resolve(directory), 'index.js'));
@@ -249,7 +249,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'subdir',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.join(path.resolve(directory), 'subdir/index.js'));
@@ -265,8 +265,8 @@ describe('filing-cabinet', () => {
           filename,
           directory,
           nodeModulesConfig: {
-            entry: 'module'
-          }
+            entry: 'module',
+          },
         });
 
         assert.equal(
@@ -282,7 +282,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'lodash.assign',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.join(path.resolve(directory), 'node_modules', 'lodash.assign', 'index.js'));
@@ -295,7 +295,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './subdir',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.normalize(`${path.resolve(directory)}/subdir/index.js`));
@@ -305,7 +305,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './bar',
           filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/'
+          directory: 'js/cjs/',
         });
 
         assert.equal(result, `${path.join(mockRootDir, 'js/cjs/bar.jsx')}`);
@@ -315,7 +315,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './baz',
           filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/'
+          directory: 'js/cjs/',
         });
 
         assert.equal(result, `${path.join(mockRootDir, 'js/cjs/baz.scss')}`);
@@ -325,7 +325,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './pkg',
           filename: 'js/cjs/foo.js',
-          directory: 'js/cjs/'
+          directory: 'js/cjs/',
         });
 
         assert.equal(result, `${path.join(mockRootDir, 'js/cjs/pkg.json')}`);
@@ -340,7 +340,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: './foo',
           filename,
-          directory
+          directory,
         });
 
         assert.equal(result, path.join(path.resolve(directory), 'foo.ts'));
@@ -354,7 +354,7 @@ describe('filing-cabinet', () => {
           const result = cabinet({
             dependency: './barbar',
             filename,
-            directory
+            directory,
           });
 
           assert.equal(result, '');
@@ -368,19 +368,19 @@ describe('filing-cabinet', () => {
       mock({
         stylus: {
           'foo.styl': '',
-          'bar.styl': ''
+          'bar.styl': '',
         },
         sass: {
           'foo.scss': '',
           'bar.scss': '',
           'foo.sass': '',
-          'bar.sass': ''
+          'bar.sass': '',
         },
         less: {
           'foo.less': '',
           'bar.less': '',
-          'bar.css': ''
-        }
+          'bar.css': '',
+        },
       });
 
       // mockJSDir = path.resolve(__dirname, '../');
@@ -395,7 +395,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar',
           filename: 'sass/foo.scss',
-          directory: 'sass/'
+          directory: 'sass/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.scss`));
@@ -405,7 +405,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar',
           filename: 'sass/foo.sass',
-          directory: 'sass/'
+          directory: 'sass/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.sass`));
@@ -417,7 +417,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar',
           filename: 'stylus/foo.styl',
-          directory: 'stylus/'
+          directory: 'stylus/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/stylus/bar.styl`));
@@ -429,7 +429,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar',
           filename: 'less/foo.less',
-          directory: 'less/'
+          directory: 'less/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
@@ -439,7 +439,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar.less',
           filename: 'less/foo.less',
-          directory: 'less/'
+          directory: 'less/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
@@ -449,7 +449,7 @@ describe('filing-cabinet', () => {
         const result = cabinet({
           dependency: 'bar.css',
           filename: 'less/foo.less',
-          directory: 'less/'
+          directory: 'less/',
         });
 
         assert.equal(result, path.normalize(`${mockRootDir}/less/bar.css`));
@@ -462,7 +462,7 @@ describe('filing-cabinet', () => {
       const result = cabinet({
         dependency: './bar',
         filename: 'barbazim/foo.baz',
-        directory: 'barbazim/'
+        directory: 'barbazim/',
       });
 
       assert.equal(result, path.normalize(`${mockRootDir}/barbazim/bar.baz`));
@@ -477,7 +477,7 @@ describe('filing-cabinet', () => {
       const pathResult = cabinet({
         dependency: './bar',
         filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/'
+        directory: 'js/amd/',
       });
 
       assert.ok(stub.called);
@@ -488,8 +488,8 @@ describe('filing-cabinet', () => {
       mock({
         stylus: {
           'foo.styl': '',
-          'bar.styl': ''
-        }
+          'bar.styl': '',
+        },
       });
 
       const stub = sinon.stub().returns('foo');
@@ -499,13 +499,13 @@ describe('filing-cabinet', () => {
       cabinet({
         dependency: './bar',
         filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/'
+        directory: 'js/amd/',
       });
 
       const result = cabinet({
         dependency: './bar',
         filename: 'stylus/foo.styl',
-        directory: 'stylus/'
+        directory: 'stylus/',
       });
 
       assert.ok(stub.called);
@@ -524,13 +524,13 @@ describe('filing-cabinet', () => {
       cabinet({
         dependency: './bar',
         filename: 'js/amd/foo.foobar',
-        directory: 'js/amd/'
+        directory: 'js/amd/',
       });
 
       cabinet({
         dependency: './bar',
         filename: 'js/amd/foo.barbar',
-        directory: 'js/amd/'
+        directory: 'js/amd/',
       });
 
       assert.ok(stub.called);
@@ -555,7 +555,7 @@ describe('filing-cabinet', () => {
       const result = cabinet({
         dependency: '~bootstrap/index',
         filename: `${fixtures}/foo.scss`,
-        directory: fixtures
+        directory: fixtures,
       });
 
       assert.equal(result, path.resolve(`${fixtures}/node_modules/bootstrap/index.scss`));
@@ -569,7 +569,7 @@ describe('filing-cabinet', () => {
           resolveConfig,
           dependency: '~bootstrap/foo2',
           filename: `${fixtures}/foo.scss`,
-          directory: fixtures
+          directory: fixtures,
         });
 
         assert.equal(result, path.resolve(`${fixtures}/foo2.scss`));
@@ -582,7 +582,7 @@ describe('filing-cabinet', () => {
           resolveConfig,
           dependency: '~bootstrap/index',
           filename: `${fixtures}/foo.scss`,
-          directory: fixtures
+          directory: fixtures,
         });
 
         assert.equal(result, path.resolve(`${fixtures}/node_modules/bootstrap/index.scss`));
@@ -603,7 +603,7 @@ describe('filing-cabinet', () => {
         dependency,
         filename: `${__dirname}/index.js`,
         directory,
-        webpackConfig: `${fixtures}/webpack.config.js`
+        webpackConfig: `${fixtures}/webpack.config.js`,
       });
 
       assert.equal(resolved, path.normalize(expected));
@@ -626,7 +626,7 @@ describe('filing-cabinet', () => {
         dependency: 'R',
         filename: `${fixtures}/test/ast.js`,
         directory,
-        webpackConfig: `${fixtures}/webpack.config.js`
+        webpackConfig: `${fixtures}/webpack.config.js`,
       });
 
       assert.equal(resolved, `${directory}/node_modules/resolve/index.js`);
@@ -637,7 +637,7 @@ describe('filing-cabinet', () => {
         dependency: 'mod1',
         filename: `${directory}/index.js`,
         directory,
-        webpackConfig: `${directory}/webpack-root.config.js`
+        webpackConfig: `${directory}/webpack-root.config.js`,
       });
 
       assert.equal(resolved, `${directory}/test/root1/mod1.js`);
@@ -648,7 +648,7 @@ describe('filing-cabinet', () => {
         dependency: 'resolve',
         filename: `${directory}/index.js`,
         directory,
-        webpackConfig: `${directory}/webpack-root.config.js`
+        webpackConfig: `${directory}/webpack-root.config.js`,
       });
 
       assert.equal(resolved, `${directory}/node_modules/resolve/index.js`);
@@ -659,7 +659,7 @@ describe('filing-cabinet', () => {
         dependency: 'resolve',
         filename: `${directory}/index.js`,
         directory,
-        webpackConfig: `${directory}/webpack-root.config.js`
+        webpackConfig: `${directory}/webpack-root.config.js`,
       });
 
       assert.equal(resolved, `${directory}/node_modules/resolve/index.js`);
@@ -670,7 +670,7 @@ describe('filing-cabinet', () => {
         dependency: 'mod2',
         filename: `${directory}/index.js`,
         directory,
-        webpackConfig: `${directory}/webpack-root.config.js`
+        webpackConfig: `${directory}/webpack-root.config.js`,
       });
 
       assert.equal(resolved, `${directory}/test/root2/mod2.js`);
@@ -681,7 +681,7 @@ describe('filing-cabinet', () => {
         dependency: 'R',
         filename: `${directory}/index.js`,
         directory,
-        webpackConfig: `${directory}/webpack-env.config.js`
+        webpackConfig: `${directory}/webpack-env.config.js`,
       });
 
       assert.equal(resolved, `${directory}/node_modules/resolve/index.js`);

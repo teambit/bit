@@ -9,14 +9,14 @@ export default class Eject implements LegacyCommand {
   alias = 'E';
   opts = [
     ['f', 'force', 'ignore local version. remove the components even when they are staged or modified'],
-    ['j', 'json', 'print the results in JSON format']
+    ['j', 'json', 'print the results in JSON format'],
   ] as CommandOptions;
   loader = true;
   migration = true;
 
   action([ids]: [string[]], { force, json }: { force: boolean; json: boolean }): Promise<EjectResults> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return ejectAction(ids, force).then(ejectResults => ({ ejectResults, json }));
+    return ejectAction(ids, force).then((ejectResults) => ({ ejectResults, json }));
   }
 
   report({ ejectResults, json }: { ejectResults: EjectResults; json: boolean }): string {

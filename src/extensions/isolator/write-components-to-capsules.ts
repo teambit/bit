@@ -13,10 +13,10 @@ export default async function writeComponentsToCapsules(
   capsules: Capsule[],
   capsuleList: CapsuleList
 ) {
-  components = components.map(c => c.clone());
-  const allIds = BitIds.fromArray(components.map(c => c.id));
+  components = components.map((c) => c.clone());
+  const allIds = BitIds.fromArray(components.map((c) => c.id));
   await Promise.all(
-    components.map(async component => {
+    components.map(async (component) => {
       const capsule = capsuleList.getCapsule(new ComponentID(component.id));
       if (!capsule) return;
       const params = getComponentWriteParams(component, allIds);
@@ -42,6 +42,6 @@ function getComponentWriteParams(component: ConsumerComponent, ids: BitIds): Com
     ignoreBitDependencies: ids,
     excludeRegistryPrefix: false,
     isolated: true,
-    applyExtensionsAddedConfig: true
+    applyExtensionsAddedConfig: true,
   };
 }

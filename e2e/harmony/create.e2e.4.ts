@@ -6,7 +6,7 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
-describe('create extension', function() {
+describe('create extension', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

@@ -28,7 +28,7 @@ function mergeOrCreateConfig(
   if (!iniReg) {
     config.push({
       path: [`${DEFAULT_BINDINGS_PREFIX}:registry`],
-      value: url
+      value: url,
     });
   } else {
     iniReg.value = url;
@@ -36,7 +36,7 @@ function mergeOrCreateConfig(
   if (!iniToken) {
     config.push({
       path: [`//${strippedUrl}/:_authToken`],
-      value: token
+      value: token,
     });
   } else {
     iniToken.value = token;

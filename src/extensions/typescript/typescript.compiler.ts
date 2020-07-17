@@ -38,14 +38,14 @@ export class TypescriptCompiler implements Compiler {
     const result = ts.transpileModule(fileContent, {
       compilerOptions,
       fileName: options.filePath,
-      reportDiagnostics: true
+      reportDiagnostics: true,
     });
 
     if (result.diagnostics && result.diagnostics.length) {
       const formatHost = {
-        getCanonicalFileName: p => p,
+        getCanonicalFileName: (p) => p,
         getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine
+        getNewLine: () => ts.sys.newLine,
       };
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
@@ -53,13 +53,13 @@ export class TypescriptCompiler implements Compiler {
       throw new Error(error);
     }
 
-    const replaceExtToJs = filePath => filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
+    const replaceExtToJs = (filePath) => filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
     const outputPath = replaceExtToJs(options.filePath);
     const outputFiles = [{ outputText: result.outputText, outputPath }];
     if (result.sourceMapText) {
       outputFiles.push({
         outputText: result.sourceMapText,
-        outputPath: `${outputPath}.map`
+        outputPath: `${outputPath}.map`,
       });
     }
     return outputFiles;
@@ -69,7 +69,7 @@ export class TypescriptCompiler implements Compiler {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
 
-    capsuleDirs.forEach(capsuleDir => {
+    capsuleDirs.forEach((capsuleDir) => {
       fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2));
 
       this.writeTypes(capsuleDir);
@@ -80,7 +80,7 @@ export class TypescriptCompiler implements Compiler {
       throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
     }
     const diagnostics: ts.Diagnostic[] = [];
-    const diagAccumulator = diag => diagnostics.push(diag);
+    const diagAccumulator = (diag) => diagnostics.push(diag);
     const host = ts.createSolutionBuilderHost(undefined, undefined, diagAccumulator);
     const solutionBuilder = ts.createSolutionBuilder(host, capsuleDirs, { dry: false, verbose: false });
     solutionBuilder.clean();
@@ -89,11 +89,11 @@ export class TypescriptCompiler implements Compiler {
       throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
     }
     const formatHost = {
-      getCanonicalFileName: p => p,
+      getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
-      getNewLine: () => ts.sys.newLine
+      getNewLine: () => ts.sys.newLine,
     };
-    const componentsErrors = diagnostics.map(diagnostic => {
+    const componentsErrors = diagnostics.map((diagnostic) => {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
@@ -105,9 +105,9 @@ export class TypescriptCompiler implements Compiler {
       if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
       return { componentId, error: errorStr };
     });
-    const components = capsules.map(capsule => {
+    const components = capsules.map((capsule) => {
       const id = capsule.id;
-      const errors = componentsErrors.filter(c => c.componentId.isEqual(id)).map(c => c.error);
+      const errors = componentsErrors.filter((c) => c.componentId.isEqual(id)).map((c) => c.error);
       return { id, errors };
     });
 
@@ -115,7 +115,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   private writeTypes(rootDir: string) {
-    this.types.forEach(typePath => {
+    this.types.forEach((typePath) => {
       const contents = fs.readFileSync(typePath, 'utf8');
       const filename = path.basename(typePath);
 

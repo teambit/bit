@@ -9,14 +9,14 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE, IMPORT_PENDING_MSG } from '../../src/constants';
 import {
   MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
-  componentIssuesLabels
+  componentIssuesLabels,
 } from '../../src/cli/templates/component-issues-template';
 
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit status command', function() {
+describe('bit status command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -117,9 +117,9 @@ describe('bit status command', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              chai: '+'
-            }
-          }
+              chai: '+',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -138,9 +138,9 @@ describe('bit status command', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              chai: '+'
-            }
-          }
+              chai: '+',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -413,7 +413,7 @@ describe('bit status command', function() {
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.command.addComponent('utils/is-string.js utils/is-string-internal.js', {
         m: 'utils/is-string.js',
-        i: 'utils/is-string'
+        i: 'utils/is-string',
       });
       helper.command.tagComponent('utils/is-string');
       helper.command.exportAllComponents();

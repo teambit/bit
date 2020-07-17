@@ -45,7 +45,7 @@ export default class ScopeHelper {
       delete this.cache;
     }
     if (this.clonedScopes && this.clonedScopes.length) {
-      this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
+      this.clonedScopes.forEach((scopePath) => fs.removeSync(scopePath));
     }
     this.fs.cleanExternalDirs();
   }
@@ -88,7 +88,7 @@ export default class ScopeHelper {
 
   initLocalScopeWithOptions(options: Record<string, any>) {
     const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
+      .map((key) => `-${key} ${options[key]}`)
       .join(' ');
     return this.command.runCmd(`bit init ${value}`);
   }

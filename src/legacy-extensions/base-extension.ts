@@ -132,7 +132,7 @@ export default class BaseExtension {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set initOptions(opts: Record<string, any> | null | undefined) {
     const defaultInitOpts = {
-      writeConfigFilesOnAction: false
+      writeConfigFilesOnAction: false,
     };
     if (!opts) {
       this._initOptions = defaultInitOpts;
@@ -162,7 +162,7 @@ export default class BaseExtension {
         initOptions = this.script.init({
           rawConfig: this.rawConfig,
           dynamicConfig: this.dynamicConfig,
-          api: this.api
+          api: this.api,
         });
       }
       // wrap in promise, in case a script has async init
@@ -192,15 +192,15 @@ export default class BaseExtension {
     return {
       [this.name]: {
         rawConfig: this.rawConfig,
-        options: this.options
-      }
+        options: this.options,
+      },
     };
   }
 
   toModelObject() {
     return {
       name: this.name,
-      config: this.dynamicConfig
+      config: this.dynamicConfig,
     };
   }
 
@@ -229,7 +229,7 @@ export default class BaseExtension {
       rootDir: this.rootDir,
       rawConfig: this.rawConfig,
       options: this.options,
-      throws
+      throws,
     });
     if (baseProps.loaded) {
       this.loaded = baseProps.loaded;
@@ -249,7 +249,7 @@ export default class BaseExtension {
   static transformStringToModelObject(name: string): BaseExtensionModel {
     return {
       name,
-      config: {}
+      config: {},
     };
   }
 
@@ -271,7 +271,7 @@ export default class BaseExtension {
     consumerPath,
     scopePath,
     throws = false,
-    context
+    context,
   }: BaseLoadArgsProps): Promise<BaseExtensionProps | BaseExtension> {
     logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
@@ -286,7 +286,7 @@ export default class BaseExtension {
         filePath: absPath,
         rawConfig,
         options,
-        throws
+        throws,
       });
       const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
       extensionProps.api = concreteBaseAPI;
@@ -299,7 +299,7 @@ export default class BaseExtension {
       options,
       disabled: false,
       loaded: false,
-      filePath: ''
+      filePath: '',
     };
     // Require extension from scope
     if (scopePath) {
@@ -312,7 +312,7 @@ export default class BaseExtension {
         rootDir: componentPath,
         rawConfig,
         options,
-        throws
+        throws,
       });
     }
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
@@ -329,7 +329,7 @@ export default class BaseExtension {
         options: {},
         disabled: false,
         loaded: false,
-        filePath: ''
+        filePath: '',
       };
     } else {
       staticExtensionProps = {
@@ -339,7 +339,7 @@ export default class BaseExtension {
         options: {},
         disabled: false,
         loaded: false,
-        filePath: ''
+        filePath: '',
       };
     }
 
@@ -354,7 +354,7 @@ export default class BaseExtension {
     rootDir,
     rawConfig = {},
     options = {},
-    throws = false
+    throws = false,
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
     logger.debug(`base-extension, loading extension ${name} from ${filePath}`);
     const extensionProps: StaticProps = {
@@ -365,7 +365,7 @@ export default class BaseExtension {
       disabled: false,
       loaded: false,
       filePath: '',
-      rootDir: ''
+      rootDir: '',
     };
     // Skip disabled extensions
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -435,7 +435,7 @@ export default class BaseExtension {
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
         const dynamicConfig = getDynamicConfig({
-          rawConfig: extensionProps.rawConfig
+          rawConfig: extensionProps.rawConfig,
         });
         return dynamicConfig;
       } catch (err) {
@@ -460,7 +460,7 @@ function _getCoreExtensionPath(name: string): ExtensionPath {
   const componentPath = path.join(__dirname, CORE_EXTENSIONS_PATH, name);
   return {
     resolvedPath: componentPath,
-    componentPath
+    componentPath,
   };
 }
 
@@ -483,12 +483,12 @@ function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPat
     const resolved = require.resolve(componentPath);
     return {
       resolvedPath: typeof resolved === 'string' ? resolved : componentPath,
-      componentPath
+      componentPath,
     };
   } catch (e) {
     return {
       resolvedPath: componentPath,
-      componentPath
+      componentPath,
     };
   }
 }
@@ -522,7 +522,7 @@ const baseApi = {
   /**
    * API to get logger
    */
-  getLogger: (name): Function => () => createExtensionLogger(name)
+  getLogger: (name): Function => () => createExtensionLogger(name),
 };
 
 /**

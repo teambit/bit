@@ -2,7 +2,7 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import {
   removeLocalVersion,
   removeLocalVersionsForAllComponents,
-  removeLocalVersionsForComponentsMatchedByWildcard
+  removeLocalVersionsForComponentsMatchedByWildcard,
 } from '../../../scope/component-ops/untag-component';
 import { untagResult } from '../../../scope/component-ops/untag-component';
 import hasWildcard from '../../../utils/string/has-wildcard';
@@ -27,7 +27,7 @@ export default (async function unTagAction(version?: string, force?: boolean, id
   };
   const results = await untag();
   await consumer.scope.objects.persist();
-  const components = results.map(result => result.component);
+  const components = results.map((result) => result.component);
   await consumer.updateComponentsVersions(components);
   await consumer.onDestroy();
   return results;

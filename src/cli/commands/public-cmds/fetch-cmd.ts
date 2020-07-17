@@ -14,7 +14,7 @@ export default class Fetch implements LegacyCommand {
   opts = [
     ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
     ['c', 'components', 'fetch components'],
-    ['j', 'json', 'return the output as JSON']
+    ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
 
@@ -23,7 +23,7 @@ export default class Fetch implements LegacyCommand {
     {
       lanes = false,
       components = false,
-      json = false
+      json = false,
     }: {
       lanes?: boolean;
       components?: boolean;
@@ -31,13 +31,13 @@ export default class Fetch implements LegacyCommand {
     }
   ): Promise<{}> {
     if (lanes) throwForUsingLaneIfDisabled();
-    return fetch(ids, lanes, components).then(results => ({ ...results, json }));
+    return fetch(ids, lanes, components).then((results) => ({ ...results, json }));
   }
 
   report({
     dependencies,
     importDetails,
-    json
+    json,
   }: {
     dependencies?: ComponentWithDependencies[];
     importDetails: ImportDetails[];
@@ -52,9 +52,9 @@ export default class Fetch implements LegacyCommand {
         components.length === 1
           ? 'successfully fetched one component'
           : `successfully fetched ${components.length} components`;
-      const componentDependencies = components.map(component => {
+      const componentDependencies = components.map((component) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

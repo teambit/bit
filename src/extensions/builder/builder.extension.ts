@@ -76,7 +76,7 @@ export class BuilderExtension {
   async getArtifacts(id: ComponentID, hash: string): Promise<ExtensionArtifact[]> {
     const component = await this.scope.getOrThrow(id);
     const state = await component.loadState(hash);
-    const extensionArtifacts = state.config.extensions.map(extensionData => {
+    const extensionArtifacts = state.config.extensions.map((extensionData) => {
       return new ExtensionArtifact(
         // @ts-ignore TODO: remove when @david fixes `extensionData.artifacts` to be abstract vinyl only.
         extensionData.artifacts,
@@ -97,7 +97,7 @@ export class BuilderExtension {
     LoggerExt,
     CoreExt,
     GraphQLExtension,
-    ComponentExtension
+    ComponentExtension,
   ];
 
   static async provider([cli, envs, workspace, scope, isolator, reporter, logger, core, graphql]: [

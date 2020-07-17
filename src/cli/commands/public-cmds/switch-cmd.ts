@@ -21,7 +21,7 @@ export default class Switch implements LegacyCommand {
     [
       'm',
       'merge [strategy]',
-      'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"'
+      'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['a', 'get-all', 'checkout all components in a lane include ones that do not exist in the workspace'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -29,10 +29,10 @@ export default class Switch implements LegacyCommand {
     [
       '',
       'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
     ],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
-    ['', 'ignore-dist', 'do not write dist files (when exist)']
+    ['', 'ignore-dist', 'do not write dist files (when exist)'],
   ] as CommandOptions;
   loader = true;
 
@@ -48,7 +48,7 @@ export default class Switch implements LegacyCommand {
       json = false,
       ignorePackageJson = false,
       skipNpmInstall = false,
-      ignoreDist = false
+      ignoreDist = false,
     }: {
       create?: boolean;
       remote?: string;
@@ -77,7 +77,7 @@ export default class Switch implements LegacyCommand {
       laneName: lane,
       remoteScope: remote,
       existingOnWorkspaceOnly: !getAll,
-      newLaneName: as
+      newLaneName: as,
     };
     const checkoutProps: CheckoutProps = {
       mergeStrategy,
@@ -89,9 +89,9 @@ export default class Switch implements LegacyCommand {
       promptMergeOptions: false,
       writeConfig: false,
       reset: false,
-      all: false
+      all: false,
     };
-    return switchAction(switchProps, checkoutProps).then(results => ({ ...results, lane, create, json }));
+    return switchAction(switchProps, checkoutProps).then((results) => ({ ...results, lane, create, json }));
   }
 
   report({
@@ -99,7 +99,7 @@ export default class Switch implements LegacyCommand {
     failedComponents,
     lane,
     create,
-    json
+    json,
   }: {
     components: ApplyVersionResults['components'];
     failedComponents: ApplyVersionResults['failedComponents'];
@@ -118,7 +118,7 @@ export default class Switch implements LegacyCommand {
       const title = 'the switch has been canceled on the following component(s)';
       const body = failedComponents
         .map(
-          failedComponent =>
+          (failedComponent) =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
         .join('\n');

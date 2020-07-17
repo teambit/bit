@@ -11,7 +11,7 @@ export default function buildInScope({
   scopePath,
   directory,
   keep,
-  noCache = false
+  noCache = false,
 }: {
   id: string;
   save?: boolean;
@@ -46,7 +46,7 @@ export default function buildInScope({
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (scopePath) return loadFromScope();
 
-  return loadFromConsumer().catch(err => {
+  return loadFromConsumer().catch((err) => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadFromScope(err);
   });

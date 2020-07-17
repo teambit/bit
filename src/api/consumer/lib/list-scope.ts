@@ -17,7 +17,7 @@ export async function listScope({
   showAll, // include nested
   showRemoteVersion,
   namespacesUsingWildcards,
-  strategiesNames
+  strategiesNames,
 }: {
   scopeName?: string;
   showAll?: boolean;
@@ -61,5 +61,5 @@ export async function getRemoteBitIdsByWildcards(idStr: string): Promise<BitId[]
   if (!listResult.length) {
     throw new NoIdMatchWildcard([idStr]);
   }
-  return listResult.map(result => result.id);
+  return listResult.map((result) => result.id);
 }

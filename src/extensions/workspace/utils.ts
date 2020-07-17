@@ -5,7 +5,7 @@ import { ResolvedComponent } from '../utils/resolved-component';
 
 export async function symlinkCapsulesInNodeModules(isolatedEnvs: ResolvedComponent[]) {
   await Promise.all(
-    isolatedEnvs.map(async e => {
+    isolatedEnvs.map(async (e) => {
       const componentPackageName = componentIdToPackageName(e.component.state._consumer);
       const linkPath = path.join(process.cwd(), 'node_modules', componentPackageName);
       await fs.mkdirp(path.dirname(linkPath));
@@ -16,7 +16,7 @@ export async function symlinkCapsulesInNodeModules(isolatedEnvs: ResolvedCompone
 
 export async function removeExistingLinksInNodeModules(isolatedEnvs: ResolvedComponent[]) {
   await Promise.all(
-    isolatedEnvs.map(async e => {
+    isolatedEnvs.map(async (e) => {
       const componentPackageName = componentIdToPackageName(e.component.state._consumer);
       try {
         await fs.unlink(path.join(process.cwd(), 'node_modules', componentPackageName));

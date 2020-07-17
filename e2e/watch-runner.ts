@@ -23,7 +23,7 @@ export default class WatchRunner {
       // this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath, detached: true });
       this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stdout.on('data', data => {
+      this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(STARTED_WATCHING_MSG)) {
           if (this.helper.debugMode) console.log('bit watch is up and running');
@@ -31,11 +31,11 @@ export default class WatchRunner {
         }
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stderr.on('data', data => {
+      this.watchProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
         reject(data);
       });
-      this.watchProcess.on('close', code => {
+      this.watchProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
       });
     });
@@ -50,7 +50,7 @@ export default class WatchRunner {
         reject(new Error(`watcher exceed the limit of ${timeoutAfter} ms, the message "${msg}" was not received`));
       }, timeoutAfter);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stdout.on('data', data => {
+      this.watchProcess.stdout.on('data', (data) => {
         if (data.includes(msg)) {
           clearTimeout(timer);
           resolve(data);

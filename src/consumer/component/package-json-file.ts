@@ -31,7 +31,7 @@ export default class PackageJsonFile {
     fileExist,
     workspaceDir,
     indent,
-    newline
+    newline,
   }: {
     filePath: PathOsBasedRelative;
     packageJsonObject?: Record<string, any>;
@@ -133,23 +133,23 @@ export default class PackageJsonFile {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.dependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.dependencies
+        ...component.testerPackageDependencies.dependencies,
       },
       devDependencies: {
         ...component.devPackageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.devDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.devDependencies
+        ...component.testerPackageDependencies.devDependencies,
       },
       peerDependencies: {
         ...component.peerPackageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.peerDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ...component.testerPackageDependencies.peerDependencies
+        ...component.testerPackageDependencies.peerDependencies,
       },
-      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
+      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };
     if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
@@ -161,7 +161,7 @@ export default class PackageJsonFile {
       path: this.filePath,
       content: this.packageJsonObject,
       indent: this.indent,
-      newline: this.newline
+      newline: this.newline,
     });
   }
 
@@ -182,8 +182,8 @@ export default class PackageJsonFile {
   }
 
   replaceDependencies(dependencies: Record<string, any>) {
-    Object.keys(dependencies).forEach(dependency => {
-      DEPENDENCIES_FIELDS.forEach(dependencyField => {
+    Object.keys(dependencies).forEach((dependency) => {
+      DEPENDENCIES_FIELDS.forEach((dependencyField) => {
         if (this.packageJsonObject[dependencyField] && this.packageJsonObject[dependencyField][dependency]) {
           this.packageJsonObject[dependencyField][dependency] = dependencies[dependency];
         }

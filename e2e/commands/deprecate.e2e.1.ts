@@ -3,7 +3,7 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
-describe('bit deprecate and undeprecate commands', function() {
+describe('bit deprecate and undeprecate commands', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

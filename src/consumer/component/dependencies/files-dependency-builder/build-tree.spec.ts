@@ -16,7 +16,7 @@ describe('buildTree', () => {
       filePaths,
       bindingPrefix: '@bit',
       visited,
-      resolveModulesConfig: undefined
+      resolveModulesConfig: undefined,
     };
     it('when no files are passed should return an empty tree', async () => {
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -122,9 +122,7 @@ describe('buildTree', () => {
         });
         it('should not recognize the cycle dependencies as link files', () => {
           const file = 'fixtures/build-tree/tree-shaking-cycle/foo.js';
-          expect(results.tree[file].files)
-            .to.be.an('array')
-            .and.have.lengthOf(1);
+          expect(results.tree[file].files).to.be.an('array').and.have.lengthOf(1);
           const indexDep = results.tree[file].files[0];
           expect(indexDep.file).to.equal('fixtures/build-tree/tree-shaking-cycle/index.js');
           expect(indexDep).to.not.have.property('isLink');
@@ -140,9 +138,7 @@ describe('buildTree', () => {
       });
       it('should not mark fileB as a link file', () => {
         const fileA = 'fixtures/build-tree/not-link-file/file-a.js';
-        expect(results.tree[fileA].files)
-          .to.be.an('array')
-          .with.lengthOf(1);
+        expect(results.tree[fileA].files).to.be.an('array').with.lengthOf(1);
         const fileBDep = results.tree[fileA].files[0];
         expect(fileBDep).to.not.have.property('isLink');
       });

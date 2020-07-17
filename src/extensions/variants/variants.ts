@@ -62,8 +62,8 @@ export class Variants {
       propagate: config.propagate ?? true,
       componentExtensions: extensions,
       componentWorkspaceMetaData: {
-        defaultScope
-      }
+        defaultScope,
+      },
     };
     // We cache this results since this is something with state (it has - hasChanged prop which should be consistent)
     this.componentsCache.set(componentId.toString(), result);

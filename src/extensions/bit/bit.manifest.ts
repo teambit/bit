@@ -13,5 +13,5 @@ export function registerCoreExtensions() {
 export default {
   name: 'bit',
   dependencies: manifests,
-  provider: provideBit
+  provider: provideBit,
 } as ExtensionManifest;

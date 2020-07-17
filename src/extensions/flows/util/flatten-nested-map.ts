@@ -19,7 +19,7 @@ export function flattenReplaySubject(toFlat: ReplaySubject<NetworkMessages> | Re
  * @param isRecursive should flatten recursively or 1 level
  */
 export function flattenNestedMap<N = any, F = any, T = any>(isRecursive = true) {
-  return flatMap(function(toFlat: N | ReplaySubject<FlowMessages<F, T>>) {
+  return flatMap(function (toFlat: N | ReplaySubject<FlowMessages<F, T>>) {
     return toFlat instanceof ReplaySubject && isRecursive ? flattenReplaySubject(toFlat) : toReplaySubject(toFlat);
   }) as any;
 }

@@ -44,7 +44,7 @@ export async function installPackages(
     installRootPackageJson,
     installPeerDependencies,
     installProdPackagesOnly,
-    verbose
+    verbose,
   });
 
   loader.stop();
@@ -53,7 +53,7 @@ export async function installPackages(
     results = [results];
   }
   if (!silentPackageManagerResult || verbose) {
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result) npmClient.printResults(result);
     });
   }
@@ -66,7 +66,7 @@ export async function installNpmPackagesForComponents({
   verbose = false,
   silentPackageManagerResult = false,
   installPeerDependencies = false,
-  installProdPackagesOnly = false
+  installProdPackagesOnly = false,
 }: {
   consumer: Consumer;
   basePath: string | null | undefined;
@@ -77,7 +77,7 @@ export async function installNpmPackagesForComponents({
   installProdPackagesOnly?: boolean;
 }): Promise<any> {
   const componentDirsRelative = getAllRootDirectoriesFor(componentsWithDependencies);
-  const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
+  const componentDirs = componentDirsRelative.map((dir) => (basePath ? path.join(basePath, dir) : dir));
   return installPackages(
     consumer,
     componentDirs,
@@ -95,17 +95,17 @@ export function getAllRootDirectoriesFor(
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
-    componentsWithDependencies.map(oneComponentWithDependencies => {
+    componentsWithDependencies.map((oneComponentWithDependencies) => {
       return oneComponentWithDependencies.component.dependenciesSavedAsComponents
         ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
         : [oneComponentWithDependencies.component];
     })
   );
 
-  const componentDirsRelative = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirsRelative = componentsWithDependenciesFlatten.map((component) => component.writtenPath);
   return R.uniq(componentDirsRelative);
 }
 
 async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {
-  return filterAsync(dirs, dir => fs.pathExists(path.join(dir, PACKAGE_JSON)));
+  return filterAsync(dirs, (dir) => fs.pathExists(path.join(dir, PACKAGE_JSON)));
 }

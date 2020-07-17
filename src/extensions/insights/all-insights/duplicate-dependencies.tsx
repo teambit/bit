@@ -32,7 +32,7 @@ export default class DuplicateDependencies implements Insight {
     if (!graph) {
       return {
         message: '',
-        data: undefined
+        data: undefined,
       };
     }
     const duplicates = graph.findDuplicateDependencies();
@@ -40,12 +40,12 @@ export default class DuplicateDependencies implements Insight {
     if (lenDependencies === 1) {
       return {
         message: `Found ${lenDependencies} duplicate dependency.`,
-        data: duplicates
+        data: duplicates,
       };
     }
     return {
       message: `Found ${lenDependencies} duplicate dependencies.`,
-      data: duplicates
+      data: duplicates,
     };
   }
 
@@ -56,7 +56,7 @@ export default class DuplicateDependencies implements Insight {
       formatted.push({
         dependencyId: dependency,
         latestVersion: depData.latestVersionId,
-        dependents
+        dependents,
       });
     }
     return formatted;
@@ -68,7 +68,7 @@ export default class DuplicateDependencies implements Insight {
       pVersion.immediateDependents.forEach((dependent: string) => {
         dependents.push({
           id: dependent,
-          usedVersion: pVersion.versionId
+          usedVersion: pVersion.versionId,
         });
       });
     });
@@ -78,14 +78,14 @@ export default class DuplicateDependencies implements Insight {
   _renderData(data: FormattedEntry[]) {
     const element = (
       <div>
-        {data.map(function(mainDependency) {
+        {data.map(function (mainDependency) {
           return (
             <div key={mainDependency.dependencyId}>
               <Text>dependency: {mainDependency.dependencyId}</Text>
               <Text>latest version: {mainDependency.latestVersion}</Text>
               <div>
                 <Text>dependents that dont use latest version:</Text>
-                {mainDependency.dependents.map(function(dependent) {
+                {mainDependency.dependents.map(function (dependent) {
                   return (
                     <div key={dependent.id}>
                       <Text>
@@ -110,10 +110,10 @@ export default class DuplicateDependencies implements Insight {
     const result: InsightResult = {
       metaData: {
         name: this.name,
-        description: this.description
+        description: this.description,
       },
       data: bareResult.data,
-      renderedData
+      renderedData,
     };
 
     if (bareResult.message) {

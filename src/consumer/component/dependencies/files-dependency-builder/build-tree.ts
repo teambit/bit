@@ -10,7 +10,7 @@ import {
   FileObject,
   ImportSpecifier,
   DependencyTreeParams,
-  ResolveModulesConfig
+  ResolveModulesConfig,
 } from './types/dependency-tree-type';
 import { PathOsBased } from '../../../../utils/path';
 import { MissingGroupItem, MissingHandler, FoundPackages } from './missing-handler';
@@ -33,7 +33,7 @@ interface SimpleGroupedDependencies {
  * @returns {Function} function which group the dependencies
  */
 const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
-  const grouped = R.groupBy(item => {
+  const grouped = R.groupBy((item) => {
     if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
       return 'bits';
     }
@@ -64,12 +64,12 @@ function groupDependencyList(list, componentDir: string, bindingPrefix: string):
     bits: [],
     packages: {},
     files: groups.files,
-    unidentifiedPackages: []
+    unidentifiedPackages: [],
   };
   const unidentifiedPackages: string[] = [];
   if (groups.packages) {
     const packages = {};
-    groups.packages.forEach(packagePath => {
+    groups.packages.forEach((packagePath) => {
       const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
@@ -79,7 +79,7 @@ function groupDependencyList(list, componentDir: string, bindingPrefix: string):
           resultGroups.bits.push(resolvedPackage);
         } else {
           const packageWithVersion = {
-            [resolvedPackage.name]: version
+            [resolvedPackage.name]: version,
           };
           Object.assign(packages, packageWithVersion);
         }
@@ -88,7 +88,7 @@ function groupDependencyList(list, componentDir: string, bindingPrefix: string):
     resultGroups.packages = packages;
   }
   if (groups.bits) {
-    groups.bits.forEach(packagePath => {
+    groups.bits.forEach((packagePath) => {
       const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
@@ -115,7 +115,7 @@ interface GroupedDependenciesTree {
  */
 function groupDependencyTree(tree: any, componentDir: string, bindingPrefix: string): GroupedDependenciesTree {
   const result = {};
-  Object.keys(tree).forEach(key => {
+  Object.keys(tree).forEach((key) => {
     if (tree[key] && !R.isEmpty(tree[key])) {
       result[key] = groupDependencyList(tree[key], componentDir, bindingPrefix);
     } else {
@@ -140,21 +140,21 @@ function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseD
   Object.keys(tree).forEach((filePath: string) => {
     const treeFiles = tree[filePath].files;
     if (!treeFiles || !treeFiles.length) return; // file has no dependency
-    const mainFilePathMap = pathMap.find(file => file.file === filePath);
+    const mainFilePathMap = pathMap.find((file) => file.file === filePath);
     if (!mainFilePathMap) throw new Error(`updateTreeWithPathMap: PathMap is missing for ${filePath}`);
     // a file might have a cycle dependency with itself, remove it from the dependencies.
     const files: FileObject[] = treeFiles
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter(dependency => dependency !== filePath)
+      .filter((dependency) => dependency !== filePath)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .map((dependency: string) => {
-        const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.resolvedDep === dependency);
+        const dependencyPathMap = mainFilePathMap.dependencies.find((file) => file.resolvedDep === dependency);
         if (!dependencyPathMap)
           throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${dependency}`);
         const fileObject: FileObject = {
           file: dependency,
           importSource: dependencyPathMap.importSource,
-          isCustomResolveUsed: dependencyPathMap.isCustomResolveUsed
+          isCustomResolveUsed: dependencyPathMap.isCustomResolveUsed,
         };
         if (dependencyPathMap.linkFile) {
           fileObject.isLink = true;
@@ -162,9 +162,9 @@ function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseD
           return fileObject;
         }
         if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
-          const depImportSpecifiers = dependencyPathMap.importSpecifiers.map(importSpecifier => {
+          const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
             return {
-              mainFile: importSpecifier
+              mainFile: importSpecifier,
             };
           });
           fileObject.importSpecifiers = depImportSpecifiers;
@@ -185,12 +185,12 @@ function getResolveConfigAbsolute(
   if (!resolveConfig) return resolveConfig;
   const resolveConfigAbsolute = R.clone(resolveConfig);
   if (resolveConfig.modulesDirectories) {
-    resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map(moduleDirectory => {
+    resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map((moduleDirectory) => {
       return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(workspacePath, moduleDirectory);
     });
   }
   if (resolveConfigAbsolute.aliases) {
-    Object.keys(resolveConfigAbsolute.aliases).forEach(alias => {
+    Object.keys(resolveConfigAbsolute.aliases).forEach((alias) => {
       if (!path.isAbsolute(resolveConfigAbsolute.aliases[alias])) {
         resolveConfigAbsolute.aliases[alias] = path.join(workspacePath, resolveConfigAbsolute.aliases[alias]);
       }
@@ -202,15 +202,15 @@ function getResolveConfigAbsolute(
 function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingGroups: MissingGroupItem[], tree: Tree) {
   if (R.isEmpty(foundPackages.bits) && R.isEmpty(foundPackages.packages)) return;
   // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
-  Object.keys(foundPackages.packages).forEach(pkg => {
+  Object.keys(foundPackages.packages).forEach((pkg) => {
     // locate package in groups(contains missing)
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
-        fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
+        fileDep.packages = fileDep.packages.filter((packageName) => packageName !== pkg);
         set(tree[fileDep.originFile], ['packages', pkg], foundPackages.packages[pkg]);
       }
       if (fileDep.bits && fileDep.bits.includes(pkg)) {
-        fileDep.bits = fileDep.bits.filter(packageName => packageName !== pkg);
+        fileDep.bits = fileDep.bits.filter((packageName) => packageName !== pkg);
         if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
         if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
         // @ts-ignore
@@ -218,13 +218,13 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
       }
     });
   });
-  foundPackages.bits.forEach(component => {
+  foundPackages.bits.forEach((component) => {
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (
         fileDep.bits &&
         ((component.fullPath && fileDep.bits.includes(component.fullPath)) || fileDep.bits.includes(component.name))
       ) {
-        fileDep.bits = fileDep.bits.filter(existComponent => {
+        fileDep.bits = fileDep.bits.filter((existComponent) => {
           return existComponent !== component.fullPath && existComponent !== component.name;
         });
         if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
@@ -238,7 +238,7 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
 
 function mergeMissingToTree(missingGroups, tree: Tree) {
   if (R.isEmpty(missingGroups)) return;
-  missingGroups.forEach(missing => {
+  missingGroups.forEach((missing) => {
     const missingCloned = R.clone(missing);
     delete missingCloned.originFile;
     if (tree[missing.originFile]) tree[missing.originFile].missing = missingCloned;
@@ -248,7 +248,7 @@ function mergeMissingToTree(missingGroups, tree: Tree) {
 
 function mergeErrorsToTree(baseDir, errors, tree: Tree) {
   if (R.isEmpty(errors)) return;
-  Object.keys(errors).forEach(file => {
+  Object.keys(errors).forEach((file) => {
     if (tree[file]) tree[file].error = errors[file];
     else tree[file] = { error: errors[file] };
   });
@@ -268,7 +268,7 @@ export async function getDependencyTree({
   bindingPrefix,
   resolveModulesConfig,
   visited = {},
-  cacheProjectAst
+  cacheProjectAst,
 }: DependencyTreeParams): Promise<{ tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
@@ -279,11 +279,11 @@ export async function getDependencyTree({
     visited,
     nonExistent: [],
     resolveConfig: resolveConfigAbsolute,
-    cacheProjectAst
+    cacheProjectAst,
   };
   // This is important because without this, madge won't know to resolve files if we run the
   // CMD not from the root dir
-  const fullPaths = filePaths.map(filePath => {
+  const fullPaths = filePaths.map((filePath) => {
     if (filePath.startsWith(componentDir)) {
       return filePath;
     }

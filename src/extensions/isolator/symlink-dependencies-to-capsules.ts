@@ -10,7 +10,7 @@ import logger from '../../logger/logger';
 
 export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsuleList: CapsuleList) {
   await Promise.all(
-    capsules.map(capsule => {
+    capsules.map((capsule) => {
       // @ts-ignore
       return symlinkComponent(capsule.component, capsuleList);
     })
@@ -37,5 +37,5 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
     const dest = path.join(componentCapsule.wrkDir, 'node_modules', packageName);
     return new Symlink(devCapsulePath, dest, component.id);
   });
-  await Promise.all(symlinks.map(symlink => symlink && symlink.write()));
+  await Promise.all(symlinks.map((symlink) => symlink && symlink.write()));
 }

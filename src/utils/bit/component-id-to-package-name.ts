@@ -14,7 +14,7 @@ export default function componentIdToPackageName({
   defaultScope,
   withPrefix = true,
   extensions,
-  isDependency = false
+  isDependency = false,
 }: {
   id: BitId;
   bindingPrefix: string | null | undefined;
@@ -47,7 +47,7 @@ function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDepe
   if (isDependency) {
     const dependencyResolverExt = extensions.findExtension(Extensions.dependencyResolver);
     if (!dependencyResolverExt || !dependencyResolverExt.data.dependencies) return null;
-    const dep = dependencyResolverExt.data.dependencies.find(d => d.componentId.isEqual(id));
+    const dep = dependencyResolverExt.data.dependencies.find((d) => d.componentId.isEqual(id));
     return dep ? dep.packageName : null;
   }
   const pkgExt = extensions.findExtension(Extensions.pkg);

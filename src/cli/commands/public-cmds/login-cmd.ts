@@ -16,8 +16,8 @@ export default class Login implements LegacyCommand {
     [
       '',
       'machine-name <string>',
-      'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)'
-    ]
+      'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)',
+    ],
   ] as CommandOptions;
   action(
     [], // eslint-disable-line no-empty-pattern
@@ -26,7 +26,7 @@ export default class Login implements LegacyCommand {
       suppressBrowserLaunch = false,
       npmrcPath,
       skipRegistryConfig = false,
-      machineName
+      machineName,
     }: {
       port: string;
       suppressBrowserLaunch?: boolean;
@@ -35,9 +35,9 @@ export default class Login implements LegacyCommand {
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(results => ({
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then((results) => ({
       ...results,
-      skipRegistryConfig
+      skipRegistryConfig,
     }));
   }
   report({
@@ -45,7 +45,7 @@ export default class Login implements LegacyCommand {
     username,
     npmrcPath,
     skipRegistryConfig,
-    writeToNpmrcError
+    writeToNpmrcError,
   }: {
     isAlreadyLoggedIn: boolean;
     username: string;

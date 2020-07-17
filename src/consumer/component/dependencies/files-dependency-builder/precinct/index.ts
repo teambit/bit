@@ -146,10 +146,10 @@ function assign(o1, o2) {
  * @param {Boolean} [options.includeCore=true] - Whether or not to include core modules in the dependency list
  * @return {String[]}
  */
-precinct.paperwork = function(filename, options) {
+precinct.paperwork = function (filename, options) {
   options = assign(
     {
-      includeCore: true
+      includeCore: true,
     },
     options || {}
   );
@@ -195,7 +195,7 @@ precinct.paperwork = function(filename, options) {
 
   if (deps && !options.includeCore) {
     if (Array.isArray(deps)) {
-      return deps.filter(function(d) {
+      return deps.filter(function (d) {
         return !natives[d];
       });
     }

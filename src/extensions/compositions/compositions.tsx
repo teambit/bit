@@ -35,7 +35,7 @@ export function Compositions() {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.legacyComponentId.name }
+    variables: { id: component.id.legacyComponentId.name },
   });
   const properties = R.path(['workspace', 'getDocs', 'properties'], data);
 

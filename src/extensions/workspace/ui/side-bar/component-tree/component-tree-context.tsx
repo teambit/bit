@@ -7,13 +7,13 @@ export interface ComponentTreeContextType {
 
 export const ComponentTreeContext = createContext<ComponentTreeContextType>({
   onSelect: () => {},
-  selected: undefined
+  selected: undefined,
 });
 
 export function ComponentTreeContextProvider({
   onSelect,
   selected,
-  children
+  children,
 }: ComponentTreeContextType & { children: ReactNode }) {
   const context = useMemo(() => ({ onSelect, selected }), [onSelect, selected]);
 

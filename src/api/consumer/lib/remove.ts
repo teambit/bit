@@ -16,7 +16,7 @@ export default (async function remove({
   remote,
   track,
   deleteFiles,
-  lane
+  lane,
 }: {
   ids: string[];
   force: boolean;
@@ -39,7 +39,7 @@ export default (async function remove({
       force,
       remote,
       track,
-      deleteFiles
+      deleteFiles,
     });
   }
   if (consumer) await consumer.onDestroy();
@@ -53,20 +53,20 @@ async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promis
     if (!bitIds.length) throw new NoIdMatchWildcard(ids);
     return bitIds;
   }
-  return ids.map(id => consumer.getParsedId(id));
+  return ids.map((id) => consumer.getParsedId(id));
 }
 
 async function getRemoteBitIdsToRemove(ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {
     return getIdsFromRemoteByWildcards(ids);
   }
-  return ids.map(id => BitId.parse(id, true));
+  return ids.map((id) => BitId.parse(id, true));
 }
 
 async function getIdsFromRemoteByWildcards(ids: string[]): Promise<BitId[]> {
   const remoteIds = await Promise.all(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    ids.map(id => {
+    ids.map((id) => {
       if (hasWildcard(id)) {
         return getRemoteBitIdsByWildcards(id);
       }

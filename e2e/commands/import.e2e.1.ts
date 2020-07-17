@@ -22,7 +22,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-string'));
 
-describe('bit import', function() {
+describe('bit import', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -80,7 +80,7 @@ describe('bit import', function() {
         helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
           t: 'src/imprel.spec.js',
           m: 'src/imprel.js',
-          i: 'imprel/imprel'
+          i: 'imprel/imprel',
         });
         helper.command.tagComponent('imprel/imprel');
         helper.command.exportComponent('imprel/imprel');
@@ -391,7 +391,7 @@ describe('bit import', function() {
         helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
           t: 'src/imprel.spec.js',
           m: 'src/imprel.js',
-          i: 'imprel/impreldist'
+          i: 'imprel/impreldist',
         });
         helper.command.tagComponent('imprel/impreldist');
         helper.command.exportComponent('imprel/impreldist');
@@ -410,7 +410,7 @@ describe('bit import', function() {
           expect(localConsumerFiles).to.include(path.join('src', 'utils', 'myUtil.js'));
         });
         it('should not write the dist files', () => {
-          localConsumerFiles.forEach(file => {
+          localConsumerFiles.forEach((file) => {
             expect(file.startsWith('components')).to.be.false;
             expect(file.endsWith('.map.js')).to.be.false;
           });
@@ -533,7 +533,7 @@ describe('bit import', function() {
       helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
         t: 'src/imprel.spec.js',
         m: 'src/imprel.js',
-        i: 'imprel/imprel'
+        i: 'imprel/imprel',
       });
       helper.command.tagComponent('imprel/imprel');
       helper.command.deprecateComponent('imprel/imprel');
@@ -574,7 +574,7 @@ describe('bit import', function() {
       expect(localConsumerFiles).not.to.include('foo.js'); // it shouldn't remove 'bar'.
     });
     it('should not write any file into components directory', () => {
-      localConsumerFiles.forEach(fileName => {
+      localConsumerFiles.forEach((fileName) => {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
@@ -584,7 +584,7 @@ describe('bit import', function() {
         localConsumerFiles = helper.fs.getConsumerFiles();
       });
       it('should not create an "undefined" package on node_modules', () => {
-        localConsumerFiles.forEach(fileName => {
+        localConsumerFiles.forEach((fileName) => {
           expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
         });
       });
@@ -731,7 +731,7 @@ describe('bit import', function() {
         expect(packageJsonContent).to.deep.include({
           name: `@bit/${helper.scopes.remote}.comp.with-deps`,
           version: '0.0.1',
-          main: 'with-deps.js'
+          main: 'with-deps.js',
         });
         expect(packageJsonContent.dependencies['lodash.isstring']).to.have.string('4.0.0'); // it can be ^4.0.0 or 4.0.0 depends on npm version installed
       });
@@ -751,7 +751,7 @@ describe('bit import', function() {
         expect(packageJsonContent).to.deep.include({
           name: `@bit/${helper.scopes.remote}.global.simple`,
           version: '0.0.1',
-          main: 'simple.js'
+          main: 'simple.js',
         });
         expect(packageJsonContent.dependencies['lodash.isboolean']).to.have.string('3.0.0');
       });
@@ -845,7 +845,7 @@ describe('bit import', function() {
       expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should not generate index.js files because package.json main already takes care of finding the entry-point', () => {
-      localConsumerFiles.forEach(file => expect(file).to.not.include('index.js'));
+      localConsumerFiles.forEach((file) => expect(file).to.not.include('index.js'));
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -878,7 +878,7 @@ describe('bit import', function() {
           localConsumerFiles = helper.fs.getConsumerFiles();
         });
         it('should not write the components files', () => {
-          localConsumerFiles.forEach(file => {
+          localConsumerFiles.forEach((file) => {
             expect(file).to.not.startsWith('components');
           });
         });
@@ -1179,7 +1179,7 @@ describe('bit import', function() {
       });
       it('should not write anything to the dist folder of the main component', () => {
         const distFolder = path.join('components', 'bar', 'foo', 'dist');
-        localConsumerFiles.forEach(file => expect(file).to.not.have.string(distFolder));
+        localConsumerFiles.forEach((file) => expect(file).to.not.have.string(distFolder));
       });
       it('main property of package.json file should point to the source and not to the dist', () => {
         const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components', 'bar', 'foo'));
@@ -1699,7 +1699,7 @@ console.log(barFoo.default());`;
       helper.command.importComponent('utils/is-string');
       localConsumerFiles = glob
         .sync(path.normalize('**/*.js'), { cwd: helper.scopes.localPath })
-        .map(x => path.normalize(x));
+        .map((x) => path.normalize(x));
     });
     it('should update the author original component successfully', () => {
       const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
@@ -1708,7 +1708,7 @@ console.log(barFoo.default());`;
       expect(result.trim()).to.equal('got is-type and got is-string v2');
     });
     it('should not write any file into components directory', () => {
-      localConsumerFiles.forEach(fileName => {
+      localConsumerFiles.forEach((fileName) => {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
@@ -2008,7 +2008,7 @@ console.log(barFoo.default());`;
         const packageJson = helper.packageJson.read();
         packageJson.workspaces = {
           packages: [],
-          nohoist: []
+          nohoist: [],
         };
         helper.packageJson.write(packageJson);
         helper.command.importComponent('comp/with-deps');
@@ -2329,16 +2329,12 @@ console.log(barFoo.default());`;
     it('bit show of the remote scope should show both versions of the dependent', () => {
       const show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-type --remote --dependents`);
       expect(show.dependentsInfo).to.have.lengthOf(3);
-      const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
-      const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
+      const barFooV1 = show.dependentsInfo.find((d) => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
+      const barFooV2 = show.dependentsInfo.find((d) => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
       expect(barFooV1).to.not.be.undefined;
       expect(barFooV2).to.not.be.undefined;
-      expect(barFooV1)
-        .to.have.property('depth')
-        .that.equals(2);
-      expect(barFooV2)
-        .to.have.property('depth')
-        .that.equals(1);
+      expect(barFooV1).to.have.property('depth').that.equals(2);
+      expect(barFooV2).to.have.property('depth').that.equals(1);
     });
     describe('import the component with "--dependents" flag', () => {
       before(() => {
@@ -2352,16 +2348,12 @@ console.log(barFoo.default());`;
       it('bit show of the local scope show both versions of the dependent', () => {
         const show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-type --dependents`);
         expect(show.dependentsInfo).to.have.lengthOf(3);
-        const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
-        const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
+        const barFooV1 = show.dependentsInfo.find((d) => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
+        const barFooV2 = show.dependentsInfo.find((d) => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
         expect(barFooV1).to.not.be.undefined;
         expect(barFooV2).to.not.be.undefined;
-        expect(barFooV1)
-          .to.have.property('depth')
-          .that.equals(2);
-        expect(barFooV2)
-          .to.have.property('depth')
-          .that.equals(1);
+        expect(barFooV1).to.have.property('depth').that.equals(2);
+        expect(barFooV2).to.have.property('depth').that.equals(1);
       });
     });
   });

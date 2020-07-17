@@ -4,7 +4,7 @@ import OutdatedIndexJson from '../../src/scope/exceptions/outdated-index-json';
 
 chai.use(require('chai-fs'));
 
-describe('scope components index mechanism', function() {
+describe('scope components index mechanism', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -38,12 +38,12 @@ describe('scope components index mechanism', function() {
       });
       it('should create a new record with the new scope', () => {
         const indexJson = helper.general.getComponentsFromIndexJson();
-        const scopes = indexJson.map(item => item.id.scope);
+        const scopes = indexJson.map((item) => item.id.scope);
         expect(scopes).to.contain(helper.scopes.remote);
       });
       it('should change the previous record to be a symlink', () => {
         const indexJson = helper.general.getComponentsFromIndexJson();
-        const indexItem = indexJson.find(item => !item.id.scope);
+        const indexItem = indexJson.find((item) => !item.id.scope);
         expect(indexItem.isSymlink).to.be.true;
       });
       it('bit list should show only one component', () => {

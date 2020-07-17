@@ -41,7 +41,7 @@ export class StencilEnv implements Environment {
    */
   getCompiler(): Compiler {
     return this.stencil.createCompiler({
-      module: 'esm'
+      module: 'esm',
     });
   }
 

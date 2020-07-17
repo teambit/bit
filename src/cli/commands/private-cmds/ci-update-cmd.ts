@@ -15,7 +15,7 @@ export default class CiUpdate implements LegacyCommand {
     ['d', 'directory [file]', 'directory to run ci-update'],
     ['k', 'keep', 'keep test environment after run (default false)'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],
-    ['o', 'output [file]', 'save ci results to file system']
+    ['o', 'output [file]', 'save ci results to file system'],
   ] as CommandOptions;
   private = true;
 
@@ -26,7 +26,7 @@ export default class CiUpdate implements LegacyCommand {
       directory,
       output,
       keep = false,
-      noCache = false
+      noCache = false,
     }: {
       // verbose: boolean | null | undefined,
       directory?: string;
@@ -50,7 +50,7 @@ export default class CiUpdate implements LegacyCommand {
     specsResults,
     dists,
     output,
-    directory
+    directory,
   }: {
     specsResults: SpecsResults | undefined;
     dists: Dists;

@@ -22,10 +22,10 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
     // populate doclets array
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
+    docs.forEach((doc) => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
     logger.silly(`failed parsing docs using on path ${filePath} with error`, e);
   }
-  return doclets.filter(doclet => doclet.access === 'public');
+  return doclets.filter((doclet) => doclet.access === 'public');
 }

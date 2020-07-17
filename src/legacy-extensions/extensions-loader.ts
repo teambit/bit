@@ -20,7 +20,7 @@ const _getGlobalBitJson = async (throws: boolean) => {
     fs
       .readJson(globalBitJsonPath, { throws })
       // Implementing the catch my self since the throws: false not really working
-      .catch(e => {
+      .catch((e) => {
         if (throws) {
           throw e;
         }
@@ -46,7 +46,7 @@ const _loadExtension = (consumerPath: string | null | undefined, scopePath: stri
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options: rawConfig.options,
     consumerPath,
-    scopePath
+    scopePath,
   };
   return Extension.load(loadArgs);
 };

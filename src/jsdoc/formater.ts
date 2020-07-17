@@ -11,7 +11,7 @@ export default function format(doc: Doclet): string {
 
   if (doc.args && doc.args.length) {
     args = doc.args
-      .map(arg => {
+      .map((arg) => {
         let formattedParam = `${arg.name}`;
         if (arg.type) {
           formattedParam += ` (${arg.type})`;

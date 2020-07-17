@@ -30,7 +30,7 @@ export default class UnmergedComponents {
     let unmerged: UnmergedComponent[];
     try {
       const fileContent = await fs.readJson(filePath);
-      unmerged = fileContent.map(item => ({ ...item, head: Ref.from(item.head) }));
+      unmerged = fileContent.map((item) => ({ ...item, head: Ref.from(item.head) }));
     } catch (err) {
       if (err.code === 'ENOENT') {
         unmerged = [];
@@ -52,15 +52,15 @@ export default class UnmergedComponents {
   }
 
   getEntry(componentName: string): UnmergedComponent | undefined {
-    return this.unmerged.find(u => u.id.name === componentName);
+    return this.unmerged.find((u) => u.id.name === componentName);
   }
 
   getResolvedComponents() {
-    return this.unmerged.filter(u => u.resolved);
+    return this.unmerged.filter((u) => u.resolved);
   }
 
   getUnresolvedComponents() {
-    return this.unmerged.filter(u => !u.resolved);
+    return this.unmerged.filter((u) => !u.resolved);
   }
 
   getComponents() {
@@ -81,7 +81,7 @@ export default class UnmergedComponents {
   }
 
   toObject() {
-    return this.unmerged.map(item => ({ ...item, head: item.head.toString() }));
+    return this.unmerged.map((item) => ({ ...item, head: item.head.toString() }));
   }
 
   static buildSnapMessage(unmergedComponent: UnmergedComponent): string {

@@ -24,7 +24,7 @@ async function initializeIndex(scopePath: string): Promise<any> {
     const indexOptions = {
       indexPath: getIndexPath(scopePath),
       logLevel,
-      stopwords: []
+      stopwords: [],
     };
 
     index = new Promise((resolve, reject) => {
@@ -41,5 +41,5 @@ async function initializeIndex(scopePath: string): Promise<any> {
 module.exports = {
   deleteDb,
   getIndexPath,
-  initializeIndex
+  initializeIndex,
 };

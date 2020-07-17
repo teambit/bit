@@ -18,7 +18,7 @@ export default {
   },
   name,
   dependencies: [CLIExtension, WorkspaceExt, Environments],
-  provider: provideCompile
+  provider: provideCompile,
 } as ExtensionManifest;
 
 export type CompileDeps = [CLIExtension, Workspace, Environments];

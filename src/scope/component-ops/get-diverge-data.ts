@@ -49,12 +49,12 @@ export async function getDivergeData(
       return;
     }
     if (!isLocal && !commonSnapBeforeDiverge) {
-      const snapExistLocally = snapsOnLocal.find(snap => snap.isEqual(version.hash()));
+      const snapExistLocally = snapsOnLocal.find((snap) => snap.isEqual(version.hash()));
       if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
     }
     snaps.push(version.hash());
     await Promise.all(
-      version.parents.map(async parent => {
+      version.parents.map(async (parent) => {
         const parentVersion = (await parent.load(repo)) as Version;
         if (parentVersion) {
           await addParentsRecursively(parentVersion, snaps, isLocal);

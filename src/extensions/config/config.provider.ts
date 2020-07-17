@@ -3,7 +3,7 @@ import { Harmony } from '@teambit/harmony';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction,
-  WorkspaceConfigIsExistFunction
+  WorkspaceConfigIsExistFunction,
 } from '../../consumer/config/workspace-config';
 import { Config } from './config';
 import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from '../../consumer/config';
@@ -27,7 +27,7 @@ export default async function provideConfig(_deps, _config, _slots, harmony: Har
   // TODO: change once config become maybe
   if (config.extensions) {
     // Send all configs to harmony
-    config?.extensions.forEach(extension => {
+    config?.extensions.forEach((extension) => {
       harmony.config.set(extension.stringId, extension.config);
     });
   }
@@ -80,7 +80,7 @@ function onLegacyWorkspaceEnsure(): WorkspaceConfigEnsureFunction {
       workspaceConfigProps = transformLegacyPropsToExtensions(legacyWorkspaceConfigProps);
     }
     const legacyInitProps: LegacyInitProps = {
-      standAlone
+      standAlone,
     };
     const config = await Config.ensureWorkspace(dirPath, workspaceConfigProps, legacyInitProps);
     const workspaceConfig = config.config;

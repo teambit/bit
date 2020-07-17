@@ -39,5 +39,5 @@ export {
   CyclicDependencies,
   InvalidIndexJson,
   OutdatedIndexJson,
-  HeadNotFound
+  HeadNotFound,
 };

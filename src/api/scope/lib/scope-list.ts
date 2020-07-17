@@ -7,7 +7,7 @@ export default function list(
   namespacesUsingWildcards?: string,
   loadScopeFromCache = true
 ): Promise<ListScopeResult[]> {
-  return loadScope(path, loadScopeFromCache).then(scope =>
+  return loadScope(path, loadScopeFromCache).then((scope) =>
     ComponentsList.listLocalScope(scope, namespacesUsingWildcards)
   );
 }

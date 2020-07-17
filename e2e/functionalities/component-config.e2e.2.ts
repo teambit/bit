@@ -5,7 +5,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe('component config', function() {
+describe('component config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -73,7 +73,7 @@ describe('component config', function() {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
           const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           packageJson.bit.env = {
-            compiler: 'my-scope/compiler/my-compiler'
+            compiler: 'my-scope/compiler/my-compiler',
           };
           helper.packageJson.write(packageJson, componentDir);
         });
@@ -89,9 +89,9 @@ describe('component config', function() {
           const overrides = {
             'bar/*': {
               env: {
-                compiler: 'bit.env/my-workspace-compiler@0.0.1'
-              }
-            }
+                compiler: 'bit.env/my-workspace-compiler@0.0.1',
+              },
+            },
           };
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
           helper.bitJson.addOverrides(overrides);
@@ -100,7 +100,7 @@ describe('component config', function() {
           before(() => {
             const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
             packageJson.bit.env = {
-              compiler: '-'
+              compiler: '-',
             };
             helper.packageJson.write(packageJson, componentDir);
           });
@@ -142,12 +142,12 @@ describe('component config', function() {
       const overrides = {
         'bar/foo': {
           dependencies: {
-            chai: '-'
+            chai: '-',
           },
           peerDependencies: {
-            chai: '+'
-          }
-        }
+            chai: '+',
+          },
+        },
       };
       helper.bitJson.addOverrides(overrides);
       helper.command.tagAllComponents();

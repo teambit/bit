@@ -36,7 +36,7 @@ export class ExtensionDataEntry {
   }
 
   clone(): ExtensionDataEntry {
-    const clonedArtifacts = this.artifacts.map(artifact => {
+    const clonedArtifacts = this.artifacts.map((artifact) => {
       return artifact instanceof Artifact ? artifact.clone() : artifact;
     });
     return new ExtensionDataEntry(
@@ -56,13 +56,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     ExtensionDataList.coreExtensionsNames.set(name, '');
   }
   static registerManyCoreExtensionNames(names: string[]) {
-    names.forEach(name => {
+    names.forEach((name) => {
       ExtensionDataList.coreExtensionsNames.set(name, '');
     });
   }
 
   get ids(): string[] {
-    const list = this.map(entry => entry.stringId);
+    const list = this.map((entry) => entry.stringId);
     return list;
   }
 
@@ -70,7 +70,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * returns only new 3rd party extension ids, not core, nor legacy.
    */
   get extensionsBitIds(): BitIds {
-    const bitIds = this.filter(entry => entry.extensionId).map(entry => entry.extensionId) as BitId[];
+    const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
     return BitIds.fromArray(bitIds);
   }
 
@@ -78,7 +78,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     if (ExtensionDataList.coreExtensionsNames.has(extensionId)) {
       return this.findCoreExtension(extensionId);
     }
-    return this.find(extEntry => {
+    return this.find((extEntry) => {
       if (ignoreVersion && ignoreScope) {
         return extEntry.extensionId?.toStringWithoutScopeAndVersion() === extensionId;
       }
@@ -93,12 +93,12 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   findCoreExtension(extensionId: string): ExtensionDataEntry | undefined {
-    return this.find(extEntry => extEntry.name === extensionId);
+    return this.find((extEntry) => extEntry.name === extensionId);
   }
 
   remove(id: BitId) {
     return ExtensionDataList.fromArray(
-      this.filter(entry => {
+      this.filter((entry) => {
         return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
       })
     );
@@ -106,17 +106,17 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigObject() {
     const res = {};
-    this.forEach(entry => (res[entry.stringId] = entry.config));
+    this.forEach((entry) => (res[entry.stringId] = entry.config));
     return res;
   }
 
   clone(): ExtensionDataList {
-    const extensionDataEntries = this.map(extensionData => extensionData.clone());
+    const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     return new ExtensionDataList(...extensionDataEntries);
   }
 
   _filterLegacy(): ExtensionDataList {
-    return ExtensionDataList.fromArray(this.filter(ext => !ext.isLegacy));
+    return ExtensionDataList.fromArray(this.filter((ext) => !ext.isLegacy));
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
@@ -155,7 +155,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * @memberof ExtensionDataList
    */
   static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
-    const objectsList = list.map(extensions => extensions.toConfigObject());
+    const objectsList = list.map((extensions) => extensions.toConfigObject());
     const merged = R.mergeAll(objectsList);
     return ExtensionDataList.fromConfigObject(merged);
   }

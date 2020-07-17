@@ -35,7 +35,7 @@ export async function getManipulateDirForExistingComponents(
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
   const componentMap: ComponentMap | undefined = consumer.bitMap.getComponentIfExist(id, {
-    ignoreVersion: true
+    ignoreVersion: true,
   });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
   if (!version) {
@@ -48,12 +48,12 @@ export async function getManipulateDirForExistingComponents(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
-  dependencies.forEach(dependency => {
+  dependencies.forEach((dependency) => {
     const depComponentMap: ComponentMap | undefined = getDependencyComponentMap(consumer.bitMap, dependency.id);
     const manipulateDirDep: ManipulateDirItem = {
       id: dependency.id,
       originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : undefined,
-      wrapDir: depComponentMap ? depComponentMap.wrapDir : undefined
+      wrapDir: depComponentMap ? depComponentMap.wrapDir : undefined,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     manipulateDirData.push(manipulateDirDep);
@@ -72,7 +72,7 @@ export async function getManipulateDirWhenImportingComponents(
   repository: Repository
 ): Promise<ManipulateDirItem[]> {
   const nonDependencies = BitIds.fromArray(
-    versionsDependencies.map(versionDependency => versionDependency.component.id)
+    versionsDependencies.map((versionDependency) => versionDependency.component.id)
   );
   const manipulateDirDataP = versionsDependencies.map(async (versionDependency: VersionDependencies) => {
     const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
@@ -87,7 +87,7 @@ export async function getManipulateDirWhenImportingComponents(
     const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
     // a component might be a dependency and directly imported at the same time, in which case,
     // it should be considered as imported, not nested
-    const manipulateDirDependenciesOnly = manipulateDirDependencies.filter(m => !nonDependencies.has(m.id));
+    const manipulateDirDependenciesOnly = manipulateDirDependencies.filter((m) => !nonDependencies.has(m.id));
     return [manipulateDirComponent, ...manipulateDirDependenciesOnly];
   });
   const manipulateDirData = await Promise.all(manipulateDirDataP);
@@ -113,7 +113,7 @@ export function getManipulateDirForComponentWithDependencies(
   componentWithDependencies: ComponentWithDependencies
 ): ManipulateDirItem[] {
   const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
-  return allComponents.map(component => getManipulateDirForConsumerComponent(component));
+  return allComponents.map((component) => getManipulateDirForConsumerComponent(component));
 }
 
 export function revertDirManipulationForPath(
@@ -135,7 +135,7 @@ export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: PathLinu
  * find a shared directory among the files of the main component and its dependencies
  */
 function calculateOriginallySharedDirForVersion(version: Version): PathLinux | undefined {
-  const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
+  const filePaths = version.files.map((file) => pathNormalizeToLinux(file.relativePath));
   const allDependencies = new Dependencies(version.getAllDependencies());
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
   return _calculateSharedDir(filePaths, allDependencies, overridesDependenciesFiles);
@@ -143,7 +143,7 @@ function calculateOriginallySharedDirForVersion(version: Version): PathLinux | u
 
 function calculateOriginallySharedDirForConsumerComponent(component: Component): PathLinux | undefined {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const filePaths = component.files.map(file => pathNormalizeToLinux(file.relative));
+  const filePaths = component.files.map((file) => pathNormalizeToLinux(file.relative));
   const allDependencies = new Dependencies(component.getAllDependencies());
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(component.overrides);
   return _calculateSharedDir(filePaths, allDependencies, overridesDependenciesFiles);
@@ -161,7 +161,7 @@ function _calculateSharedDir(
   if (!sharedStart || !sharedStart.includes(pathSep)) return undefined;
   const sharedStartDirectories = sharedStart.split(pathSep);
   sharedStartDirectories.pop(); // the sharedStart ended with a slash, remove it.
-  if (allPaths.some(p => p.replace(sharedStart, '') === PACKAGE_JSON)) {
+  if (allPaths.some((p) => p.replace(sharedStart, '') === PACKAGE_JSON)) {
     // if package.json is located in an inside dir, don't consider that dir as a sharedDir, we
     // must keep this directory in order to not collide with the generated package.json.
     sharedStartDirectories.pop();
@@ -184,8 +184,8 @@ function isWrapperDirNeeded(version: Version) {
   const allDependencies = new Dependencies(version.getAllDependencies());
   const dependenciesSourcePaths = allDependencies.getSourcesPaths();
   return (
-    version.files.some(file => file.relativePath === PACKAGE_JSON) ||
-    dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
+    version.files.some((file) => file.relativePath === PACKAGE_JSON) ||
+    dependenciesSourcePaths.some((dependencyPath) => dependencyPath === PACKAGE_JSON)
   );
 }
 
@@ -194,8 +194,8 @@ function isWrapperDirNeededForConsumerComponent(component: Component) {
   const dependenciesSourcePaths = allDependencies.getSourcesPaths();
   return (
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    component.files.some(file => file.relative === PACKAGE_JSON) ||
-    dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
+    component.files.some((file) => file.relative === PACKAGE_JSON) ||
+    dependenciesSourcePaths.some((dependencyPath) => dependencyPath === PACKAGE_JSON)
   );
 }
 

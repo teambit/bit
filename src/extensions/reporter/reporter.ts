@@ -41,8 +41,8 @@ export default class Reporter {
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
-      .filter(line => line.replace(/\s+/, '').length > 0)
-      .forEach(line => {
+      .filter((line) => line.replace(/\s+/, '').length > 0)
+      .forEach((line) => {
         if (componentId) {
           console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
@@ -55,8 +55,8 @@ export default class Reporter {
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
-      .filter(line => line.replace(/\s+/, '').length > 0)
-      .forEach(line => {
+      .filter((line) => line.replace(/\s+/, '').length > 0)
+      .forEach((line) => {
         // console.log(chalk.yellow('warn:'), chalk.hex(stc(id))(line));
         if (componentId) {
           console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
@@ -70,8 +70,8 @@ export default class Reporter {
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
-      .filter(line => line.replace(/\s+/, '').length > 0)
-      .forEach(line => {
+      .filter((line) => line.replace(/\s+/, '').length > 0)
+      .forEach((line) => {
         if (componentId) {
           console.log(chalk.red('error:'), chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {
@@ -84,8 +84,8 @@ export default class Reporter {
     const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
     lines
-      .filter(line => line.replace(/\s+/, '').length > 0)
-      .forEach(line => {
+      .filter((line) => line.replace(/\s+/, '').length > 0)
+      .forEach((line) => {
         if (componentId) {
           console.log(chalk.hex(stc(componentId))(`${componentId}, ${line}`));
         } else {

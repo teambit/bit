@@ -116,14 +116,14 @@ export default class Isolator {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
       applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig,
-      isolated: true
+      isolated: true,
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
     await this.installComponentPackages({
       installNpmPackages,
-      keepExistingCapsule: !!opts.keepExistingCapsule
+      keepExistingCapsule: !!opts.keepExistingCapsule,
     });
     await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
@@ -163,14 +163,14 @@ export default class Isolator {
    */
   async writeLinksOnNodeModules() {
     const links = await this.manyComponentsWriter._getAllLinks();
-    const nodeModulesLinks = links.filterByPath(filePath => filePath.startsWith('node_modules'));
+    const nodeModulesLinks = links.filterByPath((filePath) => filePath.startsWith('node_modules'));
     await nodeModulesLinks.persistAllToCapsule(this.capsule);
   }
 
   _manipulateDir() {
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     const manipulateDirData = getManipulateDirForComponentWithDependencies(this.componentWithDependencies);
-    allComponents.forEach(component => {
+    allComponents.forEach((component) => {
       component.stripOriginallySharedDir(manipulateDirData);
     });
   }
@@ -202,7 +202,7 @@ export default class Isolator {
   async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
-    allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
+    allComponents.forEach((component) => dataToPersist.merge(component.dataToPersist));
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 

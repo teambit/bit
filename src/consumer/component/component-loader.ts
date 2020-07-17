@@ -26,7 +26,7 @@ export default class ComponentLoader {
 
   async loadForCapsule(id: BitId): Promise<Component> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
-      id: id.toString()
+      id: id.toString(),
     });
     const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
     const idStr = idWithVersion.toString();
@@ -37,7 +37,7 @@ export default class ComponentLoader {
     }
 
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule finished loading the component "{id}"', {
-      id: id.toString()
+      id: id.toString(),
     });
     return this._componentsCacheForCapsule[idStr];
   }
@@ -47,7 +47,7 @@ export default class ComponentLoader {
     throwOnFailure = true
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
-      ids: ids.toString()
+      ids: ids.toString(),
     });
     const alreadyLoadedComponents: Component[] = [];
     const idsToProcess: BitId[] = [];
@@ -67,7 +67,7 @@ export default class ComponentLoader {
     logger.debugAndAddBreadCrumb(
       'ComponentLoader',
       `the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. {idsStr}`,
-      { idsStr: alreadyLoadedComponents.map(c => c.id.toString()).join(', ') }
+      { idsStr: alreadyLoadedComponents.map((c) => c.id.toString()).join(', ') }
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
@@ -77,7 +77,7 @@ export default class ComponentLoader {
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
-          id: component.id.toString()
+          id: component.id.toString(),
         });
         allComponents.push(component);
       }
@@ -93,11 +93,11 @@ export default class ComponentLoader {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
     let component: Component;
-    const handleError = error => {
+    const handleError = (error) => {
       if (throwOnFailure) throw error;
 
       logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
-        id: id.toString()
+        id: id.toString(),
       });
       if (Component.isComponentInvalidByErrorType(error)) {
         invalidComponents.push({ id, error, component });
@@ -110,7 +110,7 @@ export default class ComponentLoader {
         bitDir,
         componentMap,
         id,
-        consumer: this.consumer
+        consumer: this.consumer,
       });
     } catch (err) {
       return handleError(err);

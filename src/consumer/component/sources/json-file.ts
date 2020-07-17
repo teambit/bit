@@ -33,7 +33,7 @@ export default class JSONFile extends AbstractVinyl {
     base,
     path,
     content,
-    override = false
+    override = false,
   }: {
     base: string;
     path: string;

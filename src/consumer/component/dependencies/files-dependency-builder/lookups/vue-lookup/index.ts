@@ -9,9 +9,9 @@ const DEFAULT_STYLE_LANG = 'scss';
 
 const languageMap = {
   css: 'scss',
-  stylus: 'styl'
+  stylus: 'styl',
 };
-export default function(options) {
+export default function (options) {
   const { dependency, filename, isScript } = options;
   // eslint-disable-next-line import/no-dynamic-require, global-require
   const cabinet = require('../../filing-cabinet').default;
@@ -25,11 +25,11 @@ export default function(options) {
         directory: path.dirname(filename),
         content: script.content,
         ast: null,
-        ext: `.${scriptExt}` || path.extname(dependency)
+        ext: `.${scriptExt}` || path.extname(dependency),
       })
     );
   }
-  const stylesResult = styles.map(style => {
+  const stylesResult = styles.map((style) => {
     const styleExt = style.lang ? languageMap[style.lang] || style.lang : DEFAULT_STYLE_LANG;
     return cabinet(
       Object.assign(options, {
@@ -37,7 +37,7 @@ export default function(options) {
         directory: path.dirname(filename),
         content: style.content,
         ast: null,
-        ext: `.${styleExt}`
+        ext: `.${styleExt}`,
       })
     );
   });

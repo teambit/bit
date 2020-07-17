@@ -11,8 +11,8 @@ export const versionExample1: Version = {
     name: 'oded',
     accountType: AccountTypes.user,
     profileImage:
-      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff'
-  }
+      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+  },
 };
 export const versionExample2: Version = {
   id: '1.0.1',
@@ -25,8 +25,8 @@ export const versionExample2: Version = {
     name: 'oded',
     accountType: AccountTypes.user,
     profileImage:
-      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff'
-  }
+      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+  },
 };
 export const versionExample3: Version = {
   id: '1.0.0',
@@ -38,8 +38,8 @@ export const versionExample3: Version = {
     name: 'oded',
     accountType: AccountTypes.user,
     profileImage:
-      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff'
-  }
+      'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+  },
 };
 
 export const versionsArray: Version[] = [versionExample1, versionExample2, versionExample3];

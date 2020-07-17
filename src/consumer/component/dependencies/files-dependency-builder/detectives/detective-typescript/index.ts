@@ -4,7 +4,7 @@
 import {
   getDependenciesFromMemberExpression,
   getDependenciesFromCallExpression,
-  getSpecifierValueForImportDeclaration
+  getSpecifierValueForImportDeclaration,
 } from '../parser-helper';
 import { isRelativeImport } from '../../../../../../utils';
 
@@ -18,18 +18,18 @@ const Walker = require('node-source-walk');
  * @param  {Object} options - options to pass to the parser
  * @return {String[]}
  */
-export default function(src, options: Record<string, any> = {}) {
+export default function (src, options: Record<string, any> = {}) {
   options.parser = Parser;
 
   const walker = new Walker(options);
 
   const dependencies = {};
-  const addDependency = dependency => {
+  const addDependency = (dependency) => {
     if (!dependencies[dependency]) {
       dependencies[dependency] = {};
     }
   };
-  const addAngularLocalDependency = dependency => {
+  const addAngularLocalDependency = (dependency) => {
     const angularDep = isRelativeImport(dependency) ? dependency : `./${dependency}`;
     addDependency(angularDep);
   };
@@ -40,10 +40,10 @@ export default function(src, options: Record<string, any> = {}) {
       dependencies[dependency].importSpecifiers = [importSpecifier];
     }
   };
-  const addExportedToImportSpecifier = name => {
-    Object.keys(dependencies).forEach(dependency => {
+  const addExportedToImportSpecifier = (name) => {
+    Object.keys(dependencies).forEach((dependency) => {
       if (!dependencies[dependency].importSpecifiers) return;
-      const specifier = dependencies[dependency].importSpecifiers.find(i => i.name === name);
+      const specifier = dependencies[dependency].importSpecifiers.find((i) => i.name === name);
       if (specifier) specifier.exported = true;
     });
   };
@@ -56,14 +56,14 @@ export default function(src, options: Record<string, any> = {}) {
     return dependencies;
   }
 
-  walker.walk(src, function(node) {
+  walker.walk(src, function (node) {
     switch (node.type) {
       case 'ImportDeclaration':
         if (node.source && node.source.value) {
           const dependency = node.source.value;
           addDependency(dependency);
 
-          node.specifiers.forEach(specifier => {
+          node.specifiers.forEach((specifier) => {
             const specifierValue = getSpecifierValueForImportDeclaration(specifier);
             addImportSpecifier(dependency, specifierValue);
           });
@@ -74,7 +74,7 @@ export default function(src, options: Record<string, any> = {}) {
         if (node.source && node.source.value) {
           addDependency(node.source.value);
         } else if (node.specifiers && node.specifiers.length) {
-          node.specifiers.forEach(exportSpecifier => {
+          node.specifiers.forEach((exportSpecifier) => {
             addExportedToImportSpecifier(exportSpecifier.exported.name);
           });
         }
@@ -109,7 +109,7 @@ export default function(src, options: Record<string, any> = {}) {
           node.expression.arguments[0].type === 'ObjectExpression'
         ) {
           const angularComponent = node.expression.arguments[0].properties;
-          angularComponent.forEach(prop => {
+          angularComponent.forEach((prop) => {
             if (!prop.key || !prop.value) return;
             if (prop.key.name === 'templateUrl' && prop.value.type === 'Literal') {
               addAngularLocalDependency(prop.value.value);
@@ -118,8 +118,8 @@ export default function(src, options: Record<string, any> = {}) {
               addAngularLocalDependency(prop.value.value);
             }
             if (prop.key.name === 'styleUrls' && prop.value.type === 'ArrayExpression') {
-              const literalsElements = prop.value.elements.filter(e => e.type === 'Literal');
-              literalsElements.forEach(element => addAngularLocalDependency(element.value));
+              const literalsElements = prop.value.elements.filter((e) => e.type === 'Literal');
+              literalsElements.forEach((element) => addAngularLocalDependency(element.value));
             }
           });
         }

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import searchFilesIgnoreExt from './search-files-ignore-ext';
 
 describe('searchFilesIgnoreExt', () => {
-  const getResults = files => searchFilesIgnoreExt(files, 'foo/bar.ts', 'relative');
+  const getResults = (files) => searchFilesIgnoreExt(files, 'foo/bar.ts', 'relative');
   it('should find the same file with a different extension', () => {
     const files = [{ relative: 'foo/baz.js' }, { relative: 'foo/bar.js' }];
     const result = getResults(files);

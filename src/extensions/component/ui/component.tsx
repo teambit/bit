@@ -18,7 +18,7 @@ export type ComponentProps = {
  */
 export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
   const {
-    params: { componentId }
+    params: { componentId },
   } = useRouteMatch();
 
   const component = useComponentQuery(componentId);

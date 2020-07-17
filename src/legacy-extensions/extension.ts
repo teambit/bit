@@ -98,7 +98,7 @@ export default class Extension extends BaseExtension {
     HOOKS_NAMES: _getHooksNames(),
     createIsolatedEnv: _createIsolatedEnv,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    ...super.api
+    ...super.api,
   };
 
   constructor(extensionProps: ExtensionProps) {
@@ -131,7 +131,7 @@ export default class Extension extends BaseExtension {
       commands: [],
       registeredHooksActions: {},
       newHooks: [],
-      ...baseExtensionProps
+      ...baseExtensionProps,
     };
     const dynamicConfig = BaseExtension.loadDynamicConfig(extensionProps);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -175,7 +175,7 @@ const _loadScope = async (scopePath: string | null | undefined) => {
 
 const _getHooksNames = () => {
   const hooks = {};
-  HOOKS_NAMES.forEach(hook => {
+  HOOKS_NAMES.forEach((hook) => {
     hooks[hook] = hook;
   });
   return hooks;

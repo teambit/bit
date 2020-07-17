@@ -36,7 +36,7 @@ export class DocsPreview {
     preview.registerPreview({
       name: 'overview',
       render: docsPreview.render.bind(docsPreview),
-      include: ['compositions']
+      include: ['compositions'],
     });
 
     return docsPreview;

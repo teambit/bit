@@ -16,8 +16,8 @@ export default class Graph implements LegacyCommand {
     [
       '',
       'layout <name>',
-      'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]'
-    ]
+      'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
+    ],
   ] as CommandOptions;
   remoteOp = true;
 
