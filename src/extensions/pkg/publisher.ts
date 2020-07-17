@@ -2,12 +2,12 @@ import execa from 'execa';
 import { IsolatorExtension, Capsule } from '../isolator';
 import { Scope } from '../../scope';
 import { LogPublisher } from '../types';
-import { loadConsumer } from '../../consumer';
 import { BitId, BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
 import GeneralError from '../../error/general-error';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { Workspace } from '../workspace';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -22,6 +22,7 @@ export class Publisher {
     private isolator: IsolatorExtension,
     private logger: LogPublisher,
     private scope: Scope,
+    private workspace: Workspace,
     public options: PublisherOptions = {}
   ) {}
 
@@ -73,16 +74,11 @@ export class Publisher {
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {
-    // @todo hack alert!
-    // currently, when loading a component from the model, it doesn't load the extension
-    // as such, the package json value such as the main-file is not loaded from the env.
-    // change it back to `createNetworkFromScope` once Gilad fixes it.
-    const consumer = await loadConsumer();
+    const consumer = this.workspace.consumer;
     if (consumer.isLegacy) {
       // publish is supported on Harmony only
       return [];
     }
-    // const network = await this.isolator.createNetworkFromScope(componentIds, this.scope);
     const idsToPublish = await this.getIdsToPublish(componentIds);
     const network = await this.isolator.createNetworkFromConsumer(idsToPublish, consumer);
     return network.seedersCapsules;
