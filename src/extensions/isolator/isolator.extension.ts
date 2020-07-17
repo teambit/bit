@@ -9,13 +9,12 @@ import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
-import { Scope } from '../../scope';
 import CapsuleList from './capsule-list';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId, BitIds } from '../../bit-id';
-import { buildOneGraphForComponents, buildOneGraphForComponentsUsingScope } from '../../scope/graph/components-graph';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
@@ -72,13 +71,6 @@ export class IsolatorExtension {
     opts = Object.assign(opts || {}, { consumer });
     return this.createNetwork(seedersIds, graph, baseDir, opts);
   }
-  async createNetworkFromScope(seeders: string[], scope: Scope, opts?: {}): Promise<Network> {
-    logger.debug(`isolatorExt, createNetworkFromScope ${seeders.join(', ')}`);
-    const seedersIds = await Promise.all(seeders.map((seeder) => scope.getParsedId(seeder)));
-    const graph = await buildOneGraphForComponentsUsingScope(seedersIds, scope);
-    const baseDir = path.join(CAPSULES_BASE_DIR, hash(scope.path)); // TODO: move this logic elsewhere
-    return this.createNetwork(seedersIds, graph, baseDir, opts);
-  }
   private getBitIdsIncludeVersionsFromGraph(seedersIds: BitId[], graph: Graph): BitId[] {
     const components: ConsumerComponent[] = graph.nodes().map((n) => graph.node(n));
     return seedersIds.map((seederId) => {
@@ -116,7 +108,7 @@ export class IsolatorExtension {
     );
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
+    await writeComponentsToCapsules(components, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
