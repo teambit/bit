@@ -3,7 +3,7 @@ import { packageNameToComponentId } from './package-name-to-component-id';
 import { Consumer } from '../../consumer';
 import { BitIds, BitId } from '../../bit-id';
 
-describe('packageNameToComponentId', function() {
+describe('packageNameToComponentId', function () {
   this.timeout(0);
   let consumer: Consumer;
   before(() => {

@@ -10,7 +10,7 @@ import { AUTO_GENERATED_STAMP, IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('typescript', function() {
+describe('typescript', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -100,7 +100,7 @@ describe('typescript', function() {
           expect(packageJsonContent).to.deep.include({
             name: `@bit/${helper.scopes.remote}.bar.foo`,
             version: '0.0.1',
-            main: 'dist/bar/foo.js'
+            main: 'dist/bar/foo.js',
           });
         });
         it('should not create an index.js file on the component root dir because it has package.json already', () => {
@@ -113,7 +113,7 @@ describe('typescript', function() {
           expect(packageJsonContent).to.deep.include({
             name: `@bit/${helper.scopes.remote}.utils.is-string`,
             version: '0.0.1',
-            main: 'dist/is-string.js'
+            main: 'dist/is-string.js',
           });
         });
         it('should point the main file key in the is-type dependency package.json to the dist main file', () => {
@@ -122,7 +122,7 @@ describe('typescript', function() {
           expect(packageJsonContent).to.deep.include({
             name: `@bit/${helper.scopes.remote}.utils.is-type`,
             version: '0.0.1',
-            main: 'dist/is-type.js'
+            main: 'dist/is-type.js',
           });
         });
         it('should save the direct dependency nested to the main component', () => {
@@ -476,7 +476,7 @@ describe('typescript', function() {
         helper.fs.createFile('src/utils', 'is-type-internal.ts', fixtures.isTypeTS);
         helper.command.addComponent('src/utils/is-type.ts src/utils/is-type-internal.ts', {
           i: 'utils/is-type',
-          m: 'src/utils/is-type.ts'
+          m: 'src/utils/is-type.ts',
         });
 
         const isStringFixture =
@@ -485,7 +485,7 @@ describe('typescript', function() {
         helper.fs.createFile('src/utils', 'is-string-internal.ts', isStringFixture);
         helper.command.addComponent('src/utils/is-string.ts src/utils/is-string-internal.ts', {
           i: 'utils/is-string',
-          m: 'src/utils/is-string.ts'
+          m: 'src/utils/is-string.ts',
         });
 
         const barFooFixture =
@@ -645,9 +645,9 @@ export class List extends React.Component {
         const overrides = {
           'bar/foo': {
             devDependencies: {
-              '@types/ninja': '-'
-            }
-          }
+              '@types/ninja': '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });

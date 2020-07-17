@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 
 chai.use(assertArrays);
 
-describe('bit build', function() {
+describe('bit build', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -271,9 +271,7 @@ describe('bit build', function() {
           const catComponent = helper.command.catComponent('bar/foo@latest');
           expect(catComponent).to.have.property('packageJsonChangedProps');
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          expect(catComponent.packageJsonChangedProps)
-            .to.have.property('foo')
-            .that.equal('bar');
+          expect(catComponent.packageJsonChangedProps).to.have.property('foo').that.equal('bar');
         });
         describe('importing the component to a new workspace', () => {
           let packageJson;
@@ -333,7 +331,7 @@ describe('bit build', function() {
         const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
         const packageJson = helper.packageJson.read(componentDir);
         packageJson.bit.env = {
-          compiler: `${helper.scopes.env}/compilers/dummy@0.0.1`
+          compiler: `${helper.scopes.env}/compilers/dummy@0.0.1`,
         };
         // an intermediate step, make sure packageJson doesn't have this "foo" property
         expect(packageJson).to.not.have.property('foo');
@@ -353,9 +351,7 @@ describe('bit build', function() {
           const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
           expect(catComponent).to.have.property('packageJsonChangedProps');
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          expect(catComponent.packageJsonChangedProps)
-            .to.have.property('foo')
-            .that.equal('bar');
+          expect(catComponent.packageJsonChangedProps).to.have.property('foo').that.equal('bar');
         });
         describe('changing the compiler to generate a different value in the package.json file', () => {
           before(() => {

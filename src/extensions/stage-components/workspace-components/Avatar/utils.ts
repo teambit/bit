@@ -7,7 +7,7 @@ export function getInitials(name: string) {
   if (words.length > 1) {
     return words
       .slice(0, 2)
-      .map(word => word[0])
+      .map((word) => word[0])
       .join('');
   }
   return name.slice(0, 2);

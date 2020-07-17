@@ -87,7 +87,7 @@ describe('ComponentsIndex', () => {
     });
     it('should remove multiple when calling them with separate removeMany calls using array.map', () => {
       expect(scopeIndex.getAll()).to.have.lengthOf(2);
-      [isStringComponent.hash().toString(), isTypeComponent.hash().toString()].map(h => scopeIndex.removeMany([h]));
+      [isStringComponent.hash().toString(), isTypeComponent.hash().toString()].map((h) => scopeIndex.removeMany([h]));
       expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
   });

@@ -4,13 +4,13 @@ import BitId from '../../bit-id/bit-id';
 /**
  * schema for forking components
  */
-export default function(bitIds: BitId[], remote: string) {
+export default function (bitIds: BitId[], remote: string) {
   return {
     properties: {
       shouldFork: {
         required: true,
         description: `bit is about to fork the following components and export them to ${chalk.bold(remote)}.
-\t${bitIds.map(id => chalk.bold(id.toStringWithoutVersion())).join('\n\t')}
+\t${bitIds.map((id) => chalk.bold(id.toStringWithoutVersion())).join('\n\t')}
 also, if they're staged, bit will not change their status to exported unless '--set-current-scope' flag is used.
 
 there are additional flags for the 'export' command to specifically handle forking components:
@@ -28,8 +28,8 @@ would you like to proceed with forking the components? (yes/no)`,
             value.toLowerCase() === 'yes' ||
             value.toLowerCase() === 'no'
           );
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

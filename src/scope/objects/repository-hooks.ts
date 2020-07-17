@@ -16,7 +16,7 @@ function loadHooks(scopePath: string, scopeJson: ScopeJson): any | undefined {
 }
 
 export function onPersist(scopePath: string, scopeJson: ScopeJson): ContentTransformer {
-  const defaultFunc = content => content;
+  const defaultFunc = (content) => content;
   const hooks = loadHooks(scopePath, scopeJson);
   if (hooks) {
     const onReadFunction = hooks.onPersist;
@@ -28,7 +28,7 @@ export function onPersist(scopePath: string, scopeJson: ScopeJson): ContentTrans
 }
 
 export function onRead(scopePath: string, scopeJson: ScopeJson): ContentTransformer {
-  const defaultFunc = content => content;
+  const defaultFunc = (content) => content;
 
   const hooks = loadHooks(scopePath, scopeJson);
   if (hooks) {

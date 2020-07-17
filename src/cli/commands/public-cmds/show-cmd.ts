@@ -18,7 +18,7 @@ export default class Show implements LegacyCommand {
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]'],
     ['d', 'detailed', 'show more details'],
     ['', 'dependents', 'EXPERIMENTAL. show all dependents recursively'],
-    ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively']
+    ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -35,7 +35,7 @@ export default class Show implements LegacyCommand {
       compare = false,
       detailed = false,
       dependents = false,
-      dependencies = false
+      dependencies = false,
     }: {
       json?: boolean;
       versions: boolean | null | undefined;
@@ -67,7 +67,7 @@ export default class Show implements LegacyCommand {
       compare,
       detailed,
       dependents,
-      dependencies
+      dependencies,
     });
   }
 
@@ -80,7 +80,7 @@ export default class Show implements LegacyCommand {
     versions,
     components,
     outdated,
-    detailed
+    detailed,
   }: {
     component: ConsumerComponent;
     componentModel?: ConsumerComponent;
@@ -94,7 +94,7 @@ export default class Show implements LegacyCommand {
   }): string {
     if (versions) {
       return JSON.stringify(
-        (components || []).map(c => c.toObject()),
+        (components || []).map((c) => c.toObject()),
         null,
         '  '
       );
@@ -103,10 +103,10 @@ export default class Show implements LegacyCommand {
       component.scopesList = component.componentFromModel.scopesList;
     }
     if (json) {
-      const makeEnvFilesReadable = env => {
+      const makeEnvFilesReadable = (env) => {
         if (!env) return undefined;
         if (env.files && env.files.length) {
-          const readableFiles = env.files.map(file => file.toReadableString());
+          const readableFiles = env.files.map((file) => file.toReadableString());
           return readableFiles;
         }
         return [];
@@ -116,7 +116,7 @@ export default class Show implements LegacyCommand {
         if (!comp) return comp;
         const componentObj = comp.toObject();
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        componentObj.files = comp.files.map(file => file.toReadableString());
+        componentObj.files = comp.files.map((file) => file.toReadableString());
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentObj.dists = componentObj.dists.getAsReadable();

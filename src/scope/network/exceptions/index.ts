@@ -19,5 +19,5 @@ export {
   RemoteScopeNotFound,
   SSHConnectionError,
   SSHInvalidResponse,
-  OldClientVersion
+  OldClientVersion,
 };

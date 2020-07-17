@@ -6,5 +6,5 @@ import { CLIExtension } from '../cli';
 export default {
   name: '@teambit/create',
   dependencies: [CLIExtension, WorkspaceExt],
-  provider: provideCreate
+  provider: provideCreate,
 } as ExtensionManifest;

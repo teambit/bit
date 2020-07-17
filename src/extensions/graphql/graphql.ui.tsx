@@ -25,14 +25,14 @@ export class GraphQlUI {
 
   static async provider() {
     const httpLink = new HttpLink({
-      uri: 'http://localhost:4000/graphql'
+      uri: 'http://localhost:4000/graphql',
     });
 
     const wsLink = new WebSocketLink({
       uri: 'ws://localhost:4000/subscriptions',
       options: {
-        reconnect: true
-      }
+        reconnect: true,
+      },
     });
 
     const client = new ApolloClient({
@@ -46,12 +46,12 @@ export class GraphQlUI {
           // eslint-disable-next-line no-console
           if (networkError) console.log(`[Network error]: ${networkError}`);
         }),
-        createLink(httpLink, wsLink)
+        createLink(httpLink, wsLink),
       ]),
       cache: new InMemoryCache({
         // @ts-ignore @todo uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
-        dataIdFromObject: o => (o._id ? `${o.__typename}:${o._id}` : null)
-      })
+        dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
+      }),
     });
 
     return new GraphQlUI(client);

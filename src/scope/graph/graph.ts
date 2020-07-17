@@ -16,7 +16,7 @@ export default class Graph extends GraphLib {
   ) {
     const successors = this.successors(bitId) || [];
     if (successors.length > 0 && !visited[bitId]) {
-      successors.forEach(successor => {
+      successors.forEach((successor) => {
         visited[bitId] = true;
         successorsList.push(successor);
 
@@ -38,7 +38,7 @@ export default class Graph extends GraphLib {
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach(dependencyId => {
+      depIds.forEach((dependencyId) => {
         const depIdStr = dependencyId.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
         graph.setEdge(idStr, depIdStr, depType);
@@ -54,13 +54,13 @@ export default class Graph extends GraphLib {
   ) {
     const scope = await loadScope(process.cwd());
     await Promise.all(
-      allModelComponents.map(async modelComponent => {
+      allModelComponents.map(async (modelComponent) => {
         const latestVersion = modelComponent.latest();
-        const buildVersionP = modelComponent.listVersions().map(async versionNum => {
+        const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
           if (onlyLatest && latestVersion !== versionNum) return;
           const id = modelComponent.toBitId().changeVersion(versionNum);
           const componentFromWorkspace = workspaceComponents
-            ? workspaceComponents.find(comp => comp.id.isEqual(id))
+            ? workspaceComponents.find((comp) => comp.id.isEqual(id))
             : undefined;
           if (!componentFromWorkspace) {
             const componentVersion = await scope.getConsumerComponentIfExist(id);
@@ -88,7 +88,7 @@ export default class Graph extends GraphLib {
     R.forEach((componentId: string) => {
       const component: Component = graph.node(componentId);
       Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-        depIds.forEach(dependencyId => {
+        depIds.forEach((dependencyId) => {
           const depIdStr = dependencyId.toString();
           if (graph.hasNode(depIdStr)) {
             graph.setEdge(componentId, depIdStr, depType);

@@ -155,5 +155,5 @@ export {
   render,
   Queue,
   toBoolean,
-  isRelativeImport
+  isRelativeImport,
 };

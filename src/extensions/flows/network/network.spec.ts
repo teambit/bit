@@ -9,15 +9,15 @@ import { flattenReplaySubject } from '../util/flatten-nested-map';
 //
 describe('Network', () => {
   function getTestCaseFunc(toExpect: string, graph: { [k: string]: string[] } = { 'bit/a': [] }, input = ['bit/a']) {
-    return async function(this: any) {
+    return async function (this: any) {
       const testCase: GraphTestCase = {
         graph,
         input,
         options: {
           concurrency: 4,
           traverse: 'both',
-          caching: true
-        }
+          caching: true,
+        },
       };
       const stream = await createTestNetworkStream(testCase);
       const report = await flattenReplaySubject(stream)
@@ -33,52 +33,52 @@ describe('Network', () => {
       return expect(report).to.equal(toExpect);
     };
   }
-  describe('sanity', function() {
-    it('should support 1 component graph', function() {
+  describe('sanity', function () {
+    it('should support 1 component graph', function () {
       return getTestCaseFunc('bit/a')();
     });
-    it('should support 0 component graph', function() {
+    it('should support 0 component graph', function () {
       return getTestCaseFunc('', {}, [])();
     });
   });
 
-  it('structure is c-->b-->a seeder is a ', function() {
+  it('structure is c-->b-->a seeder is a ', function () {
     return getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
         'bit/a': [],
         'bit/b': ['bit/a'],
-        'bit/c': ['bit/b']
+        'bit/c': ['bit/b'],
       },
       ['bit/a']
     )();
   });
 
-  it('structure is c-->b-->a seeder is b', function() {
+  it('structure is c-->b-->a seeder is b', function () {
     return getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
         'bit/a': [],
         'bit/b': ['bit/a'],
-        'bit/c': ['bit/b']
+        'bit/c': ['bit/b'],
       },
       ['bit/b']
     )();
   });
 
-  it('structure is c-->b-->a seeder is c ', function() {
+  it('structure is c-->b-->a seeder is c ', function () {
     return getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
         'bit/a': [],
         'bit/b': ['bit/a'],
-        'bit/c': ['bit/b']
+        'bit/c': ['bit/b'],
       },
       ['bit/c']
     )();
   });
 
-  it('structure is l->a c->h c->a c->l', function() {
+  it('structure is l->a c->h c->a c->l', function () {
     // this.timeout(1000 * 100)
     return getTestCaseFunc(
       'bit/c-->bit/l-->bit/a-->bit/h',
@@ -86,7 +86,7 @@ describe('Network', () => {
         'bit/a': [],
         'bit/l': ['bit/a'],
         'bit/h': [],
-        'bit/c': ['bit/a', 'bit/l', 'bit/h']
+        'bit/c': ['bit/a', 'bit/l', 'bit/h'],
       },
       []
     ).bind(this)();
@@ -100,12 +100,12 @@ describe('Network', () => {
       {
         'bit/a': [],
         'bit/b': ['bit/a', 'bit/c'],
-        'bit/c': ['bit/b']
+        'bit/c': ['bit/b'],
       },
       ['bit/a']
     )
   );
 
   // currently fails on circular
-  it.skip('circular structure is a-->b-->c-->b seeder is c', function() {});
+  it.skip('circular structure is a-->b-->c-->b seeder is c', function () {});
 });

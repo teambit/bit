@@ -11,7 +11,7 @@ export default function getNodeModulesPathOfComponent({
   allowNonScope = false,
   defaultScope, // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
   extensions,
-  isDependency = false
+  isDependency = false,
 }: {
   bindingPrefix?: string;
   id: BitId;
@@ -31,7 +31,7 @@ export default function getNodeModulesPathOfComponent({
     defaultScope,
     withPrefix: undefined,
     extensions,
-    isDependency
+    isDependency,
   });
   return path.join('node_modules', packageName);
 }

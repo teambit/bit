@@ -4,11 +4,11 @@
 export default {
   properties: {
     username: {
-      required: true
+      required: true,
     },
     password: {
       hidden: true,
-      required: true
-    }
-  }
+      required: true,
+    },
+  },
 };

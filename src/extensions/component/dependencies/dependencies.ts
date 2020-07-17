@@ -27,11 +27,11 @@ export class DependencyList extends Array<Dependency> {
    * @memberof DependencyList
    */
   get packages(): PackageDependency[] {
-    return this.filter(dep => dep instanceof PackageDependency);
+    return this.filter((dep) => dep instanceof PackageDependency);
   }
 
   get components(): ComponentDependency[] {
-    return this.filter(dep => dep instanceof ComponentDependency);
+    return this.filter((dep) => dep instanceof ComponentDependency);
   }
 
   static fromArray(dependencies: Dependency[]): DependencyList {

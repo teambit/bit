@@ -10,18 +10,18 @@ import { BEFORE_LOADING_COMPONENTS } from '../../cli/loader/loader-messages';
 import ComponentsList from '../component/components-list';
 
 export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) {
-  const lanesToUpdate = lanes.filter(l => l.remoteLaneId);
+  const lanesToUpdate = lanes.filter((l) => l.remoteLaneId);
   // lanes that don't have remoteLaneId should not be updated. it happens when updating to a
   // different remote with no intention to save the remote.
   if (!lanesToUpdate.length) return;
   const currentLane = consumer.getCurrentLaneId();
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
-  lanesToUpdate.forEach(lane => {
+  lanesToUpdate.forEach((lane) => {
     const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
     consumer.scope.lanes.trackLane({
       localLane: lane.name,
       remoteLane: remoteLaneId.name,
-      remoteScope: remoteLaneId.scope
+      remoteScope: remoteLaneId.scope,
     });
     const isCurrentLane = lane.name === currentLane.name;
     if (isCurrentLane) {
@@ -34,7 +34,7 @@ export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) 
     consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
     workspaceLane.reset();
   });
-  await Promise.all(workspaceLanesToUpdate.map(l => l.write()));
+  await Promise.all(workspaceLanesToUpdate.map((l) => l.write()));
 }
 
 export async function getLaneCompIdsToExport(
@@ -43,11 +43,11 @@ export async function getLaneCompIdsToExport(
   includeNonStaged: boolean
 ): Promise<{ componentsToExport: BitIds; lanesObjects: Lane[] }> {
   const currentLaneId = consumer.getCurrentLaneId();
-  const laneIds = ids.length ? ids.map(laneName => new LaneId({ name: laneName })) : [currentLaneId];
+  const laneIds = ids.length ? ids.map((laneName) => new LaneId({ name: laneName })) : [currentLaneId];
   const nonExistingLanes: string[] = [];
   const lanesObjects: Lane[] = [];
   await Promise.all(
-    laneIds.map(async laneId => {
+    laneIds.map(async (laneId) => {
       const laneObject = await consumer.scope.loadLane(laneId);
       if (laneObject) {
         lanesObjects.push(laneObject);

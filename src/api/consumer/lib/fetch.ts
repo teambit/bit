@@ -23,7 +23,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
     writeConfig: false,
     writeDists: false,
     override: false,
-    installNpmPackages: false
+    installNpmPackages: false,
   };
   const importComponents = new ImportComponents(consumer, importOptions);
   if (lanes) {
@@ -38,7 +38,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
 
   async function getLaneIds(): Promise<RemoteLaneId[]> {
     if (ids.length) {
-      return ids.map(id => {
+      return ids.map((id) => {
         const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
         if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
         // assuming it's a remote

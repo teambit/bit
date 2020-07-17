@@ -20,7 +20,7 @@ export type GraphTestCase = {
 export async function createTestNetworkStream(testCase: GraphTestCase): Promise<ReplaySubject<any>> {
   const fakeGetGraph = createGetGraphFn(testCase);
   const fakeWorkSpace = createFakeWorkSpace(fakeGetGraph);
-  const ids = testCase.input.map(val => new ComponentID(BitId.parse(val)));
+  const ids = testCase.input.map((val) => new ComponentID(BitId.parse(val)));
   const getFlow = (id: Capsule) => Promise.resolve(new Flow([`echo hello-${id.component.id}`]));
 
   const network = new Network(fakeWorkSpace, ids, getFlow, fakeGetGraph);
@@ -31,19 +31,19 @@ function createFakeWorkSpace(fakeGetGraph: (_consumer: Consumer) => Promise<Grap
   return ({
     getMany: (ids: Array<BitId | string>) => {
       return Promise.resolve(
-        ids.map(id => {
+        ids.map((id) => {
           return {
             id: {
-              toString: () => (typeof id === 'string' ? id : id.toString())
-            }
+              toString: () => (typeof id === 'string' ? id : id.toString()),
+            },
           } as Component;
         })
       );
     },
     loadCapsules: async (ids: string[]) => {
       const graph = await fakeGetGraph({} as Consumer);
-      return Promise.all(ids.map(id => createFakeCapsuleInGraph(id, graph)));
-    }
+      return Promise.all(ids.map((id) => createFakeCapsuleInGraph(id, graph)));
+    },
   } as any) as Workspace;
 }
 
@@ -51,7 +51,7 @@ export function createGetGraphFn(testCase: GraphTestCase) {
   return (_consumer: Consumer) => {
     const res = Object.entries(testCase.graph).reduce((accum, [key, value]) => {
       accum.setNode(key);
-      value.forEach(val => {
+      value.forEach((val) => {
         accum.setNode(val);
         accum.setEdge(key, val);
       });
@@ -72,11 +72,11 @@ async function createFakeCapsuleInGraph(name: string, graph: Graph) {
   const fs = {
     [main]: `
       ${Object.keys(dependencies)
-        .map(dependency => `const ${dependency.split('/')[1]} = require('${dependency}')`)
+        .map((dependency) => `const ${dependency.split('/')[1]} = require('${dependency}')`)
         .join('\n')}
       function printMe(){
         console.log('${Object.keys(dependencies)
-          .map(dependency => `${dependency.split('/')[1]}()` || ['hello', 'world'])
+          .map((dependency) => `${dependency.split('/')[1]}()` || ['hello', 'world'])
           .join('+')}')
       }
 
@@ -84,7 +84,7 @@ async function createFakeCapsuleInGraph(name: string, graph: Graph) {
         return '${name}'
       }
     `,
-    'package.json': JSON.stringify({ main, name, dependencies }, null, 2)
+    'package.json': JSON.stringify({ main, name, dependencies }, null, 2),
   };
 
   const fakeCapsule = await createFakeCapsule(fs, name);

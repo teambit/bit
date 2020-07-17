@@ -12,7 +12,7 @@ export default class CompsAndLanesObjects {
   }
 
   toString() {
-    const components = this.componentsObjects.map(componentAndObject => componentAndObject.toString());
+    const components = this.componentsObjects.map((componentAndObject) => componentAndObject.toString());
     if (!this.laneObjects.length) {
       // @todo: delete this `if` block before releasing v15
       // backward compatibility, before v15, it used to be an array of component-objects
@@ -21,7 +21,7 @@ export default class CompsAndLanesObjects {
     }
     return JSON.stringify({
       components,
-      lanes: this.laneObjects.map(laneObj => laneObj.toString())
+      lanes: this.laneObjects.map((laneObj) => laneObj.toString()),
     });
   }
 
@@ -38,15 +38,15 @@ export default class CompsAndLanesObjects {
       components = parsed.components;
       lanes = parsed.lanes;
     }
-    const componentsObjects = components.map(componentObject => ComponentObjects.fromString(componentObject));
-    const laneObjects = lanes.map(laneObj => LaneObjects.fromString(laneObj));
+    const componentsObjects = components.map((componentObject) => ComponentObjects.fromString(componentObject));
+    const laneObjects = lanes.map((laneObj) => LaneObjects.fromString(laneObj));
     return new CompsAndLanesObjects(componentsObjects, laneObjects);
   }
 
   static flatten(manyCompsAndLanesObjects: CompsAndLanesObjects[]): CompsAndLanesObjects {
     return new CompsAndLanesObjects(
-      R.flatten(manyCompsAndLanesObjects.map(m => m.componentsObjects)),
-      R.flatten(manyCompsAndLanesObjects.map(m => m.laneObjects))
+      R.flatten(manyCompsAndLanesObjects.map((m) => m.componentsObjects)),
+      R.flatten(manyCompsAndLanesObjects.map((m) => m.laneObjects))
     );
   }
 }

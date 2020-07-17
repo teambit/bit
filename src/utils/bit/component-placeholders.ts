@@ -11,7 +11,7 @@ export function replacePlaceHolderWithComponentValue<T>(component: ConsumerCompo
   const values = {
     main: () => getMainFileWithoutExtension(component.mainFile),
     name: () => replaceSlashesWithDots(component.name),
-    scope: () => component.scope
+    scope: () => component.scope,
   };
   return format(template, values);
 }
@@ -22,7 +22,7 @@ export function replacePlaceHolderForPackageName(
 ): string {
   const values = {
     name: () => replaceSlashesWithDots(name),
-    scope: () => scope
+    scope: () => scope,
   };
   return format(template, values);
 }

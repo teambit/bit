@@ -9,7 +9,7 @@ export default (async function getConsumerBit({
   allVersions,
   showRemoteVersions,
   showDependents,
-  showDependencies
+  showDependencies,
 }: {
   id: string;
   compare: boolean;

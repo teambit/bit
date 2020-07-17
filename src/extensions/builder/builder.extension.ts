@@ -32,7 +32,7 @@ export class BuilderExtension {
     ScopeExtension,
     IsolatorExtension,
     ReporterExt,
-    LoggerExt
+    LoggerExt,
   ];
 
   constructor(

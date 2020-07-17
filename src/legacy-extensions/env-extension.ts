@@ -7,7 +7,7 @@ import {
   EnvLoadArgsProps,
   EnvExtensionProps,
   EnvExtensionModel,
-  EnvExtensionSerializedModel
+  EnvExtensionSerializedModel,
 } from './env-extension-types';
 import { BaseExtensionProps, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
@@ -96,7 +96,7 @@ export default class EnvExtension extends BaseExtension {
       ids: [{ componentId: BitId.parse(this.name, true), type: this.envType.toLowerCase() }], // @todo: make sure it always has a scope name
       dependentId,
       scope,
-      ...opts
+      ...opts,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const installResult = await installExtensions(installOpts);
@@ -127,11 +127,11 @@ export default class EnvExtension extends BaseExtension {
     logger.silly('env-extension, toBitJsonObject');
     const envVal = {
       rawConfig: this.dynamicConfig,
-      options: this.options
+      options: this.options,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
-      [this.name]: envVal
+      [this.name]: envVal,
     };
   }
 
@@ -173,7 +173,7 @@ export default class EnvExtension extends BaseExtension {
       dynamicPackageDependencies = getDynamicPackageDependencies({
         rawConfig: envExtensionProps.rawConfig,
         dynamicConfig: envExtensionProps.dynamicConfig,
-        context: envExtensionProps.context
+        context: envExtensionProps.context,
       });
     } catch (err) {
       throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
@@ -184,7 +184,7 @@ export default class EnvExtension extends BaseExtension {
     }
     // old format returned an object of the packages, without any separation between
     // dependencies, devDependencies and peerDependencies
-    const usesOldFormat = Object.keys(dynamicPackageDependencies).some(field => !DEPENDENCIES_FIELDS.includes(field));
+    const usesOldFormat = Object.keys(dynamicPackageDependencies).some((field) => !DEPENDENCIES_FIELDS.includes(field));
     if (usesOldFormat) {
       throw new GeneralError(
         `getDynamicPackageDependencies expects to return the following keys only: [${DEPENDENCIES_FIELDS.join(', ')}]`
@@ -200,7 +200,7 @@ export default class EnvExtension extends BaseExtension {
       try {
         const dynamicConfig = getDynamicConfig({
           rawConfig: envExtensionProps.rawConfig,
-          context: envExtensionProps.context
+          context: envExtensionProps.context,
         });
         return dynamicConfig;
       } catch (err) {
@@ -243,7 +243,7 @@ export default class EnvExtension extends BaseExtension {
     overrides,
     workspaceConfig,
     envType,
-    context
+    context,
   }: {
     consumerPath: string;
     scopePath: string;
@@ -316,12 +316,12 @@ export default class EnvExtension extends BaseExtension {
     envModelA: EnvExtensionModel | null | undefined,
     envModelB: EnvExtensionModel | null | undefined
   ) {
-    const sortEnv = env => {
+    const sortEnv = (env) => {
       env.config = sortObject(env.config);
       const result = sortObject(env);
       return result;
     };
-    const stringifyEnv = env => {
+    const stringifyEnv = (env) => {
       if (!env) {
         return '';
       }
@@ -344,7 +344,7 @@ async function loadFromConfig({
   consumerPath,
   scopePath,
   configPath,
-  context
+  context,
 }): Promise<EnvExtension | null | undefined> {
   const env = envConfig[envType];
   if (!env) return null;
@@ -359,7 +359,7 @@ async function loadFromConfig({
     bitJsonPath: configPath,
     options: envObject.options,
     envType,
-    context
+    context,
   };
   return makeEnv(envType, envProps);
 }

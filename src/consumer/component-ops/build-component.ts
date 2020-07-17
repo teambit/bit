@@ -39,7 +39,7 @@ export default (async function buildComponent({
   directory,
   verbose,
   dontPrintEnvMsg,
-  keep
+  keep,
 }: {
   component: ConsumerComponent;
   scope: Scope;
@@ -98,10 +98,10 @@ export default (async function buildComponent({
     scope,
     keep,
     directory,
-    verbose: !!verbose
+    verbose: !!verbose,
   });
   const { builtFiles, mainDist, packageJson } = compilerResults;
-  builtFiles.forEach(file => {
+  builtFiles.forEach((file) => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
@@ -109,7 +109,7 @@ export default (async function buildComponent({
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   component.setDists(
     // @ts-ignore
-    builtFiles.map(file => new Dist(file)),
+    builtFiles.map((file) => new Dist(file)),
     mainDist
   );
   if (save) {
@@ -165,7 +165,7 @@ function _extractAndVerifyCompilerResults(
     return {
       builtFiles: compilerResults.dists,
       mainDist: compilerResults.mainFile,
-      packageJson: compilerResults.packageJson
+      packageJson: compilerResults.packageJson,
     };
   }
   throw new GeneralError(`fatal: compiler must return an array or object, instead, got ${typeof compilerResults}`);
@@ -175,7 +175,7 @@ function _verifyPackageJsonReturnedByCompiler(packageJson: Record<string, any>) 
   if (typeof packageJson !== 'object') {
     throw new GeneralError(`fatal: compiler must return packageJson as an object, got ${typeof packageJson}`);
   }
-  PackageJsonFile.propsNonUserChangeable().forEach(prop => {
+  PackageJsonFile.propsNonUserChangeable().forEach((prop) => {
     if (packageJson[prop]) {
       throw new GeneralError(`fatal: compiler must not return packageJson with "${prop}" property`);
     }
@@ -189,7 +189,7 @@ async function _build({
   scope,
   verbose,
   directory,
-  keep
+  keep,
 }: {
   component: ConsumerComponent;
   consumer?: Consumer;
@@ -223,7 +223,7 @@ async function _build({
     const isolateOpts = {
       verbose,
       installNpmPackages: true,
-      writePackageJson: true
+      writePackageJson: true,
     };
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;
@@ -248,12 +248,12 @@ async function _isNeededToReBuild(
   if (!consumer) return false;
   const componentStatus = await consumer.getComponentStatusById(component.id);
   if (componentStatus.modified) return true;
-  const areDependenciesChangedP = component.dependencies.getAllIds().map(async dependencyId => {
+  const areDependenciesChangedP = component.dependencies.getAllIds().map(async (dependencyId) => {
     const dependencyStatus = await consumer.getComponentStatusById(dependencyId);
     return dependencyStatus.modified;
   });
   const areDependenciesChanged = await Promise.all(areDependenciesChangedP);
-  return areDependenciesChanged.some(isDependencyChanged => isDependencyChanged);
+  return areDependenciesChanged.some((isDependencyChanged) => isDependencyChanged);
 }
 
 async function _runBuild({
@@ -262,7 +262,7 @@ async function _runBuild({
   consumer,
   scope,
   componentMap,
-  verbose
+  verbose,
 }: {
   component: ConsumerComponent;
   componentRoot?: PathLinux;
@@ -278,7 +278,7 @@ async function _runBuild({
 
   let rootDistDir = componentRoot ? path.join(componentRoot, DEFAULT_DIST_DIRNAME) : undefined;
   const consumerPath = consumer ? consumer.getPath() : '';
-  const files = component.files.map(file => file.clone());
+  const files = component.files.map((file) => file.clone());
   let tmpFolderFullPath;
 
   let componentDir = '';
@@ -295,7 +295,7 @@ async function _runBuild({
     targetDir,
     shouldBuildDependencies,
     installNpmPackages,
-    keepExistingCapsule
+    keepExistingCapsule,
   }: {
     targetDir?: string;
     shouldBuildDependencies?: boolean;
@@ -308,7 +308,7 @@ async function _runBuild({
       shouldBuildDependencies,
       writeDists: false,
       installNpmPackages,
-      keepExistingCapsule
+      keepExistingCapsule,
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
   };
@@ -317,7 +317,7 @@ async function _runBuild({
     componentObject: component.toObject(),
     rootDistDir,
     componentDir,
-    isolate: isolateFunc
+    isolate: isolateFunc,
   };
   const getBuildResults = async () => {
     try {
@@ -331,7 +331,7 @@ async function _runBuild({
           rawConfig: compiler.rawConfig,
           dynamicConfig: compiler.dynamicConfig,
           api: compiler.api,
-          context
+          context,
         };
         const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {

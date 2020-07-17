@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('es6 components', function() {
+describe('es6 components', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

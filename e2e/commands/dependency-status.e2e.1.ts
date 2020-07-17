@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('bit dependency status', function() {
+describe('bit dependency status', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -18,13 +18,13 @@ describe('bit dependency status', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
       helper.command.addComponent('dependency-status-test-files/a.js', {
-        i: 'dependency-status-test-files/a'
+        i: 'dependency-status-test-files/a',
       });
       helper.command.addComponent('dependency-status-test-files/b.js', {
-        i: 'dependency-status-test-files/b'
+        i: 'dependency-status-test-files/b',
       });
       helper.command.addComponent('dependency-status-test-files/c.js', {
-        i: 'dependency-status-test-files/c'
+        i: 'dependency-status-test-files/c',
       });
     });
     it('should print no missing files as all files are mapped', () => {
@@ -38,10 +38,10 @@ describe('bit dependency status', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
       helper.command.addComponent('dependency-status-test-files/a.js', {
-        i: 'dependency-status-test-files/a'
+        i: 'dependency-status-test-files/a',
       });
       helper.command.addComponent('dependency-status-test-files/b.js', {
-        i: 'dependency-status-test-files/b'
+        i: 'dependency-status-test-files/b',
       });
     });
     it('Should print missing files which are not mapped to bit components', () => {

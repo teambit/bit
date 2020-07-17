@@ -7,7 +7,7 @@ export enum LogLevel {
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 export type LogEntry = {
   componentId: string; // TODO: actual ComponentID
@@ -39,7 +39,7 @@ export default class Logger {
       },
       debug(componentId, messages) {
         emitAndLogToFile(componentId, messages, 'debug');
-      }
+      },
     };
   }
   subscribe(extensionName: string, cb: (LogEntry) => void) {
@@ -48,7 +48,7 @@ export default class Logger {
     });
   }
   subscribeAll(cb: (LogEntry) => void) {
-    this.subscribers.forEach(extensionName => {
+    this.subscribers.forEach((extensionName) => {
       this.eventEmitter.on(extensionName, (logEntry: LogEntry) => {
         cb(logEntry);
       });

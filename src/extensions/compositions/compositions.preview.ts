@@ -32,7 +32,7 @@ export class CompositionsPreview {
     preview.registerPreview({
       name: 'compositions',
       render: compPreview.render.bind(compPreview),
-      default: true
+      default: true,
     });
 
     return compPreview;

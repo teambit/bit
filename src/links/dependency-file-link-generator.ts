@@ -12,7 +12,7 @@ import {
   getLinkToPackageContent,
   EXTENSIONS_TO_STRIP_FROM_PACKAGES,
   EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES,
-  EXTENSIONS_NOT_SUPPORT_DIRS
+  EXTENSIONS_NOT_SUPPORT_DIRS,
 } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
@@ -60,7 +60,7 @@ export default class DependencyFileLinkGenerator {
     relativePath,
     dependencyComponent,
     createNpmLinkFiles,
-    targetDir
+    targetDir,
   }: {
     consumer: Consumer | null | undefined;
     bitMap: BitMap;
@@ -98,7 +98,7 @@ export default class DependencyFileLinkGenerator {
     const linkFile = this.prepareLinkFile({
       linkPath: this.getLinkPath(),
       relativePathInDependency: this.relativePathInDependency,
-      depRootDir: this._getDepRootDir()
+      depRootDir: this._getDepRootDir(),
     });
     this.linkFiles.push(linkFile);
 
@@ -126,7 +126,7 @@ export default class DependencyFileLinkGenerator {
     const linkFile = this.prepareLinkFile({
       linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency),
       relativePathInDependency,
-      depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
+      depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir,
     });
     if (this.createNpmLinkFiles && linkFile.linkContent) {
       linkFile.postInstallLink = true;
@@ -141,7 +141,7 @@ export default class DependencyFileLinkGenerator {
       const linkFileInNodeModules = this.prepareLinkFile({
         linkPath: path.join(distRoot, importSourcePath),
         relativePathInDependency: relativeDistPathInDependency,
-        depRootDir: depRootDirDist
+        depRootDir: depRootDirDist,
       });
       this.linkFiles.push(linkFileInNodeModules);
     }
@@ -152,7 +152,7 @@ export default class DependencyFileLinkGenerator {
       const linkFileTs = this.prepareLinkFile({
         linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency).replace('.js', '.d.ts'),
         relativePathInDependency: relativePathInDependency.replace('.js', '.ts'),
-        depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
+        depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir,
       });
       if (this.createNpmLinkFiles && linkFile.linkContent) {
         linkFileTs.postInstallLink = true;
@@ -173,7 +173,7 @@ export default class DependencyFileLinkGenerator {
     const linkFileInDist = this.prepareLinkFile({
       linkPath: path.join(distRoot, sourceRelativePathWithCompiledExt), // Generate a link file inside dist folder of the dependent component
       relativePathInDependency: relativeDistPathInDependency,
-      depRootDir: this._getDepRootDirDist()
+      depRootDir: this._getDepRootDirDist(),
     });
     this.linkFiles.push(linkFileInDist);
   }
@@ -181,7 +181,7 @@ export default class DependencyFileLinkGenerator {
   prepareLinkFile({
     linkPath,
     relativePathInDependency,
-    depRootDir
+    depRootDir,
   }: {
     linkPath: PathOsBased;
     relativePathInDependency: PathOsBased;

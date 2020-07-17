@@ -10,4 +10,4 @@ if (!id) {
 
 runAndUpdateCI({ id, scopePath })
   .then(() => null)
-  .catch(er => process.stderr.write(er));
+  .catch((er) => process.stderr.write(er));

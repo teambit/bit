@@ -13,7 +13,7 @@ export default function splitBy(array: [], fn: (elm: any) => boolean): [Array<an
   const truthy = [];
   const falsy = [];
 
-  array.forEach(elm => {
+  array.forEach((elm) => {
     if (fn(elm)) truthy.push(elm);
     else falsy.push(elm);
   });

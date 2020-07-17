@@ -11,7 +11,7 @@ function toFiles(versionModel: Record<string, any>): Record<string, any> {
       name: versionModel.impl.name,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: versionModel.impl.name,
-      test: false
+      test: false,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.files.push(file);
@@ -30,7 +30,7 @@ function toFiles(versionModel: Record<string, any>): Record<string, any> {
       name: versionModel.dist.name,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: versionModel.dist.name,
-      test: false
+      test: false,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.dists.push(file);
@@ -49,7 +49,7 @@ function toFiles(versionModel: Record<string, any>): Record<string, any> {
       name: versionModel.specs.name,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: versionModel.specs.name,
-      test: true
+      test: true,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.files.push(file);
@@ -61,5 +61,5 @@ function toFiles(versionModel: Record<string, any>): Record<string, any> {
 
 export default {
   name: 'convert impl / specs to files array',
-  migrate: toFiles
+  migrate: toFiles,
 };

@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('big text file', function() {
+describe('big text file', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

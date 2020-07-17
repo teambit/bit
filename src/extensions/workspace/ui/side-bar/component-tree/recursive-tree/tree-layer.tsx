@@ -7,7 +7,7 @@ export function TreeLayer({ childNodes, depth }: TreeLayerProps) {
 
   return (
     <>
-      {childNodes.map(node => {
+      {childNodes.map((node) => {
         const NodeComponent = getTreeNodeComponent(node);
 
         return <NodeComponent key={node.id} node={node} depth={depth + 1} />;

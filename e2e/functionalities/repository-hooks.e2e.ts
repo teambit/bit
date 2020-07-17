@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('repository-hooks', function() {
+describe('repository-hooks', function () {
   let exportOutput;
   let importOutput;
   this.timeout(0);

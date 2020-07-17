@@ -51,7 +51,7 @@ export class CLIExtension {
   register(command: Command) {
     this.setDefaults(command);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    command.commands!.forEach(cmd => this.setDefaults(cmd));
+    command.commands!.forEach((cmd) => this.setDefaults(cmd));
     this.registry.register(command);
   }
 
@@ -77,7 +77,7 @@ export class CLIExtension {
       packageManagerArgs.shift(); // remove the -- delimiter
     }
 
-    Object.values(this.commands).forEach(command => register(command as any, commander, packageManagerArgs));
+    Object.values(this.commands).forEach((command) => register(command as any, commander, packageManagerArgs));
     this.throwForNonExistsCommand(args[0]);
 
     // this is what runs the `execAction` of the specific command and eventually exits the process
@@ -87,12 +87,12 @@ export class CLIExtension {
     }
   }
   private shouldOutputJson() {
-    const showCommand = commander.commands.find(c => c._name === 'show');
+    const showCommand = commander.commands.find((c) => c._name === 'show');
     return showCommand.versions;
   }
   private throwForNonExistsCommand(commandName: string) {
     const commands = Object.keys(this.commands);
-    const aliases = commands.map(c => this.commands[c].alias).filter(a => a);
+    const aliases = commands.map((c) => this.commands[c].alias).filter((a) => a);
     const globalFlags = ['-V', '--version'];
     const validCommands = [...commands, ...aliases, ...globalFlags];
     const commandExist = validCommands.includes(commandName);
@@ -101,7 +101,7 @@ export class CLIExtension {
       didYouMean.returnFirstMatch = true;
       const suggestions = didYouMean(
         commandName,
-        Object.keys(this.commands).filter(c => !this.commands[c].private)
+        Object.keys(this.commands).filter((c) => !this.commands[c].private)
       );
       const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
       throw new CommandNotFound(commandName, suggestion);
@@ -118,7 +118,7 @@ export class CLIExtension {
 export async function CLIProvider([cliExtension]: [CLIExtension]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
-  legacyExtensions.forEach(extension => {
+  legacyExtensions.forEach((extension) => {
     extension.registerHookActionsOnHooksManager();
   });
 
@@ -132,7 +132,7 @@ export async function CLIProvider([cliExtension]: [CLIExtension]) {
 
   const legacyRegistry = buildRegistry(extensionsCommands);
   const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-  allCommands.forEach(command => {
+  allCommands.forEach((command) => {
     const legacyCommandAdapter = new LegacyCommandAdapter(command, cliExtension);
     cliExtension.register(legacyCommandAdapter);
   });

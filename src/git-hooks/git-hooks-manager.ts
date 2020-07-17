@@ -44,7 +44,7 @@ export default class GitHooksManager {
    */
   static init(basePath: string) {
     const self = new GitHooksManager(basePath);
-    GIT_HOOKS_NAMES.forEach(hookName => {
+    GIT_HOOKS_NAMES.forEach((hookName) => {
       const hook = new GitHook(self.hooksDirPath, hookName, bitImportGitHook);
       self.hooks.set(hookName, hook);
     });
@@ -66,7 +66,7 @@ export default class GitHooksManager {
     });
     return {
       added,
-      alreadyExist
+      alreadyExist,
     };
   }
 

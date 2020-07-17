@@ -20,8 +20,8 @@ export default {
     DependencyResolverExtension,
     VariantsExt,
     LoggerExt,
-    GraphQLExtension
+    GraphQLExtension,
   ],
   provider: workspaceProvider,
-  defineRuntime: 'browser'
+  defineRuntime: 'browser',
 } as ExtensionManifest;

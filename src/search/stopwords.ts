@@ -70,7 +70,7 @@ const words = [
   'you',
   'your',
   'a',
-  'i'
+  'i',
 ];
 
 export default words;

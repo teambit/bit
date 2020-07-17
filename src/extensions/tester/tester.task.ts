@@ -19,7 +19,7 @@ export class TesterTask implements BuildTask {
     const components = detectTestFiles(context.components);
 
     const testMatch = components.reduce((acc: string[], component: any) => {
-      const specs = component.specs.map(specFile => {
+      const specs = component.specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
         return join(capsule.wrkDir, specFile);
@@ -32,7 +32,7 @@ export class TesterTask implements BuildTask {
     const testerContext = Object.assign(context, {
       release: true,
       specFiles: testMatch,
-      rootPath: CAPSULES_BASE_DIR
+      rootPath: CAPSULES_BASE_DIR,
     });
 
     // @todo: Ran to fix.

@@ -24,15 +24,11 @@ describe('React docs Parser', () => {
       });
       it('should have properties parsed', () => {
         expect(doclet).to.have.property('properties');
-        expect(doclet.properties)
-          .to.be.an('array')
-          .with.lengthOf(3);
+        expect(doclet.properties).to.be.an('array').with.lengthOf(3);
       });
       it('should have methods parsed', () => {
         expect(doclet).to.have.property('methods');
-        expect(doclet.methods)
-          .to.be.an('array')
-          .with.lengthOf(2);
+        expect(doclet.methods).to.be.an('array').with.lengthOf(2);
       });
       it('should parse the description correctly', () => {
         expect(doclet)
@@ -40,19 +36,14 @@ describe('React docs Parser', () => {
           .that.is.equal('Styled button component for the rich and famous!');
       });
       it('should parse the examples correctly', () => {
-        expect(doclet)
-          .to.have.property('examples')
-          .that.is.an('array')
-          .with.lengthOf(1);
+        expect(doclet).to.have.property('examples').that.is.an('array').with.lengthOf(1);
       });
       it('should preserve the spaces in the example', () => {
         const example = doclet.examples[0].raw;
         expect(example).to.string('  text');
       });
       it('should parse the properties description correctly', () => {
-        expect(doclet)
-          .to.have.property('properties')
-          .that.is.an('array');
+        expect(doclet).to.have.property('properties').that.is.an('array');
         expect(doclet.properties[0].description).to.equal('Button text.');
       });
     });
@@ -67,9 +58,7 @@ describe('React docs Parser', () => {
       });
       it('should have properties parsed', () => {
         expect(doclet).to.have.property('properties');
-        expect(doclet.properties)
-          .to.be.an('array')
-          .with.lengthOf(1);
+        expect(doclet.properties).to.be.an('array').with.lengthOf(1);
       });
       it('should parse the description correctly', () => {
         expect(doclet)
@@ -77,9 +66,7 @@ describe('React docs Parser', () => {
           .that.is.equal('A wrapper resembling a physical card, grouping elements and improve readability.');
       });
       it('should parse the properties type correctly', () => {
-        expect(doclet)
-          .to.have.property('properties')
-          .that.is.an('array');
+        expect(doclet).to.have.property('properties').that.is.an('array');
         expect(doclet.properties[0].type).to.equal("'none' | 'low' | 'medium' | 'high'");
       });
     });

@@ -14,7 +14,7 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
     .map((component: ApplyVersionResult) => {
       const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
       const files = Object.keys(component.filesStatus)
-        .map(file => {
+        .map((file) => {
           const note =
             component.filesStatus[file] === FileStatus.manual
               ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
@@ -46,10 +46,10 @@ export default class Merge implements LegacyCommand {
     [
       '',
       'existing',
-      'EXPERIMENTAL. relevant for lanes. checkout only components in a lane that exist in the workspace'
+      'EXPERIMENTAL. relevant for lanes. checkout only components in a lane that exist in the workspace',
     ],
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
-    ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap']
+    ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
 
@@ -64,7 +64,7 @@ export default class Merge implements LegacyCommand {
       lane = false,
       noSnap = false,
       existing = false,
-      message
+      message,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -90,16 +90,16 @@ export default class Merge implements LegacyCommand {
     version,
     resolvedComponents,
     abortedComponents,
-    mergeSnapResults
+    mergeSnapResults,
   }: ApplyVersionResults): string {
     if (resolvedComponents) {
       const title = 'successfully resolved component(s)\n';
-      const componentsStr = resolvedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
+      const componentsStr = resolvedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
     if (abortedComponents) {
       const title = 'successfully aborted the merge of the following component(s)\n';
-      const componentsStr = abortedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
+      const componentsStr = abortedComponents.map((c) => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
     const getSuccessOutput = () => {
@@ -113,15 +113,15 @@ export default class Merge implements LegacyCommand {
     const getSnapsOutput = () => {
       if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
       const { snappedComponents, autoSnappedResults } = mergeSnapResults;
-      const outputComponents = comps => {
+      const outputComponents = (comps) => {
         return comps
-          .map(component => {
+          .map((component) => {
             let componentOutput = `     > ${component.id.toString()}`;
-            const autoTag = autoSnappedResults.filter(result =>
+            const autoTag = autoSnappedResults.filter((result) =>
               result.triggeredBy.searchWithoutScopeAndVersion(component.id)
             );
             if (autoTag.length) {
-              const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+              const autoTagComp = autoTag.map((a) => a.component.toBitIdWithLatestVersion().toString());
               componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
             }
             return componentOutput;
@@ -139,7 +139,7 @@ export default class Merge implements LegacyCommand {
       const title = 'the merge has been canceled on the following component(s)';
       const body = failedComponents
         .map(
-          failedComponent =>
+          (failedComponent) =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
         .join('\n');

@@ -7,7 +7,7 @@ export default async function runAndUpdateCI({
   verbose,
   directory,
   keep = false,
-  noCache = false
+  noCache = false,
 }: {
   id: string;
   scopePath?: string;

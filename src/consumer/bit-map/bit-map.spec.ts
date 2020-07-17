@@ -11,7 +11,7 @@ const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
   files: [{ name: 'is-string.js', relativePath: 'is-string.js', test: false }],
   mainFile: 'is-string.js',
-  origin: COMPONENT_ORIGINS.AUTHORED
+  origin: COMPONENT_ORIGINS.AUTHORED,
 };
 
 const addComponentParamsImportedFixture = {
@@ -19,10 +19,10 @@ const addComponentParamsImportedFixture = {
   files: [{ name: 'is-string-imported.js', relativePath: 'is-string-imported.js', test: false }],
   mainFile: 'is-string-imported.js',
   origin: COMPONENT_ORIGINS.IMPORTED,
-  rootDir: 'utils'
+  rootDir: 'utils',
 };
 
-describe('BitMap', function() {
+describe('BitMap', function () {
   // @ts-ignore
   logger.debug = () => {};
   // @ts-ignore

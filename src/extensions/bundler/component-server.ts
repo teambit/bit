@@ -28,7 +28,7 @@ export class ComponentServer {
    * determine whether component server contains a component.
    */
   hasComponent(component: Component) {
-    return this.components.find(contextComponent => contextComponent.equals(component));
+    return this.components.find((contextComponent) => contextComponent.equals(component));
   }
 
   /**

@@ -67,7 +67,7 @@ export class ScopeJson {
       license: this.license,
       groupName: this.groupName,
       version: this.version,
-      lanes: this.lanes
+      lanes: this.lanes,
     });
   }
 
@@ -114,7 +114,7 @@ export class ScopeJson {
     this.lanes.tracking.push({
       localLane: trackLaneData.localLane,
       remoteLane: trackLaneData.remoteLane,
-      remoteScope: trackLaneData.remoteScope
+      remoteScope: trackLaneData.remoteScope,
     });
     this.hasChanged = true;
   }
@@ -148,6 +148,6 @@ export class ScopeJson {
   getPopulatedLicense(): Promise<string | null | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.get('license') || !fs.existsSync(this.get('license'))) return Promise.resolve();
-    return fs.readFile(this.get('license')).then(license => license.toString());
+    return fs.readFile(this.get('license')).then((license) => license.toString());
   }
 }

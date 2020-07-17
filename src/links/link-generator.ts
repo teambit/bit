@@ -5,7 +5,7 @@ import {
   DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
   ANGULAR_PACKAGE_IDENTIFIER,
-  ANGULAR_BIT_ENTRY_POINT_FILE
+  ANGULAR_BIT_ENTRY_POINT_FILE,
 } from '../constants';
 import { getExt } from '../utils';
 import { OutputFileParams } from '../utils/fs-output-file';
@@ -48,7 +48,7 @@ function getComponentLinks({
   component,
   dependencies,
   createNpmLinkFiles,
-  bitMap
+  bitMap,
 }: {
   consumer?: Consumer | null | undefined;
   component: Component;
@@ -82,7 +82,7 @@ function getComponentLinks({
         component,
         relativePath,
         dependencyComponent,
-        createNpmLinkFiles
+        createNpmLinkFiles,
       });
       return dependencyFileLinkGenerator.generate();
     });
@@ -110,20 +110,20 @@ function getComponentLinks({
   }
 
   if (symlinks.length) {
-    dataToPersist.addManySymlinks(symlinks.map(symlink => Symlink.makeInstance(symlink.source, symlink.dest)));
+    dataToPersist.addManySymlinks(symlinks.map((symlink) => Symlink.makeInstance(symlink.source, symlink.dest)));
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
+  dataToPersist.addManyFiles(linksToWrite.map((linkToWrite) => LinkFile.load(linkToWrite)));
   return dataToPersist;
 }
 
 function _getDependencyComponent(dependencyId: BitId, dependencies: Component[], componentId: BitId): Component {
-  const componentWithSameVersion = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+  const componentWithSameVersion = dependencies.find((dependency) => dependency.id.isEqual(dependencyId));
   if (componentWithSameVersion) return componentWithSameVersion;
-  const dependencyComponent = dependencies.find(dependency => dependency.id.isEqualWithoutVersion(dependencyId));
+  const dependencyComponent = dependencies.find((dependency) => dependency.id.isEqualWithoutVersion(dependencyId));
   if (!dependencyComponent) {
     const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
-The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
+The dependencies array has the following ids: ${dependencies.map((d) => d.id).join(', ')}`;
     throw new Error(errorMessage);
   }
   logger.warn(`link-generation: failed finding an exact version of ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
@@ -160,12 +160,12 @@ function groupLinks(
   symlinks: SymlinkType[];
   postInstallSymlinks: SymlinkType[];
 } {
-  const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
+  const groupedLinks = groupBy(flattenLinks, (link) => link.linkPath);
   const linksToWrite = [];
   const postInstallLinks = [];
   const postInstallSymlinks = [];
   const symlinks = [];
-  Object.keys(groupedLinks).forEach(group => {
+  Object.keys(groupedLinks).forEach((group) => {
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
@@ -184,7 +184,7 @@ function groupLinks(
       // check by the first item of the array, it can be any other item as well
       content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
     }
-    content += groupedLinks[group].map(linkItem => linkItem.linkContent).join('\n');
+    content += groupedLinks[group].map((linkItem) => linkItem.linkContent).join('\n');
     const linkFile: OutputFileParams = { filePath: group, content };
     if (firstGroupItem.postInstallLink) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -253,7 +253,7 @@ function getComponentsDependenciesLinks(
         component,
         dependencies: componentWithDeps.allDependencies,
         createNpmLinkFiles,
-        bitMap
+        bitMap,
       });
       componentsDependenciesLinks.merge(componentsLinks);
       linkedComponents.push(component.id);
@@ -274,7 +274,7 @@ function getComponentsDependenciesLinks(
           component: dep,
           dependencies,
           createNpmLinkFiles,
-          bitMap
+          bitMap,
         });
         componentsDependenciesLinks.merge(dependencyLinks);
         linkedComponents.push(dep.id);
@@ -331,11 +331,11 @@ function getInternalCustomResolvedLinks(
     return `node_modules/${importSource}${suffixToAdd}`;
   };
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
-  const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  const customResolvedPathsToProcess = R.uniqBy(JSON.stringify, component.customResolvedPaths).filter(customPath =>
+  const isResolvePathsInvalid = (customPath) => !invalidImportSources.includes(customPath.importSource);
+  const customResolvedPathsToProcess = R.uniqBy(JSON.stringify, component.customResolvedPaths).filter((customPath) =>
     isResolvePathsInvalid(customPath)
   );
-  return customResolvedPathsToProcess.map(customPath => {
+  return customResolvedPathsToProcess.map((customPath) => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
     const dest = getDestination(customPath);
     const destAbs = path.join(componentDir, dest);
@@ -356,7 +356,7 @@ function getInternalCustomResolvedLinks(
       postInstallLink: createNpmLinkFiles,
       customResolveMapping,
       symlinkTo: getSymlink(),
-      postInstallSymlink
+      postInstallSymlink,
     };
   });
 }
@@ -479,5 +479,5 @@ export {
   getEntryPointsForComponent, // irrelevant for Harmony
   getComponentsDependenciesLinks, // irrelevant if all components use Harmony
   getIndexFileName, // irrelevant for Harmony
-  getEntryPointForAngularComponent
+  getEntryPointForAngularComponent,
 };

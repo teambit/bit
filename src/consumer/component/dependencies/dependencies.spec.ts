@@ -11,7 +11,7 @@ describe('Dependencies', () => {
     let validateFunc;
     beforeEach(() => {
       const dependenciesFixtureCloned = R.clone(dependenciesFixture);
-      dependenciesFixtureCloned.forEach(d => (d.id = BitId.parse(d.id)));
+      dependenciesFixtureCloned.forEach((d) => (d.id = BitId.parse(d.id)));
       dependencies = new Dependencies(dependenciesFixtureCloned);
       validateFunc = () => dependencies.validate();
     });

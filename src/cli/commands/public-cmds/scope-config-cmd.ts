@@ -32,7 +32,7 @@ class ScopeConfigList implements LegacyCommand {
 
   report(conf: { [key: string]: any }): string {
     return objectToStringifiedTupleArray(conf)
-      .map(tuple => {
+      .map((tuple) => {
         return tuple.join('     ');
       })
       .join('\n');
@@ -84,7 +84,7 @@ export default class ScopeConfig implements LegacyCommand {
 
   report(conf: { [key: string]: string }): string {
     return objectToStringifiedTupleArray(conf)
-      .map(tuple => {
+      .map((tuple) => {
         return tuple.join('     ');
       })
       .join('\n');

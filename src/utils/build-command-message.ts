@@ -6,7 +6,7 @@ module.exports = function buildCommandMessage(payload, context, compress = true)
     headers: {
       version: BIT_VERSION,
       compressed: compress,
-      context
-    }
+      context,
+    },
   };
 };

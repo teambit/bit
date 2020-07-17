@@ -4,7 +4,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe('import/require using module paths when no scope is set', function() {
+describe('import/require using module paths when no scope is set', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

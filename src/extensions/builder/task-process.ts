@@ -17,12 +17,12 @@ export class TaskProcess {
   ) {}
 
   public throwIfErrorsFound() {
-    const compsWithErrors = this.taskResult.components.filter(c => c.errors.length);
+    const compsWithErrors = this.taskResult.components.filter((c) => c.errors.length);
     if (compsWithErrors.length) {
       const title = `Builder found the following errors while running "${this.task.extensionId}" task\n`;
       const errorsStr = compsWithErrors
-        .map(c => {
-          const errors = c.errors.map(e => (typeof e === 'string' ? e : e.toString()));
+        .map((c) => {
+          const errors = c.errors.map((e) => (typeof e === 'string' ? e : e.toString()));
           return `${c.id.toString()}\n${errors.join('\n')}`;
         })
         .join('\n\n');
@@ -32,7 +32,7 @@ export class TaskProcess {
 
   public async saveTaskResults() {
     const { components } = this.buildContext;
-    const resultsP = components.map(async component => {
+    const resultsP = components.map(async (component) => {
       this.saveDataToComponent(component);
       await this.saveArtifactsToComponent(component);
     });
@@ -41,7 +41,7 @@ export class TaskProcess {
   }
 
   private saveDataToComponent(component: Component) {
-    const componentResult = this.taskResult.components.find(c => c.id.isEqual(component.id));
+    const componentResult = this.taskResult.components.find((c) => c.id.isEqual(component.id));
     const data = componentResult && componentResult.data;
     if (data) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
@@ -57,7 +57,7 @@ export class TaskProcess {
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
       const files = await this.getFilesByArtifacts(capsule);
 
-      const artifactsVinyl = files.map(file => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));
+      const artifactsVinyl = files.map((file) => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));
       extensionDataEntry.artifacts = artifactsVinyl;
     }
   }
@@ -73,7 +73,7 @@ export class TaskProcess {
   }
 
   private async getFilesByArtifacts(capsule: Capsule): Promise<string[]> {
-    const filesP = this.taskResult.artifacts.map(async artifact => {
+    const filesP = this.taskResult.artifacts.map(async (artifact) => {
       return getFilesFromCapsule(capsule, artifact.dirName);
     });
     return flatten(await Promise.all(filesP));
@@ -88,5 +88,5 @@ export class TaskProcess {
  */
 async function getFilesFromCapsule(capsule: Capsule, dir: string): Promise<string[]> {
   const files = glob.sync('*', { cwd: path.join(capsule.wrkDir, dir), nodir: true });
-  return files.map(file => path.join(dir, file));
+  return files.map((file) => path.join(dir, file));
 }

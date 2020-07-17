@@ -9,7 +9,7 @@ console.log('got ' + a() + ' and got B')`;
 
 // @todo: this is failing due to NPM unable to "npm install" on capsules.
 // once Librarian is the one responsible to install packages on capsules, this must work.
-describe('cyclic dependencies', function() {
+describe('cyclic dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -107,7 +107,7 @@ describe('cyclic dependencies', function() {
     });
     it('leaves (A3 and is-type) should not have any dependency', () => {
       const leaves = ['comp/a3@latest', 'utils/is-type@latest'];
-      leaves.forEach(leaf => {
+      leaves.forEach((leaf) => {
         const catComp = helper.command.catComponent(leaf);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComp.dependencies).to.have.lengthOf(0);
@@ -133,7 +133,7 @@ describe('cyclic dependencies', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.dependencies).to.have.lengthOf(2);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependenciesIds = A1.dependencies.map(dep => dep.id);
+      const dependenciesIds = A1.dependencies.map((dep) => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
       expect(dependenciesIds).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -161,7 +161,7 @@ describe('cyclic dependencies', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.dependencies).to.have.lengthOf(2);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependenciesIds = B2.dependencies.map(dep => dep.id);
+      const dependenciesIds = B2.dependencies.map((dep) => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
       expect(dependenciesIds).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -189,7 +189,7 @@ describe('cyclic dependencies', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependenciesIds = B1.dependencies.map(dep => dep.id);
+      const dependenciesIds = B1.dependencies.map((dep) => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.have.lengthOf(8);
@@ -216,7 +216,7 @@ describe('cyclic dependencies', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependenciesIds = B3.dependencies.map(dep => dep.id);
+      const dependenciesIds = B3.dependencies.map((dep) => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.have.lengthOf(3);
@@ -233,7 +233,7 @@ describe('cyclic dependencies', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependenciesIds = B4.dependencies.map(dep => dep.id);
+      const dependenciesIds = B4.dependencies.map((dep) => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.flattenedDependencies).to.have.lengthOf(2);

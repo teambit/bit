@@ -22,7 +22,7 @@ export default class Put implements LegacyCommand {
     checkVersionCompatibilityOnTheServer(headers.version);
     return new Promise((resolve, reject) => {
       process.stdin
-        .on('data', chunk => {
+        .on('data', (chunk) => {
           data += chunk.toString();
         })
         .on('end', () => {

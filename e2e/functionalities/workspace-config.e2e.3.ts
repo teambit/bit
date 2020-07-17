@@ -5,12 +5,12 @@ import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd'
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 import {
   MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
-  componentIssuesLabels
+  componentIssuesLabels,
 } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
-describe('workspace config', function() {
+describe('workspace config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -35,7 +35,7 @@ describe('workspace config', function() {
       packageJson.bit = {
         env: {},
         componentsDefaultDirectory: 'components/{name}',
-        packageManager: 'npm'
+        packageManager: 'npm',
       };
       helper.packageJson.write(packageJson);
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -90,9 +90,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
         });
@@ -130,9 +130,9 @@ describe('workspace config', function() {
           packageJson.bit.overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
+              },
+            },
           };
           helper.packageJson.write(packageJson);
         });
@@ -170,9 +170,9 @@ describe('workspace config', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              chai: '4.0.0'
-            }
-          }
+              chai: '4.0.0',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -212,9 +212,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_FILE_PREFIX}bar-dir/bar.js`]: '-'
-              }
-            }
+                [`${OVERRIDE_FILE_PREFIX}bar-dir/bar.js`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -240,9 +240,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_FILE_PREFIX}foo-dir/foo2.js`]: '-'
-              }
-            }
+                [`${OVERRIDE_FILE_PREFIX}foo-dir/foo2.js`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -279,9 +279,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_FILE_PREFIX}foo-dir/*`]: '-'
-              }
-            }
+                [`${OVERRIDE_FILE_PREFIX}foo-dir/*`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -302,9 +302,9 @@ describe('workspace config', function() {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
-                }
-              }
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
           });
@@ -327,9 +327,9 @@ describe('workspace config', function() {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
-                }
-              }
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
             showBar = helper.command.showComponentParsed('bar');
@@ -360,9 +360,9 @@ describe('workspace config', function() {
             const overrides = {
               bar: {
                 devDependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+'
-                }
-              }
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
           });
@@ -384,9 +384,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/*`]: '-'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/*`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -416,9 +416,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_FILE_PREFIX}foo-dir/foo3*`]: '-' // we don't enter the entire file foo-dir/foo3.js because the require string doesn't have the extension
-              }
-            }
+                [`${OVERRIDE_FILE_PREFIX}foo-dir/foo3*`]: '-', // we don't enter the entire file foo-dir/foo3.js because the require string doesn't have the extension
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -449,9 +449,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils/is-string`]: '-'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils/is-string`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -482,9 +482,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -514,9 +514,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                'non-exist-package': '-'
-              }
-            }
+                'non-exist-package': '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -546,9 +546,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                'existing-package': '-'
-              }
-            }
+                'existing-package': '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -578,15 +578,15 @@ describe('workspace config', function() {
           helper.command.addComponent('bar-dir/*', {
             i: 'bar',
             m: 'bar-dir/bar.js',
-            t: 'bar-dir/bar.spec.js'
+            t: 'bar-dir/bar.spec.js',
           });
 
           const overrides = {
             bar: {
               devDependencies: {
-                'existing-package': '-'
-              }
-            }
+                'existing-package': '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -618,9 +618,9 @@ describe('workspace config', function() {
           const overrides = {
             'bar/foo': {
               peerDependencies: {
-                chai: '-'
-              }
-            }
+                chai: '-',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar/foo');
@@ -662,9 +662,9 @@ describe('workspace config', function() {
         const overrides = {
           bar: {
             dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}foo2`]: '-'
-            }
-          }
+              [`${OVERRIDE_COMPONENT_PREFIX}foo2`]: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -750,9 +750,9 @@ describe('workspace config', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              chai: '-'
-            }
-          }
+              chai: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();
@@ -848,7 +848,7 @@ describe('workspace config', function() {
             packageJson.bit = {
               env: {},
               componentsDefaultDirectory: 'components/{name}',
-              packageManager: 'npm'
+              packageManager: 'npm',
             };
             helper.packageJson.write(packageJson);
             try {
@@ -877,16 +877,16 @@ describe('workspace config', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              chai: '-'
-            }
-          }
+              chai: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();
         const overridesChanged = {
           'bar/foo': {
-            dependencies: {}
-          }
+            dependencies: {},
+          },
         };
         helper.bitJson.addOverrides(overridesChanged);
       });
@@ -906,9 +906,9 @@ describe('workspace config', function() {
           'bar/foo': {
             dependencies: {
               chai: '-',
-              lodash: '-'
-            }
-          }
+              lodash: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();
@@ -916,9 +916,9 @@ describe('workspace config', function() {
           'bar/foo': {
             dependencies: {
               lodash: '-',
-              chai: '-'
-            }
-          }
+              chai: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overridesChangedOrder);
       });
@@ -939,12 +939,12 @@ describe('workspace config', function() {
           const overrides = {
             'bar/foo': {
               dependencies: {
-                chai: '-'
+                chai: '-',
               },
               peerDependencies: {
-                chai: '+'
-              }
-            }
+                chai: '+',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar/foo');
@@ -976,9 +976,9 @@ describe('workspace config', function() {
           const overrides = {
             'bar/foo': {
               peerDependencies: {
-                chai: '2.2.0'
-              }
-            }
+                chai: '2.2.0',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar/foo');
@@ -1001,9 +1001,9 @@ describe('workspace config', function() {
           const overrides = {
             'bar/foo': {
               peerDependencies: {
-                chai: '+'
-              }
-            }
+                chai: '+',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
         });
@@ -1031,9 +1031,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -1085,7 +1085,7 @@ describe('workspace config', function() {
               const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar'));
               expect(packageJson).to.have.property('bit');
               expect(packageJson.bit.overrides.dependencies).to.deep.equal({
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1'
+                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1',
               });
             });
             it('bit status should show a clean state', () => {
@@ -1095,7 +1095,7 @@ describe('workspace config', function() {
               before(() => {
                 const componentPackageJson = helper.packageJson.readComponentPackageJson('bar');
                 componentPackageJson.bit.overrides.dependencies = {
-                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.foo`]: '0.0.1'
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.foo`]: '0.0.1',
                 };
                 helper.packageJson.write(componentPackageJson, path.join(helper.scopes.localPath, 'components/bar'));
               });
@@ -1162,9 +1162,9 @@ describe('workspace config', function() {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+'
-              }
-            }
+                [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+',
+              },
+            },
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
@@ -1231,14 +1231,14 @@ describe('workspace config', function() {
           bitJson.overrides = {
             foo1: {
               env: {
-                compiler: 'my-scope/foo1-compiler@0.0.1'
-              }
+                compiler: 'my-scope/foo1-compiler@0.0.1',
+              },
             },
             foo2: {
               env: {
-                compiler: 'my-scope/foo2-compiler@0.0.1'
-              }
-            }
+                compiler: 'my-scope/foo2-compiler@0.0.1',
+              },
+            },
           };
           helper.bitJson.write(bitJson);
         });
@@ -1257,14 +1257,14 @@ describe('workspace config', function() {
             const overrides = {
               foo1: {
                 env: {
-                  compiler: '-'
-                }
+                  compiler: '-',
+                },
               },
               foo2: {
                 env: {
-                  compiler: 'my-scope/foo2-compiler@0.0.1'
-                }
-              }
+                  compiler: 'my-scope/foo2-compiler@0.0.1',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
           });
@@ -1277,13 +1277,13 @@ describe('workspace config', function() {
           before(() => {
             const overrides = {
               foo1: {
-                env: {}
+                env: {},
               },
               foo2: {
                 env: {
-                  compiler: 'my-scope/foo2-compiler@0.0.1'
-                }
-              }
+                  compiler: 'my-scope/foo2-compiler@0.0.1',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
           });
@@ -1306,9 +1306,9 @@ describe('workspace config', function() {
         const overrides = {
           foo: {
             dependencies: {
-              [`${OVERRIDE_FILE_PREFIX}src/utils/*`]: '-'
-            }
-          }
+              [`${OVERRIDE_FILE_PREFIX}src/utils/*`]: '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();
@@ -1365,12 +1365,12 @@ describe('workspace config', function() {
         overrides = {
           'bar/*': {
             peerDependencies: {
-              chai: '2.2.0'
+              chai: '2.2.0',
             },
             env: {
-              compiler: 'bit.env/my-special-compiler@0.0.1'
-            }
-          }
+              compiler: 'bit.env/my-special-compiler@0.0.1',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         const bitJson = helper.bitJson.read();
@@ -1416,16 +1416,14 @@ describe('workspace config', function() {
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/*': {
-            bin: 'my-bin-file.js'
-          }
+            bin: 'my-bin-file.js',
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
       it('bit show should show the overrides', () => {
         const show = helper.command.showComponentParsed('bar/foo');
-        expect(show.overrides)
-          .to.have.property('bin')
-          .equal('my-bin-file.js');
+        expect(show.overrides).to.have.property('bin').equal('my-bin-file.js');
       });
       describe('tag, export and import the component', () => {
         let authorScope;
@@ -1439,9 +1437,7 @@ describe('workspace config', function() {
         });
         it('should write the values into package.json file', () => {
           const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
-          expect(packageJson)
-            .to.have.property('bin')
-            .that.equals('my-bin-file.js');
+          expect(packageJson).to.have.property('bin').that.equals('my-bin-file.js');
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
@@ -1493,9 +1489,7 @@ describe('workspace config', function() {
             });
             it('bit show should display the modified field and not the original one', () => {
               const show = helper.command.showComponentParsed('bar/foo');
-              expect(show.overrides)
-                .to.have.property('bin')
-                .that.equals('my-new-file.js');
+              expect(show.overrides).to.have.property('bin').that.equals('my-new-file.js');
             });
           });
         });
@@ -1513,24 +1507,24 @@ describe('workspace config', function() {
         overrides = {
           '*': {
             scripts: {
-              build: 'babel build'
-            }
+              build: 'babel build',
+            },
           },
           'bar/*': {
             bin: 'my-bin-file.js',
             scripts: {
               test: 'mocha test',
-              lint: 'eslint lint'
+              lint: 'eslint lint',
             },
-            propagate: true
+            propagate: true,
           },
           'bar/foo': {
             scripts: {
               test: 'jest test',
-              watch: 'babel watch'
+              watch: 'babel watch',
             },
-            propagate: true
-          }
+            propagate: true,
+          },
         };
         helper.bitJson.addOverrides(overrides);
         show = helper.command.showComponentParsed();
@@ -1539,21 +1533,13 @@ describe('workspace config', function() {
         expect(show.overrides).to.not.have.property('propagate');
       });
       it('should propagate to a more general rule and save string values that are not in the specific rule', () => {
-        expect(show.overrides)
-          .to.have.property('bin')
-          .that.equals('my-bin-file.js');
+        expect(show.overrides).to.have.property('bin').that.equals('my-bin-file.js');
       });
       it('should propagate to a more general rule and merge objects that are in the specific rule', () => {
         expect(show.overrides).to.have.property('scripts');
-        expect(show.overrides.scripts)
-          .to.have.property('build')
-          .that.equals('babel build');
-        expect(show.overrides.scripts)
-          .to.have.property('lint')
-          .that.equals('eslint lint');
-        expect(show.overrides.scripts)
-          .to.have.property('watch')
-          .that.equals('babel watch');
+        expect(show.overrides.scripts).to.have.property('build').that.equals('babel build');
+        expect(show.overrides.scripts).to.have.property('lint').that.equals('eslint lint');
+        expect(show.overrides.scripts).to.have.property('watch').that.equals('babel watch');
       });
       it('should let the more specific rule wins when it contradict a more general rule', () => {
         expect(show.overrides.scripts).to.have.property('test');
@@ -1599,8 +1585,8 @@ describe('workspace config', function() {
           const overrides = {
             '*': {
               bin: 'my-bin-file.js',
-              exclude: ['bar/foo']
-            }
+              exclude: ['bar/foo'],
+            },
           };
           helper.bitJson.addOverrides(overrides);
         });
@@ -1614,8 +1600,8 @@ describe('workspace config', function() {
           const overrides = {
             '*': {
               bin: 'my-bin-file.js',
-              exclude: ['bar/*']
-            }
+              exclude: ['bar/*'],
+            },
           };
           helper.bitJson.addOverrides(overrides);
         });
@@ -1642,7 +1628,7 @@ describe('workspace config', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         const overrides = {
-          bar: 1234
+          bar: 1234,
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -1656,8 +1642,8 @@ describe('workspace config', function() {
         helper.scopeHelper.reInitLocalScope();
         const overrides = {
           bar: {
-            name: 'foo' // the name field of package.json is not permitted to change
-          }
+            name: 'foo', // the name field of package.json is not permitted to change
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -1673,8 +1659,8 @@ describe('workspace config', function() {
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/*': {
-            private: 'foo' // according to npm specs it should be boolean
-          }
+            private: 'foo', // according to npm specs it should be boolean
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -1690,8 +1676,8 @@ describe('workspace config', function() {
         helper.scopeHelper.reInitLocalScope();
         const overrides = {
           bar: {
-            dependencies: 1234
-          }
+            dependencies: 1234,
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -1706,9 +1692,9 @@ describe('workspace config', function() {
         const overrides = {
           foo: {
             dependencies: {
-              bar: false
-            }
-          }
+              bar: false,
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });
@@ -1722,8 +1708,8 @@ describe('workspace config', function() {
         helper.scopeHelper.reInitLocalScope();
         const overrides = {
           '*': {
-            exclude: 'bar'
-          }
+            exclude: 'bar',
+          },
         };
         helper.bitJson.addOverrides(overrides);
       });

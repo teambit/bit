@@ -5,7 +5,7 @@ import {
   resolvePackagePath,
   resolvePackageData,
   resolvePackageNameByPath,
-  ResolvedPackageData
+  ResolvedPackageData,
 } from '../../../../utils/packages';
 
 type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
@@ -37,9 +37,9 @@ export class MissingHandler {
     // It see them as missing even if they are exists
     const foundPackages: FoundPackages = {
       packages: {},
-      bits: []
+      bits: [],
     };
-    missingGroups.forEach(group => this.processMissingGroup(group, foundPackages));
+    missingGroups.forEach((group) => this.processMissingGroup(group, foundPackages));
 
     return { missingGroups, foundPackages };
   }
@@ -47,7 +47,7 @@ export class MissingHandler {
   private processMissingGroup(group: MissingGroupItem, foundPackages: FoundPackages) {
     if (!group.packages) return;
     const missingPackages: string[] = [];
-    group.packages.forEach(packageName => {
+    group.packages.forEach((packageName) => {
       // Don't try to resolve the same package twice
       if (missingPackages.includes(packageName)) return;
       const resolvedPath = resolvePackagePath(packageName, this.componentDir, this.workspacePath);
@@ -67,7 +67,7 @@ export class MissingHandler {
         const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
         if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
         const packageWithVersion = {
-          [resolvedPackageData.name]: version
+          [resolvedPackageData.name]: version,
         };
         Object.assign(foundPackages.packages, packageWithVersion);
       }
@@ -80,11 +80,11 @@ export class MissingHandler {
    * @returns {Function} function which group the dependencies
    */
   private groupMissingByType(): MissingGroupItem[] {
-    const byPathType = R.groupBy(item => {
+    const byPathType = R.groupBy((item) => {
       if (item.startsWith(`${this.bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
       return item.startsWith('.') ? 'files' : 'packages';
     });
-    return Object.keys(this.missing).map(key =>
+    return Object.keys(this.missing).map((key) =>
       Object.assign(
         { originFile: processPath(key, {}, this.componentDir) },
         byPathType(this.missing[key], this.bindingPrefix)

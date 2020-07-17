@@ -14,12 +14,12 @@ export class OverviewSection implements Section {
   navigationLink = {
     to: '',
     exact: true,
-    children: 'Overview'
+    children: 'Overview',
   };
 
   route = {
     path: '',
     exact: true,
-    children: <Overview />
+    children: <Overview />,
   };
 }

@@ -29,7 +29,7 @@ const loader: Loader = {
   fail,
   warn,
   info,
-  stopAndPersist
+  stopAndPersist,
 };
 
 function start(text: string | null | undefined): Loader {

@@ -15,5 +15,5 @@ export {
   ensureMainFileDeclartaion,
   changeImportSpecifiersToArray,
   updateBindingPrefixToNewDefault,
-  removeLatestFromCompiler
+  removeLatestFromCompiler,
 };

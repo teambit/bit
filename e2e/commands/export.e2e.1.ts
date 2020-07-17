@@ -7,7 +7,7 @@ import { CURRENT_UPSTREAM } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('bit export command', function() {
+describe('bit export command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -467,7 +467,7 @@ describe('bit export command', function() {
         }
       });
     });
-    describe('when the group exists and the current user has permission to that group', function() {
+    describe('when the group exists and the current user has permission to that group', function () {
       if (isWin || process.env.npm_config_with_ssh) {
         // @ts-ignore
         this.skip;
@@ -864,7 +864,7 @@ describe('bit export command', function() {
         before(() => {
           helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
           const forkScopeList = helper.command.listScopeParsed(forkScope);
-          forkScopeIds = forkScopeList.map(c => c.id);
+          forkScopeIds = forkScopeList.map((c) => c.id);
         });
         it('should fork the component', () => {
           expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
@@ -877,9 +877,7 @@ describe('bit export command', function() {
         });
         it('bit show should display the remote details', () => {
           const show = helper.command.showComponentParsed('utils/is-string');
-          expect(show)
-            .to.have.property('scopesList')
-            .with.lengthOf(2);
+          expect(show).to.have.property('scopesList').with.lengthOf(2);
           expect(show.scopesList[0].name).to.equal(helper.scopes.remote);
           expect(show.scopesList[1].name).to.equal(forkScope);
         });
@@ -893,7 +891,7 @@ describe('bit export command', function() {
 
             helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
             const forkScopeList = helper.command.listScopeParsed(forkScope);
-            forkScopeIds = forkScopeList.map(c => c.id);
+            forkScopeIds = forkScopeList.map((c) => c.id);
           });
           it('should fork the component', () => {
             expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
@@ -923,7 +921,7 @@ describe('bit export command', function() {
 
             helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
             const forkScopeList = helper.command.listScopeParsed(forkScope);
-            forkScopeIds = forkScopeList.map(c => c.id);
+            forkScopeIds = forkScopeList.map((c) => c.id);
           });
           it('should fork the component', () => {
             expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
@@ -950,7 +948,7 @@ describe('bit export command', function() {
         it('should not change the scope name to the new remote', () => {
           const list = helper.command.listLocalScopeParsed();
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const ids = list.map(i => i.id);
+          const ids = list.map((i) => i.id);
           expect(ids).to.include(`${helper.scopes.remote}/utils/is-type`);
           expect(ids).to.not.include(`${forkScope}/utils/is-type`);
         });
@@ -961,9 +959,7 @@ describe('bit export command', function() {
         });
         it('should save all remotes in the objects', () => {
           const isType = helper.command.catComponent('utils/is-type');
-          expect(isType)
-            .to.have.property('remotes')
-            .that.have.lengthOf(2);
+          expect(isType).to.have.property('remotes').that.have.lengthOf(2);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -987,7 +983,7 @@ describe('bit export command', function() {
         it('should change the scope name to the new remote', () => {
           const list = helper.command.listLocalScopeParsed();
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const ids = list.map(i => i.id);
+          const ids = list.map((i) => i.id);
           expect(ids).to.not.include(`${helper.scopes.remote}/utils/is-type`);
           expect(ids).to.include(`${forkScope}/utils/is-type`);
         });
@@ -998,9 +994,7 @@ describe('bit export command', function() {
         });
         it('should save all remotes in the objects', () => {
           const isType = helper.command.catComponent('utils/is-type');
-          expect(isType)
-            .to.have.property('remotes')
-            .that.have.lengthOf(2);
+          expect(isType).to.have.property('remotes').that.have.lengthOf(2);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

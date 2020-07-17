@@ -8,7 +8,7 @@ const fixturePackageJsonV2 = { name: 'nice-package-v2' }; // name must be valid,
 
 chai.use(require('chai-fs'));
 
-describe('component with package.json as a file of the component', function() {
+describe('component with package.json as a file of the component', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

@@ -72,7 +72,7 @@ export default class Dists {
 
   getAsReadable(): string[] {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.dists.map(file => file.toReadableString());
+    return this.dists.map((file) => file.toReadableString());
   }
   getMainDistFile() {
     return this._mainDistFile;
@@ -117,7 +117,7 @@ export default class Dists {
   updateDistsPerWorkspaceConfig(id: BitId, consumer: Consumer | null | undefined, componentMap: ComponentMap): void {
     if (this.isEmpty()) return;
     const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
-    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase }));
+    this.dists.forEach((dist) => dist.updatePaths({ newBase: newDistBase }));
     if (consumer) this.stripDistEntryIfNeeded(id, consumer, componentMap);
   }
 
@@ -129,7 +129,7 @@ export default class Dists {
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
       const areAllDistsStartWithDistEntry = () => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
+        return this.dists.map((dist) => dist.relative.startsWith(distEntry)).every((x) => x);
       };
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         return areAllDistsStartWithDistEntry();
@@ -145,14 +145,14 @@ export default class Dists {
     logger.debug(`stripping dist.entry "${distEntry}" from ${id.toString()}`);
     this.distEntryShouldBeStripped = true;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.dists.forEach(dist => dist.updatePaths({ newRelative: dist.relative.replace(distEntry, '') }));
+    this.dists.forEach((dist) => dist.updatePaths({ newRelative: dist.relative.replace(distEntry, '') }));
     if (this._mainDistFile) {
       this._mainDistFile.replace(distEntry, '');
     }
   }
 
   stripOriginallySharedDir(originallySharedDir: string | undefined) {
-    this.dists.forEach(distFile => {
+    this.dists.forEach((distFile) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newRelative });
@@ -176,7 +176,7 @@ export default class Dists {
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.dists.map(distFile => distFile.path);
+    return this.dists.map((distFile) => distFile.path);
   }
 
   /**
@@ -277,7 +277,7 @@ export default class Dists {
     // consumerComponent.dists.distEntryShouldBeStripped is set to true.
     // because the model always has the paths of the original author, in case part of the path was stripped, add it
     // back before saving to the model. this way, when the author updates the components, the paths will be correct.
-    const addSharedDirAndDistEntry = pathStr => {
+    const addSharedDirAndDistEntry = (pathStr) => {
       const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
       const withDistEntry = this.distEntryShouldBeStripped
         ? path.join(consumer.config._distEntry as string, withSharedDir)
@@ -287,7 +287,7 @@ export default class Dists {
 
     if (this.isEmpty() || !isCompileSet) return {};
 
-    const dists = this.get().map(dist => {
+    const dists = this.get().map((dist) => {
       return {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         name: dist.basename,
@@ -296,7 +296,7 @@ export default class Dists {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         file: Source.from(dist.contents),
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        test: dist.test
+        test: dist.test,
       };
     });
     const mainDistFile = this._mainDistFile ? addSharedDirAndDistEntry(this._mainDistFile) : this._mainDistFile;
@@ -316,8 +316,8 @@ export default class Dists {
       return undefined;
     const distTarget = consumer.config._distTarget || DEFAULT_DIST_DIRNAME;
     const distEntry = consumer.config._distEntry;
-    const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map(moduleDir => {
-      const isRelative = str => str.startsWith('./') || str.startsWith('../');
+    const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map((moduleDir) => {
+      const isRelative = (str) => str.startsWith('./') || str.startsWith('../');
       if (!distEntry) return path.join(distTarget, moduleDir);
       const distEntryRelativeToModuleDir = pathRelativeLinux(distEntry, moduleDir);
       if (isRelative(distEntryRelativeToModuleDir)) {
@@ -327,14 +327,14 @@ export default class Dists {
       return path.join(distTarget, distEntryRelativeToModuleDir);
     });
     return nodePaths
-      .map(nodePath => consumer.toAbsolutePath(nodePath))
+      .map((nodePath) => consumer.toAbsolutePath(nodePath))
       .map(pathNormalizeToLinux)
       .join(NODE_PATH_SEPARATOR);
   }
 
   clone(): Dists {
     const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
-    clone.dists = this.dists.map(d => d.clone());
+    clone.dists = this.dists.map((d) => d.clone());
     return clone;
   }
 }

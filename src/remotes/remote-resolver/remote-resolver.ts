@@ -6,7 +6,7 @@ import { DEFAULT_HUB_DOMAIN, CFG_HUB_DOMAIN_KEY } from '../../constants';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 
-const hubResolver = scopeName => {
+const hubResolver = (scopeName) => {
   const hubPrefix = `ssh://bit@${hubDomain}:`;
   return Promise.resolve(hubPrefix + scopeName);
 };

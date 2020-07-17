@@ -19,7 +19,7 @@ import {
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
   CFG_ANALYTICS_ENVIRONMENT_KEY,
-  BIT_VERSION
+  BIT_VERSION,
 } from '../constants';
 
 const LEVEL = {
@@ -27,7 +27,7 @@ const LEVEL = {
   INFO: 'info',
   WARNING: 'warning',
   ERROR: 'error',
-  FATAL: 'fatal'
+  FATAL: 'fatal',
 };
 
 class Breadcrumb {
@@ -109,7 +109,7 @@ class Analytics {
       case 'string':
         return this._maskString(value);
       case 'object':
-        if (Array.isArray(value)) return value.map(item => this._hashLightly(item));
+        if (Array.isArray(value)) return value.map((item) => this._hashLightly(item));
         if (value === null) return value;
         return hashObj(value);
       default:
@@ -118,9 +118,9 @@ class Analytics {
   }
   static _hashFlags(flags: Record<string, any>) {
     const hashedFlags = {};
-    const definedFlags = R.filter(flag => typeof flag !== 'undefined', flags);
+    const definedFlags = R.filter((flag) => typeof flag !== 'undefined', flags);
     if (this.anonymous && !R.isEmpty(definedFlags)) {
-      Object.keys(definedFlags).forEach(key => {
+      Object.keys(definedFlags).forEach((key) => {
         hashedFlags[key] = this._hashLightly(flags[key]);
       });
       return hashedFlags;
@@ -129,7 +129,7 @@ class Analytics {
   }
   static _hashArgs(args: string[]): string[] {
     if (!this.anonymous) return args;
-    return args.map(arg => this._hashLightly(arg));
+    return args.map((arg) => this._hashLightly(arg));
   }
   static init(command: string, flags: Record<string, any>, args: string[]) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
@@ -161,7 +161,7 @@ class Analytics {
           // without it, when the message is large, it exits before the child got the complete message
           resolve();
         });
-        forked.on('error', err => {
+        forked.on('error', (err) => {
           reject(err);
         });
       } else {
@@ -219,7 +219,7 @@ class Analytics {
       breadcrumbs: this.breadcrumbs,
       analytics_usage: this.analytics_usage,
       error_usage: this.analytics_usage,
-      environment: this.environment
+      environment: this.environment,
     };
   }
 }

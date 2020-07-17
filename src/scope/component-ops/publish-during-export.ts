@@ -21,7 +21,7 @@ export type PublishPostExportResult = {
 
 export async function publishComponentsToRegistry({
   newIdsOnRemote,
-  updatedIds
+  updatedIds,
 }: {
   newIdsOnRemote: BitId[];
   updatedIds: BitId[];
@@ -29,16 +29,16 @@ export async function publishComponentsToRegistry({
   const consumer = await loadConsumer();
   let postExportResults;
   try {
-    postExportResults = await Promise.all(consumer.scope.onPostExport.map(func => func(newIdsOnRemote)));
+    postExportResults = await Promise.all(consumer.scope.onPostExport.map((func) => func(newIdsOnRemote)));
   } catch (err) {
-    const publishErr = `The components ${updatedIds.map(c => c.toString()).join(', ')} were exported successfully.
+    const publishErr = `The components ${updatedIds.map((c) => c.toString()).join(', ')} were exported successfully.
     However, the publish operation has failed due to an error: ${err.msg || err}`;
     logger.error(publishErr, err);
     throw new Error(publishErr);
   }
   const publishPostExport: PublishPostExportResult[] = postExportResults[0]; // as of now, this is the only function running on PostExport
   const publishResults: PublishResults = { publishedComponents: [], failedComponents: [] };
-  publishPostExport.forEach(component => {
+  publishPostExport.forEach((component) => {
     if (component.errors.length) {
       publishResults.failedComponents.push({ id: component.id, errors: component.errors });
     } else if (component.data) {

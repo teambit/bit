@@ -50,7 +50,7 @@ export async function execAction(command: Command, concrete, args): Promise<any>
   Analytics.init(concrete.name(), flags, relevantArgs);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
     args: relevantArgs,
-    flags
+    flags,
   });
   if (command.loader && !flags.json) {
     loader.on();
@@ -74,7 +74,7 @@ function registerAction(command: Command, concrete) {
     if (subCommands?.length) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
-      const subcommand = subCommands.find(cmd => {
+      const subcommand = subCommands.find((cmd) => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 
@@ -115,7 +115,7 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   concrete.option(SKIP_UPDATE_FLAG, 'Skips auto updates');
 
   if (command.commands) {
-    command.commands.forEach(nestedCmd => {
+    command.commands.forEach((nestedCmd) => {
       register(nestedCmd, concrete);
     });
   }

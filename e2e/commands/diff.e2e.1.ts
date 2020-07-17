@@ -12,7 +12,7 @@ const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };\n";
 const noDiffMessage = 'no diff for';
 const successDiffMessage = 'showing diff for';
 
-describe('bit diff command', function() {
+describe('bit diff command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

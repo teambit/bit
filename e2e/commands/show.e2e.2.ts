@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit show command', function() {
+describe('bit show command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -45,7 +45,7 @@ describe('bit show command', function() {
       helper.fs.createFile('src/utils', 'utilFile.js');
       helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', {
         m: 'src/mainFile.js',
-        i: 'comp/comp'
+        i: 'comp/comp',
       });
       helper.command.tagComponent('comp/comp');
     });
@@ -564,7 +564,7 @@ describe('bit show command', function() {
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({
         name: 'bar/foo',
-        version: '0.0.1'
+        version: '0.0.1',
       });
     });
   });
@@ -577,9 +577,9 @@ describe('bit show command', function() {
         'bar/foo': {
           dependencies: {
             chai: '4.3.2',
-            react: '+'
-          }
-        }
+            react: '+',
+          },
+        },
       };
       helper.bitJson.addOverrides(overrides);
     });
@@ -654,22 +654,13 @@ Circle.defaultProps = {
           show = helper.command.showComponentParsed('utils/is-string --dependents');
         });
         it('should show the dependents only', () => {
-          expect(show)
-            .to.have.property('dependentsInfo')
-            .that.is.an('array')
-            .with.lengthOf(2);
-          expect(show)
-            .to.have.property('dependenciesInfo')
-            .to.deep.equal([]);
+          expect(show).to.have.property('dependentsInfo').that.is.an('array').with.lengthOf(2);
+          expect(show).to.have.property('dependenciesInfo').to.deep.equal([]);
         });
         it('should show all dependents sorted by depth', () => {
-          expect(show.dependentsInfo[0])
-            .to.have.property('depth')
-            .that.equals(1);
+          expect(show.dependentsInfo[0]).to.have.property('depth').that.equals(1);
           expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
-          expect(show.dependentsInfo[1])
-            .to.have.property('depth')
-            .that.equals(2);
+          expect(show.dependentsInfo[1]).to.have.property('depth').that.equals(2);
           expect(show.dependentsInfo[1].id.name).to.equal('bar-dep');
         });
       });
@@ -679,18 +670,11 @@ Circle.defaultProps = {
           show = helper.command.showComponentParsed('utils/is-string --dependencies');
         });
         it('should show the dependencies only', () => {
-          expect(show)
-            .to.have.property('dependenciesInfo')
-            .that.is.an('array')
-            .with.lengthOf(1);
-          expect(show)
-            .to.have.property('dependentsInfo')
-            .to.deep.equal([]);
+          expect(show).to.have.property('dependenciesInfo').that.is.an('array').with.lengthOf(1);
+          expect(show).to.have.property('dependentsInfo').to.deep.equal([]);
         });
         it('should show all dependencies', () => {
-          expect(show.dependenciesInfo[0])
-            .to.have.property('depth')
-            .that.equals(1);
+          expect(show.dependenciesInfo[0]).to.have.property('depth').that.equals(1);
           expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
         });
       });
@@ -706,22 +690,13 @@ Circle.defaultProps = {
           show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-string --remote --dependents`);
         });
         it('should show the dependents only', () => {
-          expect(show)
-            .to.have.property('dependentsInfo')
-            .that.is.an('array')
-            .with.lengthOf(2);
-          expect(show)
-            .to.have.property('dependenciesInfo')
-            .to.deep.equal([]);
+          expect(show).to.have.property('dependentsInfo').that.is.an('array').with.lengthOf(2);
+          expect(show).to.have.property('dependenciesInfo').to.deep.equal([]);
         });
         it('should show all dependents sorted by depth', () => {
-          expect(show.dependentsInfo[0])
-            .to.have.property('depth')
-            .that.equals(1);
+          expect(show.dependentsInfo[0]).to.have.property('depth').that.equals(1);
           expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
-          expect(show.dependentsInfo[1])
-            .to.have.property('depth')
-            .that.equals(2);
+          expect(show.dependentsInfo[1]).to.have.property('depth').that.equals(2);
           expect(show.dependentsInfo[1].id.name).to.equal('bar-dep');
         });
       });
@@ -731,18 +706,11 @@ Circle.defaultProps = {
           show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-string --remote --dependencies`);
         });
         it('should show the dependencies only', () => {
-          expect(show)
-            .to.have.property('dependenciesInfo')
-            .that.is.an('array')
-            .with.lengthOf(1);
-          expect(show)
-            .to.have.property('dependentsInfo')
-            .to.deep.equal([]);
+          expect(show).to.have.property('dependenciesInfo').that.is.an('array').with.lengthOf(1);
+          expect(show).to.have.property('dependentsInfo').to.deep.equal([]);
         });
         it('should show all dependencies', () => {
-          expect(show.dependenciesInfo[0])
-            .to.have.property('depth')
-            .that.equals(1);
+          expect(show.dependenciesInfo[0]).to.have.property('depth').that.equals(1);
           expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
         });
       });
@@ -756,14 +724,8 @@ Circle.defaultProps = {
       show = helper.command.showComponentParsed('utils/is-string --dependents --dependencies');
     });
     it('should show all dependents and dependencies', () => {
-      expect(show)
-        .to.have.property('dependentsInfo')
-        .that.is.an('array')
-        .with.lengthOf(1);
-      expect(show)
-        .to.have.property('dependenciesInfo')
-        .that.is.an('array')
-        .with.lengthOf(1);
+      expect(show).to.have.property('dependentsInfo').that.is.an('array').with.lengthOf(1);
+      expect(show).to.have.property('dependenciesInfo').that.is.an('array').with.lengthOf(1);
       expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
       expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
     });

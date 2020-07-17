@@ -2,7 +2,7 @@ import * as path from 'path';
 import { expect } from 'chai';
 import DataToPersist from './data-to-persist';
 
-describe('DataToPersist', function() {
+describe('DataToPersist', function () {
   this.timeout(0);
   describe('addFile', () => {
     describe('dir/file collision', () => {

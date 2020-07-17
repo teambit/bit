@@ -10,7 +10,7 @@ export class PublishCmd implements Command {
   options = [
     ['d', 'dry-run [boolean]', 'npm publish --dry-run'],
     ['', 'allow-staged', 'allow publish components that were not exported yet (not recommended)'],
-    ['j', 'json [boolean]', 'return the output as JSON']
+    ['j', 'json [boolean]', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
   alias = '';
@@ -27,7 +27,7 @@ export class PublishCmd implements Command {
     const publishOrDryRun = options.dryRun ? 'dry-run' : 'published';
     const title = chalk.white.bold(`successfully ${publishOrDryRun} the following components\n`);
     const output = components
-      .map(component => {
+      .map((component) => {
         const compName = component.id.toString();
         const getData = () => {
           if (component.errors.length) {
@@ -46,7 +46,7 @@ export class PublishCmd implements Command {
     const packResult = await this.publisher.publish([compId], options);
     return {
       data: packResult,
-      code: 0
+      code: 0,
     };
   }
 }

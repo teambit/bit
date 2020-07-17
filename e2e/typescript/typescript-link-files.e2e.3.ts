@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import { IS_WINDOWS } from '../../src/constants';
 
-describe('typescript components with link files', function() {
+describe('typescript components with link files', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

@@ -9,7 +9,7 @@ linkModules('${prefix}', defaultModule, {
   ${componentMap
     .toArray()
     .map(([component, modulePaths]: any) => {
-      return `'${component.id.fullName}': [${modulePaths.map(path => `require('${path}')`).join(', ')}]`;
+      return `'${component.id.fullName}': [${modulePaths.map((path) => `require('${path}')`).join(', ')}]`;
     })
     .join(',\n')}
 });  

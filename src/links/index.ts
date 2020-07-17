@@ -8,5 +8,5 @@ export {
   getLinksInDistToWrite,
   getAllComponentsLinks,
   reLinkDependents,
-  LinkFile
+  LinkFile,
 };

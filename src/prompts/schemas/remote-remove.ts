@@ -15,7 +15,7 @@ export default {
           value.toLowerCase() === 'yes' ||
           value.toLowerCase() === 'no'
         );
-      }
-    }
-  }
+      },
+    },
+  },
 };

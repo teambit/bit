@@ -17,13 +17,13 @@ export function inflateToTree(paths: string[]) {
 function buildKeyTree(paths: string[]): KeyTree {
   const treeRoot: KeyTree = {};
 
-  paths.forEach(fullpath => {
-    const segments = subPaths(fullpath).filter(x => x !== '.'); // @HACK!
+  paths.forEach((fullpath) => {
+    const segments = subPaths(fullpath).filter((x) => x !== '.'); // @HACK!
     const fileName = segments.pop();
 
     let currentFolder = treeRoot;
 
-    segments.forEach(dirname => {
+    segments.forEach((dirname) => {
       const nextFolder = currentFolder[dirname] || {};
       currentFolder[dirname] = nextFolder;
       currentFolder = nextFolder;
@@ -45,7 +45,7 @@ function keyTreeToNodeTree(nodeId: string, children?: KeyTree): TreeNode {
   if (!children) {
     return {
       id: nodeId,
-      children: undefined
+      children: undefined,
       // payload: undefined,
     };
   }
@@ -56,7 +56,7 @@ function keyTreeToNodeTree(nodeId: string, children?: KeyTree): TreeNode {
     children: Object.entries(children)
       .sort(alphabetically)
       .sort(foldersFirst)
-      .map(([fullpath, subChildren]) => keyTreeToNodeTree(fullpath, subChildren))
+      .map(([fullpath, subChildren]) => keyTreeToNodeTree(fullpath, subChildren)),
   };
 }
 

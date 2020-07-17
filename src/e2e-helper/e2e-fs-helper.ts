@@ -20,7 +20,7 @@ export default class FsHelper {
       params.ignore = 'node_modules/**/*';
     }
 
-    return glob.sync(path.normalize(`**/${ext}`), params).map(x => path.normalize(x));
+    return glob.sync(path.normalize(`**/${ext}`), params).map((x) => path.normalize(x));
   }
   getObjectFiles() {
     return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
@@ -95,7 +95,7 @@ export default class FsHelper {
     fs.removeSync(dirPath);
   }
   cleanExternalDirs() {
-    this.externalDirsArray.forEach(dirPath => {
+    this.externalDirsArray.forEach((dirPath) => {
       this.cleanDir(dirPath);
     });
   }

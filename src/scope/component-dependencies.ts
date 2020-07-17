@@ -25,6 +25,6 @@ export default class ComponentWithDependencies {
   }
 
   hasDependency(id: BitId) {
-    this.allDependencies.some(dependency => dependency.id.isEqual(id));
+    this.allDependencies.some((dependency) => dependency.id.isEqual(id));
   }
 }

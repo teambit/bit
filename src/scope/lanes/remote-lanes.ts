@@ -25,7 +25,7 @@ export default class RemoteLanes {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteLaneId);
-    const existingComponent = remoteLane.find(n => n.id.isEqualWithoutVersion(componentId));
+    const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
       existingComponent.head = head;
     } else {
@@ -39,7 +39,7 @@ export default class RemoteLanes {
       await this.loadRemoteLane(remoteLaneId);
     }
     const remoteLane = this.remotes[remoteLaneId.scope][remoteLaneId.name];
-    const existingComponent = remoteLane.find(n => n.id.isEqualWithoutVersion(bitId));
+    const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(bitId));
     if (!existingComponent) return null;
     return existingComponent.head;
   }
@@ -53,7 +53,7 @@ export default class RemoteLanes {
 
   async getRemoteBitIds(remoteLaneId: RemoteLaneId): Promise<BitId[]> {
     const remoteLane = await this.getRemoteLane(remoteLaneId);
-    return remoteLane.map(item => item.id.changeVersion(item.head.toString()));
+    return remoteLane.map((item) => item.id.changeVersion(item.head.toString()));
   }
 
   async loadRemoteLane(remoteLaneId: RemoteLaneId) {
@@ -65,7 +65,7 @@ export default class RemoteLanes {
       if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
       this.remotes[remoteName][laneName] = remoteFile.map(({ id, head }) => ({
         id: new BitId({ scope: id.scope, name: id.name }),
-        head: new Ref(head)
+        head: new Ref(head),
       }));
     } catch (err) {
       if (err.code === 'ENOENT') {
@@ -79,7 +79,7 @@ export default class RemoteLanes {
 
   async getAllRemoteLaneIds(): Promise<RemoteLaneId[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
-    return matches.map(match => {
+    return matches.map((match) => {
       const split = match.split(path.sep);
       // in the future, lane-name might have slashes, so until the first slash is the scope.
       // the rest are the name
@@ -92,7 +92,7 @@ export default class RemoteLanes {
     if (!this.remotes[remoteName] || !this.remotes[remoteName][lane.name]) {
       await this.loadRemoteLane(remoteLaneId);
     }
-    await Promise.all(lane.components.map(component => this.addEntry(remoteLaneId, component.id, component.head)));
+    await Promise.all(lane.components.map((component) => this.addEntry(remoteLaneId, component.id, component.head)));
   }
 
   private composeRemoteLanePath(remoteName: string, laneName: string) {
@@ -100,19 +100,19 @@ export default class RemoteLanes {
   }
 
   async write() {
-    return Promise.all(Object.keys(this.remotes).map(remoteName => this.writeRemoteLanes(remoteName)));
+    return Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)));
   }
 
   private async writeRemoteLanes(remoteName: string) {
     return Promise.all(
-      Object.keys(this.remotes[remoteName]).map(laneName => this.writeRemoteLaneFile(remoteName, laneName))
+      Object.keys(this.remotes[remoteName]).map((laneName) => this.writeRemoteLaneFile(remoteName, laneName))
     );
   }
 
   private async writeRemoteLaneFile(remoteName: string, laneName: string) {
     const obj = this.remotes[remoteName][laneName].map(({ id, head }) => ({
       id: { scope: id.scope, name: id.name },
-      head: head.toString()
+      head: head.toString(),
     }));
     return fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
   }

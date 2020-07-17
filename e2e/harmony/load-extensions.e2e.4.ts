@@ -3,7 +3,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 // TODO: think about how to change this require or move this tests
 import {
   UNABLE_TO_LOAD_EXTENSION,
-  UNABLE_TO_LOAD_EXTENSION_FROM_LIST
+  UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
 } from '../../src/extensions/utils/load-extensions/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
@@ -13,7 +13,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('load extensions', function() {
+describe('load extensions', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

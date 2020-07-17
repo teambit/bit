@@ -16,7 +16,7 @@ export default class Lane implements LegacyCommand {
     ['j', 'json', 'show lanes details in json format'],
     ['r', 'remote <string>', 'show remote lanes'],
     ['', 'merged', 'show merged lanes'],
-    ['', 'not-merged', 'show not merged lanes']
+    ['', 'not-merged', 'show not merged lanes'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -30,7 +30,7 @@ export default class Lane implements LegacyCommand {
       remote,
       merged = false,
       notMerged = false,
-      json = false
+      json = false,
     }: {
       details: boolean;
       remote?: string;
@@ -45,8 +45,8 @@ export default class Lane implements LegacyCommand {
       remote,
       showDefaultLane: json,
       merged,
-      notMerged
-    }).then(results => ({ results, details, json, name, merged, notMerged, remote }));
+      notMerged,
+    }).then((results) => ({ results, details, json, name, merged, notMerged, remote }));
   }
 
   report({
@@ -56,7 +56,7 @@ export default class Lane implements LegacyCommand {
     name,
     merged,
     notMerged,
-    remote
+    remote,
   }: {
     results: LaneResults;
     details: boolean;
@@ -68,14 +68,14 @@ export default class Lane implements LegacyCommand {
   }): string {
     if (json) return JSON.stringify(results, null, 2);
     if (merged) {
-      const mergedLanes = results.lanes.filter(l => l.isMerged);
+      const mergedLanes = results.lanes.filter((l) => l.isMerged);
       if (!mergedLanes.length) return chalk.green('None of the lanes is merged');
-      return chalk.green(mergedLanes.map(m => m.name).join('\n'));
+      return chalk.green(mergedLanes.map((m) => m.name).join('\n'));
     }
     if (notMerged) {
-      const unmergedLanes = results.lanes.filter(l => !l.isMerged);
+      const unmergedLanes = results.lanes.filter((l) => !l.isMerged);
       if (!unmergedLanes.length) return chalk.green('All lanes are merged');
-      return chalk.green(unmergedLanes.map(m => m.name).join('\n'));
+      return chalk.green(unmergedLanes.map((m) => m.name).join('\n'));
     }
     if (name) {
       const onlyLane = results.lanes[0];
@@ -85,7 +85,7 @@ export default class Lane implements LegacyCommand {
     }
     let currentLane = results.currentLane ? `current lane - ${chalk.bold(results.currentLane as string)}` : '';
     if (details) {
-      const laneDataOfCurrentLane = results.lanes.find(l => l.name === results.currentLane);
+      const laneDataOfCurrentLane = results.lanes.find((l) => l.name === results.currentLane);
       const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
       if (currentLane) {
@@ -94,9 +94,9 @@ export default class Lane implements LegacyCommand {
     }
 
     const availableLanes = results.lanes
-      .filter(l => l.name !== results.currentLane)
+      .filter((l) => l.name !== results.currentLane)
       // @ts-ignore
-      .map(laneData => {
+      .map((laneData) => {
         if (details) {
           const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
           const components = outputComponents(laneData.components);
@@ -110,7 +110,7 @@ export default class Lane implements LegacyCommand {
 
     function outputComponents(components: LaneData['components']): string {
       const title = `\tcomponents (${components.length})\n`;
-      const componentsStr = components.map(c => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
+      const componentsStr = components.map((c) => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
       return title + componentsStr;
     }
 

@@ -14,8 +14,8 @@ function formatProperty(prop) {
     type,
     defaultValue: {
       value: prop.default === '__undefined__' ? undefined : prop.default,
-      computed: false
-    }
+      computed: false,
+    },
   };
 }
 
@@ -27,8 +27,8 @@ function formatComputed(computed) {
     required: false,
     defaultValue: {
       value: null,
-      computed: true
-    }
+      computed: true,
+    },
   };
 }
 
@@ -46,7 +46,7 @@ function formatMethod(method) {
     // Private method won't be in the raw vue docs results, so what ever got here is public
     access: 'public',
     args: params,
-    returns: method.return
+    returns: method.return,
   };
 }
 
@@ -62,16 +62,16 @@ function fromVueDocs({ name, description, props, methods, computed }, filePath):
     description,
     properties: formatProperties(props, computed),
     access: 'public',
-    methods: formatMethods(methods)
+    methods: formatMethods(methods),
   };
 }
 
 export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[]> {
   const options = {
-    filecontent: data
+    filecontent: data,
   };
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     try {
       // Wrapping this call with a domain since the vue docs parser call process.nextTick directly
       // see (https://gitlab.com/vuedoc/parser/blob/master/lib/parser/Parser.js#L72) which
@@ -80,7 +80,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
       // https://gitlab.com/vuedoc/parser/issues/56#note_219267637
       const parsingDomain = domain.create();
       parsingDomain
-        .on('error', err => {
+        .on('error', (err) => {
           logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`, err);
           // never mind, ignore the doc of this source
           resolve([]);

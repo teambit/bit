@@ -35,7 +35,7 @@ export async function snapAction(args: {
     force,
     skipTests,
     verbose,
-    skipAutoSnap
+    skipAutoSnap,
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;

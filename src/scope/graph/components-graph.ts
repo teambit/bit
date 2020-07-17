@@ -22,7 +22,7 @@ export function buildComponentsGraph(components: Component[]): AllDependenciesGr
   const graphDeps = new GraphLib();
   const graphDevDeps = new GraphLib();
   const graphExtensionDeps = new GraphLib();
-  components.forEach(component => {
+  components.forEach((component) => {
     _setGraphEdges(component.id, component.dependencies, graphDeps);
     _setGraphEdges(component.id, component.devDependencies, graphDevDeps);
     _setGraphEdges(component.id, component.extensionDependencies, graphExtensionDeps);
@@ -51,7 +51,7 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
     const bitId = component.toBitId().changeVersion(undefined);
     const idStr = bitId.toString();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, bitId);
-    version.getAllDependencies().forEach(dependency => {
+    version.getAllDependencies().forEach((dependency) => {
       const depId = dependency.id.changeVersion(undefined);
       const depIdStr = depId.toString();
       if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, depId);
@@ -74,7 +74,7 @@ export async function buildOneGraphForComponents(
   const componentsWithDeps = await pMapSeries(components, (component: Component) =>
     loadFlattenedDependenciesForCapsule(consumer, component)
   );
-  const allComponents: Component[] = R.flatten(componentsWithDeps.map(c => [c.component, ...c.allDependencies]));
+  const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));
 
   return buildGraphFromComponentsObjects(allComponents, direction);
 }
@@ -93,7 +93,7 @@ export async function buildOneGraphForComponentsUsingScope(
   const loadFlattened = async (component: Component): Promise<Component[]> => {
     return scope.getManyConsumerComponents(component.getAllFlattenedDependencies());
   };
-  const dependencies = await Promise.all(components.map(component => loadFlattened(component)));
+  const dependencies = await Promise.all(components.map((component) => loadFlattened(component)));
   const allComponents: Component[] = [...components, ...R.flatten(dependencies)];
 
   return buildGraphFromComponentsObjects(allComponents, direction);
@@ -102,7 +102,7 @@ export async function buildOneGraphForComponentsUsingScope(
 function buildGraphFromComponentsObjects(components: Component[], direction: 'normal' | 'reverse' = 'normal'): Graph {
   const graph = new Graph();
   // set vertices
-  components.forEach(component => {
+  components.forEach((component) => {
     const idStr = component.id.toString();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, component);
   });
@@ -118,7 +118,7 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   };
   components.forEach((component: Component) => {
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach(depId => {
+      depIds.forEach((depId) => {
         if (!graph.hasNode(depId.toString())) {
           throw new Error(`buildGraphFromComponentsObjects: missing node of ${depId.toString()}`);
         }
@@ -135,7 +135,7 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
 
 function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLib) {
   const id = bitId.toString();
-  dependencies.get().forEach(dependency => {
+  dependencies.get().forEach((dependency) => {
     const depId = dependency.id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(id)) graph.setNode(id, bitId);
@@ -151,7 +151,7 @@ function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLi
 export function topologicalSortComponentDependencies(componentWithDependencies: ComponentWithDependencies): void {
   const { graphDeps } = buildComponentsGraph([
     componentWithDependencies.component,
-    ...componentWithDependencies.allDependencies
+    ...componentWithDependencies.allDependencies,
   ]);
   const componentId = componentWithDependencies.component.id.toString();
   let sortedComponents;
@@ -163,10 +163,10 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
   }
   try {
     sortedComponents = graphLib.alg.topsort(graphDeps);
-    const sortedComponentsIds = sortedComponents.map(s => graphDeps.node(s));
+    const sortedComponentsIds = sortedComponents.map((s) => graphDeps.node(s));
     const sortedDependenciesIds = R.tail(sortedComponentsIds); // the first one is the component itself
-    const dependencies = sortedDependenciesIds.map(depId => {
-      const matchDependency = componentWithDependencies.dependencies.find(dependency => dependency.id.isEqual(depId));
+    const dependencies = sortedDependenciesIds.map((depId) => {
+      const matchDependency = componentWithDependencies.dependencies.find((dependency) => dependency.id.isEqual(depId));
       if (!matchDependency) throw new Error(`topologicalSortComponentDependencies, ${depId.toString()} is missing`);
       return matchDependency;
     });

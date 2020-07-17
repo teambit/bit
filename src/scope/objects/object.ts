@@ -43,7 +43,7 @@ export default class BitObject {
       const refs = object.refs();
       let objs;
       try {
-        objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+        objs = await Promise.all(refs.map((ref) => ref.load(repo, true)));
       } catch (err) {
         if (err.code === 'ENOENT') {
           throw new Error(`failed finding an object file required by ${object.constructor.name} object, originated from ${objectId}
@@ -54,7 +54,7 @@ path: ${err.path}`);
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       refsCollection.push(...refs);
-      await Promise.all(objs.map(obj => addRefs(obj)));
+      await Promise.all(objs.map((obj) => addRefs(obj)));
     }
 
     await addRefs(this);
@@ -63,7 +63,7 @@ path: ${err.path}`);
 
   async collectRaw(repo: Repository): Promise<Buffer[]> {
     const refs = await this.collectRefs(repo);
-    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
+    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
   }
 
   asRaw(repo: Repository): Promise<Buffer> {
@@ -74,12 +74,12 @@ path: ${err.path}`);
     const objects: BitObject[] = [];
 
     function addRefs(object: BitObject) {
-      const objs = object.refs().map(ref => {
+      const objs = object.refs().map((ref) => {
         return ref.loadSync(repo);
       });
 
       objects.push(...objs);
-      objs.forEach(obj => addRefs(obj));
+      objs.forEach((obj) => addRefs(obj));
     }
 
     addRefs(this);
@@ -107,7 +107,7 @@ path: ${err.path}`);
    * see `this.parseSync` for the sync version
    */
   static parseObject(fileContents: Buffer): Promise<BitObject> {
-    return inflate(fileContents).then(buffer => parse(buffer));
+    return inflate(fileContents).then((buffer) => parse(buffer));
   }
 
   // static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {

@@ -58,7 +58,7 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | u
         path,
         hasScope,
         hasConsumerConfig,
-        hasBitMap
+        hasBitMap,
       };
     }
   }

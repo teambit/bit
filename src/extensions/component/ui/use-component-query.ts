@@ -45,7 +45,7 @@ type ComponentQueryData = {
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(componentId: string) {
   const { data } = useDataQuery<ComponentQueryData>(GET_COMPONENT, {
-    variables: { id: componentId }
+    variables: { id: componentId },
   });
 
   const rawComponent = data?.workspace?.getComponent;

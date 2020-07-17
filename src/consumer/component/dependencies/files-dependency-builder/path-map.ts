@@ -33,7 +33,7 @@ export function convertPathMapToRelativePaths(pathMap: PathMapItem[], baseDir: s
   return pathMap.map((file: PathMapItem) => {
     const newFile = R.clone(file);
     newFile.file = processPath(file.file, pathCache, baseDir);
-    newFile.dependencies = file.dependencies.map(dependency => {
+    newFile.dependencies = file.dependencies.map((dependency) => {
       const newDependency = R.clone(dependency);
       newDependency.resolvedDep = processPath(dependency.resolvedDep, pathCache, baseDir);
       return newDependency;
@@ -76,15 +76,15 @@ function findTheRealDependency(
 
   while (!visitedFiles.includes(currentPathMap.file)) {
     visitedFiles.push(currentPathMap.file);
-    const currentRealDep: PathMapDependency | null | undefined = currentPathMap.dependencies.find(dep => {
+    const currentRealDep: PathMapDependency | null | undefined = currentPathMap.dependencies.find((dep) => {
       if (!dep.importSpecifiers) return false;
-      return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name && depSpecifier.exported);
+      return dep.importSpecifiers.find((depSpecifier) => depSpecifier.name === specifier.name && depSpecifier.exported);
     });
     if (!currentRealDep) {
       // the currentRealDep is not the real dependency, return the last real we found
       return lastRealDep;
     }
-    const realDepPathMap = allPathMapItems.find(file => file.file === currentRealDep.resolvedDep);
+    const realDepPathMap = allPathMapItems.find((file) => file.file === currentRealDep.resolvedDep);
     if (!realDepPathMap || !realDepPathMap.dependencies.length) {
       // since the currentRealDep we just found doesn't have any more dependencies, we know that it
       // is the last one. no need to continue searching.
@@ -118,7 +118,9 @@ function getDependenciesFromLinkFileIfExists(
   dependency: PathMapDependency,
   pathMap: PathMapItem[]
 ): LinkFile[] | null | undefined {
-  const dependencyPathMap: PathMapItem | null | undefined = pathMap.find(file => file.file === dependency.resolvedDep);
+  const dependencyPathMap: PathMapItem | null | undefined = pathMap.find(
+    (file) => file.file === dependency.resolvedDep
+  );
   if (
     !dependencyPathMap ||
     !dependencyPathMap.dependencies.length ||
@@ -132,15 +134,15 @@ function getDependenciesFromLinkFileIfExists(
     const realDep = findTheRealDependency(pathMap, dependencyPathMap, specifier);
     if (!realDep) return null;
     // @ts-ignore
-    const depImportSpecifier = realDep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
+    const depImportSpecifier = realDep.importSpecifiers.find((depSpecifier) => depSpecifier.name === specifier.name);
     const importSpecifier: ImportSpecifier = {
       mainFile: specifier,
-      linkFile: depImportSpecifier
+      linkFile: depImportSpecifier,
     };
     return { file: realDep.resolvedDep, importSpecifier };
   });
 
-  if (dependencies.some(dep => !dep)) {
+  if (dependencies.some((dep) => !dep)) {
     // at least one specifier doesn't have "realDep", meaning it doesn't use link-file
     return null;
   }
@@ -148,7 +150,7 @@ function getDependenciesFromLinkFileIfExists(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies.forEach((dep: { file: string; importSpecifier: ImportSpecifier }) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const existingFile = linkFiles.find(linkFile => linkFile.file === dep.file);
+    const existingFile = linkFiles.find((linkFile) => linkFile.file === dep.file);
     if (existingFile) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       existingFile.importSpecifiers.push(dep.importSpecifier);

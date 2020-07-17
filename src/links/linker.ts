@@ -76,7 +76,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
 ): Promise<DataToPersist> {
   logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
   const componentsWithDependencies = await Promise.all(
-    components.map(component => component.toComponentWithDependencies(consumer))
+    components.map((component) => component.toComponentWithDependencies(consumer))
   );
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
@@ -114,7 +114,7 @@ export async function getReLinkDependentsData(
   const directDependentComponents = await consumer.getAuthoredAndImportedDependentsComponentsOf(components);
   const dataToPersist = new DataToPersist();
   if (directDependentComponents.length) {
-    if (directDependentComponents.every(c => linkedComponents.has(c.id))) {
+    if (directDependentComponents.every((c) => linkedComponents.has(c.id))) {
       // all components already linked
       return dataToPersist;
     }
@@ -145,7 +145,7 @@ export async function getAllComponentsLinks({
   writtenDependencies,
   consumer,
   bitMap,
-  createNpmLinkFiles
+  createNpmLinkFiles,
 }: {
   componentsWithDependencies: ComponentWithDependencies[];
   writtenComponents: Component[];
@@ -163,18 +163,18 @@ export async function getAllComponentsLinks({
   );
   if (writtenDependencies) {
     const uniqDependencies = ComponentsList.getUniqueComponents(R.flatten(writtenDependencies));
-    const entryPoints = uniqDependencies.map(component =>
+    const entryPoints = uniqDependencies.map((component) =>
       linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
     );
     dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
-  const entryPoints = writtenComponents.map(component =>
+  const entryPoints = writtenComponents.map((component) =>
     linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
   );
   dataToPersist.addManyFiles(R.flatten(entryPoints));
   const bitAngularEntryPoints = writtenComponents
-    .map(component => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
-    .filter(x => x); // remove nulls when components are not Angular
+    .map((component) => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
+    .filter((x) => x); // remove nulls when components are not Angular
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(bitAngularEntryPoints);
 
@@ -186,7 +186,7 @@ export async function getAllComponentsLinks({
   dataToPersist.merge(nodeModuleLinks);
 
   if (consumer) {
-    const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));
+    const allComponentsIds = BitIds.uniqFromArray(allComponents.map((c) => c.id));
     const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);
     dataToPersist.merge(reLinkDependentsData);
   }

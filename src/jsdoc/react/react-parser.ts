@@ -7,7 +7,7 @@ import { Doclet } from '../types';
 import extractDataRegex from '../extract-data-regex';
 
 function formatProperties(props) {
-  const parseDescription = description => {
+  const parseDescription = (description) => {
     // an extra step is needed to parse the properties description correctly. without this step
     // it'd show the entire tag, e.g. `@property {propTypes.string} text - Button text.`
     // instead of just `text - Button text.`.
@@ -19,7 +19,7 @@ function formatProperties(props) {
     }
     return description;
   };
-  return Object.keys(props).map(name => {
+  return Object.keys(props).map((name) => {
     const { type, description, required, defaultValue, flowType, tsType } = props[name];
 
     return {
@@ -27,20 +27,20 @@ function formatProperties(props) {
       description: parseDescription(description),
       required,
       type: stringifyType(type || flowType || tsType),
-      defaultValue
+      defaultValue,
     };
   });
 }
 
 function formatMethods(methods) {
-  return Object.keys(methods).map(key => {
+  return Object.keys(methods).map((key) => {
     const { returns, modifiers, params, docblock, name } = methods[key];
     return {
       name,
       description: docblock,
       returns,
       modifiers,
-      params
+      params,
     };
   });
 }
@@ -53,7 +53,7 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
     properties: formatProperties(props),
     access: 'public',
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    methods: formatMethods(methods)
+    methods: formatMethods(methods),
   };
 }
 
@@ -79,13 +79,13 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
       );
       break;
     case 'enum':
-      transformed = prop.value.map(enumProp => enumProp.value).join(' | ');
+      transformed = prop.value.map((enumProp) => enumProp.value).join(' | ');
       break;
     case 'instanceOf':
       transformed = prop.value;
       break;
     case 'union':
-      transformed = prop.value ? prop.value.map(p => stringifyType(p)).join(' | ') : prop.raw;
+      transformed = prop.value ? prop.value.map((p) => stringifyType(p)).join(' | ') : prop.raw;
       break;
     case 'arrayOf':
       transformed = `${stringifyType(prop.value)}[]`;
@@ -100,11 +100,11 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
   try {
     const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllExportedComponentDefinitions, undefined, {
       configFile: false,
-      filename: filePath // should we use pathNormalizeToLinux(filePath) ?
+      filename: filePath, // should we use pathNormalizeToLinux(filePath) ?
     });
 
     if (componentsInfo) {
-      return componentsInfo.map(componentInfo => {
+      return componentsInfo.map((componentInfo) => {
         const formatted = fromReactDocs(componentInfo, filePath);
         formatted.args = [];
         // this is a workaround to get the 'example' tag parsed when using react-docs

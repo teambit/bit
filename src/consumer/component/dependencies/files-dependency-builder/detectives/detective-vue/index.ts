@@ -1,17 +1,17 @@
-export default function(src, options: Record<string, any> = {}) {
+export default function (src, options: Record<string, any> = {}) {
   // eslint-disable-next-line import/no-dynamic-require, global-require
   const compiler = require('vue-template-compiler');
   const finalDependencies = {};
   const addDependencies = (dependencies, isScript) => {
     let objDependencies = {};
     if (Array.isArray(dependencies)) {
-      dependencies.forEach(dependency => {
+      dependencies.forEach((dependency) => {
         objDependencies[dependency] = {};
       });
     } else {
       objDependencies = dependencies;
     }
-    Object.keys(objDependencies).forEach(dependency => {
+    Object.keys(objDependencies).forEach((dependency) => {
       finalDependencies[dependency] = objDependencies[dependency];
       finalDependencies[dependency].isScript = isScript;
     });
@@ -31,7 +31,7 @@ export default function(src, options: Record<string, any> = {}) {
     addDependencies(dependencies, true);
   }
   if (styles) {
-    styles.forEach(style => {
+    styles.forEach((style) => {
       const dependencies = precinct(style.content, { type: style.lang || 'scss' });
       addDependencies(dependencies, false);
     });

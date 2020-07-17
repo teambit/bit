@@ -40,9 +40,7 @@ describe('Bit-id', () => {
   describe('changeScope', () => {
     it('should return a new BitId with different scope', () => {
       const bitId = new BitId({ name: 'my-name' });
-      expect(bitId.changeScope('my-scope'))
-        .to.have.property('scope')
-        .that.equal('my-scope');
+      expect(bitId.changeScope('my-scope')).to.have.property('scope').that.equal('my-scope');
     });
     it('should accept an empty parameter to remove the scope', () => {
       const bitId = new BitId({ scope: 'my-scope', name: 'my-name' });
@@ -52,9 +50,7 @@ describe('Bit-id', () => {
   describe('changeVersion', () => {
     it('should return a new BitId with different version', () => {
       const bitId = new BitId({ name: 'my-name' });
-      expect(bitId.changeVersion('0.0.1'))
-        .to.have.property('version')
-        .that.equal('0.0.1');
+      expect(bitId.changeVersion('0.0.1')).to.have.property('version').that.equal('0.0.1');
     });
     it('should accept an empty parameter to remove the version', () => {
       const bitId = new BitId({ scope: 'my-scope', name: 'my-name', version: '0.0.1' });

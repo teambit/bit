@@ -30,7 +30,7 @@ const defaultLookups = {
   '.sass': cssPreprocessorLookup,
   '.styl': stylusLookup,
   '.less': cssPreprocessorLookup,
-  '.vue': vueLookUp
+  '.vue': vueLookUp,
 };
 
 // for some reason, .ts is not sufficient, .d.ts is needed as well
@@ -103,7 +103,7 @@ module.exports.supportedFileExtensions = Object.keys(defaultLookups);
  * @param  {String} extension - The file extension that should use the resolver
  * @param  {Function} lookupStrategy - A resolver of dependency paths
  */
-module.exports.register = function(extension, lookupStrategy) {
+module.exports.register = function (extension, lookupStrategy) {
   defaultLookups[extension] = lookupStrategy;
 
   if (this.supportedFileExtensions.indexOf(extension) === -1) {
@@ -162,7 +162,7 @@ function jsLookup(options: Options) {
     filename,
     ast,
     isScript,
-    content
+    content,
   });
 
   switch (type) {
@@ -174,7 +174,7 @@ function jsLookup(options: Options) {
         configPath,
         partial: dependency,
         directory,
-        filename
+        filename,
       });
 
     case 'webpack':
@@ -231,7 +231,7 @@ function tsLookup(options: Options) {
   debug('performing a typescript lookup');
 
   const tsOptions = {
-    module: ts.ModuleKind.CommonJS
+    module: ts.ModuleKind.CommonJS,
   };
 
   const host = ts.createCompilerHost({});
@@ -305,7 +305,7 @@ function commonJSLookup(options: Options) {
     result = resolve.sync(dependency, {
       extensions: resolveExtensions,
       basedir: directory,
-      moduleDirectory: ['node_modules']
+      moduleDirectory: ['node_modules'],
     });
     debug(`resolved path: ${result}`);
   } catch (e) {

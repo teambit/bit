@@ -5,7 +5,7 @@ import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
-    return this.map(bitId => bitId.toString());
+    return this.map((bitId) => bitId.toString());
   }
 
   /**
@@ -37,54 +37,54 @@ export default class BitIds extends Array<BitId> {
   }
 
   hasWithoutScopeAndVersionAsString(bitIdStr: BitIdStr): boolean {
-    return Boolean(this.find(id => id.name === bitIdStr));
+    return Boolean(this.find((id) => id.name === bitIdStr));
   }
 
   search(bitId: BitId): BitId | null | undefined {
-    return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
+    return this.find((id) => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
 
   searchWithoutVersion(bitId: BitId): BitId | null | undefined {
-    return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
+    return this.find((id) => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
   searchWithoutScopeAndVersion(bitId: BitId): BitId | undefined {
-    return this.find(id => id.hasSameName(bitId));
+    return this.find((id) => id.hasSameName(bitId));
   }
 
   searchWithoutScope(bitId: BitId): BitId | null | undefined {
-    return this.find(id => id.hasSameName(bitId) && id.hasSameVersion(bitId));
+    return this.find((id) => id.hasSameName(bitId) && id.hasSameVersion(bitId));
   }
 
   searchStrWithoutVersion(idStr: string): BitId | null | undefined {
-    return this.find(id => id.toStringWithoutVersion() === idStr);
+    return this.find((id) => id.toStringWithoutVersion() === idStr);
   }
 
   searchStrWithoutScopeAndVersion(idStr: string): BitId | null | undefined {
-    return this.find(id => id.toStringWithoutScopeAndVersion() === idStr);
+    return this.find((id) => id.toStringWithoutScopeAndVersion() === idStr);
   }
 
   filterExact(bitId: BitId): BitId[] {
-    return this.filter(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
+    return this.filter((id) => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
 
   filterWithoutVersion(bitId: BitId): BitId[] {
-    return this.filter(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
+    return this.filter((id) => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
   filterWithoutScopeAndVersion(bitId: BitId): BitId[] {
-    return this.filter(id => id.hasSameName(bitId));
+    return this.filter((id) => id.hasSameName(bitId));
   }
 
   removeIfExist(bitId: BitId): BitIds {
-    return BitIds.fromArray(this.filter(id => !id.isEqual(bitId)));
+    return BitIds.fromArray(this.filter((id) => !id.isEqual(bitId)));
   }
 
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
-    return BitIds.fromArray(this.filter(id => !id.isEqualWithoutVersion(bitId)));
+    return BitIds.fromArray(this.filter((id) => !id.isEqualWithoutVersion(bitId)));
   }
   removeMultipleIfExistWithoutVersion(bitIds: BitIds): BitIds {
-    return BitIds.fromArray(this.filter(id => !bitIds.hasWithoutVersion(id)));
+    return BitIds.fromArray(this.filter((id) => !bitIds.hasWithoutVersion(id)));
   }
 
   /**
@@ -93,16 +93,16 @@ export default class BitIds extends Array<BitId> {
    */
   static deserialize(array: string[] = []): BitIds {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new BitIds(...array.map(id => BitId.parse(id, true)));
+    return new BitIds(...array.map((id) => BitId.parse(id, true)));
   }
 
   static deserializeObsolete(array: string[] = []): BitIds {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new BitIds(...array.map(id => BitId.parseObsolete(id)));
+    return new BitIds(...array.map((id) => BitId.parseObsolete(id)));
   }
 
   toString(): string {
-    return this.map(id => id.toString()).join(', ');
+    return this.map((id) => id.toString()).join(', ');
   }
 
   toGroupByScopeName(idsWithDefaultScope: BitIds): { [scopeName: string]: BitIds } {
@@ -124,7 +124,7 @@ export default class BitIds extends Array<BitId> {
 
   findDuplicationsIgnoreVersion(): { [id: string]: BitId[] } {
     const duplications = {};
-    this.forEach(id => {
+    this.forEach((id) => {
       const sameIds = this.filterWithoutVersion(id);
       if (sameIds.length > 1) {
         duplications[id.toStringWithoutVersion()] = sameIds;
@@ -156,17 +156,17 @@ export default class BitIds extends Array<BitId> {
   }
 
   throwForDuplicationIgnoreVersion() {
-    this.forEach(bitId => {
+    this.forEach((bitId) => {
       const found = this.filterWithoutVersion(bitId);
       if (found.length > 1) {
         throw new Error(`bitIds has "${bitId.toStringWithoutVersion()}" duplicated as following:
-${found.map(id => id.toString()).join('\n')}`);
+${found.map((id) => id.toString()).join('\n')}`);
       }
     });
   }
 
   clone(): BitIds {
-    const cloneIds = this.map(id => id.clone());
+    const cloneIds = this.map((id) => id.clone());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...cloneIds);
   }

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
-const fileSpecFixture = testShouldPass => `const expect = require('chai').expect;
+const fileSpecFixture = (testShouldPass) => `const expect = require('chai').expect;
 const comp = require('./file');
 
 describe('comp', () => {
@@ -11,7 +11,7 @@ describe('comp', () => {
   });
 });`;
 
-describe('bit ci-update', function() {
+describe('bit ci-update', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

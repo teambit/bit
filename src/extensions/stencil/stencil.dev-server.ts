@@ -17,21 +17,21 @@ export class StencilDevServer implements DevServer {
       devServer: {
         reloadStrategy: 'pageReload',
         port: port || 4444,
-        basePath: this.workspace.path
+        basePath: this.workspace.path,
       },
       outputTargets: [
         {
-          type: 'dist'
+          type: 'dist',
         },
         {
-          type: 'www'
-        }
+          type: 'www',
+        },
       ],
       namespace: 'test',
       tsconfig: require.resolve('./typescript/tsconfig'),
       taskQueue: 'async',
       // cwd: this.workspace.path,
-      srcDir: `${this.workspace.path}/web-components`
+      srcDir: `${this.workspace.path}/web-components`,
       // includeSrc: [this.workspace.path + '']
     });
     const watcher = await stencilCompiler.createWatcher();
@@ -39,7 +39,7 @@ export class StencilDevServer implements DevServer {
     await watcher.start();
 
     return {
-      listen: () => {}
+      listen: () => {},
     };
   }
 }

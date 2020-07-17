@@ -5,7 +5,7 @@ import ObjectsWithoutConsumer from '../../src/api/consumer/lib/exceptions/object
 
 chai.use(require('chai-fs'));
 
-describe('user deleted only .bitmap file leaving the objects in place', function() {
+describe('user deleted only .bitmap file leaving the objects in place', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

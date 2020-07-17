@@ -13,7 +13,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit tag command', function() {
+describe('bit tag command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -93,7 +93,7 @@ describe('bit tag command', function() {
           localVersion: '0.0.1',
           deprecated: false,
           currentVersion: '0.0.1',
-          remoteVersion: 'N/A'
+          remoteVersion: 'N/A',
         });
       });
       it('Should increment the patch version when no version type specified', () => {
@@ -135,14 +135,14 @@ describe('bit tag command', function() {
           localVersion: '1.0.0',
           deprecated: false,
           currentVersion: '1.0.0',
-          remoteVersion: 'N/A'
+          remoteVersion: 'N/A',
         });
         expect(listOutput).to.deep.include({
           id: 'components/dependent',
           localVersion: '0.0.2',
           deprecated: false,
           currentVersion: '0.0.2',
-          remoteVersion: 'N/A'
+          remoteVersion: 'N/A',
         });
       });
       it('Should throw error when the version already exists', () => {
@@ -176,14 +176,14 @@ describe('bit tag command', function() {
           localVersion: '0.0.1',
           deprecated: false,
           currentVersion: '0.0.1',
-          remoteVersion: 'N/A'
+          remoteVersion: 'N/A',
         });
         expect(listOutput).to.deep.include({
           id: 'components/b',
           localVersion: '0.0.1',
           deprecated: false,
           currentVersion: '0.0.1',
-          remoteVersion: 'N/A'
+          remoteVersion: 'N/A',
         });
       });
       it('Should increment the patch version when no version type specified', () => {
@@ -748,14 +748,16 @@ describe('bit tag command', function() {
 
       const depPathsIsString = {
         sourceRelativePath: 'utils/is-string.js',
-        destinationRelativePath: 'utils/is-string.js'
+        destinationRelativePath: 'utils/is-string.js',
       };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
-      expect(dependencies.find(dep => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
+      expect(dependencies.find((dep) => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
         depPathsIsString
       );
-      expect(dependencies.find(dep => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(depPathsIsType);
+      expect(dependencies.find((dep) => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(
+        depPathsIsType
+      );
     });
 
     it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
@@ -776,14 +778,16 @@ describe('bit tag command', function() {
       const dependencies = JSON.parse(output).dependencies;
       const depPathsIsString = {
         sourceRelativePath: 'utils/is-string.js',
-        destinationRelativePath: 'utils/is-string.js'
+        destinationRelativePath: 'utils/is-string.js',
       };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
-      expect(dependencies.find(dep => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
+      expect(dependencies.find((dep) => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
         depPathsIsString
       );
-      expect(dependencies.find(dep => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(depPathsIsType);
+      expect(dependencies.find((dep) => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(
+        depPathsIsType
+      );
     });
 
     it.skip('should persist all models in the scope', () => {});

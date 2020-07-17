@@ -67,23 +67,23 @@ function formatter(doc: Doc | any): string {
  * @return {Promise}
  */
 function search(queryStr: string, path: string): Promise<Doc[]> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const index = serverlessIndex.initializeIndex(path);
     const searchResults = [];
     const query = buildQuery(queryStr);
-    return index.then(indexInstance => {
+    return index.then((indexInstance) => {
       indexInstance
         .search({
           query,
-          pageSize: numOfResultsPerPage
+          pageSize: numOfResultsPerPage,
         })
-        .on('data', function(data) {
+        .on('data', function (data) {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           searchResults.push(data);
         })
-        .on('end', function() {
+        .on('end', function () {
           const searchResultsSorted = sortSearchResults(searchResults);
-          return resolve(searchResultsSorted.map(result => result.document));
+          return resolve(searchResultsSorted.map((result) => result.document));
         });
     });
   });
@@ -91,5 +91,5 @@ function search(queryStr: string, path: string): Promise<Doc[]> {
 
 module.exports = {
   search,
-  formatter
+  formatter,
 };

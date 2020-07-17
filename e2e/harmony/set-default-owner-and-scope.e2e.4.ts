@@ -7,14 +7,14 @@ import * as fixtures from '../../src/fixtures/fixtures';
 chai.use(require('chai-fs'));
 
 // (supportNpmCiRegistryTesting ? describe : describe.skip)(
-describe('set default owner and scope', function() {
+describe('set default owner and scope', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     const helperOptions: HelperOptions = {
       scopesOptions: {
-        remoteScopeWithDot: true
-      }
+        remoteScopeWithDot: true,
+      },
     };
     helper = new Helper(helperOptions);
   });
@@ -37,7 +37,7 @@ describe('set default owner and scope', function() {
       componentId = `${defaultScope}/utils/is-type`;
       componentPackageName = `@${defaultOwner}/${scopeWithoutOwner}.utils.is-type`;
       const workspaceExtConfig = {
-        defaultScope
+        defaultScope,
       };
       helper.extensions.addExtensionToWorkspace('@teambit/workspace', workspaceExtConfig);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
@@ -95,7 +95,7 @@ describe('set default owner and scope', function() {
             const componentIdWithVersion = `${componentId}@0.0.1`;
             const packDir = path.join(helper.scopes.localPath, 'pack');
             const options = {
-              d: packDir
+              d: packDir,
             };
             helper.command.packComponent(componentIdWithVersion, options, true);
             const packageJsonPath = path.join(packDir, 'package', 'package.json');

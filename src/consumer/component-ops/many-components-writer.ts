@@ -148,9 +148,9 @@ export default class ManyComponentsWriter {
   }
   async _persistComponentsData() {
     const dataToPersist = new DataToPersist();
-    this.componentsWithDependencies.forEach(componentWithDeps => {
+    this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
+      allComponents.forEach((component) => dataToPersist.merge(component.dataToPersist));
     });
     const componentsConfig = this.consumer?.config?.componentsConfig;
     if (componentsConfig?.hasChanged) {
@@ -166,7 +166,9 @@ export default class ManyComponentsWriter {
 
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
-    const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
+    const componentWriterInstances = writeComponentsParams.map((writeParams) =>
+      ComponentWriter.getInstance(writeParams)
+    );
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
     componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
@@ -191,7 +193,7 @@ export default class ManyComponentsWriter {
       if (!this.consumer) {
         componentWithDeps.component.dists.writeDistsFiles = this.writeDists;
         return {
-          origin: COMPONENT_ORIGINS.IMPORTED
+          origin: COMPONENT_ORIGINS.IMPORTED,
         };
       }
       // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
@@ -209,7 +211,7 @@ export default class ManyComponentsWriter {
       return {
         origin,
         existingComponentMap: componentMap,
-        saveOnLane: this.saveOnLane
+        saveOnLane: this.saveOnLane,
       };
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -222,7 +224,7 @@ export default class ManyComponentsWriter {
         typeof this.ignoreBitDependencies === 'boolean'
           ? this.ignoreBitDependencies
           : componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-      ...getParams()
+      ...getParams(),
     };
   }
   _getDefaultWriteParams(): Record<string, any> {
@@ -232,7 +234,7 @@ export default class ManyComponentsWriter {
       bitMap: this.bitMap,
       isolated: this.isolated,
       applyExtensionsAddedConfig: this.applyExtensionsAddedConfig,
-      excludeRegistryPrefix: this.excludeRegistryPrefix
+      excludeRegistryPrefix: this.excludeRegistryPrefix,
     };
   }
   async _populateComponentsDependenciesToWrite() {
@@ -273,7 +275,7 @@ export default class ManyComponentsWriter {
           depFromBitMap &&
           depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED &&
           (fs.existsSync(depFromBitMap.rootDir as string) ||
-            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
+            this.writtenComponents.find((c) => c.writtenPath === depFromBitMap.rootDir))
         ) {
           dep.writtenPath = depFromBitMap.rootDir;
           logger.debugAndAddBreadCrumb(
@@ -297,19 +299,19 @@ export default class ManyComponentsWriter {
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          existingComponentMap: componentMap
+          existingComponentMap: componentMap,
         });
         return componentWriter.populateComponentsFilesToWrite();
       });
 
-      return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
+      return Promise.all(writeDependenciesP).then((deps) => deps.filter((dep) => dep));
     });
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
-    this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter(dep => dep);
+    this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter((dep) => dep);
   }
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
-      this.componentsWithDependencies.forEach(componentWithDeps => {
+      this.componentsWithDependencies.forEach((componentWithDeps) => {
         // $FlowFixMe componentWithDeps.component.componentMap is set
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
@@ -349,7 +351,7 @@ to move all component files to a different directory, run bit remove and then bi
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: this.silentPackageManagerResult,
       installPeerDependencies: this.installPeerDependencies,
-      installProdPackagesOnly: this.installProdPackagesOnly
+      installProdPackagesOnly: this.installProdPackagesOnly,
     });
   }
   async _getAllLinks(): Promise<DataToPersist> {
@@ -361,7 +363,7 @@ to move all component files to a different directory, run bit remove and then bi
       bitMap: this.bitMap,
       createNpmLinkFiles: this.createNpmLinkFiles,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writePackageJson: this.writePackageJson
+      writePackageJson: this.writePackageJson,
     });
   }
   _getComponentRootDir(bitId: BitId): PathOsBasedRelative {

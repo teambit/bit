@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('component that requires another component file by relative path', function() {
+describe('component that requires another component file by relative path', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -20,12 +20,12 @@ describe('component that requires another component file by relative path', func
       helper.fixtures.copyFixtureComponents('import-relative-path');
       helper.command.addComponent('import-by-2-files/a1.js import-by-2-files/a2.js', {
         i: 'comp-a',
-        m: 'import-by-2-files/a1.js'
+        m: 'import-by-2-files/a1.js',
       });
       helper.command.addComponent('import-by-2-files/b.js', { i: 'comp-b' });
       output = helper.command.showComponentParsed('comp-a');
       const specifiers = output.dependencies[0].relativePaths[0].importSpecifiers;
-      specifiersNames = specifiers.map(specifier => specifier.mainFile.name);
+      specifiersNames = specifiers.map((specifier) => specifier.mainFile.name);
     });
     it('should have all the import specifiers from both files', () => {
       expect(specifiersNames).to.have.members(['b1', 'b2', 'b3']);

@@ -50,7 +50,7 @@ class ConfigList implements LegacyCommand {
 
   report(conf: { [key: string]: string }): string {
     return Object.entries(conf)
-      .map(tuple => {
+      .map((tuple) => {
         return tuple.join('     ');
       })
       .join('\n');
@@ -86,7 +86,7 @@ export default class Config implements LegacyCommand {
 
   report(conf: { [key: string]: string }): string {
     return Object.entries(conf)
-      .map(tuple => {
+      .map((tuple) => {
         tuple[0] = rightpad(tuple[0], 30, ' ');
         return tuple.join('');
       })

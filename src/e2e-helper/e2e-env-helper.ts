@@ -53,10 +53,10 @@ export default class EnvHelper {
         tsconfig: {
           compilerOptions: {
             target: 'ES5',
-            module: 'CommonJS'
-          }
-        }
-      }
+            module: 'CommonJS',
+          },
+        },
+      },
     };
   }
 
@@ -130,8 +130,8 @@ export default class EnvHelper {
       version: '1.0.0',
       dependencies: {
         mocha: '6.1.4',
-        chai: '4.2.0'
-      }
+        chai: '4.2.0',
+      },
     });
     this.command.runCmd('npm install', tempScopePath);
     this.command.addComponent('tester.js', { i: 'testers/dummy' }, tempScopePath);
@@ -162,7 +162,7 @@ export default class EnvHelper {
     const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
     const babelPluginTransformObjectRestSpreadPackageJson = {
       name: 'babel-plugin-transform-object-rest-spread',
-      version: '6.23.0'
+      version: '6.23.0',
     };
     const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
     const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };

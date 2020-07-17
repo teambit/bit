@@ -18,8 +18,8 @@ export class GraphBuilder {
       return this._graph;
     }
     if (this.workspace) {
-      const ids = (await this.workspace.list()).map(comp => comp.id);
-      const bitIds = ids.map(id => id._legacy);
+      const ids = (await this.workspace.list()).map((comp) => comp.id);
+      const bitIds = ids.map((id) => id._legacy);
       const initialGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
       const graph = await ComponentGraph.buildFromLegacy(initialGraph, this.componentFactory);
       this._graph = graph;

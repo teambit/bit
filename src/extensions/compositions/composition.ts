@@ -24,7 +24,7 @@ export class Composition {
   }
 
   static fromArray(compositions: CompositionProps[]): Composition[] {
-    return compositions.map(composition => {
+    return compositions.map((composition) => {
       return new Composition(composition.identifier, composition.filepath);
     });
   }

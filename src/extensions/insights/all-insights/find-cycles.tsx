@@ -19,19 +19,19 @@ export default class FindCycles implements Insight {
     if (!graph) {
       return {
         message: '',
-        data: undefined
+        data: undefined,
       };
     }
     const cycles = graph.findCycles();
     if (cycles.length === 1) {
       return {
         message: `Found ${cycles.length} cycle.`,
-        data: cycles
+        data: cycles,
       };
     }
     return {
       message: `Found ${cycles.length} cycles.`,
-      data: cycles
+      data: cycles,
     };
   }
 
@@ -59,10 +59,10 @@ export default class FindCycles implements Insight {
     const result: InsightResult = {
       metaData: {
         name: this.name,
-        description: this.description
+        description: this.description,
       },
       data: bareResult.data,
-      renderedData
+      renderedData,
     };
 
     if (bareResult.message) {

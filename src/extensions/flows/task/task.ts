@@ -25,7 +25,7 @@ export function executeTask(task: string, capsule: Capsule): Subject<any> {
       {
         command: task.trim().split(' '),
         stdio: 'ipc',
-        cwd: ''
+        cwd: '',
       } as any,
       exec
     );

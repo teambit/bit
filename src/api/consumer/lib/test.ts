@@ -38,7 +38,7 @@ export default (async function test(
     const consumer: Consumer = await loadConsumer();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
-    const ids = components.map(component => component.id.toString());
+    const ids = components.map((component) => component.id.toString());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const results = await specsRunner({ ids, forkLevel, verbose });
     return results;
@@ -62,7 +62,7 @@ export async function testInProcess(
   await consumer.onDestroy();
   return {
     type: 'results',
-    results: testsResults
+    results: testsResults,
   };
 }
 

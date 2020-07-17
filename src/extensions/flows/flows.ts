@@ -17,7 +17,7 @@ export class Flows {
   constructor(private workspace: Workspace) {}
 
   getIds(ids: string[]) {
-    return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
+    return ids.map((id) => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
 
   /**
@@ -73,7 +73,7 @@ export class Flows {
    * @param network optional custom network
    */
   async runToPromise(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
-    logger.debug(`flowsExt, runToPromise is running ${name} on ${seeders.map(s => s.toString()).join(', ')}`);
+    logger.debug(`flowsExt, runToPromise is running ${name} on ${seeders.map((s) => s.toString()).join(', ')}`);
     const resultStream = await this.run(seeders, name, options, network);
     logger.debug(`flowsExt, runToPromise got resultStream`);
     return new Promise((resolve, reject) => {
@@ -92,7 +92,7 @@ export class Flows {
         },
         complete() {
           logger.debug(`flowsExt, runToPromise in complete()`);
-        }
+        },
       });
     });
   }
@@ -116,7 +116,7 @@ export class Flows {
       {
         caching: true,
         concurrency: 4,
-        traverse: 'both'
+        traverse: 'both',
       },
       options
     );
@@ -139,7 +139,7 @@ export class Flows {
       return Promise.resolve(new Flow(value || []));
     };
 
-    const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
+    const ids = flowsWithIds.map((withID) => new ComponentID(withID.id));
     const network = this.createNetwork(ids, getFlow);
     return this.runToPromise(ids, '', options || {}, network);
   }
@@ -151,15 +151,15 @@ export class Flows {
 
 export class IdsAndFlows extends Array<{ id: BitId; value: string[] }> {
   getFlows(id: BitId): string[] | null {
-    const found = this.find(item => item.id.isEqual(id));
+    const found = this.find((item) => item.id.isEqual(id));
     return found ? found.value : null;
   }
   getFlowsIgnoreVersion(id: BitId): string[] | null {
-    const found = this.find(item => item.id.isEqualWithoutVersion(id));
+    const found = this.find((item) => item.id.isEqualWithoutVersion(id));
     return found ? found.value : null;
   }
   getFlowsIgnoreScopeAndVersion(id: BitId): string[] | null {
-    const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
+    const found = this.find((item) => item.id.isEqualWithoutScopeAndVersion(id));
     return found ? found.value : null;
   }
   toString() {

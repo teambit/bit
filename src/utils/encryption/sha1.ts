@@ -8,8 +8,5 @@ import * as crypto from 'crypto';
  * ```
  */
 export default function sha1(data: string | Buffer, encoding: crypto.HexBase64Latin1Encoding = 'hex'): string {
-  return crypto
-    .createHash('sha1')
-    .update(data)
-    .digest(encoding);
+  return crypto.createHash('sha1').update(data).digest(encoding);
 }

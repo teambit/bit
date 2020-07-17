@@ -12,5 +12,5 @@ export default {
     // const runCMD = new RunCmd(flows, reporter, logger);
     // cli.register(runCMD);
     return flows;
-  }
+  },
 } as ExtensionManifest;

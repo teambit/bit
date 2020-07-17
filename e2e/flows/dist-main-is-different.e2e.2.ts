@@ -12,7 +12,7 @@ chai.use(require('chai-fs'));
  * dist files are generated with an extra file with a suffix "-main" and the text "from source" is
  * replaced by "from dist". See the compiler at e2e/fixtures/compilers/dist-main/compiler.js
  */
-describe('mainFile of the dist is different than the source', function() {
+describe('mainFile of the dist is different than the source', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

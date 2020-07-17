@@ -18,18 +18,18 @@ describe('detective-es6', () => {
             type: 'VariableDeclarator',
             id: {
               type: 'Identifier',
-              name: 'x'
+              name: 'x',
             },
             init: {
               type: 'Literal',
               value: 4,
-              raw: '4'
-            }
-          }
+              raw: '4',
+            },
+          },
         ],
-        kind: 'let'
-      }
-    ]
+        kind: 'let',
+      },
+    ],
   };
 
   it('accepts an ast', () => {
@@ -74,29 +74,29 @@ describe('detective-es6', () => {
     assert(depsKeys[0] === 'foo');
   });
 
-  it('handles dynamic imports', function() {
+  it('handles dynamic imports', function () {
     const deps = detective('import("foo").then(foo => foo());');
     const depsKeys = Object.keys(deps);
     assert(depsKeys.length === 1);
     assert(depsKeys[0] === 'foo');
   });
 
-  it('should support commonJS syntax', function() {
+  it('should support commonJS syntax', function () {
     const deps = detective('var foo = require("foo");');
     const depsKeys = Object.keys(deps);
     assert(depsKeys.length === 1);
     assert(depsKeys[0] === 'foo');
   });
 
-  it('returns an empty list for empty files', function() {
+  it('returns an empty list for empty files', function () {
     const deps = detective('');
     const depsKeys = Object.keys(deps);
     assert.equal(depsKeys.length, 0);
   });
 
-  it('throws when content is not provided', function() {
+  it('throws when content is not provided', function () {
     assert.throws(
-      function() {
+      function () {
         // @ts-ignore
         detective();
       },
@@ -105,14 +105,14 @@ describe('detective-es6', () => {
     );
   });
 
-  it('does not throw with jsx in a module', function() {
-    assert.doesNotThrow(function() {
+  it('does not throw with jsx in a module', function () {
+    assert.doesNotThrow(function () {
       detective("import foo from 'foo'; var templ = <jsx />;");
     });
   });
 
-  it('does not throw on an async ES7 function', function() {
-    assert.doesNotThrow(function() {
+  it('does not throw on an async ES7 function', function () {
+    assert.doesNotThrow(function () {
       detective("import foo from 'foo'; export default async function bar() {}");
     });
   });

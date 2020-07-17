@@ -11,5 +11,5 @@
  */
 export default function forEach(obj: Record<string, any>, cb: (val: any, key: any) => void) {
   const keys = Object.keys(obj);
-  keys.forEach(key => cb(obj[key], key));
+  keys.forEach((key) => cb(obj[key], key));
 }

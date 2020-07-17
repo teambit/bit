@@ -17,11 +17,7 @@ export type Doc = {
   stemmedMinDescription: string;
 };
 
-const stem = (sentence: string): string =>
-  sentence
-    .split(' ')
-    .map(stemmer)
-    .join(' ');
+const stem = (sentence: string): string => sentence.split(' ').map(stemmer).join(' ');
 let indexInstance;
 
 function tokenizeStr(str: string): string {
@@ -47,9 +43,9 @@ function prepareDoc(docs: Object, component: Component): Doc {
   const name = component.name;
   const tokenizedName = tokenizeStr(name);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const functionNames = docs.map(doc => doc.name).join(' ');
+  const functionNames = docs.map((doc) => doc.name).join(' ');
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const minDescription = docs.map(doc => minimizeDescription(doc.description)).join(' ');
+  const minDescription = docs.map((doc) => minimizeDescription(doc.description)).join(' ');
   return {
     id: name,
     name,
@@ -58,19 +54,19 @@ function prepareDoc(docs: Object, component: Component): Doc {
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    description: docs.map(doc => doc.description).join(' '),
+    description: docs.map((doc) => doc.description).join(' '),
     minDescription,
-    stemmedMinDescription: stem(minDescription)
+    stemmedMinDescription: stem(minDescription),
   };
 }
 
 function addAllToLocalIndex(components: Array<Component>): Promise<string> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const docs = components.map(component => prepareDoc(component.docs, component));
+    const docs = components.map((component) => prepareDoc(component.docs, component));
     const docStream = new Readable({ objectMode: true });
     // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
-    docs.map(doc => docStream.push(doc));
+    docs.map((doc) => docStream.push(doc));
     docStream.push(null);
     docStream
       .pipe(indexInstance.defaultPipeline())
@@ -82,7 +78,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
 }
 
 function addToLocalIndex(component: Component): Promise<Component> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const doc = prepareDoc(component.docs, component);
     const docStream = new Readable({ objectMode: true });
@@ -123,5 +119,5 @@ module.exports = {
   index,
   indexAll,
   tokenizeStr,
-  stem
+  stem,
 };

@@ -12,11 +12,11 @@ export class PublishDryRunTask implements BuildTask {
     this.publisher.options.dryRun = true;
     const capsules = context.capsuleGraph.capsules.getAllCapsules();
     // @ts-ignore todo: fix once the component here is not ConsumerComponent, just change to c.component.config.extensions
-    const capsulesToPublish = capsules.filter(c => this.publisher.shouldPublish(c.component.extensions));
+    const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.extensions));
     const results = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     return {
       components: results,
-      artifacts: []
+      artifacts: [],
     };
   }
 }

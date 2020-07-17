@@ -9,31 +9,31 @@ export function listenToExecutionStream(exec: ContainerExec, id: string, time: D
   subscriber.next({
     type: 'task:start',
     id,
-    startTime: time
+    startTime: time,
   });
 
-  exec.stdout.on('data', function(data) {
+  exec.stdout.on('data', function (data) {
     subscriber.next({
       type: 'task:stdout',
       id,
-      value: data.toString()
+      value: data.toString(),
     });
   });
 
-  exec.stderr.on('data', function(data) {
+  exec.stderr.on('data', function (data) {
     logger.error(`flowsExt, createExecutionStream of ${id} got error: ${data.toString()}`);
     subscriber.next({
       type: 'task:stderr',
       id,
-      value: data.toString()
+      value: data.toString(),
     });
   });
 
-  exec.on('message', function(data) {
+  exec.on('message', function (data) {
     message = data;
   });
 
-  exec.on('close', function() {
+  exec.on('close', function () {
     logger.debug(`flowsExt, createExecutionStream of ${id} completed!`);
     const streamMessage = {
       type: 'task:result',
@@ -41,7 +41,7 @@ export function listenToExecutionStream(exec: ContainerExec, id: string, time: D
       value: message,
       startTime: time,
       duration: new Date().getTime() - time.getTime(),
-      code: exec.code
+      code: exec.code,
     };
     subscriber.next(streamMessage);
     subscriber.complete();

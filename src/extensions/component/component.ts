@@ -74,7 +74,7 @@ export class Component {
   stringify(): string {
     return JSON.stringify({
       id: this.id,
-      head: this.head
+      head: this.head,
     });
   }
 
@@ -92,7 +92,7 @@ export class Component {
    * display name of the component.
    */
   get displayName() {
-    const tokens = this.id.name.split('-').map(token => capitalize(token));
+    const tokens = this.id.name.split('-').map((token) => capitalize(token));
     return tokens.join(' ');
   }
 

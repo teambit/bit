@@ -13,7 +13,7 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 // the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
 // some commands are slower by 20% with this enabled.
 Bluebird.config({
-  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG || process.env.BIT_LOG)
+  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG || process.env.BIT_LOG),
 });
 
 initApp();
@@ -33,4 +33,4 @@ async function initApp() {
   }
 }
 
-process.on('unhandledRejection', err => handleUnhandledRejection(err));
+process.on('unhandledRejection', (err) => handleUnhandledRejection(err));

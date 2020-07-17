@@ -42,7 +42,7 @@ export default class DependencyGraph {
   static loadFromString(str: object): DependencyGraph {
     const graph = GraphLib.json.read(str);
     // when getting a graph from a remote scope, the class BitId is gone and only the object is received
-    graph.nodes().forEach(node => {
+    graph.nodes().forEach((node) => {
       const id = graph.node(node);
       if (!(id instanceof BitId)) {
         graph.setNode(node, new BitId(id));
@@ -62,10 +62,10 @@ export default class DependencyGraph {
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
     await Promise.all(
-      allComponents.map(async component => {
+      allComponents.map(async (component) => {
         graph.setNode(component.id(), component);
         await Promise.all(
-          Object.keys(component.versions).map(async version => {
+          Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, scope.objects);
             if (!componentVersion) return;
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
@@ -81,8 +81,8 @@ export default class DependencyGraph {
     // set all edges
     // @todo: currently the label is "require". Change it to be "direct" and "indirect" depends on whether it comes from
     // flattenedDependencies or from dependencies.
-    Object.keys(depObj).forEach(id =>
-      depObj[id].flattenedDependencies.forEach(dep => graph.setEdge(id, dep.toString(), 'require'))
+    Object.keys(depObj).forEach((id) =>
+      depObj[id].flattenedDependencies.forEach((dep) => graph.setEdge(id, dep.toString(), 'require'))
     );
     return graph;
   }
@@ -91,8 +91,8 @@ export default class DependencyGraph {
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
-    const buildGraphP = allModelComponents.map(async modelComponent => {
-      const buildVersionP = modelComponent.listVersions().map(async versionNum => {
+    const buildGraphP = allModelComponents.map(async (modelComponent) => {
+      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
         const version = await modelComponent.loadVersion(versionNum, scope.objects);
         if (!version) {
           // a component might be in the scope with only the latest version
@@ -113,12 +113,12 @@ export default class DependencyGraph {
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
-    const buildGraphP = allModelComponents.map(async modelComponent => {
+    const buildGraphP = allModelComponents.map(async (modelComponent) => {
       const latestVersion = modelComponent.latest();
-      const buildVersionP = modelComponent.listVersions().map(async versionNum => {
+      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
         if (onlyLatest && latestVersion !== versionNum) return;
         const id = modelComponent.toBitId().changeVersion(versionNum);
-        const componentFromWorkspace = workspaceComponents.find(comp => comp.id.isEqual(id));
+        const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
           componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects));
@@ -160,7 +160,7 @@ export default class DependencyGraph {
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach(dependencyId => {
+      depIds.forEach((dependencyId) => {
         const depIdStr = dependencyId.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
         if (reverse) {
@@ -180,18 +180,18 @@ export default class DependencyGraph {
   getSubGraphOfConnectedComponents(id: BitId): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);
-    const graphWithId = connectedGraphs.find(graph => graph.includes(idWithVersion.toString()));
+    const graphWithId = connectedGraphs.find((graph) => graph.includes(idWithVersion.toString()));
     if (!graphWithId) {
       throw new Error(`${id.toString()} is missing from the dependency graph`);
     }
-    return this.graph.filterNodes(node => graphWithId.includes(node));
+    return this.graph.filterNodes((node) => graphWithId.includes(node));
   }
 
   getDependenciesInfo(id: BitId): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString());
     const dependencies: DependenciesInfo[] = [];
-    Object.keys(dijkstraResults).forEach(idStr => {
+    Object.keys(dijkstraResults).forEach((idStr) => {
       const distance = dijkstraResults[idStr].distance;
       if (distance === Infinity || distance === 0) {
         // there is no dependency or it's the same component (distance zero)
@@ -203,7 +203,7 @@ export default class DependencyGraph {
         id: this.graph.node(idStr),
         depth: distance,
         parent: predecessor,
-        dependencyType: DEPENDENCIES_TYPES_UI_MAP[dependencyType]
+        dependencyType: DEPENDENCIES_TYPES_UI_MAP[dependencyType],
       });
     });
     dependencies.sort((a, b) => a.depth - b.depth);
@@ -212,11 +212,11 @@ export default class DependencyGraph {
 
   getDependentsInfo(id: BitId): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
-    const edgeFunc = v => this.graph.inEdges(v);
+    const edgeFunc = (v) => this.graph.inEdges(v);
     // @ts-ignore (incorrect types in @types/graphlib)
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString(), undefined, edgeFunc);
     const dependents: DependenciesInfo[] = [];
-    Object.keys(dijkstraResults).forEach(idStr => {
+    Object.keys(dijkstraResults).forEach((idStr) => {
       const distance = dijkstraResults[idStr].distance;
       if (distance === Infinity || distance === 0) {
         // there is no dependency or it's the same component (distance zero)
@@ -228,7 +228,7 @@ export default class DependencyGraph {
         id: this.graph.node(idStr),
         depth: distance,
         parent: predecessor,
-        dependencyType: DEPENDENCIES_TYPES_UI_MAP[dependencyType]
+        dependencyType: DEPENDENCIES_TYPES_UI_MAP[dependencyType],
       });
     });
     dependents.sort((a, b) => a.depth - b.depth);
@@ -240,11 +240,11 @@ export default class DependencyGraph {
       return id;
     }
     const nodes = this.graph.nodes();
-    const ids = nodes.filter(n => n.startsWith(id.toString()));
+    const ids = nodes.filter((n) => n.startsWith(id.toString()));
     if (!ids.length) {
       throw new Error(`failed finding ${id.toString()} in the graph`);
     }
-    const bitIds = ids.map(idStr => this.graph.node(idStr));
+    const bitIds = ids.map((idStr) => this.graph.node(idStr));
     return getLatestVersionNumber(BitIds.fromArray(bitIds), id);
   }
 
@@ -255,14 +255,14 @@ export default class DependencyGraph {
   getImmediateDependentsPerId(id: BitId, returnNodeValue = false): Array<string | Component | BitId> {
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
-    const idsStr = nodeEdges.map(node => node.v);
-    return returnNodeValue ? idsStr.map(idStr => this.graph.node(idStr)) : idsStr;
+    const idsStr = nodeEdges.map((node) => node.v);
+    return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr;
   }
 
   getImmediateDependenciesPerId(id: BitId): string[] {
     const nodeEdges = this.graph.outEdges(id.toString());
     if (!nodeEdges) return [];
-    return nodeEdges.map(node => node.v);
+    return nodeEdges.map((node) => node.v);
   }
 
   serialize(graph: Graph = this.graph) {

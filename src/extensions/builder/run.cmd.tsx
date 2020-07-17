@@ -19,13 +19,13 @@ export class BuilderCmd implements Command {
     this.reporter.title('Starting "build"');
     let capsulesInstalled = 0;
     let totalCapsules = 0;
-    onCapsuleInstalled(componentName => {
+    onCapsuleInstalled((componentName) => {
       capsulesInstalled += 1;
       this.reporter.setStatusText(
         `⏳ Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
       );
     });
-    beforeInstallingCapsules(numCapsules => {
+    beforeInstallingCapsules((numCapsules) => {
       totalCapsules += numCapsules;
     });
 

@@ -155,7 +155,7 @@ export default class FixtureHelper {
    * @returns the expected output in case "node app.js" is running
    */
   populateComponents(numOfComponents = 3): string {
-    const getImp = index => {
+    const getImp = (index) => {
       if (index === numOfComponents) return `module.exports = () => 'comp${index}';`;
       const nextComp = `comp${index + 1}`;
       return `const ${nextComp} = require('../${nextComp}');
@@ -181,7 +181,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
    * @memberof FixtureHelper
    */
   populateExtensions(numOfExtensions = 3): void {
-    const getImp = index => {
+    const getImp = (index) => {
       return `
       class MyExtension {
         constructor(config) {
@@ -216,7 +216,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
         nmPathPrefix = `@${remoteSplit[0]}/${remoteSplit[1]}.`;
       }
     }
-    const getImp = index => {
+    const getImp = (index) => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;
       const nextComp = `comp${index + 1}`;
       return `import ${nextComp} from '${nmPathPrefix}${nextComp}';
@@ -282,7 +282,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
 
     this.npm.initNpm();
     const dependencies = {
-      typescript: '^3.8'
+      typescript: '^3.8',
     };
 
     this.packageJson.addKeyValue({ dependencies });
@@ -319,7 +319,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     tar.extract({
       sync: true,
       file: scopeFile,
-      cwd: this.scopes.e2eDir
+      cwd: this.scopes.e2eDir,
     });
   }
 }

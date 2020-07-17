@@ -6,7 +6,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe('bit link', function() {
+describe('bit link', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

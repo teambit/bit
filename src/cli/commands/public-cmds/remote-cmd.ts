@@ -61,10 +61,10 @@ export default class Remote implements LegacyCommand {
 
     const header = [
       { value: 'scope name', width: 30, headerColor: 'cyan' },
-      { value: 'host', width: 100, headerColor: 'cyan' }
+      { value: 'host', width: 100, headerColor: 'cyan' },
     ];
     const opts = {
-      align: 'left'
+      align: 'left',
     };
 
     const table = new Table(header, [], opts);

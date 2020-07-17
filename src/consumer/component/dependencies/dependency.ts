@@ -41,7 +41,7 @@ export default class Dependency {
       const partToRemove = `${sharedDir}/`;
       return pathStr.replace(partToRemove, '');
     };
-    const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
+    const depManipulateDir = manipulateDirData.find((manipulateDirItem) => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
       // when custom resolved is used, do not strip the source as it is not used. the actual source
       // is the importSource. strip only the destination as it is relevant when installing
@@ -64,7 +64,7 @@ export default class Dependency {
       return pathJoinLinux(wrapDir, pathStr);
     };
 
-    const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
+    const depManipulateDir = manipulateDirData.find((manipulateDirItem) => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
       if (!relativePath.isCustomResolveUsed) {
         relativePath.sourceRelativePath = pathWithWrapDir(relativePath.sourceRelativePath, componentWrapDir);
@@ -81,7 +81,7 @@ export default class Dependency {
   static getClone(dependency: Dependency): Record<string, any> {
     return {
       id: dependency.id,
-      relativePaths: R.clone(dependency.relativePaths)
+      relativePaths: R.clone(dependency.relativePaths),
     };
   }
 }

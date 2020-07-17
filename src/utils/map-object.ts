@@ -17,7 +17,7 @@ export default function mapObject(obj: Record<string, any>, iteratee: Iteratee) 
   const keys = Object.keys(obj);
   const mappedObject = {};
 
-  keys.forEach(key => {
+  keys.forEach((key) => {
     mappedObject[key] = iteratee(obj[key], key);
   });
 

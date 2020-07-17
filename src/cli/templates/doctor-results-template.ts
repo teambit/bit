@@ -8,8 +8,8 @@ import { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
 
 const summeryTableColumnConfig = {
   columnDefault: {
-    alignment: 'left'
-  }
+    alignment: 'left',
+  },
 };
 
 type SummeryRow = [string, string, string, string];

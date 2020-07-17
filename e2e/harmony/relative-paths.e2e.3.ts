@@ -5,7 +5,7 @@ import IncorrectRootDir from '../../src/consumer/component/exceptions/incorrect-
 
 chai.use(require('chai-fs'));
 
-describe('relative paths flow (components requiring each other by relative paths)', function() {
+describe('relative paths flow (components requiring each other by relative paths)', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

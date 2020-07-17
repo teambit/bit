@@ -11,7 +11,7 @@ import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 
 chai.use(require('chai-fs'));
 
-describe('bit snap command', function() {
+describe('bit snap command', function () {
   this.timeout(0);
   const helper = new Helper();
   helper.command.setFeatures('lanes');
@@ -85,9 +85,7 @@ describe('bit snap command', function() {
     it('should save the dependencies successfully with their snaps as versions', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
       expect(barFoo.dependencies).to.have.lengthOf(1);
-      expect(barFoo.dependencies[0].id.version)
-        .to.be.a('string')
-        .and.have.lengthOf(HASH_SIZE);
+      expect(barFoo.dependencies[0].id.version).to.be.a('string').and.have.lengthOf(HASH_SIZE);
     });
   });
   describe('untag a snap', () => {
@@ -173,7 +171,7 @@ describe('bit snap command', function() {
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({
             id: { scope: helper.scopes.remote, name: 'bar/foo' },
-            head: secondSnap
+            head: secondSnap,
           });
         });
         it('should not change the version/snap in .bitmap', () => {
@@ -199,7 +197,7 @@ describe('bit snap command', function() {
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({
             id: { scope: helper.scopes.remote, name: 'bar/foo' },
-            head: secondSnap
+            head: secondSnap,
           });
         });
         it('should change the version/snap in .bitmap', () => {
@@ -244,7 +242,7 @@ describe('bit snap command', function() {
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({
             id: { scope: helper.scopes.remote, name: 'bar/foo' },
-            head: secondSnap
+            head: secondSnap,
           });
         });
         it('bit status should show the component as pending merge', () => {
@@ -263,7 +261,7 @@ describe('bit snap command', function() {
         it('should stop the process and throw a descriptive error suggesting to use --merge flag', () => {
           const func = () => helper.command.importComponent('bar/foo');
           const error = new ComponentsPendingMerge([
-            { id: `${helper.scopes.remote}/bar/foo`, snapsLocal: 1, snapsRemote: 1 }
+            { id: `${helper.scopes.remote}/bar/foo`, snapsLocal: 1, snapsRemote: 1 },
           ]);
           helper.general.expectToThrow(func, error);
         });

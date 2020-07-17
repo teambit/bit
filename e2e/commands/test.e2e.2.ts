@@ -21,7 +21,7 @@ describe('isType before hook describe', () => {
   });
 });`;
 
-describe('bit test command', function() {
+describe('bit test command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -177,7 +177,7 @@ describe('bit test command', function() {
       helper.fs.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
       helper.command.addComponent('utils/is-type.js', {
         i: 'utils/is-type',
-        t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
+        t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js',
       });
       try {
         helper.command.testComponent('utils/is-type');
@@ -331,7 +331,7 @@ describe('bit test command', function() {
       expect(output).to.have.string('tests passed');
     });
   });
-  describe('bit component with no tester', function() {
+  describe('bit component with no tester', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
@@ -346,7 +346,7 @@ describe('bit test command', function() {
       expect(output).to.have.string('tester for component: bar/foo is not defined');
     });
   });
-  describe('when there is no new or modified component', function() {
+  describe('when there is no new or modified component', function () {
     before(() => {
       // Set imported component
       helper.scopeHelper.getClonedLocalScope(clonedScopePath);

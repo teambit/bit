@@ -12,5 +12,5 @@ function updateBindingPrefixToNewDefault(componentModel: Record<string, any>): R
 
 export default {
   name: 'update bindingPrefix from "bit" to "@bit"',
-  migrate: updateBindingPrefixToNewDefault
+  migrate: updateBindingPrefixToNewDefault,
 };

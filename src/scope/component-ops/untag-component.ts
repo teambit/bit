@@ -36,7 +36,7 @@ export async function removeLocalVersion(
   if (!force) {
     const dependencyGraph = await scope.getDependencyGraph();
 
-    versionsToRemove.forEach(versionToRemove => {
+    versionsToRemove.forEach((versionToRemove) => {
       const idWithVersion = component.toBitId().changeVersion(versionToRemove);
       const dependents = dependencyGraph.getImmediateDependentsPerId(idWithVersion);
       if (dependents.length) {
@@ -93,15 +93,15 @@ async function removeLocalVersionsForMultipleComponents(
   // if no version is given, there is risk of deleting dependencies version without their dependents.
   if (!force && version) {
     const dependencyGraph = await scope.getDependencyGraph();
-    const candidateComponentsIds = componentsToUntag.map(component => {
+    const candidateComponentsIds = componentsToUntag.map((component) => {
       const bitId = component.toBitId();
       return bitId.changeVersion(version);
     });
-    const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
+    const candidateComponentsIdsStr = candidateComponentsIds.map((id) => id.toString());
     candidateComponentsIds.forEach((bitId: BitId) => {
       const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
+      const dependentsNotCandidates = dependents.filter((dependent) => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
         throw new GeneralError( // $FlowFixMe
           `unable to untag ${bitId}, the version ${version} has the following dependent(s) ${dependents.join(', ')}`
@@ -110,7 +110,9 @@ async function removeLocalVersionsForMultipleComponents(
     });
   }
   logger.debug(`found ${componentsToUntag.length} components to untag`);
-  return Promise.all(componentsToUntag.map(component => removeLocalVersion(scope, component.toBitId(), version, true)));
+  return Promise.all(
+    componentsToUntag.map((component) => removeLocalVersion(scope, component.toBitId(), version, true))
+  );
 }
 
 async function getComponentsWithOptionToUntag(scope, version): Promise<ModelComponent[]> {

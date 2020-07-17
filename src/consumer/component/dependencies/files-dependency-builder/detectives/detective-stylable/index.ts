@@ -1,9 +1,9 @@
 const stylable = require('stylable');
 
-export default function(src) {
+export default function (src) {
   const css = stylable.safeParse(src);
   const dependencies = {};
-  const addDependency = dependency => {
+  const addDependency = (dependency) => {
     if (!dependencies[dependency]) {
       dependencies[dependency] = {};
     }
@@ -16,17 +16,17 @@ export default function(src) {
     }
   };
 
-  css.walkRules(rule => {
-    const stFrom = rule.nodes.find(node => node.prop === '-st-from');
+  css.walkRules((rule) => {
+    const stFrom = rule.nodes.find((node) => node.prop === '-st-from');
     if (!stFrom) return;
     const stFromValue = stFrom.value.replace(/["']/g, '');
     addDependency(stFromValue);
-    const stNamed = rule.nodes.find(node => node.prop === '-st-named');
+    const stNamed = rule.nodes.find((node) => node.prop === '-st-named');
     if (!stNamed) return;
     const specifierValue = {
       isDefault: false, // @todo,
       name: stNamed.value,
-      exported: true
+      exported: true,
     };
     addImportSpecifier(stFromValue, specifierValue);
   });

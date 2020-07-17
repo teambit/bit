@@ -83,7 +83,7 @@ export default class Repository {
   }
 
   getScopeMetaObject(): Promise<Buffer> {
-    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scopeJson.name }).compress());
+    return this.getLicense().then((license) => ScopeMeta.fromObject({ license, name: this.scopeJson.name }).compress());
   }
 
   objectPath(ref: Ref): string {
@@ -96,17 +96,17 @@ export default class Repository {
     // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
       .readFile(this.objectPath(ref))
-      .then(fileContents => {
+      .then((fileContents) => {
         return this.onRead(fileContents);
       })
-      .then(fileContents => {
+      .then((fileContents) => {
         return BitObject.parseObject(fileContents);
       })
       .then((parsedObject: BitObject) => {
         this.setCache(parsedObject);
         return parsedObject;
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.code !== 'ENOENT') {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
           throw err;
@@ -119,11 +119,11 @@ export default class Repository {
 
   async list(): Promise<BitObject[]> {
     const refs = await this.listRefs();
-    return Promise.all(refs.map(ref => this.load(ref)));
+    return Promise.all(refs.map((ref) => this.load(ref)));
   }
   async listRefs(): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
-    const refs = matches.map(str => {
+    const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
       return new Ref(hash);
     });
@@ -133,7 +133,7 @@ export default class Repository {
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
     return Promise.all(
-      refs.map(async ref => {
+      refs.map(async (ref) => {
         try {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
@@ -159,7 +159,7 @@ export default class Repository {
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
     const bitObjects = await Promise.all(
-      hashes.map(async hash => {
+      hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const indexJsonPath = this.scopeIndex.getPath();
@@ -179,7 +179,7 @@ export default class Repository {
       })
     );
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return bitObjects.filter(b => b); // remove nulls;
+    return bitObjects.filter((b) => b); // remove nulls;
   }
 
   async loadOptionallyCreateScopeIndex(): Promise<ScopeIndex> {
@@ -261,7 +261,7 @@ export default class Repository {
 
   addMany(objects: BitObject[]): Repository {
     if (!objects || !objects.length) return this;
-    objects.forEach(obj => this.add(obj));
+    objects.forEach((obj) => this.add(obj));
     return this;
   }
 
@@ -271,11 +271,11 @@ export default class Repository {
 
   removeManyObjects(refs: Ref[]) {
     if (!refs || !refs.length) return;
-    refs.forEach(ref => this.removeObject(ref));
+    refs.forEach((ref) => this.removeObject(ref));
   }
 
   findMany(refs: Ref[]): Promise<BitObject[]> {
-    return Promise.all(refs.map(ref => this.load(ref)));
+    return Promise.all(refs.map((ref) => this.load(ref)));
   }
 
   /**
@@ -305,7 +305,7 @@ export default class Repository {
    * the `validate` argument.
    */
   _validateObjects(validate: boolean) {
-    Object.keys(this.objects).forEach(hash => {
+    Object.keys(this.objects).forEach((hash) => {
       const bitObject = this.objects[hash];
       // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
@@ -322,7 +322,7 @@ export default class Repository {
     if (!this.objectsToRemove.length) return;
     const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
-    await Promise.all(uniqRefs.map(ref => this._deleteOne(ref)));
+    await Promise.all(uniqRefs.map((ref) => this._deleteOne(ref)));
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -331,7 +331,7 @@ export default class Repository {
     if (R.isEmpty(this.objects)) return;
     logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
-    await Promise.all(Object.keys(this.objects).map(hash => this._writeOne(this.objects[hash])));
+    await Promise.all(Object.keys(this.objects).map((hash) => this._writeOne(this.objects[hash])));
     const added = this.scopeIndex.addMany(R.values(this.objects));
     if (added) await this.scopeIndex.write();
   }

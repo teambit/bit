@@ -77,7 +77,7 @@ export default class ComponentMap {
     onLanesOnly,
     lanes,
     defaultVersion,
-    isAvailableOnCurrentLane
+    isAvailableOnCurrentLane,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
@@ -99,11 +99,11 @@ export default class ComponentMap {
     const componentMapParams = {
       ...componentMapObj,
       lanes: componentMapObj.lanes
-        ? componentMapObj.lanes.map(lane => ({
+        ? componentMapObj.lanes.map((lane) => ({
             remoteLane: RemoteLaneId.parse(lane.remoteLane),
-            version: lane.version
+            version: lane.version,
           }))
-        : []
+        : [],
     };
     return new ComponentMap(componentMapParams);
   }
@@ -119,9 +119,9 @@ export default class ComponentMap {
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.map(l => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
+      lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
     };
-    const notNil = val => {
+    const notNil = (val) => {
       return !R.isNil(val);
     };
     res = R.filter(notNil, res);
@@ -140,7 +140,7 @@ export default class ComponentMap {
 
   static changeFilesPathAccordingToItsRootDir(existingRootDir: PathLinux, files: ComponentMapFile[]): PathChange[] {
     const changes = [];
-    files.forEach(file => {
+    files.forEach((file) => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -155,7 +155,7 @@ export default class ComponentMap {
   }
 
   _findFile(fileName: PathLinux): ComponentMapFile | undefined {
-    return this.files.find(file => {
+    return this.files.find((file) => {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
@@ -163,7 +163,7 @@ export default class ComponentMap {
 
   changeRootDirAndUpdateFilesAccordingly(newRootDir: PathLinuxRelative) {
     if (this.rootDir === newRootDir) return;
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       const filePathRelativeToConsumer = this.rootDir
         ? pathJoinLinux(this.rootDir, file.relativePath)
         : file.relativePath;
@@ -176,7 +176,7 @@ export default class ComponentMap {
   }
 
   addRootDirToDistributedFiles(rootDir: PathOsBased) {
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       file.relativePath = file.name;
     });
     this.rootDir = pathNormalizeToLinux(rootDir);
@@ -219,7 +219,7 @@ export default class ComponentMap {
       this.rootDir = newRootDirNormalized;
       return changes;
     }
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       const filePath = this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
       if (filePath.startsWith(dirFrom)) {
         const fileTo = filePath.replace(dirFrom, dirTo);
@@ -240,13 +240,13 @@ export default class ComponentMap {
   }
 
   getFilesRelativeToConsumer(): PathLinux[] {
-    return this.files.map(file => {
+    return this.files.map((file) => {
       return this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
     });
   }
 
   getAllFilesPaths(): PathLinux[] {
-    return this.files.map(file => file.relativePath);
+    return this.files.map((file) => file.relativePath);
   }
 
   getFilesGroupedByBeingTests(): { allFiles: string[]; nonTestsFiles: string[]; testsFiles: string[] } {
@@ -326,7 +326,7 @@ export default class ComponentMap {
    */
   updatePerLane(currentRemote?: RemoteLaneId | null, currentLaneIds?: BitIds | null) {
     this.isAvailableOnCurrentLane = undefined;
-    const replaceVersion = version => {
+    const replaceVersion = (version) => {
       this.defaultVersion = this.id.version;
       this.id = this.id.changeVersion(version);
       this.isAvailableOnCurrentLane = true;
@@ -335,7 +335,7 @@ export default class ComponentMap {
     if (localBitId) {
       replaceVersion(localBitId.version);
     } else if (currentRemote) {
-      const remoteExist = this.lanes.find(lane => lane.remoteLane.isEqual(currentRemote));
+      const remoteExist = this.lanes.find((lane) => lane.remoteLane.isEqual(currentRemote));
       if (remoteExist) {
         replaceVersion(remoteExist.version);
       }
@@ -347,7 +347,7 @@ export default class ComponentMap {
   }
 
   addLane(remoteLaneId: RemoteLaneId, version: string) {
-    const existing = this.lanes.find(l => l.remoteLane.isEqual(remoteLaneId));
+    const existing = this.lanes.find((l) => l.remoteLane.isEqual(remoteLaneId));
     if (existing) existing.version = version;
     this.lanes.push({ remoteLane: remoteLaneId, version });
   }
@@ -367,7 +367,7 @@ export default class ComponentMap {
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
-        origin: this.origin
+        origin: this.origin,
       };
       const numOfFilesBefore = this.files.length;
       const addContext: AddContext = { consumer };
@@ -391,7 +391,7 @@ export default class ComponentMap {
   }
 
   removeFiles(files: ComponentMapFile[]): void {
-    const relativePaths = files.map(file => file.relativePath);
+    const relativePaths = files.map((file) => file.relativePath);
     this.files = this.files.reduce((accumulator, file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
@@ -431,25 +431,25 @@ export default class ComponentMap {
     }
 
     if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
         throw new ValidationError(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });
-    const foundMainFile = this.files.find(file => file.relativePath === this.mainFile);
+    const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
       throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
     }
-    const filesPaths = this.files.map(file => file.relativePath);
+    const filesPaths = this.files.map((file) => file.relativePath);
     const duplicateFiles = filesPaths.filter(
-      file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
+      (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
     );
     if (duplicateFiles.length) {
       throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
     }
     if (this.trackDir) {
       const trackDir = this.trackDir;
-      this.files.forEach(file => {
+      this.files.forEach((file) => {
         if (!file.relativePath.startsWith(trackDir)) {
           throw new ValidationError(
             `${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`

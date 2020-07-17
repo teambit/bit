@@ -11,7 +11,7 @@ function indent(numSpaces) {
 function getMaxIndexLength(input) {
   let maxWidth = 0;
 
-  Object.getOwnPropertyNames(input).forEach(function(key) {
+  Object.getOwnPropertyNames(input).forEach(function (key) {
     // Skip undefined values.
     if (input[key] === undefined) {
       return;

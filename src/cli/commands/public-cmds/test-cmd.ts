@@ -18,7 +18,7 @@ export default class Test implements LegacyCommand {
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
     ['j', 'json', 'return results in json format'],
-    ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
+    ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -29,7 +29,7 @@ export default class Test implements LegacyCommand {
     {
       all,
       verbose,
-      forkLevel
+      forkLevel,
     }: {
       all: boolean | null | undefined;
       verbose: boolean | null | undefined;
@@ -47,10 +47,10 @@ export default class Test implements LegacyCommand {
     verboseReport = verbose || false;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testRes = await test(id, forkLevel, all, verbose);
-    const pass = testRes.results.every(comp => comp.pass);
+    const pass = testRes.results.every((comp) => comp.pass);
     const res = {
       data: testRes,
-      __code: pass ? 0 : 1
+      __code: pass ? 0 : 1,
     };
     return res;
   }

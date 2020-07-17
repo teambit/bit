@@ -24,7 +24,7 @@ export default class ValidateGitExec extends Diagnosis {
     try {
       await execa(gitExecutablePath, ['--version']);
       return {
-        valid: true
+        valid: true,
       };
     } catch (err) {
       // if (err.code === 'ENOENT') {
@@ -32,8 +32,8 @@ export default class ValidateGitExec extends Diagnosis {
       return {
         valid: false,
         data: {
-          gitExecutablePath
-        }
+          gitExecutablePath,
+        },
       };
     }
   }

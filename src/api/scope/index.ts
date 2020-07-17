@@ -41,5 +41,5 @@ export {
   remove,
   deprecate,
   undeprecate,
-  latestVersions
+  latestVersions,
 };
