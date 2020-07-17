@@ -61,7 +61,7 @@ export class GraphQLExtension {
       '/graphql',
       graphqlHTTP({
         schema: schema.schema,
-        graphiql: true
+        graphiql: true,
       })
     );
 
@@ -72,11 +72,11 @@ export class GraphQLExtension {
       {
         execute,
         subscribe,
-        schema: schema.schema
+        schema: schema.schema,
       },
       {
         server: subscriptionServer,
-        path: subscriptionsPath
+        path: subscriptionsPath,
       }
     );
 
@@ -108,7 +108,7 @@ export class GraphQLExtension {
     const modules = this.buildModules();
 
     return new GraphQLModule({
-      imports: modules
+      imports: modules,
     });
   }
 
@@ -120,7 +120,7 @@ export class GraphQLExtension {
       const module = new GraphQLModule({
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
-        imports: moduleDeps
+        imports: moduleDeps,
       });
 
       this.modules.set(extensionId, module);
@@ -132,7 +132,7 @@ export class GraphQLExtension {
   private getModuleDependencies(extensionId: string): GraphQLModule[] {
     const extension = this.context.extensions.get(extensionId);
     // @ts-ignore
-    const deps = extension?.dependencies.map(ext => ext.id || ext.name);
+    const deps = extension?.dependencies.map((ext) => ext.id || ext.name);
 
     // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
@@ -141,7 +141,7 @@ export class GraphQLExtension {
         if (!dep) return undefined;
         return module;
       })
-      .filter(module => !!module);
+      .filter((module) => !!module);
   }
 
   static id = '@teambit/graphql';
@@ -149,7 +149,7 @@ export class GraphQLExtension {
   static slots = [Slot.withType<Schema>()];
 
   static defaultConfig = {
-    port: 4000
+    port: 4000,
   };
 
   static dependencies = [LoggerExt];

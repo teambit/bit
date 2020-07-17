@@ -4,7 +4,7 @@ import { MergeStrategy, ApplyVersionResults, mergeVersion } from '../../../consu
 import {
   mergeComponentsFromRemote,
   resolveMerge,
-  abortMerge
+  abortMerge,
 } from '../../../consumer/versions-ops/merge-version/merge-snaps';
 import { mergeLanes } from '../../../consumer/lanes/merge-lanes';
 import hasWildcard from '../../../utils/string/has-wildcard';
@@ -40,7 +40,7 @@ export default async function merge(
       mergeStrategy,
       noSnap,
       snapMessage: message,
-      existingOnWorkspaceOnly
+      existingOnWorkspaceOnly,
     });
   } else if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);
@@ -61,5 +61,5 @@ function getComponentsToMerge(consumer: Consumer, ids: string[]): BitId[] {
     const componentsList = new ComponentsList(consumer);
     return componentsList.listComponentsByIdsWithWildcard(ids);
   }
-  return ids.map(id => consumer.getParsedId(id));
+  return ids.map((id) => consumer.getParsedId(id));
 }

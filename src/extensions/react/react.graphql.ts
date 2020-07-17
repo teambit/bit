@@ -35,7 +35,7 @@ export function reactSchema(react: ReactExtension) {
           const empty = {
             abstract: '',
             filePath: '',
-            properties: []
+            properties: [],
           };
 
           if (!component) return empty;
@@ -43,8 +43,8 @@ export function reactSchema(react: ReactExtension) {
           if (!docs) return empty;
 
           return docs;
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

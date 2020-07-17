@@ -10,14 +10,8 @@ describe('Vue docs Parser', () => {
     it('should returns an empty object', async () => {
       const doclets = (await parser('this is an invalid code'))[0];
       expect(doclets).to.be.a('object');
-      expect(doclets)
-        .to.have.property('methods')
-        .to.be.a('array')
-        .to.have.lengthOf(0);
-      expect(doclets)
-        .to.have.property('properties')
-        .to.be.a('array')
-        .to.have.lengthOf(0);
+      expect(doclets).to.have.property('methods').to.be.a('array').to.have.lengthOf(0);
+      expect(doclets).to.have.property('properties').to.be.a('array').to.have.lengthOf(0);
     });
   });
 
@@ -41,18 +35,10 @@ describe('Vue docs Parser', () => {
     describe('Method Declaration', () => {
       it('should recognize the check method', () => {
         const methodDef = doclet.methods[0];
-        expect(methodDef)
-          .to.have.property('name')
-          .that.equals('check');
-        expect(methodDef)
-          .to.have.property('description')
-          .that.equals('Check the checkbox');
-        expect(methodDef)
-          .to.have.property('access')
-          .that.equals('public');
-        expect(methodDef)
-          .to.have.property('returns')
-          .that.is.an('object').that.is.not.empty;
+        expect(methodDef).to.have.property('name').that.equals('check');
+        expect(methodDef).to.have.property('description').that.equals('Check the checkbox');
+        expect(methodDef).to.have.property('access').that.equals('public');
+        expect(methodDef).to.have.property('returns').that.is.an('object').that.is.not.empty;
         // TODO: add tests for this
         // expect(methodDef)
         //   .to.have.property('examples')
@@ -63,19 +49,14 @@ describe('Vue docs Parser', () => {
       });
       it('should recognize the uncommentedMethod method', () => {
         const methodDef = doclet.methods[1];
-        expect(methodDef)
-          .to.have.property('name')
-          .that.equals('uncommentedMethod');
+        expect(methodDef).to.have.property('name').that.equals('uncommentedMethod');
         expect(methodDef).to.have.property('description').that.is.empty;
       });
     });
 
     describe('Properties property', () => {
       it('should parse the properties correctly', () => {
-        expect(doclet)
-          .to.have.property('properties')
-          .that.is.an('array')
-          .that.have.lengthOf(5);
+        expect(doclet).to.have.property('properties').that.is.an('array').that.have.lengthOf(5);
         expect(doclet.properties[0].name).to.equal('model');
         expect(doclet.properties[0].type).to.equal('Array');
         expect(doclet.properties[0].description).to.equal('The checkbox model');

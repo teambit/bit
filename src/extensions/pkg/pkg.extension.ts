@@ -129,7 +129,7 @@ export class PkgExtension {
       newProps = Object.assign(newProps, propsFromEnv);
     }
     const configuredIds = configuredExtensions.ids;
-    configuredIds.forEach(extId => {
+    configuredIds.forEach((extId) => {
       // Only get props from configured extensions on this specific component
       const props = this.packageJsonPropsRegistry.get(extId);
       if (props) {

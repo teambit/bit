@@ -60,7 +60,7 @@ export default (async function threeWayMergeVersions({
   otherLabel,
   currentComponent,
   currentLabel,
-  baseComponent
+  baseComponent,
 }: {
   consumer: Consumer;
   otherComponent: Component;
@@ -124,10 +124,10 @@ export default (async function threeWayMergeVersions({
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
-  fsFiles.forEach(fsFile => {
+  fsFiles.forEach((fsFile) => {
     const relativePath = pathNormalizeToLinux(fsFile.relative);
-    const baseFile = baseFiles.find(file => file.relativePath === relativePath);
-    const currentFile = currentFiles.find(file => file.relativePath === relativePath);
+    const baseFile = baseFiles.find((file) => file.relativePath === relativePath);
+    const currentFile = currentFiles.find((file) => file.relativePath === relativePath);
     getFileResult(fsFile, baseFile, currentFile);
   });
 
@@ -136,7 +136,7 @@ export default (async function threeWayMergeVersions({
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
+    const modifiedFile = results.modifiedFiles.find((file) => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     modifiedFile.output = conflictResult.output;
@@ -153,7 +153,7 @@ async function getMergeResults(
   modifiedFiles: MergeResultsThreeWay['modifiedFiles']
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
-  const conflictResultsP = modifiedFiles.map(async modifiedFile => {
+  const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
@@ -166,23 +166,23 @@ async function getMergeResults(
     const [fsFilePath, baseFilePath, currentFilePath] = await Promise.all([
       fsFilePathP,
       baseFilePathP,
-      currentFilePathP
+      currentFilePathP,
     ]);
     const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {
         // @ts-ignore
         label: modifiedFile.currentFile.label,
-        path: currentFilePath
+        path: currentFilePath,
       },
       baseFile: {
-        path: baseFilePath
+        path: baseFilePath,
       },
       otherFile: {
         // @ts-ignore
         label: modifiedFile.fsFile.label,
-        path: fsFilePath
-      }
+        path: fsFilePath,
+      },
     };
     return mergeFiles(mergeFilesParams);
   });

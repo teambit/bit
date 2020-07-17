@@ -11,7 +11,7 @@ export type SerializedSpecsResultsWithComponentId = {
   results?: SpecsResultsWithComponentId[];
 };
 
-const testOneComponent = verbose => async (id: string) => {
+const testOneComponent = (verbose) => async (id: string) => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const res = await testInProcess(id, false, verbose);
   return res.results[0];
@@ -28,7 +28,7 @@ export default function run(): Promise<void> {
   if (!ids || !ids.length) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return testInProcess(undefined, includeUnmodified, verbose)
-      .then(results => {
+      .then((results) => {
         const serializedResults = serializeResults(results.results);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         process.send(serializedResults);
@@ -39,7 +39,7 @@ export default function run(): Promise<void> {
           process.exit();
         }, 0);
       })
-      .catch(e => {
+      .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -54,7 +54,7 @@ export default function run(): Promise<void> {
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
-    .then(results => {
+    .then((results) => {
       const serializedResults = serializeResults(results);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.send(serializedResults);
@@ -65,7 +65,7 @@ export default function run(): Promise<void> {
         process.exit();
       }, 0);
     })
-    .catch(e => {
+    .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -102,12 +102,12 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
     const serializedErr = serializeError(results);
     const finalResults = {
       type: 'error',
-      error: serializedErr
+      error: serializedErr,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return finalResults;
   }
-  const serializeFailure = failure => {
+  const serializeFailure = (failure) => {
     if (!failure) return undefined;
     const serializedFailure = failure;
     if (failure.err && failure.err instanceof Error) {
@@ -116,13 +116,13 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
     return serializedFailure;
   };
 
-  const serializeSpec = spec => {
+  const serializeSpec = (spec) => {
     if (!spec.failures) return spec;
     spec.failures = spec.failures.map(serializeFailure);
     return spec;
   };
 
-  const serializeResult = result => {
+  const serializeResult = (result) => {
     const specs = result.specs;
     if (!specs || !Array.isArray(specs)) return result;
     result.specs = specs.map(serializeSpec);

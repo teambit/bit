@@ -27,7 +27,7 @@ export default class Untrack implements LegacyCommand {
   report({
     untrackedComponents,
     unRemovableComponents,
-    missingComponents
+    missingComponents,
   }: {
     untrackedComponents: Array<string>;
     unRemovableComponents: Array<string>;
@@ -40,7 +40,7 @@ export default class Untrack implements LegacyCommand {
     if (!R.isEmpty(untrackedComponents)) {
       const title = chalk.underline('untracked components:\n');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      msg.push(title + untrackedComponents.map(result => chalk.green(result)).join('\n'));
+      msg.push(title + untrackedComponents.map((result) => chalk.green(result)).join('\n'));
     }
     if (!R.isEmpty(unRemovableComponents)) {
       msg.push(

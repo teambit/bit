@@ -10,7 +10,7 @@ chai.use(require('chai-fs'));
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'installing dependencies as packages (not as components)',
-  function() {
+  function () {
     this.timeout(0);
     let helper: Helper;
     let npmCiRegistry;

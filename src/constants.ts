@@ -51,13 +51,13 @@ type origins = 'IMPORTED' | 'AUTHORED' | 'NESTED';
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED' as origins,
   AUTHORED: 'AUTHORED' as origins,
-  NESTED: 'NESTED' as origins
+  NESTED: 'NESTED' as origins,
 };
 
 export const TESTS_FORK_LEVEL = {
   NONE: 'NONE',
   ONE: 'ONE',
-  COMPONENT: 'COMPONENT'
+  COMPONENT: 'COMPONENT',
 };
 
 export const DEFAULT_INDEX_NAME = 'index';
@@ -166,7 +166,7 @@ export const IGNORE_LIST = [
   '**/node_modules/**',
   '**/package-lock.json',
   '**/yarn.lock',
-  '**/LICENSE'
+  '**/LICENSE',
 ];
 
 /**
@@ -303,7 +303,7 @@ export const HOOKS_NAMES = [
   POST_DEPRECATE_REMOTE,
   POST_UNDEPRECATE_REMOTE,
   PRE_REMOVE_REMOTE,
-  POST_REMOVE_REMOTE
+  POST_REMOVE_REMOTE,
 ];
 
 /**
@@ -438,5 +438,5 @@ export const IMPORT_PENDING_MSG =
 
 export enum Extensions {
   dependencyResolver = '@teambit/dependency-resolver',
-  pkg = '@teambit/pkg'
+  pkg = '@teambit/pkg',
 }

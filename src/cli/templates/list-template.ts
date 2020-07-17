@@ -13,15 +13,15 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       value: showRemoteVersion ? 'local version' : 'local version',
       width: 9,
       headerColor: 'cyan',
-      headerAlign: 'left'
+      headerAlign: 'left',
     },
-    { value: 'used version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
+    { value: 'used version', width: 9, headerColor: 'cyan', headerAlign: 'left' },
   ];
   if (showRemoteVersion) {
     header.push({ value: 'remote version', width: 9, headerColor: 'cyan', headerAlign: 'left' });
   }
   const opts = {
-    align: 'left'
+    align: 'left',
   };
 
   function tabulateComponent(listScopeResult: ListScopeResult): Row {
@@ -37,7 +37,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       localVersion: version,
-      currentVersion: listScopeResult.currentlyUsedVersion || 'N/A'
+      currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
     };
 
     if (showRemoteVersion) {
@@ -61,7 +61,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
       localVersion: version,
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
-      remoteVersion: listScopeResult.remoteVersion || 'N/A'
+      remoteVersion: listScopeResult.remoteVersion || 'N/A',
     };
     return data;
   }
@@ -74,7 +74,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
 
   const table = new Table(
     header,
-    rows.map(row => R.values(row)),
+    rows.map((row) => R.values(row)),
     opts
   );
   return table.render();

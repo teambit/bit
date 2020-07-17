@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('harmony extension config', function() {
+describe('harmony extension config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -18,7 +18,7 @@ describe('harmony extension config', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('persist extension config (provided by the user)to models', function() {
+  describe('persist extension config (provided by the user)to models', function () {
     describe('core extensions', () => {
       let componentVersionModel;
       const config = { key: 'val' };
@@ -171,7 +171,7 @@ describe('harmony extension config', function() {
         });
         it('should auto-import the extensions as well', () => {
           const scopeList = helper.command.listLocalScopeParsed('--scope');
-          const ids = scopeList.map(entry => entry.id);
+          const ids = scopeList.map((entry) => entry.id);
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
         });
       });

@@ -6,7 +6,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe('dev-dependencies functionality', function() {
+describe('dev-dependencies functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -48,17 +48,13 @@ describe('dev-dependencies functionality', function() {
         expect(barFoo.flattenedDevDependencies).to.be.an('array').that.is.empty;
       });
       it('should save "chai" in the dev-packages because it is only required in the tests files', () => {
-        expect(barFoo.devPackageDependencies)
-          .to.be.an('object')
-          .that.has.property('chai');
+        expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
       });
       it('should not save "chai" in the packages because it is not required in non-test files', () => {
         expect(barFoo.packageDependencies).to.be.an('object').that.is.empty;
       });
       it('should leave the dependencies intact', () => {
-        expect(barFoo.dependencies)
-          .to.be.an('array')
-          .that.have.lengthOf(1);
+        expect(barFoo.dependencies).to.be.an('array').that.have.lengthOf(1);
         expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
         expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
       });
@@ -100,9 +96,7 @@ describe('foo', () => {
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
       });
       it('should save the dev-dependencies', () => {
-        expect(barFoo.devDependencies)
-          .to.be.an('array')
-          .that.have.lengthOf(1);
+        expect(barFoo.devDependencies).to.be.an('array').that.have.lengthOf(1);
         expect(barFoo.devDependencies[0].id).to.deep.equal({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save the flattened-dev-dependencies', () => {
@@ -110,9 +104,7 @@ describe('foo', () => {
         expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save "chai" in the dev-packages', () => {
-        expect(barFoo.devPackageDependencies)
-          .to.be.an('object')
-          .that.has.property('chai');
+        expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
       });
       it('should not save "chai" in the packages', () => {
         expect(barFoo.packageDependencies).to.be.an('object').that.is.empty;
@@ -185,7 +177,7 @@ describe('foo', () => {
       helper.command.addComponent('utils/is-string.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string',
-        t: 'utils/is-string-spec.js'
+        t: 'utils/is-string-spec.js',
       });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

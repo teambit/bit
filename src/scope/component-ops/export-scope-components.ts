@@ -36,12 +36,12 @@ export async function exportManyBareScope(
   clientIsOld: boolean,
   lanesObjects: LaneObjects[] = []
 ): Promise<BitIds> {
-  const lanesObjectsTree = (lanesObjects || []).map(laneObj => laneObj.toObjects());
+  const lanesObjectsTree = (lanesObjects || []).map((laneObj) => laneObj.toObjects());
   logger.debugAndAddBreadCrumb(
     'scope.exportManyBareScope',
     `Going to save ${componentsObjects.length} components, ${lanesObjects.length} lanes`
   );
-  const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects());
+  const manyObjects = componentsObjects.map((componentObjects) => componentObjects.toObjects());
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects, lanesObjectsTree);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
@@ -51,8 +51,8 @@ export async function exportManyBareScope(
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
   // @todo: this is a temp workaround, remove once v15 is out
   if (clientIsOld) {
-    const manyCompVersions = manyObjects.map(objects => objects.component.toComponentVersion(LATEST));
-    const bitIds = BitIds.fromArray(manyCompVersions.map(compVersion => compVersion.id));
+    const manyCompVersions = manyObjects.map((objects) => objects.component.toComponentVersion(LATEST));
+    const bitIds = BitIds.fromArray(manyCompVersions.map((compVersion) => compVersion.id));
     logger.debug('exportManyBareScope: completed. exit.');
     return bitIds;
   }
@@ -70,7 +70,7 @@ export async function exportMany({
   codemod = false,
   lanesObjects = [],
   allVersions,
-  idsWithFutureScope
+  idsWithFutureScope,
 }: {
   scope: Scope;
   ids: BitIds;
@@ -101,14 +101,14 @@ export async function exportMany({
   logger.debugAndAddBreadCrumb('export-scope-components', 'export ids to multiple remotes');
   const groupedByScope = await sortAndGroupByScope();
   const groupedByScopeString = groupedByScope
-    .map(item => `scope "${item.scopeName}": ${item.ids.toString()}`)
+    .map((item) => `scope "${item.scopeName}": ${item.ids.toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
+  const results = await pMapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
   return {
-    newIdsOnRemote: R.flatten(results.map(r => r.newIdsOnRemote)),
-    exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
-    updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
+    newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
+    exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
+    updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
   };
 
   async function exportIntoRemote(
@@ -118,17 +118,17 @@ export async function exportMany({
   ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
-    const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
+    const componentObjects = await pMapSeries(bitIds, (id) => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
-      bitIds.filter(id => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
+      bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
-    const idsAndObjectsP = lanes.map(laneObj => laneObj.collectObjectsById(scope.objects));
+    const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
     const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
     const componentsAndObjects: Array<{ component: ModelComponent; objects: BitObject[] }> = [];
     const processComponentObjects = async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects();
       const localVersions = componentAndObject.component.getLocalVersions();
-      idsAndObjects.forEach(idAndObjects => {
+      idsAndObjects.forEach((idAndObjects) => {
         if (componentAndObject.component.toBitId().isEqual(idAndObjects.id)) {
           // @todo: remove duplication. check whether the same hash already exist, and don't push it.
           componentAndObject.objects.push(...idAndObjects.objects);
@@ -169,7 +169,7 @@ export async function exportMany({
           lanes.length
         ) {
           // only when really needed (e.g. fork or version changes), collect all versions objects
-          return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+          return Promise.all(componentAndObject.objects.map((obj) => obj.compress()));
         }
         // when possible prefer collecting only new/local versions. the server has already
         // the rest, so no point of sending them.
@@ -181,8 +181,8 @@ export async function exportMany({
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
     const manyObjects: ComponentObjects[] = await pMapSeries(componentObjects, processComponentObjects);
     const manyLanesObjects = await Promise.all(
-      lanes.map(async lane => {
-        lane.components.forEach(c => {
+      lanes.map(async (lane) => {
+        lane.components.forEach((c) => {
           c.id = c.id.changeScope(remoteName);
         });
         const laneBuffer = await lane.compress();
@@ -201,14 +201,14 @@ export async function exportMany({
       logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-    await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
+    await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id)));
     // @ts-ignore
-    idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
-    componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
+    idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
+    componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
 
     // update lanes
     await Promise.all(
-      lanes.map(async lane => {
+      lanes.map(async (lane) => {
         if (idsToChangeLocally.length) {
           // otherwise, we don't want to update scope-name of components in the lane object
           scope.objects.add(lane);
@@ -230,16 +230,16 @@ export async function exportMany({
     }
 
     await scope.objects.persist();
-    const newIdsOnRemote = exportedIds.map(id => BitId.parse(id, true));
+    const newIdsOnRemote = exportedIds.map((id) => BitId.parse(id, true));
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = newIdsOnRemote.map(id => id.changeVersion(undefined));
+    const idsWithRemoteScope: BitId[] = newIdsOnRemote.map((id) => id.changeVersion(undefined));
     const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
       newIdsOnRemote,
       exported: idsWithRemoteScopeUniq,
       updatedLocally: BitIds.fromArray(
-        idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))
-      )
+        idsWithRemoteScopeUniq.filter((id) => idsToChangeLocally.hasWithoutScopeAndVersion(id))
+      ),
     };
   }
 
@@ -270,7 +270,7 @@ export async function exportMany({
    */
   async function sortAndGroupByScope(): Promise<{ scopeName: string; ids: BitIds }[]> {
     const grouped = ids.toGroupByScopeName(idsWithFutureScope);
-    const groupedArrayFormat = Object.keys(grouped).map(scopeName => ({ scopeName, ids: grouped[scopeName] }));
+    const groupedArrayFormat = Object.keys(grouped).map((scopeName) => ({ scopeName, ids: grouped[scopeName] }));
     if (Object.keys(grouped).length <= 1) {
       return groupedArrayFormat;
     }
@@ -296,21 +296,21 @@ export async function exportMany({
       // export, so just ignore it.
     };
     if (cycles.length) {
-      const cyclesWithMultipleScopes = cycles.filter(cycle => {
-        const bitIds = cycle.map(s => graph.node(s));
+      const cyclesWithMultipleScopes = cycles.filter((cycle) => {
+        const bitIds = cycle.map((s) => graph.node(s));
         const firstScope = bitIds[0].scope;
-        return bitIds.some(id => id.scope !== firstScope);
+        return bitIds.some((id) => id.scope !== firstScope);
       });
       if (cyclesWithMultipleScopes.length) {
         throw new GeneralError(`fatal: unable to export. the following components have circular dependencies between two or more scopes
-${cyclesWithMultipleScopes.map(c => c.join(', ')).join('\n')}
+${cyclesWithMultipleScopes.map((c) => c.join(', ')).join('\n')}
 please untag the problematic components and eliminate the circle between the scopes.
 tip: use "bit graph [--all-versions]" to get a visual look of the circular dependencies`);
       }
       // there are circles but they are all from the same scope, add them to groupedArraySorted
       // first, then, remove from the graph, so it will be possible to execute topsort
-      cycles.forEach(cycle => {
-        cycle.forEach(node => {
+      cycles.forEach((cycle) => {
+        cycle.forEach((node) => {
           const id = graph.node(node);
           addToGroupedSorted(id);
           graph.removeNode(node);
@@ -327,8 +327,8 @@ tip: use "bit graph [--all-versions]" to get a visual look of the circular depen
       logger.error(err);
       throw new Error(`fatal: graphlib was unable to topsort the components. circles: ${cycles}`);
     }
-    const sortedComponentsIds = sortedComponents.map(s => graph.node(s)).reverse();
-    sortedComponentsIds.forEach(id => addToGroupedSorted(id));
+    const sortedComponentsIds = sortedComponents.map((s) => graph.node(s)).reverse();
+    sortedComponentsIds.forEach((id) => addToGroupedSorted(id));
 
     return groupedArraySorted;
   }
@@ -337,9 +337,9 @@ tip: use "bit graph [--all-versions]" to get a visual look of the circular depen
     const scopeComponentImporter = new ScopeComponentsImporter(scope);
     const versionsDependencies = await scopeComponentImporter.importManyWithAllVersions(ids, true, true);
     const allDependencies = R.flatten(
-      versionsDependencies.map(versionDependencies => versionDependencies.allDependencies)
+      versionsDependencies.map((versionDependencies) => versionDependencies.allDependencies)
     );
-    return allDependencies.map(componentVersion => componentVersion.component.toBitId());
+    return allDependencies.map((componentVersion) => componentVersion.component.toBitId());
   }
 }
 
@@ -352,7 +352,7 @@ tip: use "bit graph [--all-versions]" to get a visual look of the circular depen
  */
 async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObjects: LaneTree[]): Promise<BitIds> {
   const mergeResults = await Promise.all(
-    manyObjects.map(async objects => {
+    manyObjects.map(async (objects) => {
       try {
         const result = await scope.sources.merge(objects, true, false);
         return result;
@@ -364,21 +364,21 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObj
       }
     })
   );
-  const mergeLaneResultsP = lanesObjects.map(laneObjects => scope.sources.mergeLane(laneObjects, false));
+  const mergeLaneResultsP = lanesObjects.map((laneObjects) => scope.sources.mergeLane(laneObjects, false));
   const mergeLaneResults = R.flatten(await Promise.all(mergeLaneResultsP));
-  const componentsWithConflicts = mergeResults.filter(result => result instanceof MergeConflict);
+  const componentsWithConflicts = mergeResults.filter((result) => result instanceof MergeConflict);
   const componentsNeedUpdate = [
-    ...mergeResults.filter(result => result instanceof ComponentNeedsUpdate),
-    ...mergeLaneResults.filter(result => result instanceof ComponentNeedsUpdate)
+    ...mergeResults.filter((result) => result instanceof ComponentNeedsUpdate),
+    ...mergeLaneResults.filter((result) => result instanceof ComponentNeedsUpdate),
   ];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
+    const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions }));
     const idsAndVersionsWithConflicts = R.sortBy(R.prop('id'), idsAndVersions);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const idsOfNeedUpdateComps = R.sortBy(
       R.prop('id'),
-      componentsNeedUpdate.map(c => ({ id: c.id, lane: c.lane }))
+      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
     );
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
@@ -386,7 +386,7 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObj
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const mergedLanesComponents = mergeLaneResults.filter(({ mergedVersions }) => mergedVersions.length);
   const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
-    mergedVersions.map(version => mergedComponent.toBitId().changeVersion(version));
+    mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return BitIds.fromArray(R.flatten([...mergedComponents, ...mergedLanesComponents].map(getMergedIds)));
 }
@@ -418,7 +418,7 @@ async function convertToCorrectScope(
   codemod: boolean
 ): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
+  const versionsObjects: Version[] = componentsObjects.objects.filter((object) => object instanceof Version);
   const haveVersionsChanged = await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
       const hashBefore = objectVersion.hash().toString();
@@ -445,7 +445,7 @@ async function convertToCorrectScope(
           { id: componentsObjects.component.id().toString() }
         );
         const versions = componentsObjects.component.versions;
-        Object.keys(versions).forEach(version => {
+        Object.keys(versions).forEach((version) => {
           if (versions[version].toString() === hashBefore) {
             versions[version] = Ref.from(hashAfter);
           }
@@ -453,8 +453,8 @@ async function convertToCorrectScope(
         if (componentsObjects.component.getHeadStr() === hashBefore) {
           componentsObjects.component.setHead(Ref.from(hashAfter));
         }
-        versionsObjects.forEach(versionObj => {
-          versionObj.parents = versionObj.parents.map(parent => {
+        versionsObjects.forEach((versionObj) => {
+          versionObj.parents = versionObj.parents.map((parent) => {
             if (parent.toString() === hashBefore) return Ref.from(hashAfter);
             return parent;
           });
@@ -468,11 +468,11 @@ async function convertToCorrectScope(
   componentsObjects.component.scope = remoteScope;
 
   // return true if one of the versions has changed or the component itself
-  return haveVersionsChanged.some(x => x) || hasComponentChanged;
+  return haveVersionsChanged.some((x) => x) || hasComponentChanged;
 
   function changeDependencyScope(version: Version): boolean {
     let hasChanged = false;
-    version.getAllDependencies().forEach(dependency => {
+    version.getAllDependencies().forEach((dependency) => {
       const updatedScope = getIdWithUpdatedScope(dependency.id);
       if (!updatedScope.isEqual(dependency.id)) {
         hasChanged = true;
@@ -480,9 +480,9 @@ async function convertToCorrectScope(
       }
     });
     const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
-    flattenedFields.forEach(flattenedField => {
+    flattenedFields.forEach((flattenedField) => {
       const ids: BitIds = version[flattenedField];
-      const needsChange = ids.some(id => id.scope !== remoteScope);
+      const needsChange = ids.some((id) => id.scope !== remoteScope);
       if (needsChange) {
         version[flattenedField] = getBitIdsWithUpdatedScope(ids);
         hasChanged = true;
@@ -493,7 +493,7 @@ async function convertToCorrectScope(
 
   function changeExtensionsScope(version: Version): boolean {
     let hasChanged = false;
-    version.extensions.forEach(ext => {
+    version.extensions.forEach((ext) => {
       if (ext.extensionId) {
         const updatedScope = getIdWithUpdatedScope(ext.extensionId);
         if (!updatedScope.isEqual(ext.extensionId)) {
@@ -502,7 +502,7 @@ async function convertToCorrectScope(
         }
       }
       if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
-        ext.data.dependencies.forEach(dep => {
+        ext.data.dependencies.forEach((dep) => {
           const id = new BitId(dep.componentId);
           const updatedScope = getIdWithUpdatedScope(id);
           if (!updatedScope.isEqual(id)) {
@@ -531,7 +531,7 @@ async function convertToCorrectScope(
     return dependencyId;
   }
   function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
-    const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
+    const updatedIds = bitIds.map((id) => getIdWithUpdatedScope(id));
     return BitIds.fromArray(updatedIds);
   }
   async function _replaceSrcOfVersionIfNeeded(version: Version): Promise<boolean> {
@@ -545,8 +545,8 @@ async function convertToCorrectScope(
       }
       return null;
     };
-    await Promise.all(version.files.map(file => processFile(file, false)));
-    await Promise.all((version.dists || []).map(file => processFile(file, true)));
+    await Promise.all(version.files.map((file) => processFile(file, false)));
+    await Promise.all((version.dists || []).map((file) => processFile(file, true)));
     return hasVersionChanged;
   }
   /**
@@ -573,11 +573,11 @@ async function convertToCorrectScope(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fileObject: Source = await scope.objects.load(currentHash);
     const fileString = fileObject.contents.toString();
-    const dependenciesIds = version.getAllDependencies().map(d => d.id);
+    const dependenciesIds = version.getAllDependencies().map((d) => d.id);
     const componentId = componentsObjects.component.toBitId();
     const allIds = [...dependenciesIds, componentId];
     let newFileString = fileString;
-    allIds.forEach(id => {
+    allIds.forEach((id) => {
       if (id.scope === remoteScope) {
         return; // nothing to do, the remote has not changed
       }
@@ -585,7 +585,7 @@ async function convertToCorrectScope(
       const pkgNameWithOldScope = componentIdToPackageName({
         id,
         bindingPrefix: componentsObjects.component.bindingPrefix,
-        extensions: version.extensions
+        extensions: version.extensions,
       });
       if (!codemod) {
         // use did not enter --rewire flag
@@ -607,7 +607,7 @@ the current import/require module has no scope-name, which result in an invalid 
       const pkgNameWithNewScope = componentIdToPackageName({
         id: idWithNewScope,
         bindingPrefix: componentsObjects.component.bindingPrefix,
-        extensions: version.extensions
+        extensions: version.extensions,
       });
       // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
       // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')

@@ -11,7 +11,7 @@ import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 
 chai.use(require('chai-fs'));
 
-describe('bit lane command', function() {
+describe('bit lane command', function () {
   this.timeout(0);
   const helper = new Helper();
   helper.command.setFeatures('lanes');
@@ -310,7 +310,7 @@ describe('bit lane command', function() {
       });
       it('bit lane should show that all components are belong to master', () => {
         const lanes = helper.command.showLanesParsed();
-        const defaultLane = lanes.lanes.find(lane => lane.name === DEFAULT_LANE);
+        const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(3);
       });
     });
@@ -339,7 +339,7 @@ describe('bit lane command', function() {
       });
       it('bit lane should not show the components as if they belong to master', () => {
         const lanes = helper.command.showLanesParsed();
-        const defaultLane = lanes.lanes.find(lane => lane.name === DEFAULT_LANE);
+        const defaultLane = lanes.lanes.find((lane) => lane.name === DEFAULT_LANE);
         expect(defaultLane.components).to.have.lengthOf(0);
       });
     });
@@ -743,7 +743,7 @@ describe('bit lane command', function() {
       it('should remove the component from the lane', () => {
         const lane = helper.command.showOneLaneParsed('dev');
         expect(lane.components).to.have.lengthOf(2);
-        lane.components.forEach(c => expect(c.id.name).to.not.have.string('bar'));
+        lane.components.forEach((c) => expect(c.id.name).to.not.have.string('bar'));
       });
       it('should not remove the component from .bitmap', () => {
         const bitMap = helper.bitMap.read();

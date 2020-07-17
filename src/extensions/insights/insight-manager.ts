@@ -11,7 +11,7 @@ export class InsightManager {
      */
     insights: Insight[]
   ) {
-    insights.forEach(insight => {
+    insights.forEach((insight) => {
       this.register(insight);
     });
   }
@@ -57,7 +57,7 @@ export class InsightManager {
   async run(insightNames: string[]): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
     await Promise.all(
-      insightNames.map(async insightName => {
+      insightNames.map(async (insightName) => {
         const insight = this.getByName(insightName);
         if (insight) {
           const insightRes: InsightResult = await insight.run();

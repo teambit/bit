@@ -51,7 +51,7 @@ export default class HooksManager {
    */
   static init() {
     const self = new HooksManager();
-    HOOKS_NAMES.forEach(hookName => self.hooks.set(hookName, []));
+    HOOKS_NAMES.forEach((hookName) => self.hooks.set(hookName, []));
   }
 
   /**
@@ -145,7 +145,7 @@ export default class HooksManager {
     }
 
     const actions = this.hooks.get(hookName);
-    const actionsP = actions.map(action => {
+    const actionsP = actions.map((action) => {
       // Catch errors in order to aggregate them
       // Wrap in a promise in case the action doesn't return a promise
       return Promise.resolve()
@@ -153,7 +153,7 @@ export default class HooksManager {
           logger.info(`running action ${action.name} on hook ${hookName}`);
           return action.run(args, headers, context);
         })
-        .catch(e => {
+        .catch((e) => {
           logger.error(`running action ${action.name} on hook ${hookName} failed, err:`, e);
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           resultErrors.push({ [action.name]: e });

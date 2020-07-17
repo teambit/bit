@@ -162,7 +162,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Fetch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new ScopeLanesList()
+      new ScopeLanesList(),
     ],
     extensionsCommands
   );

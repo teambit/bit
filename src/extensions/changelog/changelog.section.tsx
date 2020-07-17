@@ -7,10 +7,10 @@ import styles from './changelog.module.scss';
 export class ChangelogSection implements Section {
   route = {
     path: '~changelog',
-    children: <ChangeLogPage className={styles.changeLog} versions={versionsArray} />
+    children: <ChangeLogPage className={styles.changeLog} versions={versionsArray} />,
   };
   navigationLink = {
     to: '~changelog',
-    children: 'Changelog'
+    children: 'Changelog',
   };
 }

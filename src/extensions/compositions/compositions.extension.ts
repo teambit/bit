@@ -42,7 +42,7 @@ export class CompositionsExtension {
    * returns an array of doc file paths for a set of components.
    */
   getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
-    return ComponentMap.as<AbstractVinyl[]>(components, component => {
+    return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
       return component.state.filesystem.byRegex(/composition.ts/);
     });
   }
@@ -52,7 +52,7 @@ export class CompositionsExtension {
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
 
-    return files.flatMap(file => {
+    return files.flatMap((file) => {
       return this.computeCompositions(component, file);
     });
   }
@@ -60,19 +60,19 @@ export class CompositionsExtension {
   async compositionsPreviewTarget(context: ExecutionContext) {
     const compositionsMap = this.getCompositionFiles(context.components);
     const template = await this.getTemplate(context);
-    const notEmpty = compositionsMap.filter(value => value.length !== 0);
-    const withPaths = notEmpty.map<string[]>(files => {
-      return files.map(file => file.path);
+    const notEmpty = compositionsMap.filter((value) => value.length !== 0);
+    const withPaths = notEmpty.map<string[]>((files) => {
+      return files.map((file) => file.path);
     });
 
     const link = this.preview.writeLink(
       'compositions',
-      withPaths.filter(value => value.length !== 0),
+      withPaths.filter((value) => value.length !== 0),
       template
     );
 
     const targetFiles = compositionsMap.toArray().flatMap(([, files]) => {
-      return files.map(file => file.path);
+      return files.map((file) => file.path);
     });
 
     return targetFiles.concat(link);
@@ -84,7 +84,7 @@ export class CompositionsExtension {
     pathArray[pathArray.length - 1] = 'js';
 
     const module = this.schema.parseModule(file.path);
-    return module.exports.map(exportModel => {
+    return module.exports.map((exportModel) => {
       return new Composition(exportModel.identifier, file.relative);
     });
   }
@@ -99,7 +99,7 @@ export class CompositionsExtension {
     GraphQLExtension,
     WorkspaceExt,
     SchemaExtension,
-    ComponentFactoryExt
+    ComponentFactoryExt,
   ];
 
   static async provider([bundler, preview, graphql, workspace, schema]: [
@@ -113,7 +113,7 @@ export class CompositionsExtension {
 
     graphql.register(compositionsSchema(compositions));
     bundler.registerTarget({
-      entry: compositions.compositionsPreviewTarget.bind(compositions)
+      entry: compositions.compositionsPreviewTarget.bind(compositions),
     });
 
     return compositions;

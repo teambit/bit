@@ -19,16 +19,16 @@ export default class Remotes extends Map<string, Remote> {
 
   validate() {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const primary = this.values.filter(remote => remote.primary);
+    const primary = this.values.filter((remote) => remote.primary);
     if (primary.length > 1) throw new PrimaryOverloaded();
-    return this.forEach(remote => remote.validate());
+    return this.forEach((remote) => remote.validate());
   }
 
   resolve(scopeName: string, thisScope?: Scope | null | undefined): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remoteResolver(scopeName, thisScope).then(scopeHost => {
+    return remoteResolver(scopeName, thisScope).then((scopeHost) => {
       return new Remote(scopeHost, scopeName);
     });
   }
@@ -52,7 +52,7 @@ export default class Remotes extends Map<string, Remote> {
     forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.resolve(scopeName, thisScope).then(remote =>
+        this.resolve(scopeName, thisScope).then((remote) =>
           remote.fetch(scopeIds, withoutDeps, context, undefined, idsAreLanes)
         )
       );
@@ -70,11 +70,11 @@ export default class Remotes extends Map<string, Remote> {
     const promises = [];
     forEach(groupedIds, (scopeIds, scopeName) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.latestVersions(scopeIds)));
+      promises.push(this.resolve(scopeName, thisScope).then((remote) => remote.latestVersions(scopeIds)));
     });
     const components = await Promise.all(promises);
     const flattenComponents = flatten(components);
-    return flattenComponents.map(componentId => BitId.parse(componentId, true));
+    return flattenComponents.map((componentId) => BitId.parse(componentId, true));
   }
 
   /**
@@ -85,7 +85,7 @@ export default class Remotes extends Map<string, Remote> {
    */
   async scopeGraphs(ids: BitId[], thisScope: Scope): Promise<DependencyGraph[]> {
     const groupedIds = this._groupByScopeName(ids);
-    const graphsP = Object.keys(groupedIds).map(async scopeName => {
+    const graphsP = Object.keys(groupedIds).map(async (scopeName) => {
       const remote = await this.resolve(scopeName, thisScope);
       const dependencyGraph = await remote.graph();
       dependencyGraph.setScopeName(scopeName);
@@ -102,7 +102,7 @@ export default class Remotes extends Map<string, Remote> {
   toPlainObject() {
     const object = {};
 
-    this.forEach(remote => {
+    this.forEach((remote) => {
       let name = remote.name;
       if (remote.primary) name = prependBang(remote.name);
       object[name] = remote.host;
@@ -112,13 +112,13 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   static getScopeRemote(scopeName: string): Promise<Remote> {
-    return Remotes.getGlobalRemotes().then(remotes => remotes.resolve(scopeName));
+    return Remotes.getGlobalRemotes().then((remotes) => remotes.resolve(scopeName));
   }
 
   static getGlobalRemotes(): Promise<Remotes> {
     return GlobalRemotes.load()
-      .then(globalRemotes => globalRemotes.toPlainObject())
-      .then(remotes => Remotes.load(remotes));
+      .then((globalRemotes) => globalRemotes.toPlainObject())
+      .then((remotes) => Remotes.load(remotes));
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

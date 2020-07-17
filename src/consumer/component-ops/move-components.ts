@@ -38,7 +38,7 @@ export async function movePaths(
     moveSync(fromAbsolute, toAbsolute);
   }
   if (!R.isEmpty(changes)) {
-    const componentsIds = changes.map(c => c.id);
+    const componentsIds = changes.map((c) => c.id);
     const { components } = await consumer.loadComponents(BitIds.fromArray(componentsIds));
     await packageJsonUtils.addComponentsToRoot(consumer, components);
     const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
@@ -65,13 +65,13 @@ export function moveExistingComponent(
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
   consumer.bitMap.markAsChanged();
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-    component.dataToPersist.files.forEach(file => {
+    component.dataToPersist.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newRelative });
     });
   } else {
-    component.dataToPersist.files.forEach(file => {
+    component.dataToPersist.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newBase = file.base.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newBase });
@@ -111,12 +111,12 @@ to change that directory, use bit move without --component flag`);
     const isEmpty = isDirEmptySync(toAbsolute);
     if (!isEmpty) throw new GeneralError(`unable to move files into "${to}", the directory is not empty`);
   }
-  const fileNames = componentMap.files.map(f => f.name);
-  const sameName = fileNames.find(name => fileNames.filter(n => n === name).length > 1);
+  const fileNames = componentMap.files.map((f) => f.name);
+  const sameName = fileNames.find((name) => fileNames.filter((n) => n === name).length > 1);
   if (sameName) {
     throw new GeneralError(`unable to move the files because there are more than one file with the name ${sameName}`);
   }
-  const changes: PathChange[] = componentMap.files.map(file => {
+  const changes: PathChange[] = componentMap.files.map((file) => {
     const fromAbsolute = consumer.toAbsolutePath(file.relativePath);
     moveSync(fromAbsolute, path.join(toAbsolute, file.name));
     return { from: file.relativePath, to: pathJoinLinux(toRelative, file.name) };

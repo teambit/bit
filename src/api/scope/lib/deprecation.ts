@@ -4,7 +4,7 @@ import {
   PRE_DEPRECATE_REMOTE,
   POST_DEPRECATE_REMOTE,
   PRE_UNDEPRECATE_REMOTE,
-  POST_UNDEPRECATE_REMOTE
+  POST_UNDEPRECATE_REMOTE,
 } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { deprecateMany, undeprecateMany } from '../../../scope/component-ops/components-deprecation';
@@ -27,7 +27,7 @@ export async function deprecate(
     missingComponentsIds: deprecationResult.missingComponents,
     scopePath: path,
     componentsIds: bitIds.serialize(),
-    scopeName: scope.scopeJson.name
+    scopeName: scope.scopeJson.name,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_DEPRECATE_REMOTE, hookArgs, headers);
@@ -49,7 +49,7 @@ export async function undeprecate(
     missingComponentsIds: deprecationResult.missingComponents,
     scopePath: path,
     componentsIds: bitIds.serialize(),
-    scopeName: scope.scopeJson.name
+    scopeName: scope.scopeJson.name,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_UNDEPRECATE_REMOTE, hookArgs, headers);

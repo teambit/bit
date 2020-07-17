@@ -2,12 +2,12 @@ export enum SchemaFeature {
   sharedDir = 'sharedDir',
   individualFiles = 'individualFiles',
   relativePaths = 'relativePaths',
-  customModuleResolutions = 'customModuleResolutions'
+  customModuleResolutions = 'customModuleResolutions',
 }
 
 export enum SchemaName {
   Legacy = '0.0.0',
-  Harmony = '1.0.0'
+  Harmony = '1.0.0',
 }
 
 export const CURRENT_SCHEMA = SchemaName.Harmony;
@@ -17,9 +17,9 @@ const schemas: { [schemaVersion: string]: SchemaFeature[] } = {
     SchemaFeature.sharedDir,
     SchemaFeature.individualFiles,
     SchemaFeature.relativePaths,
-    SchemaFeature.customModuleResolutions
+    SchemaFeature.customModuleResolutions,
   ],
-  [SchemaName.Harmony]: []
+  [SchemaName.Harmony]: [],
 };
 
 export function isSchemaSupport(feature: SchemaFeature, schema: string = SchemaName.Legacy) {

@@ -19,7 +19,7 @@ export default class InsightsCmd implements Command {
   async render([names]: [string[]], { list }: { list: boolean }) {
     if (list) {
       const results = this.insightManager.listInsights();
-      const listItems = results.map(insight => (insight += '\n'));
+      const listItems = results.map((insight) => (insight += '\n'));
       return <Color blueBright>{listItems}</Color>;
     }
     if (names) {
@@ -36,7 +36,7 @@ export default class InsightsCmd implements Command {
 function template(results) {
   return (
     <div key="help">
-      {results.map(function(result) {
+      {results.map(function (result) {
         return (
           <div key={result.metaData.name}>
             <div>

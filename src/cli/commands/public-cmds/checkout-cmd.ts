@@ -19,7 +19,7 @@ export default class Checkout implements LegacyCommand {
     [
       'i',
       'interactive-merge',
-      'when a component is modified and the merge process found conflicts, display options to resolve them'
+      'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
@@ -31,14 +31,14 @@ export default class Checkout implements LegacyCommand {
     [
       '',
       'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
     ],
     [
       '',
       'conf [path]',
-      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)'
+      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)',
     ],
-    ['', 'ignore-dist', 'do not write dist files (when exist)']
+    ['', 'ignore-dist', 'do not write dist files (when exist)'],
   ] as CommandOptions;
   loader = true;
 
@@ -55,7 +55,7 @@ export default class Checkout implements LegacyCommand {
       skipNpmInstall = false,
       ignorePackageJson = false,
       conf,
-      ignoreDist = false
+      ignoreDist = false,
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -80,7 +80,7 @@ export default class Checkout implements LegacyCommand {
       skipNpmInstall,
       ignoreDist,
       ignorePackageJson,
-      writeConfig: !!conf
+      writeConfig: !!conf,
     };
     return checkout(values, checkoutProps);
   }
@@ -93,7 +93,7 @@ export default class Checkout implements LegacyCommand {
       const title = 'the checkout has been canceled on the following component(s)';
       const body = failedComponents
         .map(
-          failedComponent =>
+          (failedComponent) =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
         .join('\n');
@@ -114,7 +114,7 @@ export default class Checkout implements LegacyCommand {
       }
       if (isReset) {
         const title = 'successfully reset the following components\n\n';
-        const body = components.map(component => chalk.bold(component.id.toString())).join('\n');
+        const body = components.map((component) => chalk.bold(component.id.toString())).join('\n');
         return title + body;
       }
       // $FlowFixMe version is defined when !isReset

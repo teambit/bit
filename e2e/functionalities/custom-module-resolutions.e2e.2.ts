@@ -8,7 +8,7 @@ import { componentIssuesLabels } from '../../src/cli/templates/component-issues-
 
 chai.use(require('chai-fs'));
 
-describe('custom module resolutions', function() {
+describe('custom module resolutions', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -122,7 +122,7 @@ describe('custom module resolutions', function() {
           untarDir = path.join(packDir, 'package');
           const componentId = `${helper.scopes.remote}/bar/foo`;
           const options = {
-            d: packDir
+            d: packDir,
           };
           helper.command.packComponent(componentId, options, true);
         });
@@ -197,7 +197,7 @@ describe('custom module resolutions', function() {
         helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
         helper.command.addComponent('src/bar/foo.js src/utils/is-string.js', {
           i: 'bar/foo',
-          m: 'src/bar/foo.js'
+          m: 'src/bar/foo.js',
         });
       });
       it('bit status should not warn about missing packages', () => {
@@ -270,12 +270,12 @@ describe('custom module resolutions', function() {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-string.js',
-          importSource: 'utils/is-string'
+          importSource: 'utils/is-string',
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-type.js',
-          importSource: 'utils/is-type'
+          importSource: 'utils/is-type',
         });
       });
       describe('importing the component', () => {
@@ -303,7 +303,7 @@ describe('custom module resolutions', function() {
             untarDir = path.join(packDir, 'package');
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
-              d: packDir
+              d: packDir,
             };
             helper.command.packComponent(componentId, options, true);
           });
@@ -370,12 +370,12 @@ describe('custom module resolutions', function() {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/index.js',
-          importSource: '@/utils'
+          importSource: '@/utils',
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-type.js',
-          importSource: '@/utils/is-type'
+          importSource: '@/utils/is-type',
         });
       });
       describe('importing the component', () => {
@@ -403,7 +403,7 @@ describe('custom module resolutions', function() {
             untarDir = path.join(packDir, 'package');
             const componentId = `${helper.scopes.remote}/bar/foo`;
             const options = {
-              d: packDir
+              d: packDir,
             };
             helper.command.packComponent(componentId, options, true);
           });
@@ -452,7 +452,7 @@ describe('custom module resolutions', function() {
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
       helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
-        m: 'src/utils/is-type.js'
+        m: 'src/utils/is-type.js',
       });
 
       const isStringFixture =
@@ -461,7 +461,7 @@ describe('custom module resolutions', function() {
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
       helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
-        m: 'src/utils/is-string.js'
+        m: 'src/utils/is-string.js',
       });
 
       const barFooFixture =
@@ -544,7 +544,7 @@ describe('custom module resolutions', function() {
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
       helper.command.addComponent('src/bar/foo.js src/assets/png_fixture.png', {
         i: 'bar/foo',
-        m: 'src/bar/foo.js'
+        m: 'src/bar/foo.js',
       });
     });
     it('bit status should not warn about missing packages', () => {

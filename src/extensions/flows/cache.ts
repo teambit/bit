@@ -22,12 +22,9 @@ export class ExecutionCache {
     const vinylFiles: AbstractVinyl[] = [...files];
     if (packageJsonFile) vinylFiles.push(packageJsonFile.toVinylFile());
     const content = `${configString}\n${capsule.wrkDir}\n${vinylFiles
-      .map(file => (file.contents || '').toString())
+      .map((file) => (file.contents || '').toString())
       .join('\n')}`;
-    const md5 = createHash('md5', { encoding: 'utf8' })
-      .update(content)
-      .digest('base64')
-      .toString();
+    const md5 = createHash('md5', { encoding: 'utf8' }).update(content).digest('base64').toString();
     return md5;
   }
 
@@ -79,7 +76,7 @@ async function safeGetLock(
     timeout: number;
   } = {
     init: (somePath: string) => fs.writeFile(somePath, '{}', 'utf8'),
-    timeout: 100
+    timeout: 100,
   }
 ) {
   let lockState: 'UNLOCK' | 'LOCK' | 'UNLOCKERROR' = 'UNLOCK';
@@ -96,8 +93,8 @@ async function safeGetLock(
   return lockState === 'UNLOCK'
     ? safeGetLock(cachePath)
     : lockState === 'UNLOCKERROR'
-    ? new Promise(function(resolve) {
-        setTimeout(function() {
+    ? new Promise(function (resolve) {
+        setTimeout(function () {
           return safeGetLock(cachePath).then(() => resolve());
         }, options.timeout);
       })

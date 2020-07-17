@@ -15,7 +15,7 @@ export async function loadResolvedExtensions(
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   logger
 ): Promise<void> {
-  const manifests = resolvedExtensions.map(resolvedExtension => {
+  const manifests = resolvedExtensions.map((resolvedExtension) => {
     const compId = resolvedExtension.component.id.toString();
     try {
       const manifest = resolvedExtension.require();
@@ -37,6 +37,6 @@ export async function loadResolvedExtensions(
   });
 
   // Remove empty manifests as a result of loading issue
-  const filteredManifests = manifests.filter(manifest => manifest);
+  const filteredManifests = manifests.filter((manifest) => manifest);
   return loadExtensionsByManifests(harmony, filteredManifests, logger);
 }

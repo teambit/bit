@@ -63,11 +63,11 @@ export default class ComponentsList {
   async getFromObjects(): Promise<BitId[]> {
     if (!this._fromObjectsIds) {
       const modelComponents: ModelComponent[] = await this.getModelComponents();
-      this._fromObjectsIds = modelComponents.map(componentObjects => {
+      this._fromObjectsIds = modelComponents.map((componentObjects) => {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : undefined
+          version: componentObjects.scope ? componentObjects.latest() : undefined,
         });
       });
     }
@@ -77,7 +77,7 @@ export default class ComponentsList {
   async getAuthoredAndImportedFromFS(): Promise<Component[]> {
     let [authored, imported] = await Promise.all([
       this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
-      this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
+      this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED),
     ]);
     authored = authored || [];
     imported = imported || [];
@@ -95,17 +95,17 @@ export default class ComponentsList {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
       const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
-      const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map(f => f.id));
+      const componentStatuses = await this.consumer.getManyComponentsStatuses(fileSystemComponents.map((f) => f.id));
       this._modifiedComponents = fileSystemComponents
-        .filter(component => {
-          const status = componentStatuses.find(s => s.id.isEqual(component.id));
+        .filter((component) => {
+          const status = componentStatuses.find((s) => s.id.isEqual(component.id));
           if (!status) throw new Error(`listModifiedComponents unable to find status for ${component.id.toString()}`);
           return status.status.modified;
         })
         .filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
-    return this._modifiedComponents.map(component => component.id);
+    return this._modifiedComponents.map((component) => component.id);
   }
 
   async listOutdatedComponents(): Promise<Component[]> {
@@ -113,10 +113,10 @@ export default class ComponentsList {
     const componentsFromModel = await this.getModelComponents();
     const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
-    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.id));
+    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map((c) => c.id));
     await Promise.all(
-      fileSystemComponents.map(async component => {
-        const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
+      fileSystemComponents.map(async (component) => {
+        const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
         if (
           !modelComponent ||
           !component.id.hasVersion() ||
@@ -141,7 +141,7 @@ export default class ComponentsList {
       })
     );
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return fileSystemComponents.filter(f => f.latestVersion);
+    return fileSystemComponents.filter((f) => f.latestVersion);
   }
 
   async listMergePendingComponents(): Promise<DivergedComponent[]> {
@@ -152,7 +152,7 @@ export default class ComponentsList {
       this._mergePendingComponents = (
         await Promise.all(
           componentsFromFs.map(async (component: Component) => {
-            const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
+            const modelComponent = componentsFromModel.find((c) => c.toBitId().isEqualWithoutVersion(component.id));
             if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id))
               return null;
             await modelComponent.setDivergeData(this.scope.objects);
@@ -161,25 +161,25 @@ export default class ComponentsList {
             return { id: modelComponent.toBitId(), diverge: divergedData };
           })
         )
-      ).filter(x => x) as DivergedComponent[];
+      ).filter((x) => x) as DivergedComponent[];
     }
     return this._mergePendingComponents;
   }
 
   listComponentsWithUnresolvedConflicts(): BitIds {
     const unresolvedComponents = this.scope.objects.unmergedComponents.getUnresolvedComponents();
-    return BitIds.fromArray(unresolvedComponents.map(u => new BitId(u.id)));
+    return BitIds.fromArray(unresolvedComponents.map((u) => new BitId(u.id)));
   }
 
   listDuringMergeStateComponents(): BitIds {
     const unresolvedComponents = this.scope.objects.unmergedComponents.getComponents();
-    return BitIds.fromArray(unresolvedComponents.map(u => new BitId(u.id)));
+    return BitIds.fromArray(unresolvedComponents.map((u) => new BitId(u.id)));
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(true),
-      this.listModifiedComponents(true)
+      this.listModifiedComponents(true),
     ]);
 
     const autoTagPendingModel: ModelComponent[] = await this.listAutoTagPendingComponents();
@@ -240,7 +240,7 @@ export default class ComponentsList {
     }
     const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
     const warnings = [];
-    tagPendingComponentsLatest.forEach(componentId => {
+    tagPendingComponentsLatest.forEach((componentId) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (semver.gt(componentId.version!, version)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -258,7 +258,7 @@ export default class ComponentsList {
   async listCommitPendingComponents(): Promise<BitIds> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(),
-      this.listModifiedComponents()
+      this.listModifiedComponents(),
     ]);
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -270,7 +270,7 @@ export default class ComponentsList {
     const pendingExportComponents = await filterAsync(modelComponents, (component: ModelComponent) =>
       component.isLocallyChanged(lane, this.scope.objects)
     );
-    const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
+    const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
 
@@ -278,8 +278,8 @@ export default class ComponentsList {
     const authoredAndImported = await this.getAuthoredAndImportedFromFS();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
-    const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
-    return BitIds.fromArray(nonNewComponents.map(c => c.id.changeVersion(undefined)));
+    const nonNewComponents = authoredAndImported.filter((component) => !newComponents.has(component.id));
+    return BitIds.fromArray(nonNewComponents.map((c) => c.id.changeVersion(undefined)));
   }
 
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
@@ -300,7 +300,7 @@ export default class ComponentsList {
   async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds(laneObj);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
+    return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponentIfExist(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
@@ -368,10 +368,10 @@ export default class ComponentsList {
         return;
       }
       const consumerPath = this.consumer.getPath();
-      const absPaths = relativePaths.map(relativePath => path.join(consumerPath, relativePath));
+      const absPaths = relativePaths.map((relativePath) => path.join(consumerPath, relativePath));
       result.push(...absPaths);
     };
-    componentMaps.forEach(componentMap => populatePaths(componentMap));
+    componentMaps.forEach((componentMap) => populatePaths(componentMap));
     return result;
   }
 
@@ -390,13 +390,13 @@ export default class ComponentsList {
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated
+      deprecated: component.deprecated,
     }));
-    const componentsIds = listScopeResults.map(result => result.id);
+    const componentsIds = listScopeResults.map((result) => result.id);
     if (showRemoteVersion) {
       const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
-      latestVersionsInfo.forEach(componentId => {
-        const listResult = listScopeResults.find(c => c.id.isEqualWithoutVersion(componentId));
+      latestVersionsInfo.forEach((componentId) => {
+        const listResult = listScopeResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -404,7 +404,7 @@ export default class ComponentsList {
       });
     }
     const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
-    listScopeResults.forEach(listResult => {
+    listScopeResults.forEach((listResult) => {
       const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
       if (existingBitMapId) {
         listResult.currentlyUsedVersion = existingBitMapId.version;
@@ -417,7 +417,7 @@ export default class ComponentsList {
       if (!currentLane) return false; // if !currentLane the user is on master, don't show it.
       return Boolean(currentLane.getComponent(componentMap.id));
     };
-    return listScopeResults.filter(listResult => {
+    return listScopeResults.filter((listResult) => {
       const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
       return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && isIdOnCurrentLane(componentMap);
     });
@@ -434,13 +434,13 @@ export default class ComponentsList {
     const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     return componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
-      deprecated: component.deprecated
+      deprecated: component.deprecated,
     }));
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[]
   static sortComponentsByName<T>(components: T): T {
-    const getName = component => {
+    const getName = (component) => {
       let name;
       if (R.is(ModelComponent, component)) name = component.id();
       else if (R.is(Component, component)) name = component.id.toString();
@@ -471,14 +471,14 @@ export default class ComponentsList {
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return components.filter(component => {
+    return components.filter((component) => {
       const bitId: BitId = getBitId(component);
       return isBitIdMatchByWildcards(bitId, idsWithWildcard);
     });
   }
 
   static getUniqueComponents(components: Component[]): Component[] {
-    return R.uniqBy(component => JSON.stringify(component.id), components);
+    return R.uniqBy((component) => JSON.stringify(component.id), components);
   }
 
   listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {

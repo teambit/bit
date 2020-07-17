@@ -5,7 +5,7 @@ import {
   AddProps,
   AddContext,
   AddActionResults,
-  PathOrDSL
+  PathOrDSL,
 } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
 import { POST_ADD_HOOK, BIT_MAP } from '../../../constants';
@@ -21,7 +21,7 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   await consumer.onDestroy();
   const hookContext = {
     workspacePath: consumer.getPath(),
-    bitmapFileName: BIT_MAP
+    bitmapFileName: BIT_MAP,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
@@ -34,17 +34,17 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
   const consumer: Consumer = await loadConsumer(consumerPath);
   const addContext: AddContext = { consumer, alternateCwd: consumerPath };
   const addComponentsArr = [];
-  components.forEach(component => {
-    const normalizedPaths: PathOsBased[] = component.componentPaths.map(p => {
+  components.forEach((component) => {
+    const normalizedPaths: PathOsBased[] = component.componentPaths.map((p) => {
       return path.normalize(p);
     });
     component.componentPaths = normalizedPaths;
     const normalizedTests: PathOrDSL[] = component.tests
-      ? component.tests.map(testFile => path.normalize(testFile.trim()))
+      ? component.tests.map((testFile) => path.normalize(testFile.trim()))
       : [];
     component.tests = normalizedTests;
     component.exclude = component.exclude
-      ? component.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
+      ? component.exclude.map((excludeFile) => path.normalize(excludeFile.trim()))
       : [];
     const addComponents = new AddComponents(addContext, component);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -52,7 +52,7 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
   });
   const addResults = [];
   await Promise.all(
-    addComponentsArr.map(async function(addComponents) {
+    addComponentsArr.map(async function (addComponents) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const addResultsSingle = await addComponents.add();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -62,7 +62,7 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
   await consumer.onDestroy();
   const hookContext = {
     workspacePath: consumer.getPath(),
-    bitmapFileName: BIT_MAP
+    bitmapFileName: BIT_MAP,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);

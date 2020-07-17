@@ -21,17 +21,17 @@ export default class Deprecate implements LegacyCommand {
   }
 
   report(deprecationResult: DeprecationResult | DeprecationResult[]): string {
-    const paintMissingComponents = missingComponents =>
+    const paintMissingComponents = (missingComponents) =>
       !R.isEmpty(missingComponents)
         ? chalk.underline('missing components:') + chalk(` ${missingComponents.join(', ')}\n`)
         : '';
-    const paintRemoved = bitIds =>
+    const paintRemoved = (bitIds) =>
       !R.isEmpty(bitIds) && !R.isNil(bitIds)
         ? chalk.underline('deprecated components:') + chalk(` ${bitIds.join(', ')}\n`)
         : '';
-    const paintSingle = obj => paintRemoved(obj.bitIds) + paintMissingComponents(obj.missingComponents);
+    const paintSingle = (obj) => paintRemoved(obj.bitIds) + paintMissingComponents(obj.missingComponents);
     const paintMany = (deprecationResults: DeprecationResult[]) =>
-      deprecationResults.map(obj => paintSingle(obj)).join('\n');
+      deprecationResults.map((obj) => paintSingle(obj)).join('\n');
 
     return Array.isArray(deprecationResult) ? paintMany(deprecationResult) : paintSingle(deprecationResult);
   }

@@ -15,7 +15,7 @@ export default class Search implements LegacyCommand {
   alias = '';
   opts = [
     ['s', 'scope <scopename>', 'search in scope'],
-    ['r', 'reindex', 're-index all components']
+    ['r', 'reindex', 're-index all components'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -28,7 +28,7 @@ export default class Search implements LegacyCommand {
       return searchAdapter.searchRemotely(queryStr, scope, reindex).catch(() => {
         // web search
         const url = `https://${SEARCH_DOMAIN}/search/?q=${queryStr}`;
-        return requestify.get(url).then(response => {
+        return requestify.get(url).then((response) => {
           const body = response.getBody();
           return Promise.resolve(body.payload.hits);
         });

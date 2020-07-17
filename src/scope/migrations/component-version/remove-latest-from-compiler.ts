@@ -21,7 +21,7 @@ function removeLatestFromCompiler(versionModel: Object): Object {
 
 const removeLatestFromCompilerDeclartaion = {
   name: 'remove latest from compiler',
-  migrate: removeLatestFromCompiler
+  migrate: removeLatestFromCompiler,
 };
 
 export default removeLatestFromCompilerDeclartaion;

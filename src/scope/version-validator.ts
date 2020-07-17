@@ -40,7 +40,7 @@ export default function validateVersionInstance(version: Version): void {
     }
     validateBitId(bitId, field, validateVersion, validateScope);
   };
-  const _validateEnv = env => {
+  const _validateEnv = (env) => {
     if (!env) return;
     if (typeof env === 'string') {
       // Do not validate version - for backward compatibility
@@ -54,7 +54,7 @@ export default function validateVersionInstance(version: Version): void {
     validateBitIdStr(env.name, 'env.name');
     if (env.files) {
       const compilerName = env.name || '';
-      env.files.forEach(file => {
+      env.files.forEach((file) => {
         if (!file.name) {
           throw new VersionInvalid(
             `${message}, the environment ${compilerName} has a file which missing the name attribute`
@@ -79,13 +79,13 @@ export default function validateVersionInstance(version: Version): void {
     // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
     validateType(message, packageVersion, `version of "${packageName}"`, 'string');
   };
-  const _validatePackageDependencies = packageDependencies => {
+  const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
     R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
   };
   const _validateEnvPackages = (envPackages, fieldName) => {
     validateType(message, envPackages, fieldName, 'object');
-    Object.keys(envPackages).forEach(dependencyType => {
+    Object.keys(envPackages).forEach((dependencyType) => {
       if (!DEPENDENCIES_FIELDS.includes(dependencyType)) {
         throw new VersionInvalid(
           `${message}, the property ${dependencyType} inside ${fieldName} is invalid, allowed values are ${DEPENDENCIES_FIELDS.join(
@@ -94,7 +94,7 @@ export default function validateVersionInstance(version: Version): void {
         );
       }
       validateType(message, envPackages[dependencyType], `${fieldName}.${dependencyType}`, 'object');
-      Object.keys(envPackages[dependencyType]).forEach(pkg => {
+      Object.keys(envPackages[dependencyType]).forEach((pkg) => {
         validateType(message, envPackages[dependencyType][pkg], `${fieldName}.${dependencyType}.${pkg}`, 'string');
       });
     });
@@ -117,7 +117,7 @@ export default function validateVersionInstance(version: Version): void {
     if (extension.extensionId) {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
-    extension.artifacts.map(artifact => validateFile(artifact, 'artifact'));
+    extension.artifacts.map((artifact) => validateFile(artifact, 'artifact'));
   };
 
   const _validateExtensions = (extensions: ExtensionDataList) => {
@@ -134,7 +134,7 @@ export default function validateVersionInstance(version: Version): void {
   let foundMainFile = false;
   validateType(message, version.files, 'files', 'array');
   const filesPaths: PathLinux[] = [];
-  version.files.forEach(file => {
+  version.files.forEach((file) => {
     validateFile(file, 'file');
     filesPaths.push(file.relativePath);
     if (file.relativePath === version.mainFile) foundMainFile = true;
@@ -147,7 +147,7 @@ export default function validateVersionInstance(version: Version): void {
     );
   }
   const duplicateFiles = filesPaths.filter(
-    file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
+    (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
   );
   if (duplicateFiles.length) {
     throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
@@ -162,7 +162,7 @@ export default function validateVersionInstance(version: Version): void {
   _validateExtensions(version.extensions);
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
-    version.dists.forEach(file => {
+    version.dists.forEach((file) => {
       validateFile(file, 'dist-file');
     });
   } else if (version.mainDistFile) {
@@ -171,7 +171,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
     throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
-  DEPENDENCIES_TYPES.forEach(dependenciesType => {
+  DEPENDENCIES_TYPES.forEach((dependenciesType) => {
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(
         `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof version[dependenciesType]}`
@@ -188,7 +188,7 @@ export default function validateVersionInstance(version: Version): void {
   }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
-    dependencies.forEach(dependency => {
+    dependencies.forEach((dependency) => {
       if (!(dependency instanceof BitId)) {
         throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
       }
@@ -208,7 +208,9 @@ export default function validateVersionInstance(version: Version): void {
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
   if (!R.isEmpty(depsDuplications)) {
     const duplicationStr = Object.keys(depsDuplications)
-      .map(id => `"${id}" shows as the following: ${depsDuplications[id].map(depId => depId.toString()).join(', ')} `)
+      .map(
+        (id) => `"${id}" shows as the following: ${depsDuplications[id].map((depId) => depId.toString()).join(', ')} `
+      )
       .join('\n');
     throw new GeneralError(`some dependencies are duplicated, see details below.
 if you added a dependency to "overrides" configuration with a plus sign, make sure to add it with a minus sign in the other dependency type
@@ -237,7 +239,7 @@ ${duplicationStr}`);
     const field = `overrides.${fieldName}`;
     if (DEPENDENCIES_FIELDS.includes(fieldName)) {
       validateType(message, fieldValue, field, 'object');
-      Object.keys(fieldValue).forEach(key => {
+      Object.keys(fieldValue).forEach((key) => {
         validateType(message, key, `property name of ${field}`, 'string');
         validateType(message, fieldValue[key], `version of "${field}.${key}"`, 'string');
       });
@@ -250,7 +252,7 @@ ${duplicationStr}`);
       }
     }
   };
-  Object.keys(version.overrides).forEach(field => {
+  Object.keys(version.overrides).forEach((field) => {
     if (componentOverridesForbiddenFields.includes(field)) {
       throw new VersionInvalid(`${message}, the "overrides" has a forbidden key "${field}"`);
     }
@@ -258,7 +260,7 @@ ${duplicationStr}`);
   });
   validateType(message, version.packageJsonChangedProps, 'packageJsonChangedProps', 'object');
   const forbiddenPackageJsonProps = PackageJsonFile.propsNonUserChangeable();
-  Object.keys(version.packageJsonChangedProps).forEach(prop => {
+  Object.keys(version.packageJsonChangedProps).forEach((prop) => {
     validateType(message, prop, 'property name of packageJson', 'string');
     if (forbiddenPackageJsonProps.includes(prop)) {
       throw new VersionInvalid(`${message}, the packageJsonChangedProps should not override the prop ${prop}`);
@@ -271,7 +273,7 @@ ${duplicationStr}`);
     }
   });
   if (version.parents) {
-    version.parents.forEach(parent => {
+    version.parents.forEach((parent) => {
       if (parent.isEqual(version.hash())) {
         throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
       }
@@ -283,23 +285,23 @@ ${duplicationStr}`);
     const fieldsForSchemaCheckNotEmpty = [
       'customResolvedPaths',
       'compilerPackageDependencies',
-      'testerPackageDependencies'
+      'testerPackageDependencies',
     ];
-    fieldsForSchemaCheck.forEach(field => {
+    fieldsForSchemaCheck.forEach((field) => {
       if (version[field]) {
         throw new VersionInvalid(`${message}, the ${field} field is not permitted according to schema "${schema}"`);
       }
     });
-    fieldsForSchemaCheckNotEmpty.forEach(field => {
+    fieldsForSchemaCheckNotEmpty.forEach((field) => {
       if (version[field] && !R.isEmpty(version[field])) {
         throw new VersionInvalid(
           `${message}, the ${field} field is cannot have values according to schema "${schema}"`
         );
       }
     });
-    ['dependencies', 'devDependencies'].forEach(dependenciesField => {
+    ['dependencies', 'devDependencies'].forEach((dependenciesField) => {
       const deps: Dependencies = version[dependenciesField];
-      deps.dependencies.forEach(dep => {
+      deps.dependencies.forEach((dep) => {
         if (dep.relativePaths.length) {
           throw new VersionInvalid(
             `${message}, the ${dependenciesField} should not have relativePaths according to schema "${schema}"`
@@ -311,7 +313,7 @@ ${duplicationStr}`);
   if (version.isLegacy) {
     // mainly to make sure that all Harmony components are saved with schema
     // if they don't have schema, they'll fail on this test
-    if (version.extensions && version.extensions.some(e => e.artifacts && e.artifacts.length)) {
+    if (version.extensions && version.extensions.some((e) => e.artifacts && e.artifacts.length)) {
       throw new VersionInvalid(
         `${message}, the extensions field should not have "artifacts" prop according to schema "${schema}"`
       );

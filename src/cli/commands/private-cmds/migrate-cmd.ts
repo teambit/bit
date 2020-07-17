@@ -13,7 +13,7 @@ export default class Migrate implements LegacyCommand {
 
   action([scopePath]: [string], { verbose }: { verbose: boolean | null | undefined }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return migrate(scopePath, verbose).then(result => ({ result, verbose }));
+    return migrate(scopePath, verbose).then((result) => ({ result, verbose }));
   }
 
   report(): string {

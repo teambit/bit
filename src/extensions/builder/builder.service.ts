@@ -36,9 +36,9 @@ export class BuilderService implements EnvService {
 
     const buildContext = Object.assign(context, {
       capsuleGraph: await this.isolator.createNetworkFromConsumer(
-        context.components.map(component => component.id.toString()),
+        context.components.map((component) => component.id.toString()),
         this.workspace.consumer
-      )
+      ),
     });
 
     const components = await buildPipe.execute(buildContext);

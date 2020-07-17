@@ -22,7 +22,7 @@ export default class ContainerExec extends EventEmitter implements Exec {
   inspect(): Promise<ExecStatus> {
     return Promise.resolve({
       running: true,
-      pid: 1
+      pid: 1,
     });
   }
   abort(): Promise<void> {

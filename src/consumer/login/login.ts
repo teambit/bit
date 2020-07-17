@@ -11,7 +11,7 @@ import {
   CFG_HUB_LOGIN_KEY,
   DEFAULT_REGISTRY_URL,
   CFG_REGISTRY_URL_KEY,
-  PREVIOUSLY_DEFAULT_REGISTRY_URL
+  PREVIOUSLY_DEFAULT_REGISTRY_URL,
 } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
@@ -38,7 +38,7 @@ export default function loginToBitSrc(
     const clientGeneratedId = uuid();
     if (getSync(CFG_USER_TOKEN_KEY)) {
       return resolve({
-        isAlreadyLoggedIn: true
+        isAlreadyLoggedIn: true,
       });
     }
     const server = http.createServer((request, response) => {
@@ -89,14 +89,14 @@ export default function loginToBitSrc(
         }
 
         response.writeHead(REDIRECT, {
-          Location: redirectUri
+          Location: redirectUri,
         });
         closeConnection();
         resolve({
           username,
           npmrcPath: actualNpmrcPath,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          writeToNpmrcError
+          writeToNpmrcError,
         });
       } catch (err) {
         logger.error(`err on login: ${err}`);
@@ -114,9 +114,11 @@ export default function loginToBitSrc(
       }
 
       const encoded = encodeURI(
-        `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${port ||
-          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName ||
-          os.hostname()}&os=${process.platform}`
+        `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${
+          port || DEFAULT_PORT
+        }&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName || os.hostname()}&os=${
+          process.platform
+        }`
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
@@ -126,7 +128,7 @@ export default function loginToBitSrc(
       }
     });
 
-    server.on('error', e => {
+    server.on('error', (e) => {
       // @ts-ignore
       if (e.code === 'EADDRINUSE') {
         // @ts-ignore

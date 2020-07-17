@@ -9,7 +9,7 @@ function specsResultstoArray(versionModel: Record<string, any>): Record<string, 
     // Get the first found spec file
     // This should be ok since when the specs results was an object there were only one spec file
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const specFile = versionModel.files.filter(file => {
+    const specFile = versionModel.files.filter((file) => {
       return file.test;
     })[0];
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -25,5 +25,5 @@ function specsResultstoArray(versionModel: Record<string, any>): Record<string, 
 
 export default {
   name: 'convert specs results array',
-  migrate: specsResultstoArray
+  migrate: specsResultstoArray,
 };

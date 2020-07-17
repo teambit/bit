@@ -23,7 +23,7 @@ export default class RemovedObjects {
     removedDependencies,
     dependentBits,
     removedFromLane,
-    removedLanes
+    removedLanes,
   }: {
     removedComponentIds?: BitIds;
     missingComponents?: BitIds;
@@ -47,7 +47,7 @@ export default class RemovedObjects {
       removedDependencies: this.removedDependencies.serialize(),
       dependentBits: this.dependentBits,
       removedFromLane: this.removedFromLane,
-      removedLanes: this.removedLanes
+      removedLanes: this.removedLanes,
     };
   }
 
@@ -59,12 +59,12 @@ export default class RemovedObjects {
     removedLanes: string[];
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
-    const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));
-    const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => BitId.parse(id, true)));
-    const removedDependencies = new BitIds(...payload.removedDependencies.map(id => BitId.parse(id, true)));
+    const missingComponents = new BitIds(...payload.missingComponents.map((id) => BitId.parse(id, true)));
+    const removedComponentIds = new BitIds(...payload.removedComponentIds.map((id) => BitId.parse(id, true)));
+    const removedDependencies = new BitIds(...payload.removedDependencies.map((id) => BitId.parse(id, true)));
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc[current] = new BitIds(...payload.dependentBits[current].map(id => new BitId(id)));
+      acc[current] = new BitIds(...payload.dependentBits[current].map((id) => new BitId(id)));
       return acc;
     }, {});
     return new RemovedObjects({
@@ -72,7 +72,7 @@ export default class RemovedObjects {
       removedComponentIds,
       removedDependencies,
       dependentBits,
-      removedLanes: payload.removedLanes
+      removedLanes: payload.removedLanes,
     });
   }
 }

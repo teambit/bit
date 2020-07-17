@@ -28,11 +28,11 @@ export class Preview {
 
     const includes = preview.include
       ? preview.include
-          .map(prevName => {
+          .map((prevName) => {
             if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
             return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
-          .filter(module => !!module)
+          .filter((module) => !!module)
       : [];
 
     return preview.render(componentId, PREVIEW_MODULES[name], includes);
@@ -48,14 +48,14 @@ export class Preview {
 
   getDefault() {
     const previews = this.previewSlot.values();
-    const defaultOne = previews.find(previewCandidate => previewCandidate.default);
+    const defaultOne = previews.find((previewCandidate) => previewCandidate.default);
 
     return defaultOne?.name || previews[0].name;
   }
 
   private getPreview(previewName: string): undefined | PreviewType {
     const previews = this.previewSlot.values();
-    const preview = previews.find(previewCandidate => previewCandidate.name === previewName);
+    const preview = previews.find((previewCandidate) => previewCandidate.name === previewName);
 
     return preview;
   }
@@ -71,7 +71,7 @@ export class Preview {
 
     return {
       previewName: this.getParam(after, 'preview'),
-      componentId: before
+      componentId: before,
     };
   }
 
@@ -91,6 +91,6 @@ export class Preview {
 export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
   PREVIEW_MODULES[previewName] = {
     mainModule: defaultModule,
-    componentMap
+    componentMap,
   };
 }

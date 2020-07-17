@@ -13,7 +13,7 @@ const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const successOutput = 'successfully switched';
 
-describe('bit checkout command', function() {
+describe('bit checkout command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -99,7 +99,7 @@ describe('bit checkout command', function() {
             it('should throw an error NewerVersionFound', () => {
               const tagFunc = () => helper.command.tagComponent('bar/foo');
               const error = new NewerVersionFound([
-                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
+                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' },
               ]);
               helper.general.expectToThrow(tagFunc, error);
             });
@@ -270,7 +270,7 @@ describe('bit checkout command', function() {
             // In another place of the error in circle we have <<<<<
             // So we want to make sure the << is also in the relevant error line
             const splitted = result.split('\n');
-            const line = splitted.find(l => l.includes('SyntaxError:'));
+            const line = splitted.find((l) => l.includes('SyntaxError:'));
             expect(line).to.have.string('SyntaxError: Unexpected token');
             expect(line).to.have.string('<<');
           });
@@ -639,9 +639,9 @@ describe('bit checkout command', function() {
         const overrides = {
           'bar/foo': {
             dependencies: {
-              'file://some-file.js': '-'
-            }
-          }
+              'file://some-file.js': '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();

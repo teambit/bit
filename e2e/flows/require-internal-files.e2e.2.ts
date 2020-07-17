@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
-describe('component that requires another component internal (not main) file', function() {
+describe('component that requires another component internal (not main) file', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry;
@@ -25,7 +25,7 @@ describe('component that requires another component internal (not main) file', f
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
       helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
-        m: 'src/utils/is-type.js'
+        m: 'src/utils/is-type.js',
       });
 
       const isStringFixture =
@@ -34,7 +34,7 @@ describe('component that requires another component internal (not main) file', f
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
       helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
-        m: 'src/utils/is-string.js'
+        m: 'src/utils/is-string.js',
       });
 
       const barFooFixture =
@@ -90,7 +90,7 @@ describe('component that requires another component internal (not main) file', f
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isTypeES6);
       helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
-        m: 'src/utils/is-type.js'
+        m: 'src/utils/is-type.js',
       });
 
       const isStringFixture =
@@ -99,7 +99,7 @@ describe('component that requires another component internal (not main) file', f
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
       helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
-        m: 'src/utils/is-string.js'
+        m: 'src/utils/is-string.js',
       });
 
       const barFooFixture =
@@ -152,7 +152,7 @@ describe('component that requires another component internal (not main) file', f
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
       helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
-        m: 'src/utils/is-type.js'
+        m: 'src/utils/is-type.js',
       });
 
       const isStringFixture =

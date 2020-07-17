@@ -26,10 +26,10 @@ export function devServerSchema(bundler: BundlerExtension): Schema {
 
           return {
             env: componentServer.env.id,
-            url: componentServer.url
+            url: componentServer.url,
           };
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

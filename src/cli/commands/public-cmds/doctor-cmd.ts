@@ -12,7 +12,7 @@ export default class Doctor implements LegacyCommand {
   opts = [
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
-    ['s', 'save [filePath]', 'save diagnoses to a file']
+    ['s', 'save [filePath]', 'save diagnoses to a file'],
   ] as CommandOptions;
   migration = false;
 
@@ -20,7 +20,7 @@ export default class Doctor implements LegacyCommand {
     [diagnosisName]: string[],
     {
       list = false,
-      save
+      save,
     }: {
       list?: boolean;
       save?: string;
@@ -73,7 +73,7 @@ function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
   if (json) {
     const fullJson = {
       savedFilePath,
-      examineResult
+      examineResult,
     };
     return JSON.stringify(fullJson, null, 2);
   }
@@ -86,7 +86,7 @@ function _runAllReport(res: DoctorRunAllResults, json: boolean): string {
   if (json) {
     const fullJson = {
       savedFilePath,
-      examineResults
+      examineResults,
     };
     return JSON.stringify(fullJson, null, 2);
   }

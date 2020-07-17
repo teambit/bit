@@ -4,7 +4,7 @@ import * as path from 'path';
 
 describe('worker', () => {
   // TODO: fix this test, the worker now do a different process than before
-  it.skip('should throw an error for a mismatch tester interface', done => {
+  it.skip('should throw an error for a mismatch tester interface', (done) => {
     const child = fork(path.join(__dirname, '..', '..', 'dist', 'specs-runner', 'worker.js'), {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silent: false,
@@ -12,8 +12,8 @@ describe('worker', () => {
         __impl__: '',
         __specs__: '',
         __tester__: path.join(__dirname, '../../', 'fixtures', 'invalid-tester.js'),
-        __testerId__: 'myScope/my-component'
-      }
+        __testerId__: 'myScope/my-component',
+      },
     });
 
     process.on('exit', () => {

@@ -6,7 +6,7 @@ import { IMPORT_PENDING_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('components that are not synced between the scope and the consumer', function() {
+describe('components that are not synced between the scope and the consumer', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

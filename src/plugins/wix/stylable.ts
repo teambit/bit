@@ -11,7 +11,7 @@ function getTemplate(importSpecifiers) {
 
   if (importSpecifiers && importSpecifiers.length) {
     const specifiers = importSpecifiers
-      .map(importSpecifier => {
+      .map((importSpecifier) => {
         const mainFile =
           R.path(['importSpecifier', 'mainFile'], importSpecifier) ||
           R.path(['importSpecifier', 'importSpecifiers', 'mainFile'], importSpecifier);

@@ -6,7 +6,7 @@ import {
   deprecateRemote,
   deprecateMany,
   undeprecateRemote,
-  undeprecateMany
+  undeprecateMany,
 } from '../../../scope/component-ops/components-deprecation';
 import { Remotes } from '../../../remotes';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
@@ -45,9 +45,9 @@ function getRemotes(consumer: Consumer | null | undefined): Promise<Remotes> {
 }
 
 function getBitIdsForLocal(ids: string[], consumer: Consumer): BitIds {
-  return BitIds.fromArray(ids.map(id => consumer.getParsedId(id)));
+  return BitIds.fromArray(ids.map((id) => consumer.getParsedId(id)));
 }
 
 function getBitIdsForRemote(ids: string[]): BitId[] {
-  return ids.map(id => BitId.parse(id, true));
+  return ids.map((id) => BitId.parse(id, true));
 }

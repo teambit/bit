@@ -9,7 +9,7 @@ export default class Move implements LegacyCommand {
   description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#moving-and-renaming-files`;
   alias = 'mv';
   opts = [
-    ['c', 'component', 'move component files that are spread over multiple directories to one directory']
+    ['c', 'component', 'move component files that are spread over multiple directories to one directory'],
   ] as CommandOptions;
   loader = true;
 
@@ -18,9 +18,11 @@ export default class Move implements LegacyCommand {
   }
 
   report(componentsChanged: PathChangeResult[]): string {
-    const output = componentsChanged.map(component => {
+    const output = componentsChanged.map((component) => {
       const title = chalk.green(`moved component ${component.id.toString()}:\n`);
-      const files = component.changes.map(file => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`).join('\n');
+      const files = component.changes
+        .map((file) => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`)
+        .join('\n');
       return title + files;
     });
     return output.join('\n');

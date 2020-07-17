@@ -79,11 +79,11 @@ export class Environments {
       else
         map[envId] = {
           components: [current],
-          env
+          env,
         };
     }, {});
 
-    return Object.keys(map).map(key => {
+    return Object.keys(map).map((key) => {
       return new EnvRuntime(key, map[key].env, map[key].components);
     });
   }

@@ -39,7 +39,7 @@ export class Compile {
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
-    components.forEach(c => {
+    components.forEach((c) => {
       const environment = this.envs.getEnvFromExtensions(c.extensions);
       const compilerInstance = environment?.getCompiler();
       // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
@@ -82,7 +82,7 @@ export class Compile {
       const dists: Dist[] = [];
       const compileErrors: { path: string; error: Error }[] = [];
       await Promise.all(
-        component.files.map(async file => {
+        component.files.map(async (file) => {
           const relativeComponentDir = component.componentMap?.getComponentDir();
           if (!relativeComponentDir)
             throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
@@ -99,11 +99,11 @@ export class Compile {
           if (compileResults) {
             dists.push(
               ...compileResults.map(
-                result =>
+                (result) =>
                   new Dist({
                     base,
                     path: path.join(base, result.outputPath),
-                    contents: Buffer.from(result.outputText)
+                    contents: Buffer.from(result.outputText),
                   })
               )
             );
@@ -114,7 +114,7 @@ export class Compile {
         })
       );
       if (compileErrors.length) {
-        const formatError = errorItem => `${errorItem.path}\n${errorItem.error}`;
+        const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
         throw new Error(`compilation failed. see the following errors from the compiler
 ${compileErrors.map(formatError).join('\n')}`);
       }
@@ -132,7 +132,7 @@ ${compileErrors.map(formatError).join('\n')}`);
       dataToPersist.addFile(packageJson.toVinylFile());
       dataToPersist.addBasePath(this.workspace.path);
       await dataToPersist.persistAllToFS();
-      const oneBuildResults = dists.map(distFile => distFile.path);
+      const oneBuildResults = dists.map((distFile) => distFile.path);
       if (component.compiler) loader.succeed();
       return { component: component.id.toString(), buildResults: oneBuildResults };
     };
@@ -154,7 +154,7 @@ ${compileErrors.map(formatError).join('\n')}`);
         consumer: this.workspace.consumer,
         noCache,
         verbose,
-        dontPrintEnvMsg
+        dontPrintEnvMsg,
       });
       const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
       if (component.compiler) loader.succeed();
@@ -175,23 +175,23 @@ ${compileErrors.map(formatError).join('\n')}`);
       scope: this.workspace.consumer.scope,
       consumer: this.workspace.consumer,
       verbose: params.verbose,
-      noCache: params.noCache
+      noCache: params.noCache,
     });
   }
 
   async writeComponentDist(componentAndCapsule: ComponentAndCapsule) {
     const dataToPersist = new DataToPersist();
     const distsFiles = componentAndCapsule.consumerComponent.dists.get();
-    distsFiles.map(d => d.updatePaths({ newBase: 'dist' }));
+    distsFiles.map((d) => d.updatePaths({ newBase: 'dist' }));
     dataToPersist.addManyFiles(distsFiles);
     await dataToPersist.persistAllToCapsule(componentAndCapsule.capsule);
-    return distsFiles.map(d => d.path);
+    return distsFiles.map((d) => d.path);
   }
 }
 
 function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): BitId[] {
   if (componentsIds.length) {
-    return componentsIds.map(compId => (compId instanceof BitId ? compId : workspace.consumer.getParsedId(compId)));
+    return componentsIds.map((compId) => (compId instanceof BitId ? compId : workspace.consumer.getParsedId(compId)));
   }
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }

@@ -23,15 +23,15 @@ export default class Remove implements LegacyCommand {
     [
       'd',
       'delete-files [boolean]',
-      'delete local component files (authored components only. for imported components the files are always deleted)'
+      'delete local component files (authored components only. for imported components the files are always deleted)',
     ],
     [
       'f',
       'force [boolean]',
-      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
+      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
     ['s', 'silent [boolean]', 'skip confirmation'],
-    ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane']
+    ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -45,7 +45,7 @@ export default class Remove implements LegacyCommand {
       track = false,
       deleteFiles = false,
       silent = false,
-      lane = false
+      lane = false,
     }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; lane: boolean }
   ): Promise<any> {
     if (lane) throwForUsingLaneIfDisabled();
@@ -62,7 +62,7 @@ export default class Remove implements LegacyCommand {
   report({
     localResult,
     remoteResult = [],
-    laneResults = []
+    laneResults = [],
   }: {
     localResult: RemovedLocalObjects;
     remoteResult: RemovedObjects[];
@@ -75,6 +75,6 @@ export default class Remove implements LegacyCommand {
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
-    return removedObjectsArray.map(item => paintRemoved(item, true));
+    return removedObjectsArray.map((item) => paintRemoved(item, true));
   }
 }

@@ -3,7 +3,7 @@ import R from 'ramda';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import {
   UntrackedFileDependencyEntry,
-  RelativeComponentsAuthoredEntry
+  RelativeComponentsAuthoredEntry,
 } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
 import Component from '../../consumer/component/consumer-component';
@@ -23,7 +23,7 @@ export const componentIssuesLabels = {
   customModuleResolutionUsed:
     'component is using an unsupported resolve-modules (aka aliases) feature, replace to module paths',
   parseErrors: 'error found while parsing the file (edit the file and fix the parsing error)',
-  resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
+  resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)',
 };
 
 export const MISSING_PACKAGES_FROM_OVERRIDES_LABEL = 'from overrides configuration';
@@ -52,7 +52,7 @@ export function componentIssueToString(value: string[] | string) {
 }
 
 export function untrackedFilesComponentIssueToString(value: UntrackedFileDependencyEntry) {
-  const colorizedMap = value.untrackedFiles.map(curr => {
+  const colorizedMap = value.untrackedFiles.map((curr) => {
     if (curr.existing) {
       return `${chalk.yellow(curr.relativePath)}`;
     }
@@ -84,7 +84,7 @@ export function formatMissing(missingComponent: Component) {
       chalk.yellow(`\n       ${label}: \n`) +
       chalk.white(
         Object.keys(value)
-          .map(k => {
+          .map((k) => {
             let space = MISSING_DEPS_SPACE;
             if (value[k].nested) {
               space = MISSING_NESTED_DEPS_SPACE;
@@ -97,7 +97,7 @@ export function formatMissing(missingComponent: Component) {
   }
 
   const missingStr = Object.keys(componentIssuesLabels)
-    .map(key => {
+    .map((key) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
       if (key === 'untrackedDependencies') {

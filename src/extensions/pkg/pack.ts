@@ -52,7 +52,7 @@ export class Packer {
       installPackages: false,
       noPackageJson: false,
       excludeRegistryPrefix: !this.options.prefix,
-      saveDependenciesAsComponents: false
+      saveDependenciesAsComponents: false,
     };
     await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
     const packResult = await this.runNpmPack(isolatePath);
@@ -93,7 +93,7 @@ async function npmPack(cwd: string, outputPath: string, override = false): Promi
   const tarPath = path.join(outputPath, tgzName);
   const response = {
     pkgJson,
-    tarPath
+    tarPath,
   };
   if (tgzOriginPath !== tarPath && fs.pathExistsSync(tarPath)) {
     if (override) {

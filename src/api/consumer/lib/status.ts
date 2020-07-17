@@ -33,15 +33,15 @@ export default (async function status(): Promise<StatusResult> {
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-  const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
+  const autoTagPendingComponentsStr = autoTagPendingComponents.map((component) => component.id().toString());
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    .filter(c => c.error instanceof ComponentsPendingImport)
+    .filter((c) => c.error instanceof ComponentsPendingImport)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    .map(i => i.id);
+    .map((i) => i.id);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const invalidComponents = allInvalidComponents.filter(c => !(c.error instanceof ComponentsPendingImport));
+  const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
   const outdatedComponents = await componentsList.listOutdatedComponents();
   const mergePendingComponents = await componentsList.listMergePendingComponents();
 
@@ -75,6 +75,6 @@ export default (async function status(): Promise<StatusResult> {
     invalidComponents,
     outdatedComponents,
     mergePendingComponents,
-    componentsDuringMergeState
+    componentsDuringMergeState,
   };
 });

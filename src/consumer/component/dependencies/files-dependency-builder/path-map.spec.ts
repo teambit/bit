@@ -22,7 +22,7 @@ describe('path-map', () => {
       let barFooDependency;
       before(() => {
         results = getPathMapWithLinkFilesData(pathMapFixture);
-        const barFoo = results.find(f => f.file === 'bar/foo.js');
+        const barFoo = results.find((f) => f.file === 'bar/foo.js');
         barFooDependency = barFoo.dependencies[0];
       });
       it('should mark the dependency as a linkFile', () => {
@@ -40,14 +40,14 @@ describe('path-map', () => {
         expect(barFooDependency.realDependencies[1].file).to.equal('utils/is-array/is-array.js');
       });
       it('realDependencies should have the importSpecifiers.mainFile same as the original file', () => {
-        const isStringSpecifier = barFooDependency.importSpecifiers.find(i => i.name === 'isString');
+        const isStringSpecifier = barFooDependency.importSpecifiers.find((i) => i.name === 'isString');
         const realDepIsStringSpecifier = barFooDependency.realDependencies[0].importSpecifiers[0];
         expect(realDepIsStringSpecifier.mainFile.name).to.equal(isStringSpecifier.name);
         expect(realDepIsStringSpecifier.mainFile.isDefault).to.equal(isStringSpecifier.isDefault);
       });
       it('realDependencies should have the importSpecifiers.linkFile same as the last link file', () => {
         const lastLinkFile = 'utils/is-string/index.js';
-        const lastLink = results.find(f => f.file === lastLinkFile);
+        const lastLink = results.find((f) => f.file === lastLinkFile);
         const lastLinkSpecifier = lastLink.dependencies[0].importSpecifiers[0];
         const realDepIsStringSpecifier = barFooDependency.realDependencies[0].importSpecifiers[0];
         expect(realDepIsStringSpecifier.linkFile.name).to.equal(lastLinkSpecifier.name);

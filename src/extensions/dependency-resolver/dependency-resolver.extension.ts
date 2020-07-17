@@ -4,7 +4,7 @@ import {
   DependenciesPolicy,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
-  installOpts
+  installOpts,
 } from './types';
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
@@ -28,7 +28,7 @@ export class DependencyResolverExtension {
     packageManager: 'npm',
     policy: {},
     packageManagerArgs: [],
-    strictPeerDependencies: true
+    strictPeerDependencies: true,
   };
   static async provider(
     [envs, logger]: [Environments, Logger],
@@ -105,7 +105,7 @@ export class DependencyResolverExtension {
       policiesFromEnv = await env.getDependencies();
     }
     const configuredIds = configuredExtensions.ids;
-    configuredIds.forEach(extId => {
+    configuredIds.forEach((extId) => {
       // Only get props from configured extensions on this specific component
       const currentPolicy = this.policiesRegistry.get(extId);
       if (currentPolicy) {
@@ -126,7 +126,7 @@ function mergePolices(policies: DependenciesPolicy[]) {
   const result: DependenciesPolicy = {
     dependencies: {},
     devDependencies: {},
-    peerDependencies: {}
+    peerDependencies: {},
   };
   return R.reduce(R.mergeDeepRight, result, policies);
 }

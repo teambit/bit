@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('component config', function() {
+describe('component config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -50,7 +50,7 @@ describe('component config', function() {
           expect(componentJson.componentId).to.deep.equal({
             // TODO: once we use the scope from default scope all over the place, this might be needed
             // scope: helper.scopes.local,
-            name: 'bar/foo'
+            name: 'bar/foo',
           });
         });
         it('expect to have the propagate false by default', () => {
@@ -137,7 +137,7 @@ describe('component config', function() {
       const defaultWsExtensions = {
         'my-scope/ext1': { key: 'val-ws-defaults' },
         'my-scope/ext2': { key: 'val-ws-defaults' },
-        'my-scope/ext5': { key: 'val-ws-defaults' }
+        'my-scope/ext5': { key: 'val-ws-defaults' },
       };
       helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
       helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
@@ -213,6 +213,6 @@ function getExtensionEntry(extensionId: string, config: any): any {
     extensionId,
     config,
     data: {},
-    artifacts: []
+    artifacts: [],
   };
 }

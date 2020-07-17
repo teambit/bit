@@ -16,8 +16,8 @@ export default class Untag implements LegacyCommand {
     [
       'f',
       'force',
-      'revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt'
-    ]
+      'revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -41,7 +41,7 @@ export default class Untag implements LegacyCommand {
 
   report(results: untagResult[]): string {
     const title = chalk.green(`${results.length} component(s) were untagged:\n`);
-    const components = results.map(result => {
+    const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
     return title + components.join('\n');

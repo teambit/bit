@@ -8,13 +8,13 @@ export class StencilTester implements Tester {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async test(context: TesterContext): Promise<TestResults> {
     const testing = await createTesting({
-      rootDir: this.workspace.path
+      rootDir: this.workspace.path,
     });
 
     testing.run({});
 
     return {
-      total: 50
+      total: 50,
     };
   }
 }

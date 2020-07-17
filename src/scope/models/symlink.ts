@@ -40,7 +40,7 @@ export default class Symlink extends BitObject {
     return {
       scope: this.scope,
       name: this.name,
-      realScope: this.realScope
+      realScope: this.realScope,
     };
   }
 

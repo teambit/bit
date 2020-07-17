@@ -28,7 +28,7 @@ export default async function remove(
     force,
     scopePath: path,
     componentsIds: bitIds.serialize(),
-    scopeName: scope.scopeJson.name
+    scopeName: scope.scopeJson.name,
   };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);

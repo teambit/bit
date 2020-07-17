@@ -42,7 +42,7 @@ export async function tagAction(args: {
     ignoreUnresolvedDependencies = false,
     ignoreNewestVersion,
     skipTests,
-    skipAutoTag
+    skipAutoTag,
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
@@ -116,7 +116,7 @@ export async function tagAllAction(args: {
     scope,
     includeImported,
     idWithWildcard,
-    skipAutoTag
+    skipAutoTag,
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);

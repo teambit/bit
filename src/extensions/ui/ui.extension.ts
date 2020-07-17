@@ -42,7 +42,7 @@ export class UIExtension {
 
   static runtimes = {
     ui: '',
-    cli: ''
+    cli: '',
   };
 
   private async selectPort() {
@@ -67,7 +67,7 @@ export class UIExtension {
     WorkspaceExt,
     GraphQLExtension,
     BundlerExtension,
-    WatcherExtension
+    WatcherExtension,
   ];
 
   static async provider([cli, envs, workspace, graphql, bundler, watcher]: UIDeps) {

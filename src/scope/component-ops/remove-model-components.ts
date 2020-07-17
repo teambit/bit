@@ -37,13 +37,13 @@ export default class RemoveModelComponents {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
-      const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
+      const removedComponents = await pMapSeries(foundComponents, (bitId) => this._removeSingle(bitId));
       if (this.currentLane) await this.scope.lanes.saveLane(this.currentLane);
       await this.scope.objects.persist();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const ids = new BitIds(...removedComponents.map(x => x.bitId));
+      const ids = new BitIds(...removedComponents.map((x) => x.bitId));
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
+      const removedDependencies = new BitIds(...R.flatten(removedComponents.map((x) => x.removedDependencies)));
       const removedFromLane = Boolean(this.currentLane);
       return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies, removedFromLane });
     }
@@ -91,13 +91,13 @@ export default class RemoveModelComponents {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
       const dependentsIds: BitId[] = dependentBits[dependencyId.toStringWithoutVersion()];
       const relevantDependents = R.reject(
-        dependent => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
+        (dependent) => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
         dependentsIds
       );
       let isNested = true;
       if (this.consumer) {
         const componentMapIgnoreVersion = this.consumer.bitMap.getComponentIfExist(dependencyId, {
-          ignoreVersion: true
+          ignoreVersion: true,
         });
         const componentMapExact = this.consumer.bitMap.getComponentIfExist(dependencyId);
         const componentMap = componentMapExact || componentMapIgnoreVersion;
@@ -117,7 +117,7 @@ export default class RemoveModelComponents {
       return null;
     });
     let removedDependencies = await Promise.all(removedComponents);
-    removedDependencies = removedDependencies.filter(x => !R.isNil(x));
+    removedDependencies = removedDependencies.filter((x) => !R.isNil(x));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromArray(removedDependencies);
   }
@@ -129,7 +129,7 @@ export default class RemoveModelComponents {
       return;
     }
     const symlink = componentList.filter(
-      component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
+      (component) => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
     await this.scope.sources.removeComponentById(id);
     if (!R.isEmpty(symlink)) this.scope.objects.removeObject(symlink[0].hash());

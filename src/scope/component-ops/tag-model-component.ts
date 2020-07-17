@@ -27,18 +27,18 @@ import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
-    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(id));
+    const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
-  componentsToTag.forEach(oneComponentToTag => {
-    oneComponentToTag.getAllDependencies().forEach(dependency => {
+  componentsToTag.forEach((oneComponentToTag) => {
+    oneComponentToTag.getAllDependencies().forEach((dependency) => {
       const newDepId = getNewDependencyVersion(dependency.id);
       if (newDepId) dependency.id = newDepId;
     });
     // TODO: in case there are core extensions they should be excluded here
-    oneComponentToTag.extensions.forEach(extension => {
+    oneComponentToTag.extensions.forEach((extension) => {
       if (extension.name === Extensions.dependencyResolver && extension.data && extension.data.dependencies) {
-        extension.data.dependencies.forEach(dep => {
+        extension.data.dependencies.forEach((dep) => {
           const newDepId = getNewDependencyVersion(dep.componentId);
           if (newDepId) dep.componentId = newDepId;
         });
@@ -57,7 +57,7 @@ this extension was not included in the tag command.`);
 }
 
 function setHashes(componentsToTag: Component[]): void {
-  componentsToTag.forEach(componentToTag => {
+  componentsToTag.forEach((componentToTag) => {
     componentToTag.version = sha1(v4());
   });
 }
@@ -69,7 +69,7 @@ async function setFutureVersions(
   exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
-    componentsToTag.map(async componentToTag => {
+    componentsToTag.map(async (componentToTag) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
@@ -134,8 +134,8 @@ function validateDirManipulation(components: Component[]): void {
     // $FlowFixMe componentMap is set here
     const componentMapFiles = component.componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
-    componentMapFiles.forEach(file => {
+    const componentFiles = component.pendingVersion.files.map((file) => file.relativePath);
+    componentMapFiles.forEach((file) => {
       const expectedFile = pathAfterDirManipulation(file);
       if (!componentFiles.includes(expectedFile)) {
         throw new ValidationError(
@@ -144,7 +144,7 @@ function validateDirManipulation(components: Component[]): void {
       }
     });
   };
-  components.forEach(component => validateComponent(component));
+  components.forEach((component) => validateComponent(component));
 }
 
 export default async function tagModelComponent({
@@ -160,7 +160,7 @@ export default async function tagModelComponent({
   verbose = false,
   skipAutoTag,
   resolveUnmerged,
-  isSnap = false
+  isSnap = false,
 }: {
   consumerComponents: Component[];
   scope: Scope;
@@ -180,13 +180,13 @@ export default async function tagModelComponent({
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
-  consumerComponents.forEach(consumerComponent => {
+  consumerComponents.forEach((consumerComponent) => {
     const componentIdString = consumerComponent.id.toString();
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
   const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
-  const componentsToTagIds = componentsToTag.map(c => c.id);
+  const componentsToTagIds = componentsToTag.map((c) => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
   const autoTagCandidates = skipAutoTag
     ? new BitIds()
@@ -196,13 +196,13 @@ export default async function tagModelComponent({
     : await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
+  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map((c) => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
-    const newestVersionsP = componentsToBuildAndTest.map(async component => {
+    const newestVersionsP = componentsToBuildAndTest.map(async (component) => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
@@ -213,14 +213,14 @@ export default async function tagModelComponent({
           return {
             componentId: component.id.toStringWithoutVersion(),
             currentVersion: component.version,
-            latestVersion: latest
+            latestVersion: latest,
           };
         }
       }
       return null;
     });
     const newestVersions = await Promise.all(newestVersionsP);
-    const newestVersionsWithoutEmpty = newestVersions.filter(newest => newest);
+    const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
     if (!RA.isNilOrEmpty(newestVersionsWithoutEmpty)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
@@ -233,7 +233,7 @@ export default async function tagModelComponent({
   const legacyComps: Component[] = [];
   const nonLegacyComps: Component[] = [];
 
-  componentsToBuildAndTest.forEach(c => {
+  componentsToBuildAndTest.forEach((c) => {
     // @todo: change this condition to `c.isLegacy` once harmony-beta is merged.
     c.extensions && c.extensions.length && !consumer.isLegacy ? nonLegacyComps.push(c) : legacyComps.push(c);
   });
@@ -241,8 +241,8 @@ export default async function tagModelComponent({
     await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
   }
   if (nonLegacyComps.length) {
-    const ids = componentsToBuildAndTest.map(c => c.id);
-    const results: any[] = await Promise.all(scope.onTag.map(func => func(ids)));
+    const ids = componentsToBuildAndTest.map((c) => c.id);
+    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
     results.map(updateComponentsByTagResult(componentsToBuildAndTest));
   }
 
@@ -253,7 +253,7 @@ export default async function tagModelComponent({
       components: componentsToBuildAndTest,
       consumer,
       verbose,
-      rejectOnFailure: !force
+      rejectOnFailure: !force,
     });
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -285,7 +285,7 @@ export default async function tagModelComponent({
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
-      testResult = testsResults.find(result => {
+      testResult = testsResults.find((result) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
@@ -306,14 +306,16 @@ export default async function tagModelComponent({
       message,
       lane,
       specsResults: testResult ? testResult.specs : undefined,
-      resolveUnmerged
+      resolveUnmerged,
     });
     return consumerComponent;
   };
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-  const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
+  const taggedComponents = await pMapSeries(componentsToTag, (consumerComponent) =>
+    persistComponent(consumerComponent)
+  );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
@@ -322,7 +324,7 @@ export default async function tagModelComponent({
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {
   if (consumer.isLegacy) return;
-  components.forEach(component => {
+  components.forEach((component) => {
     component.schema = CURRENT_SCHEMA;
   });
 }
@@ -379,7 +381,9 @@ function updateComponentsByTagResultsComponents(componentsToUpdate: Component[],
  */
 function updateComponentsByTagResultsComponent(componentsToUpdate: Component[]) {
   return (tagResultComponent: any) => {
-    const matchingComponent = componentsToUpdate.find(component => component.id.isEqual(tagResultComponent.id._legacy));
+    const matchingComponent = componentsToUpdate.find((component) =>
+      component.id.isEqual(tagResultComponent.id._legacy)
+    );
     if (matchingComponent) {
       matchingComponent.extensions = tagResultComponent.config.extensions;
     }

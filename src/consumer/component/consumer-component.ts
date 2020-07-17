@@ -36,7 +36,7 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   BIT_WORKSPACE_TMP_DIRNAME,
-  BASE_WEB_DOMAIN
+  BASE_WEB_DOMAIN,
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { Dependency, Dependencies } from './dependencies';
@@ -194,7 +194,7 @@ export default class Component {
     return new BitId({
       scope: this.scope,
       name: this.name,
-      version: this.version
+      version: this.version,
     });
   }
 
@@ -235,7 +235,7 @@ export default class Component {
     customResolvedPaths,
     scopesList,
     extensions,
-    extensionsAddedConfig
+    extensionsAddedConfig,
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -278,7 +278,7 @@ export default class Component {
 
   validateComponent() {
     const nonEmptyFields = ['name', 'mainFile'];
-    nonEmptyFields.forEach(field => {
+    nonEmptyFields.forEach((field) => {
       if (!this[field]) {
         throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
@@ -295,7 +295,7 @@ export default class Component {
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
-    newInstance.files = this.files.map(file => file.clone());
+    newInstance.files = this.files.map((file) => file.clone());
     newInstance.dists = this.dists.clone();
     return newInstance;
   }
@@ -374,7 +374,7 @@ export default class Component {
   }
 
   get extensionDependencies() {
-    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+    return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
   }
 
   getAllDependencies(): Dependency[] {
@@ -399,7 +399,7 @@ export default class Component {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
-      extensionDependencies: this.extensions.extensionsBitIds
+      extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
 
@@ -432,7 +432,7 @@ export default class Component {
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -444,7 +444,7 @@ export default class Component {
     this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    this.customResolvedPaths.forEach(customPath => {
+    this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
         stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
       );
@@ -467,7 +467,7 @@ export default class Component {
   }
 
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
-    const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
+    const manipulateDirItem = manipulateDirData.find((m) => m.id.isEqual(this.id));
     if (!manipulateDirItem || !manipulateDirItem.wrapDir) return;
     this.wrapDir = manipulateDirItem.wrapDir;
 
@@ -475,7 +475,7 @@ export default class Component {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return path.join(this.wrapDir, pathStr);
     };
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = pathWithWrapDir(file.relative);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -485,7 +485,7 @@ export default class Component {
     this.mainFile = pathWithWrapDir(this.mainFile);
     const allDependencies = new Dependencies(this.getAllDependencies());
     allDependencies.addWrapDir(manipulateDirData, this.wrapDir);
-    this.customResolvedPaths.forEach(customPath => {
+    this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
     });
   }
@@ -496,7 +496,7 @@ export default class Component {
   }
 
   cloneFilesWithSharedDir(): SourceFile[] {
-    return this.files.map(file => {
+    return this.files.map((file) => {
       const newFile = file.clone();
       const newRelative = this.addSharedDir(file.relative);
       newFile.updatePaths({ newRelative });
@@ -512,7 +512,7 @@ export default class Component {
     verbose,
     dontPrintEnvMsg,
     directory,
-    keep
+    keep,
   }: {
     scope: Scope;
     save?: boolean;
@@ -532,7 +532,7 @@ export default class Component {
       directory,
       verbose,
       dontPrintEnvMsg,
-      keep
+      keep,
     });
   }
 
@@ -545,7 +545,7 @@ export default class Component {
     dontPrintEnvMsg,
     isolated,
     directory,
-    keep
+    keep,
   }: {
     scope: Scope;
     rejectOnFailure?: boolean;
@@ -557,7 +557,7 @@ export default class Component {
     directory?: string;
     keep?: boolean;
   }): Promise<SpecsResults | undefined> {
-    const testFiles = this.files.filter(file => file.test);
+    const testFiles = this.files.filter((file) => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
     if (!this.tester || !testFiles || R.isEmpty(testFiles)) return undefined;
 
@@ -610,7 +610,7 @@ export default class Component {
         contextPaths = this.tester.context;
       } else if (consumer && consumer.bitMap) {
         contextPaths = {
-          workspaceDir: consumer.bitMap.projectRoot
+          workspaceDir: consumer.bitMap.projectRoot,
         };
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -624,7 +624,7 @@ export default class Component {
           targetDir,
           shouldBuildDependencies,
           installNpmPackages,
-          keepExistingCapsule
+          keepExistingCapsule,
         }: {
           targetDir?: string;
           shouldBuildDependencies?: boolean;
@@ -637,7 +637,7 @@ export default class Component {
             shouldBuildDependencies,
             writeDists: false,
             installNpmPackages,
-            keepExistingCapsule
+            keepExistingCapsule,
           });
           return new ExtensionIsolateResult(isolator, componentWithDependencies);
         };
@@ -647,7 +647,7 @@ export default class Component {
 
           const context: Record<string, any> = {
             componentObject: component.toObject(),
-            isolate: isolateFunc
+            isolate: isolateFunc,
           };
 
           contextPaths && Object.assign(context, contextPaths);
@@ -657,7 +657,7 @@ export default class Component {
             rawConfig: tester.rawConfig,
             dynamicConfig: tester.dynamicConfig,
             api: tester.api,
-            context
+            context,
           };
 
           specsResults = await tester.action(actionParams);
@@ -671,7 +671,7 @@ export default class Component {
         } else {
           logger.debug('running tests using old format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using old format');
-          const oneFileSpecResult = async testFile => {
+          const oneFileSpecResult = async (testFile) => {
             const testFilePath = testFile.path;
             try {
               const componentRootDir = component.componentMap?.getTrackDir();
@@ -695,7 +695,7 @@ export default class Component {
                  */
                 componentRootDir: componentRootDir && cwd ? path.join(cwd, componentRootDir) : null,
                 specFileRelativePath: testFileRelative,
-                isolate: isolateFunc
+                isolate: isolateFunc,
               };
 
               // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -706,14 +706,14 @@ export default class Component {
               const failures = [
                 {
                   title: err.message,
-                  err
-                }
+                  err,
+                },
               ];
               const results = {
                 specPath: testFile.relative,
                 pass: false,
                 tests: [],
-                failures
+                failures,
               };
               return results;
             }
@@ -731,9 +731,9 @@ export default class Component {
         throw err;
       }
 
-      this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
+      this.specsResults = specsResults.map((specRes) => SpecsResults.createFromRaw(specRes));
 
-      if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
+      if (rejectOnFailure && !this.specsResults.every((element) => element.pass)) {
         // some or all the tests were failed.
         loader.stop();
         if (verbose) {
@@ -747,7 +747,7 @@ export default class Component {
       if (save) {
         await scope.sources.modifySpecsResults({
           source: this,
-          specsResults: this.specsResults
+          specsResults: this.specsResults,
         });
       }
 
@@ -769,7 +769,7 @@ export default class Component {
         writeDists: true,
         installNpmPackages: true,
         installPeerDependencies: true,
-        writePackageJson: true
+        writePackageJson: true,
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
 
@@ -783,7 +783,7 @@ export default class Component {
 
       await component.build({ scope, verbose });
       if (!component.dists.isEmpty()) {
-        const specDistWrite = component.dists.get().map(file => file.write());
+        const specDistWrite = component.dists.get().map((file) => file.write());
         await Promise.all(specDistWrite);
       }
 
@@ -821,7 +821,7 @@ export default class Component {
       tester: this.tester ? this.tester.toObject() : null,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
-      extensions: this.extensions.map(ext => {
+      extensions: this.extensions.map((ext) => {
         const res = Object.assign({}, ext);
         if (res.extensionId) {
           // @ts-ignore
@@ -840,10 +840,10 @@ export default class Component {
       files: this.files,
       docs: this.docs,
       dists: this.dists,
-      specsResults: this.specsResults ? this.specsResults.map(res => res.serialize()) : null,
+      specsResults: this.specsResults ? this.specsResults.map((res) => res.serialize()) : null,
       license: this.license ? this.license.serialize() : null,
       log: this.log,
-      deprecated: this.deprecated
+      deprecated: this.deprecated,
     };
   }
 
@@ -853,12 +853,12 @@ export default class Component {
 
   copyFilesIntoDists() {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
+    const dists = this.files.map((file) => new Dist({ base: file.base, path: file.path, contents: file.contents }));
     this.setDists(dists);
   }
 
   setOriginallySharedDir(manipulateDirData: ManipulateDirItem[]): void {
-    const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
+    const manipulateDirItem = manipulateDirData.find((m) => m.id.isEqual(this.id));
     if (manipulateDirItem) {
       this.originallySharedDir = manipulateDirItem.originallySharedDir;
     }
@@ -872,9 +872,9 @@ export default class Component {
       ComponentOutOfSync,
       ComponentsPendingImport,
       IncorrectRootDir,
-      ExtensionFileNotFound
+      ExtensionFileNotFound,
     ];
-    return invalidComponentErrors.some(errorType => err instanceof errorType);
+    return invalidComponentErrors.some((errorType) => err instanceof errorType);
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
@@ -885,7 +885,7 @@ export default class Component {
     };
     const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
       return Promise.all(
-        ids.map(dependencyId => {
+        ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
             return consumer.loadComponent(dependencyId);
           }
@@ -903,7 +903,7 @@ export default class Component {
       component: this,
       dependencies,
       devDependencies,
-      extensionDependencies
+      extensionDependencies,
     });
   }
 
@@ -973,7 +973,7 @@ export default class Component {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      deprecated
+      deprecated,
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1004,7 +1004,7 @@ export default class Component {
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : undefined,
       license: license ? License.deserialize(license) : undefined,
       overrides: new ComponentOverrides(overrides),
-      deprecated: deprecated || false
+      deprecated: deprecated || false,
     });
   }
 
@@ -1027,7 +1027,7 @@ export default class Component {
     bitDir,
     componentMap,
     id,
-    consumer
+    consumer,
   }: {
     bitDir: PathOsBasedAbsolute;
     componentMap: ComponentMap;
@@ -1051,11 +1051,11 @@ export default class Component {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
-      componentMap.files.forEach(file => {
+      componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, bitDir, consumerPath, {
-            test: file.test
+            test: file.test,
           });
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           sourceFiles.push(sourceFile);
@@ -1068,7 +1068,7 @@ export default class Component {
       });
       if (filesToDelete.length) {
         if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
-        filesToDelete.forEach(fileToDelete => {
+        filesToDelete.forEach((fileToDelete) => {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (fileToDelete.relativePath === componentMap.mainFile) {
             throw new MainFileRemoved(componentMap.mainFile, id.toString());
@@ -1092,7 +1092,7 @@ export default class Component {
       componentId: id,
       componentDir,
       workspaceDir: consumerPath,
-      workspaceConfig
+      workspaceConfig,
     });
     logger.silly(`consumer-component.loadFromFileSystem, finish loading config ${id.toString()}`);
     // by default, imported components are not written with bit.json file.
@@ -1106,7 +1106,7 @@ export default class Component {
 
     const envsContext = {
       componentDir: bitDir,
-      workspaceDir: consumerPath
+      workspaceDir: consumerPath,
     };
 
     // TODO: change this once we want to support change export by changing the default scope
@@ -1131,7 +1131,7 @@ export default class Component {
       overrides,
       workspaceConfig,
       componentConfig,
-      context: envsContext
+      context: envsContext,
     };
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1204,12 +1204,12 @@ export default class Component {
       packageJsonFile,
       packageJsonChangedProps,
       extensions,
-      extensionsAddedConfig
+      extensionsAddedConfig,
     });
   }
 }
 
 function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet[]>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
+  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }

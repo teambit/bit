@@ -83,9 +83,7 @@ describe('Version', () => {
         dependencies = idParsed.dependencies;
       });
       it('dependencies should be an array', () => {
-        expect(dependencies)
-          .to.be.an('array')
-          .and.have.lengthOf(1);
+        expect(dependencies).to.be.an('array').and.have.lengthOf(1);
       });
       it('dependencies should have properties id and relativePaths only', () => {
         expect(dependencies[0]).to.haveOwnProperty('id');
@@ -94,9 +92,7 @@ describe('Version', () => {
         expect(Object.keys(dependencies[0])).to.have.lengthOf(2);
       });
       it('relativePaths should be an array', () => {
-        expect(dependencies[0].relativePaths)
-          .to.be.an('array')
-          .and.have.lengthOf(1);
+        expect(dependencies[0].relativePaths).to.be.an('array').and.have.lengthOf(1);
       });
       it('relativePaths should have properties sourceRelativePath and destinationRelativePath only', () => {
         expect(dependencies[0].relativePaths[0]).to.haveOwnProperty('sourceRelativePath');

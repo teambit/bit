@@ -6,7 +6,7 @@ import Diagnosis from './diagnosis';
  */
 let instance = null;
 
-const _checkName = name => (diagnosis: Diagnosis) => {
+const _checkName = (name) => (diagnosis: Diagnosis) => {
   return diagnosis.name === name;
 };
 

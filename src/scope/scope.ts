@@ -17,7 +17,7 @@ import {
   NODE_PATH_SEPARATOR,
   CURRENT_UPSTREAM,
   DEFAULT_LANE,
-  LATEST
+  LATEST,
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -204,7 +204,7 @@ export default class Scope {
       if (verbose) console.log(upToDateMsg); // eslint-disable-line
       logger.silly(`scope.migrate, ${upToDateMsg}`);
       return {
-        run: false
+        run: false,
       };
     }
     loader.start(BEFORE_MIGRATION);
@@ -228,22 +228,22 @@ export default class Scope {
     loader.stop();
     return {
       run: true,
-      success: true
+      success: true,
     };
   }
 
   describe(): ScopeDescriptor {
     return {
-      name: this.name
+      name: this.name,
     };
   }
 
   toConsumerComponents(components: ModelComponent[]): Promise<Component[]> {
     return Promise.all(
       components
-        .filter(comp => !(comp instanceof Symlink))
+        .filter((comp) => !(comp instanceof Symlink))
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        .map(c => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
+        .map((c) => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
   }
 
@@ -261,13 +261,13 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
-    await Promise.all(components.map(component => component.populateLocalAndRemoteHeads(this.objects, laneId, lane)));
+    await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, laneId, lane)));
     return components;
   }
 
   async listLocal(): Promise<ModelComponent[]> {
     const listResults = await this.list();
-    return listResults.filter(result => !result.scope || result.scope === this.name);
+    return listResults.filter((result) => !result.scope || result.scope === this.name);
   }
 
   async listLanes(): Promise<Lane[]> {
@@ -279,9 +279,9 @@ export default class Scope {
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
-    componentIds = componentIds.map(componentId => componentId.changeVersion(undefined));
+    componentIds = componentIds.map((componentId) => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
-    const ids = components.map(component => {
+    const ids = components.map((component) => {
       const getVersion = () => {
         if (component.component) {
           return component.component.latest();
@@ -346,7 +346,7 @@ export default class Scope {
     const isNodePathNeeded =
       nodePathDirDist &&
       components.some(
-        component =>
+        (component) =>
           (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
           component.componentMap &&
           component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
@@ -374,7 +374,7 @@ export default class Scope {
     consumer,
     verbose,
     dontPrintEnvMsg = false,
-    rejectOnFailure = false
+    rejectOnFailure = false,
   }: {
     components: Component[];
     consumer: Consumer;
@@ -397,10 +397,10 @@ export default class Scope {
         rejectOnFailure,
         consumer,
         verbose,
-        dontPrintEnvMsg
+        dontPrintEnvMsg,
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pass = specs ? specs.every(spec => spec.pass) : true;
+      const pass = specs ? specs.every((spec) => spec.pass) : true;
       const missingDistSpecs = specs && R.isEmpty(specs);
       return { componentId: component.id, missingDistSpecs, specs, pass };
     };
@@ -433,19 +433,19 @@ export default class Scope {
       `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
     );
     await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
-      componentObjects.toObjectsAsync().then(objects => this.mergeModelComponent(objects))
+      componentObjects.toObjectsAsync().then((objects) => this.mergeModelComponent(objects))
     );
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
-      compsAndLanesObjects.laneObjects.map(async laneBuffers => {
+      compsAndLanesObjects.laneObjects.map(async (laneBuffers) => {
         const laneObjects = await laneBuffers.toObjectsAsync();
         const lane = laneObjects.lane;
         if (!lane.scope) {
           throw new Error(`writeManyComponentsToModel scope is missing from a lane ${lane.name}`);
         }
         await this.objects.remoteLanes.syncWithLaneObject(lane.scope, lane);
-        nonLaneIds = nonLaneIds.filter(id => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map(c => c.id));
+        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
+        nonLaneIds.push(...lane.components.map((c) => c.id));
       })
     );
     if (persist) await this.objects.persist();
@@ -513,7 +513,7 @@ export default class Scope {
       allComponents.map(async (component: ModelComponent) => {
         const allRefs = await getAllVersionHashes(component, this.objects, false);
         const loadedVersions = await Promise.all(
-          allRefs.map(async ref => {
+          allRefs.map(async (ref) => {
             const componentVersion = await component.loadVersion(ref.toString(), this.objects);
             if (!componentVersion) return null;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -521,15 +521,15 @@ export default class Scope {
             return componentVersion;
           })
         );
-        return loadedVersions.filter(x => x);
+        return loadedVersions.filter((x) => x);
       })
     );
     const allScopeComponents = R.flatten(allComponentVersions);
     const dependentBits = {};
-    bitIds.forEach(bitId => {
+    bitIds.forEach((bitId) => {
       const dependencies = [];
-      allScopeComponents.forEach(scopeComponents => {
-        scopeComponents.flattenedDependencies.forEach(flattenedDependency => {
+      allScopeComponents.forEach((scopeComponents) => {
+        scopeComponents.flattenedDependencies.forEach((flattenedDependency) => {
           if (flattenedDependency.isEqualWithoutVersion(bitId)) {
             if (returnResultsWithVersion) {
               // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -557,7 +557,7 @@ export default class Scope {
   ): Promise<{ missingComponents: BitIds; foundComponents: BitIds }> {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
-    const resultP = bitIds.map(async id => {
+    const resultP = bitIds.map(async (id) => {
       const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
       else foundComponents.push(id);
@@ -572,7 +572,7 @@ export default class Scope {
    */
   async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
-    const components = componentsObjects.map(componentObject => {
+    const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
       if (!component) return null;
       const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
@@ -585,13 +585,13 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   loadComponentLogs(id: BitId): Promise<ComponentLogs> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.getModelComponent(id).then(componentModel => {
+    return this.getModelComponent(id).then((componentModel) => {
       return componentModel.collectLogs(this.objects);
     });
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {
-    return this.getModelComponentIfExist(id).then(componentModel => {
+    return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
@@ -623,7 +623,7 @@ export default class Scope {
     if (!id.scope) {
       // search for the complete ID
       const components: ModelComponent[] = await this.list();
-      const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
+      const foundComponent = components.filter((c) => c.toBitId().isEqualWithoutScopeAndVersion(id));
       if (foundComponent.length) return first(foundComponent);
     }
     throw new ComponentNotFound(id.toString());
@@ -642,7 +642,7 @@ export default class Scope {
   }
 
   async getManyConsumerComponents(ids: BitId[]): Promise<Component[]> {
-    return Promise.all(ids.map(id => this.getConsumerComponent(id)));
+    return Promise.all(ids.map((id) => this.getConsumerComponent(id)));
   }
 
   /**
@@ -668,7 +668,7 @@ export default class Scope {
 
   async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
+    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
       const getVersionStr = (): string => {
@@ -692,12 +692,12 @@ export default class Scope {
 
   async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
+    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
       const localVersions = component.getLocalVersions();
       return Promise.all(
-        localVersions.map(async versionStr => {
+        localVersions.map(async (versionStr) => {
           const version: Version = await component.loadVersion(versionStr, this.objects);
           return { component, version, versionStr };
         })
@@ -716,7 +716,7 @@ export default class Scope {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope: id.scope,
       name: id.name,
-      realScope: remote
+      realScope: remote,
     });
     return this.objects.add(symlink);
   }
@@ -739,12 +739,12 @@ export default class Scope {
       const component: Version = await componentVersion.getVersion(this.objects);
       const found = component
         .getAllDependencies()
-        .find(dependency => potentialDependencies.searchWithoutVersion(dependency.id));
+        .find((dependency) => potentialDependencies.searchWithoutVersion(dependency.id));
       return found ? componentVersion : null;
     });
     const dependents = await Promise.all(dependentsP);
     const dependentsWithoutNull = removeNils(dependents);
-    return BitIds.fromArray(dependentsWithoutNull.map(c => c.id));
+    return BitIds.fromArray(dependentsWithoutNull.map((c) => c.id));
   }
 
   async runComponentSpecs({
@@ -754,7 +754,7 @@ export default class Scope {
     verbose,
     isolated,
     directory,
-    keep
+    keep,
   }: {
     bitId: BitId;
     consumer?: Consumer;
@@ -776,7 +776,7 @@ export default class Scope {
       verbose,
       isolated,
       directory,
-      keep
+      keep,
     });
   }
 
@@ -787,7 +787,7 @@ export default class Scope {
     verbose,
     directory,
     keep,
-    noCache
+    noCache,
   }: {
     bitId: BitId;
     save?: boolean;
@@ -808,7 +808,7 @@ export default class Scope {
       verbose,
       directory,
       keep,
-      noCache
+      noCache,
     });
   }
 

@@ -19,12 +19,12 @@ export default class ValidateYarnExec extends Diagnosis {
     const yarnVersion = await npmClient.getYarnVersion();
     if (yarnVersion) {
       return {
-        valid: true
+        valid: true,
       };
     }
     return {
       valid: false,
-      data: {}
+      data: {},
     };
   }
 }

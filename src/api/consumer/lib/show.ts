@@ -11,7 +11,7 @@ export default (async function show({
   compare,
   detailed,
   dependents,
-  dependencies
+  dependencies,
 }: {
   id: string;
   json: boolean;
@@ -24,9 +24,9 @@ export default (async function show({
   dependencies: boolean;
 }) {
   if (versions) {
-    return getComponent(versions).then(components => ({
+    return getComponent(versions).then((components) => ({
       components,
-      versions
+      versions,
     }));
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -37,7 +37,7 @@ export default (async function show({
     dependenciesInfo,
     json,
     outdated,
-    detailed
+    detailed,
   }));
 
   function getComponent(allVersions: boolean | null | undefined) {
@@ -46,7 +46,7 @@ export default (async function show({
       allVersions,
       showRemoteVersions: outdated,
       showDependents: dependents,
-      showDependencies: dependencies
+      showDependencies: dependencies,
     };
     if (remote) {
       loader.start(BEFORE_SHOW_REMOTE);

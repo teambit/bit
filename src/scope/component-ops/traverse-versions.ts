@@ -25,7 +25,7 @@ export async function getAllVersionsInfo({
   repo,
   throws = true,
   versionObjects,
-  startFrom
+  startFrom,
 }: {
   modelComponent: ModelComponent;
   repo?: Repository;
@@ -35,7 +35,7 @@ export async function getAllVersionsInfo({
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
-    if (versionObjects) return versionObjects.find(v => v.hash().isEqual(ref));
+    if (versionObjects) return versionObjects.find((v) => v.hash().isEqual(ref));
     if (repo) return (await ref.load(repo)) as Version;
     throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
   };
@@ -57,7 +57,7 @@ export async function getAllVersionsInfo({
 
     const addParentsRecursively = async (version: Version) => {
       await Promise.all(
-        version.parents.map(async parent => {
+        version.parents.map(async (parent) => {
           const parentVersion = await getVersionObj(parent);
           const versionInfo: VersionInfo = { ref: parent, tag: modelComponent.getTagOfRefIfExists(parent) };
           if (parentVersion) {
@@ -80,8 +80,8 @@ export async function getAllVersionsInfo({
   // even if they do have head (as a result of tag/snap after v15), they
   // have old versions without parents and new versions with parents
   await Promise.all(
-    Object.keys(modelComponent.versions).map(async version => {
-      if (!results.find(r => r.tag === version)) {
+    Object.keys(modelComponent.versions).map(async (version) => {
+      if (!results.find((r) => r.tag === version)) {
         const ref = modelComponent.versions[version];
         const versionObj = await getVersionObj(ref);
         const versionInfo: VersionInfo = { ref, tag: version };
@@ -104,7 +104,7 @@ export async function getAllVersionsObjects(
   throws = true
 ): Promise<Version[]> {
   const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws });
-  return allVersionsInfo.map(a => a.version).filter(a => a) as Version[];
+  return allVersionsInfo.map((a) => a.version).filter((a) => a) as Version[];
 }
 
 export async function getAllVersionHashesByVersionsObjects(
@@ -113,7 +113,7 @@ export async function getAllVersionHashesByVersionsObjects(
   throws = true
 ): Promise<Ref[]> {
   const allVersionsInfo = await getAllVersionsInfo({ modelComponent, throws, versionObjects });
-  return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
+  return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
 
 export async function getAllVersionHashes(
@@ -123,7 +123,7 @@ export async function getAllVersionHashes(
   startFrom?: Ref | null
 ): Promise<Ref[]> {
   const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws, startFrom });
-  return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
+  return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
 
 export async function hasVersionByRef(
@@ -133,5 +133,5 @@ export async function hasVersionByRef(
   startFrom?: Ref | null
 ): Promise<boolean> {
   const allVersionHashes = await getAllVersionHashes(modelComponent, repo, true, startFrom);
-  return allVersionHashes.some(hash => hash.isEqual(ref));
+  return allVersionHashes.some((hash) => hash.isEqual(ref));
 }

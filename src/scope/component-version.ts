@@ -30,18 +30,18 @@ export default class ComponentVersion {
   }
 
   flattenedDependencies(repository: Repository): Promise<BitIds> {
-    return this.getVersion(repository).then(version => version.flattenedDependencies);
+    return this.getVersion(repository).then((version) => version.flattenedDependencies);
   }
 
   flattenedDevDependencies(repository: Repository): Promise<BitIds> {
-    return this.getVersion(repository).then(version => version.flattenedDevDependencies);
+    return this.getVersion(repository).then((version) => version.flattenedDevDependencies);
   }
 
   toId(): BitId {
     return new BitId({
       scope: this.component.scope,
       name: this.component.name,
-      version: this.version
+      version: this.version,
     });
   }
 
@@ -75,7 +75,7 @@ Please upgrade your bit client to version >= v14.1.0`);
         // version.collectRaw(repo),
         collectParents ? version.collectRaw(repo) : version.collectRawWithoutParents(repo),
         version.asRaw(repo),
-        repo.getScopeMetaObject()
+        repo.getScopeMetaObject(),
       ]);
       return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
     } catch (err) {

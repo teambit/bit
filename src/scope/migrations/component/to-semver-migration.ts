@@ -26,7 +26,7 @@ function changeVersionToSemVer(componentModel: Record<string, any>): Record<stri
 
 const changeVersionToSemVerDeclartaion = {
   name: 'change version to SemVer',
-  migrate: changeVersionToSemVer
+  migrate: changeVersionToSemVer,
 };
 
 export default changeVersionToSemVerDeclartaion;

@@ -14,7 +14,7 @@ export async function mergeLanes({
   remoteName,
   noSnap,
   snapMessage,
-  existingOnWorkspaceOnly
+  existingOnWorkspaceOnly,
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -48,7 +48,7 @@ export async function mergeLanes({
   } else {
     otherLane = await consumer.scope.loadLane(laneId);
     if (!otherLane) throw new GeneralError(`unable to switch to "${laneName}", the lane was not found`);
-    bitIds = otherLane.components.map(c => c.id.changeVersion(c.head.toString()));
+    bitIds = otherLane.components.map((c) => c.id.changeVersion(c.head.toString()));
     otherLaneName = laneId.name;
   }
   const allComponentsStatus = await getAllComponentsStatus();
@@ -61,14 +61,14 @@ export async function mergeLanes({
     laneId,
     localLane,
     noSnap,
-    snapMessage
+    snapMessage,
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map(bitId => getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
+        bitIds.map((bitId) => getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
       );
       await tmp.clear();
       return componentsStatus;

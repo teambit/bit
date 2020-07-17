@@ -22,8 +22,8 @@ export function compositionsSchema(compositions: CompositionsExtension): Schema 
       Component: {
         compositions: (component: Component) => {
           return compositions.getCompositions(component);
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

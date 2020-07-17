@@ -20,7 +20,7 @@ found hash mismatch of hash-mismatch-case/foo, version 0.0.1.
  * now, we expect the import to work with no errors and to save the version object into the
  * original hash path (6b/d019fe5dbf11a5adf2f68d0099457ad077fa8c).
  */
-describe('hash mismatch', function() {
+describe('hash mismatch', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {

@@ -27,21 +27,21 @@ export default class Export implements LegacyCommand {
     [
       'd',
       'include-dependencies',
-      "EXPERIMENTAL. include the component's dependencies as part of the export to the remote scope"
+      "EXPERIMENTAL. include the component's dependencies as part of the export to the remote scope",
     ],
     [
       's',
       'set-current-scope',
-      "EXPERIMENTAL. ensure the component's remote scope is set according to the target location"
+      "EXPERIMENTAL. ensure the component's remote scope is set according to the target location",
     ],
     [
       'r',
       'rewire',
-      'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope'
+      'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
     ['l', 'lanes', 'EXPERIMENTAL. export lanes'],
-    ['', 'all-versions', 'export not only staged versions but all of them']
+    ['', 'all-versions', 'export not only staged versions but all of them'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -57,7 +57,7 @@ export default class Export implements LegacyCommand {
       allVersions = false,
       force = false,
       rewire = false,
-      lanes = false
+      lanes = false,
     }: any
   ): Promise<any> {
     if (lanes) throwForUsingLaneIfDisabled();
@@ -80,11 +80,11 @@ export default class Export implements LegacyCommand {
       allVersions: allVersions || all,
       codemod: rewire,
       force,
-      lanes
-    }).then(results => ({
+      lanes,
+    }).then((results) => ({
       ...results,
       remote,
-      includeDependencies
+      includeDependencies,
     }));
   }
 
@@ -96,7 +96,7 @@ export default class Export implements LegacyCommand {
     ejectResults,
     publishResults,
     remote,
-    includeDependencies
+    includeDependencies,
   }: {
     componentsIds: BitId[];
     nonExistOnBitMap: BitId[];
@@ -120,14 +120,14 @@ export default class Export implements LegacyCommand {
     const nonExistOnBitMapOutput = () => {
       // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
       if (R.isEmpty(nonExistOnBitMap) || includeDependencies) return '';
-      const ids = nonExistOnBitMap.map(id => id.toString()).join(', ');
+      const ids = nonExistOnBitMap.map((id) => id.toString()).join(', ');
       return chalk.yellow(
         `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
       );
     };
     const missingScopeOutput = () => {
       if (R.isEmpty(missingScope)) return '';
-      const ids = missingScope.map(id => id.toString()).join(', ');
+      const ids = missingScope.map((id) => id.toString()).join(', ');
       return chalk.yellow(
         `the following component(s) were not exported: ${chalk.bold(
           ids
@@ -143,19 +143,19 @@ export default class Export implements LegacyCommand {
       if (!exportedLanes.length) return '';
       return chalk.green(
         `exported the following ${exportedLanes.length} lane(s):
-${exportedLanes.map(l => `${chalk.bold(l.name)} (${l.components.length} components)`).join('\n')}\n\n`
+${exportedLanes.map((l) => `${chalk.bold(l.name)} (${l.components.length} components)`).join('\n')}\n\n`
       );
     };
 
     const publishOutput = () => {
       if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
       const failedCompsStr = publishResults.failedComponents
-        .map(failed => {
+        .map((failed) => {
           return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
         })
         .join('\n\n');
       const successCompsStr = publishResults.publishedComponents
-        .map(success => {
+        .map((success) => {
           return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
         })
         .join('\n');

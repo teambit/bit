@@ -12,7 +12,7 @@ import {
   ComponentOutOfSync,
   MissingDependencies,
   NewerVersionFound,
-  LoginFailed
+  LoginFailed,
 } from '../consumer/exceptions';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
@@ -23,7 +23,7 @@ import {
   SSHInvalidResponse,
   ProtocolNotSupported,
   RemoteScopeNotFound,
-  AuthenticationFailed
+  AuthenticationFailed,
 } from '../scope/network/exceptions';
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
@@ -43,7 +43,7 @@ import {
   ParentNotFound,
   CyclicDependencies,
   HashNotFound,
-  HeadNotFound
+  HeadNotFound,
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
@@ -73,7 +73,7 @@ import {
   MainFileIsDir,
   PathOutsideConsumer,
   MissingMainFileMultipleComponents,
-  ExcludedMainFile
+  ExcludedMainFile,
 } from '../consumer/component-ops/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
@@ -121,7 +121,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () =>
       chalk.red(
         'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
-      )
+      ),
   ],
   [
     AddTestsWithoutId,
@@ -130,12 +130,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         `please specify a component ID to add test files to an existing component. \n${chalk.bold(
           'example: bit add --tests [test_file_path] --id [component_id]'
         )}`
-      )
+      ),
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
-  [GeneralError, err => `${err.msg}`],
+  [GeneralError, (err) => `${err.msg}`],
 
-  [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
+  [VersionAlreadyExists, (err) => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   [LoginFailed, () => 'error: there was a problem with web authentication'],
 
@@ -143,102 +143,103 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   PluginNotFound,
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
-  [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [FileSourceNotFound, (err) => `file or directory "${err.path}" was not found`],
   [
     OutsideRootDir,
-    err => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`
+    (err) => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`,
   ],
   [
     AddingIndividualFiles,
-    err => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`
+    (err) => `error: adding individual files is blocked ("${err.file}"), and only directories can be added`,
   ],
-  [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
+  [ExtensionFileNotFound, (err) => `file "${err.path}" was not found`],
   [
     ExtensionNameNotValid,
-    err =>
-      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
+    (err) =>
+      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`,
   ],
   [
     ProtocolNotSupported,
-    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
+    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`',
   ],
-  [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
+  [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [
     InvalidBitId,
-    err => `error: component ID "${chalk.bold(err.id)}" is invalid, please use the following format: [scope]/<name>`
+    (err) => `error: component ID "${chalk.bold(err.id)}" is invalid, please use the following format: [scope]/<name>`,
   ],
   [
     EjectBoundToWorkspace,
-    () => 'error: could not eject config for authored component which are bound to the workspace configuration'
+    () => 'error: could not eject config for authored component which are bound to the workspace configuration',
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
     ComponentsPendingMerge,
-    err => {
+    (err) => {
       const componentsStr = err.divergeData
         .map(
-          d =>
+          (d) =>
             `${chalk.bold(d.id)} has ${chalk.bold(d.snapsLocal)} snaps locally only and ${chalk.bold(
               d.snapsRemote
             )} snaps remotely only`
         )
         .join('\n');
       return `the local and remote history of the following component(s) have diverged\n${componentsStr}\nPlease use --merge to merge them`;
-    }
+    },
   ],
   [
     EjectNoDir,
-    err => `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`
+    (err) =>
+      `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`,
   ],
   [
     ComponentNotFound,
-    err => {
+    (err) => {
       const msg = err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
             err.dependentId
           )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
       return msg;
-    }
+    },
   ],
   [
     CorruptedComponent,
-    err =>
+    (err) =>
       `error: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
         err.version
-      } is missing.\n${reportIssueToGithubMsg}`
+      } is missing.\n${reportIssueToGithubMsg}`,
   ],
   [
     DependencyNotFound,
-    err =>
+    (err) =>
       `error: dependency "${chalk.bold(
         err.id
-      )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`
+      )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`,
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
-  [ValidationError, err => `${err.message}\n${reportIssueToGithubMsg}`],
-  [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
+  [ValidationError, (err) => `${err.message}\n${reportIssueToGithubMsg}`],
+  [ComponentNotFoundInPath, (err) => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
     PermissionDenied,
-    err =>
-      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#authentication-issues`
+    (err) =>
+      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#authentication-issues`,
   ],
-  [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
-  [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
+  [RemoteNotFound, (err) => `error: remote "${chalk.bold(err.name)}" was not found`],
+  [NetworkError, (err) => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
   [
     HashMismatch,
-    err => `found hash mismatch of ${chalk.bold(err.id)}, version ${chalk.bold(err.version)}.
+    (err) => `found hash mismatch of ${chalk.bold(err.id)}, version ${chalk.bold(err.version)}.
   originalHash: ${chalk.bold(err.originalHash)}.
   currentHash: ${chalk.bold(err.currentHash)}
-  this usually happens when a component is old and the migration script was not running or interrupted`
+  this usually happens when a component is old and the migration script was not running or interrupted`,
   ],
-  [HashNotFound, err => `hash ${chalk.bold(err.hash)} not found`],
-  [HeadNotFound, err => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
+  [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
+  [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
     MergeConflict,
-    err =>
+    (err) =>
       `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
         ', '
       )}
@@ -246,15 +247,15 @@ to resolve it and merge your local and remote changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
 2) bit import
 3) bit checkout ${err.versions.join(' ')} ${err.id}
-once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`
+once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`,
   ],
   [
     MergeConflictOnRemote,
-    err => {
+    (err) => {
       let output = '';
       if (err.idsAndVersions.length) {
         output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-          .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
+          .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
           .join(', ')} to the remote scope.
   to resolve this conflict and merge your remote and local changes, please do the following:
   1) bit untag [id] [version]
@@ -264,315 +265,321 @@ once your changes are merged with the new remote version, you can tag and export
       }
       if (err.idsNeedUpdate) {
         output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map(i => `${chalk.bold(i.id)} (lane: ${i.lane})`)
+          .map((i) => `${chalk.bold(i.id)} (lane: ${i.lane})`)
           .join(', ')} to the remote scope.
 to resolve this error, please re-import the above components`;
       }
       return output;
-    }
+    },
   ],
   [
     OutdatedIndexJson,
-    err => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
-the cache is deleted and will be rebuilt on the next command. please re-run the command.`
+    (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
+the cache is deleted and will be rebuilt on the next command. please re-run the command.`,
   ],
-  [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
+  [CyclicDependencies, (err) => `${err.msg.toString().toLocaleLowerCase()}`],
   [
     UnexpectedNetworkError,
-    err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
+    (err) => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`,
   ],
   [
     RemoteResolverError,
-    err => `error: ${err.message ? `${err.message}` : 'unexpected remote resolver error has occurred'}`
+    (err) => `error: ${err.message ? `${err.message}` : 'unexpected remote resolver error has occurred'}`,
   ],
   [
     ExportAnotherOwnerPrivate,
-    err => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
+    (
+      err
+    ) => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`
+see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`,
   ],
   [
     SSHInvalidResponse,
     () => `error: received an invalid response from the remote SSH server.
-to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`
+to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`,
   ],
   [
     InvalidIndexJson,
-    err => `fatal: your .bit/index.json is not a valid JSON file.
+    (err) => `fatal: your .bit/index.json is not a valid JSON file.
 To rebuild the file, please run ${chalk.bold('bit init --reset')}.
-Original Error: ${err.message}`
+Original Error: ${err.message}`,
   ],
-  [ScopeNotFound, err => `error: scope not found at ${chalk.bold(err.scopePath)}`],
+  [ScopeNotFound, (err) => `error: scope not found at ${chalk.bold(err.scopePath)}`],
   [
     IncorrectRootDir,
-    err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
-please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.`
+    (err) => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.`,
   ],
   [
     ScopeJsonNotFound,
-    err =>
+    (err) =>
       `error: scope.json file was not found at ${chalk.bold(err.path)}, please use ${chalk.bold(
         'bit init'
-      )} to recreate the file`
+      )} to recreate the file`,
   ],
   [MissingDiagnosisName, () => 'error: please provide a diagnosis name'],
-  [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
-  [ComponentSpecsFailed, err => formatComponentSpecsFailed(err.id, err.specsResults)],
+  [DiagnosisNotFound, (err) => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
+  [ComponentSpecsFailed, (err) => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     ComponentOutOfSync,
-    err => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
+    (err) => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
 if it is originated from another git branch, go back to that branch to continue working on the component.
 if possible, remove the component using "bit remove" and re-import or re-create it.
-to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`
+to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`,
   ],
   [
     MissingDependencies,
-    err => {
+    (err) => {
       const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
-    }
+    },
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
     InvalidIdChunk,
-    err =>
+    (err) =>
       `error: "${chalk.bold(
         err.id
-      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
   ],
   [
     InvalidName,
-    err =>
+    (err) =>
       `error: "${chalk.bold(
         err.componentName
-      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`
+      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`,
   ],
   [
     InvalidScopeName,
-    err =>
+    (err) =>
       `error: "${chalk.bold(
         err.scopeName
-      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
   ],
   [
     InvalidBitJson,
-    err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-consider running ${chalk.bold('bit init --reset')} to recreate the file`
+    (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
+consider running ${chalk.bold('bit init --reset')} to recreate the file`,
   ],
   [
     InvalidPackageManager,
-    err => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
-please specify 'npm' or 'yarn'`
+    (err) => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
+please specify 'npm' or 'yarn'`,
   ],
   [
     InvalidPackageJson,
-    err => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
-please fix the file in order to run bit commands`
+    (err) => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
+please fix the file in order to run bit commands`,
   ],
   [
     InvalidConfigPropPath,
-    err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
+    (err) => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
       err.fieldName
     )}" in your bit.json or package.json file is invalid.
-please make sure it's not absolute and doesn't contain invalid characters`
+please make sure it's not absolute and doesn't contain invalid characters`,
   ],
   [
     MissingMainFile,
-    err =>
+    (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`,
   ],
   [
     MissingMainFileMultipleComponents,
-    err =>
+    (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-point`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-point`,
   ],
   [
     InvalidBitMap,
-    err =>
+    (err) =>
       `error: unable to parse your bitMap file at ${chalk.bold(err.path)}, due to an error ${chalk.bold(
         err.errorMessage
       )}.
-      consider running ${chalk.bold('bit init --reset')} to recreate the file`
+      consider running ${chalk.bold('bit init --reset')} to recreate the file`,
   ],
-  [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
+  [ExcludedMainFile, (err) => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
     MainFileRemoved,
-    err => `error: main file ${chalk.bold(err.mainFile)} was removed from ${chalk.bold(err.id)}.
-please use "bit remove" to delete the component or "bit add" with "--main" and "--id" flags to add a new mainFile`
+    (err) => `error: main file ${chalk.bold(err.mainFile)} was removed from ${chalk.bold(err.id)}.
+please use "bit remove" to delete the component or "bit add" with "--main" and "--id" flags to add a new mainFile`,
   ],
   [
     VersionShouldBeRemoved,
-    err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`
+    (err) => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`,
   ],
   [
     TestIsDirectory,
-    err =>
-      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`
+    (err) =>
+      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`,
   ],
   [
     MainFileIsDir,
-    err =>
+    (err) =>
       `error: the specified main path ${chalk.bold(
         err.mainFile
-      )} is a directory, please specify a file or a pattern DSL`
+      )} is a directory, please specify a file or a pattern DSL`,
   ],
   [
     MissingFilesFromComponent,
-    err => {
+    (err) => {
       return `component ${err.id} is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue`;
-    }
+    },
   ],
   [
     MissingBitMapComponent,
-    err =>
+    (err) =>
       `error: component "${chalk.bold(
         err.id
-      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
+      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`,
   ],
-  [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [PathsNotExist, (err) => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [
     PathOutsideConsumer,
-    err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
+    (err) => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`,
   ],
-  [ConfigKeyNotFound, err => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
-  [FlagHarmonyOnly, err => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
-  [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
-  [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
+  [ConfigKeyNotFound, (err) => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
+  [FlagHarmonyOnly, (err) => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
+  [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
+  [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
-  [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
+  [VersionNotFound, (err) => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     ParentNotFound,
-    err =>
+    (err) =>
       `component ${chalk.bold(err.id)} missing data. parent ${err.parentHash} of version ${
         err.versionHash
-      } was not found.`
+      } was not found.`,
   ],
   [
     MissingComponentIdForImportedComponent,
-    err =>
+    (err) =>
       `error: unable to add new files to the component "${chalk.bold(
         err.id
-      )}" without specifying a component ID. please define the component ID using the --id flag.`
+      )}" without specifying a component ID. please define the component ID using the --id flag.`,
   ],
   [
     IncorrectIdForImportedComponent,
-    err =>
+    (err) =>
       `error: trying to add a file ${chalk.bold(err.filePath)} to a component-id "${chalk.bold(
         err.newId
-      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
+      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`,
   ],
-  [FailedLoadForTag, err => err.getErrorMessage()],
+  [FailedLoadForTag, (err) => err.getErrorMessage()],
   [
     NoFiles,
-    err =>
+    (err) =>
       chalk.yellow('warning: no files to add') +
-      chalk.yellow(err.ignoredFiles ? `, the following files were ignored: ${chalk.bold(err.ignoredFiles)}` : '')
+      chalk.yellow(err.ignoredFiles ? `, the following files were ignored: ${chalk.bold(err.ignoredFiles)}` : ''),
   ],
   [
     DuplicateIds,
-    err =>
+    (err) =>
       Object.keys(err.componentObject)
-        .map(key => {
+        .map((key) => {
           return `unable to add ${
             Object.keys(err.componentObject[key]).length
           } components with the same ID: ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
         })
-        .join(' ')
+        .join(' '),
   ],
 
-  [IdExportedAlready, err => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`],
+  [
+    IdExportedAlready,
+    (err) => `component ${chalk.bold(err.id)} has been already exported to ${chalk.bold(err.remote)}`,
+  ],
   [
     InvalidVersion,
-    err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
+    (err) =>
+      `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`,
   ],
   [
     NoIdMatchWildcard,
-    err => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`
+    (err) => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`,
   ],
   [NothingToCompareTo, () => 'no previous versions to compare'],
   [
     NewerVersionFound,
     // err => JSON.stringify(err.newerVersions)
-    err => newerVersionTemplate(err.newerVersions)
+    (err) => newerVersionTemplate(err.newerVersions),
   ],
   [PromptCanceled, () => chalk.yellow('operation aborted')],
   [
     ExternalTestErrors,
-    err =>
+    (err) =>
       `error: bit failed to test ${err.id} with the following exception:\n${getExternalErrorsMessageAndStack(
         err.originalErrors
-      )}`
+      )}`,
   ],
   [
     ExternalBuildErrors,
-    err =>
+    (err) =>
       `error: bit failed to build ${err.id} with the following exception:\n${getExternalErrorsMessageAndStack(
         err.originalErrors
-      )}`
+      )}`,
   ],
   [
     ExtensionLoadError,
-    err =>
+    (err) =>
       `error: bit failed to load ${err.compName} with the following exception:\n${getExternalErrorMessage(
         err.originalError
-      )}.\n${err.printStack ? err.originalError.stack : ''}`
+      )}.\n${err.printStack ? err.originalError.stack : ''}`,
   ],
   [
     ExtensionSchemaError,
-    err => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`
+    (err) => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`,
   ],
   [
     ExtensionInitError,
-    err =>
+    (err) =>
       `error: bit failed to initialized ${err.compName} with the following exception:\n${getExternalErrorMessage(
         err.originalError
-      )}.\n${err.originalError.stack}`
+      )}.\n${err.originalError.stack}`,
   ],
   [
     ExtensionGetDynamicPackagesError,
-    err =>
-      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
+    (err) =>
+      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
   ],
   [
     ExtensionGetDynamicConfigError,
-    err =>
-      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
+    (err) =>
+      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`,
   ],
   [
     InvalidCompilerInterface,
-    err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
+    (err) => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`,
   ],
   [
     ResolutionException,
-    err =>
+    (err) =>
       `error: bit failed to require ${err.filePath} due to the following exception:\n${getExternalErrorMessage(
         err.originalError
-      )}.\n${err.originalError.stack}`
+      )}.\n${err.originalError.stack}`,
   ],
   [
     GitNotFound,
     () =>
-      "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'"
+      "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'",
   ],
   [
     AuthenticationFailed,
-    err =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`
+    (err) =>
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`,
   ],
   [
     ObjectsWithoutConsumer,
-    err => `error: unable to initialize a bit workspace. bit has found undeleted local objects at ${chalk.bold(
+    (err) => `error: unable to initialize a bit workspace. bit has found undeleted local objects at ${chalk.bold(
       err.scopePath
     )}.
 1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
 2. if deleted by mistake, please restore .bitmap and bit.json.
-3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`
-  ]
+3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`,
+  ],
 ];
 function formatComponentSpecsFailed(id, specsResults) {
   // $FlowFixMe this.specsResults is not null at this point
@@ -629,7 +636,7 @@ function getExternalErrorMessage(externalError: Error | null | undefined): strin
 
 function getExternalErrorsMessageAndStack(errors: Error[]): string {
   const result = errors
-    .map(e => {
+    .map((e) => {
       const msg = getExternalErrorMessage(e);
       const stack = e.stack || '';
       return `${msg}\n${stack}\n`;

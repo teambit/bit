@@ -10,19 +10,19 @@ import sinon from 'sinon';
 describe.skip('npmClient.install()', () => {
   const execSpy = sinon.spy();
   const childProcessMock = {
-    exec: execSpy
+    exec: execSpy,
   };
 
   const fsMock = {
     ensureDirSync: () => {
       return null;
-    }
+    },
   };
 
   before(() => {
     mockery.enable({
       warnOnReplace: false,
-      warnOnUnregistered: false
+      warnOnUnregistered: false,
     });
 
     mockery.registerMock('child_process', childProcessMock);

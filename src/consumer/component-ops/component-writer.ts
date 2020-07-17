@@ -72,7 +72,7 @@ export default class ComponentWriter {
     existingComponentMap,
     excludeRegistryPrefix = false,
     saveOnLane = false,
-    applyExtensionsAddedConfig = false
+    applyExtensionsAddedConfig = false,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -136,8 +136,8 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    this.component.files.forEach(file => (file.override = this.override));
-    this.component.files.map(file => this.component.dataToPersist.addFile(file));
+    this.component.files.forEach((file) => (file.override = this.override));
+    this.component.files.map((file) => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
     // TODO: change to new eject config
@@ -208,10 +208,10 @@ export default class ComponentWriter {
    * that are set in package.json.files[], to have a similar structure of a package.
    */
   private populateArtifacts() {
-    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map(e => e.artifacts));
+    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
-      artifactsVinyl.forEach(a => a.updatePaths({ newBase: artifactsDir }));
+      artifactsVinyl.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
     this.component.dataToPersist.addManyFiles(artifactsVinyl);
   }
@@ -225,7 +225,7 @@ export default class ComponentWriter {
   }
 
   addComponentToBitMap(rootDir: string | undefined): ComponentMap {
-    const filesForBitMap = this.component.files.map(file => {
+    const filesForBitMap = this.component.files.map((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -241,7 +241,7 @@ export default class ComponentWriter {
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir,
-      onLanesOnly: this.saveOnLane
+      onLanesOnly: this.saveOnLane,
     });
   }
 
@@ -284,7 +284,7 @@ export default class ComponentWriter {
   _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Record<string, any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonChangedProps: Record<string, any> = this.component.packageJsonChangedProps;
-    const isReplaceNeeded = R.values(packageJsonChangedProps).some(val => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
+    const isReplaceNeeded = R.values(packageJsonChangedProps).some((val) => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
     if (!isReplaceNeeded) {
       return packageJsonChangedProps;
     }
@@ -418,9 +418,9 @@ export default class ComponentWriter {
 
   _updateFilesBasePaths() {
     const newBase = this.writeToPath || '.';
-    this.component.files.forEach(file => file.updatePaths({ newBase }));
+    this.component.files.forEach((file) => file.updatePaths({ newBase }));
     if (!this.component.dists.isEmpty()) {
-      this.component.dists.get().forEach(dist => dist.updatePaths({ newBase }));
+      this.component.dists.get().forEach((dist) => dist.updatePaths({ newBase }));
     }
   }
 
@@ -446,7 +446,7 @@ export default class ComponentWriter {
     }
     const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
     await Promise.all(
-      directDependentIds.map(dependentId => {
+      directDependentIds.map((dependentId) => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer ? getNodeModulesPathOfComponent(this.component) : null;
         const nodeModulesLinkAbs =

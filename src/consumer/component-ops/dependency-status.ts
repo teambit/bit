@@ -13,9 +13,9 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
     workspacePath: consumerPath,
     filePaths: paths,
     bindingPrefix: DEFAULT_BINDINGS_PREFIX,
-    resolveModulesConfig: consumer.config._resolveModules
+    resolveModulesConfig: consumer.config._resolveModules,
   });
-  const topLevelDependencies = Object.keys(tree.tree).map(topLevelFile => topLevelFile);
+  const topLevelDependencies = Object.keys(tree.tree).map((topLevelFile) => topLevelFile);
   return topLevelDependencies;
 }
 
@@ -23,10 +23,10 @@ function getComponentFiles(consumer: Consumer) {
   const bitmap = consumer.bitMap;
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
-  componentsMaps.forEach(function(componentMap) {
+  componentsMaps.forEach(function (componentMap) {
     if (componentMap.files && Array.isArray(componentMap.files)) {
       const currentFiles = [];
-      componentMap.files.forEach(function(file) {
+      componentMap.files.forEach(function (file) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (file && file.relativePath) currentFiles.push(file.relativePath);
       });
@@ -43,7 +43,7 @@ export default (async function getDependencyStatus(
   const topLevelDependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];
-  topLevelDependencies.forEach(function(dependency) {
+  topLevelDependencies.forEach(function (dependency) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!componentFiles.includes(dependency)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

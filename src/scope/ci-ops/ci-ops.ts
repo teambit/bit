@@ -10,9 +10,9 @@ function defaultCIFunc(id: string, scopePath: string) {
     cwd: scopePath,
     env: {
       __id__: id,
-      __scope__: scopePath
+      __scope__: scopePath,
     },
-    stdio: ['ignore', 'ignore', 'ignore']
+    stdio: ['ignore', 'ignore', 'ignore'],
   });
 
   child.unref();

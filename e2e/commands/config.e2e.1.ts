@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('bit config', function() {
+describe('bit config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

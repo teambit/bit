@@ -20,7 +20,7 @@ would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
           value.toLowerCase() === 'yes' ||
           value.toLowerCase() === 'no'
         );
-      }
-    }
-  }
+      },
+    },
+  },
 };

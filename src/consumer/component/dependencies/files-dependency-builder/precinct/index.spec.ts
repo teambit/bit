@@ -94,7 +94,7 @@ describe('node-precinct', () => {
     expect(css).to.have.property('another.css');
   });
 
-  it('grabs dependencies of scss files', function() {
+  it('grabs dependencies of scss files', function () {
     const scss = precinct(read('styles.scss'), 'scss');
     assert.deepEqual(scss, ['_foo', 'baz.scss']);
   });
@@ -175,7 +175,7 @@ describe('node-precinct', () => {
 
     it('filters out core modules if options.includeCore is false', () => {
       const deps = precinct.paperwork(`${fixturesFullPath}/coreModules.js`, {
-        includeCore: false
+        includeCore: false,
       });
 
       assert(!deps.length);
@@ -189,13 +189,13 @@ describe('node-precinct', () => {
     it('supports passing detective configuration', () => {
       const config = {
         amd: {
-          skipLazyLoaded: true
-        }
+          skipLazyLoaded: true,
+        },
       };
 
       const deps = precinct.paperwork(`${fixturesFullPath}/amd.js`, {
         includeCore: false,
-        amd: config.amd
+        amd: config.amd,
       });
       assert.deepEqual(deps, ['./a', './b']);
     });
@@ -207,8 +207,8 @@ describe('node-precinct', () => {
 
         precinct.paperwork(`${fixturesFullPath}/amd.js`, {
           amd: {
-            skipLazyLoaded: true
-          }
+            skipLazyLoaded: true,
+          },
         });
 
         assert.equal(stub.args[0][1].includeCore, true);
@@ -221,8 +221,8 @@ describe('node-precinct', () => {
     it('passes amd config to the amd detective', () => {
       const config = {
         amd: {
-          skipLazyLoaded: true
-        }
+          skipLazyLoaded: true,
+        },
       };
 
       const deps = precinct(read('amd.js'), config);
@@ -234,8 +234,8 @@ describe('node-precinct', () => {
         it('returns both the commonjs and es6 dependencies', () => {
           const deps = precinct(read('es6MixedImport.js'), {
             es6: {
-              mixedImports: true
-            }
+              mixedImports: true,
+            },
           });
 
           assert.equal(Object.keys(deps).length, 2);
@@ -246,8 +246,8 @@ describe('node-precinct', () => {
         it('returns both the commonjs and es6 dependencies', () => {
           const deps = precinct(read('cjsMixedImport.js'), {
             es6: {
-              mixedImports: true
-            }
+              mixedImports: true,
+            },
           });
 
           assert.equal(Object.keys(deps).length, 2);
@@ -271,8 +271,8 @@ describe('node-precinct', () => {
       it('grabs the lazy imports', () => {
         const es6 = precinct(read('es6MixedExportLazy.js'), {
           es6: {
-            mixedImports: true
-          }
+            mixedImports: true,
+          },
         });
         expect(es6).to.have.property('./amd');
         expect(es6).to.have.property('./es6');

@@ -63,5 +63,5 @@ function getBitIdsForDiff(consumer: Consumer, ids: string[]): BitId[] {
     const componentsList = new ComponentsList(consumer);
     return componentsList.listComponentsByIdsWithWildcard(ids);
   }
-  return ids.map(id => consumer.getParsedId(id));
+  return ids.map((id) => consumer.getParsedId(id));
 }

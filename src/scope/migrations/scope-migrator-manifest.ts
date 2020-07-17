@@ -11,17 +11,17 @@ export default {
       versionMigrations.implSpecsToFilesDeclartaion,
       versionMigrations.specsResultstoArrayDeclartaion,
       versionMigrations.addBindingPrefixDeclartaion,
-      versionMigrations.changeVersionToSemVerDeclartaion
-    ]
+      versionMigrations.changeVersionToSemVerDeclartaion,
+    ],
   },
   '0.11.1': {
-    Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion]
+    Version: [versionMigrations.changeImportSpecifiersToArray, versionMigrations.ensureMainFileDeclartaion],
   },
   '0.12.0': {
     Component: [componentMigrations.updateBindingPrefixToNewDefault],
-    Version: [versionMigrations.updateBindingPrefixToNewDefault]
+    Version: [versionMigrations.updateBindingPrefixToNewDefault],
   },
   '0.12.1': {
-    Version: [versionMigrations.removeLatestFromCompiler]
-  }
+    Version: [versionMigrations.removeLatestFromCompiler],
+  },
 };

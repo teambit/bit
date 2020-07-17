@@ -37,7 +37,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       imageSize = size,
       fontSize = Math.round(size * 0.4),
       className,
-      imgClassName
+      imgClassName,
       // hideTooltip = false
     } = this.props;
     // const { tooltipId } = this.state;

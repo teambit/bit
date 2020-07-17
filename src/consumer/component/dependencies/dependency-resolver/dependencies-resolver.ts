@@ -106,14 +106,14 @@ export default class DependencyResolver {
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
-      devDependencies: []
+      devDependencies: [],
     };
     this.allPackagesDependencies = {
       packageDependencies: {},
       devPackageDependencies: {},
       compilerPackageDependencies: {},
       testerPackageDependencies: {},
-      peerPackageDependencies: {}
+      peerPackageDependencies: {},
     };
     this.processedFiles = [];
     // later on, empty issues are removed. see `this.removeEmptyIssues();`
@@ -130,7 +130,7 @@ export default class DependencyResolver {
       relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
-      missingBits: {} // temporarily, will be combined with missingComponents. see combineIssues
+      missingBits: {}, // temporarily, will be combined with missingComponents. see combineIssues
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
   }
@@ -170,7 +170,7 @@ export default class DependencyResolver {
       bindingPrefix: this.component.bindingPrefix,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
-      cacheProjectAst
+      cacheProjectAst,
     });
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
@@ -213,7 +213,7 @@ export default class DependencyResolver {
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
       const fileType: FileType = {
-        isTestFile: R.contains(file, testsFiles)
+        isTestFile: R.contains(file, testsFiles),
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
@@ -239,10 +239,10 @@ export default class DependencyResolver {
   addCustomResolvedIssues() {
     if (this.consumer.isLegacy) return;
     const deps: Dependency[] = [...this.allDependencies.dependencies, ...this.allDependencies.devDependencies];
-    const customModulesDeps = deps.filter(dep => dep.relativePaths.some(r => r.isCustomResolveUsed));
+    const customModulesDeps = deps.filter((dep) => dep.relativePaths.some((r) => r.isCustomResolveUsed));
     if (customModulesDeps.length) {
       const importSources = customModulesDeps.reduce((acc, current) => {
-        current.relativePaths.forEach(relativePath => {
+        current.relativePaths.forEach((relativePath) => {
           if (relativePath.isCustomResolveUsed) {
             // @ts-ignore
             acc[relativePath.importSource] = current.id.toStringWithoutVersion();
@@ -299,9 +299,9 @@ export default class DependencyResolver {
     const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
-    DEPENDENCIES_FIELDS.forEach(depField => {
+    DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
-        components[depField].forEach(id => this.allDependencies[depField].push({ id, relativePaths: [] }));
+        components[depField].forEach((id) => this.allDependencies[depField].push({ id, relativePaths: [] }));
       }
       if (packages[depField] && !R.isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
@@ -310,8 +310,8 @@ export default class DependencyResolver {
   }
 
   applyOverridesOnEnvPackages() {
-    [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach(packages => {
-      DEPENDENCIES_FIELDS.forEach(fieldType => {
+    [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach((packages) => {
+      DEPENDENCIES_FIELDS.forEach((fieldType) => {
         if (!packages[fieldType]) return;
         const shouldBeIncluded = (pkgVersion, pkgName) => {
           return (
@@ -453,7 +453,7 @@ export default class DependencyResolver {
     const resolveModules = this.consumer.config._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const aliases = resolveModules.aliases;
-    const foundAlias = Object.keys(aliases).find(alias => depFile.startsWith(aliases[alias]));
+    const foundAlias = Object.keys(aliases).find((alias) => depFile.startsWith(aliases[alias]));
     if (!foundAlias) return null;
     const newDepFile = depFile.replace(
       `${resolveModules.aliases[foundAlias]}/dist`,
@@ -466,14 +466,16 @@ export default class DependencyResolver {
   getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
     const dependency = this.componentFromModel
       .getAllDependencies()
-      .find(dep => dep.id.isEqualWithoutVersion(componentId));
+      .find((dep) => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new ShowDoctorError( // $FlowFixMe
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
 
-    const relativePath: RelativePath | undefined = dependency.relativePaths.find(r => r.sourceRelativePath === depFile);
+    const relativePath: RelativePath | undefined = dependency.relativePaths.find(
+      (r) => r.sourceRelativePath === depFile
+    );
     if (!relativePath) {
       throw new ShowDoctorError(
         `unable to find ${relativePath} path in the dependencies relativePaths of ${this.componentFromModel.id}`
@@ -482,7 +484,7 @@ export default class DependencyResolver {
     return {
       componentId: dependency.id,
       destination: relativePath.destinationRelativePath,
-      depFileRelative: depFile
+      depFileRelative: depFile,
     };
   }
 
@@ -516,7 +518,7 @@ export default class DependencyResolver {
           // Recursively check for untracked files (to show them all in bit status)
           // for nested files we don't really care about the file types since we won't do all the checking
           const dummyFileType: FileType = {
-            isTestFile: false
+            isTestFile: false,
           };
           this.processDepFiles(depFile.file, dummyFileType, true);
         }
@@ -560,7 +562,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (depFileObject.isCustomResolveUsed) {
         this.component.customResolvedPaths.push({
           destinationPath: depFileObject.file,
-          importSource: depFileObject.importSource
+          importSource: depFileObject.importSource,
         });
       }
       return false;
@@ -585,10 +587,10 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     const depsPaths: RelativePath = {
       sourceRelativePath,
-      destinationRelativePath
+      destinationRelativePath,
     };
     if (importSpecifiers) {
-      importSpecifiers.forEach(importSpecifier => {
+      importSpecifiers.forEach((importSpecifier) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (importSpecifier.linkFile) delete importSpecifier.linkFile.exported;
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -621,7 +623,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
-      ...this.allDependencies.devDependencies
+      ...this.allDependencies.devDependencies,
     ];
     const existingDependency = this.getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
@@ -661,7 +663,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   processLinkFile(originFile: PathLinuxRelative, linkFile: FileObject, fileType: FileType) {
     if (!linkFile.linkDependencies || R.isEmpty(linkFile.linkDependencies)) return;
     const nonLinkImportSpecifiers = [];
-    linkFile.linkDependencies.forEach(dependency => {
+    linkFile.linkDependencies.forEach((dependency) => {
       const component = this.getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
@@ -670,7 +672,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         // also, delete the linkFile attribute of importSpecifiers so then once the component is
         // imported and the link is generated, it won't be treated as a linkFile.
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        dependency.importSpecifiers.map(a => delete a.linkFile);
+        dependency.importSpecifiers.map((a) => delete a.linkFile);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         nonLinkImportSpecifiers.push(dependency.importSpecifiers);
       } else {
@@ -706,7 +708,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;
     let componentId;
-    bits.forEach(bitDep => {
+    bits.forEach((bitDep) => {
       const version =
         this.getValidVersion(bitDep.concreteVersion) || this.getValidVersion(bitDep.versionUsedByDependent);
       if (bitDep.componentId) {
@@ -771,7 +773,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (RA.isNilOrEmpty(missing.files)) return;
       const absOriginFile = this.consumer.toAbsolutePath(originFile);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const missingFiles = missing.files.filter(missingFile => {
+      const missingFiles = missing.files.filter((missingFile) => {
         // convert from importSource (the string inside the require/import call) to the path relative to consumer
         const resolvedPath = path.resolve(path.dirname(absOriginFile), missingFile);
         const relativeToConsumer = this.consumer.getPathRelativeToConsumer(resolvedPath);
@@ -783,12 +785,12 @@ either, use the ignore file syntax or change the require statement to have a mod
     const processMissingPackages = () => {
       if (RA.isNilOrEmpty(missing.packages)) return;
       const missingPackages = missing.packages.filter(
-        pkg => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
+        (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
       if (R.isEmpty(missingPackages)) return;
       const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missingPackages);
       if (customResolvedDependencies) {
-        Object.keys(customResolvedDependencies).forEach(missingPackage => {
+        Object.keys(customResolvedDependencies).forEach((missingPackage) => {
           const componentId = customResolvedDependencies[missingPackage].toString();
           this._pushToMissingCustomModuleIssues(originFile, componentId);
         });
@@ -811,7 +813,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
-    missingComponents.forEach(missingBit => {
+    missingComponents.forEach((missingBit) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
         missingBit,
         this.component.bindingPrefix
@@ -866,10 +868,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     const importSourceMap = dependencies.getCustomResolvedData();
     if (R.isEmpty(importSourceMap)) return;
     const clonedDependencies = new Dependencies(dependencies.getClone());
-    unidentifiedPackages.forEach(unidentifiedPackage => {
+    unidentifiedPackages.forEach((unidentifiedPackage) => {
       const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
       const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');
-      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+      const foundImportSource = Object.keys(importSourceMap).find((importSource) =>
         packageWithNoNodeModules.startsWith(importSource)
       );
       if (foundImportSource) {
@@ -877,7 +879,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         const currentComponentDeps = {
           id: dependencyId,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          relativePaths: clonedDependencies.getById(dependencyId).relativePaths
+          relativePaths: clonedDependencies.getById(dependencyId).relativePaths,
         };
         this._pushToDependenciesIfNotExist(currentComponentDeps, fileType);
       }
@@ -915,7 +917,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const depData = {
       componentId: id,
       packageName,
-      type: fileType.isTestFile ? 'dev' : 'prod'
+      type: fileType.isTestFile ? 'dev' : 'prod',
     };
     if (!ext.data.dependencies) ext.data.dependencies = [];
     ext.data.dependencies.push(depData);
@@ -928,7 +930,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    */
   removeDevAndEnvDepsIfTheyAlsoRegulars() {
     // remove dev and env packages that are also regular packages
-    const getNotRegularPackages = packages =>
+    const getNotRegularPackages = (packages) =>
       R.difference(R.keys(packages), R.keys(this.allPackagesDependencies.packageDependencies));
     this.allPackagesDependencies.devPackageDependencies = R.pick(
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies),
@@ -945,9 +947,9 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map(c => c.id));
+    const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
-      d => !componentDepsIds.has(d.id)
+      (d) => !componentDepsIds.has(d.id)
     );
   }
 
@@ -963,7 +965,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (R.isEmpty(importSourceMap)) return undefined;
     const foundPackages = packages.reduce((acc, value) => {
       const packageLinuxFormat = pathNormalizeToLinux(value);
-      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+      const foundImportSource = Object.keys(importSourceMap).find((importSource) =>
         importSource.startsWith(packageLinuxFormat)
       );
       if (foundImportSource) {
@@ -977,7 +979,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   combineIssues() {
-    Object.keys(this.issues.missingBits).forEach(missingBit => {
+    Object.keys(this.issues.missingBits).forEach((missingBit) => {
       if (this.issues.missingComponents[missingBit]) {
         this.issues.missingComponents[missingBit] = this.issues.missingComponents[missingBit].concat(
           this.issues.missingBits[missingBit]
@@ -989,18 +991,18 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   removeEmptyIssues() {
-    const notEmpty = item => !R.isEmpty(item);
+    const notEmpty = (item) => !R.isEmpty(item);
     this.issues = R.filter(notEmpty, this.issues);
   }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
-    return dependencies.find(d => d.id.isEqualWithoutVersion(id));
+    return dependencies.find((d) => d.id.isEqualWithoutVersion(id));
   }
 
   getExistingDepRelativePaths(dependency: Dependency, relativePath: RelativePath) {
     if (!dependency.relativePaths || R.isEmpty(dependency.relativePaths)) return null;
     return dependency.relativePaths.find(
-      paths =>
+      (paths) =>
         paths.sourceRelativePath === relativePath.sourceRelativePath &&
         paths.destinationRelativePath === relativePath.destinationRelativePath
     );
@@ -1032,9 +1034,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     // check whether the peer-dependencies was actually require in the code. if so, remove it from
     // the packages/dev-packages and add it as a peer-package.
     // if it was not required in the code, don't add it to the peerPackages
-    Object.keys(projectPeerDependencies).forEach(pkg => {
+    Object.keys(projectPeerDependencies).forEach((pkg) => {
       if (this.overridesDependencies.shouldIgnorePeerPackage(pkg)) return;
-      ['packageDependencies', 'devPackageDependencies'].forEach(field => {
+      ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
         if (Object.keys(this.allPackagesDependencies[field]).includes(pkg)) {
           delete this.allPackagesDependencies[field][pkg];
           peerPackages[pkg] = projectPeerDependencies[pkg];
@@ -1089,11 +1091,11 @@ either, use the ignore file syntax or change the require statement to have a mod
       const typesPackage = `@types/${packageName}`;
       if (!packageJson[depField][typesPackage]) return;
       Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], {
-        [typesPackage]: packageJson[depField][typesPackage]
+        [typesPackage]: packageJson[depField][typesPackage],
       });
     };
-    Object.keys(packages).forEach(packageName => {
-      DEPENDENCIES_FIELDS.forEach(depField => addIfNeeded(depField, packageName));
+    Object.keys(packages).forEach((packageName) => {
+      DEPENDENCIES_FIELDS.forEach((depField) => addIfNeeded(depField, packageName));
     });
   }
 
@@ -1114,8 +1116,8 @@ either, use the ignore file syntax or change the require statement to have a mod
     const untracked = this.issues.untrackedDependencies[originFile];
     const findExisting = () => {
       let result;
-      R.forEachObjIndexed(currentUntracked => {
-        const found = currentUntracked.untrackedFiles.find(file => {
+      R.forEachObjIndexed((currentUntracked) => {
+        const found = currentUntracked.untrackedFiles.find((file) => {
           return file.relativePath === depFileRelative;
         });
         if (found) {

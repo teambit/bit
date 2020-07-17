@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
 
-describe('component id with wildcard', function() {
+describe('component id with wildcard', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

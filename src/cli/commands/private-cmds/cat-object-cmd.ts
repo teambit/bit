@@ -8,7 +8,7 @@ export default class CatObject implements LegacyCommand {
   alias = '';
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
-    ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"']
+    ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
   ] as CommandOptions;
 
   action([hash]: [string], { pretty, stringify }: { pretty: boolean; stringify: boolean }): Promise<any> {

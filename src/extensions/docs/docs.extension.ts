@@ -31,9 +31,9 @@ export class DocsExtension {
    * returns an array of doc file paths for a set of components.
    */
   getDocsMap(components: Component[]): ComponentMap<string[]> {
-    return ComponentMap.as<string[]>(components, component => {
+    return ComponentMap.as<string[]>(components, (component) => {
       const files = component.state.filesystem.byRegex(/docs.ts/);
-      return files.map(file => file.path);
+      return files.map((file) => file.path);
     });
   }
 
@@ -43,7 +43,7 @@ export class DocsExtension {
 
     const link = this.preview.writeLink(
       'overview',
-      docsMap.filter(value => value.length !== 0),
+      docsMap.filter((value) => value.length !== 0),
       template
     );
 
@@ -68,7 +68,7 @@ export class DocsExtension {
     const docs = new DocsExtension(preview);
 
     bundler.registerTarget({
-      entry: docs.docsPreviewTarget.bind(docs)
+      entry: docs.docsPreviewTarget.bind(docs),
     });
 
     return docs;

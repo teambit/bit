@@ -32,7 +32,7 @@ export function getSpecifierValueForImportDeclaration(specifier) {
     // syntax of `import x from 'file'` doesn't have specifier.imported, only specifier.local
     // syntax of `import { x as y } from 'file'`, has `x` as specifier.imported and `y` as
     // specifier.local. we interested in `x` in this case.
-    name: specifier.imported ? specifier.imported.name : specifier.local.name
+    name: specifier.imported ? specifier.imported.name : specifier.local.name,
   };
 }
 

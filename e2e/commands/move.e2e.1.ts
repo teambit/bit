@@ -6,7 +6,7 @@ import { removeChalkCharacters } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
-describe('bit move command', function() {
+describe('bit move command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -77,20 +77,20 @@ describe('bit move command', function() {
       helper.command.addComponent('bar', {
         i: 'bar/foo',
         t: path.normalize('bar/foo1.spec.js'),
-        m: path.normalize('bar/foo1.js')
+        m: path.normalize('bar/foo1.js'),
       });
       helper.command.runCmd('bit move bar utils');
     });
     it('should move physically the directory', () => {
       const localConsumerFiles = helper.fs.getConsumerFiles(undefined, undefined, false);
-      localConsumerFiles.forEach(file => {
+      localConsumerFiles.forEach((file) => {
         expect(file.startsWith('utils')).to.be.true;
       });
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.bitMap.read();
 
-      bitMap['bar/foo'].files.forEach(file => {
+      bitMap['bar/foo'].files.forEach((file) => {
         expect(file.relativePath.startsWith('utils')).to.be.true;
       });
     });
@@ -247,7 +247,7 @@ describe('bit move command', function() {
     });
     it('should move physically the directory', () => {
       const localConsumerFiles = helper.fs.getConsumerFiles();
-      localConsumerFiles.forEach(file => {
+      localConsumerFiles.forEach((file) => {
         if (!file.startsWith('node_modules')) {
           expect(file.startsWith(newPath), `checking file: ${file}`).to.be.true;
         }
@@ -293,7 +293,7 @@ console.log(barFoo());`;
         const bitMap = helper.bitMap.read();
         const componentMap = bitMap.foo;
         expect(componentMap.rootDir).to.equal('components/foo');
-        const files = componentMap.files.map(f => f.relativePath);
+        const files = componentMap.files.map((f) => f.relativePath);
         expect(files).to.have.lengthOf(2);
         expect(files).to.deep.equal(['foo.js', 'foo.spec.js']);
         expect(componentMap.mainFile).to.equal('foo.js');
@@ -341,7 +341,7 @@ console.log(barFoo());`;
         const bitMap = helper.bitMap.read();
         const componentMap = bitMap.foo;
         expect(componentMap.rootDir).to.equal('components/foo');
-        const files = componentMap.files.map(f => f.relativePath);
+        const files = componentMap.files.map((f) => f.relativePath);
         expect(files).to.have.lengthOf(1);
         expect(files).to.deep.equal(['foo.js']);
         expect(componentMap.mainFile).to.equal('foo.js');

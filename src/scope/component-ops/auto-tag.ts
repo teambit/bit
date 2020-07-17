@@ -43,7 +43,7 @@ export async function bumpDependenciesVersions(
   taggedComponents: Component[],
   shouldSnap = false // when user tags it should auto-tag, when user snaps it should auto-snap
 ): Promise<AutoTagResult[]> {
-  const taggedComponentsIds = BitIds.fromArray(taggedComponents.map(c => c.id));
+  const taggedComponentsIds = BitIds.fromArray(taggedComponents.map((c) => c.id));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const allComponents = new BitIds(...potentialComponents, ...taggedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
@@ -89,9 +89,9 @@ async function rewriteFlattenedDependencies(
   scope: Scope
 ) {
   // get "componentsAndVersions" updated with the recently added versions
-  updatedComponents.forEach(updatedComponent => {
+  updatedComponents.forEach((updatedComponent) => {
     const id = updatedComponent.component.toBitId();
-    const componentAndVersion = componentsAndVersions.find(c => c.component.toBitId().isEqualWithoutVersion(id));
+    const componentAndVersion = componentsAndVersions.find((c) => c.component.toBitId().isEqualWithoutVersion(id));
     if (!componentAndVersion) throw new Error(`rewriteFlattenedDependencies failed finding id ${id.toString()}`);
     componentAndVersion.version = updatedComponent.version;
     componentAndVersion.versionStr = updatedComponent.versionStr;
@@ -100,7 +100,7 @@ async function rewriteFlattenedDependencies(
   const allDependenciesGraphs = buildComponentsGraphForComponentsAndVersion(componentsAndVersions);
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
-  const updateAll = updatedComponents.map(async updatedComponent => {
+  const updateAll = updatedComponents.map(async (updatedComponent) => {
     const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionStr);
     const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
       scope,
@@ -196,7 +196,7 @@ function updateDependencies(version: Version, edgeId: BitId, changedComponentId:
   version.updateFlattenedDependency(edgeId, edgeId.changeVersion(changedComponentId.version));
   const dependencyToUpdate = version
     .getAllDependencies()
-    .find(dependency => dependency.id.isEqualWithoutVersion(edgeId));
+    .find((dependency) => dependency.id.isEqualWithoutVersion(edgeId));
   if (dependencyToUpdate) {
     // it's a direct dependency
     dependencyToUpdate.id = dependencyToUpdate.id.changeVersion(changedComponentId.version);
@@ -205,7 +205,7 @@ function updateDependencies(version: Version, edgeId: BitId, changedComponentId:
 
 function buildGraph(componentsAndVersions: ComponentsAndVersions[]): Graph {
   const graph = new Graph();
-  const componentsIds = BitIds.fromArray(componentsAndVersions.map(c => c.component.toBitId()));
+  const componentsIds = BitIds.fromArray(componentsAndVersions.map((c) => c.component.toBitId()));
   componentsAndVersions.forEach(({ component, version, versionStr }) => {
     const id = component.id();
     version.getAllDependencies().forEach((dependency: Dependency) => {
@@ -239,7 +239,7 @@ export async function getAutoTagPending(
     // edges are dependencies. we loop over the dependencies of a component
     // @ts-ignore
     const edges = graphlib.alg.preorder(graph, idStr);
-    const isAutoTagPending = edges.some(edge => {
+    const isAutoTagPending = edges.some((edge) => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
       if (!changedComponentId) {

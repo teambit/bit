@@ -22,7 +22,7 @@ export default class Snap implements LegacyCommand {
     ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
-    ['', 'skip-auto-snap', 'skip auto snapping dependents']
+    ['', 'skip-auto-snap', 'skip auto snapping dependents'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -36,7 +36,7 @@ export default class Snap implements LegacyCommand {
       verbose = false,
       ignoreUnresolvedDependencies = false,
       skipTests = false,
-      skipAutoSnap = false
+      skipAutoSnap = false,
     }: {
       message?: string;
       all?: boolean;
@@ -64,30 +64,32 @@ export default class Snap implements LegacyCommand {
       verbose,
       ignoreUnresolvedDependencies,
       skipTests,
-      skipAutoSnap
+      skipAutoSnap,
     });
   }
 
   report(results: SnapResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
     const { snappedComponents, autoSnappedResults, warnings, newComponents }: SnapResults = results;
-    const changedComponents = snappedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
-    const addedComponents = snappedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
+    const changedComponents = snappedComponents.filter(
+      (component) => !newComponents.searchWithoutVersion(component.id)
+    );
+    const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
 (use "bit untag" to unstage versions)\n`;
 
-    const outputComponents = comps => {
+    const outputComponents = (comps) => {
       return comps
-        .map(component => {
+        .map((component) => {
           let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoSnappedResults.filter(result =>
+          const autoTag = autoSnappedResults.filter((result) =>
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+            const autoTagComp = autoTag.map((a) => a.component.toBitIdWithLatestVersion().toString());
             componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
           }
           return componentOutput;

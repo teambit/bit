@@ -39,10 +39,10 @@ export async function undeprecateRemote(
 
 async function _deprecationMany(scope: Scope, ids: BitIds, deprecationAction: Function): Promise<DeprecationResult> {
   const { missingComponents, foundComponents } = await scope.filterFoundAndMissingComponents(ids);
-  const bitIdsP = foundComponents.map(bitId => deprecationAction(scope, bitId));
+  const bitIdsP = foundComponents.map((bitId) => deprecationAction(scope, bitId));
   const bitIds = await Promise.all(bitIdsP);
   await scope.objects.persist();
-  const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
+  const missingComponentsStrings = missingComponents.map((id) => id.toStringWithoutVersion());
   return { bitIds, missingComponents: missingComponentsStrings };
 }
 
@@ -55,9 +55,9 @@ async function _deprecationRemote(
   const groupedBitsByScope = groupArray(bitIds, 'scope');
   const context = {};
   enrichContextFromGlobal(context);
-  const deprecateP = Object.keys(groupedBitsByScope).map(async scopeName => {
+  const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
     const resolvedRemote = await remotes.resolve(scopeName, scope);
-    const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
+    const idsStr = groupedBitsByScope[scopeName].map((id) => id.toStringWithoutVersion());
     const deprecateResult = deprecate
       ? await resolvedRemote.deprecateMany(idsStr, context)
       : await resolvedRemote.undeprecateMany(idsStr, context);

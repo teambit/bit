@@ -14,7 +14,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
-describe('run bit init', function() {
+describe('run bit init', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -84,7 +84,7 @@ describe('run bit init', function() {
       helper.scopeHelper.cleanLocalScope();
       helper.scopeHelper.initLocalScopeWithOptions({
         '-default-directory': 'my-comps',
-        '-package-manager': 'yarn'
+        '-package-manager': 'yarn',
         // '-compiler': 'my-compiler',
         // '-tester': 'my-tester'
       });

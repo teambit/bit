@@ -71,7 +71,7 @@ export default (async function importAction(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     envComponents,
     consumer,
-    installNpmPackages: importOptions.installNpmPackages
+    installNpmPackages: importOptions.installNpmPackages,
   });
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
@@ -121,11 +121,11 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],
-    notInBoth: []
+    notInBoth: [],
   };
   if (installNpmPackages) return Promise.resolve(warnings);
   const projectDir = consumer.getPath();
-  const getPackageJson = dir => {
+  const getPackageJson = (dir) => {
     try {
       return fs.readJSONSync(path.join(dir, 'package.json'));
     } catch (e) {
@@ -135,13 +135,13 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
   const packageJson = getPackageJson(projectDir);
   const packageJsonDependencies = R.merge(packageJson.dependencies || {}, packageJson.devDependencies || {});
 
-  const getNameAndVersion = pj => ({ [pj.name]: pj.version });
+  const getNameAndVersion = (pj) => ({ [pj.name]: pj.version });
   const nodeModules = R.mergeAll(
     glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
   // eslint-disable-next-line
-  dependencies.forEach(dep => {
+  dependencies.forEach((dep) => {
     if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
     R.forEachObjIndexed((packageDepVersion, packageDepName) => {

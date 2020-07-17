@@ -13,7 +13,7 @@ export default class DependencyStatus implements LegacyCommand {
 
   action([mainFile]: [string[]]): Promise<DependencyStatusResult> {
     const dependencyStatusProps: DependencyStatusProps = {
-      mainFile
+      mainFile,
     };
     return dependencyStatus(dependencyStatusProps);
   }
@@ -23,7 +23,7 @@ export default class DependencyStatus implements LegacyCommand {
       return output;
     }
     let output = chalk.red('The following file exist in dependency tree but are not a component:\n');
-    const files = dependencyStatusResult.missingFiles.map(missingFile => {
+    const files = dependencyStatusResult.missingFiles.map((missingFile) => {
       const file = chalk.bold(missingFile);
       return file;
     });

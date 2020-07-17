@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('delete files from a component', function() {
+describe('delete files from a component', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

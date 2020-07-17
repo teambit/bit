@@ -56,7 +56,7 @@ const GET_COMPONENT = gql`
  */
 export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useQuery(GET_COMPONENT, {
-    variables: { id: componentId }
+    variables: { id: componentId },
   });
   // :TODO @uri please add a proper loader with amir
   if (loading) return <div></div>;

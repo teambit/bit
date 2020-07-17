@@ -4,7 +4,7 @@ import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/orphan-symlink-o
 
 chai.use(require('chai-fs'));
 
-describe('scope with a symlink object reference to a non-exist component', function() {
+describe('scope with a symlink object reference to a non-exist component', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -24,9 +24,9 @@ describe('scope with a symlink object reference to a non-exist component', funct
     // intermediate step, make sure, the local scope has both, the Symlink and ModelComponent objects
     const scope = helper.command.catScope(true);
     expect(scope).to.have.lengthOf(2);
-    const modelComponent = scope.find(o => o.type === 'Component');
+    const modelComponent = scope.find((o) => o.type === 'Component');
     expect(modelComponent).to.be.ok;
-    const symlink = scope.find(o => o.type === 'Symlink');
+    const symlink = scope.find((o) => o.type === 'Symlink');
     expect(symlink).to.be.ok;
 
     // delete manually the modelComponent object. there is no other known way how to get a scope
@@ -37,7 +37,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
     expect(scopeAfterDelete).to.have.lengthOf(1);
 
     const indexJson = helper.general.getIndexJson();
-    const componentIndex = indexJson.components.filter(i => i.isSymlink === true);
+    const componentIndex = indexJson.components.filter((i) => i.isSymlink === true);
     helper.general.writeIndexJson(componentIndex);
   });
   it('bit import should throw a descriptive error', () => {

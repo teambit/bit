@@ -8,7 +8,7 @@ export default (async function eject(ids: string[], force: boolean): Promise<Eje
     throw new GeneralError('please specify component ids to eject');
   }
   const consumer: Consumer = await loadConsumer();
-  const bitIds = ids.map(id => consumer.bitMap.getExistingBitId(id)); // this also assure that the ID is in .bitmap
+  const bitIds = ids.map((id) => consumer.bitMap.getExistingBitId(id)); // this also assure that the ID is in .bitmap
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const ejectComponents = new EjectComponents(consumer, bitIds, force);
   const ejectResults = await ejectComponents.eject();

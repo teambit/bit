@@ -22,21 +22,21 @@ export async function changeCodeFromRelativeToModulePaths(
   bitIds: BitId[]
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
-  const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
+  const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
-  const codemodResults = componentsWithRelativeIssues.map(component => {
+  const codemodResults = componentsWithRelativeIssues.map((component) => {
     const { files, warnings } = codemodComponent(consumer, component);
     dataToPersist.addManyFiles(files);
-    return { id: component.id, changedFiles: files.map(f => f.relative), warnings };
+    return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
   });
   await dataToPersist.persistAllToFS();
-  return codemodResults.filter(c => c.changedFiles.length || c.warnings);
+  return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
 async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
   const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
-  invalidComponents.forEach(invalidComp => {
+  invalidComponents.forEach((invalidComp) => {
     if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
     else throw invalidComp.error;
   });
@@ -124,7 +124,7 @@ function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeC
  */
 function isLinkFileHasDifferentImportType(importSpecifiers?: ImportSpecifier[]) {
   if (!importSpecifiers) return false;
-  return importSpecifiers.some(importSpecifier => {
+  return importSpecifiers.some((importSpecifier) => {
     if (!importSpecifier.linkFile) return false;
     return importSpecifier.linkFile.isDefault !== importSpecifier.mainFile.isDefault;
   });

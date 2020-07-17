@@ -9,7 +9,7 @@ export default {
     passphrase: {
       hidden: true,
       required: true,
-      description: `enter passphrase for key '${identityFile()}'`
-    }
-  }
+      description: `enter passphrase for key '${identityFile()}'`,
+    },
+  },
 };

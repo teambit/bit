@@ -27,7 +27,7 @@ export default class BitJsoncHelper {
     const bitJsonc = this.read(bitJsoncDir);
     // Using this to keep the comments
     const obj = {
-      [key]: val
+      [key]: val,
     };
     const updated = assign(bitJsonc, obj);
     this.write(updated, bitJsoncDir);

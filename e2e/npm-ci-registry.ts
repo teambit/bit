@@ -55,10 +55,10 @@ export default class NpmCiRegistry {
   }
 
   _establishRegistry(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.registryServer = execa('verdaccio', { detached: true });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.registryServer.stdout.on('data', data => {
+      this.registryServer.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes('4873')) {
           if (this.helper.debugMode) console.log('Verdaccio server is up and running');
@@ -66,10 +66,10 @@ export default class NpmCiRegistry {
         }
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.registryServer.stderr.on('data', data => {
+      this.registryServer.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
       });
-      this.registryServer.on('close', code => {
+      this.registryServer.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
       });
     });
@@ -95,7 +95,7 @@ EOD`;
 
   // TODO: improve this to only write it to project level npmrc instead of global one
   _registerScopes(scopes: string[] = ['@ci']) {
-    scopes.forEach(scope => {
+    scopes.forEach((scope) => {
       this.helper.command.runCmd(`npm config set ${scope}:registry ${this.ciRegistry}`);
     });
   }
@@ -131,7 +131,7 @@ EOD`;
       : `${this.helper.scopes.remote}/${componentName}`;
     const componentId = `${componentFullName}@${componentVersion}`;
     const options = {
-      d: packDir
+      d: packDir,
     };
     if (this.helper.general.isProjectNew()) {
       // @ts-ignore
@@ -148,9 +148,9 @@ EOD`;
       packageJson: {
         publishConfig: {
           scope: this.ciDefaultScope,
-          registry: this.ciRegistry
-        }
-      }
+          registry: this.ciRegistry,
+        },
+      },
     };
     this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
   }
@@ -160,9 +160,9 @@ EOD`;
       packageJson: {
         name,
         publishConfig: {
-          registry: this.ciRegistry
-        }
-      }
+          registry: this.ciRegistry,
+        },
+      },
     };
     this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
   }
@@ -180,9 +180,9 @@ EOD`;
     this.helper.scopeHelper.addRemoteScope();
     this.helper.command.importComponent('* --objects');
     const remoteComponents = this.helper.command.listRemoteScopeParsed();
-    const remoteIds = remoteComponents.map(c => c.id);
+    const remoteIds = remoteComponents.map((c) => c.id);
     this.helper.scopeHelper.removeRemoteScope();
-    remoteIds.forEach(id => this.publishComponent(id));
+    remoteIds.forEach((id) => this.publishComponent(id));
   }
 
   /**

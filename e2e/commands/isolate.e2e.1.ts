@@ -7,7 +7,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('run bit isolate', function() {
+describe('run bit isolate', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

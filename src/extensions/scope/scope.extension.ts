@@ -12,7 +12,7 @@ import {
   Snap,
   ComponentFS,
   Tag,
-  TagMap
+  TagMap,
 } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
@@ -140,7 +140,7 @@ export class ScopeExtension implements ComponentFactory {
       [],
       {
         displayName: version.log.username || 'unknown',
-        email: version.log.email || 'unknown@anywhere'
+        email: version.log.email || 'unknown@anywhere',
       },
       version.log.message
     );

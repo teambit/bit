@@ -28,7 +28,7 @@ export class WorkspaceUI {
   get workspaceRoute() {
     return {
       path: '/',
-      children: <Workspace routeSlot={this.routeSlot} />
+      children: <Workspace routeSlot={this.routeSlot} />,
     };
   }
 

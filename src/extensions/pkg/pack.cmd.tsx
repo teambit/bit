@@ -16,7 +16,7 @@ export class PackCmd implements Command {
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix [boolean]', 'keep custom (binding) prefix'],
     ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
-    ['j', 'json [boolean]', 'return the output as JSON']
+    ['j', 'json [boolean]', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
   alias = '';
@@ -38,7 +38,7 @@ export class PackCmd implements Command {
     const packResult = await this.packer.packComponent(compId, scopePathStr, options);
     return {
       data: packResult,
-      code: 0
+      code: 0,
     };
   }
 }

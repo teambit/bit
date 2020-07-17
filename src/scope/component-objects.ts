@@ -14,7 +14,7 @@ export default class ComponentObjects {
   toString(): string {
     return JSON.stringify({
       component: toBase64ArrayBuffer(this.component),
-      objects: this.objects.map(toBase64ArrayBuffer)
+      objects: this.objects.map(toBase64ArrayBuffer),
     });
   }
 
@@ -30,12 +30,12 @@ export default class ComponentObjects {
   }
 
   static manyToString(componentsAndObjects: Array<{ component: Buffer; objects: Buffer[] }>) {
-    const result = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString()));
+    const result = JSON.stringify(componentsAndObjects.map((componentAndObject) => componentAndObject.toString()));
     return result;
   }
 
   static manyFromString(str: string): ComponentObjects[] {
-    return JSON.parse(str).map(componentObject => ComponentObjects.fromString(componentObject));
+    return JSON.parse(str).map((componentObject) => ComponentObjects.fromString(componentObject));
   }
 
   static fromObject(object: Record<string, any>): ComponentObjects {
@@ -53,7 +53,7 @@ export default class ComponentObjects {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component: BitObject.parseSync(this.component),
-      objects: this.objects.map(obj => BitObject.parseSync(obj))
+      objects: this.objects.map((obj) => BitObject.parseSync(obj)),
     };
   }
   /**
@@ -63,7 +63,7 @@ export default class ComponentObjects {
     return {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component: await BitObject.parseObject(this.component),
-      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj)))
+      objects: await Promise.all(this.objects.map((obj) => BitObject.parseObject(obj))),
     };
   }
 }

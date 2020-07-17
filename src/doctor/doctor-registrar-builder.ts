@@ -16,7 +16,7 @@ export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: D
     new BrokenSymlinkFiles(),
     new ValidateNpmExec(),
     new ValidateYarnExec(),
-    new ValidateBitVersion()
+    new ValidateBitVersion(),
   ].concat(extensionDiagnoses);
   DoctorRegistrar.init(diagnoses);
 }

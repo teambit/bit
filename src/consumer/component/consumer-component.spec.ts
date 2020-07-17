@@ -5,7 +5,7 @@ import Component from './consumer-component';
 import CompilerExtension from '../../legacy-extensions/compiler-extension';
 import { SourceFile } from './sources';
 
-describe('ConsumerComponent', function() {
+describe('ConsumerComponent', function () {
   this.timeout(0);
   describe('fromString()', () => {
     describe('component with compiler', () => {
@@ -26,7 +26,7 @@ describe('ConsumerComponent', function() {
       name: 'is-string',
       mainFile: 'is-string.js',
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })]
+      files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })],
     };
     it('should return an empty array when there is no docs', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -60,7 +60,7 @@ describe('ConsumerComponent', function() {
         base: '.',
         path: 'is-string.spec.js',
         contents: Buffer.from(src),
-        test: true
+        test: true,
       });
       componentProps.files = [sourceFile, sourceFileSpec];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

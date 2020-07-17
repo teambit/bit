@@ -8,7 +8,7 @@ export class TagMap extends Map<SemVer, Tag> {
    * get snap by hash.
    */
   byHash(hash: Hash) {
-    const tag = Array.from(this.values()).find(currTag => currTag.snap.hash === hash);
+    const tag = Array.from(this.values()).find((currTag) => currTag.snap.hash === hash);
     return tag;
   }
 
@@ -20,7 +20,7 @@ export class TagMap extends Map<SemVer, Tag> {
   }
 
   static fromArray(tags: Tag[]) {
-    const tuples: [SemVer, Tag][] = tags.map(tag => [tag.version, tag]);
+    const tuples: [SemVer, Tag][] = tags.map((tag) => [tag.version, tag]);
     return new TagMap(tuples);
   }
 

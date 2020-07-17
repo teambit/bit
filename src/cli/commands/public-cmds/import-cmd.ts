@@ -28,7 +28,7 @@ export default class Import implements LegacyCommand {
     [
       'o',
       'objects',
-      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
+      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id",
     ],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
@@ -39,25 +39,25 @@ export default class Import implements LegacyCommand {
     [
       '',
       'skip-npm-install',
-      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)'
+      'do not install packages of the imported components. (it automatically enables save-dependencies-as-components flag)',
     ],
     [
       '',
       'ignore-package-json',
-      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)',
     ],
     [
       'm',
       'merge [strategy]',
-      'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
+      'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"',
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
     [
       '',
       'skip-lane',
-      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master'
-    ]
+      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -82,7 +82,7 @@ export default class Import implements LegacyCommand {
       merge,
       skipLane = false,
       dependencies = false,
-      dependents = false
+      dependents = false,
     }: {
       tester?: boolean;
       compiler?: boolean;
@@ -124,7 +124,7 @@ export default class Import implements LegacyCommand {
     }
     const environmentOptions: EnvironmentOptions = {
       tester,
-      compiler
+      compiler,
     };
 
     const importOptions: ImportOptions = {
@@ -142,12 +142,12 @@ export default class Import implements LegacyCommand {
       writePackageJson: !ignorePackageJson,
       skipLane,
       importDependenciesDirectly: dependencies,
-      importDependents: dependents
+      importDependents: dependents,
     };
-    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults => ({
+    return importAction(environmentOptions, importOptions, packageManagerArgs).then((importResults) => ({
       displayDependencies,
       json,
-      ...importResults
+      ...importResults,
     }));
   }
 
@@ -157,7 +157,7 @@ export default class Import implements LegacyCommand {
     importDetails,
     warnings,
     displayDependencies,
-    json
+    json,
   }: {
     dependencies?: ComponentWithDependencies[];
     envComponents?: Component[];
@@ -187,9 +187,9 @@ export default class Import implements LegacyCommand {
         components.length === 1
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
-      const componentDependencies = components.map(component => {
+      const componentDependencies = components.map((component) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        const details = importDetails.find((c) => c.id === component.id.toStringWithoutVersion());
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -211,7 +211,7 @@ export default class Import implements LegacyCommand {
     if (envComponents && !R.isEmpty(envComponents)) {
       envComponentsOutput = immutableUnshift(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        envComponents.map(envDependency => formatPlainComponentItem(envDependency.component)),
+        envComponents.map((envDependency) => formatPlainComponentItem(envDependency.component)),
         chalk.green('the following component environments were installed')
       ).join('\n');
     }
@@ -226,7 +226,7 @@ export default class Import implements LegacyCommand {
       return chalk.yellow('nothing to import');
     };
 
-    const logObject = obj => `> ${R.keys(obj)[0]}: ${R.values(obj)[0]}`;
+    const logObject = (obj) => `> ${R.keys(obj)[0]}: ${R.values(obj)[0]}`;
     const getWarningOutput = () => {
       if (!warnings) return '';
       let output = '\n';

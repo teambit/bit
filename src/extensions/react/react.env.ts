@@ -67,7 +67,7 @@ export class ReactEnv implements Environment {
     const tsconfig = require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
-      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')]
+      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')],
     });
   }
 
@@ -81,7 +81,7 @@ export class ReactEnv implements Environment {
    */
   getDevServer(context: DevServerContext): DevServer {
     const withDocs = Object.assign(context, {
-      entry: context.entry.concat([require.resolve('./docs')])
+      entry: context.entry.concat([require.resolve('./docs')]),
     });
 
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
@@ -114,16 +114,16 @@ export class ReactEnv implements Environment {
   async getDependencies() {
     return {
       dependencies: {
-        react: '-'
+        react: '-',
       },
       // TODO: add this only if using ts
       devDependencies: {
-        '@types/react': '^16.9.17'
+        '@types/react': '^16.9.17',
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.12.0'
-      }
+        react: '^16.12.0',
+      },
     };
   }
 

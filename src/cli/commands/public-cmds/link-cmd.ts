@@ -12,7 +12,7 @@ export default class Link implements LegacyCommand {
   alias = 'b';
   opts = [
     ['j', 'json', 'return the output as JSON'],
-    ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")']
+    ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")'],
   ] as CommandOptions;
   private = false;
   loader = true;

@@ -29,7 +29,7 @@ export default async function removeComponents({
   force,
   remote,
   track,
-  deleteFiles
+  deleteFiles,
 }: {
   consumer: Consumer | null | undefined; // when remote is false, it's always set
   ids: BitIds;
@@ -41,11 +41,11 @@ export default async function removeComponents({
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
   const bitIdsLatest = BitIds.fromArray(
-    ids.map(id => {
+    ids.map((id) => {
       return id.changeVersion(LATEST_BIT_VERSION);
     })
   );
-  const [localIds, remoteIds] = partition(bitIdsLatest, id => id.isLocal());
+  const [localIds, remoteIds] = partition(bitIdsLatest, (id) => id.isLocal());
   if (remote && localIds.length) {
     throw new GeneralError(
       `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
@@ -71,9 +71,9 @@ async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitId
   const context = {};
   enrichContextFromGlobal(context);
   const scope = consumer ? consumer.scope : null;
-  const removeP = Object.keys(groupedBitsByScope).map(async key => {
+  const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
     const resolvedRemote = await remotes.resolve(key, scope);
-    const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
+    const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });
 
@@ -100,7 +100,7 @@ async function removeLocal(
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
     await Promise.all(
-      bitIds.map(async id => {
+      bitIds.map(async (id) => {
         try {
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
@@ -123,15 +123,15 @@ async function removeLocal(
     missingComponents,
     dependentBits,
     removedFromLane,
-    removedDependencies
+    removedDependencies,
   } = await consumer.scope.removeMany(idsToRemove, force, true, consumer);
 
   if (!R.isEmpty(removedComponentIds) && !removedFromLane) {
-    const removedComponents = componentsToRemove.filter(c => removedComponentIds.hasWithoutVersion(c.id));
+    const removedComponents = componentsToRemove.filter((c) => removedComponentIds.hasWithoutVersion(c.id));
     await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
-      const invalidComponentsIds = invalidComponents.map(i => i.id);
+      const invalidComponentsIds = invalidComponents.map((i) => i.id);
       await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(
         consumer,
         removedComponents,

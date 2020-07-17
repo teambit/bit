@@ -24,7 +24,7 @@ export class PreviewExtension {
 
   static async provider([bundler]: [BundlerExtension]) {
     bundler.registerTarget({
-      entry: async () => [require.resolve('./preview.runtime')]
+      entry: async () => [require.resolve('./preview.runtime')],
     });
 
     return new PreviewExtension();

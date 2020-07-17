@@ -33,9 +33,9 @@ export default (async function componentsDiff(
   const tmp = new Tmp(consumer.scope);
 
   // try to resolve ids scope of by components array
-  const idsWithScope = ids.map(id => {
+  const idsWithScope = ids.map((id) => {
     if (!id.scope && components) {
-      const foundComponent = components.find(o => o.name === id.name);
+      const foundComponent = components.find((o) => o.name === id.name);
       if (foundComponent) return id.changeScope(foundComponent.scope);
     }
     return id;
@@ -44,12 +44,12 @@ export default (async function componentsDiff(
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        return Promise.all(idsWithScope.map(id => getComponentDiffBetweenVersions(id)));
+        return Promise.all(idsWithScope.map((id) => getComponentDiffBetweenVersions(id)));
       }
       if (version) {
-        return Promise.all(components.map(component => getComponentDiffOfVersion(component)));
+        return Promise.all(components.map((component) => getComponentDiffOfVersion(component)));
       }
-      return Promise.all(components.map(component => getComponentDiff(component)));
+      return Promise.all(components.map((component) => getComponentDiff(component)));
     };
     const componentsDiffResults = await getResults();
     await tmp.clear();
@@ -136,7 +136,7 @@ export default (async function componentsDiff(
 });
 
 function hasDiff(diffResult: DiffResults): boolean {
-  return !!((diffResult.filesDiff && diffResult.filesDiff.find(file => file.diffOutput)) || diffResult.fieldsDiff);
+  return !!((diffResult.filesDiff && diffResult.filesDiff.find((file) => file.diffOutput)) || diffResult.fieldsDiff);
 }
 
 async function getOneFileDiff(
@@ -169,7 +169,7 @@ async function getEnvFilesDiff(
   componentB: Component
 ): Promise<FileDiff[]> {
   const envs = ['compiler', 'tester'];
-  const envsDiffP = envs.map(env => {
+  const envsDiffP = envs.map((env) => {
     const filesA = componentA[env] && componentA[env].files ? componentA[env].files : [];
     const filesB = componentB[env] && componentB[env].files ? componentB[env].files : [];
     const filesAVersion = componentA.version;
@@ -192,14 +192,14 @@ async function getFilesDiff(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   fileNameAttribute? = 'relative'
 ): Promise<FileDiff[]> {
-  const filesAPaths = filesA.map(f => f[fileNameAttribute]);
-  const filesBPaths = filesB.map(f => f[fileNameAttribute]);
+  const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
+  const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
   const allPaths = R.uniq(filesAPaths.concat(filesBPaths));
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
-  const filesDiffP = allPaths.map(async relativePath => {
+  const filesDiffP = allPaths.map(async (relativePath) => {
     const getFilePath = async (files): Promise<PathOsBased> => {
-      const file = files.find(f => f[fileNameAttribute] === relativePath);
+      const file = files.find((f) => f[fileNameAttribute] === relativePath);
       const fileContent = file ? file.contents : '';
       return tmp.save(fileContent);
     };

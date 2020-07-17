@@ -36,7 +36,7 @@ function RootNode({ node }: { node: TreeNode }) {
 
     return (
       <>
-        {node.children.map(rootNode => (
+        {node.children.map((rootNode) => (
           <RootNode key={rootNode.id} node={rootNode} />
         ))}
       </>

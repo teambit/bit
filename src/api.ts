@@ -28,7 +28,7 @@ export function show(scopePath: string, id: string, opts?: Record<string, any>) 
   return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions, loadScopeFromCache }).then(
     ({ component }) => {
       if (Array.isArray(component)) {
-        return component.map(v => v.toObject());
+        return component.map((v) => v.toObject());
       }
       return component.toObject();
     }
@@ -41,8 +41,8 @@ export function list(
 ) {
   // When using the API programmatically do not use the scope cache by default
   const loadScopeFromCache = opts && opts.loadScopeFromCache !== undefined ? !!opts.loadScopeFromCache : false;
-  return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then(listScopeResult =>
-    listScopeResult.map(result => result.id.toString())
+  return scopeList(scopePath, namespacesUsingWildcards, loadScopeFromCache).then((listScopeResult) =>
+    listScopeResult.map((result) => result.id.toString())
   );
 }
 

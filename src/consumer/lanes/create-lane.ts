@@ -11,7 +11,7 @@ export default async function createNewLane(
   laneComponents?: LaneComponent[]
 ): Promise<Lane> {
   const lanes = await consumer.scope.listLanes();
-  if (lanes.find(lane => lane.name === laneName)) {
+  if (lanes.find((lane) => lane.name === laneName)) {
     throw new GeneralError(
       `lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`
     );

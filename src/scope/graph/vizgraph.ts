@@ -34,7 +34,7 @@ const defaultConfig: ConfigProps = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencyColor: '#ff0000',
   edgeColor: '#757575',
-  highlightColor: 'green'
+  highlightColor: 'green',
 };
 
 export default class VisualDependencyGraph {
@@ -76,10 +76,10 @@ export default class VisualDependencyGraph {
     const nodes = graphlib.nodes();
     const edges = graphlib.edges();
 
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       graph.addNode(node);
     });
-    edges.forEach(edge => {
+    edges.forEach((edge) => {
       const edgeType = graphlib.edge(edge);
       const vizEdge = graph.addEdge(edge.v, edge.w);
       if (edgeType !== 'dependencies') {
@@ -96,7 +96,7 @@ export default class VisualDependencyGraph {
       return this.graph.getNode(id.toString());
     }
     // if there is no version, search for the component with the latest version
-    const allIds = this.graphlib.nodes().map(n => this.graphlib.node(n));
+    const allIds = this.graphlib.nodes().map((n) => this.graphlib.node(n));
     const bitIds = BitIds.fromArray(allIds);
     const latestId = getLatestVersionNumber(bitIds, id);
     return this.graph.getNode(latestId.toString());
@@ -166,7 +166,7 @@ function setEdgeColor(edge, color) {
  */
 function checkGraphvizInstalled(graphVizPath?: string) {
   const options: Record<string, any> = {
-    shell: true
+    shell: true,
   };
   if (graphVizPath) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -174,7 +174,7 @@ function checkGraphvizInstalled(graphVizPath?: string) {
   }
 
   const childProcess = execa('gvpr', ['-V'], options);
-  return childProcess.catch(e => {
+  return childProcess.catch((e) => {
     logger.debug(`Graphviz could not be found in path: ${graphVizPath || 'default path'}`);
     throw new Error(`Graphviz could not be found. Ensure that "gvpr" is in your $PATH.\n${e}`);
   });
@@ -194,13 +194,13 @@ function createGraphvizOptions(config) {
         overlap: false,
         pad: 0.111,
         layout: config.layout,
-        bgcolor: config.backgroundColor
+        bgcolor: config.backgroundColor,
       },
       graphVizOptions.G
     ),
     E: Object.assign(
       {
-        color: config.edgeColor
+        color: config.edgeColor,
       },
       graphVizOptions.E
     ),
@@ -209,9 +209,9 @@ function createGraphvizOptions(config) {
         fontname: config.fontName,
         fontsize: config.fontSize,
         color: config.nodeColor,
-        fontcolor: config.nodeColor
+        fontcolor: config.nodeColor,
       },
       graphVizOptions.N
-    )
+    ),
   };
 }

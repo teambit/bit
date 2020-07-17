@@ -23,7 +23,7 @@ export default (async function run({
   ids,
   forkLevel,
   includeUnmodified = false,
-  verbose
+  verbose,
 }: {
   ids: string[] | null | undefined;
   forkLevel: ForkLevel;
@@ -35,7 +35,7 @@ export default (async function run({
     logger.debug('specs-runner.run, running tests on one child process without ids');
     return runOnChildProcess({
       includeUnmodified,
-      verbose
+      verbose,
     });
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
@@ -44,16 +44,16 @@ export default (async function run({
     return runOnChildProcess({
       ids,
       includeUnmodified: false, // no meaning to pass this when there is specific ids
-      verbose
+      verbose,
     });
   }
   Analytics.addBreadCrumb('specs-runner.run', 'running tests on child process for each component');
   logger.debug('specs-runner.run, running tests on child process for each component');
-  const allRunnersP = ids.map(id =>
+  const allRunnersP = ids.map((id) =>
     runOnChildProcess({
       ids: [id],
       includeUnmodified: false, // no meaning to pass this when there is specific ids
-      verbose
+      verbose,
     })
   );
   const allRunnersResults = await Promise.all(allRunnersP);
@@ -86,7 +86,7 @@ export default (async function run({
 async function runOnChildProcess({
   ids,
   includeUnmodified,
-  verbose
+  verbose,
 }: {
   ids?: string[] | null | undefined;
   includeUnmodified: boolean | null | undefined;
@@ -105,7 +105,7 @@ async function runOnChildProcess({
   }
   const baseEnv: Record<string, any> = {
     __verbose__: verbose,
-    __includeUnmodified__: includeUnmodified
+    __includeUnmodified__: includeUnmodified,
   };
   // Don't use ternary condition since if we put it as undefined
   // It will pass to the fork as "undefined" (string) instad of not passing it at all
@@ -174,12 +174,12 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
     }
     const finalResults = {
       type: 'error',
-      error: deserializedError
+      error: deserializedError,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return finalResults;
   }
-  const deserializeFailure = failure => {
+  const deserializeFailure = (failure) => {
     if (!failure) return undefined;
     const deserializedFailure = failure;
     if (failure.err) {
@@ -192,7 +192,7 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
     return deserializedFailure;
   };
 
-  const deserializeResult = result => {
+  const deserializeResult = (result) => {
     result.componentId = new BitId(result.componentId); // when BitId is received from a fork it loses its class and appears as an object
     if (!result.failures) return result;
     result.failures = result.failures.map(deserializeFailure);
@@ -202,6 +202,6 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
   const deserializedResults = results.results.map(deserializeResult);
   return {
     type: 'results',
-    results: deserializedResults
+    results: deserializedResults,
   };
 }

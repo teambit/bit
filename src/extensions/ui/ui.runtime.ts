@@ -17,6 +17,6 @@ harmony
     const uiExtension = harmony.get<UIRuntimeExtension>('UIRuntimeExtension');
     uiExtension.render();
   })
-  .catch(err => {
+  .catch((err) => {
     throw err;
   });

@@ -15,5 +15,5 @@ export {
   MissingDependencies,
   NewerVersionFound,
   LoginFailed,
-  ComponentOutOfSync
+  ComponentOutOfSync,
 };

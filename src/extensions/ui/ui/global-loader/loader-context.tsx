@@ -9,7 +9,7 @@ export type LoaderApi = {
 const defaultLoaderApi: LoaderApi = {
   isActive: () => false,
   update: () => false,
-  remove: () => false
+  remove: () => false,
 };
 
 export const LoaderContext = createContext<LoaderApi>(defaultLoaderApi);

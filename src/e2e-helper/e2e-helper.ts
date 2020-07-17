@@ -79,7 +79,7 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
 }
 
 export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
+  Object.keys(FileStatus).map((status) => [status, removeChalkCharacters(FileStatus[status])])
 );
 
 export { VERSION_DELIMITER };

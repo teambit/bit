@@ -18,7 +18,7 @@ import {
   TESTER_ENV_TYPE,
   LATEST,
   DEPENDENCIES_FIELDS,
-  DEFAULT_LANE
+  DEFAULT_LANE,
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -46,7 +46,7 @@ import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
 import {
   getManipulateDirWhenImportingComponents,
-  getManipulateDirForExistingComponents
+  getManipulateDirForExistingComponents,
 } from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
 import { getScopeRemotes } from '../scope/scope-remotes';
@@ -108,7 +108,7 @@ export default class Consumer {
     isolated = false,
     bitMap,
     addedGitHooks,
-    existingGitHooks
+    existingGitHooks,
   }: ConsumerProps) {
     this.projectPath = projectPath;
     this.config = config;
@@ -197,7 +197,7 @@ export default class Consumer {
     if (semver.gte(bitmapVersion, BIT_VERSION)) {
       logger.silly('bit.map version is up to date');
       return {
-        run: false
+        run: false,
       };
     }
     loader.start(BEFORE_MIGRATION);
@@ -218,7 +218,7 @@ export default class Consumer {
 
     return {
       run: true,
-      success: true
+      success: true,
     };
   }
 
@@ -278,7 +278,7 @@ export default class Consumer {
    */
   async loadComponentFromModelIfExist(id: BitId): Promise<Component | undefined> {
     if (!id.version) return undefined;
-    return this.loadComponentFromModel(id).catch(err => {
+    return this.loadComponentFromModel(id).catch((err) => {
       if (err instanceof ComponentNotFound) return undefined;
       throw err;
     });
@@ -286,7 +286,7 @@ export default class Consumer {
 
   async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    const componentsP = modelComponent.listVersions().map(async versionNum => {
+    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
       const componentVersion = modelComponent.toComponentVersion(versionNum);
       const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
       return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects, manipulateDirData);
@@ -347,7 +347,7 @@ export default class Consumer {
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
       : await scopeComponentsImporter.importMany(ids);
     const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
-      versionDependenciesArr.map(v => v.component.id),
+      versionDependenciesArr.map((v) => v.component.id),
       saveDependenciesAsComponents
     );
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
@@ -355,11 +355,11 @@ export default class Consumer {
       versionDependenciesArr,
       this.scope.objects
     );
-    const componentWithDependencies = await pMapSeries(versionDependenciesArr, versionDependencies =>
+    const componentWithDependencies = await pMapSeries(versionDependenciesArr, (versionDependencies) =>
       versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
     );
-    componentWithDependencies.forEach(componentWithDeps => {
-      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
+    componentWithDependencies.forEach((componentWithDeps) => {
+      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find((c) =>
         c.id.isEqual(componentWithDeps.component.id)
       );
       if (!shouldSavedAsComponents) {
@@ -378,7 +378,7 @@ export default class Consumer {
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
         id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope)
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope),
       };
     });
     return shouldDependenciesSavedAsComponents;
@@ -394,13 +394,13 @@ export default class Consumer {
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
     const candidateComponents = this.bitMap.getAuthoredAndImportedBitIds();
-    const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
+    const modifiedComponentsWithoutVersions = modifiedComponents.map((modifiedComponent) =>
       modifiedComponent.toStringWithoutVersion()
     );
     // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
     const idsWithoutModified = candidateComponents.filter(
-      component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+      (component) => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
     return BitIds.fromArray(idsWithoutModified);
   }
@@ -434,17 +434,17 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { version } = await this.scope.sources.consumerComponentToVersion({
         consumer: this,
-        consumerComponent: componentFromFileSystem
+        consumerComponent: componentFromFileSystem,
       });
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
-        dependenciesFS.get().forEach(dependency => {
+        dependenciesFS.get().forEach((dependency) => {
           const dependencyFromModel = dependenciesModel
             .get()
-            .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
+            .find((modelDependency) => modelDependency.id.isEqualWithoutVersion(dependency.id));
           if (dependencyFromModel && !dependency.id.hasVersion()) {
             dependency.id = dependencyFromModel.id;
           }
@@ -491,7 +491,7 @@ export default class Consumer {
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
-      DEPENDENCIES_FIELDS.forEach(field => {
+      DEPENDENCIES_FIELDS.forEach((field) => {
         if (overrides[field]) overrides[field] = sortObject(overrides[field]);
       });
     }
@@ -523,23 +523,23 @@ export default class Consumer {
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     const componentsWithRelativeAuthored = components.filter(
-      component => component.issues && component.issues.relativeComponentsAuthored
+      (component) => component.issues && component.issues.relativeComponentsAuthored
     );
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
     if (!ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter(component => {
+      const componentsWithOtherIssues = components.filter((component) => {
         const issues = component.issues;
         return (
           issues &&
-          Object.keys(issues).some(label => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
+          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
         );
       });
       if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
     }
-    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
     }
@@ -556,10 +556,10 @@ export default class Consumer {
       skipTests,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
-      skipAutoTag
+      skipAutoTag,
     });
 
-    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
+    const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await this.updateComponentsVersions(allComponents);
 
@@ -574,7 +574,7 @@ export default class Consumer {
     skipTests = false,
     verbose = false,
     skipAutoSnap = false,
-    resolveUnmerged = false
+    resolveUnmerged = false,
   }: {
     ids: BitIds;
     message?: string;
@@ -586,7 +586,7 @@ export default class Consumer {
     resolveUnmerged?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
-      components: ids.toString()
+      components: ids.toString(),
     });
     const components = await this._loadComponentsForTag(ids);
 
@@ -595,23 +595,23 @@ export default class Consumer {
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     const componentsWithRelativeAuthored = components.filter(
-      component => component.issues && component.issues.relativeComponentsAuthored
+      (component) => component.issues && component.issues.relativeComponentsAuthored
     );
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
     if (!ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter(component => {
+      const componentsWithOtherIssues = components.filter((component) => {
         const issues = component.issues;
         return (
           issues &&
-          Object.keys(issues).some(label => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
+          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
         );
       });
       if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
     }
-    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
     }
@@ -627,10 +627,10 @@ export default class Consumer {
       verbose,
       skipAutoTag: skipAutoSnap,
       resolveUnmerged,
-      isSnap: true
+      isSnap: true,
     });
 
-    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
+    const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await this.updateComponentsVersions(allComponents);
 
@@ -646,7 +646,7 @@ export default class Consumer {
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
     const componentsWithCustomModuleResolution: string[] = [];
-    components.forEach(component => {
+    components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
       const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
@@ -700,7 +700,7 @@ export default class Consumer {
       return modelComponent.hasHead();
     };
 
-    const updateVersionsP = components.map(async unknownComponent => {
+    const updateVersionsP = components.map(async (unknownComponent) => {
       const id: BitId =
         unknownComponent instanceof ModelComponent
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
@@ -795,7 +795,7 @@ export default class Consumer {
       scope,
       config,
       bitMap,
-      existingGitHooks
+      existingGitHooks,
     });
   }
 
@@ -824,7 +824,7 @@ export default class Consumer {
       created: true,
       scope,
       isolated: true,
-      config
+      config,
     });
   }
 
@@ -856,7 +856,7 @@ export default class Consumer {
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config,
-      scope
+      scope,
     });
   }
 
@@ -910,9 +910,9 @@ export default class Consumer {
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
     const authoredAndImportedComponents = this.bitMap.getAllIdsAvailableOnLane([
       COMPONENT_ORIGINS.IMPORTED,
-      COMPONENT_ORIGINS.AUTHORED
+      COMPONENT_ORIGINS.AUTHORED,
     ]);
-    const componentsIds = BitIds.fromArray(components.map(c => c.id));
+    const componentsIds = BitIds.fromArray(components.map((c) => c.id));
     return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
 
@@ -926,7 +926,7 @@ export default class Consumer {
       versionDependenciesArr,
       this.scope.objects
     );
-    const dependentComponentsP = versionDependenciesArr.map(c =>
+    const dependentComponentsP = versionDependenciesArr.map((c) =>
       c.component.toConsumer(this.scope.objects, manipulateDirData)
     );
     return Promise.all(dependentComponentsP);
@@ -951,7 +951,7 @@ export default class Consumer {
       bitJsonPath: path.dirname(this.config.path),
       options: envObject.options,
       envType,
-      context
+      context,
     };
   }
 

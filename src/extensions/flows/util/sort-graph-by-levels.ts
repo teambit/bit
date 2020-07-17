@@ -25,7 +25,7 @@ export function toposortByLevels(graph: Graph, throwForCycles = false): Array<Bi
       if (!accum.length) {
         accum.push({
           inEdgeCount: inEdges ? inEdges.length : 0,
-          edges: [curr]
+          edges: [curr],
         });
         return accum;
       }
@@ -38,12 +38,12 @@ export function toposortByLevels(graph: Graph, throwForCycles = false): Array<Bi
       } else {
         accum.push({
           inEdgeCount: inEdges.length,
-          edges: [curr]
+          edges: [curr],
         });
       }
       return accum;
     }, [])
-    .map(level => level.edges);
+    .map((level) => level.edges);
 }
 
 function getGraphSorted(graph: Graph): string[] {

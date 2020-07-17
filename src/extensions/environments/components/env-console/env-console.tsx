@@ -13,7 +13,7 @@ export function EnvConsole() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCounter(previousCounter => previousCounter + 1);
+      setCounter((previousCounter) => previousCounter + 1);
     }, 100);
 
     return () => {
