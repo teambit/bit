@@ -1,7 +1,7 @@
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { BuilderCmd } from './run.cmd';
-import { Component, ComponentID } from '../component';
+import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
@@ -9,6 +9,10 @@ import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
+import { ExtensionArtifact } from './artifact';
+import { CoreExt, Core } from '../core';
+import { GraphQLExtension } from '../graphql';
+import { builderSchema } from './builder.graphql';
 
 /**
  * extension config type.
@@ -22,18 +26,6 @@ export type BuilderConfig = {
 
 export class BuilderExtension {
   static id = '@teambit/builder';
-  /**
-   * extension dependencies
-   */
-  static dependencies = [
-    CLIExtension,
-    Environments,
-    WorkspaceExt,
-    ScopeExtension,
-    IsolatorExtension,
-    ReporterExt,
-    LoggerExt
-  ];
 
   constructor(
     /**
@@ -49,7 +41,17 @@ export class BuilderExtension {
     /**
      * builder service.
      */
-    private service: BuilderService
+    private service: BuilderService,
+
+    /**
+     * scope extension
+     */
+    private scope: ScopeExtension,
+
+    /**
+     * core extension.
+     */
+    private core: Core
   ) {}
 
   async tagListener(ids: BitId[]) {
@@ -68,18 +70,51 @@ export class BuilderExtension {
     return buildResult;
   }
 
-  static async provider([cli, envs, workspace, scope, isolator, reporter, logger]: [
+  /**
+   * return a list of artifacts for the given hash and component id.
+   */
+  async getArtifacts(id: ComponentID, hash: string): Promise<ExtensionArtifact[]> {
+    const component = await this.scope.getOrThrow(id);
+    const state = await component.loadState(hash);
+    const extensionArtifacts = state.config.extensions.map(extensionData => {
+      return new ExtensionArtifact(
+        // @ts-ignore TODO: remove when @david fixes `extensionData.artifacts` to be abstract vinyl only.
+        extensionData.artifacts,
+        this.core.getDescriptor(extensionData.id.toString())
+      );
+    });
+
+    return extensionArtifacts;
+  }
+
+  static dependencies = [
+    CLIExtension,
+    Environments,
+    WorkspaceExt,
+    ScopeExtension,
+    IsolatorExtension,
+    ReporterExt,
+    LoggerExt,
+    CoreExt,
+    GraphQLExtension,
+    ComponentExtension
+  ];
+
+  static async provider([cli, envs, workspace, scope, isolator, reporter, logger, core, graphql]: [
     CLIExtension,
     Environments,
     Workspace,
     ScopeExtension,
     IsolatorExtension,
     Reporter,
-    Logger
+    Logger,
+    Core,
+    GraphQLExtension
   ]) {
     const logPublisher = logger.createLogPublisher(BuilderExtension.id);
     const builderService = new BuilderService(isolator, workspace, logPublisher);
-    const builder = new BuilderExtension(envs, workspace, builderService);
+    const builder = new BuilderExtension(envs, workspace, builderService, scope, core);
+    graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 

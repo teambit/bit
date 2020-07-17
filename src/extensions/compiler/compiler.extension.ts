@@ -10,6 +10,12 @@ import { CompilerTask } from './compiler.task';
 const name = 'compile';
 
 export default {
+  // id: '@teambit/compiler',
+  icon: () => {
+    return `<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="25" cy="25" r="20"/>
+    </svg>`;
+  },
   name,
   dependencies: [CLIExtension, WorkspaceExt, Environments],
   provider: provideCompile

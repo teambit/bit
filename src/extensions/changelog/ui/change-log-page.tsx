@@ -21,7 +21,7 @@ export function ChangeLogPage({ versions, className }: ChangeLogPageProps) {
     <div className={classNames(styles.changeLogPage, className)}>
       <H1 className={styles.title}>History</H1>
       <Separator />
-      {tags.map((tag, index) => (
+      {tags.reverse().map((tag, index) => (
         <TagBlock key={index} tag={tag} />
       ))}
     </div>

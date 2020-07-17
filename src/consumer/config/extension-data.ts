@@ -2,8 +2,8 @@
 import R, { forEachObjIndexed } from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
 import { AbstractVinyl } from '../component/sources';
-import { Source } from '../../scope/models';
 import { Artifact } from '../component/sources/artifact';
+import Source from '../../scope/models/source';
 
 export class ExtensionDataEntry {
   constructor(
@@ -12,6 +12,7 @@ export class ExtensionDataEntry {
     public name?: string,
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
+    // TODO: rename to files and make sure it only includes abstract vinyl
     public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = []
   ) {}
 
