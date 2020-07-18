@@ -1,4 +1,3 @@
-import React from 'react';
 import { Command, CommandOptions } from '../cli';
 import { Compile } from './compile';
 
@@ -17,13 +16,11 @@ export class CompileCmd implements Command {
 
   constructor(private compile: Compile) {}
 
-  async render([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
-    // @ts-ignore
+  async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
     const compileResults = await this.compile.compileOnWorkspace(components, { verbose, noCache });
     // eslint-disable-next-line no-console
     console.log('compileResults', compileResults);
-    const output = `${compileResults.length} components have been compiled successfully`;
-    return <div>{output}</div>;
+    return `${compileResults.length} components have been compiled successfully`;
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {

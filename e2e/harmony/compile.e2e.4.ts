@@ -41,7 +41,7 @@ describe('compile extension', function () {
         const capsules = JSON.parse(capsulesJson);
         capsules.capsules.forEach((c) => expect(c).to.not.have.string('comp1'));
       });
-      it('should write the dists files inside the node-modules of the component', () => {
+      it.only('should write the dists files inside the node-modules of the component', () => {
         const nmComponent = path.join(
           helper.scopes.localPath,
           'node_modules',

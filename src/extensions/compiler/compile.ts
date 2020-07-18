@@ -4,7 +4,6 @@ import { Workspace } from '../workspace';
 import { DEFAULT_DIST_DIRNAME } from './../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { BitId, BitIds } from '../../bit-id';
-import buildComponent from '../../consumer/component-ops/build-component';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
@@ -15,8 +14,6 @@ import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments } from '../environments';
 import { CompilerTask } from './compiler.task';
 import { Compiler } from './types';
-import { Component } from '../component';
-import { Capsule } from '../isolator';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -140,7 +137,7 @@ ${compileErrors.map(formatError).join('\n')}`);
     return allBuildResults;
   }
 
-  async compileWithLegacyCompilers(
+  private async compileWithLegacyCompilers(
     components: ConsumerComponent[],
     noCache?: boolean,
     verbose?: boolean,
@@ -168,25 +165,6 @@ ${compileErrors.map(formatError).join('\n')}`);
 
     return buildResults;
   }
-
-  populateComponentDist(params: { verbose: boolean; noCache: boolean }, component: ComponentAndCapsule) {
-    return buildComponent({
-      component: component.consumerComponent,
-      scope: this.workspace.consumer.scope,
-      consumer: this.workspace.consumer,
-      verbose: params.verbose,
-      noCache: params.noCache,
-    });
-  }
-
-  async writeComponentDist(componentAndCapsule: ComponentAndCapsule) {
-    const dataToPersist = new DataToPersist();
-    const distsFiles = componentAndCapsule.consumerComponent.dists.get();
-    distsFiles.map((d) => d.updatePaths({ newBase: 'dist' }));
-    dataToPersist.addManyFiles(distsFiles);
-    await dataToPersist.persistAllToCapsule(componentAndCapsule.capsule);
-    return distsFiles.map((d) => d.path);
-  }
 }
 
 function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): BitId[] {
@@ -195,9 +173,3 @@ function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): 
   }
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }
-
-export type ComponentAndCapsule = {
-  consumerComponent: ConsumerComponent;
-  component: Component;
-  capsule: Capsule;
-};

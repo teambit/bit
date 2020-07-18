@@ -1,5 +1,4 @@
-import { BuildContext } from '../builder';
-import { BuildTask, BuildResults } from '../builder';
+import { BuildTask, BuildContext, BuildResults } from '../builder';
 import { Compiler } from './types';
 
 /**
