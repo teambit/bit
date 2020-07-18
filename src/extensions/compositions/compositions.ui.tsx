@@ -14,3 +14,5 @@ export class CompositionsUI {
     return compositions;
   }
 }
+
+export default CompositionsUI;

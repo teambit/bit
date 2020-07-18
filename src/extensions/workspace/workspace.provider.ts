@@ -14,6 +14,8 @@ import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
+import { UIExtension } from '../ui';
+import { WorkspaceUIRoot } from './workspace.ui-root';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -23,7 +25,8 @@ export type WorkspaceDeps = [
   DependencyResolverExtension,
   Variants,
   Logger,
-  GraphQLExtension
+  GraphQLExtension,
+  UIExtension
 ];
 
 export type WorkspaceCoreConfig = {
@@ -42,7 +45,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -84,6 +87,7 @@ export default async function provideWorkspace(
       });
 
       const workspaceSchema = getWorkspaceSchema(workspace);
+      ui.registerUiRoot(new WorkspaceUIRoot(workspace));
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));

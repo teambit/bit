@@ -61,3 +61,5 @@ export class ComponentUI {
     return componentUI;
   }
 }
+
+export default ComponentUI;

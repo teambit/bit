@@ -54,6 +54,13 @@ export class ScopeExtension implements ComponentFactory {
   ) {}
 
   /**
+   * name of the scope
+   */
+  get name(): string {
+    return this.legacyScope.name;
+  }
+
+  /**
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
@@ -90,6 +97,10 @@ export class ScopeExtension implements ComponentFactory {
     // TODO: implement
   }
 
+  /**
+   * get a component.
+   * @param id component id
+   */
   async get(id: ComponentID): Promise<Component | undefined> {
     const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     if (!modelComponent) return undefined;
@@ -108,17 +119,39 @@ export class ScopeExtension implements ComponentFactory {
     );
   }
 
+  /**
+   * list all components in the scope.
+   */
+  list() {
+    this.legacyScope.list();
+  }
+
+  startRuntime() {}
+
+  /**
+   * get a component and throw an exception if not found.
+   * @param id component id
+   */
   async getOrThrow(id: ComponentID): Promise<Component> {
     const component = await this.get(id);
     if (!component) throw new ComponentNotFound(id);
     return component;
   }
 
+  /**
+   * returns a specific state of a component.
+   * @param id component ID.
+   * @param hash state hash.
+   */
   async getState(id: ComponentID, hash: string): Promise<State> {
     const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
     return this.createStateFromVersion(id, version);
   }
 
+  /**
+   * resolve a component ID.
+   * @param id component ID
+   */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id.toString());
     return ComponentID.fromLegacy(legacyId);
