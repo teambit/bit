@@ -122,8 +122,8 @@ export class Component {
   }
 
   // TODO: @david after snap we need to make sure to refactor here.
-  loadState(snapId: string) {
-    this.factory.getState(this.id, snapId);
+  loadState(snapId: string): Promise<State> {
+    return this.factory.getState(this.id, snapId);
   }
 
   /**
