@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
-import { ComponentID } from './id';
 import { ComponentMeta } from './component-meta';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { ComponentExtension } from './component.extension';
