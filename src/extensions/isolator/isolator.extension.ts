@@ -1,27 +1,21 @@
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
-import { flatten, filter, uniq, concat, map, equals } from 'ramda';
+import { map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component, ComponentID } from '../component';
+import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
 import CapsuleList from './capsule-list';
-import { CapsuleListCmd } from './capsule-list.cmd';
-import { CapsuleCreateCmd } from './capsule-create.cmd';
-import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId, BitIds } from '../../bit-id';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
-import logger from '../../logger/logger';
 import { CLIExtension } from '../cli';
 import { DEPENDENCIES_FIELDS } from '../../constants';
-import { Network } from './network';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -31,7 +25,7 @@ export type ListResults = {
   capsules: string[];
 };
 
-async function createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
+async function createCapsulesFromComponents(components: Component[], baseDir: string, orchOptions): Promise<Capsule[]> {
   const capsules: Capsule[] = await Promise.all(
     map((component: Component) => {
       return Capsule.createFromComponent(component, baseDir, orchOptions);
@@ -40,48 +34,17 @@ async function createCapsulesFromComponents(components: any[], baseDir, orchOpti
   return capsules;
 }
 
-function findSuccessorsInGraph(graph: Graph, seeders: string[]) {
-  const dependenciesFromAllIds = flatten(seeders.map((bitId) => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-  const components: ConsumerComponent[] = filter(
-    (val) => val,
-    uniq(concat(dependenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
-  );
-  return components;
-}
-
 export class IsolatorExtension {
   static id = '@teambit/isolator';
-  static dependencies = [DependencyResolverExtension, CLIExtension];
+  static dependencies = [DependencyResolverExtension];
   static defaultConfig = {};
-  static async provide([dependencyResolver, cli]: IsolatorDeps) {
+  static async provide([dependencyResolver]: IsolatorDeps) {
     const isolator = new IsolatorExtension(dependencyResolver);
-    const capsuleListCmd = new CapsuleListCmd(isolator);
-    const capsuleCreateCmd = new CapsuleCreateCmd(isolator);
-    cli.register(capsuleListCmd);
-    cli.register(capsuleCreateCmd);
     return isolator;
   }
   constructor(private dependencyResolver: DependencyResolverExtension) {}
 
-  async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
-    logger.debug(`isolatorExt, createNetworkFromConsumer ${seeders.join(', ')}`);
-    const seedersIds = seeders.map((seeder) => consumer.getParsedId(seeder));
-    const graph = await buildOneGraphForComponents(seedersIds, consumer);
-    const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
-    opts = Object.assign(opts || {}, { consumer });
-    return this.createNetwork(seedersIds, graph, baseDir, opts);
-  }
-  private getBitIdsIncludeVersionsFromGraph(seedersIds: BitId[], graph: Graph): BitId[] {
-    const components: ConsumerComponent[] = graph.nodes().map((n) => graph.node(n));
-    return seedersIds.map((seederId) => {
-      const component = components.find((c) => c.id.isEqual(seederId) || c.id.isEqualWithoutVersion(seederId));
-      if (!component) throw new Error(`unable to find ${seederId.toString()} in the graph`);
-      return component.id;
-    });
-  }
-  private async createNetwork(seedersIds: BitId[], graph: Graph, baseDir, opts?: {}) {
-    const seederIds = this.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
-    const seeders = seederIds.map((s) => s.toString());
+  public async isolateComponents(baseDir: string, components: Component[], opts?: {}): Promise<CapsuleList> {
     const config = Object.assign(
       {},
       {
@@ -90,25 +53,19 @@ export class IsolatorExtension {
       },
       opts
     );
-    const compsAndDeps = findSuccessorsInGraph(graph, seeders);
-    const filterNonWorkspaceComponents = () => {
-      // @ts-ignore @todo: fix this opts to have types
-      const consumer: Consumer = opts?.consumer;
-      if (!consumer) return compsAndDeps;
-      return compsAndDeps.filter((c) => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true }));
-    };
-    const components = filterNonWorkspaceComponents();
-    const capsules = await createCapsulesFromComponents(components, baseDir, config);
+    const capsulesDir = path.join(CAPSULES_BASE_DIR, hash(baseDir)); // TODO: move this logic elsewhere
+    const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
 
     const capsuleList = new CapsuleList(
       ...capsules.map((c) => {
-        const id = c.component.id instanceof BitId ? new ComponentID(c.component.id) : c.component.id;
+        const id = c.component.id;
         return { id, capsule: c };
       })
     );
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await writeComponentsToCapsules(components, capsuleList);
+    const consumerComponents = components.map((c) => c.state._consumer);
+    await writeComponentsToCapsules(consumerComponents, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     if (config.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
@@ -132,12 +89,9 @@ export class IsolatorExtension {
       );
     });
 
-    return new Network(
-      capsuleList,
-      graph,
-      seederIds.map((s) => new ComponentID(s))
-    );
+    return capsuleList;
   }
+
   async list(consumer: Consumer): Promise<ListResults> {
     const workspacePath = consumer.getPath();
     try {
@@ -191,8 +145,7 @@ async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<Caps
 
 function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
   capsules.forEach((capsule) => {
-    // @ts-ignore
-    const component: ConsumerComponent = capsule.component as ConsumerComponent;
+    const component: ConsumerComponent = capsule.component.state._consumer;
     const packageJson = getCurrentPackageJson(component, capsule);
     const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
     if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);

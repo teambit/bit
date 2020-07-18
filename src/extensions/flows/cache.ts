@@ -16,8 +16,7 @@ export class ExecutionCache {
 
   hash(capsule: Capsule, name: string) {
     const configString = JSON.stringify(path(['component', 'extensions'], capsule));
-    // for some reason in this point i get consumerComponent and not a component
-    const consumerComponent = (capsule.component as any) as ConsumerComponent;
+    const consumerComponent = capsule.component.state._consumer;
     const { files, packageJsonFile } = consumerComponent;
     const vinylFiles: AbstractVinyl[] = [...files];
     if (packageJsonFile) vinylFiles.push(packageJsonFile.toVinylFile());

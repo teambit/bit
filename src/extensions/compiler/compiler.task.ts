@@ -10,6 +10,6 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const compilerInstance: Compiler = context.env.getCompiler();
-    return compilerInstance.compileOnCapsules(context);
+    return compilerInstance.build(context);
   }
 }

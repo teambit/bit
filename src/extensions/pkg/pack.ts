@@ -70,7 +70,8 @@ export class Packer {
     if (!bitId.hasScope()) {
       throw new GeneralError(`unable to find "${componentId}" in the scope, make sure the component is tagged first`);
     }
-    const network = await this.isolator.createNetworkFromConsumer([componentId], consumer);
+    if (!this.workspace) throw new Error('packUsingCapsule expect to have workspace');
+    const network = await this.workspace.createNetwork([componentId]);
     const capsule = network.capsules.getCapsuleIgnoreVersion(new ComponentID(bitId));
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return this.runNpmPack(capsule.wrkDir);
