@@ -19,6 +19,7 @@ import { Version, ModelComponent } from '../../scope/models';
 import Config from '../component/config';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
+import { ComponentNotFound } from './exceptions';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -105,6 +106,12 @@ export class ScopeExtension implements ComponentFactory {
       await this.getTagMap(modelComponent),
       this
     );
+  }
+
+  async getOrThrow(id: ComponentID): Promise<Component> {
+    const component = await this.get(id);
+    if (!component) throw new ComponentNotFound(id);
+    return component;
   }
 
   async getState(id: ComponentID, hash: string): Promise<State> {

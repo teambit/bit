@@ -62,5 +62,5 @@ export const manifestsMap = {
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WatcherExtension.name]: WatcherExtension,
-  [WorkspaceExt.name]: WorkspaceExt
+  [WorkspaceExt.name]: WorkspaceExt,
 };

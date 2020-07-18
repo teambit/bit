@@ -42,7 +42,7 @@ export function TagBlock({ tag, className, ...rest }: VersionBlockProps) {
         /> */}
         {/* <Image alt="" src="bit-assets/simulations.svg" /> */}
       </div>
-      <CommitDetails commitTitle="Minor changes" commitMessage={tag.snap.message} />
+      <CommitDetails commitTitle="" commitMessage={tag.snap.message} />
     </div>
   );
 }

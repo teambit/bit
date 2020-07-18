@@ -14,6 +14,8 @@ import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
+import { CapsuleListCmd } from './capsule-list.cmd';
+import { CapsuleCreateCmd } from './capsule-create.cmd';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -87,6 +89,11 @@ export default async function provideWorkspace(
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
+
+      const capsuleListCmd = new CapsuleListCmd(isolator);
+      const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
+      cli.register(capsuleListCmd);
+      cli.register(capsuleCreateCmd);
 
       return workspace;
     }

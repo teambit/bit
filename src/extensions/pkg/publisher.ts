@@ -68,8 +68,7 @@ export class Publisher {
       if (err.stderr) this.logger.error(componentIdStr, err.stderr);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
-    // @ts-ignore fix once capsule has the right Component object
-    const id = new ComponentID(capsule.component.id as BitId);
+    const id = capsule.component.id;
     return { id, data, errors };
   }
 
@@ -80,7 +79,7 @@ export class Publisher {
       return [];
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
-    const network = await this.isolator.createNetworkFromConsumer(idsToPublish, consumer);
+    const network = await this.workspace.createNetwork(idsToPublish);
     return network.seedersCapsules;
   }
 

@@ -61,13 +61,15 @@ export class ComponentModel {
    * create an instance of a component from a plain object.
    */
   static from({ id, server, displayName, compositions, packageName, tags }: ComponentModelProps) {
+    const tagsArray = tags || [];
+
     return new ComponentModel(
       ComponentID.fromObject(id),
       displayName,
       packageName,
       server,
       Composition.fromArray(compositions),
-      TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag)))
+      TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag)))
     );
   }
 
