@@ -22,6 +22,9 @@ import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';
 import { UIExtension } from '../ui';
 import { ScopeUIRoot } from './scope.ui-root';
+import { GraphQLExtension } from '../graphql';
+import { scopeSchema } from './scope.graphql';
+import { ComponentMeta } from '../component/component-meta';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -127,11 +130,10 @@ export class ScopeExtension implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  list(): Promise<Component[]> {
-    return this.legacyScope.list();
+  async list(): Promise<ComponentMeta[]> {
+    const modelComponents = await this.legacyScope.list();
+    return modelComponents.map((component) => this.buildMetaComponent(component));
   }
-
-  startRuntime() {}
 
   /**
    * get a component and throw an exception if not found.
@@ -160,6 +162,13 @@ export class ScopeExtension implements ComponentFactory {
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id.toString());
     return ComponentID.fromLegacy(legacyId);
+  }
+
+  private buildMetaComponent(component: ModelComponent): ComponentMeta {
+    const id = component.toBitId().serialize();
+    return ComponentMeta.from({
+      id,
+    });
   }
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
@@ -206,10 +215,10 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static dependencies = [ComponentExtension, UIExtension];
+  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension];
 
   static async provider(
-    [componentExt, ui]: [ComponentExtension, UIExtension],
+    [componentExt, ui, graphql]: [ComponentExtension, UIExtension, GraphQLExtension],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
   ) {
@@ -220,6 +229,7 @@ export class ScopeExtension implements ComponentFactory {
 
     const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
     ui.registerUiRoot(new ScopeUIRoot(scope));
+    graphql.register(scopeSchema(scope));
 
     return scope;
   }

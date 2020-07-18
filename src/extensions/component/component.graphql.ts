@@ -1,5 +1,6 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
+import { ComponentMeta } from './component-meta';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export function componentSchema() {
@@ -82,8 +83,8 @@ export function componentSchema() {
     `,
     resolvers: {
       ComponentMeta: {
-        id: (component: Component) => component.id._legacy.serialize(),
-        displayName: (component: Component) => component.displayName,
+        id: (component: ComponentMeta) => component.id.toObject(),
+        displayName: (component: ComponentMeta) => component.displayName,
       },
       Component: {
         id: (component: Component) => component.id._legacy.serialize(),

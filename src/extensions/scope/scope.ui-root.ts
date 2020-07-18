@@ -26,6 +26,6 @@ export class ScopeUIRoot implements UIRoot {
   }
 
   async resolvePattern() {
-    return this.scope.list();
+    return [];
   }
 }

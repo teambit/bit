@@ -3,7 +3,7 @@ import { ScopeExtension } from './scope.extension';
 
 export function scopeSchema(scopeExtension: ScopeExtension) {
   return {
-    typeDef: gql`
+    typeDefs: gql`
       type Scope {
         # name of the scope.
         name: String
@@ -12,7 +12,7 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
         path: String
 
         # list of components contained in the scope.
-        components: [Component]
+        components: [ComponentMeta]
 
         # get a specific component.
         get(id: String!): Component

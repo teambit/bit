@@ -59,6 +59,7 @@ export class ComponentUI {
   ) {
     const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);
     workspace.registerRoute(componentUI.componentRoute);
+    scope.registerRoute(componentUI.componentRoute);
     return componentUI;
   }
 }

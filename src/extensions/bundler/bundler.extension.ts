@@ -1,6 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
-import { WorkspaceExt, Workspace } from '../workspace';
 import { DevServerService } from './dev-server.service';
 import { Environments } from '../environments';
 import { GraphQLExtension } from '../graphql';
@@ -15,6 +14,8 @@ export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
  * bundler extension.
  */
 export class BundlerExtension {
+  static id = '@teambit/bundler';
+
   constructor(
     /**
      * environments extension.
