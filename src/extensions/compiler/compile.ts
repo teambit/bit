@@ -73,7 +73,7 @@ export class Compile {
   ): Promise<BuildResult[]> {
     const build = async ({ component, compilerName: compilerId, compilerInstance }: ComponentsAndNewCompilers) => {
       if (!compilerInstance.transpileFile) {
-        throw new Error(`compiler ${compilerId.toString()} doesn't implement "compileFile" interface`);
+        throw new Error(`compiler ${compilerId.toString()} doesn't implement "transpileFile" interface`);
       }
       const packageName = componentIdToPackageName(component);
       const packageDir = path.join('node_modules', packageName);

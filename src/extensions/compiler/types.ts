@@ -1,12 +1,12 @@
 import { ConcreteService } from '../environments/services/concrete-service';
 import { BuildResults, BuildContext } from '../builder';
 
-export type transpileOpts = {
+export type TranspileOpts = {
   componentDir: string; // absolute path of the component's root directory
   filePath: string; // relative path of the file inside the component directory
 };
 
-export type CompilerOutput =
+export type TranspileOutput =
   | {
       outputText: string;
       outputPath: string;
@@ -17,7 +17,7 @@ export interface Compiler extends ConcreteService {
   /**
    * transpile a single file. this being used during development and get saved into the workspace
    */
-  transpileFile: (fileContent: string, options: transpileOpts) => CompilerOutput;
+  transpileFile: (fileContent: string, options: TranspileOpts) => TranspileOutput;
 
   /**
    * compile components inside isolated capsules. this being used during tag for the release.

@@ -1,12 +1,12 @@
 import { transpileSync, TranspileOptions } from '@stencil/core/compiler';
 import { Compiler } from '../compiler';
 import { BuildContext, BuildResults } from '../builder';
-import { CompilerOutput, transpileOpts } from '../compiler/types';
+import { TranspileOutput, TranspileOpts } from '../compiler/types';
 
 export class StencilCompiler implements Compiler {
   constructor(private transpileOpts: TranspileOptions) {}
 
-  transpileFile(fileContent: string, options: transpileOpts): CompilerOutput {
+  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
     const output = transpileSync(fileContent, this.transpileOpts);
     const path = options.filePath.split('.');
     path[path.length - 1] = 'js';
