@@ -8,7 +8,7 @@ import { ScopeExtension } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
-import { IsolatorExtension } from '../isolator';
+import { IsolatorExtension, Network } from '../isolator';
 import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
@@ -27,6 +27,7 @@ import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 export type EjectConfResult = {
   configPath: string;
@@ -130,6 +131,26 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
+  async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
+    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
+    const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
+    const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
+    opts = Object.assign(opts || {}, { consumer: this.consumer });
+    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
+    const seedersStr = seederIdsWithVersions.map((s) => s.toString());
+    const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
+    const consumerComponents = compsAndDeps.filter((c) =>
+      this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
+    );
+    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const capsuleList = await this.isolateEnv.isolateComponents(this.consumer.getPath(), components, opts);
+    return new Network(
+      capsuleList,
+      graph,
+      seederIdsWithVersions.map((s) => new ComponentID(s))
+    );
+  }
+
   async loadCapsules(bitIds: string[]) {
     // throw new Error("Method not implemented.");
     const components = await this.load(bitIds);
@@ -144,9 +165,8 @@ export default class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
+    const isolatedEnvironment = await this.createNetwork(
       components.map((c) => c.id.toString()),
-      this.consumer,
       {
         packageManager: 'npm',
       }
