@@ -77,12 +77,7 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      // ConsumerComponent.registerOnComponentConfigLegacyLoading(
-      //   'workspace',
-      //   async (id, componentConfig: ComponentConfig) => {
-      //     return workspace.loadExtensions(componentConfig.extensions);
-      //   }
-      // );
+
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
         const componentId = await workspace.resolveComponentId(id);
         const wsComponentConfig = await workspace.workspaceComponentConfig(componentId);
@@ -100,6 +95,7 @@ export default async function provideWorkspace(
       const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
       cli.register(capsuleListCmd);
       cli.register(capsuleCreateCmd);
+      component.registerHost(workspace);
 
       return workspace;
     }

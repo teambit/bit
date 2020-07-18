@@ -230,6 +230,7 @@ export class ScopeExtension implements ComponentFactory {
     const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
+    componentExt.registerHost(scope);
 
     return scope;
   }

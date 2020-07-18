@@ -17,6 +17,7 @@ export class ScopeUIRoot implements UIRoot {
 
   get extensionsPaths() {
     return [
+      require.resolve('./scope.ui'),
       require.resolve('../tester/tester.ui'),
       require.resolve('../changelog/changelog.ui'),
       require.resolve('../component/component.ui'),

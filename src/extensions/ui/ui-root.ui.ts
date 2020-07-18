@@ -1,3 +1,5 @@
+import { RouteProps } from 'react-router-dom';
+
 export type UIRoot = {
-  component: JSX.Element;
+  routes: RouteProps[];
 };

@@ -1,9 +1,12 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
+import { ComponentID } from './id';
 import { ComponentMeta } from './component-meta';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { ComponentExtension } from './component.extension';
+import { ComponentFactory } from './component-factory';
 
-export function componentSchema() {
+export function componentSchema(componentExtension: ComponentExtension) {
   return {
     typeDefs: gql`
       type ComponentID {
@@ -80,6 +83,14 @@ export function componentSchema() {
         id: ComponentID
         displayName: String
       }
+
+      type ComponentHost {
+        get(id: String!): Component
+      }
+
+      type Query {
+        getHost(id: String): ComponentHost
+      }
     `,
     resolvers: {
       ComponentMeta: {
@@ -87,7 +98,7 @@ export function componentSchema() {
         displayName: (component: ComponentMeta) => component.displayName,
       },
       Component: {
-        id: (component: Component) => component.id._legacy.serialize(),
+        id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
         headTag: (component: Component) => component.headTag,
         tags: (component) => {
@@ -108,6 +119,17 @@ export function componentSchema() {
             extensions: component.config.extensions,
             isDependency: false,
           });
+        },
+      },
+      ComponentHost: {
+        get: async (host: ComponentFactory, { id }: { id: string }) => {
+          const componentId = await host.resolveComponentId(id);
+          return host.get(componentId);
+        },
+      },
+      Query: {
+        getHost: (componentExt: ComponentExtension, { id }: { id: string }) => {
+          return componentExtension.getHost(id);
         },
       },
     },

@@ -55,7 +55,11 @@ export class UIExtension {
   async createRuntime(uiRootName: string, pattern?: string) {
     const server = this.graphql.listen();
     const uiRoot = this.getUiRootOrThrow(uiRootName);
-    const config = createWebpackConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, uiRootName)]);
+    const config = createWebpackConfig(
+      uiRoot.path,
+      [await this.generateRoot(uiRoot.extensionsPaths, uiRootName)],
+      uiRootName
+    );
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());

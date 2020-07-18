@@ -5,6 +5,7 @@ import { Workspace } from './ui';
 import { RouteSlot } from '../react-router/slot-router';
 import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
+import ComponentUI from '../component/component.ui';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -15,7 +16,12 @@ export class WorkspaceUI {
     /**
      * route slot.
      */
-    private routeSlot: RouteSlot
+    private routeSlot: RouteSlot,
+
+    /**
+     * component ui extension.
+     */
+    private componentUi: ComponentUI
   ) {}
 
   /**
@@ -27,22 +33,34 @@ export class WorkspaceUI {
   }
 
   get root(): UIRoot {
+    this.routeSlot.register({
+      path: this.componentUi.routePath,
+      children: this.componentUi.getComponentUI(WorkspaceUI.id),
+    });
+
     return {
-      component: <Workspace routeSlot={this.routeSlot} />,
+      routes: [
+        {
+          path: '/',
+          children: <Workspace routeSlot={this.routeSlot} />,
+        },
+      ],
     };
   }
 
-  static dependencies = [UIRuntimeExtension];
+  static dependencies = [UIRuntimeExtension, ComponentUI];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/workspace';
 
   static slots = [Slot.withType<RouteProps>()];
 
-  static async provider([ui]: [UIRuntimeExtension], config, [routeSlot]: [RouteSlot]) {
-    const workspaceUI = new WorkspaceUI(routeSlot);
+  static async provider([ui, componentUi]: [UIRuntimeExtension, ComponentUI], config, [routeSlot]: [RouteSlot]) {
+    const workspaceUI = new WorkspaceUI(routeSlot, componentUi);
     ui.registerRoot(workspaceUI.root);
 
     return workspaceUI;
   }
 }
+
+export default WorkspaceUI;

@@ -43,10 +43,12 @@ export function Scope({ routeSlot }: ScopeProps) {
 
   return (
     <ScopeProvider scope={scope}>
-      <Corner name={scope.name} />
-      <SideBar components={ids} className={styles.sideBar} />
-      <div className={styles.main}>
-        <SlotRouter slot={routeSlot} />
+      <div className={styles.scope}>
+        <Corner name={scope.name} />
+        <SideBar components={ids} className={styles.sideBar} />
+        <div className={styles.main}>
+          <SlotRouter slot={routeSlot} />
+        </div>
       </div>
     </ScopeProvider>
   );

@@ -28,6 +28,7 @@ export class WorkspaceUIRoot implements UIRoot {
   get extensionsPaths() {
     // TODO: @gilad please make sure to automate this for all extensions configured in the workspace.
     return [
+      require.resolve('./workspace.ui'),
       require.resolve('../tester/tester.ui'),
       require.resolve('../changelog/changelog.ui'),
       require.resolve('../component/component.ui'),
