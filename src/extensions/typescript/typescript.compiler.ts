@@ -18,7 +18,7 @@ export class TypescriptCompiler implements Compiler {
     private types: string[]
   ) {}
 
-  compileFile(
+  transpileFile(
     fileContent: string,
     options: { componentDir: string; filePath: string }
   ): { outputText: string; outputPath: string }[] | null {
@@ -65,7 +65,7 @@ export class TypescriptCompiler implements Compiler {
     return outputFiles;
   }
 
-  async compileOnCapsules({ capsuleGraph }: { capsuleGraph: Network }): Promise<BuildResults> {
+  async build({ capsuleGraph }: { capsuleGraph: Network }): Promise<BuildResults> {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
 
