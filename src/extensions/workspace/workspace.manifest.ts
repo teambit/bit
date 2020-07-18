@@ -10,6 +10,7 @@ import { EXT_NAME } from './constants';
 import { GraphQLExtension } from '../graphql';
 import { CLIExtension } from '../cli';
 import { UIExtension } from '../ui';
+import { BundlerExtension } from '../bundler';
 
 export default {
   name: EXT_NAME,
@@ -23,6 +24,7 @@ export default {
     LoggerExt,
     GraphQLExtension,
     UIExtension,
+    BundlerExtension,
   ],
   provider: workspaceProvider,
   defineRuntime: 'browser',

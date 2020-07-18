@@ -26,11 +26,19 @@ export interface UIRoot {
   /**
    * listener for when the dev server starts. can be used for running the watcher.
    */
-  onStart?(): void;
+  postStart?(options: PostStartOptions, uiRoot: UIRoot): Promise<void>;
 
-  componentDir(
+  // :TODO remove this from here.
+  componentDir?(
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options?: { relative: boolean }
   ): PathOsBased | undefined;
 }
+
+export type PostStartOptions = {
+  /**
+   * pattern for selecting components in the container.
+   */
+  pattern?: string;
+};

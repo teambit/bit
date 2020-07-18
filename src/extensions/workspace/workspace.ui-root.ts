@@ -3,13 +3,20 @@ import { Component, ComponentID } from '../component';
 import { Workspace } from '.';
 import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
+import { BundlerExtension } from '../bundler';
+import { PostStartOptions } from '../ui/ui-root';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
     /**
      * workspace extension.
      */
-    private workspace: Workspace
+    private workspace: Workspace,
+
+    /**
+     * bundler extension
+     */
+    private bundler: BundlerExtension
   ) {}
 
   name = 'workspace';
@@ -45,5 +52,7 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.componentDir(componentId, bitMapOptions, options);
   }
 
-  onStart() {}
+  async postStart(options: PostStartOptions, uiRoot: UIRoot) {
+    await this.bundler.devServer(await this.workspace.byPattern(options.pattern || ''), uiRoot);
+  }
 }

@@ -20,6 +20,8 @@ import Config from '../component/config';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';
+import { UIExtension } from '../ui';
+import { ScopeUIRoot } from './scope.ui-root';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -29,7 +31,6 @@ export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension implements ComponentFactory {
   static id = '@teambit/scope';
-  static dependencies = [ComponentExtension];
 
   constructor(
     /**
@@ -58,6 +59,10 @@ export class ScopeExtension implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get path(): string {
+    return this.legacyScope.path;
   }
 
   /**
@@ -122,8 +127,8 @@ export class ScopeExtension implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  list() {
-    this.legacyScope.list();
+  list(): Promise<Component[]> {
+    return this.legacyScope.list();
   }
 
   startRuntime() {}
@@ -201,12 +206,21 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static async provider([componentFactory], config, [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]) {
+  static dependencies = [ComponentExtension, UIExtension];
+
+  static async provider(
+    [componentExt, ui]: [ComponentExtension, UIExtension],
+    config,
+    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
+  ) {
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;
     }
 
-    return new ScopeExtension(legacyScope, componentFactory, tagSlot, postExportSlot);
+    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
+    ui.registerUiRoot(new ScopeUIRoot(scope));
+
+    return scope;
   }
 }

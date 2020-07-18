@@ -1,16 +1,16 @@
 import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
-import { Workspace } from './ui';
 import { RouteSlot } from '../react-router/slot-router';
 import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
+import { Scope } from './ui/scope';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
 };
 
-export class WorkspaceUI {
+export class ScopeUI {
   constructor(
     /**
      * route slot.
@@ -19,7 +19,7 @@ export class WorkspaceUI {
   ) {}
 
   /**
-   * register a route to the workspace.
+   * register a route to the scope.
    */
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
@@ -28,21 +28,21 @@ export class WorkspaceUI {
 
   get root(): UIRoot {
     return {
-      component: <Workspace routeSlot={this.routeSlot} />,
+      component: <Scope routeSlot={this.routeSlot} />,
     };
   }
 
   static dependencies = [UIRuntimeExtension];
 
   // TODO: @gilad we must automate this.
-  static id = '@teambit/workspace';
+  static id = '@teambit/scope';
 
   static slots = [Slot.withType<RouteProps>()];
 
   static async provider([ui]: [UIRuntimeExtension], config, [routeSlot]: [RouteSlot]) {
-    const workspaceUI = new WorkspaceUI(routeSlot);
-    ui.registerRoot(workspaceUI.root);
+    const scopeUi = new ScopeUI(routeSlot);
+    ui.registerRoot(scopeUi.root);
 
-    return workspaceUI;
+    return scopeUi;
   }
 }

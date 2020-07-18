@@ -4,6 +4,7 @@ import { Slot } from '@teambit/harmony';
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
+import { ScopeUI } from '../scope/scope.ui';
 
 export type Server = {
   env: string;
@@ -47,12 +48,12 @@ export class ComponentUI {
     this.widgetSlot.register(widget);
   }
 
-  static dependencies = [WorkspaceUI];
+  static dependencies = [WorkspaceUI, ScopeUI];
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
 
   static async provider(
-    [workspace]: [WorkspaceUI],
+    [workspace, scope]: [WorkspaceUI, ScopeUI],
     config,
     [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]
   ) {

@@ -52,21 +52,20 @@ export class UIExtension {
     return getPort({ port: getPort.makeRange(3000, 3200) });
   }
 
-  async createRuntime(uiRootName: string, componentsPattern?: string) {
+  async createRuntime(uiRootName: string, pattern?: string) {
     const server = this.graphql.listen();
     const uiRoot = this.getUiRootOrThrow(uiRootName);
-    const config = createWebpackConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths)]);
+    const config = createWebpackConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, uiRootName)]);
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
-    await this.bundler.devServer(await uiRoot.resolvePattern(componentsPattern || ''), uiRoot);
-    if (uiRoot.onStart) uiRoot.onStart();
+    if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
     // const devServers = await this.bundler.devServer(components);
     return server;
   }
 
-  private async generateRoot(extensionPaths: string[]) {
-    const contents = await createRoot(extensionPaths);
+  private async generateRoot(extensionPaths: string[], rootExtensionName: string) {
+    const contents = await createRoot(extensionPaths, rootExtensionName);
     const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
