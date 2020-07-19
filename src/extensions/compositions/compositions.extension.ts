@@ -9,6 +9,7 @@ import { GraphQLExtension } from '../graphql';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { SchemaExtension } from '../schema';
+import { ExtensionData } from '../workspace/on-component-load';
 
 export type CompositionsConfig = {
   /**
@@ -21,6 +22,7 @@ export type CompositionsConfig = {
  * the component documentation extension.
  */
 export class CompositionsExtension {
+  static id = '@teambit/compositions';
   constructor(
     /**
      * envs extension.
@@ -47,7 +49,22 @@ export class CompositionsExtension {
     });
   }
 
-  getCompositions(component: Component) {
+  /**
+   * get component compositions.
+   */
+  getCompositions(component: Component): Composition[] {
+    const entry = component.state.config.extensions.findExtension(CompositionsExtension.id);
+    if (!entry) return [];
+    const compositions = entry.data.compositions;
+    if (!compositions) return [];
+
+    return Composition.fromArray(compositions);
+  }
+
+  /**
+   * read composition from the component source code.
+   */
+  readCompositions(component: Component): Composition[] {
     const maybeFiles = this.getCompositionFiles([component]).byComponent(component);
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
@@ -78,7 +95,14 @@ export class CompositionsExtension {
     return targetFiles.concat(link);
   }
 
-  private computeCompositions(component: Component, file: AbstractVinyl) {
+  async onComponentLoad(component: Component): Promise<ExtensionData> {
+    const compositions = this.readCompositions(component);
+    return {
+      compositions: compositions.map((composition) => composition.toObject()),
+    };
+  }
+
+  private computeCompositions(component: Component, file: AbstractVinyl): Composition[] {
     // :TODO hacked for a specific file extension now until david will take care in the compiler.
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
@@ -115,6 +139,9 @@ export class CompositionsExtension {
     bundler.registerTarget({
       entry: compositions.compositionsPreviewTarget.bind(compositions),
     });
+    if (workspace) {
+      workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
+    }
 
     return compositions;
   }

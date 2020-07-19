@@ -1,4 +1,4 @@
-import { Harmony } from '@teambit/harmony';
+import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
 import { ComponentExtension } from '../component';
@@ -19,6 +19,7 @@ import { WorkspaceUIRoot } from './workspace.ui-root';
 import { BundlerExtension } from '../bundler';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
+import { OnComponentLoad } from './on-component-load';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -32,6 +33,8 @@ export type WorkspaceDeps = [
   UIExtension,
   BundlerExtension
 ];
+
+export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
 
 export type WorkspaceCoreConfig = {
   /**
@@ -51,7 +54,7 @@ export type WorkspaceCoreConfig = {
 export default async function provideWorkspace(
   [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  _slots,
+  [onComponentLoadSlot]: [OnComponentLoadSlot],
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -75,7 +78,8 @@ export default async function provideWorkspace(
         variants,
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
-        harmony
+        harmony,
+        onComponentLoadSlot
       );
 
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {

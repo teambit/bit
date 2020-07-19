@@ -119,7 +119,7 @@ export class TypescriptCompiler implements Compiler {
       const contents = fs.readFileSync(typePath, 'utf8');
       const filename = path.basename(typePath);
 
-      fs.outputFile(path.join(rootDir, 'types', filename), contents);
+      fs.outputFileSync(path.join(rootDir, 'types', filename), contents);
     });
   }
 }
