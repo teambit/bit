@@ -87,3 +87,7 @@ bin/bit
 
 # sonarcloud dir
 .scannerwork
+
+# package managers
+pnpm-lock.yaml
+yarn.lock
