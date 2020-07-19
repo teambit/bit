@@ -20,6 +20,11 @@ import Config from '../component/config';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';
+import { UIExtension } from '../ui';
+import { ScopeUIRoot } from './scope.ui-root';
+import { GraphQLExtension } from '../graphql';
+import { scopeSchema } from './scope.graphql';
+import { ComponentMeta } from '../component/component-meta';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -29,7 +34,6 @@ export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export class ScopeExtension implements ComponentFactory {
   static id = '@teambit/scope';
-  static dependencies = [ComponentExtension];
 
   constructor(
     /**
@@ -52,6 +56,17 @@ export class ScopeExtension implements ComponentFactory {
      */
     private postExportRegistry: PostExportRegistry
   ) {}
+
+  /**
+   * name of the scope
+   */
+  get name(): string {
+    return this.legacyScope.name;
+  }
+
+  get path(): string {
+    return this.legacyScope.path;
+  }
 
   /**
    * register to the tag slot.
@@ -90,6 +105,10 @@ export class ScopeExtension implements ComponentFactory {
     // TODO: implement
   }
 
+  /**
+   * get a component.
+   * @param id component id
+   */
   async get(id: ComponentID): Promise<Component | undefined> {
     const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     if (!modelComponent) return undefined;
@@ -108,20 +127,48 @@ export class ScopeExtension implements ComponentFactory {
     );
   }
 
+  /**
+   * list all components in the scope.
+   */
+  async list(): Promise<ComponentMeta[]> {
+    const modelComponents = await this.legacyScope.list();
+    return modelComponents.map((component) => this.buildMetaComponent(component));
+  }
+
+  /**
+   * get a component and throw an exception if not found.
+   * @param id component id
+   */
   async getOrThrow(id: ComponentID): Promise<Component> {
     const component = await this.get(id);
     if (!component) throw new ComponentNotFound(id);
     return component;
   }
 
+  /**
+   * returns a specific state of a component.
+   * @param id component ID.
+   * @param hash state hash.
+   */
   async getState(id: ComponentID, hash: string): Promise<State> {
     const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
     return this.createStateFromVersion(id, version);
   }
 
+  /**
+   * resolve a component ID.
+   * @param id component ID
+   */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id.toString());
     return ComponentID.fromLegacy(legacyId);
+  }
+
+  private buildMetaComponent(component: ModelComponent): ComponentMeta {
+    const id = component.toBitId().serialize();
+    return ComponentMeta.from({
+      id,
+    });
   }
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
@@ -168,12 +215,23 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static async provider([componentFactory], config, [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]) {
+  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension];
+
+  static async provider(
+    [componentExt, ui, graphql]: [ComponentExtension, UIExtension, GraphQLExtension],
+    config,
+    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
+  ) {
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;
     }
 
-    return new ScopeExtension(legacyScope, componentFactory, tagSlot, postExportSlot);
+    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
+    ui.registerUiRoot(new ScopeUIRoot(scope));
+    graphql.register(scopeSchema(scope));
+    componentExt.registerHost(scope);
+
+    return scope;
   }
 }

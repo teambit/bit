@@ -9,6 +9,8 @@ import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
 import { GraphQLExtension } from '../graphql';
 import { CLIExtension } from '../cli';
+import { UIExtension } from '../ui';
+import { BundlerExtension } from '../bundler';
 
 export default {
   name: EXT_NAME,
@@ -21,6 +23,8 @@ export default {
     VariantsExt,
     LoggerExt,
     GraphQLExtension,
+    UIExtension,
+    BundlerExtension,
   ],
   provider: workspaceProvider,
   defineRuntime: 'browser',

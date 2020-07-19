@@ -14,6 +14,9 @@ import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
+import { UIExtension } from '../ui';
+import { WorkspaceUIRoot } from './workspace.ui-root';
+import { BundlerExtension } from '../bundler';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 
@@ -25,7 +28,9 @@ export type WorkspaceDeps = [
   DependencyResolverExtension,
   Variants,
   Logger,
-  GraphQLExtension
+  GraphQLExtension,
+  UIExtension,
+  BundlerExtension
 ];
 
 export type WorkspaceCoreConfig = {
@@ -44,7 +49,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -72,12 +77,7 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      // ConsumerComponent.registerOnComponentConfigLegacyLoading(
-      //   'workspace',
-      //   async (id, componentConfig: ComponentConfig) => {
-      //     return workspace.loadExtensions(componentConfig.extensions);
-      //   }
-      // );
+
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
         const componentId = await workspace.resolveComponentId(id);
         const wsComponentConfig = await workspace.workspaceComponentConfig(componentId);
@@ -86,6 +86,7 @@ export default async function provideWorkspace(
       });
 
       const workspaceSchema = getWorkspaceSchema(workspace);
+      ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
@@ -94,6 +95,7 @@ export default async function provideWorkspace(
       const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
       cli.register(capsuleListCmd);
       cli.register(capsuleCreateCmd);
+      component.registerHost(workspace);
 
       return workspace;
     }
