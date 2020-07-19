@@ -7,6 +7,7 @@ $animationTime: 300ms;
 
 .notification {
 	margin: 8px 0;
+	padding: 16px;
 	transform-origin: right bottom;
 	max-height: 100vh;
 	transition: all $animationTime, max-height $animationTime / 2 ease-out;
@@ -26,6 +27,10 @@ $animationTime: 300ms;
 		margin: 0px;
 		padding: 0px;
 	}
+}
+
+.separator {
+	margin: 8px 0;
 }
 
 @keyframes exit {

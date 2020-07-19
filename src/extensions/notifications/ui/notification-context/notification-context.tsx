@@ -1,6 +1,5 @@
 import { createContext } from 'react';
-
-type MessageId = string;
+import { MessageId, MessageLevel, NotificationApi } from '../../notification-api';
 
 export type Message = {
   id: MessageId;
@@ -9,26 +8,11 @@ export type Message = {
   time: string;
 };
 
-export enum MessageLevel {
-  error = 'error',
-  warning = 'warning',
-  success = 'success',
-  info = 'info'
-  // debug,
-}
-
-export type NotificationApi = {
-  add: (message: string, level: MessageLevel) => MessageId;
-  log: (message: string) => MessageId;
-  error: (message: string) => MessageId;
-  dismiss: (id: string) => void;
-};
-
 const defaultLoaderApi: NotificationApi = {
   add: () => '',
   log: () => '',
   error: () => '',
-  dismiss: () => {}
+  dismiss: () => {},
 };
 
 export const NotificationContext = createContext<NotificationApi>(defaultLoaderApi);

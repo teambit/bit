@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+
 import { WorkspaceUI } from '../workspace/workspace.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
 import { ReactRouterUI } from '../react-router/react-router.ui';
 import { ClientContext } from './ui/client-context';
+import { Compose } from './Compose';
 
 // import * as serviceWorker from './serviceWorker';
 
@@ -11,6 +14,12 @@ import { ClientContext } from './ui/client-context';
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 // serviceWorker.unregister();
+
+type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
+
+type HudSlot = SlotRegistry<ReactNode>;
+type ContextSlot = SlotRegistry<ContextType>;
+
 /**
  * extension
  */
@@ -29,24 +38,49 @@ export class UIRuntimeExtension {
     /**
      * react-router extension.
      */
-    private router: ReactRouterUI
+    private router: ReactRouterUI,
+
+    private hudSlot: HudSlot,
+    private contextSlot: ContextSlot
   ) {}
 
   render() {
     const GraphqlProvider = this.graphql.getProvider;
     const routes = this.router.renderRoutes();
+    const hudItems = this.hudSlot.values();
+    const contexts = this.contextSlot.values();
 
     ReactDOM.render(
       <GraphqlProvider>
-        <ClientContext>{routes}</ClientContext>
+        <ClientContext>
+          <Compose components={contexts}>
+            {hudItems}
+            {routes}
+          </Compose>
+        </ClientContext>
       </GraphqlProvider>,
       document.getElementById('root')
     );
   }
 
-  static dependencies = [WorkspaceUI, GraphQlUI, ReactRouterUI];
+  /** adds elements to the Heads Up Display */
+  registerHudItem = (element: ReactNode) => {
+    this.hudSlot.register(element);
+  };
 
-  static async provider([workspace, graphql, router]: [WorkspaceUI, GraphQlUI, ReactRouterUI]) {
-    return new UIRuntimeExtension(workspace, graphql, router);
+  //** adds global context at the ui root */
+  registerContext(context: ContextType) {
+    this.contextSlot.register(context);
+  }
+
+  static dependencies = [WorkspaceUI, GraphQlUI, ReactRouterUI];
+  static slots = [Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
+
+  static async provider(
+    [workspace, graphql, router]: [WorkspaceUI, GraphQlUI, ReactRouterUI],
+    config,
+    [hudSlot, contextSlot]: [SlotRegistry<ReactNode>, SlotRegistry<ContextType>]
+  ) {
+    return new UIRuntimeExtension(workspace, graphql, router, hudSlot, contextSlot);
   }
 }

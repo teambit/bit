@@ -2,10 +2,10 @@ import React, { useContext, useCallback, useState } from 'react';
 import classNames from 'classnames';
 import { Card } from '@bit/bit.base-ui.surfaces.card';
 import { mutedText } from '@bit/bit.base-ui.text.muted-text';
-import { Separator } from '@bit/bit.test-scope.ui.separator';
-import { NotificationContext, Message } from '../../notification-context';
+import { Separator } from '@bit/bit.base-ui.elements.separator';
+import { NotificationContext, Message } from '../notification-context';
 import styles from './notification.module.scss';
-import { TimeAgo } from '../../../../stage-components/workspace-components/time-ago';
+import { TimeAgo } from '../../../stage-components/workspace-components/time-ago';
 
 const DISMISS_TIME = +styles.dismissTime;
 
@@ -25,7 +25,7 @@ export function Notification({ entry }: { entry: Message }) {
     <Card className={classNames(styles.notification, isDismissing && styles.dismissing)}>
       <button onClick={isDismissing ? undefined : handleDismiss}>x</button>
       <div>{level}</div>
-      <Separator />
+      <Separator className={styles.separator} />
 
       {message}
 
