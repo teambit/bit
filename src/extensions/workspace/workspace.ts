@@ -528,12 +528,11 @@ export default class Workspace implements ComponentFactory {
   /**
    * This will mutate the original extensions list and resolve it's ids
    *
-   * @private
    * @param {ExtensionDataList} extensions
    * @returns {Promise<void[]>}
    * @memberof Workspace
    */
-  private resolveExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
+  resolveExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
     const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
       if (extensionEntry.extensionId) {
         // const hasVersion = extensionEntry.extensionId.hasVersion();
