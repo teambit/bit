@@ -49,7 +49,22 @@ export class CompositionsExtension {
     });
   }
 
+  /**
+   * get component compositions.
+   */
   getCompositions(component: Component): Composition[] {
+    const entry = component.state.config.extensions.findExtension(CompositionsExtension.id);
+    if (!entry) return [];
+    const compositions = entry.data.compositions;
+    if (!compositions) return [];
+
+    return Composition.fromArray(compositions);
+  }
+
+  /**
+   * read composition from the component source code.
+   */
+  readCompositions(component: Component): Composition[] {
     const maybeFiles = this.getCompositionFiles([component]).byComponent(component);
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
@@ -81,7 +96,7 @@ export class CompositionsExtension {
   }
 
   async onComponentLoad(component: Component): Promise<ExtensionData> {
-    const compositions = this.getCompositions(component);
+    const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),
     };
