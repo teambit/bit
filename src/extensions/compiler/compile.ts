@@ -1,5 +1,6 @@
+/* eslint-disable max-classes-per-file */
 import path from 'path';
-import pMapSeries from 'p-map-series';
+import BluebirdPromise from 'bluebird';
 import { Workspace } from '../workspace';
 import { DEFAULT_DIST_DIRNAME } from './../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -7,35 +8,108 @@ import { BitId, BitIds } from '../../bit-id';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import { Dist } from '../../consumer/component/sources';
+import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { searchFilesIgnoreExt, pathJoinLinux } from '../../utils';
-import PackageJsonFile from '../../consumer/component/package-json-file';
 import { Environments } from '../environments';
-import { CompilerTask } from './compiler.task';
 import { Compiler } from './types';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
-type ComponentsAndNewCompilers = {
-  component: ConsumerComponent;
-  compilerInstance: Compiler;
-  compilerName: string;
+type LegacyCompilerOptions = {
+  noCache?: boolean;
+  verbose?: boolean;
+  dontPrintEnvMsg?: boolean;
 };
 
-export class Compile {
-  constructor(private workspace: Workspace, private envs: Environments, readonly task: CompilerTask) {}
+export class ComponentCompiler {
+  constructor(
+    private workspace: Workspace,
+    private component: ConsumerComponent,
+    private compilerInstance: Compiler,
+    private compilerId: string,
+    private dists: Dist[] = [],
+    private compileErrors: { path: string; error: Error }[] = []
+  ) {}
 
-  async compileOnWorkspace(
+  async compile(): Promise<BuildResult> {
+    // const { component, compilerName: compilerId, compilerInstance } = componentAndNewCompiler;
+    if (!this.compilerInstance.transpileFile) {
+      throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
+    }
+    await Promise.all(this.component.files.map((file) => this.compileOneFileWithNewCompiler(file)));
+    this.throwOnCompileErrors();
+    // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
+    // as it uses other base-paths and doesn't respect the new node-modules base path.
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(this.dists);
+    dataToPersist.addBasePath(this.workspace.path);
+    await dataToPersist.persistAllToFS();
+    const buildResults = this.dists.map((distFile) => distFile.path);
+    if (this.component.compiler) loader.succeed();
+    return { component: this.component.id.toString(), buildResults };
+  }
+
+  private throwOnCompileErrors() {
+    if (this.compileErrors.length) {
+      const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
+      throw new Error(`compilation failed. see the following errors from the compiler
+${this.compileErrors.map(formatError).join('\n')}`);
+    }
+  }
+
+  private get distDir() {
+    const packageName = componentIdToPackageName(this.component);
+    const packageDir = path.join('node_modules', packageName);
+    const distDirName = DEFAULT_DIST_DIRNAME;
+    return path.join(packageDir, distDirName);
+  }
+
+  private get componentDir() {
+    const relativeComponentDir = this.component.componentMap?.getComponentDir();
+    if (!relativeComponentDir)
+      throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
+    return path.join(this.workspace.path, relativeComponentDir);
+  }
+
+  private async compileOneFileWithNewCompiler(file: SourceFile) {
+    const options = { componentDir: this.componentDir, filePath: file.relative };
+    let compileResults;
+    try {
+      compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
+    } catch (error) {
+      this.compileErrors.push({ path: file.path, error });
+      return;
+    }
+    const base = this.distDir;
+    if (compileResults) {
+      this.dists.push(
+        ...compileResults.map(
+          (result) =>
+            new Dist({
+              base,
+              path: path.join(base, result.outputPath),
+              contents: Buffer.from(result.outputText),
+            })
+        )
+      );
+    } else {
+      // compiler doesn't support this file type. copy the file as is to the dist dir.
+      this.dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
+    }
+  }
+}
+
+export class WorkspaceCompiler {
+  constructor(private workspace: Workspace, private envs: Environments) {}
+
+  async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all
-    noCache?: boolean,
-    verbose?: boolean,
-    dontPrintEnvMsg?: boolean
+    options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
-    const bitIds = getBitIds(componentsIds, this.workspace);
+    const bitIds = this.getBitIds(componentsIds);
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
-    const componentsAndNewCompilers: ComponentsAndNewCompilers[] = [];
+    const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
       const environment = this.envs.getEnvFromExtensions(c.extensions);
       const compilerInstance = environment?.getCompiler();
@@ -43,7 +117,7 @@ export class Compile {
       // inside the component dir.
       if (compilerInstance && c.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
-        componentsAndNewCompilers.push({ component: c, compilerInstance, compilerName });
+        componentsAndNewCompilers.push(new ComponentCompiler(this.workspace, c, compilerInstance, compilerName));
       } else {
         componentsWithLegacyCompilers.push(c);
       }
@@ -51,97 +125,21 @@ export class Compile {
     let newCompilersResultOnWorkspace: BuildResult[] = [];
     let oldCompilersResult: BuildResult[] = [];
     if (componentsAndNewCompilers.length) {
-      newCompilersResultOnWorkspace = await this.compileWithNewCompilersOnWorkspace(componentsAndNewCompilers);
+      newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
+        componentsAndNewCompilers,
+        (componentAndNewCompilers) => componentAndNewCompilers.compile()
+      );
     }
     if (componentsWithLegacyCompilers.length) {
-      oldCompilersResult = await this.compileWithLegacyCompilers(
-        componentsWithLegacyCompilers,
-        noCache,
-        verbose,
-        dontPrintEnvMsg
-      );
+      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers, options);
     }
 
     return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
   }
 
-  private async compileWithNewCompilersOnWorkspace(
-    componentsAndNewCompilers: ComponentsAndNewCompilers[]
-  ): Promise<BuildResult[]> {
-    const build = async ({ component, compilerName: compilerId, compilerInstance }: ComponentsAndNewCompilers) => {
-      if (!compilerInstance.transpileFile) {
-        throw new Error(`compiler ${compilerId.toString()} doesn't implement "transpileFile" interface`);
-      }
-      const packageName = componentIdToPackageName(component);
-      const packageDir = path.join('node_modules', packageName);
-      const distDirName = DEFAULT_DIST_DIRNAME;
-      const distDir = path.join(packageDir, distDirName);
-      const dists: Dist[] = [];
-      const compileErrors: { path: string; error: Error }[] = [];
-      await Promise.all(
-        component.files.map(async (file) => {
-          const relativeComponentDir = component.componentMap?.getComponentDir();
-          if (!relativeComponentDir)
-            throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
-          const componentDir = path.join(this.workspace.path, relativeComponentDir);
-          const options = { componentDir, filePath: file.relative };
-          let compileResults;
-          try {
-            compileResults = compilerInstance.transpileFile(file.contents.toString(), options);
-          } catch (error) {
-            compileErrors.push({ path: file.path, error });
-            return;
-          }
-          const base = distDir;
-          if (compileResults) {
-            dists.push(
-              ...compileResults.map(
-                (result) =>
-                  new Dist({
-                    base,
-                    path: path.join(base, result.outputPath),
-                    contents: Buffer.from(result.outputText),
-                  })
-              )
-            );
-          } else {
-            // compiler doesn't support this file type. copy the file as is to the dist dir.
-            dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
-          }
-        })
-      );
-      if (compileErrors.length) {
-        const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
-        throw new Error(`compilation failed. see the following errors from the compiler
-${compileErrors.map(formatError).join('\n')}`);
-      }
-      // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
-      // as it uses other base-paths and doesn't respect the new node-modules base path.
-      const dataToPersist = new DataToPersist();
-      dataToPersist.addManyFiles(dists);
-      const found = searchFilesIgnoreExt(dists, component.mainFile, 'relative');
-      if (!found) throw new Error(`unable to find dist main file for ${component.id.toString()}`);
-      const packageJson = PackageJsonFile.loadFromPathSync(this.workspace.path, packageDir);
-      if (!packageJson.fileExist) {
-        throw new Error(`failed finding package.json file in ${packageDir}, please run "bit link"`);
-      }
-      packageJson.addOrUpdateProperty('main', pathJoinLinux(distDirName, found));
-      dataToPersist.addFile(packageJson.toVinylFile());
-      dataToPersist.addBasePath(this.workspace.path);
-      await dataToPersist.persistAllToFS();
-      const oneBuildResults = dists.map((distFile) => distFile.path);
-      if (component.compiler) loader.succeed();
-      return { component: component.id.toString(), buildResults: oneBuildResults };
-    };
-    const allBuildResults = await pMapSeries(componentsAndNewCompilers, build);
-    return allBuildResults;
-  }
-
   private async compileWithLegacyCompilers(
     components: ConsumerComponent[],
-    noCache?: boolean,
-    verbose?: boolean,
-    dontPrintEnvMsg?: boolean
+    options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: ConsumerComponent) => {
@@ -149,9 +147,7 @@ ${compileErrors.map(formatError).join('\n')}`);
       await component.build({
         scope: this.workspace.consumer.scope,
         consumer: this.workspace.consumer,
-        noCache,
-        verbose,
-        dontPrintEnvMsg,
+        ...options,
       });
       const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
       if (component.compiler) loader.succeed();
@@ -160,16 +156,18 @@ ${compileErrors.map(formatError).join('\n')}`);
     const writeLinks = async (component: ConsumerComponent) =>
       component.dists.writeDistsLinks(component, this.workspace.consumer);
 
-    const buildResults = await pMapSeries(components, build);
-    await pMapSeries(components, writeLinks);
+    const buildResults = await BluebirdPromise.mapSeries(components, build);
+    await BluebirdPromise.mapSeries(components, writeLinks);
 
     return buildResults;
   }
-}
 
-function getBitIds(componentsIds: Array<string | BitId>, workspace: Workspace): BitId[] {
-  if (componentsIds.length) {
-    return componentsIds.map((compId) => (compId instanceof BitId ? compId : workspace.consumer.getParsedId(compId)));
+  private getBitIds(componentsIds: Array<string | BitId>): BitId[] {
+    if (componentsIds.length) {
+      return componentsIds.map((compId) =>
+        compId instanceof BitId ? compId : this.workspace.consumer.getParsedId(compId)
+      );
+    }
+    return this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
   }
-  return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }

@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
@@ -7,17 +8,15 @@ import { WorkspaceExt, Workspace } from '../workspace';
 import { WatchCommand } from './watch.cmd';
 import { CompilerExtension } from '../compiler';
 import { CLIExtension } from '../cli';
-/* eslint no-console: 0 */
 import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
 import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils';
-import { Compile } from '../compiler';
 import { Consumer } from '../../consumer';
 import { Watcher } from './watcher';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
-export type WatcherDeps = [CLIExtension, Compile, Workspace];
+export type WatcherDeps = [CLIExtension, CompilerExtension, Workspace];
 export type WatchSlot = SlotRegistry<Watcher>;
 
 // :TODO @david we should refactor this extension to few separate classes and focus this file on the api...
@@ -26,7 +25,7 @@ export class WatcherExtension {
 
   constructor(
     // :TODO @david we should not couple the compiler. compiler should register to a slot provided by this extension.
-    private compile: Compile,
+    private compilerExt: CompilerExtension,
     private workspace: Workspace,
     private watchSlot: WatchSlot,
     private trackDirs: { [dir: string]: string } = {},
@@ -100,7 +99,10 @@ export class WatcherExtension {
         console.log(`running build for ${chalk.bold(idStr)}`);
         // TODO: Make sure the log for build is printed to console
         // TODO: make sure this is a slot.
-        const buildResults = await this.compile.compileOnWorkspace([idStr], false, this.verbose);
+        const buildResults = await this.compilerExt.compileOnWorkspace([idStr], {
+          noCache: false,
+          verbose: this.verbose,
+        });
         const buildPaths = buildResults[0].buildResults;
         if (buildPaths && buildPaths.length) {
           resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;
