@@ -1,12 +1,18 @@
 import AbstractError from '../../error/abstract-error';
 
+type IdAndVersions = { id: string; versions: string[] };
+type IdAndLane = { id: string; lane?: string };
+
 export default class MergeConflictOnRemote extends AbstractError {
   code: number;
-  idsAndVersions: Array<{ id: string; versions: string[] }>;
+  // @todo: once v15 is about to be released, rename it to `idsAndVersionsWithConflicts`
+  idsAndVersions: IdAndVersions[]; // a better name is `idsAndVersionsWithConflicts`, however, to keep backward compatibility, we have to stick with this name
+  idsNeedUpdate: IdAndLane[];
 
-  constructor(idsAndVersions: Array<{ id: string; versions: string[] }>) {
+  constructor(idsAndVersionsWithConflicts: IdAndVersions[], idsNeedUpdate: IdAndLane[]) {
     super();
     this.code = 131;
-    this.idsAndVersions = idsAndVersions;
+    this.idsAndVersions = idsAndVersionsWithConflicts;
+    this.idsNeedUpdate = idsNeedUpdate;
   }
 }

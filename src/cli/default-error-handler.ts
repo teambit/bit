@@ -40,8 +40,10 @@ import {
   MergeConflictOnRemote,
   OutdatedIndexJson,
   VersionNotFound,
+  ParentNotFound,
   CyclicDependencies,
-  HashNotFound
+  HashNotFound,
+  HeadNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
@@ -100,6 +102,7 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
+import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -172,6 +175,20 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [ComponentsPendingImport, () => IMPORT_PENDING_MSG],
   // TODO: improve error
   [
+    ComponentsPendingMerge,
+    err => {
+      const componentsStr = err.divergeData
+        .map(
+          d =>
+            `${chalk.bold(d.id)} has ${chalk.bold(d.snapsLocal)} snaps locally only and ${chalk.bold(
+              d.snapsRemote
+            )} snaps remotely only`
+        )
+        .join('\n');
+      return `the local and remote history of the following component(s) have diverged\n${componentsStr}\nPlease use --merge to merge them`;
+    }
+  ],
+  [
     EjectNoDir,
     err => `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`
   ],
@@ -218,6 +235,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   this usually happens when a component is old and the migration script was not running or interrupted`
   ],
   [HashNotFound, err => `hash ${chalk.bold(err.hash)} not found`],
+  [HeadNotFound, err => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
     MergeConflict,
     err =>
@@ -232,21 +250,30 @@ once your changes are merged with the new remote version, you can tag and export
   ],
   [
     MergeConflictOnRemote,
-    err =>
-      `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-        .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
-        .join(', ')} to the remote scope.
-to resolve this conflict and merge your remote and local changes, please do the following:
-1) bit untag [id] [version]
-2) bit import
-3) bit checkout [version] [id]
-once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
+    err => {
+      let output = '';
+      if (err.idsAndVersions.length) {
+        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
+          .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
+          .join(', ')} to the remote scope.
+  to resolve this conflict and merge your remote and local changes, please do the following:
+  1) bit untag [id] [version]
+  2) bit import
+  3) bit checkout [version] [id]
+  once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
+      }
+      if (err.idsNeedUpdate) {
+        output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
+          .map(i => `${chalk.bold(i.id)} (lane: ${i.lane})`)
+          .join(', ')} to the remote scope.
+to resolve this error, please re-import the above components`;
+      }
+      return output;
+    }
   ],
   [
     OutdatedIndexJson,
-    err => `error: component ${chalk.bold(
-      err.componentId
-    )} found in the cache (index.json file), however, is missing from the scope.
+    err => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
 the cache is deleted and will be rebuilt on the next command. please re-run the command.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
@@ -418,6 +445,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
   [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
+  [
+    ParentNotFound,
+    err =>
+      `component ${chalk.bold(err.id)} missing data. parent ${err.parentHash} of version ${
+        err.versionHash
+      } was not found.`
+  ],
   [
     MissingComponentIdForImportedComponent,
     err =>

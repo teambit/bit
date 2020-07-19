@@ -11,17 +11,18 @@ export type ComponentProps = {
   navSlot: NavigationSlot;
   routeSlot: RouteSlot;
   widgetSlot: NavigationSlot;
+  host: string;
 };
 
 /**
  * main UI component of the Component extension.
  */
-export function Component({ navSlot, routeSlot, widgetSlot }: ComponentProps) {
+export function Component({ navSlot, routeSlot, widgetSlot, host }: ComponentProps) {
   const {
     params: { componentId }
   } = useRouteMatch();
 
-  const component = useComponentQuery(componentId);
+  const component = useComponentQuery(componentId, host);
   if (!component) return <FullLoader />;
 
   return (

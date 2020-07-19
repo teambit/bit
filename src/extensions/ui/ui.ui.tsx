@@ -1,9 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { WorkspaceUI } from '../workspace/workspace.ui';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { UIRoot } from './ui-root.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
 import { ReactRouterUI } from '../react-router/react-router.ui';
 import { ClientContext } from './ui/client-context';
+
+export type UIRootRegistry = SlotRegistry<UIRoot>;
 
 // import * as serviceWorker from './serviceWorker';
 
@@ -17,11 +20,6 @@ import { ClientContext } from './ui/client-context';
 export class UIRuntimeExtension {
   constructor(
     /**
-     * workspace UI extension.
-     */
-    private workspace: WorkspaceUI,
-
-    /**
      * GraphQL extension.
      */
     private graphql: GraphQlUI,
@@ -29,12 +27,19 @@ export class UIRuntimeExtension {
     /**
      * react-router extension.
      */
-    private router: ReactRouterUI
+    private router: ReactRouterUI,
+
+    /**
+     * ui root registry.
+     */
+    private uiRootSlot: UIRootRegistry
   ) {}
 
-  render() {
+  render(rootExtension: string) {
     const GraphqlProvider = this.graphql.getProvider;
-    const routes = this.router.renderRoutes();
+    const root = this.getRoot(rootExtension);
+    if (!root) throw new Error(`root: ${root} was not found`);
+    const routes = this.router.renderRoutes(root.routes);
 
     ReactDOM.render(
       <GraphqlProvider>
@@ -44,9 +49,19 @@ export class UIRuntimeExtension {
     );
   }
 
-  static dependencies = [WorkspaceUI, GraphQlUI, ReactRouterUI];
+  registerRoot(uiRoot: UIRoot) {
+    return this.uiRootSlot.register(uiRoot);
+  }
 
-  static async provider([workspace, graphql, router]: [WorkspaceUI, GraphQlUI, ReactRouterUI]) {
-    return new UIRuntimeExtension(workspace, graphql, router);
+  private getRoot(rootExtension: string) {
+    return this.uiRootSlot.get(rootExtension);
+  }
+
+  static slots = [Slot.withType<UIRoot>()];
+
+  static dependencies = [GraphQlUI, ReactRouterUI];
+
+  static async provider([graphql, router]: [GraphQlUI, ReactRouterUI], config, [uiRootSlot]: [UIRootRegistry]) {
+    return new UIRuntimeExtension(graphql, router, uiRootSlot);
   }
 }

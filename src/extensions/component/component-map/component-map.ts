@@ -1,4 +1,4 @@
-import Component from '../component';
+import { Component } from '../component';
 
 /**
  * allows to index components -> values.

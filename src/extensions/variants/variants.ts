@@ -1,9 +1,9 @@
 import R from 'ramda';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
-import { BitId } from '../../bit-id';
 import { Config } from '../config';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { WorkspaceComponentConfig } from '../workspace/types'; // todo: change to "import type" once babel supports it
+import { ComponentID } from '../component';
 
 export type Patterns = { [pattern: string]: Record<string, any> };
 
@@ -48,13 +48,13 @@ export class Variants {
    * Gets the config for specific component after merge all matching patterns of the component id in the variants section
    * @param componentId
    */
-  byId(componentId: BitId): VariantsComponentConfig | undefined {
+  byId(componentId: ComponentID): VariantsComponentConfig | undefined {
     if (this.componentsCache.has(componentId.toString())) {
       return this.componentsCache.get(componentId.toString());
     }
 
     // TODO: handle propagation and exclusion
-    const config = this.legacy()?.getOverrideComponentData(componentId) || {};
+    const config = this.legacy()?.getOverrideComponentData(componentId._legacy) || {};
     const defaultScope = config.defaultScope;
     const rawExtensions = R.omit(INTERNAL_FIELDS, config);
     const extensions = ExtensionDataList.fromConfigObject(rawExtensions);
@@ -68,7 +68,7 @@ export class Variants {
     // We cache this results since this is something with state (it has - hasChanged prop which should be consistent)
     this.componentsCache.set(componentId.toString(), result);
 
-    // TODO: transform to new format (only once we support storing all requireld fields under extensions -
+    // TODO: transform to new format (only once we support storing all required fields under extensions -
     // 'dependencies',
     // 'devDependencies',
     // 'peerDependencies',

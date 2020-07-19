@@ -769,6 +769,7 @@ jobs:
           root: C:\Users\circleci\project
           paths:
             - bit
+  # TODO: make it powershell if you want to use it
   windows_set_ssh_key:
     <<: *windows_defaults
     working_directory: C:\Users\circleci\.ssh
@@ -791,21 +792,27 @@ jobs:
     <<: *windows_defaults
     steps:
       # prod registry
+      # -
+        # run: npm config set @bit:registry https://node.bit.dev
       -
-        run: npm config set @bit:registry https://node.bit.dev
+        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
+      # -
+      #   run: Get-Content -Path C:\Users\circleci\.npmrc
+      # -
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
-        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
       # stage registry
       # -
-      #   run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
       # -
-      #   run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
+      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
-          key: windows_bitsrc-registry-v1
+          key: windows_bitsrc-registry-v3
           # key: windows_bitsrc-registry-stg-v1
           paths:
-            - .npmrc
+            - C:\Users\circleci\.npmrc
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
@@ -818,8 +825,10 @@ jobs:
           at: .
       -
         restore_cache:
-          key: windows_bitsrc-registry-v1
+          key: windows_bitsrc-registry-v3
           # key: windows_bitsrc-registry-stg-v1
+      # -
+      #   run: 'npm config list'
       -
         run:
           name: 'Install npm dependencies'
@@ -1023,9 +1032,9 @@ workflows:
       - windows_checkout_code:
           requires:
             - windows_approval_job
-      - windows_set_ssh_key:
-          requires:
-            - windows_approval_job
+      # - windows_set_ssh_key:
+      #     requires:
+      #       - windows_approval_job
       - windows_set_bitsrc_registry:
           requires:
             - windows_approval_job
@@ -1039,7 +1048,7 @@ workflows:
       - windows_e2e_test:
           requires:
             - windows_build
-            - windows_set_ssh_key
+            # - windows_set_ssh_key
             - windows_set_bitsrc_registry
   deploy:
     jobs:

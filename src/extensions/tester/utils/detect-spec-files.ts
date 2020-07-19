@@ -6,7 +6,7 @@ import { Component } from '../../component';
 export function detectTestFiles(components: Component[]) {
   return components.map(component => {
     const paths = component.filesystem.readdirSync('/').filter(path => {
-      const testerConfig = component.config.extensions.findExtension('@teambit/tester')?.data;
+      const testerConfig = component.config.extensions.findExtension('@teambit/tester')?.config;
       // should be used as a default value.
       return path.match(testerConfig?.testRegex || '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$');
     });

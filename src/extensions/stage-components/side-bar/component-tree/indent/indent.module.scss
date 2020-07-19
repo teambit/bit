@@ -1,0 +1,10 @@
+$baseIndent: 32px;
+$multiplier: 8px;
+
+.indent {
+	padding-left: calc(var(--indent-depth) * #{$multiplier} + #{$baseIndent});
+}
+
+.indentMargin {
+	margin-left: calc(var(--indent-depth) * #{$multiplier} + #{$baseIndent});
+}

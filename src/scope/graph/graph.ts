@@ -13,7 +13,7 @@ export default class Graph extends GraphLib {
     bitId: string,
     successorsList: string[] = [],
     visited: { [key: string]: boolean } = {}
-  ) {
+  ): string[] {
     const successors = this.successors(bitId) || [];
     if (successors.length > 0 && !visited[bitId]) {
       successors.forEach(successor => {
@@ -24,6 +24,26 @@ export default class Graph extends GraphLib {
       });
     }
     return successorsList;
+  }
+
+  findSuccessorsInGraph(ids: string[]): Component[] {
+    const dependenciesFromAllIds = R.flatten(ids.map(id => this.getSuccessorsByEdgeTypeRecursively(id)));
+    const components: Component[] = R.uniq([...dependenciesFromAllIds, ...ids])
+      .map((id: string) => this.node(id))
+      .filter(val => val);
+    return components;
+  }
+
+  /**
+   * helps finding the versions of bit-ids using the components stored in the graph
+   */
+  public getBitIdsIncludeVersionsFromGraph(ids: BitId[], graph: Graph): BitId[] {
+    const components: Component[] = graph.nodes().map(n => graph.node(n));
+    return ids.map(id => {
+      const component = components.find(c => c.id.isEqual(id) || c.id.isEqualWithoutVersion(id));
+      if (!component) throw new Error(`unable to find ${id.toString()} in the graph`);
+      return component.id;
+    });
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

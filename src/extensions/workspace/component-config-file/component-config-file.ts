@@ -3,11 +3,11 @@ import fs from 'fs-extra';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import stringifyPackage from 'stringify-package';
-import { BitId } from '../../../bit-id';
 import { ExtensionDataList } from '../../../consumer/config/extension-data';
 import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
 import { PathOsBasedAbsolute } from '../../../utils/path';
 import { AlreadyExistsError } from './exceptions';
+import { ComponentID } from '../../component';
 
 interface ComponentConfigFileOptions {
   indent: number;
@@ -30,7 +30,7 @@ const DEFAULT_NEWLINE = '\n';
 
 export class ComponentConfigFile {
   constructor(
-    public componentId: BitId,
+    public componentId: ComponentID,
     public extensions: ExtensionDataList,
     public propagate: boolean = false,
     private options: ComponentConfigFileOptions = { indent: DEFAULT_INDENT, newLine: DEFAULT_NEWLINE },
@@ -48,7 +48,7 @@ export class ComponentConfigFile {
     const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
-    const componentId = new BitId(parsed.componentId);
+    const componentId = ComponentID.fromObject(parsed.componentId);
     const extensions = ExtensionDataList.fromConfigObject(parsed.extensions);
 
     return new ComponentConfigFile(
@@ -76,7 +76,7 @@ export class ComponentConfigFile {
 
   toJson(): ComponentConfigFileJson {
     return {
-      componentId: this.componentId.serialize(),
+      componentId: this.componentId.toObject(),
       propagate: this.propagate,
       defaultScope: this.defaultScope,
       extensions: this.extensions.toConfigObject()

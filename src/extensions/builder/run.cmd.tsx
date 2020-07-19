@@ -41,7 +41,7 @@ export class BuilderCmd implements Command {
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console
-    ) => console.log('result', `Env: ${result.env}\nResult: ${JSON.stringify(result.res, undefined, 2)}`));
+    ) => console.log('result', `Env: ${result.env}\nResult: success`));
     this.reporter.end();
 
     return `compiled ${results.length} components successfully`;

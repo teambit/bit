@@ -270,6 +270,13 @@ ${duplicationStr}`);
       );
     }
   });
+  if (version.parents) {
+    version.parents.forEach(parent => {
+      if (parent.isEqual(version.hash())) {
+        throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
+      }
+    });
+  }
   const schema = version.schema || SchemaName.Legacy;
   if (!version.isLegacy) {
     const fieldsForSchemaCheck = ['compiler', 'tester', 'dists', 'mainDistFile'];

@@ -1,11 +1,11 @@
 export default class OutdatedIndexJson extends Error {
-  componentId: string;
+  id: string;
   indexJsonPath: string;
   showDoctorMessage: boolean;
 
-  constructor(componentId: string, indexJsonPath: string) {
+  constructor(id: string, indexJsonPath: string) {
     super();
-    this.componentId = componentId;
+    this.id = id;
     this.indexJsonPath = indexJsonPath;
     this.showDoctorMessage = true;
   }

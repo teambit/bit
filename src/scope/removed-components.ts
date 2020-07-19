@@ -6,6 +6,8 @@ export type RemovedObjectSerialized = {
   missingComponents: BitIdStr[];
   removedDependencies: BitIdStr[];
   dependentBits: Record<string, any>;
+  removedFromLane?: boolean;
+  removedLanes: string[];
 };
 
 export default class RemovedObjects {
@@ -13,21 +15,29 @@ export default class RemovedObjects {
   missingComponents: BitIds;
   removedDependencies: BitIds;
   dependentBits: Record<string, any>;
+  removedFromLane: boolean;
+  removedLanes: string[];
   constructor({
     removedComponentIds,
     missingComponents,
     removedDependencies,
-    dependentBits
+    dependentBits,
+    removedFromLane,
+    removedLanes
   }: {
     removedComponentIds?: BitIds;
     missingComponents?: BitIds;
     removedDependencies?: BitIds;
     dependentBits?: Record<string, any>;
+    removedFromLane?: boolean;
+    removedLanes?: string[];
   }) {
     this.removedComponentIds = removedComponentIds || new BitIds();
     this.missingComponents = missingComponents || new BitIds();
     this.removedDependencies = removedDependencies || new BitIds();
     this.dependentBits = dependentBits || {};
+    this.removedFromLane = removedFromLane || false;
+    this.removedLanes = removedLanes || [];
   }
 
   serialize(): RemovedObjectSerialized {
@@ -35,7 +45,9 @@ export default class RemovedObjects {
       removedComponentIds: this.removedComponentIds.serialize(),
       missingComponents: this.missingComponents.serialize(),
       removedDependencies: this.removedDependencies.serialize(),
-      dependentBits: this.dependentBits
+      dependentBits: this.dependentBits,
+      removedFromLane: this.removedFromLane,
+      removedLanes: this.removedLanes
     };
   }
 
@@ -44,6 +56,7 @@ export default class RemovedObjects {
     missingComponents: string[];
     removedDependencies: string[];
     dependentBits: { [key: string]: Record<string, any>[] };
+    removedLanes: string[];
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
     const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));
@@ -58,7 +71,8 @@ export default class RemovedObjects {
       missingComponents,
       removedComponentIds,
       removedDependencies,
-      dependentBits
+      dependentBits,
+      removedLanes: payload.removedLanes
     });
   }
 }

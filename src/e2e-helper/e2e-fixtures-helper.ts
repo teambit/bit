@@ -69,6 +69,11 @@ export default class FixtureHelper {
     return path.join(__dirname, '../../e2e/fixtures');
   }
 
+  copyFixtureDir(src: string, dest: string) {
+    const sourceDir = path.join(this.getFixturesDir(), src);
+    fs.copySync(sourceDir, dest);
+  }
+
   copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
@@ -100,6 +105,15 @@ export default class FixtureHelper {
     this.fs.createFile('utils', 'is-string.js', fixtures.isString);
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
+
+  populateWorkspaceWithComponentsWithV2() {
+    this.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+    this.addComponentUtilsIsType();
+    this.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixtureV2);
     this.addComponentBarFoo();
   }
 

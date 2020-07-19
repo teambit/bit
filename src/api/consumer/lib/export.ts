@@ -23,6 +23,12 @@ import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_BINDINGS_
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
+import { Lane } from '../../../scope/models';
+import {
+  updateLanesAfterExport,
+  getLaneCompIdsToExport,
+  isUserTryingToExportLanes
+} from '../../../consumer/lanes/export-lanes';
 import { publishComponentsToRegistry } from '../../../scope/component-ops/publish-during-export';
 import Component from '../../../consumer/component/consumer-component';
 
@@ -38,13 +44,28 @@ export default (async function exportAction(params: {
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
+  lanes: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-  const { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote } = await exportComponents(params);
+  const {
+    updatedIds,
+    nonExistOnBitMap,
+    missingScope,
+    exported,
+    newIdsOnRemote,
+    exportedLanes
+  } = await exportComponents(params);
   const publishResults = await publishComponentsToRegistry({ newIdsOnRemote, updatedIds });
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
-  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults, publishResults };
+  const exportResults = {
+    componentsIds: exported,
+    nonExistOnBitMap,
+    missingScope,
+    ejectResults,
+    publishResults,
+    exportedLanes
+  };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
   return exportResults;
 });
@@ -56,8 +77,9 @@ async function exportComponents({
   setCurrentScope,
   includeNonStaged,
   codemod,
-  allVersions,
-  force
+  force,
+  lanes,
+  allVersions
 }: {
   ids: string[];
   remote: string | null | undefined;
@@ -67,23 +89,27 @@ async function exportComponents({
   codemod: boolean;
   allVersions: boolean;
   force: boolean;
+  lanes: boolean;
 }): Promise<{
   updatedIds: BitId[];
   nonExistOnBitMap: BitId[];
   missingScope: BitId[];
   exported: BitId[];
+  exportedLanes: Lane[];
   newIdsOnRemote: BitId[];
 }> {
   const consumer: Consumer = await loadConsumer();
-  const { idsToExport, missingScope, idsWithFutureScope } = await getComponentsToExport(
+  const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,
     remote,
     includeNonStaged,
-    force
+    force,
+    lanes
   );
+
   if (R.isEmpty(idsToExport)) {
-    return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [], newIdsOnRemote: [] };
+    return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [], newIdsOnRemote: [], exportedLanes: [] };
   }
   let componentsToExport: Component[] | undefined;
   if (codemod) {
@@ -99,9 +125,11 @@ async function exportComponents({
     includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
+    lanesObjects,
     allVersions,
     idsWithFutureScope
   });
+  if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
@@ -114,7 +142,7 @@ async function exportComponents({
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote };
+  return { updatedIds, nonExistOnBitMap, missingScope, exported, newIdsOnRemote, exportedLanes: lanesObjects || [] };
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
@@ -134,8 +162,9 @@ async function getComponentsToExport(
   consumer: Consumer,
   remote: string | null | undefined,
   includeNonStaged: boolean,
-  force: boolean
-): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds }> {
+  force: boolean,
+  lanes: boolean
+): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; lanesObjects?: Lane[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
   const filterNonScopeIfNeeded = (
@@ -160,6 +189,13 @@ async function getComponentsToExport(
       throw new GeneralError('the operation has been canceled');
     }
   };
+  if (isUserTryingToExportLanes(consumer, ids, lanes)) {
+    const { componentsToExport, lanesObjects } = await getLaneCompIdsToExport(consumer, ids, includeNonStaged);
+    await promptForFork(componentsToExport);
+    const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
+    loader.start(loaderMsg);
+    return { ...filterNonScopeIfNeeded(componentsToExport), lanesObjects: lanesObjects.filter(l => l) };
+  }
   if (!ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = includeNonStaged

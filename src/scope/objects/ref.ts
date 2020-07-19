@@ -25,6 +25,14 @@ export default class Ref {
     return repo.loadRaw(this);
   }
 
+  isEqual(ref: Ref): boolean {
+    return this.toString() === ref.toString();
+  }
+
+  clone() {
+    return new Ref(this.hash);
+  }
+
   static from(hash: string): Ref {
     return new Ref(hash);
   }

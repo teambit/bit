@@ -12,6 +12,7 @@ import { PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import ComponentWriter from '../../component-ops/component-writer';
 import { Tmp } from '../../../scope/repositories';
+import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -33,6 +34,9 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
+  resolvedComponents?: Component[]; // relevant for bit merge --resolve
+  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
+  mergeSnapResults?: { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] } | null;
 };
 type ComponentStatus = {
   componentFromFS: Component;
@@ -75,17 +79,24 @@ export async function mergeVersion(
 }
 
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
-  const componentModel = await consumer.scope.sources.get(component.id);
+  const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   if (!componentModel) {
     throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  if (!componentModel.hasVersion(version)) {
+  const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+  if (!hasVersion) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+  }
+  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  if (unmerged && unmerged.resolved === false) {
+    throw new GeneralError(
+      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+    );
   }
   const otherComponent: Component = await consumer.loadComponentFromModel(component.id.changeVersion(version));
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({

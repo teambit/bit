@@ -5,6 +5,7 @@ import { Config } from '../config';
 import { LogPublisher } from '../logger';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentHost } from '../types';
+import { ExtensionDescriptor } from './extension-descriptor';
 
 export default class Core {
   host: ComponentHost;
@@ -40,6 +41,22 @@ export default class Core {
    */
   get version() {
     return '1.0.0';
+  }
+
+  getDescriptor(id: string): ExtensionDescriptor {
+    const instance = this.harmony.get<any>(id);
+    const iconFn = instance.icon;
+    const defaultIcon = `
+      <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="25" cy="25" r="20"/>
+      </svg>`;
+
+    const icon = iconFn ? iconFn() : defaultIcon;
+
+    return {
+      id,
+      icon
+    };
   }
 
   /**

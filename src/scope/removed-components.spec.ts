@@ -7,7 +7,8 @@ describe('RemovedComponents', () => {
     removedComponentIds: [],
     missingComponents: [],
     removedDependencies: [],
-    dependentBits: {}
+    dependentBits: {},
+    removedLanes: []
   };
   describe('fromObjects', () => {
     describe('with dependentBits', () => {

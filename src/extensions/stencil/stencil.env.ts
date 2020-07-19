@@ -1,9 +1,8 @@
 import { Environment } from '../environments';
 import { Tester } from '../tester';
 import { BuildTask } from '../builder';
-import { Compiler } from '../compiler';
+import { Compiler, CompilerExtension } from '../compiler';
 import { DevServer, DevServerContext } from '../bundler';
-import { Compile } from '../compiler';
 import { StencilExtension } from './stencil.extension';
 import { WebpackExtension } from '../webpack';
 import webpackConfig from './webpack/webpack.config';
@@ -21,7 +20,7 @@ export class StencilEnv implements Environment {
     /**
      * compiler extension.
      */
-    private compiler: Compile,
+    private compiler: CompilerExtension,
 
     /**
      * webpack extension.

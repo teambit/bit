@@ -45,7 +45,7 @@ describe('merge functionality', function() {
         { id: `${helper.scopes.remote}/bar/foo`, versions: ['0.0.2'] },
         { id: `${helper.scopes.remote}/bar2/foo2`, versions: ['0.0.2'] }
       ];
-      const error = new MergeConflictOnRemote(idsAndVersions);
+      const error = new MergeConflictOnRemote(idsAndVersions, []);
       helper.general.expectToThrow(exportFunc, error);
     });
     it('should throw MergeConflict error when importing the component', () => {

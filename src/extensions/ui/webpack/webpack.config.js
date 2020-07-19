@@ -18,7 +18,7 @@ module.exports = {
   createWebpackConfig
 };
 
-function createWebpackConfig(workspaceDir, entryFiles) {
+function createWebpackConfig(workspaceDir, entryFiles, title) {
   const resolveWorkspacePath = relativePath => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -191,7 +191,7 @@ function createWebpackConfig(workspaceDir, entryFiles) {
       // filename output defined above.
       new HtmlWebpackPlugin({
         inject: true,
-        templateContent: html('My component workspace'),
+        templateContent: html(title || 'My component workspace'),
         chunks: ['main'],
         filename: 'index.html'
       })

@@ -1,7 +1,7 @@
 import { Harmony } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
 import Workspace from './workspace';
-import { ComponentFactory } from '../component';
+import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
 import { Logger } from '../logger';
@@ -14,16 +14,23 @@ import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
+import { UIExtension } from '../ui';
+import { WorkspaceUIRoot } from './workspace.ui-root';
+import { BundlerExtension } from '../bundler';
+import { CapsuleListCmd } from './capsule-list.cmd';
+import { CapsuleCreateCmd } from './capsule-create.cmd';
 
 export type WorkspaceDeps = [
   CLIExtension,
   ScopeExtension,
-  ComponentFactory,
+  ComponentExtension,
   IsolatorExtension,
   DependencyResolverExtension,
   Variants,
   Logger,
-  GraphQLExtension
+  GraphQLExtension,
+  UIExtension,
+  BundlerExtension
 ];
 
 export type WorkspaceCoreConfig = {
@@ -42,7 +49,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   _slots,
   harmony: Harmony
@@ -70,22 +77,25 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      // ConsumerComponent.registerOnComponentConfigLegacyLoading(
-      //   'workspace',
-      //   async (id, componentConfig: ComponentConfig) => {
-      //     return workspace.loadExtensions(componentConfig.extensions);
-      //   }
-      // );
+
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
-        const wsComponentConfig = await workspace.workspaceComponentConfig(id);
+        const componentId = await workspace.resolveComponentId(id);
+        const wsComponentConfig = await workspace.workspaceComponentConfig(componentId);
         await workspace.loadExtensions(wsComponentConfig.componentExtensions);
         return wsComponentConfig;
       });
 
       const workspaceSchema = getWorkspaceSchema(workspace);
+      ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
+
+      const capsuleListCmd = new CapsuleListCmd(isolator);
+      const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
+      cli.register(capsuleListCmd);
+      cli.register(capsuleCreateCmd);
+      component.registerHost(workspace);
 
       return workspace;
     }

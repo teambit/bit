@@ -46,7 +46,7 @@ export class Flows {
     const getFlow = async (capsule: Capsule) => {
       const seed = capsule.component.id;
       const id = seed instanceof BitId ? seed : seed._legacy;
-      const component = await this.workspace.get(id);
+      const component = await this.workspace.get(seed);
       if (!component) {
         return new Flow([]);
       }

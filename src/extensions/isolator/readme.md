@@ -23,12 +23,6 @@ const Network = {
 The exact particularities of this API are beyond the scope of this readme. Instead, this document opts to
 provide a general description of the methods of this API and their purpose.
 
-### Isolator.createNetworkFromConsumer
-This method receives a list of seeder component IDs and a consumer including them.
-It returns a Network including the seeder components as well as any of their dependencies.
-
-### Isolator.createNetworkFromScope
-Like createNetworkFromConsumer but receives a Scope instead.
-
-### Isolator.createNetwork
-Like createNetworkFromConsumer and createNetworkFromScope, only this method receives a graph directly. This method is also used internally by the above two methods, but is provided in the API as a convenience.
+### Isolator.isolateComponents
+This method receives a list of components, create capsule for the components and write the components data into the capsule.
+It returns a list of capsules.

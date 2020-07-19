@@ -4,7 +4,7 @@ import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
-import { Compiler, Compile } from '../compiler';
+import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { DevServer, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
@@ -29,7 +29,7 @@ export class ReactEnv implements Environment {
     /**
      * compiler extension.
      */
-    private compiler: Compile,
+    private compiler: CompilerExtension,
 
     /**
      * webpack extension.

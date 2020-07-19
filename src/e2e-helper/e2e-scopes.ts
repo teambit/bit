@@ -37,8 +37,10 @@ export default class ScopesData {
     this.localPath = path.join(this.e2eDir, this.local);
     fs.ensureDirSync(this.localPath);
   }
-  setRemoteScope(remoteScopeWithDot = false, prefix = generateRandomStr()) {
-    if (remoteScopeWithDot) {
+  setRemoteScope(remoteScopeWithDot = false, prefix = generateRandomStr(), remoteScope?: string) {
+    if (remoteScope) {
+      this.remote = remoteScope;
+    } else if (remoteScopeWithDot) {
       this.remote = `${prefix}.${generateRandomStr()}-remote`;
     } else {
       this.remote = `${generateRandomStr()}-remote`;

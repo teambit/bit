@@ -37,6 +37,7 @@ export class TaskProcess {
       await this.saveArtifactsToComponent(component);
     });
     await Promise.all(resultsP);
+    return components;
   }
 
   private saveDataToComponent(component: Component) {

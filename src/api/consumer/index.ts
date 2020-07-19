@@ -4,6 +4,7 @@ import remove from './lib/remove';
 import { deprecate, undeprecate } from './lib/deprecation';
 import { listScope } from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
+import { snapAction } from './lib/snap';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';
 import importAction from './lib/import';
@@ -31,6 +32,9 @@ import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
 import show from './lib/show';
 import paintGraph from './lib/paint-graph';
+import lane from './lib/lane';
+import switchAction from './lib/switch';
+import fetch from './lib/fetch';
 
 export {
   init,
@@ -44,6 +48,7 @@ export {
   listScope,
   tagAction,
   tagAllAction,
+  snapAction,
   status,
   build,
   importAction,
@@ -70,5 +75,8 @@ export {
   ejectAction,
   login,
   show,
-  paintGraph
+  paintGraph,
+  lane,
+  switchAction,
+  fetch
 };

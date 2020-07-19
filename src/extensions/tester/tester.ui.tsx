@@ -22,3 +22,5 @@ export class TesterUI {
     return testerUi;
   }
 }
+
+export default TesterUI;

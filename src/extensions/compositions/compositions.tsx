@@ -40,7 +40,7 @@ export function Compositions() {
   const properties = R.path(['workspace', 'getDocs', 'properties'], data);
 
   // reset selected composition when component changes.
-  // this does trigger rerender, but perf seems to be ok
+  // this does trigger renderer, but perf seems to be ok
   useEffect(() => {
     selectComposition(component.compositions[0]);
   }, [component]);

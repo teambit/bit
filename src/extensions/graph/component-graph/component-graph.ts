@@ -18,11 +18,16 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     super(nodes, edges);
     this.versionMap = new Map();
   }
-  static buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): ComponentGraph {
+  static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
-    legacyGraph.nodes().forEach(nodeId => {
-      newGraph.setNode(nodeId, componentFactory.fromLegacyComponent(legacyGraph.node(nodeId)));
+    const setNodeP = legacyGraph.nodes().map(async nodeId => {
+      const componentId = await componentFactory.resolveComponentId(nodeId);
+      const component = await componentFactory.get(componentId);
+      if (component) {
+        newGraph.setNode(nodeId, component);
+      }
     });
+    await Promise.all(setNodeP);
     legacyGraph.edges().forEach(edgeId => {
       const source = edgeId.v;
       const target = edgeId.w;

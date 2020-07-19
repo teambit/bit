@@ -11,6 +11,7 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import CompsAndLanesObjects from '../../scope/comps-and-lanes-objects';
 
 export default class ComponentLoader {
   _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
@@ -180,9 +181,10 @@ export default class ComponentLoader {
   async _throwPendingImportIfNeeded(currentId: BitId) {
     if (currentId.hasScope()) {
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
-      // $FlowFixMe version is set here
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
+      // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
+      // whether one of the hashes exist.
+      // @ts-ignore version is set here
+      if (remoteComponent && remoteComponent.hasTag(currentId.version)) {
         throw new ComponentsPendingImport();
       }
     }
@@ -190,14 +192,14 @@ export default class ComponentLoader {
 
   async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const remotes = await getScopeRemotes(this.consumer.scope);
-    let componentsObjects;
+    let compsAndLanesObjects: CompsAndLanesObjects;
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
+      compsAndLanesObjects = await remotes.fetch([id], this.consumer.scope, false);
     } catch (err) {
       return null; // probably doesn't exist
     }
-    const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
+    const remoteComponent = await compsAndLanesObjects.componentsObjects[0].toObjectsAsync();
     return remoteComponent.component;
   }
 

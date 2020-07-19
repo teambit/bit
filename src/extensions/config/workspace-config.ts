@@ -21,6 +21,7 @@ import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
+import { Analytics } from '../../analytics/analytics';
 
 export type ComponentsConfigFn = () => ConsumerOverrides;
 export type ComponentConfigFn = (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
@@ -106,6 +107,7 @@ export class WorkspaceConfig implements HostConfig {
         };
       }
     }
+    Analytics.setExtraData('is_harmony', !this.isLegacy);
   }
 
   get path(): PathOsBased {
