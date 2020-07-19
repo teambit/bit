@@ -1,6 +1,7 @@
 import path from 'path';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
+import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
@@ -22,12 +23,14 @@ import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { OnComponentLoadSlot } from './workspace.provider';
+import { OnComponentLoad } from './on-component-load';
 
 export type EjectConfResult = {
   configPath: string;
@@ -77,8 +80,14 @@ export default class Workspace implements ComponentFactory {
     /**
      * private reference to the instance of Harmony.
      */
-    private harmony: Harmony
+    private harmony: Harmony,
+
+    /**
+     * on component load slot.
+     */
+    private onComponentLoadSlot: OnComponentLoadSlot
   ) {
+    // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
   }
 
@@ -87,6 +96,11 @@ export default class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  onComponentLoad(loadFn: OnComponentLoad) {
+    this.onComponentLoadSlot.register(loadFn);
+    return this;
   }
 
   /**
@@ -197,7 +211,26 @@ export default class Workspace implements ComponentFactory {
     if (!component) return this.newComponentFromState(state);
 
     component.state = state;
+    return this.executeLoadSlot(component);
+  }
+
+  private async executeLoadSlot(component: Component) {
+    const entries = this.onComponentLoadSlot.toArray();
+    const promises = entries.map(async ([extension, onLoad]) => {
+      const data = await onLoad(component);
+      const existingExtension = component.state.config.extensions.findExtension(extension);
+      if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
+      component.state.config.extensions.push(this.getDataEntry(extension, data));
+    });
+
+    await Promise.all(promises);
+
     return component;
+  }
+
+  private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {
+    // TODO: @gilad we need to refactor the extension data entry api.
+    return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
 
   private newComponentFromState(state: State): Component {

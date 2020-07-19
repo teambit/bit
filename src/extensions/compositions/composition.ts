@@ -23,6 +23,13 @@ export class Composition {
     return capitalize(text);
   }
 
+  toObject() {
+    return {
+      identifier: this.identifier,
+      filepath: this.filepath,
+    };
+  }
+
   static fromArray(compositions: CompositionProps[]): Composition[] {
     return compositions.map((composition) => {
       return new Composition(composition.identifier, composition.filepath);

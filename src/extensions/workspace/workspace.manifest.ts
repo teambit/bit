@@ -1,4 +1,4 @@
-import { ExtensionManifest } from '@teambit/harmony';
+import { ExtensionManifest, Slot } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeExtension } from '../scope';
 import { ComponentExtension } from '../component';
@@ -11,6 +11,7 @@ import { GraphQLExtension } from '../graphql';
 import { CLIExtension } from '../cli';
 import { UIExtension } from '../ui';
 import { BundlerExtension } from '../bundler';
+import { OnComponentLoad } from './on-component-load';
 
 export default {
   name: EXT_NAME,
@@ -26,6 +27,7 @@ export default {
     UIExtension,
     BundlerExtension,
   ],
+  slots: [Slot.withType<OnComponentLoad>()],
   provider: workspaceProvider,
   defineRuntime: 'browser',
 } as ExtensionManifest;

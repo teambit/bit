@@ -123,7 +123,8 @@ export function componentSchema(componentExtension: ComponentExtension) {
       ComponentHost: {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
           const componentId = await host.resolveComponentId(id);
-          return host.get(componentId);
+          const component = await host.get(componentId);
+          return component;
         },
       },
       Query: {
