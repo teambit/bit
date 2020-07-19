@@ -1,8 +1,9 @@
+import gql from 'graphql-tag';
 import Workspace from './workspace';
 
 export default (workspace: Workspace) => {
   return {
-    typeDefs: `
+    typeDefs: gql`
       type Workspace {
         name: String
         path: String

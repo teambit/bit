@@ -1,0 +1,34 @@
+.scope {
+	display: grid;
+	height: 100vh;
+	
+	color: var(--text-highlight);
+	
+	overflow: hidden;
+
+	grid-template:
+		'corner main'
+		'navigation main';
+
+	grid-template-columns: 264px 1fr;
+	grid-template-rows: auto 1fr;
+
+	> :nth-child(1) {
+		grid-area: corner;
+	}
+	
+	> :nth-child(2) {
+		grid-area: navigation;
+	}
+	
+	> :nth-child(3) {
+		grid-area: main;
+	}
+}
+
+.sideBar {
+	border-right: 1px solid #ededed;
+	flex: 1;
+	
+	overflow: auto;
+}

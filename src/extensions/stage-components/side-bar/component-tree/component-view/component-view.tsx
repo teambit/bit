@@ -5,8 +5,8 @@ import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
 import { getName } from '../utils/get-name';
-import { clickable } from '../../../../../../to-eject/css-components/clickable';
-import { hoverable } from '../../../../../../to-eject/css-components/hoverable';
+import { clickable } from '../../../../../to-eject/css-components/clickable';
+import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import styles from './component-view.module.scss';
 
 export function ComponentView(props: TreeNodeProps) {

@@ -7,13 +7,18 @@ import { SlotRegistry } from '../../api';
 export type RouteSlot = SlotRegistry<RouteProps>;
 export type NavigationSlot = SlotRegistry<NavLinkProps>;
 
-export function SlotRouter({ slot }: { slot: RouteSlot }) {
+export type SlotRouterProps = {
+  slot: RouteSlot;
+  rootRoutes?: RouteProps[];
+};
+
+export function SlotRouter({ slot, rootRoutes }: SlotRouterProps) {
   const routes = slot.values();
-  // TODO - generate key as part of the slot.
+  const withRoot = routes.concat(rootRoutes || []);
 
   return (
     <Switch>
-      {routes.map((route, idx) => (
+      {withRoot.map((route, idx) => (
         <Route key={idx} {...route} />
       ))}
     </Switch>

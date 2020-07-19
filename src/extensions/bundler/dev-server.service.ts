@@ -8,7 +8,7 @@ import { ComponentServer } from './component-server';
 import { BindError } from './exceptions';
 import { BrowserRuntimeSlot } from './bundler.extension';
 import { DevServerContext } from './dev-server-context';
-import { Workspace } from '../workspace';
+import { UIRoot } from '../ui';
 
 export class DevServerService implements EnvService {
   constructor(
@@ -18,10 +18,14 @@ export class DevServerService implements EnvService {
     private runtimeSlot: BrowserRuntimeSlot,
 
     /**
-     * workspace extension.
+     * main path of the dev server to execute on.
      */
-    private workspace: Workspace
+    private _uiRoot?: UIRoot
   ) {}
+
+  set uiRoot(value: UIRoot) {
+    this._uiRoot = value;
+  }
 
   async run(context: ExecutionContext) {
     const devServer: DevServer = context.env.getDevServer(await this.buildContext(context));
@@ -47,12 +51,14 @@ export class DevServerService implements EnvService {
    * computes the bundler entry.
    */
   private async getEntry(context: ExecutionContext): Promise<string[]> {
+    const uiRoot = this._uiRoot;
+    if (!uiRoot) throw new Error('a root must be provided by UI root');
     const mainFiles = context.components.map((component) => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
+        // this.workspace.componentDir(component.id, {}, { relative: true }),
         // @ts-ignore
-        // component.state._consumer.componentMap?.getComponentDir()
-        this.workspace.componentDir(component.id, {}, { relative: true }),
+        uiRoot.componentDir(component.id, {}, { relative: true }),
         // @ts-ignore
         component.config.main
       );

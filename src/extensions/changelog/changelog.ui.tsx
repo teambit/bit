@@ -22,3 +22,5 @@ export class ChangeLogUI {
     return ui;
   }
 }
+
+export default ChangeLogUI;

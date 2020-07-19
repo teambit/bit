@@ -14,10 +14,10 @@ export class ReactRouterUI {
   /**
    * render all slot routes.
    */
-  renderRoutes(): JSX.Element {
+  renderRoutes(routes: RouteProps[]): JSX.Element {
     return (
       <BrowserRouter>
-        <SlotRouter slot={this.routeSlot} />
+        <SlotRouter slot={this.routeSlot} rootRoutes={routes} />
       </BrowserRouter>
     );
   }
