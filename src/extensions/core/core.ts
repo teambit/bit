@@ -65,9 +65,23 @@ export default class Core {
   async init(): Promise<void> {
     if (this.config && this.config.extensions) {
       const extensions = this.config.extensions._filterLegacy();
+      if (this.workspace) {
+        await this.workspace.resolveExtensionsList(extensions);
+      }
+      // We set the configs here also (except it its set as part of config extension) to make sure it set with the correct resolved ids
+      // wec can't resolve the ids before loading the workspace itself
+      // We do need it also as part of the config load because of the core extensions
+      this.setExtensionConfig(extensions);
       return this.loadExtensions(extensions);
     }
     return undefined;
+  }
+
+  setExtensionConfig(extensions: ExtensionDataList): void {
+    // Send all configs to harmony
+    extensions.forEach((extension) => {
+      this.harmony.config.set(extension.stringId, extension.config);
+    });
   }
 
   /**
