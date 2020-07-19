@@ -362,12 +362,14 @@ export default class Workspace implements ComponentFactory {
       // Put it in the start to make sure the config file is stronger
       extensionsToMerge.push(wsDefaultExtensions);
     }
+
+    // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
+    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
+
     // In case there are no config file for the component use extension from the scope
     if (!componentConfigFile) {
       extensionsToMerge.push(scopeExtensions);
     }
-
-    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
 
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
 
