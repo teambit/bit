@@ -145,9 +145,12 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   /**
    * Merge a list of ExtensionDataList into one ExtensionDataList
    * In case of entry with the same id appear in more than one list
-   * the later in the list will be taken
+   * the former in the list will be taken
    * see unit tests for examples
    *
+   * Make sure you extension ids are resolved before call this, otherwise you might get unexpected results
+   * for example:
+   * you might have 2 entries like: default-scope/my-extension and my-extension on the same time
    *
    * @static
    * @param {ExtensionDataList[]} list
@@ -155,8 +158,23 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * @memberof ExtensionDataList
    */
   static mergeConfigs(list: ExtensionDataList[]): ExtensionDataList {
-    const objectsList = list.map((extensions) => extensions.toConfigObject());
-    const merged = R.mergeAll(objectsList);
-    return ExtensionDataList.fromConfigObject(merged);
+    if (list.length === 1) {
+      return list[0];
+    }
+
+    const merged = list.reduce(mergeReducer, new ExtensionDataList());
+    return ExtensionDataList.fromArray(merged);
   }
+}
+
+const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
+
+function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
+  if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
+    return extensionEntry1.extensionId.isEqualWithoutVersion(extensionEntry2.extensionId);
+  }
+  if (extensionEntry1.name && extensionEntry2.name) {
+    return extensionEntry1.name === extensionEntry2.name;
+  }
+  return false;
 }

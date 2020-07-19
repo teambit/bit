@@ -352,21 +352,24 @@ export default class Workspace implements ComponentFactory {
     let continuePropagating = componentConfigFile?.propagate ?? true;
     if (variantsExtensions && continuePropagating) {
       // Put it in the start to make sure the config file is stronger
-      extensionsToMerge.unshift(variantsExtensions);
+      extensionsToMerge.push(variantsExtensions);
     }
     continuePropagating = continuePropagating && (variantConfig?.propagate ?? true);
     // Do not apply default extensions on the default extensions (it will create infinite loop when loading them)
     const isDefaultExtension = wsDefaultExtensions.findExtension(componentId.toString(), true, true);
     if (wsDefaultExtensions && continuePropagating && !isDefaultExtension) {
       // Put it in the start to make sure the config file is stronger
-      extensionsToMerge.unshift(wsDefaultExtensions);
+      extensionsToMerge.push(wsDefaultExtensions);
     }
     // In case there are no config file for the component use extension from the scope
     if (!componentConfigFile) {
-      extensionsToMerge.unshift(scopeExtensions);
+      extensionsToMerge.push(scopeExtensions);
     }
 
+    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
+
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
+
     // remove self from merged extensions
     const selfInMergedExtensions = mergedExtensions.findExtension(
       componentId._legacy.toStringWithoutScopeAndVersion(),
@@ -376,16 +379,6 @@ export default class Workspace implements ComponentFactory {
     if (selfInMergedExtensions && selfInMergedExtensions.extensionId) {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
-    const resolveMergedExtensionsP = mergedExtensions.map(async (extensionEntry) => {
-      if (extensionEntry.extensionId) {
-        const hasVersion = extensionEntry.extensionId.hasVersion();
-        const useBitmapVersion = !hasVersion;
-        // Assuming extensionId always has scope - do not allow extension id without scope
-        const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, useBitmapVersion);
-        extensionEntry.extensionId = resolvedId._legacy;
-      }
-    });
-    await Promise.all(resolveMergedExtensionsP);
 
     return mergedExtensions;
   }
@@ -528,12 +521,27 @@ export default class Workspace implements ComponentFactory {
     const legacyId = this.consumer.getParsedId(stringIdWithoutScope, useVersionFromBitmap);
     return ComponentID.fromLegacy(legacyId);
   }
-}
 
-// TODO: handle this properly when we decide about using bitId vs componentId
-// if it's still needed we should move it other place, it will be used by many places
-function getBitId(id, consumer): BitId {
-  if (id instanceof ComponentID) return id._legacy;
-  if (typeof id === 'string') return consumer.getParsedId(id);
-  return id;
+  /**
+   * This will mutate the original extensions list and resolve it's ids
+   *
+   * @private
+   * @param {ExtensionDataList} extensions
+   * @returns {Promise<void[]>}
+   * @memberof Workspace
+   */
+  private resolveExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
+    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
+      if (extensionEntry.extensionId) {
+        // const hasVersion = extensionEntry.extensionId.hasVersion();
+        // const useBitmapVersion = !hasVersion;
+        // const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, useBitmapVersion);
+
+        // Assuming extensionId always has scope - do not allow extension id without scope
+        const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, false);
+        extensionEntry.extensionId = resolvedId._legacy;
+      }
+    });
+    return Promise.all(resolveMergedExtensionsP);
+  }
 }
