@@ -13,7 +13,7 @@ import {
   ApplyVersionResult,
   MergeOptions,
   FileStatus,
-  ApplyVersionResults
+  ApplyVersionResults,
 } from './merge-version';
 import Component from '../../component/consumer-component';
 import { Tmp } from '../../../scope/repositories';
@@ -62,14 +62,14 @@ export async function mergeComponentsFromRemote(
     laneId: localLaneId,
     localLane: localLaneObject,
     noSnap,
-    snapMessage
+    snapMessage,
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map(async bitId => {
+        bitIds.map(async (bitId) => {
           const remoteLaneName = remoteTrackedLane ? remoteTrackedLane.remoteLane : localLaneId.name;
           const remoteScopeName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
           const remoteLaneId = RemoteLaneId.from(remoteLaneName, remoteScopeName as string);
@@ -104,7 +104,7 @@ export async function merge({
   laneId,
   localLane,
   noSnap,
-  snapMessage
+  snapMessage,
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -116,16 +116,16 @@ export async function merge({
   snapMessage: string;
 }) {
   const componentWithConflict = allComponentsStatus.find(
-    component => component.mergeResults && component.mergeResults.hasConflicts
+    (component) => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict && !mergeStrategy) {
     mergeStrategy = await getMergeStrategyInteractive();
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter(componentStatus => componentStatus.failureMessage)
-    .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
-  const succeededComponents = allComponentsStatus.filter(componentStatus => !componentStatus.failureMessage);
+    .filter((componentStatus) => componentStatus.failureMessage)
+    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+  const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
@@ -138,7 +138,7 @@ export async function merge({
       remoteHead: new Ref(id.version),
       remoteName: remoteName || componentFromFS.scope,
       laneId,
-      localLane
+      localLane,
     });
   });
 
@@ -238,7 +238,7 @@ export async function getComponentStatus(
     otherLabel: `${currentlyUsedVersion} (local)`,
     currentComponent, // this is actually the other
     currentLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
-    baseComponent
+    baseComponent,
   });
   return { componentFromFS: component, id, mergeResults };
 }
@@ -252,7 +252,7 @@ export async function applyVersion({
   remoteHead,
   remoteName,
   laneId,
-  localLane
+  localLane,
 }: {
   consumer: Consumer;
   componentFromFS: Component | null;
@@ -272,12 +272,12 @@ export async function applyVersion({
     head: remoteHead,
     // @ts-ignore
     remote: remoteName,
-    lane: laneId.name
+    lane: laneId.name,
   };
   id = componentFromFS ? componentFromFS.id : id;
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-    componentFromFS.files.forEach(file => {
+    componentFromFS.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
@@ -309,7 +309,7 @@ export async function applyVersion({
   const writePackageJson = await shouldWritePackageJson();
 
   const files = componentWithDependencies.component.files;
-  files.forEach(file => {
+  files.forEach((file) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
@@ -337,7 +337,7 @@ export async function applyVersion({
     writeConfig: false, // @todo: should write if config exists before, needs to figure out how to do it.
     verbose: false, // @todo: do we need a flag here?
     writeDists: true, // @todo: do we need a flag here?
-    writePackageJson
+    writePackageJson,
   });
   await manyComponentsWriter.writeAll();
 
@@ -346,7 +346,7 @@ export async function applyVersion({
   if (mergeResults) {
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
       unmergedComponent.resolved = false;
-      unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter(f => f.conflict).map(f => f.filePath);
+      unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter((f) => f.conflict).map((f) => f.filePath);
     } else {
       unmergedComponent.resolved = true;
     }
@@ -370,10 +370,10 @@ async function snapResolvedComponents(
   const resolvedComponents = consumer.scope.objects.unmergedComponents.getResolvedComponents();
   logger.debug(`merge-snaps, snapResolvedComponents, total ${resolvedComponents.length.toString()} components`);
   if (!resolvedComponents.length) return null;
-  const ids = BitIds.fromArray(resolvedComponents.map(r => new BitId(r.id)));
+  const ids = BitIds.fromArray(resolvedComponents.map((r) => new BitId(r.id)));
   return consumer.snap({
     ids,
-    message: snapMessage
+    message: snapMessage,
   });
 }
 
@@ -381,7 +381,7 @@ export async function abortMerge(consumer: Consumer, values: string[]): Promise<
   const ids = getIdsForUnresolved(consumer, values);
   // @ts-ignore not clear yet what to do with other flags
   const results = await checkoutVersion(consumer, { ids, reset: true });
-  ids.forEach(id => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
+  ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
   await consumer.scope.objects.unmergedComponents.write();
   return { abortedComponents: results.components };
 }
@@ -395,15 +395,15 @@ export async function resolveMerge(
   const { snappedComponents } = await consumer.snap({
     ids: BitIds.fromArray(ids),
     resolveUnmerged: true,
-    message: snapMessage
+    message: snapMessage,
   });
   return { resolvedComponents: snappedComponents };
 }
 
 function getIdsForUnresolved(consumer: Consumer, idsStr?: string[]): BitId[] {
   if (idsStr && idsStr.length) {
-    const bitIds = idsStr.map(id => consumer.getParsedId(id));
-    bitIds.forEach(id => {
+    const bitIds = idsStr.map((id) => consumer.getParsedId(id));
+    bitIds.forEach((id) => {
       const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
       if (!entry) {
         throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
@@ -413,5 +413,5 @@ function getIdsForUnresolved(consumer: Consumer, idsStr?: string[]): BitId[] {
   }
   const unresolvedComponents = consumer.scope.objects.unmergedComponents.getComponents();
   if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
-  return unresolvedComponents.map(u => new BitId(u.id));
+  return unresolvedComponents.map((u) => new BitId(u.id));
 }

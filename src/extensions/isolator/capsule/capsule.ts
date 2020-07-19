@@ -52,7 +52,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return this.typedExec(
       {
         command: ['node', executable, ...(args.args || [])],
-        cwd: ''
+        cwd: '',
       },
       exec
     );
@@ -74,16 +74,12 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return this.container.symlink(src, dest);
   }
 
-  static async createFromComponent(component: Component, baseDir: string, opts?: {}): Promise<Capsule> {
+  static async createFromComponent(
+    component: Component,
+    baseDir: string,
+    config: { alwaysNew?: boolean; name?: string } = {}
+  ): Promise<Capsule> {
     // TODO: make this a static method and combine with ComponentCapsule
-    const config = Object.assign(
-      {
-        alwaysNew: false,
-        name: undefined
-      },
-      opts
-    );
-
     const capsuleDirName = config.name || filenamify(component.id.toString(), { replacement: '_' });
     const wrkDir = path.join(baseDir, config.alwaysNew ? `${capsuleDirName}_${v4()}` : capsuleDirName);
     const container = new FsContainer(wrkDir);

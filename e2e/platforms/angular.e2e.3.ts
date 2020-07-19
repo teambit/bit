@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('angular', function() {
+describe('angular', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

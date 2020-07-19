@@ -6,7 +6,7 @@ import {
   TabProps as BaseTabProps,
   TabList as BaseTabList,
   TabListProps as BaseTabListProps,
-  TabPanel as TabPanelBase
+  TabPanel as TabPanelBase,
 } from 'react-tabs';
 
 import { clickable } from '../../../to-eject/css-components/clickable';

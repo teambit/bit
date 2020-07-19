@@ -20,36 +20,34 @@ export default class BitsrcTester {
     if (!supportTestingOnBitsrc) throw new Error('supportTestingOnBitsrc is set to false');
     return requestify
       .post(`${apiBaseUrl}/user/login`, { username, password })
-      .then(res => {
+      .then((res) => {
         return {
-          cocyclesSession: getSession(res.getHeader('set-cookie'))
+          cocyclesSession: getSession(res.getHeader('set-cookie')),
         };
       })
-      .catch(err => {
+      .catch((err) => {
         console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
         throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
     function getSession(cookies) {
-      const sessionPart = cookies.find(str => str.includes('cocyclesSession'));
+      const sessionPart = cookies.find((str) => str.includes('cocyclesSession'));
       if (!sessionPart) {
         throw new Error(`Failed to authenticate to ${apiBaseUrl}, the "cocyclesSession" was not found`);
       }
       const cocyclesSessionPart = sessionPart.split(';');
-      const cocyclesSession = cocyclesSessionPart.find(str => str.includes('cocyclesSession'));
+      const cocyclesSession = cocyclesSessionPart.find((str) => str.includes('cocyclesSession'));
       return cocyclesSession.replace('cocyclesSession=', '');
     }
   }
 
   loginToBitSrc() {
-    return this.init().then(cookies => {
+    return this.init().then((cookies) => {
       this.cookies = cookies;
     });
   }
 
   generateRandomName() {
-    const randomName = Math.random()
-      .toString(36)
-      .substr(2, 5);
+    const randomName = Math.random().toString(36).substr(2, 5);
     return `ci-${randomName}`;
   }
 
@@ -60,7 +58,7 @@ export default class BitsrcTester {
     return requestify
       .request(`${apiBaseUrl}/scope/`, { method: 'POST', cookies: this.cookies, body: { scope, private: true } })
       .then(() => scope)
-      .catch(res => {
+      .catch((res) => {
         throw new Error(`Failed to create scope with error: ${res.getBody().message}`);
       });
   }
@@ -71,7 +69,7 @@ export default class BitsrcTester {
     }
     return requestify
       .request(`${apiBaseUrl}/scope/`, { method: 'DELETE', cookies: this.cookies, body: { scope } })
-      .catch(res => {
+      .catch((res) => {
         throw new Error(`Failed to delete scope with error: ${res.getBody().message}`);
       });
   }

@@ -21,7 +21,7 @@ export default class BitStructure {
     if (!this._componentsDefaultDirectory) {
       const dirStructure = this._componentsDefaultDirectoryUnProcessed;
       const dirStructureParsed = [];
-      dirStructure.split('/').forEach(dir => {
+      dirStructure.split('/').forEach((dir) => {
         if (dir.startsWith('{') && dir.endsWith('}')) {
           // this is a dynamic parameter
           const dirStripped = dir.replace(/[{}]/g, '');

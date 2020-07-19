@@ -39,7 +39,7 @@ export class LaneItem implements IndexItem {
 
 export enum IndexType {
   components = 'components',
-  lanes = 'lanes'
+  lanes = 'lanes',
 }
 
 type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneItem[] };
@@ -64,9 +64,9 @@ export default class ScopeIndex {
       const indexObject = getIndexWithBackwardCompatibility();
       const index = {
         [IndexType.components]: indexObject[IndexType.components].map(
-          c => new ComponentItem(c.id, c.isSymlink, c.hash)
+          (c) => new ComponentItem(c.id, c.isSymlink, c.hash)
         ),
-        [IndexType.lanes]: indexObject[IndexType.lanes].map(l => new LaneItem(l.id, l.hash))
+        [IndexType.lanes]: indexObject[IndexType.lanes].map((l) => new LaneItem(l.id, l.hash)),
       };
       return new ScopeIndex(indexPath, index);
     } catch (err) {
@@ -94,18 +94,18 @@ export default class ScopeIndex {
 
   getHashes(indexType: IndexType): string[] {
     // @ts-ignore how to tell TS that all this.index.prop are array?
-    return this.index[indexType].map(indexItem => indexItem.hash);
+    return this.index[indexType].map((indexItem) => indexItem.hash);
   }
   getHashesByQuery(indexType: IndexType, filter: Function): string[] {
     // @ts-ignore how to tell TS that all this.index.prop are array?
-    return this.index[indexType].filter(filter).map(indexItem => indexItem.hash);
+    return this.index[indexType].filter(filter).map((indexItem) => indexItem.hash);
   }
   getHashesIncludeSymlinks(): string[] {
-    return this.index.components.map(indexItem => indexItem.hash);
+    return this.index.components.map((indexItem) => indexItem.hash);
   }
   addMany(bitObjects: BitObject[]): boolean {
-    const added = bitObjects.map(bitObject => this.addOne(bitObject));
-    return added.some(oneAdded => oneAdded); // return true if one of the objects was added
+    const added = bitObjects.map((bitObject) => this.addOne(bitObject));
+    return added.some((oneAdded) => oneAdded); // return true if one of the objects was added
   }
   addOne(bitObject: BitObject): boolean {
     if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink) && !(bitObject instanceof Lane))
@@ -127,12 +127,12 @@ export default class ScopeIndex {
     return true;
   }
   removeMany(refs: Ref[]): boolean {
-    const removed = refs.map(ref => this.removeOne(ref.toString()));
-    return removed.some(removedOne => removedOne); // return true if one of the objects was removed
+    const removed = refs.map((ref) => this.removeOne(ref.toString()));
+    return removed.some((removedOne) => removedOne); // return true if one of the objects was removed
   }
   removeOne(hash: string): boolean {
     for (const entity of Object.keys(IndexType)) {
-      const found = this.index[entity].find(indexItem => indexItem.hash === hash);
+      const found = this.index[entity].find((indexItem) => indexItem.hash === hash);
       if (found) {
         this.index[entity] = R.without([found], this.index[entity]);
         return true;
@@ -158,7 +158,7 @@ export default class ScopeIndex {
   }
   find(hash: string): IndexItem | null {
     for (const entity of Object.keys(IndexType)) {
-      const found = this.index[entity].find(indexItem => indexItem.hash === hash);
+      const found = this.index[entity].find((indexItem) => indexItem.hash === hash);
       if (found) return found;
     }
     return null;

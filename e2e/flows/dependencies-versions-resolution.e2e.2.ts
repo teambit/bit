@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { OVERRIDE_COMPONENT_PREFIX } from '../../src/constants';
 
-describe('dependencies versions resolution', function() {
+describe('dependencies versions resolution', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -46,8 +46,8 @@ describe('dependencies versions resolution', function() {
         packageJson.bit = {};
         packageJson.bit.overrides = {
           dependencies: {
-            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
-          }
+            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10',
+          },
         };
         helper.packageJson.write(packageJson, componentPath);
       });
@@ -67,8 +67,8 @@ describe('dependencies versions resolution', function() {
         const bitJson = helper.bitJson.read(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
-            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.2'
-          }
+            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.2',
+          },
         };
         helper.bitJson.write(bitJson, bitJsonDir);
       });
@@ -85,8 +85,8 @@ describe('dependencies versions resolution', function() {
           packageJson.bit = {};
           packageJson.bit.overrides = {
             dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
-            }
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10',
+            },
           };
           helper.packageJson.write(packageJson, componentPath);
         });
@@ -105,9 +105,9 @@ describe('dependencies versions resolution', function() {
         bitJson.overrides = {
           'bar/foo': {
             dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5'
-            }
-          }
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5',
+            },
+          },
         };
         helper.bitJson.write(bitJson);
       });
@@ -124,8 +124,8 @@ describe('dependencies versions resolution', function() {
           packageJson.bit = {};
           packageJson.bit.overrides = {
             dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
-            }
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10',
+            },
           };
           helper.packageJson.write(packageJson, componentPath);
         });
@@ -144,9 +144,9 @@ describe('dependencies versions resolution', function() {
         bitJson.overrides = {
           'bar/*': {
             dependencies: {
-              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5'
-            }
-          }
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5',
+            },
+          },
         };
         helper.bitJson.write(bitJson);
       });

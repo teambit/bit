@@ -13,11 +13,11 @@ export class CompositionsSection implements Section {
 
   navigationLink = {
     to: '~compositions',
-    children: 'Compositions'
+    children: 'Compositions',
   };
 
   route = {
     path: '~compositions',
-    children: <Compositions />
+    children: <Compositions />,
   };
 }

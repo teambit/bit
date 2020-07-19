@@ -6,7 +6,7 @@ import { IS_WINDOWS } from '../../src/constants';
 
 const sizeOfChain = 5;
 
-describe('flow of a long-dependencies-chain', function() {
+describe('flow of a long-dependencies-chain', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -59,7 +59,7 @@ describe('flow of a long-dependencies-chain', function() {
         const result = helper.command.runCmd('node app.js');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const arrayOfSizeOfChain = [...Array(sizeOfChain).keys()];
-        const expectedResult = arrayOfSizeOfChain.map(num => `got foo${num}`).join(' and ');
+        const expectedResult = arrayOfSizeOfChain.map((num) => `got foo${num}`).join(' and ');
         expect(result.trim()).to.equal(expectedResult);
       });
     }

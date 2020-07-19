@@ -6,7 +6,7 @@ import { DefaultAvatar } from './default-avatar';
 export enum AccountTypes {
   org = 'organization',
   user = 'user',
-  default = 'default'
+  default = 'default',
 }
 
 export type AccountObj = {

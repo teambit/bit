@@ -26,21 +26,21 @@ export async function getAllFlattenedDependencies(
     scope,
     componentId,
     cache,
-    notFoundDependencies
+    notFoundDependencies,
   };
   const flattenedDependencies = await getFlattenedDependencies({
     ...params,
-    graph: graphDeps
+    graph: graphDeps,
   });
   const flattenedDevDependencies = await getFlattenedDependencies({
     ...params,
     graph: graphDevDeps,
-    prodGraph: graphDeps
+    prodGraph: graphDeps,
   });
   const flattenedExtensionDependencies = await getFlattenedDependencies({
     ...params,
     graph: graphExtensionDeps,
-    prodGraph: graphDeps
+    prodGraph: graphDeps,
   });
 
   const getFlattenedDevDeps = () => {
@@ -52,7 +52,7 @@ export async function getAllFlattenedDependencies(
 
   return {
     flattenedDependencies,
-    flattenedDevDependencies: getFlattenedDevDeps()
+    flattenedDevDependencies: getFlattenedDevDeps(),
   };
 }
 
@@ -62,7 +62,7 @@ async function getFlattenedDependencies({
   graph,
   cache,
   notFoundDependencies,
-  prodGraph
+  prodGraph,
 }: {
   scope: Scope;
   componentId: BitId;
@@ -76,7 +76,7 @@ async function getFlattenedDependencies({
   if (!edges) return new BitIds();
   const dependencies = getEdgesWithProdGraph(prodGraph, edges);
   if (!dependencies.length) return new BitIds();
-  const flattenDependency = async dependency => {
+  const flattenDependency = async (dependency) => {
     if (cache[dependency]) return cache[dependency];
     // @ts-ignore if graph doesn't have the node, prodGraph must have it
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
@@ -128,6 +128,8 @@ function getEdges(graph: Graph, id: BitIdStr): BitIdStr[] | null {
  */
 function getEdgesWithProdGraph(prodGraph: Graph | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
   if (!prodGraph) return dependencies;
-  const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
+  const prodDependencies = R.flatten(dependencies.map((dependency) => getEdges(prodGraph, dependency))).filter(
+    (x) => x
+  );
   return R.uniq([...dependencies, ...prodDependencies]);
 }

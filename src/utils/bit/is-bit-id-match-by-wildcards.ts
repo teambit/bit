@@ -3,9 +3,9 @@ import BitId from '../../bit-id/bit-id';
 
 export default function isBitIdMatchByWildcards(bitId: BitId, idsWithWildcard: string[] | string): boolean {
   if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
-  const regexPatterns = idsWithWildcard.map(id => getRegex(id));
+  const regexPatterns = idsWithWildcard.map((id) => getRegex(id));
   const isNameMatchByWildcard = (name: string): boolean => {
-    return regexPatterns.some(regex => regex.test(name));
+    return regexPatterns.some((regex) => regex.test(name));
   };
   return (
     isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||

@@ -33,7 +33,7 @@ export default class ExtensionIsolateResult {
         return;
       }
       capsuleComponent.setDists(
-        builtFiles.map(file => new Dist(file)),
+        builtFiles.map((file) => new Dist(file)),
         mainDist
       );
     }
@@ -71,7 +71,7 @@ export default class ExtensionIsolateResult {
     const sharedDir = this.componentWithDependencies.component.originallySharedDir;
     let updatedFiles = filesToAdd;
     if (sharedDir) {
-      updatedFiles = filesToAdd.map(file => {
+      updatedFiles = filesToAdd.map((file) => {
         const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
         fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
         return fileAsAbstractVinyl;

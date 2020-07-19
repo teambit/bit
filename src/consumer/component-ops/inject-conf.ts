@@ -49,14 +49,14 @@ export default (async function injectConf(
 function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel: ConsumerComponent | null | undefined) {
   if (!componentFromModel) return false;
   const envTypes = [COMPILER_ENV_TYPE, TESTER_ENV_TYPE];
-  return envTypes.some(envType => {
+  return envTypes.some((envType) => {
     const fsHashes = // $FlowFixMe
       componentFromFs[envType] && componentFromFs[envType].files
         ? componentFromFs[envType].files.map((file: AbstractVinyl) => file.toSourceAsLinuxEOL().hash()).sort()
         : [];
     const modelHashes = // $FlowFixMe
       componentFromModel[envType] && componentFromModel[envType].files
-        ? componentFromModel[envType].files.map(file => file.file.hash()).sort()
+        ? componentFromModel[envType].files.map((file) => file.file.hash()).sort()
         : [];
     return !R.equals(fsHashes, modelHashes);
   });

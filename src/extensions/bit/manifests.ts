@@ -1,5 +1,5 @@
 import { CLIExtension } from '../cli';
-import { CompileExt } from '../compiler';
+import { CompilerExtension } from '../compiler';
 import { ComponentFactoryExt } from '../component';
 import { ComponentGraphExt } from '../graph';
 import { ConfigExt } from '../config';
@@ -31,7 +31,7 @@ import { CompositionsExtension } from '../compositions';
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
   [WorkspaceExt.name]: WorkspaceExt,
-  [CompileExt.name]: CompileExt,
+  [CompilerExtension.id]: CompilerExtension,
   [ComponentFactoryExt.id]: ComponentFactoryExt,
   [PreviewExtension.name]: PreviewExtension,
   [ConfigExt.name]: ConfigExt,
@@ -62,5 +62,5 @@ export const manifestsMap = {
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WatcherExtension.name]: WatcherExtension,
-  [WorkspaceExt.name]: WorkspaceExt
+  [WorkspaceExt.name]: WorkspaceExt,
 };

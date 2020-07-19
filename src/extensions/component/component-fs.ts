@@ -26,7 +26,7 @@ export default class ComponentFS extends MemoryFS {
    * filter all component files by regex.
    */
   byRegex(extension: RegExp): AbstractVinyl[] {
-    return this.files.filter(file => file.path.match(extension));
+    return this.files.filter((file) => file.path.match(extension));
   }
 
   toObject() {}
@@ -35,7 +35,7 @@ export default class ComponentFS extends MemoryFS {
 
   static fromVinyls(files: AbstractVinyl[]) {
     const fs = new ComponentFS(files);
-    files.forEach(file => {
+    files.forEach((file) => {
       let dirPath = file.relativeDir;
       if (!dirPath.startsWith('/')) dirPath = path.join('/', dirPath);
       fs.mkdirpSync(dirPath);

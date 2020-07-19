@@ -6,7 +6,7 @@ import { Component } from '../../component';
 export function createSubGraph(components: Component[], options: ExecutionOptions, graph: Graph) {
   const shouldStay = uniq(
     flatten(
-      components.map(comp => {
+      components.map((comp) => {
         const id = comp.id.toString();
         const base = [id];
         let pre: string[] = [];
@@ -36,5 +36,5 @@ export function getNeighborsByDirection(
   direction: 'predecessors' | 'successors' = 'successors'
 ): string[] {
   const neighbors = g[direction](id) || [];
-  return neighbors.concat(neighbors.map(pre => flatten(getNeighborsByDirection(pre, g, direction))));
+  return neighbors.concat(neighbors.map((pre) => flatten(getNeighborsByDirection(pre, g, direction))));
 }

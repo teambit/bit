@@ -14,18 +14,18 @@ describe('detective-typescript', () => {
             type: 'VariableDeclarator',
             id: {
               type: 'Identifier',
-              name: 'x'
+              name: 'x',
             },
             init: {
               type: 'Literal',
               value: 4,
-              raw: '4'
-            }
-          }
+              raw: '4',
+            },
+          },
         ],
-        kind: 'let'
-      }
-    ]
+        kind: 'let',
+      },
+    ],
   };
 
   it('accepts an ast', () => {

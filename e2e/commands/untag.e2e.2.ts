@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
-describe('bit untag command', function() {
+describe('bit untag command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

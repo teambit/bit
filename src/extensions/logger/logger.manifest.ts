@@ -4,5 +4,5 @@ export default {
   name: 'Logger',
   dependencies: [],
   config: {},
-  provider: provideLogger
+  provider: provideLogger,
 };

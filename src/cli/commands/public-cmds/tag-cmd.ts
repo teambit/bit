@@ -32,7 +32,7 @@ export default class Tag implements LegacyCommand {
     ['', 'allow-relative-paths', 'allow require statements between components to use relative paths (not recommended)'],
     ['', 'allow-files', 'allow component to have files spread over multiple directories (not recommended)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
-    ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents']
+    ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -53,7 +53,7 @@ export default class Tag implements LegacyCommand {
       ignoreNewestVersion = false,
       skipTests = false,
       skipAutoTag = false,
-      scope
+      scope,
     }: {
       message?: string;
       all?: boolean;
@@ -85,7 +85,7 @@ export default class Tag implements LegacyCommand {
       );
     }
 
-    const releaseFlags = [patch, minor, major].filter(x => x);
+    const releaseFlags = [patch, minor, major].filter((x) => x);
     if (releaseFlags.length > 1) {
       throw new GeneralError('you can use only one of the following - patch, minor, major');
     }
@@ -110,7 +110,7 @@ export default class Tag implements LegacyCommand {
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
       skipTests,
-      skipAutoTag
+      skipAutoTag,
     };
 
     if (all || scope || idHasWildcard) {
@@ -119,35 +119,35 @@ export default class Tag implements LegacyCommand {
         scope,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         includeImported,
-        idWithWildcard: id
+        idWithWildcard: id,
       });
     }
     return tagAction({
       ...params,
-      id
+      id,
     });
   }
 
   report(results: TagResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
-    const changedComponents = taggedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
-    const addedComponents = taggedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
+    const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
+    const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
 (use "bit untag" to unstage versions)\n`;
 
-    const outputComponents = comps => {
+    const outputComponents = (comps) => {
       return comps
-        .map(component => {
+        .map((component) => {
           let componentOutput = `     > ${component.id.toString()}`;
-          const autoTag = autoTaggedResults.filter(result =>
+          const autoTag = autoTaggedResults.filter((result) =>
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+            const autoTagComp = autoTag.map((a) => a.component.toBitIdWithLatestVersion().toString());
             componentOutput += `\n       ${AUTO_TAGGED_MSG}:
             ${autoTagComp.join('\n            ')}`;
           }

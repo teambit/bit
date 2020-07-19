@@ -8,7 +8,7 @@ export default (async function createCapsule(type = 'fs', dir?: string): Promise
         return {
           createContainer: async function create() {
             return new FsContainer(dir || '');
-          }
+          },
         };
     }
   }

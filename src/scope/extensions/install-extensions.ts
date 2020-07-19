@@ -20,7 +20,7 @@ export default function installExtensions({
   dependentId,
   scope,
   verbose,
-  dontPrintEnvMsg
+  dontPrintEnvMsg,
 }: {
   ids: [{ componentId: BitId; type?: string }];
   dependentId?: BitId;
@@ -28,7 +28,7 @@ export default function installExtensions({
   verbose?: boolean;
   dontPrintEnvMsg?: boolean;
 }): Promise<ComponentWithDependencies[]> {
-  logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
+  logger.debug(`scope.installEnvironment, ids: ${ids.map((id) => id.componentId).join(', ')}`);
   Analytics.addBreadCrumb('installEnvironment', `scope.installEnvironment, ids: ${Analytics.hashData(ids)}`);
   const componentsDir = scope.getComponentsPath();
   const isolateOpts: IsolateOptions = {
@@ -41,12 +41,12 @@ export default function installExtensions({
     override: false,
     installProdPackagesOnly: true,
     verbose,
-    silentPackageManagerResult: true
+    silentPackageManagerResult: true,
   };
   const idsWithoutNils = removeNils(ids);
-  const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
+  const predicate = (id) => id.componentId.toString(); // TODO: should be moved to BitId class
   const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
-  const nonExistingEnvsIds = uniqIds.filter(id => {
+  const nonExistingEnvsIds = uniqIds.filter((id) => {
     return !isEnvironmentInstalled(scope, id.componentId);
   });
   if (!nonExistingEnvsIds.length) {
@@ -58,7 +58,7 @@ export default function installExtensions({
     return Promise.resolve([]);
   }
 
-  const importEnv = async id => {
+  const importEnv = async (id) => {
     let concreteId = id.componentId;
     if (id.componentId.getVersion().latest) {
       const concreteIds = await fetchRemoteVersions(scope, [id.componentId]);

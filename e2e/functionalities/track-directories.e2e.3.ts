@@ -6,7 +6,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
 // track directories functionality = add/rename files to rootDir.
-describe('track directories functionality', function() {
+describe('track directories functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -161,7 +161,7 @@ describe('track directories functionality', function() {
       it('should change the files according to the new rootDir', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
-        const files = bitMap['utils/bar'].files.map(f => f.relativePath);
+        const files = bitMap['utils/bar'].files.map((f) => f.relativePath);
         expect(files).to.include('bar/foo.js');
         expect(files).to.not.include('foo.js');
       });
@@ -216,12 +216,12 @@ describe('track directories functionality', function() {
       expect(bitMap['utils/bar'].files).to.deep.include({
         relativePath: 'foo.spec.js',
         test: true,
-        name: 'foo.spec.js'
+        name: 'foo.spec.js',
       });
       expect(bitMap['utils/bar'].files).to.deep.include({
         relativePath: 'foo2.js',
         test: false,
-        name: 'foo2.js'
+        name: 'foo2.js',
       });
     });
   });
@@ -266,12 +266,12 @@ describe('track directories functionality', function() {
         expect(files).to.deep.include({ relativePath: 'foo2.js', test: false, name: 'foo2.js' });
       });
       it('should not track the link files', () => {
-        files.forEach(file => {
+        files.forEach((file) => {
           expect(file.name).to.not.equal('is-string.js');
         });
       });
       it('should not track gitignore files', () => {
-        files.forEach(file => {
+        files.forEach((file) => {
           expect(file.name).to.not.equal('package.json');
           expect(file.name).to.not.equal('package-lock.json');
         });

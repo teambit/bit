@@ -28,7 +28,7 @@ export class Tag {
   toObject(): TagProps {
     return {
       snap: this.snap.toObject(),
-      version: this.version.raw
+      version: this.version.raw,
     };
   }
 

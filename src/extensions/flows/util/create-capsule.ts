@@ -20,7 +20,7 @@ export async function createFakeCapsule(fs: CapsuleContent, id: string) {
     new Console(),
     ({} as any) as State,
     {
-      id: bitId
+      id: bitId,
     } as Component
   );
   return capsule;
@@ -29,7 +29,7 @@ export async function createFakeCapsule(fs: CapsuleContent, id: string) {
 async function createFS(targetDir: string, content: CapsuleContent) {
   await mkdirp(targetDir);
   await Promise.all(
-    Object.keys(content).map(async key => {
+    Object.keys(content).map(async (key) => {
       const realPath = join(targetDir, key);
       const containingFolder = dirname(realPath);
       await mkdirp(containingFolder);
@@ -43,7 +43,7 @@ export function getTestCase(name: string): CapsuleContent {
   const main = 'src/index.js';
   return {
     [main]: `console.log('hello-world)`,
-    'package.json': JSON.stringify({ main, name }, null, 2)
+    'package.json': JSON.stringify({ main, name }, null, 2),
   };
 }
 

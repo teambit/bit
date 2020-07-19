@@ -17,7 +17,7 @@ export default function isValidPath(pathStr: string): boolean {
   if (
     !pathStr ||
     !R.is(String, pathStr) ||
-    INVALID_CHARS.some(c => pathStr.includes(c)) ||
+    INVALID_CHARS.some((c) => pathStr.includes(c)) ||
     pathStr.length > MAX_LENGTH ||
     path.isAbsolute(pathStr) ||
     pathStr.startsWith('./') ||

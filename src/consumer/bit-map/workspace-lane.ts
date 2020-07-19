@@ -46,7 +46,7 @@ export default class WorkspaceLane {
     const loadIds = () => {
       try {
         const laneFile = fs.readJsonSync(lanePath);
-        return BitIds.fromArray(laneFile.map(id => new BitId(id)));
+        return BitIds.fromArray(laneFile.map((id) => new BitId(id)));
       } catch (err) {
         if (err.code === 'ENOENT') {
           return new BitIds();
@@ -59,7 +59,7 @@ export default class WorkspaceLane {
   }
 
   async write() {
-    const obj = this.ids.map(id => ({ scope: id.scope, name: id.name, version: id.version }));
+    const obj = this.ids.map((id) => ({ scope: id.scope, name: id.name, version: id.version }));
     return fs.outputFile(this.lanePath, JSON.stringify(obj, null, 2));
   }
 }

@@ -33,7 +33,7 @@ export default class ConfigHelper {
 
   backupConfigs(names: string[]): Record<string, any> {
     const backupObject: Record<string, any> = {};
-    names.forEach(name => {
+    names.forEach((name) => {
       backupObject[name] = this.command.getConfig(name);
     });
     return backupObject;

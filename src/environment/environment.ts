@@ -72,7 +72,7 @@ export default class Environment {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig
+      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig,
     };
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter.writeAll();

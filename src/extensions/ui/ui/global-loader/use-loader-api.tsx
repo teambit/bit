@@ -23,7 +23,7 @@ export function useLoaderApi(): [LoaderApi, boolean] {
         const res = loaders.delete(id);
         reevaluate();
         return res;
-      }
+      },
     }),
     [loaders, reevaluate]
   );

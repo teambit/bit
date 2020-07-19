@@ -37,7 +37,7 @@ export default (async function mergeFiles({
   filePath,
   currentFile,
   baseFile,
-  otherFile
+  otherFile,
 }: MergeFileParams): Promise<MergeFileResult> {
   const mergeResult: MergeFileResult = { filePath, output: null, conflict: null };
   const gitExecutablePath = getGitExecutablePath();
@@ -53,7 +53,7 @@ export default (async function mergeFiles({
       currentFile.path,
       baseFile.path,
       otherFile.path,
-      '-p'
+      '-p',
     ]);
     mergeResult.output = result.stdout;
     return mergeResult;

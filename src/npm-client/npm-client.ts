@@ -15,7 +15,7 @@ import { PackageManagerClients } from '../consumer/config/legacy-workspace-confi
 
 export type PackageManagerResults = { stdout: string; stderr: string };
 
-const objectToArray = obj => map(join('@'), toPairs(obj));
+const objectToArray = (obj) => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
 
 const defaultNpmArgs = [];
@@ -24,10 +24,10 @@ const defaultPnpmArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
   yarn: defaultYarnArgs,
-  pnpm: defaultPnpmArgs
+  pnpm: defaultPnpmArgs,
 };
 const defaultPackageManagerProcessOptions = {
-  cwd: process.cwd
+  cwd: process.cwd,
 };
 const warningPrefix = (packageManager: string): string => {
   return packageManager === 'npm' ? 'npm WARN' : 'warning';
@@ -45,7 +45,7 @@ const stripNonNpmErrors = (errors: string, packageManager: string) => {
   const prefix = errorPrefix(packageManager);
   return errors
     .split('\n')
-    .filter(error => error.startsWith(prefix))
+    .filter((error) => error.startsWith(prefix))
     .join('\n');
 };
 
@@ -54,7 +54,7 @@ const stripNonPeerDependenciesWarnings = (errors: string, packageManager: string
   const peer = peerDependenciesMissing(packageManager);
   return errors
     .split('\n')
-    .filter(error => error.startsWith(prefix) && error.includes(peer))
+    .filter((error) => error.startsWith(prefix) && error.includes(peer))
     .join('\n');
 };
 
@@ -62,7 +62,7 @@ const stripNonPeerDependenciesWarnings = (errors: string, packageManager: string
  * Pick only allowed to be overridden options
  * @param {Object} userOptions
  */
-const getAllowdPackageManagerProcessOptions = userOptions => {
+const getAllowdPackageManagerProcessOptions = (userOptions) => {
   const allowdOptions = ['shell', 'env', 'extendEnv', 'uid', 'gid', 'preferLocal', 'localDir', 'timeout'];
   return R.pick(allowdOptions, userOptions);
 };
@@ -92,7 +92,7 @@ const _installInOneDirectory = ({
   packageManagerProcessOptions = {},
   dir,
   installProdPackagesOnly = false,
-  verbose = false
+  verbose = false,
 }): Promise<PackageManagerResults> => {
   // Handle process options
   const allowedPackageManagerProcessOptions = getAllowdPackageManagerProcessOptions(packageManagerProcessOptions);
@@ -110,7 +110,7 @@ const _installInOneDirectory = ({
   const concretePackageManagerDefaultArgs = [
     'install',
     ...processedModules,
-    ...defaultPackageManagerArgs[packageManager]
+    ...defaultPackageManagerArgs[packageManager],
   ];
   const concretePackageManagerArgs = rejectNils(R.concat(concretePackageManagerDefaultArgs, packageManagerArgs));
 
@@ -137,7 +137,7 @@ const _installInOneDirectory = ({
   );
 
   // Remove the install from args since it's always there
-  const printArgs = concretePackageManagerArgs.filter(arg => arg !== 'install');
+  const printArgs = concretePackageManagerArgs.filter((arg) => arg !== 'install');
   const argsString = printArgs && printArgs.length > 0 ? `with args: ${printArgs}` : '';
 
   return childProcess
@@ -149,7 +149,7 @@ const _installInOneDirectory = ({
       stderr = verbose ? stderr : '';
       return { stdout, stderr };
     })
-    .catch(err => {
+    .catch((err) => {
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
       throw new ShowDoctorError(
@@ -169,28 +169,28 @@ const _getNpmList = async (
   // handling such long outputs
   // once we stop support node < 10 we can replace it with something like
   // npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     let stdout = '';
     let stderr = '';
     const shell = IS_WINDOWS;
     const ls = spawn(packageManager, ['list', '-j'], { cwd: dir, shell });
-    ls.stdout.on('data', data => {
+    ls.stdout.on('data', (data) => {
       stdout += data;
     });
 
-    ls.stderr.on('data', data => {
+    ls.stderr.on('data', (data) => {
       stderr += data;
     });
 
-    ls.on('error', err => {
+    ls.on('error', (err) => {
       stderr += err;
     });
 
-    ls.on('close', code => {
+    ls.on('close', (code) => {
       const res = {
         stdout,
         stderr,
-        code
+        code,
       };
       resolve(res);
     });
@@ -219,7 +219,7 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
 async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Record<string, any>> {
   const parsePeers = (deps: Record<string, any>): Record<string, any> => {
     const result = {};
-    R.forEachObjIndexed(dep => {
+    R.forEachObjIndexed((dep) => {
       if (dep.peerMissing) {
         const name = dep.required.name;
         const version = dep.required.version;
@@ -269,7 +269,7 @@ const _installInOneDirectoryWithPeerOption = async ({
   dir,
   installPeerDependencies = false,
   installProdPackagesOnly = false,
-  verbose = false
+  verbose = false,
 }): Promise<PackageManagerResults | PackageManagerResults[]> => {
   const rootDirResults = await _installInOneDirectory({
     modules,
@@ -280,7 +280,7 @@ const _installInOneDirectoryWithPeerOption = async ({
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     installPeerDependencies,
     installProdPackagesOnly,
-    verbose
+    verbose,
   });
 
   if (installPeerDependencies) {
@@ -293,7 +293,7 @@ const _installInOneDirectoryWithPeerOption = async ({
       packageManagerProcessOptions,
       dir,
       installProdPackagesOnly,
-      verbose
+      verbose,
     });
     return [rootDirResults, peerResults];
   }
@@ -314,7 +314,7 @@ const installAction = async ({
   installRootPackageJson = false,
   installPeerDependencies = false,
   installProdPackagesOnly = false,
-  verbose = false
+  verbose = false,
 }: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
     await _installInOneDirectoryWithPeerOption({
@@ -327,7 +327,7 @@ const installAction = async ({
       dir: rootDir,
       installPeerDependencies,
       installProdPackagesOnly,
-      verbose
+      verbose,
     });
   }
 
@@ -344,7 +344,7 @@ const installAction = async ({
       dir: rootDir,
       installPeerDependencies,
       installProdPackagesOnly,
-      verbose
+      verbose,
     });
     if (Array.isArray(rootDirResults)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -355,7 +355,7 @@ const installAction = async ({
     }
   }
 
-  const installInDir = dir =>
+  const installInDir = (dir) =>
     _installInOneDirectoryWithPeerOption({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
@@ -366,7 +366,7 @@ const installAction = async ({
       dir,
       installPeerDependencies,
       installProdPackagesOnly,
-      verbose
+      verbose,
     });
 
   // run npm install for each one of the directories serially, not in parallel. Don’t use Promise.all() here.
@@ -437,5 +437,5 @@ export default {
   getNpmVersion,
   getYarnVersion,
   getPeerDepsFromNpmList,
-  getPackageLatestVersion
+  getPackageLatestVersion,
 };

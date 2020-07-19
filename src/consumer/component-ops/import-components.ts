@@ -127,12 +127,14 @@ export default class ImportComponents {
 
   _throwForDivergedHistory() {
     if (this.options.merge || this.options.objectsOnly) return;
-    const divergedComponents = this.divergeData.filter(modelComponent => modelComponent.getDivergeData().isDiverged());
+    const divergedComponents = this.divergeData.filter((modelComponent) =>
+      modelComponent.getDivergeData().isDiverged()
+    );
     if (divergedComponents.length) {
-      const divergeData = divergedComponents.map(modelComponent => ({
+      const divergeData = divergedComponents.map((modelComponent) => ({
         id: modelComponent.id(),
         snapsLocal: modelComponent.getDivergeData().snapsOnLocalOnly.length,
-        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length
+        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length,
       }));
       throw new ComponentsPendingMerge(divergeData);
     }
@@ -145,9 +147,9 @@ export default class ImportComponents {
   _filterComponentsWithLowerVersions(
     componentsWithDependencies: ComponentWithDependencies[]
   ): ComponentWithDependencies[] {
-    return componentsWithDependencies.filter(comp => {
+    return componentsWithDependencies.filter((comp) => {
       const sameIdHigherVersion = componentsWithDependencies.find(
-        c =>
+        (c) =>
           !c.component.id.isEqual(comp.component.id) &&
           c.component.id.isEqualWithoutVersion(comp.component.id) &&
           isTag(c.component.id.version) &&
@@ -163,7 +165,7 @@ export default class ImportComponents {
     if (this.options.lanes) {
       const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
       const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
-      lanes.forEach(lane => bitIds.push(...lane.toBitIds()));
+      lanes.forEach((lane) => bitIds.push(...lane.toBitIds()));
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -192,25 +194,25 @@ export default class ImportComponents {
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependencies = bitIds.map(bitId => {
-      const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
+    const dependencies = bitIds.map((bitId) => {
+      const componentGraph = graphs.find((graph) => graph.scopeName === bitId.scope);
       if (!componentGraph) {
         throw new Error(`unable to find a graph for ${bitId.toString()}`);
       }
       const dependenciesInfo = componentGraph.getDependenciesInfo(bitId);
-      return dependenciesInfo.map(d => d.id);
+      return dependenciesInfo.map((d) => d.id);
     });
     return R.flatten(dependencies);
   }
 
   _getDependentsFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependents = bitIds.map(bitId => {
-      const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
+    const dependents = bitIds.map((bitId) => {
+      const componentGraph = graphs.find((graph) => graph.scopeName === bitId.scope);
       if (!componentGraph) {
         throw new Error(`unable to find a graph for ${bitId.toString()}`);
       }
       const dependentsInfo = componentGraph.getDependentsInfo(bitId);
-      return dependentsInfo.map(d => d.id);
+      return dependentsInfo.map((d) => d.id);
     });
     return R.flatten(dependents);
   }
@@ -272,7 +274,7 @@ export default class ImportComponents {
       return {
         dependencies: componentsAndDependencies,
         envComponents: R.flatten(envComponents),
-        importDetails
+        importDetails,
       };
     }
 
@@ -281,7 +283,7 @@ export default class ImportComponents {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async _getCurrentVersions(ids: BitIds): ImportedVersions {
-    const versionsP = ids.map(async id => {
+    const versionsP = ids.map(async (id) => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       const idStr = id.toStringWithoutVersion();
       if (!modelComponent) return [idStr, []];
@@ -298,7 +300,7 @@ export default class ImportComponents {
     currentVersions: ImportedVersions,
     components: ComponentWithDependencies[]
   ): Promise<ImportDetails[]> {
-    const detailsP = components.map(async component => {
+    const detailsP = components.map(async (component) => {
       const id = component.component.id;
       const idStr = id.toStringWithoutVersion();
       const beforeImportVersions = currentVersions[idStr];
@@ -337,7 +339,7 @@ export default class ImportComponents {
     const componentsStatuses = await this.consumer.getManyComponentsStatuses(ids);
     const modifiedComponents = componentsStatuses
       .filter(({ status }) => status.modified || status.newlyCreated)
-      .map(c => c.id);
+      .map((c) => c.id);
     if (modifiedComponents.length) {
       throw new GeneralError(
         chalk.yellow(
@@ -351,7 +353,7 @@ export default class ImportComponents {
 
   async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
     const allDependenciesIds = R.flatten(
-      componentsAndDependencies.map(componentAndDependencies =>
+      componentsAndDependencies.map((componentAndDependencies) =>
         componentAndDependencies.component.dependencies.getAllIds()
       )
     );
@@ -398,7 +400,7 @@ export default class ImportComponents {
       currentComponent, // $FlowFixMe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentLabel: component.id.version,
-      baseComponent
+      baseComponent,
     });
     mergeStatus.mergeResults = mergeResults;
     return mergeStatus;
@@ -423,7 +425,7 @@ export default class ImportComponents {
     const filesStatus = {};
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
       // don't write the files to the filesystem, only bump the bitmap version.
-      files.forEach(file => {
+      files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
@@ -433,7 +435,7 @@ export default class ImportComponents {
     }
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
       // the local changes will be overridden (as if the user entered --override flag for this component)
-      files.forEach(file => {
+      files.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
@@ -461,19 +463,19 @@ export default class ImportComponents {
     });
     const componentsStatus = await Promise.all(componentsStatusP);
     const componentWithConflict = componentsStatus.find(
-      component => component.mergeResults && component.mergeResults.hasConflicts
+      (component) => component.mergeResults && component.mergeResults.hasConflicts
     );
     if (componentWithConflict && !this.options.mergeStrategy) {
       this.options.mergeStrategy = await getMergeStrategyInteractive();
     }
     this.mergeStatus = {};
 
-    const componentsToWrite = componentsStatus.map(componentStatus => {
+    const componentsToWrite = componentsStatus.map((componentStatus) => {
       const filesStatus: FilesStatus | null | undefined = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
       if (!filesStatus) return componentWithDependencies;
       this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
-      const unchangedFiles = Object.keys(filesStatus).filter(file => filesStatus[file] === FileStatus.unchanged);
+      const unchangedFiles = Object.keys(filesStatus).filter((file) => filesStatus[file] === FileStatus.unchanged);
       if (unchangedFiles.length === Object.keys(filesStatus).length) {
         // all files are unchanged
         return null;
@@ -501,9 +503,9 @@ export default class ImportComponents {
       return; // user on master
     }
     await Promise.all(
-      componentsWithDependencies.map(async compWithDeps => {
+      componentsWithDependencies.map(async (compWithDeps) => {
         const allComps = [compWithDeps.component, ...compWithDeps.allDependencies];
-        const updateAllCompsP = allComps.map(async comp => {
+        const updateAllCompsP = allComps.map(async (comp) => {
           const modelComponent = await this.scope.getModelComponent(comp.id);
           const ref = modelComponent.getRef(comp.id.version as string);
           if (!ref) throw new Error(`_saveLaneDataIfNeeded unable to get ref for ${comp.id.toString()}`);
@@ -531,7 +533,7 @@ export default class ImportComponents {
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,
       override: this.options.override,
-      saveOnLane: this._shouldSaveLaneData()
+      saveOnLane: this._shouldSaveLaneData(),
     });
     await manyComponentsWriter.writeAll();
   }

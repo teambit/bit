@@ -39,7 +39,7 @@ export default (async function put(
     clientIsOld,
     compsAndLanesObjects.laneObjects
   );
-  const componentsIds: string[] = componentsBitIds.map(id => id.toString());
+  const componentsIds: string[] = componentsBitIds.map((id) => id.toString());
   let uniqComponentsIds = componentsIds;
   if (componentsIds && componentsIds.length) {
     uniqComponentsIds = R.uniq(componentsIds);
@@ -50,7 +50,7 @@ export default (async function put(
       componentObjects: compsAndLanesObjects.componentsObjects,
       componentsIds: uniqComponentsIds,
       scopePath: path,
-      scopeName: scope.scopeJson.name
+      scopeName: scope.scopeJson.name,
     },
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     headers

@@ -15,9 +15,9 @@ export default function hashErrorIfNeeded(error: Error) {
   const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
-  const fieldToHash = fields.filter(field => !systemFields.includes(field) && field !== 'message');
+  const fieldToHash = fields.filter((field) => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
-  fieldToHash.forEach(field => {
+  fieldToHash.forEach((field) => {
     clonedError[field] = hashValue(clonedError[field]);
   });
   return clonedError;
@@ -33,7 +33,7 @@ function hashValue(value: any): string {
       return value;
     case 'object':
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (Array.isArray(value)) return value.map(v => hash(v));
+      if (Array.isArray(value)) return value.map((v) => hash(v));
       return hash(value);
     default:
       return hash(value);

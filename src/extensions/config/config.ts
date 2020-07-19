@@ -5,7 +5,7 @@ import {
   WorkspaceConfigFileProps,
   LegacyInitProps,
   ComponentsConfigFn,
-  ComponentConfigFn
+  ComponentConfigFn,
 } from './workspace-config';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config';
 

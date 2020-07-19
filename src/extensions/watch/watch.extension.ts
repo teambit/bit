@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
@@ -5,19 +6,17 @@ import R from 'ramda';
 import chalk from 'chalk';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { WatchCommand } from './watch.cmd';
-import { CompileExt } from '../compiler';
+import { CompilerExtension } from '../compiler';
 import { CLIExtension } from '../cli';
-/* eslint no-console: 0 */
 import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
 import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils';
-import { Compile } from '../compiler';
 import { Consumer } from '../../consumer';
 import { Watcher } from './watcher';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
-export type WatcherDeps = [CLIExtension, Compile, Workspace];
+export type WatcherDeps = [CLIExtension, CompilerExtension, Workspace];
 export type WatchSlot = SlotRegistry<Watcher>;
 
 // :TODO @david we should refactor this extension to few separate classes and focus this file on the api...
@@ -26,7 +25,7 @@ export class WatcherExtension {
 
   constructor(
     // :TODO @david we should not couple the compiler. compiler should register to a slot provided by this extension.
-    private compile: Compile,
+    private compilerExt: CompilerExtension,
     private workspace: Workspace,
     private watchSlot: WatchSlot,
     private trackDirs: { [dir: string]: string } = {},
@@ -67,19 +66,19 @@ export class WatcherExtension {
       watcher.on('ready', () => {
         log(chalk.yellow(STARTED_WATCHING_MSG));
       });
-      watcher.on('change', p => {
+      watcher.on('change', (p) => {
         log(`file ${p} has been changed`);
-        this._handleChange(p).catch(err => reject(err));
+        this._handleChange(p).catch((err) => reject(err));
       });
-      watcher.on('add', p => {
+      watcher.on('add', (p) => {
         log(`file ${p} has been added`);
-        this._handleChange(p, true).catch(err => reject(err));
+        this._handleChange(p, true).catch((err) => reject(err));
       });
-      watcher.on('unlink', p => {
+      watcher.on('unlink', (p) => {
         log(`file ${p} has been removed`);
-        this._handleChange(p).catch(err => reject(err));
+        this._handleChange(p).catch((err) => reject(err));
       });
-      watcher.on('error', err => {
+      watcher.on('error', (err) => {
         log(`Watcher error ${err}`);
         reject(err);
       });
@@ -100,7 +99,10 @@ export class WatcherExtension {
         console.log(`running build for ${chalk.bold(idStr)}`);
         // TODO: Make sure the log for build is printed to console
         // TODO: make sure this is a slot.
-        const buildResults = await this.compile.compileOnWorkspace([idStr], false, this.verbose);
+        const buildResults = await this.compilerExt.compileOnWorkspace([idStr], {
+          noCache: false,
+          verbose: this.verbose,
+        });
         const buildPaths = buildResults[0].buildResults;
         if (buildPaths && buildPaths.length) {
           resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;
@@ -122,7 +124,7 @@ export class WatcherExtension {
 
   // :TODO @david we should document all extension public apis.
   isComponentWatchedExternally(componentId: BitId) {
-    const watcherData = this.multipleWatchers.find(m => m.componentIds.find(id => id.isEqual(componentId)));
+    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId)));
     if (watcherData) {
       console.log(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
@@ -144,7 +146,7 @@ export class WatcherExtension {
     }
 
     if (isNew && !componentId) {
-      const trackDir = Object.keys(this.trackDirs).find(dir => relativeFile.startsWith(dir));
+      const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
       if (trackDir) {
         const id = this.trackDirs[trackDir];
         const bitId = this.consumer.getParsedId(id);
@@ -167,7 +169,7 @@ export class WatcherExtension {
       // https://github.com/paulmillr/chokidar/issues/773
       // https://github.com/paulmillr/chokidar/issues/492
       // https://github.com/paulmillr/chokidar/issues/724
-      ignored: path => {
+      ignored: (path) => {
         // Ignore package.json temporarily since it cerates endless loop since it's re-written after each build
         if (path.includes('dist') || path.includes('node_modules') || path.includes('package.json')) {
           return true;
@@ -175,20 +177,20 @@ export class WatcherExtension {
         return false;
       },
       persistent: true,
-      useFsEvents: false
+      useFsEvents: false,
     });
   }
 
   _getPathsToWatch(): string[] {
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    const paths = componentsFromBitMap.map(componentMap => {
+    const paths = componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id.toString();
       const trackDir = componentMap.getTrackDir();
       if (trackDir) {
         this.trackDirs[trackDir] = componentId;
       }
       const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
-      const absPaths = relativePaths.map(relativePath => this.consumer.toAbsolutePath(relativePath));
+      const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
       if (this.verbose) {
         console.log(`watching ${chalk.bold(componentId)}\n${absPaths.join('\n')}`);
       }
@@ -197,7 +199,7 @@ export class WatcherExtension {
     return R.flatten(paths);
   }
 
-  static dependencies = [CLIExtension, CompileExt, WorkspaceExt];
+  static dependencies = [CLIExtension, CompilerExtension, WorkspaceExt];
 
   static slots = [Slot.withType<Watcher>()];
 

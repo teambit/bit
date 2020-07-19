@@ -18,7 +18,7 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
   const ignoreScope = !bitId.hasScope();
 
   const similarIds = ignoreScope ? bitIds.filterWithoutScopeAndVersion(bitId) : bitIds.filterWithoutVersion(bitId);
-  const allVersionsForId = similarIds.filter(id => id.hasVersion() && !id.isVersionSnap()).map(id => id.version);
+  const allVersionsForId = similarIds.filter((id) => id.hasVersion() && !id.isVersionSnap()).map((id) => id.version);
 
   // A case when the provided bitId doesn't exists in the array
   if (R.isEmpty(allVersionsForId)) {

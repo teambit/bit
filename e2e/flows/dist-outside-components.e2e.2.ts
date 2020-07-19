@@ -7,7 +7,7 @@ import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd'
 
 chai.use(require('chai-fs'));
 
-describe('dists file are written outside the components dir', function() {
+describe('dists file are written outside the components dir', function () {
   this.timeout(0);
   let helper: Helper;
   let appJsFixture;
@@ -485,7 +485,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
   });
 });
 
-describe('dist-outside-components when no compiler has been set up', function() {
+describe('dist-outside-components when no compiler has been set up', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

@@ -5,7 +5,7 @@ import {
   DEFAULT_DIR_MSG_Q,
   PACKAGE_MANAGER_MSG_Q,
   CHOOSE_COMPILER_MSG_Q,
-  CHOOSE_CUSTOM_COMPILER_MSG_Q
+  CHOOSE_CUSTOM_COMPILER_MSG_Q,
 } from '../../src/interactive/commands/init-interactive';
 import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE, IS_WINDOWS } from '../../src/constants';
 import { INTERACTIVE_KEYS } from '../../src/interactive/utils/run-interactive-cmd';
@@ -23,12 +23,12 @@ const inputsWithDefaultsNoCompiler = [
   {
     triggerText: CHOOSE_COMPILER_MSG_Q,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    inputs: [{ value: INTERACTIVE_KEYS.enter }]
-  }
+    inputs: [{ value: INTERACTIVE_KEYS.enter }],
+  },
 ];
 
 // TODO: reenable those tests once paper support streaming correctly
-describe.skip('run bit init - interactive', function() {
+describe.skip('run bit init - interactive', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -84,7 +84,7 @@ describe.skip('run bit init - interactive', function() {
             triggerText: PACKAGE_MANAGER_MSG_Q,
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+            inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }],
           },
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: 'my-comps' }, { value: INTERACTIVE_KEYS.enter }] },
@@ -92,8 +92,8 @@ describe.skip('run bit init - interactive', function() {
             triggerText: CHOOSE_COMPILER_MSG_Q,
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
-          }
+            inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }],
+          },
         ];
         await helper.scopeHelper.initInteractive(inputs);
         bitJson = helper.bitJson.read();
@@ -128,7 +128,7 @@ describe.skip('run bit init - interactive', function() {
           {
             triggerText: PACKAGE_MANAGER_MSG_Q,
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            inputs: [{ value: INTERACTIVE_KEYS.enter }]
+            inputs: [{ value: INTERACTIVE_KEYS.enter }],
           },
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
@@ -136,13 +136,13 @@ describe.skip('run bit init - interactive', function() {
             triggerText: CHOOSE_COMPILER_MSG_Q,
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            inputs: [{ value: INTERACTIVE_KEYS.up }, { value: INTERACTIVE_KEYS.enter }]
+            inputs: [{ value: INTERACTIVE_KEYS.up }, { value: INTERACTIVE_KEYS.enter }],
           },
           {
             triggerText: CHOOSE_CUSTOM_COMPILER_MSG_Q,
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            inputs: [{ value: `bit import ${compilerName}` }, { value: INTERACTIVE_KEYS.enter }]
-          }
+            inputs: [{ value: `bit import ${compilerName}` }, { value: INTERACTIVE_KEYS.enter }],
+          },
         ];
         await helper.scopeHelper.initInteractive(inputs);
         // helper.scopeHelper.removeRemoteEnvironment(true);

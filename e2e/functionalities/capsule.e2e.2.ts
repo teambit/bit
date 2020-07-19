@@ -9,7 +9,7 @@ import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-to
 
 chai.use(require('chai-fs'));
 
-describe('capsule', function() {
+describe('capsule', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -247,7 +247,7 @@ describe('capsule', function() {
             'utils/is-string': bitMap['utils/is-string'],
             'utils/is-type': bitMap['utils/is-type'],
             'bar/foo': bitMap['bar/foo'],
-            version: bitMap.version
+            version: bitMap.version,
           };
           helper.bitMap.write(newBitMap);
           const buildOutput = helper.command.build();
@@ -304,9 +304,9 @@ describe('capsule', function() {
             const overrides = {
               'utils/is-type': {
                 env: {
-                  compiler: '-'
-                }
-              }
+                  compiler: '-',
+                },
+              },
             };
             helper.bitJson.addOverrides(overrides);
             const buildResult = helper.command.tagComponent('utils/is-type');
@@ -393,7 +393,7 @@ describe('capsule', function() {
     it('should save the link into the dists', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
+      const distLink = barFoo.dists.find((d) => d.relativePath === 'utils/is-string.js');
       expect(distLink).to.not.be.undefined;
       const fileHash = distLink.file;
       const content = helper.command.catObject(fileHash);
@@ -408,7 +408,7 @@ describe('capsule', function() {
       it('should change the dists', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
+        const distLink = barFoo.dists.find((d) => d.relativePath === 'utils/is-string.js');
         expect(distLink).to.not.be.undefined;
         const fileHash = distLink.file;
         const content = helper.command.catObject(fileHash);

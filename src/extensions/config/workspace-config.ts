@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import { omit, isEmpty } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
-  WorkspaceConfigProps as LegacyWorkspaceConfigProps
+  WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from '../../consumer/config/workspace-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
@@ -21,6 +21,7 @@ import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
+import { Analytics } from '../../analytics/analytics';
 
 export type ComponentsConfigFn = () => ConsumerOverrides;
 export type ComponentConfigFn = (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
@@ -102,10 +103,11 @@ export class WorkspaceConfig implements HostConfig {
           resolveModules: legacyConfig.resolveModules,
           saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
           distEntry: legacyConfig.distEntry,
-          distTarget: legacyConfig.distTarget
+          distTarget: legacyConfig.distTarget,
         };
       }
     }
+    Analytics.setExtraData('is_harmony', !this.isLegacy);
   }
 
   get path(): PathOsBased {
@@ -381,13 +383,13 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   toLegacy(): ILegacyWorkspaceConfig {
-    const _setCompiler = compiler => {
+    const _setCompiler = (compiler) => {
       if (this.legacyConfig) {
         this.legacyConfig.setCompiler(compiler);
       }
     };
 
-    const _setTester = tester => {
+    const _setTester = (tester) => {
       if (this.legacyConfig) {
         this.legacyConfig.setTester(tester);
       }
@@ -437,7 +439,7 @@ export class WorkspaceConfig implements HostConfig {
       _compiler: this.legacyConfig?.compiler,
       _setCompiler,
       _tester: this.legacyConfig?.tester,
-      _setTester
+      _setTester,
     };
   }
 }
@@ -446,10 +448,10 @@ export function transformLegacyPropsToExtensions(
   legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps
 ): ExtensionsDefs {
   // TODO: move to utils
-  const removeUndefined = obj => {
+  const removeUndefined = (obj) => {
     // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
     // return res;
-    Object.entries(obj).forEach(e => {
+    Object.entries(obj).forEach((e) => {
       if (e[1] === undefined) delete obj[e[0]];
     });
     return obj;
@@ -458,7 +460,7 @@ export function transformLegacyPropsToExtensions(
   const workspace = removeUndefined({
     defaultScope: legacyConfig.defaultScope,
     defaultDirectory: legacyConfig.componentsDefaultDirectory,
-    defaultOwner: legacyConfig.bindingPrefix
+    defaultOwner: legacyConfig.bindingPrefix,
   });
   const dependencyResolver = removeUndefined({
     packageManager: legacyConfig.packageManager,
@@ -466,7 +468,7 @@ export function transformLegacyPropsToExtensions(
     extraArgs: legacyConfig.packageManagerArgs,
     packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
     manageWorkspaces: legacyConfig.manageWorkspaces,
-    useWorkspaces: legacyConfig.useWorkspaces
+    useWorkspaces: legacyConfig.useWorkspaces,
   });
   const variants = legacyConfig.overrides?.overrides;
   const data = {};

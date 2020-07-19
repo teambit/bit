@@ -62,15 +62,15 @@ export class Create {
     templateFiles: TemplateFile[]
   ): Promise<PathOsBasedRelative[]> {
     const dataToPersist = new DataToPersist();
-    const vinylFiles = templateFiles.map(templateFile => {
+    const vinylFiles = templateFiles.map((templateFile) => {
       const templateFileVinyl = new Vinyl({
         base: componentPath,
         path: path.join(componentPath, templateFile.path),
-        contents: Buffer.from(templateFile.content)
+        contents: Buffer.from(templateFile.content),
       });
       return AbstractVinyl.fromVinyl(templateFileVinyl);
     });
-    const results = vinylFiles.map(v => v.path);
+    const results = vinylFiles.map((v) => v.path);
     dataToPersist.addManyFiles(vinylFiles);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
@@ -78,8 +78,8 @@ export class Create {
   }
 }
 
-const DEFAULT_TEMPLATE = name => [
-  { path: `${name}.js`, content: `export default function ${name} { console.log('I am the default template'); }` }
+const DEFAULT_TEMPLATE = (name) => [
+  { path: `${name}.js`, content: `export default function ${name} { console.log('I am the default template'); }` },
 ];
 
 export class Registry {

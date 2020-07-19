@@ -33,7 +33,7 @@ export default class ComponentJsonHelper {
     const componentJson = this.read(componentRelativeDir);
     // Using this to keep the comments
     const obj = {
-      [key]: val
+      [key]: val,
     };
     const updated = assign(componentJson, obj);
     this.write(updated, componentRelativeDir);

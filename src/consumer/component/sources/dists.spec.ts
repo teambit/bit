@@ -6,7 +6,7 @@ describe('Dists', () => {
     let consumer;
     before(() => {
       consumer = { config: {} };
-      consumer.toAbsolutePath = src => src;
+      consumer.toAbsolutePath = (src) => src;
     });
     it('should return null when custom module resolution is not configured', () => {
       consumer.config = {};
@@ -14,7 +14,7 @@ describe('Dists', () => {
     });
     it('when distTarget and distEntry are not configured it should return the default dist plus the customDir', () => {
       consumer.config = {
-        _resolveModules: { modulesDirectories: ['src'] }
+        _resolveModules: { modulesDirectories: ['src'] },
       };
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/src');
     });
@@ -22,7 +22,7 @@ describe('Dists', () => {
       consumer.config = {
         _distTarget: 'dist',
         _distEntry: 'src',
-        _resolveModules: { modulesDirectories: ['src'] }
+        _resolveModules: { modulesDirectories: ['src'] },
       };
 
       expect(Dists.getNodePathDir(consumer)).to.equal('dist');
@@ -31,7 +31,7 @@ describe('Dists', () => {
       consumer.config = {
         _distTarget: 'dist',
         _distEntry: 'src',
-        _resolveModules: { modulesDirectories: ['src/custom'] }
+        _resolveModules: { modulesDirectories: ['src/custom'] },
       };
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/custom');
     });
@@ -39,7 +39,7 @@ describe('Dists', () => {
       consumer.config = {
         _distTarget: 'dist',
         _distEntry: 'src',
-        _resolveModules: { modulesDirectories: ['src2'] }
+        _resolveModules: { modulesDirectories: ['src2'] },
       };
       expect(Dists.getNodePathDir(consumer)).to.equal('dist/src2');
     });
@@ -47,7 +47,7 @@ describe('Dists', () => {
       consumer.config = {
         _distTarget: 'dist',
         _distEntry: 'src',
-        _resolveModules: { modulesDirectories: ['custom1', 'custom2'] }
+        _resolveModules: { modulesDirectories: ['custom1', 'custom2'] },
       };
       const delimiter = process.platform === 'win32' ? ';' : ':';
       expect(Dists.getNodePathDir(consumer)).to.equal(`dist/custom1${delimiter}dist/custom2`);

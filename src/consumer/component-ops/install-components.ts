@@ -15,10 +15,10 @@ import { Analytics } from '../../analytics/analytics';
  */
 export async function install(consumer: Consumer, verbose: boolean): Promise<LinksResult[]> {
   const candidateComponents = consumer.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
-  const dirs = candidateComponents.map(componentMap => componentMap.rootDir).filter(dir => dir);
+  const dirs = candidateComponents.map((componentMap) => componentMap.rootDir).filter((dir) => dir);
   const consumerPath = consumer.getPath();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const dirsAbsolute = dirs.map(dir => path.join(consumerPath, dir));
+  const dirsAbsolute = dirs.map((dir) => path.join(consumerPath, dir));
   await installPackages(consumer, dirsAbsolute, verbose, true);
   return linkAllToNodeModules(consumer);
 }
@@ -31,7 +31,7 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
 export async function installIds(consumer: Consumer, ids: BitId[], verbose: boolean): Promise<LinksResult[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
-  const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
+  const dirs: string[] = components.map((component) => component.componentMap.rootDir).filter((dir) => dir);
   if (dirs.length) await installPackages(consumer, dirs, verbose);
   Analytics.setExtraData('num_components', components.length);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);

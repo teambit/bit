@@ -8,7 +8,7 @@ chai.use(require('chai-fs'));
 
 const defaultOwner = 'ci';
 
-describe('publish functionality', function() {
+describe('publish functionality', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
@@ -16,8 +16,8 @@ describe('publish functionality', function() {
     const helperOptions: HelperOptions = {
       scopesOptions: {
         remoteScopeWithDot: true,
-        remoteScopePrefix: defaultOwner
-      }
+        remoteScopePrefix: defaultOwner,
+      },
     };
     helper = new Helper(helperOptions);
     helper.command.setFeatures(HARMONY_FEATURE);
@@ -37,7 +37,7 @@ describe('publish functionality', function() {
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       const environments = {
         env: '@teambit/react',
-        config: {}
+        config: {},
       };
       helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -117,11 +117,11 @@ describe('publish functionality', function() {
       });
     });
   });
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('with custom package name', function() {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('with custom package name', function () {
     let randomStr: string;
     let publishOutput: string;
     let pkgName: string;
-    before(async function() {
+    before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
@@ -174,7 +174,7 @@ describe('publish functionality', function() {
       helper.fixtures.populateComponentsTS(1);
       const environments = {
         env: '@teambit/react',
-        config: {}
+        config: {},
       };
       helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
 

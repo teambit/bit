@@ -69,7 +69,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
         getFromPackageJsonIfChanged,
         getFromBitMap,
         getFromModel,
-        getFromPackageJson
+        getFromPackageJson,
       ];
     } else {
       // @todo: change this once vendors feature is in.
@@ -135,7 +135,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
     const packagePath = getNodeModulesPathOfComponent({
       ...component,
-      id: componentId
+      id: componentId,
     });
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -160,7 +160,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const dependencyIdAsPackage = componentIdToPackageName({
       ...component,
       id: componentId, // this componentId is actually the dependencyId
-      isDependency: true
+      isDependency: true,
     });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
@@ -177,7 +177,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
     if (R.isEmpty(dependencies)) return undefined;
     const dependency = Object.keys(dependencies).find(
-      idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
+      (idStr) =>
+        componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
     );
     if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);

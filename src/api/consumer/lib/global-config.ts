@@ -8,7 +8,7 @@ export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
     throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config`);
   }
-  return Config.load().then(config => {
+  return Config.load().then((config) => {
     config.set(key, val);
     invalidateCache();
     return config.write().then(() => config);
@@ -24,7 +24,7 @@ export function setSync(key: string, val: string): Config {
 }
 
 export function del(key: string): Promise<Config> {
-  return Config.load().then(config => {
+  return Config.load().then((config) => {
     config.delete(key);
     invalidateCache();
     return config.write().then(() => config);
@@ -80,7 +80,7 @@ export function getSync(key: string): string | null | undefined {
 }
 
 export function list(): Promise<any> {
-  return Config.load().then(config => config.toPlainObject());
+  return Config.load().then((config) => config.toPlainObject());
 }
 
 export function listSync(): any {
@@ -94,10 +94,10 @@ function cache() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return cache.config;
     },
-    set: config => {
+    set: (config) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cache.config = config;
-    }
+    },
   };
 }
 

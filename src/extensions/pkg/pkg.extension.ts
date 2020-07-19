@@ -12,6 +12,7 @@ import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
 import { LoggerExt, Logger } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
+import { WorkspaceExt, Workspace } from '../workspace';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -33,18 +34,25 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
-  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExt];
+  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExt, WorkspaceExt];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static provider(
-    [cli, scope, envs, isolator, logger]: [CLIExtension, ScopeExtension, Environments, IsolatorExtension, Logger],
+    [cli, scope, envs, isolator, logger, workspace]: [
+      CLIExtension,
+      ScopeExtension,
+      Environments,
+      IsolatorExtension,
+      Logger,
+      Workspace
+    ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const logPublisher = logger.createLogPublisher(PkgExtension.id);
-    const packer = new Packer(isolator, scope?.legacyScope);
-    const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope);
+    const packer = new Packer(isolator, scope?.legacyScope, workspace);
+    const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
 
@@ -129,7 +137,7 @@ export class PkgExtension {
       newProps = Object.assign(newProps, propsFromEnv);
     }
     const configuredIds = configuredExtensions.ids;
-    configuredIds.forEach(extId => {
+    configuredIds.forEach((extId) => {
       // Only get props from configured extensions on this specific component
       const props = this.packageJsonPropsRegistry.get(extId);
       if (props) {

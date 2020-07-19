@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-describe('bit list command', function() {
+describe('bit list command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -83,7 +83,7 @@ describe('bit list command', function() {
         output = helper.command.listLocalScopeParsed('-o');
       });
       it('should show that it has a later version in the remote', () => {
-        const barFoo = output.find(item => item.id === `${helper.scopes.remote}/bar/foo`);
+        const barFoo = output.find((item) => item.id === `${helper.scopes.remote}/bar/foo`);
         expect(barFoo.remoteVersion).to.equal('0.0.2');
         expect(barFoo.localVersion).to.equal('0.0.1');
       });
@@ -102,7 +102,7 @@ describe('bit list command', function() {
         output = helper.command.listLocalScopeParsed('-o');
       });
       it('should display the same version for the local and remote', () => {
-        const barBaz = output.find(item => item.id === `${helper.scopes.remote}/bar/baz`);
+        const barBaz = output.find((item) => item.id === `${helper.scopes.remote}/bar/baz`);
         expect(barBaz.remoteVersion).to.equal(barBaz.localVersion);
       });
     });
@@ -116,7 +116,7 @@ describe('bit list command', function() {
         output = helper.command.listLocalScopeParsed('-o');
       });
       it('should show that the component does not have a remote version', () => {
-        const barLocal = output.find(item => item.id === 'bar/local');
+        const barLocal = output.find((item) => item.id === 'bar/local');
         expect(barLocal.remoteVersion).to.equal('N/A');
       });
     });

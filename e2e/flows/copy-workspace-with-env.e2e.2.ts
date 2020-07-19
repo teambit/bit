@@ -6,7 +6,7 @@ import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/broken-symlink-f
 
 chai.use(require('chai-fs'));
 
-describe('copy workspace with env', function() {
+describe('copy workspace with env', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

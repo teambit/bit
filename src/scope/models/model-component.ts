@@ -13,7 +13,7 @@ import {
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE
+  TESTER_ENV_TYPE,
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
@@ -151,7 +151,7 @@ export default class Component extends BitObject {
   async hasVersion(version: string, repo: Repository): Promise<boolean> {
     if (isTag(version)) return this.hasTag(version);
     const allHashes = await getAllVersionHashes(this, repo, false);
-    return allHashes.some(hash => hash.toString() === version);
+    return allHashes.some((hash) => hash.toString() === version);
   }
 
   hasTag(version: string): boolean {
@@ -167,7 +167,7 @@ export default class Component extends BitObject {
         `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${scopeListItem.url}, date: ${scopeListItem.date}`
       );
     }
-    if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
+    if (!this.scopesList.find((r) => r.url === scopeListItem.url)) {
       this.scopesList.push(scopeListItem);
     }
   }
@@ -239,7 +239,7 @@ export default class Component extends BitObject {
   diffWith(component: Component, local: boolean): string[] {
     const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
     return Object.keys(thisComponentVersions).filter(
-      version => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
+      (version) => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
     );
   }
 
@@ -275,7 +275,7 @@ export default class Component extends BitObject {
     }
     // either a user is on master or a lane, check whether the remote is ahead of the local
     const allLocalHashes = await getAllVersionHashes(this, repo, false);
-    const isRemoteHeadExistsLocally = allLocalHashes.find(localHash => localHash.isEqual(remoteHead));
+    const isRemoteHeadExistsLocally = allLocalHashes.find((localHash) => localHash.isEqual(remoteHead));
     if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
     return remoteHead.toString(); // remote is ahead
   }
@@ -339,7 +339,7 @@ export default class Component extends BitObject {
 
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
-      this.listVersions().map(versionNum => {
+      this.listVersions().map((versionNum) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
@@ -347,11 +347,11 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versions).find(versionRef => this.versions[versionRef].isEqual(ref));
+    return Object.keys(this.versions).find((versionRef) => this.versions[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map(ref => this.getTagOfRefIfExists(ref) || ref.toString());
+    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**
@@ -452,7 +452,7 @@ export default class Component extends BitObject {
       lang: this.lang,
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
-      remotes: this.scopesList
+      remotes: this.scopesList,
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -485,25 +485,25 @@ export default class Component extends BitObject {
 
       async function addRefs(object: BitObject) {
         const refs = object.refs();
-        const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+        const objs = await Promise.all(refs.map((ref) => ref.load(repo, true)));
         refsCollection.push(...refs);
-        await Promise.all(objs.map(obj => addRefs(obj)));
+        await Promise.all(objs.map((obj) => addRefs(obj)));
       }
 
-      const versionsRefs = versions.map(version => this.versions[version]);
+      const versionsRefs = versions.map((version) => this.versions[version]);
       refsCollection.push(...versionsRefs);
-      const versionsObjects = await Promise.all(versions.map(version => this.versions[version].load(repo)));
-      await Promise.all(versionsObjects.map(versionObject => addRefs(versionObject)));
+      const versionsObjects = await Promise.all(versions.map((version) => this.versions[version].load(repo)));
+      await Promise.all(versionsObjects.map((versionObject) => addRefs(versionObject)));
       return refsCollection;
     };
     const refs = await collectRefs();
-    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
+    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
     return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
-      .catch(err => {
+      .catch((err) => {
         if (err.code === 'ENOENT') {
           throw new Error(
             `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`
@@ -554,7 +554,7 @@ export default class Component extends BitObject {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
-    const loadFileInstance = ClassName => async file => {
+    const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
@@ -574,12 +574,12 @@ export default class Component extends BitObject {
       distsP,
       scopeMetaP,
       compilerP,
-      testerP
+      testerP,
     ]);
 
     const extensions = version.extensions.clone();
     await Promise.all(
-      extensions.map(async extension => {
+      extensions.map(async (extension) => {
         extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(Artifact)));
       })
     );
@@ -616,7 +616,7 @@ export default class Component extends BitObject {
       docs: version.docs,
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
-      specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
+      specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
@@ -624,7 +624,7 @@ export default class Component extends BitObject {
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
       schema: version.schema,
-      extensions
+      extensions,
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
@@ -685,7 +685,7 @@ export default class Component extends BitObject {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
+    return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
 
   getLocalTagsOrHashes(): string[] {
@@ -721,14 +721,14 @@ export default class Component extends BitObject {
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
-      versions: mapObject(rawComponent.versions, val => Ref.from(val)),
+      versions: mapObject(rawComponent.versions, (val) => Ref.from(val)),
       lang: rawComponent.lang,
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
       scopesList: rawComponent.remotes,
-      head: rawComponent.head ? Ref.from(rawComponent.head) : undefined
+      head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
     });
   }
 
@@ -741,7 +741,7 @@ export default class Component extends BitObject {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.name,
-      scope: bitId.scope
+      scope: bitId.scope,
     });
   }
 
@@ -749,13 +749,13 @@ export default class Component extends BitObject {
     const message = `unable to save Component object "${this.id()}"`;
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
-      Object.keys(this.state.versions).forEach(version => {
+      Object.keys(this.state.versions).forEach((version) => {
         if (isTag(version) && !this.hasTag(version)) {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }
       });
     }
-    const hashDuplications = findDuplications(this.versionArray.map(v => v.toString()));
+    const hashDuplications = findDuplications(this.versionArray.map((v) => v.toString()));
     if (hashDuplications.length) {
       throw new ValidationError(`${message}, the following hash(es) are duplicated ${hashDuplications.join(', ')}`);
     }

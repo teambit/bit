@@ -41,27 +41,27 @@ export default class BitMapHelper {
           {
             relativePath: 'bar/foo.js',
             test: false,
-            name: 'foo.js'
-          }
+            name: 'foo.js',
+          },
         ],
         mainFile: 'bar/foo.js',
-        origin: 'AUTHORED'
-      }
+        origin: 'AUTHORED',
+      },
     },
     oldBitMapFile = false
   ) {
     const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : BIT_MAP);
 
     const bitmap = {
-      version: '0.11.1-testing'
+      version: '0.11.1-testing',
     };
-    Object.keys(componentObject).forEach(key => (bitmap[key] = componentObject[key]));
+    Object.keys(componentObject).forEach((key) => (bitmap[key] = componentObject[key]));
     fs.ensureFileSync(bitmapFile);
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
   printFilesInCaseOfError(files: Record<string, any>[]): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const filesStr = files.map(f => f.name).join(', ');
+    const filesStr = files.map((f) => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;
   }
 }

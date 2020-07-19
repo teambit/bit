@@ -29,7 +29,7 @@ const dependencyTreeRewired = rewire('./');
 const dependencyTree = dependencyTreeRewired.default;
 const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
 
-describe('dependencyTree', function() {
+describe('dependencyTree', function () {
   this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', () => {
@@ -57,8 +57,8 @@ describe('dependencyTree', function() {
           @require "c.styl"
         `,
         'b.styl': '@import "c"',
-        'c.styl': ''
-      }
+        'c.styl': '',
+      },
     });
   }
 
@@ -70,8 +70,8 @@ describe('dependencyTree', function() {
           @import "_c.scss";
         `,
         '_b.scss': 'body { color: blue; }',
-        '_c.scss': 'body { color: pink; }'
-      }
+        '_c.scss': 'body { color: pink; }',
+      },
     });
   }
 
@@ -83,8 +83,8 @@ describe('dependencyTree', function() {
           @import "c.less";
         `,
         'b.css': 'body { color: blue; }',
-        'c.less': 'body { color: pink; }'
-      }
+        'c.less': 'body { color: pink; }',
+      },
     });
   }
 
@@ -99,8 +99,8 @@ describe('dependencyTree', function() {
         'c.js': 'export default () => {};',
         'jsx.js': "import c from './c';\n export default <jsx />;",
         'foo.jsx': "import React from 'react';\n import b from './b';\n export default <jsx />;",
-        'es7.js': "import c from './c';\n export default async function foo() {};"
-      }
+        'es7.js': "import c from './c';\n export default async function foo() {};",
+      },
     });
   }
 
@@ -112,8 +112,8 @@ describe('dependencyTree', function() {
           import c from './c';
         `,
         'b.ts': 'export default () => {};',
-        'c.ts': 'export default () => {};'
-      }
+        'c.ts': 'export default () => {};',
+      },
     });
   }
 
@@ -123,7 +123,7 @@ describe('dependencyTree', function() {
 
   it('returns an empty object for a non-existent filename', () => {
     mockfs({
-      imaginary: {}
+      imaginary: {},
     });
 
     const root = `${__dirname}/imaginary`;
@@ -146,8 +146,8 @@ describe('dependencyTree', function() {
         'd.js': '',
         'e.js': '',
         'f.js': '',
-        'g.js': ''
-      }
+        'g.js': '',
+      },
     });
 
     const directory = `${__dirname}/extended`;
@@ -171,8 +171,8 @@ describe('dependencyTree', function() {
   it('does not include files that are not real (#13)', () => {
     mockfs({
       [`${__dirname}/onlyRealDeps`]: {
-        'a.js': 'var notReal = require("./notReal");'
-      }
+        'a.js': 'var notReal = require("./notReal");',
+      },
     });
 
     const directory = `${__dirname}/onlyRealDeps`;
@@ -181,15 +181,15 @@ describe('dependencyTree', function() {
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
 
-    assert.ok(!Object.keys(subTree).some(dep => dep.indexOf('notReal') !== -1));
+    assert.ok(!Object.keys(subTree).some((dep) => dep.indexOf('notReal') !== -1));
   });
 
   it('does not choke on cyclic dependencies', () => {
     mockfs({
       [`${__dirname}/cyclic`]: {
         'a.js': 'var b = require("./b");',
-        'b.js': 'var a = require("./a");'
-      }
+        'b.js': 'var a = require("./a");',
+      },
     });
 
     const directory = `${__dirname}/cyclic`;
@@ -242,14 +242,14 @@ describe('dependencyTree', function() {
       const filename = path.normalize(`${directory}/a.js`);
       const detectiveConfig = {
         amd: {
-          skipLazyLoaded: true
-        }
+          skipLazyLoaded: true,
+        },
       };
 
       dependencyTree({
         filename,
         directory,
-        detective: detectiveConfig
+        detective: detectiveConfig,
       });
 
       assert.ok(spy.calledWith(filename, detectiveConfig));
@@ -262,8 +262,8 @@ describe('dependencyTree', function() {
       it('stores the invalid partials', () => {
         mockfs({
           [`${__dirname}/onlyRealDeps`]: {
-            'a.js': 'var notReal = require("./notReal");'
-          }
+            'a.js': 'var notReal = require("./notReal");',
+          },
         });
 
         const directory = path.normalize(`${__dirname}/onlyRealDeps`);
@@ -282,8 +282,8 @@ describe('dependencyTree', function() {
         mockfs({
           [`${__dirname}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
-            'b.js': 'export default 1;'
-          }
+            'b.js': 'export default 1;',
+          },
         });
 
         const directory = `${__dirname}/onlyRealDeps`;
@@ -302,8 +302,8 @@ describe('dependencyTree', function() {
           [`${__dirname}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");',
             'b.js': 'var c = require("./c"); export default 1;',
-            'c.js': 'var crap = require("./notRealMan");'
-          }
+            'c.js': 'var crap = require("./notRealMan");',
+          },
         });
 
         const directory = path.normalize(`${__dirname}/onlyRealDeps`);
@@ -323,8 +323,8 @@ describe('dependencyTree', function() {
           [`${__dirname}/onlyRealDeps`]: {
             'a.js': 'var b = require("./b");\nvar crap = require("./notRealMan");',
             'b.js': 'var c = require("./c"); export default 1;',
-            'c.js': 'var crap = require("./notRealMan");'
-          }
+            'c.js': 'var crap = require("./notRealMan");',
+          },
         });
 
         const directory = path.normalize(`${__dirname}/onlyRealDeps`);
@@ -358,7 +358,7 @@ describe('dependencyTree', function() {
         dependencyTree({
           filename: undefined,
           // @ts-ignore
-          directory: this._directory
+          directory: this._directory,
         });
       });
     });
@@ -377,7 +377,7 @@ describe('dependencyTree', function() {
         dependencyTree({
           filename,
           directory,
-          filter: 'foobar'
+          filter: 'foobar',
         });
       });
     });
@@ -389,7 +389,7 @@ describe('dependencyTree', function() {
 
         dependencyTree({
           filename,
-          root: directory
+          root: directory,
         });
       });
     });
@@ -406,7 +406,7 @@ describe('dependencyTree', function() {
         dependencyTree({
           filename: 'foo',
           // @ts-ignore
-          directory: this._directory
+          directory: this._directory,
         });
       });
     });
@@ -435,14 +435,14 @@ describe('dependencyTree', function() {
 
       cache[path.normalize(`${fixtures}/amd/b.js`)] = {
         pathMap: {
-          dependencies: [path.normalize(`${fixtures}/amd/b.js`), path.normalize(`${fixtures}/amd/c.js`)]
-        }
+          dependencies: [path.normalize(`${fixtures}/amd/b.js`), path.normalize(`${fixtures}/amd/c.js`)],
+        },
       };
 
       const tree = dependencyTree({
         filename,
         directory,
-        visited: cache
+        visited: cache,
       });
 
       assert.equal(Object.keys(tree[filename]).length, 2);
@@ -456,13 +456,13 @@ describe('dependencyTree', function() {
 
       const cache = {
         // Shouldn't process the first file's tree
-        [filename]: { pathMap: { dependencies: [] } }
+        [filename]: { pathMap: { dependencies: [] } },
       };
 
       const tree = dependencyTree({
         filename,
         directory,
-        visited: cache
+        visited: cache,
       });
 
       assert(!tree.length);
@@ -493,7 +493,7 @@ describe('dependencyTree', function() {
         const tree = dependencyTree({
           filename,
           // @ts-ignore
-          directory: this._directory
+          directory: this._directory,
         });
         // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
@@ -505,7 +505,7 @@ describe('dependencyTree', function() {
         const tree = dependencyTree({
           filename,
           // @ts-ignore
-          directory: this._directory
+          directory: this._directory,
         });
         // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/b.js`)));
@@ -517,7 +517,7 @@ describe('dependencyTree', function() {
         const tree = dependencyTree({
           filename,
           // @ts-ignore
-          directory: this._directory
+          directory: this._directory,
         });
         // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
@@ -570,16 +570,16 @@ describe('dependencyTree', function() {
       // @ts-ignore
       this._webpackConfig = `${this._root}/webpack.config.js`;
       // @ts-ignore
-      this._testResolution = name => {
+      this._testResolution = (name) => {
         const results = dependencyTree.toList({
           filename: `${fixtures}/webpack/${name}.js`,
           // @ts-ignore
           directory: this._root,
           // @ts-ignore
           webpackConfig: this._webpackConfig,
-          filter: filename => filename.indexOf('filing-cabinet') !== -1
+          filter: (filename) => filename.indexOf('filing-cabinet') !== -1,
         });
-        assert.ok(results.some(filename => filename.indexOf('node_modules/filing-cabinet') !== -1));
+        assert.ok(results.some((filename) => filename.indexOf('node_modules/filing-cabinet') !== -1));
       };
     });
 
@@ -622,8 +622,8 @@ describe('dependencyTree', function() {
             ], function(F) {
 
             });
-          `
-        }
+          `,
+        },
       });
     });
 
@@ -631,7 +631,7 @@ describe('dependencyTree', function() {
       const tree = dependencyTree({
         filename: 'root/a.js',
         directory: 'root',
-        config: 'root/require.config.js'
+        config: 'root/require.config.js',
       });
 
       const filename = path.resolve(process.cwd(), 'root/a.js');
@@ -642,7 +642,7 @@ describe('dependencyTree', function() {
       const tree = dependencyTree({
         filename: 'root/b.js',
         directory: 'root',
-        config: 'root/require.config.js'
+        config: 'root/require.config.js',
       });
 
       const filename = path.resolve(process.cwd(), 'root/b.js');
@@ -663,13 +663,13 @@ describe('dependencyTree', function() {
           assert.ok(require.resolve('debug'));
           assert.ok(moduleFile.includes(path.normalize('onlyRealDeps/a.js')));
           return filePath.indexOf('node_modules') === -1;
-        }
+        },
       });
 
       const subTree = tree[filename];
       assert.ok(Object.keys(tree).length);
 
-      const has3rdPartyDep = Object.keys(subTree).some(dep => dep === require.resolve('debug'));
+      const has3rdPartyDep = Object.keys(subTree).some((dep) => dep === require.resolve('debug'));
       assert.ok(!has3rdPartyDep);
     });
   });
@@ -679,8 +679,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/cjs`]: {
           'foo.js': 'module.exports = function(bar = require("./bar")) {};',
-          'bar.js': 'module.exports = 1;'
-        }
+          'bar.js': 'module.exports = 1;',
+        },
       });
     });
 
@@ -698,8 +698,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/es6`]: {
           'foo.js': 'export default function(bar = require("./bar")) {};',
-          'bar.js': 'export default 1;'
-        }
+          'bar.js': 'export default 1;',
+        },
       });
     });
 
@@ -713,9 +713,9 @@ describe('dependencyTree', function() {
           directory,
           detective: {
             es6: {
-              mixedImports: true
-            }
-          }
+              mixedImports: true,
+            },
+          },
         });
 
         assert.ok(tree[filename].includes(path.normalize(`${directory}/bar.js`)));
@@ -728,8 +728,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/es6`]: {
           'foo.js': 'import("./bar");',
-          'bar.js': 'export default 1;'
-        }
+          'bar.js': 'export default 1;',
+        },
       });
     });
 
@@ -739,7 +739,7 @@ describe('dependencyTree', function() {
 
       const tree = dependencyTree({
         filename,
-        directory
+        directory,
       });
 
       const subTree = tree[filename];
@@ -753,8 +753,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/baz`]: {
           'foo.js': 'require("./bar.json");',
-          'bar.json': '{ "main": "I\'m a simple JSON object" }'
-        }
+          'bar.json': '{ "main": "I\'m a simple JSON object" }',
+        },
       });
     });
 
@@ -764,7 +764,7 @@ describe('dependencyTree', function() {
 
       const tree = dependencyTree({
         filename,
-        directory
+        directory,
       });
 
       assert.ok(`${directory}/bar.json` in tree);
@@ -784,10 +784,10 @@ describe('dependencyTree', function() {
             'module.entry': {
               'index.main.js': 'module.exports = () => {};',
               'index.module.js': 'module.exports = () => {};',
-              'package.json': '{ "main": "index.main.js", "module": "index.module.js" }'
-            }
-          }
-        }
+              'package.json': '{ "main": "index.main.js", "module": "index.module.js" }',
+            },
+          },
+        },
       });
     });
 
@@ -799,8 +799,8 @@ describe('dependencyTree', function() {
         filename,
         directory,
         nodeModulesConfig: {
-          entry: 'module'
-        }
+          entry: 'module',
+        },
       });
       const subTree = tree[filename];
 
@@ -814,14 +814,14 @@ describe('dependencyTree', function() {
         it('retains the detective config in the clone', () => {
           const detectiveConfig = {
             es6: {
-              mixedImports: true
-            }
+              mixedImports: true,
+            },
           };
 
           const config = new Config({
             detectiveConfig,
             filename: 'foo',
-            directory: 'bar'
+            directory: 'bar',
           });
 
           const clone = config.clone();
@@ -838,8 +838,8 @@ describe('dependencyTree', function() {
         [`${__dirname}/baz`]: {
           'foo.js': 'require("non-exist-foo-pkg");',
           'bar.js': 'require("./foo"); require("non-exist-bar-pkg")',
-          'baz.js': 'require("./foo"); require("./bar"); require("non-exist-baz-pkg")'
-        }
+          'baz.js': 'require("./foo"); require("./bar"); require("non-exist-baz-pkg")',
+        },
       });
     });
 
@@ -852,7 +852,7 @@ describe('dependencyTree', function() {
       const config = {
         directory,
         nonExistent,
-        visited: {}
+        visited: {},
       };
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -879,8 +879,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/baz`]: {
           'base.scss': 'li {} a {}', // don't change the content. it crash only with this for some reason
-          'index.jsx': "require('some-module');"
-        }
+          'index.jsx': "require('some-module');",
+        },
       });
     });
     it('should not crash with "RangeError: Maximum call stack size exceeded" error', () => {
@@ -888,7 +888,7 @@ describe('dependencyTree', function() {
       const baseFile = path.normalize(`${directory}/base.scss`);
       const indexFile = path.normalize(`${directory}/index.jsx`);
       const config = {
-        directory
+        directory,
       };
 
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -905,8 +905,8 @@ describe('dependencyTree', function() {
     it('should not show missing dependencies', () => {
       mockfs({
         [`${__dirname}/dynamic`]: {
-          'foo.js': 'const a = "./b"; import(a); require(a);'
-        }
+          'foo.js': 'const a = "./b"; import(a); require(a);',
+        },
       });
       const directory = path.normalize(`${__dirname}/dynamic`);
       const filename = path.normalize(`${directory}/foo.js`);
@@ -915,7 +915,7 @@ describe('dependencyTree', function() {
       dependencyTree({
         filename,
         directory,
-        visited
+        visited,
       });
       expect(visited[filename].missing).to.be.undefined;
     });
@@ -924,8 +924,8 @@ describe('dependencyTree', function() {
     it('should not show missing dependencies when importing from https', () => {
       mockfs({
         [`${__dirname}/cdn`]: {
-          'foo.js': 'import { a } from "https://unpkg.com";'
-        }
+          'foo.js': 'import { a } from "https://unpkg.com";',
+        },
       });
       const directory = path.normalize(`${__dirname}/cdn`);
       const filename = path.normalize(`${directory}/foo.js`);
@@ -933,15 +933,15 @@ describe('dependencyTree', function() {
       dependencyTree({
         filename,
         directory,
-        visited
+        visited,
       });
       expect(visited[filename].missing).to.be.undefined;
     });
     it('should not show missing dependencies when importing from http', () => {
       mockfs({
         [`${__dirname}/cdn`]: {
-          'bar.js': 'const b = require("http://pkg.com");'
-        }
+          'bar.js': 'const b = require("http://pkg.com");',
+        },
       });
       const directory = path.normalize(`${__dirname}/cdn`);
       const filename = path.normalize(`${directory}/bar.js`);
@@ -949,7 +949,7 @@ describe('dependencyTree', function() {
       dependencyTree({
         filename,
         directory,
-        visited
+        visited,
       });
       expect(visited[filename].missing).to.be.undefined;
     });
@@ -959,8 +959,8 @@ describe('dependencyTree', function() {
       mockfs({
         [`${__dirname}/src`]: {
           'foo.js': "require('.');",
-          'index.js': 'module.exports = {}'
-        }
+          'index.js': 'module.exports = {}',
+        },
       });
       const directory = path.normalize(`${__dirname}/src`);
       const filename = path.normalize(`${directory}/foo.js`);
@@ -968,11 +968,11 @@ describe('dependencyTree', function() {
         filename,
         directory,
         pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } }
+        resolveConfig: { aliases: { something: 'anything' } },
       };
       dependencyTree(config);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(pathMapRecord.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -986,9 +986,9 @@ describe('dependencyTree', function() {
         [`${__dirname}/src`]: {
           'index.js': 'module.exports = {}',
           bar: {
-            'foo.js': "require('..');"
-          }
-        }
+            'foo.js': "require('..');",
+          },
+        },
       });
       const directory = path.normalize(`${__dirname}/src`);
       const filename = path.normalize(`${directory}/bar/foo.js`);
@@ -996,11 +996,11 @@ describe('dependencyTree', function() {
         filename,
         directory,
         pathMap: [],
-        resolveConfig: { aliases: { something: 'anything' } }
+        resolveConfig: { aliases: { something: 'anything' } },
       };
       dependencyTree(config);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      const pathMapRecord = config.pathMap.find((f) => f.file === filename);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(pathMapRecord.dependencies).to.have.lengthOf(1);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

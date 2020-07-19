@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import _ from 'lodash';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension } from './isolator.extension';
-import { loadConsumer } from '../../consumer';
-import CapsuleList from './capsule-list';
+import { Workspace } from '.';
+import CapsuleList from '../isolator/capsule-list';
 
 type CreateOpts = {
   baseDir?: string;
@@ -24,10 +23,10 @@ export class CapsuleCreateCmd implements Command {
     ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
-    ['d', 'installPackages', 'install packages in capsule with npm']
+    ['d', 'installPackages', 'install packages in capsule with npm'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorExtension) {}
+  constructor(private workspace: Workspace) {}
 
   async create(
     [componentIds]: [string[]],
@@ -35,10 +34,8 @@ export class CapsuleCreateCmd implements Command {
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
-    // TODO: remove this consumer loading from here. it shouldn't be here
-    const consumer = await loadConsumer();
     const capsuleOptions = _.omitBy({ baseDir, installPackages, alwaysNew, name: id }, _.isNil);
-    const isolatedEnvironment = await this.isolator.createNetworkFromConsumer(componentIds, consumer, capsuleOptions);
+    const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
     const capsules = isolatedEnvironment.capsules;
     return capsules;
   }
@@ -47,7 +44,7 @@ export class CapsuleCreateCmd implements Command {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     const capsuleOutput = capsules
-      .map(capsule => `${chalk.bold(capsule.id.toString())} - ${capsule.capsule.path}`)
+      .map((capsule) => `${chalk.bold(capsule.id.toString())} - ${capsule.capsule.path}`)
       .join('\n');
     const title = `${capsules.length} capsule(s) were created successfully`;
     return `${chalk.green(title)}\n${capsuleOutput}`;
@@ -56,9 +53,9 @@ export class CapsuleCreateCmd implements Command {
   async json([componentIds]: [string[]], opts: CreateOpts) {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
-    return capsules.map(c => ({
+    return capsules.map((c) => ({
       id: c.id.toString(),
-      path: c.capsule.path
+      path: c.capsule.path,
     }));
   }
 }

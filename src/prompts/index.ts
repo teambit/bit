@@ -22,5 +22,5 @@ export {
   resolveConflictPrompt,
   analyticsPrompt,
   errorReportingPrompt,
-  forkComponentsPrompt
+  forkComponentsPrompt,
 };

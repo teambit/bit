@@ -39,7 +39,7 @@ export class DevServerService implements EnvService {
    */
   private async buildContext(context: ExecutionContext): Promise<DevServerContext> {
     return Object.assign(context, {
-      entry: await this.getEntry(context)
+      entry: await this.getEntry(context),
     });
   }
 
@@ -47,7 +47,7 @@ export class DevServerService implements EnvService {
    * computes the bundler entry.
    */
   private async getEntry(context: ExecutionContext): Promise<string[]> {
-    const mainFiles = context.components.map(component => {
+    const mainFiles = context.components.map((component) => {
       const path = join(
         // :TODO check how it works with david. Feels like a side-effect.
         // @ts-ignore
@@ -61,7 +61,7 @@ export class DevServerService implements EnvService {
     });
 
     const slotEntries = await Promise.all(
-      this.runtimeSlot.values().map(async browserRuntime => browserRuntime.entry(context))
+      this.runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
     );
 
     const slotPaths = slotEntries.reduce((acc, current) => {

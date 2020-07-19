@@ -3,10 +3,11 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { Extensions } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('compile extension', function() {
+describe('compile extension', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -23,12 +24,12 @@ describe('compile extension', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       const environments = {
         env: '@teambit/react',
-        config: {}
+        config: {},
       };
       helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -38,7 +39,7 @@ describe('compile extension', function() {
       it('should not create a capsule as it is not needed for development', () => {
         const capsulesJson = helper.command.runCmd('bit capsule-list -j');
         const capsules = JSON.parse(capsulesJson);
-        capsules.capsules.forEach(c => expect(c).to.not.have.string('comp1'));
+        capsules.capsules.forEach((c) => expect(c).to.not.have.string('comp1'));
       });
       it('should write the dists files inside the node-modules of the component', () => {
         const nmComponent = path.join(
@@ -69,8 +70,8 @@ describe('compile extension', function() {
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');
-        const compileExt = catComp2.extensions.find(e => e.name === 'compile');
-        const files = compileExt.artifacts.map(d => d.relativePath);
+        const compileExt = catComp2.extensions.find((e) => e.name === Extensions.compiler);
+        const files = compileExt.artifacts.map((d) => d.relativePath);
         expect(files).to.include('dist/index.js');
         expect(files).to.include('dist/index.d.ts'); // makes sure it saves declaration files
       });
@@ -133,8 +134,8 @@ describe('compile extension', function() {
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
         expect(catComp).to.have.property('extensions');
-        const compileExt = catComp.extensions.find(e => e.name === 'compile');
-        const files = compileExt.artifacts.map(d => d.relativePath);
+        const compileExt = catComp.extensions.find((e) => e.name === Extensions.compiler);
+        const files = compileExt.artifacts.map((d) => d.relativePath);
         expect(files).to.include('dist/index.js');
       });
     });

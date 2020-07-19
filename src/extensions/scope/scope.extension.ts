@@ -12,13 +12,14 @@ import {
   Snap,
   ComponentFS,
   Tag,
-  TagMap
+  TagMap,
 } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
 import Config from '../component/config';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
+import { ComponentNotFound } from './exceptions';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -107,6 +108,12 @@ export class ScopeExtension implements ComponentFactory {
     );
   }
 
+  async getOrThrow(id: ComponentID): Promise<Component> {
+    const component = await this.get(id);
+    if (!component) throw new ComponentNotFound(id);
+    return component;
+  }
+
   async getState(id: ComponentID, hash: string): Promise<State> {
     const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
     return this.createStateFromVersion(id, version);
@@ -140,7 +147,7 @@ export class ScopeExtension implements ComponentFactory {
       [],
       {
         displayName: version.log.username || 'unknown',
-        email: version.log.email || 'unknown@anywhere'
+        email: version.log.email || 'unknown@anywhere',
       },
       version.log.message
     );

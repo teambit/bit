@@ -23,13 +23,13 @@ export default class Init implements LegacyCommand {
     [
       'T',
       'standalone [boolean]',
-      'do not nest component store within .git directory and do not write config data inside package.json'
+      'do not nest component store within .git directory and do not write config data inside package.json',
     ],
     ['r', 'reset', 'write missing or damaged Bit files'],
     [
       '',
       'reset-hard',
-      'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
+      'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch',
     ],
     // Disabled until supported by the new config
     // ['c', 'compiler <compiler>', 'set up compiler'],
@@ -38,7 +38,7 @@ export default class Init implements LegacyCommand {
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['', 'harmony', 'EXPERIMENTAL. create a new workspace using the experimental Harmony version'],
-    ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
+    ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
@@ -59,7 +59,7 @@ export default class Init implements LegacyCommand {
       tester,
       defaultDirectory,
       harmony,
-      packageManager
+      packageManager,
     } = flags;
     if (harmony) addFeature(HARMONY_FEATURE);
     if (path) path = pathlib.resolve(path);
@@ -70,14 +70,14 @@ export default class Init implements LegacyCommand {
       return initScope(path, bareVal, shared).then(({ created }) => {
         return {
           created,
-          bare: true
+          bare: true,
         };
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
     const workspaceConfigFileProps: WorkspaceConfigProps = {
       componentsDefaultDirectory: defaultDirectory,
-      packageManager
+      packageManager,
     };
     return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
@@ -86,7 +86,7 @@ export default class Init implements LegacyCommand {
           addedGitHooks,
           existingGitHooks,
           reset,
-          resetHard
+          resetHard,
         };
       }
     );

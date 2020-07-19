@@ -2,7 +2,7 @@ import { Environments } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { Compile, CompileExt } from '../compiler';
+import { CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
@@ -15,7 +15,7 @@ type ReactDeps = [
   Environments,
   JestExtension,
   TypescriptExtension,
-  Compile,
+  CompilerExtension,
   WebpackExtension,
   Workspace,
   GraphQLExtension,
@@ -76,7 +76,7 @@ export class ReactExtension {
     return {
       abstract: docs.description,
       filePath: docs.filePath,
-      properties: docs.properties
+      properties: docs.properties,
     };
   }
 
@@ -84,16 +84,16 @@ export class ReactExtension {
     Environments,
     JestExtension,
     TypescriptExtension,
-    CompileExt,
+    CompilerExtension,
     WebpackExtension,
     WorkspaceExt,
     GraphQLExtension,
     PkgExtension,
-    TesterExtension
+    TesterExtension,
   ];
 
-  static provider([envs, jest, ts, compile, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
-    const reactEnv = new ReactEnv(jest, ts, compile, webpack, workspace, pkg, tester);
+  static provider([envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
+    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester);
     const react = new ReactExtension(reactEnv);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

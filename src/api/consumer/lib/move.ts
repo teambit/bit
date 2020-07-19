@@ -5,7 +5,7 @@ import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 export default (async function move({
   from,
   to,
-  component
+  component,
 }: {
   from: string;
   to: string;

@@ -26,7 +26,7 @@ class FeatureToggle {
   private setFeatures() {
     if (this.areFeaturesPopulated()) return;
     const enabledFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
-    this.features = enabledFeatures ? enabledFeatures.split(',').map(f => f.trim()) : null;
+    this.features = enabledFeatures ? enabledFeatures.split(',').map((f) => f.trim()) : null;
   }
   public isFeatureEnabled(featureName: string): boolean {
     this.setFeatures();

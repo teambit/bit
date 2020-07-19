@@ -25,12 +25,12 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
     try {
       await WorkspaceConfig.loadIfExist(consumerPath);
       return {
-        valid: true
+        valid: true,
       };
     } catch (e) {
       return {
         valid: false,
-        data: {}
+        data: {},
       };
     }
   }

@@ -8,7 +8,7 @@ import { ScopeExtension } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
-import { IsolatorExtension } from '../isolator';
+import { IsolatorExtension, Network } from '../isolator';
 import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
@@ -27,6 +27,7 @@ import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 export type EjectConfResult = {
   configPath: string;
@@ -108,7 +109,7 @@ export default class Workspace implements ComponentFactory {
    */
   async list(): Promise<Component[]> {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const ids = consumerComponents.map(component => ComponentID.fromLegacy(component.id));
+    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
     return this.getMany(ids);
   }
 
@@ -130,10 +131,30 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
+  async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
+    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
+    const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
+    const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
+    opts = Object.assign(opts || {}, { consumer: this.consumer });
+    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
+    const seedersStr = seederIdsWithVersions.map((s) => s.toString());
+    const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
+    const consumerComponents = compsAndDeps.filter((c) =>
+      this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
+    );
+    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const capsuleList = await this.isolateEnv.isolateComponents(this.consumer.getPath(), components, opts);
+    return new Network(
+      capsuleList,
+      graph,
+      seederIdsWithVersions.map((s) => new ComponentID(s))
+    );
+  }
+
   async loadCapsules(bitIds: string[]) {
     // throw new Error("Method not implemented.");
     const components = await this.load(bitIds);
-    return components.map(comp => comp.capsule);
+    return components.map((comp) => comp.capsule);
   }
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
@@ -141,21 +162,20 @@ export default class Workspace implements ComponentFactory {
    * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const componentIdsP = ids.map(id => this.resolveComponentId(id));
+    const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
-      components.map(c => c.id.toString()),
-      this.consumer,
+    const isolatedEnvironment = await this.createNetwork(
+      components.map((c) => c.id.toString()),
       {
-        packageManager: 'npm'
+        packageManager: 'npm',
       }
     );
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.capsule;
       return accum;
     }, {});
-    const ret = components.map(component => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
+    const ret = components.map((component) => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
     return ret;
   }
 
@@ -206,7 +226,7 @@ export default class Workspace implements ComponentFactory {
     const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
-      configPath: ComponentConfigFile.composePath(componentDir)
+      configPath: ComponentConfigFile.composePath(componentDir),
     };
   }
 
@@ -215,7 +235,7 @@ export default class Workspace implements ComponentFactory {
   async byPattern(pattern: string): Promise<Component[]> {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
-    return all.filter(c => c.id.toString() === pattern);
+    return all.filter((c) => c.id.toString() === pattern);
   }
 
   /**
@@ -356,7 +376,7 @@ export default class Workspace implements ComponentFactory {
     if (selfInMergedExtensions && selfInMergedExtensions.extensionId) {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
-    const resolveMergedExtensionsP = mergedExtensions.map(async extensionEntry => {
+    const resolveMergedExtensionsP = mergedExtensions.map(async (extensionEntry) => {
       if (extensionEntry.extensionId) {
         const hasVersion = extensionEntry.extensionId.hasVersion();
         const useBitmapVersion = !hasVersion;
@@ -411,7 +431,7 @@ export default class Workspace implements ComponentFactory {
    * @param extensions list of extensions with config to load
    */
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
-    const extensionsIdsP = extensions.map(async extensionEntry => {
+    const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
         return extensionEntry.stringId;
@@ -451,7 +471,7 @@ export default class Workspace implements ComponentFactory {
     //      this.reporter.setStatusText('Installing');
     const components = await this.list();
     // this.reporter.info('Isolating Components');
-    const isolatedEnvs = await this.load(components.map(c => c.id.toString()));
+    const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
     // this.reporter.info('Installing workspace dependencies');
     await removeExistingLinksInNodeModules(isolatedEnvs);
     await this.dependencyResolver.folderInstall(process.cwd());

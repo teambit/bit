@@ -30,7 +30,7 @@ chai.use(require('chai-string'));
 
 // Skip this for now since we removed many features these tests requires
 // It should be re-written
-describe.skip('envs', function() {
+describe.skip('envs', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -47,12 +47,12 @@ describe.skip('envs', function() {
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.fixtures.copyFixtureFile(compiler);
     helper.command.addComponent('compiler.js', {
-      i: compilerId
+      i: compilerId,
     });
     const tester = path.join('testers', 'new-mocha', 'tester.js');
     helper.fixtures.copyFixtureFile(tester);
     helper.command.addComponent('tester.js', {
-      i: testerId
+      i: testerId,
     });
     helper.scopeHelper.reInitEnvsScope();
     helper.scopeHelper.addRemoteEnvironment();
@@ -83,7 +83,7 @@ describe.skip('envs', function() {
     helper.command.addComponent('objRestSpread.js', {
       i: 'comp/my-comp',
       t: '"*.spec.js"',
-      m: 'objRestSpread.js'
+      m: 'objRestSpread.js',
     });
     helper.fs.createFile('', 'comp2.js');
     helper.command.addComponent('comp2.js', { i: 'comp/my-comp2' });
@@ -102,15 +102,15 @@ describe.skip('envs', function() {
   });
   const envConfigOriginal = {
     a: 'b',
-    valToDynamic: 'dyanamicValue'
+    valToDynamic: 'dyanamicValue',
   };
   const compilerConfigChanged = {
     a: 'compiler',
-    valToDynamic: 'dyanamicValue'
+    valToDynamic: 'dyanamicValue',
   };
   const testerConfigChanged = {
     a: 'tester',
-    valToDynamic: 'dyanamicValue'
+    valToDynamic: 'dyanamicValue',
   };
   describe('author environment', () => {
     // TODO: reimport component on author after changing file/config of its env in different project
@@ -147,12 +147,12 @@ describe.skip('envs', function() {
         it('should store the compiler dynamicPackageDependencies', () => {
           expect(compilerPackageDependencies).to.include({
             'babel-plugin-transform-object-rest-spread': '^6.26.0',
-            'babel-preset-env': '^1.6.1'
+            'babel-preset-env': '^1.6.1',
           });
         });
         it('should store the tester dynamicPackageDependencies', () => {
           expect(testerPackageDependencies).to.include({
-            'lodash.get': '4.4.2'
+            'lodash.get': '4.4.2',
           });
         });
       });
@@ -530,7 +530,7 @@ describe.skip('envs', function() {
         expect(devDeps).to.include({
           'babel-plugin-transform-object-rest-spread': '^6.26.0',
           'babel-preset-env': '^1.6.1',
-          'lodash.get': '4.4.2'
+          'lodash.get': '4.4.2',
         });
       });
       it('should build the component successfully', () => {
@@ -580,11 +580,11 @@ describe.skip('envs', function() {
             // Since the output comes from console.log it's with \n also in windows
             const splittedAlignedOutput = alignedOuput.split('\n');
             // don't use regex because of windows problems
-            const writingCount = splittedAlignedOutput.filter(line => line === writingStr).length;
+            const writingCount = splittedAlignedOutput.filter((line) => line === writingStr).length;
             // There should be 2 occurrences - one for the compiler and one for the tester
             expect(writingCount).to.equal(2);
             const deletingStr = `deleting tmp directory ${tmpFolder}`;
-            const deletingCount = splittedAlignedOutput.filter(line => line === deletingStr).length;
+            const deletingCount = splittedAlignedOutput.filter((line) => line === deletingStr).length;
             expect(deletingCount).to.equal(2);
             const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
             const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
@@ -911,9 +911,9 @@ describe.skip('envs', function() {
       helper.bitJson.addOverrides({
         '*': {
           devDependencies: {
-            'babel-preset-env': '-'
-          }
-        }
+            'babel-preset-env': '-',
+          },
+        },
       });
     });
     it('overrides feature should consider the packages received from the compiler', () => {
@@ -938,9 +938,9 @@ describe.skip('envs', function() {
       helper.bitJson.addOverrides({
         '*': {
           dependencies: {
-            '@bit/comp/my-comp2': '-'
-          }
-        }
+            '@bit/comp/my-comp2': '-',
+          },
+        },
       });
     });
     it('overrides feature should consider the packages received from the compiler', () => {
@@ -952,7 +952,7 @@ describe.skip('envs', function() {
   });
 });
 
-describe('add an env with an invalid env name', function() {
+describe('add an env with an invalid env name', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -972,10 +972,10 @@ describe('add an env with an invalid env name', function() {
             file: path.join(
               helper.scopes.localPath,
               `.bit/components/compilers/dummy/${helper.scopes.env}/0.0.1/compiler.js`
-            )
-          }
-        }
-      }
+            ),
+          },
+        },
+      },
     };
     helper.bitJson.write(bitJson);
     const objectFiles = helper.fs.getObjectFiles();

@@ -8,6 +8,8 @@ import { IsolatorExtension } from '../isolator';
 import GeneralError from '../../error/general-error';
 import IsolatedEnvironment from '../../environment';
 import { ComponentID } from '../component';
+import { Consumer } from '../../consumer';
+import { Workspace } from '../workspace';
 
 export type PackResult = {
   pkgJson: Record<any, string>;
@@ -25,7 +27,7 @@ export type PackOptions = {
 
 export class Packer {
   options: PackOptions;
-  constructor(private isolator: IsolatorExtension, private scope?: LegacyScope) {}
+  constructor(private isolator: IsolatorExtension, private scope?: LegacyScope, private workspace?: Workspace) {}
 
   async packComponent(componentId: string, scopePath: string | undefined, options: PackOptions): Promise<PackResult> {
     this.options = options;
@@ -37,7 +39,8 @@ export class Packer {
       throw new ScopeNotFound(scopePath);
     }
     if (this.options.useCapsule) {
-      return this.packUsingCapsule(componentId, scope);
+      if (!this.workspace) throw new Error('pkg expects to have Workspace when using the new Capsule');
+      return this.packUsingCapsule(componentId, this.workspace.consumer);
     }
     return this.packLegacy(componentId, scope);
   }
@@ -52,7 +55,7 @@ export class Packer {
       installPackages: false,
       noPackageJson: false,
       excludeRegistryPrefix: !this.options.prefix,
-      saveDependenciesAsComponents: false
+      saveDependenciesAsComponents: false,
     };
     await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
     const packResult = await this.runNpmPack(isolatePath);
@@ -62,12 +65,13 @@ export class Packer {
     return packResult;
   }
 
-  private async packUsingCapsule(componentId: string, scope: LegacyScope) {
-    const bitId = await scope.getParsedId(componentId);
+  private async packUsingCapsule(componentId: string, consumer: Consumer) {
+    const bitId = consumer.getParsedId(componentId);
     if (!bitId.hasScope()) {
       throw new GeneralError(`unable to find "${componentId}" in the scope, make sure the component is tagged first`);
     }
-    const network = await this.isolator.createNetworkFromScope([componentId], scope);
+    if (!this.workspace) throw new Error('packUsingCapsule expect to have workspace');
+    const network = await this.workspace.createNetwork([componentId]);
     const capsule = network.capsules.getCapsuleIgnoreVersion(new ComponentID(bitId));
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return this.runNpmPack(capsule.wrkDir);
@@ -93,7 +97,7 @@ async function npmPack(cwd: string, outputPath: string, override = false): Promi
   const tarPath = path.join(outputPath, tgzName);
   const response = {
     pkgJson,
-    tarPath
+    tarPath,
   };
   if (tgzOriginPath !== tarPath && fs.pathExistsSync(tarPath)) {
     if (override) {

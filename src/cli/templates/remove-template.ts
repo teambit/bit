@@ -11,7 +11,7 @@ export default (
     return (
       chalk.red('missing components (try to `bit untrack` them instead):') +
       chalk(
-        ` ${missingComponents.map(id => {
+        ` ${missingComponents.map((id) => {
           if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId
           return id.version === 'latest' ? id.toStringWithoutVersion() : id.toString();
         })}\n`
@@ -27,7 +27,7 @@ export default (
     return (
       chalk.green(msg) +
       chalk(
-        ` ${removedComponentIds.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
+        ` ${removedComponentIds.map((id) => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
       )
     );
   };
@@ -35,7 +35,7 @@ export default (
   const paintUnRemovedComponents = () => {
     if (R.isEmpty(dependentBits)) return '';
     return Object.keys(dependentBits)
-      .map(key => {
+      .map((key) => {
         const header = chalk.underline.red(
           `error: unable to delete ${key}, because the following components depend on it:`
         );
@@ -45,18 +45,16 @@ export default (
       .join('\n\n');
   };
 
-  const paintModifiedComponents = () =>
-    !R.isEmpty(modifiedComponents)
-      ? `${chalk.red(
-          'error: unable to remove modified components (please use --force to remove modified components)\n'
-        ) +
-          chalk(
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            `- ${modifiedComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}`
-          )}`
-      : '';
+  const paintModifiedComponents = () => {
+    if (R.isEmpty(modifiedComponents)) return '';
+    const modifiedStr = modifiedComponents.map((id: BitId) =>
+      id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()
+    );
+    return `${
+      chalk.red('error: unable to remove modified components (please use --force to remove modified components)\n') +
+      chalk(`- ${modifiedStr}`)
+    }`;
+  };
 
   return (
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

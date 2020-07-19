@@ -6,14 +6,14 @@ export class TypeScriptParser implements Parser {
   public extension = /.ts/;
 
   getExports(sourceFile: SourceFile): Export[] {
-    const exports = sourceFile.statements.filter(statement => {
+    const exports = sourceFile.statements.filter((statement) => {
       if (!statement.modifiers) return false;
-      return statement.modifiers.find(modifier => {
+      return statement.modifiers.find((modifier) => {
         return modifier.kind === ts.SyntaxKind.ExportKeyword;
       });
     });
 
-    const exportModels = exports.map(statement => {
+    const exportModels = exports.map((statement) => {
       // todo refactor to a registry of variable statements.
       if (isVariableStatement(statement)) {
         const child = (statement as VariableStatement).declarationList.declarations[0];
@@ -28,7 +28,7 @@ export class TypeScriptParser implements Parser {
 
       return undefined;
     });
-    const withoutEmpty = exportModels.filter(exportModel => exportModel !== undefined);
+    const withoutEmpty = exportModels.filter((exportModel) => exportModel !== undefined);
     // @ts-ignore
     return withoutEmpty;
   }

@@ -8,7 +8,7 @@ export default class CatComponent implements LegacyCommand {
   alias = 'cmp';
   opts = [
     // json is also the default for this command. it's only needed to suppress the logger.console
-    ['j', 'json', 'json format']
+    ['j', 'json', 'json format'],
   ] as CommandOptions;
 
   action([id]: [string]): Promise<any> {

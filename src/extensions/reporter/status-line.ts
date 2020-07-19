@@ -11,11 +11,7 @@ const SPACE_BUFFER = 10;
 
 function clearStatusRow() {
   // eslint-disable-next-line no-console
-  console.log(
-    `\r${Array(getColumnCount())
-      .fill(' ')
-      .join('')}`
-  );
+  console.log(`\r${Array(getColumnCount()).fill(' ').join('')}`);
 }
 
 // we send a proxy to the spinner instance rather than proxess.stdout
@@ -29,7 +25,7 @@ const stdoutProxy = new Proxy(process.stdout, {
       return originalStdoutWrite;
     }
     return obj[prop];
-  }
+  },
 });
 
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -74,7 +70,7 @@ export default class StatusLine {
   }
   private fullVersion(phaseName) {
     return this.ids.length > 0
-      ? `${phaseName}: (${this.ids.map(logId => chalk.hex(stc(logId))(logId)).join(', ')})`
+      ? `${phaseName}: (${this.ids.map((logId) => chalk.hex(stc(logId))(logId)).join(', ')})`
       : phaseName || '';
   }
   private fullVersionLength(text) {

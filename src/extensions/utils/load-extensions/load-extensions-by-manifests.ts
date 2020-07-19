@@ -11,7 +11,7 @@ export async function loadExtensionsByManifests(harmony: Harmony, extensionsMani
   try {
     await harmony.set(extensionsManifests);
   } catch (e) {
-    const ids = extensionsManifests.map(manifest => manifest.name);
+    const ids = extensionsManifests.map((manifest) => manifest.name);
     const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
     logger.warn(warning);
     // TODO: improve texts

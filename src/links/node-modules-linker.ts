@@ -54,7 +54,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
     await this._populateShouldDependenciesSavedAsComponentsData();
     await Promise.all(
-      this.components.map(component => {
+      this.components.map((component) => {
         const componentId = component.id.toString();
         logger.debug(`linking component to node_modules: ${componentId}`);
         const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
@@ -76,7 +76,7 @@ export default class NodeModuleLinker {
   }
   getLinksResults(): LinksResult[] {
     const linksResults: LinksResult[] = [];
-    const getExistingLinkResult = id => linksResults.find(linkResult => linkResult.id.isEqual(id));
+    const getExistingLinkResult = (id) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
     const addLinkResult = (id: BitId | null | undefined, from: string, to: string) => {
       if (!id) return;
       const existingLinkResult = getExistingLinkResult(id);
@@ -94,7 +94,7 @@ export default class NodeModuleLinker {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       addLinkResult(file.componentId, file.srcPath, file.path);
     });
-    this.components.forEach(component => {
+    this.components.forEach((component) => {
       const existingLinkResult = getExistingLinkResult(component.id);
       if (!existingLinkResult) {
         linksResults.push({ id: component.id, bound: [] });
@@ -116,7 +116,7 @@ export default class NodeModuleLinker {
       id: componentId,
       allowNonScope: true,
       defaultScope: this._getDefaultScope(component),
-      extensions: component.extensions
+      extensions: component.extensions,
     });
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -165,11 +165,11 @@ export default class NodeModuleLinker {
       id: componentId,
       allowNonScope: true,
       defaultScope: this._getDefaultScope(component),
-      extensions: component.extensions
+      extensions: component.extensions,
     });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
-    filesToBind.forEach(file => {
+    filesToBind.forEach((file) => {
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
       const dest = path.join(linkPath, file);
 
@@ -191,13 +191,13 @@ export default class NodeModuleLinker {
       id: componentId,
       allowNonScope: true,
       defaultScope: this._getDefaultScope(component),
-      extensions: component.extensions
+      extensions: component.extensions,
     });
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
-    filesToBind.forEach(file => {
+    filesToBind.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isMain = file === componentMap.mainFile;
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
@@ -221,7 +221,7 @@ export default class NodeModuleLinker {
           srcPath: file,
           componentId,
           override: true,
-          ignorePreviousSymlink: true // in case the component didn't have a compiler before, this file was a symlink
+          ignorePreviousSymlink: true, // in case the component didn't have a compiler before, this file was a symlink
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);
@@ -246,7 +246,7 @@ export default class NodeModuleLinker {
         id: component.id.changeScope(null),
         allowNonScope: true,
         defaultScope: this._getDefaultScope(component),
-        extensions: component.extensions
+        extensions: component.extensions,
       });
       this.dataToPersist.removePath(new RemovePath(previousDest));
     }
@@ -301,11 +301,11 @@ export default class NodeModuleLinker {
     const customResolvedData = component.dependencies.getCustomResolvedData();
     if (!R.isEmpty(customResolvedData)) {
       // filter out packages that are actually symlinks to dependencies
-      Object.keys(customResolvedData).forEach(importSource => dirsToFilter.push(first(importSource.split('/'))));
+      Object.keys(customResolvedData).forEach((importSource) => dirsToFilter.push(first(importSource.split('/'))));
     }
-    const dirs = dirsToFilter.length ? unfilteredDirs.filter(dir => !dirsToFilter.includes(dir)) : unfilteredDirs;
+    const dirs = dirsToFilter.length ? unfilteredDirs.filter((dir) => !dirsToFilter.includes(dir)) : unfilteredDirs;
     if (!dirs.length) return [];
-    return dirs.map(dir => {
+    return dirs.map((dir) => {
       const fromDir = path.join(fromNodeModules, dir);
       const toDir = path.join(toNodeModules, dir);
       return Symlink.makeInstance(fromDir, toDir);
@@ -353,7 +353,7 @@ export default class NodeModuleLinker {
       id: bitId,
       allowNonScope: true,
       bindingPrefix,
-      isDependency: true
+      isDependency: true,
     });
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
@@ -368,16 +368,17 @@ export default class NodeModuleLinker {
    */
   _createPackageJsonForAuthor(component: Component) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
+    const hasPackageJsonAsComponentFile = component.files.some((file) => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(
       getNodeModulesPathOfComponent({
         ...component,
         id: component.id,
-        allowNonScope: true
+        allowNonScope: true,
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    packageJson.mergePropsFromExtensions(component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 
@@ -389,10 +390,10 @@ export default class NodeModuleLinker {
    */
   async _populateShouldDependenciesSavedAsComponentsData(): Promise<void> {
     if (!this.components.length || !this.consumer) return;
-    const bitIds = this.components.map(c => c.id);
+    const bitIds = this.components.map((c) => c.id);
     const shouldDependenciesSavedAsComponents = await this.consumer.shouldDependenciesSavedAsComponents(bitIds);
-    this.components.forEach(component => {
-      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c => c.id.isEqual(component.id));
+    this.components.forEach((component) => {
+      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find((c) => c.id.isEqual(component.id));
       if (!shouldSavedAsComponents) {
         throw new Error(
           `_populateShouldDependenciesSavedAsComponentsData, saveDependenciesAsComponents is missing for ${component.id.toString()}`

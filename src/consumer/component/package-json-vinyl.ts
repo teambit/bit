@@ -41,7 +41,7 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     content,
     indent,
     newline,
-    override = true
+    override = true,
   }: {
     base: string;
     path: string;

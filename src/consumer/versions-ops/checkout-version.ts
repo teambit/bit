@@ -48,7 +48,7 @@ export default (async function checkoutVersion(
   const { components } = await consumer.loadComponents(ids);
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
-    component => component.mergeResults && component.mergeResults.hasConflicts
+    (component) => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict) {
     if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
@@ -60,17 +60,17 @@ export default (async function checkoutVersion(
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
-    .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .filter((componentStatus) => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
+    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
 
-  const succeededComponents = allComponentsStatus.filter(componentStatus => !componentStatus.failureMessage);
+  const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  const componentsWithDependencies = componentsResults.map(c => c.component).filter(c => c);
+  const componentsWithDependencies = componentsResults.map((c) => c.component).filter((c) => c);
 
   const manyComponentsWriter = new ManyComponentsWriter({
     consumer,
@@ -80,18 +80,18 @@ export default (async function checkoutVersion(
     verbose: checkoutProps.verbose,
     writeDists: !checkoutProps.ignoreDist,
     writeConfig: checkoutProps.writeConfig,
-    writePackageJson: !checkoutProps.ignorePackageJson
+    writePackageJson: !checkoutProps.ignorePackageJson,
   });
   await manyComponentsWriter.writeAll();
 
-  const appliedVersionComponents = componentsResults.map(c => c.applyVersionResult);
+  const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
   return { components: appliedVersionComponents, version, failedComponents };
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
     try {
-      const componentsStatusP = components.map(component => getComponentStatus(consumer, component, checkoutProps));
+      const componentsStatusP = components.map((component) => getComponentStatus(consumer, component, checkoutProps));
       const componentsStatus = await Promise.all(componentsStatusP);
       await tmp.clear();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -163,7 +163,7 @@ async function getComponentStatus(
       otherLabel: `${currentlyUsedVersion} modified`,
       currentComponent,
       currentLabel: newVersion,
-      baseComponent
+      baseComponent,
     });
   }
   const versionRef = componentModel.getRef(newVersion);
@@ -206,7 +206,7 @@ export async function applyVersion(
     // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
     // otherwise it's impossible to have conflicts
     if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-    componentFromFS.files.forEach(file => {
+    componentFromFS.files.forEach((file) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
@@ -221,7 +221,7 @@ export async function applyVersion(
     componentWithDependencies.devDependencies = [];
   }
   const files = componentWithDependencies.component.files;
-  files.forEach(file => {
+  files.forEach((file) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
@@ -242,7 +242,7 @@ export async function applyVersion(
 
   return {
     applyVersionResult: { id, filesStatus: Object.assign(filesStatus, modifiedStatus) },
-    component: componentWithDependencies
+    component: componentWithDependencies,
   };
 }
 
@@ -261,10 +261,10 @@ export function applyModifiedVersion(
 ): Record<string, any> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
-  mergeResults.modifiedFiles.forEach(file => {
+  mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const pathWithSharedDir = (p: string) => (sharedDir ? path.join(sharedDir, p) : p);
-    const foundFile = componentFiles.find(componentFile => pathWithSharedDir(componentFile.relative) === filePath);
+    const foundFile = componentFiles.find((componentFile) => pathWithSharedDir(componentFile.relative) === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -278,14 +278,14 @@ export function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  mergeResults.addFiles.forEach(file => {
+  mergeResults.addFiles.forEach((file) => {
     componentFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
-  mergeResults.overrideFiles.forEach(file => {
+  mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     foundFile.contents = file.fsFile.contents;

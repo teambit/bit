@@ -14,7 +14,7 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS,
-  PACKAGE_JSON
+  PACKAGE_JSON,
 } from '../../constants';
 import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
@@ -159,10 +159,10 @@ export default class AbstractConfig {
         bindingPrefix: this.bindingPrefix,
         env: {
           compiler: AbstractConfig.convertEnvToStringIfPossible(this.compiler),
-          tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
+          tester: AbstractConfig.convertEnvToStringIfPossible(this.tester),
         },
         dependencies: this.dependencies,
-        extensions: this.extensions?.toConfigObject()
+        extensions: this.extensions?.toConfigObject(),
       },
       isPropDefaultOrNull
     );
@@ -170,7 +170,7 @@ export default class AbstractConfig {
 
   async write({
     workspaceDir,
-    componentDir
+    componentDir,
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
@@ -185,7 +185,7 @@ export default class AbstractConfig {
 
   async prepareToWrite({
     workspaceDir,
-    componentDir = '.'
+    componentDir = '.',
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
@@ -196,7 +196,7 @@ export default class AbstractConfig {
 
   async toVinyl({
     workspaceDir,
-    componentDir = '.'
+    componentDir = '.',
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
@@ -257,7 +257,7 @@ export default class AbstractConfig {
       if (env === NO_PLUGIN_TYPE) return {};
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return {
-        [env]: {}
+        [env]: {},
       };
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

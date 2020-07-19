@@ -7,10 +7,10 @@ export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {
     const help: HelpProps = Object.entries(commands)
       .filter(([, command]) => !command.private && (command.shortDescription || command.description))
-      .reduce(function(partialHelp, [id, command]) {
+      .reduce(function (partialHelp, [id, command]) {
         partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},
-          description: groups[command.group!] || command.group
+          description: groups[command.group!] || command.group,
         };
         partialHelp[command.group!].commands[id] = command.shortDescription || command.description;
         return partialHelp;

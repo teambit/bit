@@ -53,7 +53,7 @@ export default class PackageJson {
       license,
       scripts,
       workspaces,
-      componentId
+      componentId,
     }: PackageJsonProps
   ) {
     this.name = name;
@@ -117,7 +117,7 @@ export default class PackageJson {
       configJSON.paths = {
         // @ts-ignore
         relative: path.relative(dir, pathToConfig),
-        absolute: pathToConfig
+        absolute: pathToConfig,
       };
     } else if (configJSON !== null) {
       delete configJSON.paths;
@@ -174,7 +174,7 @@ export default class PackageJson {
     const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
     const workspaces = this.extractWorkspacesPackages(pkg);
     if (!workspaces) return;
-    const updatedWorkspaces = workspaces.filter(folder => !pathsTOoRemove.includes(folder));
+    const updatedWorkspaces = workspaces.filter((folder) => !pathsTOoRemove.includes(folder));
     this.updateWorkspacesPackages(pkg, updatedWorkspaces);
     await PackageJson.saveRawObject(rootDir, pkg);
   }
@@ -185,7 +185,7 @@ export default class PackageJson {
   static async removeComponentsFromDependencies(rootDir: string, components: ConsumerComponent[]) {
     const pkg = await PackageJson.getPackageJson(rootDir);
     if (pkg && pkg.dependencies) {
-      components.forEach(c => {
+      components.forEach((c) => {
         delete pkg.dependencies[componentIdToPackageName(c)];
       });
       await PackageJson.saveRawObject(rootDir, pkg);

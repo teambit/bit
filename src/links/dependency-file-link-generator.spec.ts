@@ -28,8 +28,8 @@ const mockBitMap = () => {
       rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1',
       getRootDir() {
         return this.rootDir;
-      }
-    })
+      },
+    }),
   };
 };
 
@@ -38,15 +38,15 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
     bitMap: mockBitMap(),
     getPath: () => '/root',
     shouldDistsBeInsideTheComponent: () => true,
-    toAbsolutePath: str => `/root/${str}`
+    toAbsolutePath: (str) => `/root/${str}`,
   };
   if (!distIsInsideTheComponent) {
     // @ts-ignore
     consumer.config = {
       workspaceSettings: {
         _distTarget: 'dist',
-        _distEntry: 'src'
-      }
+        _distEntry: 'src',
+      },
     };
     consumer.shouldDistsBeInsideTheComponent = () => false;
   }
@@ -70,7 +70,7 @@ const getComponentMap = () => {
     rootDir: 'components/bar/foo',
     getRootDir(): string {
       return this.rootDir as string;
-    }
+    },
   };
 };
 
@@ -96,7 +96,7 @@ describe('DependencyFileLinkGenerator', () => {
           relativePath: component.dependencies.get()[0].relativePaths[0],
           dependencyComponent,
           createNpmLinkFiles: false,
-          targetDir: ''
+          targetDir: '',
         });
         const linkResults = dependencyFileLinkGenerator.generate();
         linkResult = linkResults[0];
@@ -129,7 +129,7 @@ describe('DependencyFileLinkGenerator', () => {
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
             createNpmLinkFiles: false,
-            targetDir: ''
+            targetDir: '',
           });
           linkResults = dependencyFileLinkGenerator.generate();
         });
@@ -184,7 +184,7 @@ describe('DependencyFileLinkGenerator', () => {
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
             createNpmLinkFiles: false,
-            targetDir: ''
+            targetDir: '',
           });
           linkResults = dependencyFileLinkGenerator.generate();
         });
@@ -242,7 +242,7 @@ describe('DependencyFileLinkGenerator', () => {
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
             createNpmLinkFiles: false,
-            targetDir: ''
+            targetDir: '',
           });
           linkResults = dependencyFileLinkGenerator.generate();
           linkResult = linkResults[0];
@@ -295,7 +295,7 @@ describe('DependencyFileLinkGenerator', () => {
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
             createNpmLinkFiles: false,
-            targetDir: ''
+            targetDir: '',
           });
           linkResults = dependencyFileLinkGenerator.generate();
         });
@@ -352,7 +352,7 @@ describe('DependencyFileLinkGenerator', () => {
           relativePath: component.dependencies.get()[0].relativePaths[0],
           dependencyComponent,
           createNpmLinkFiles: false,
-          targetDir: ''
+          targetDir: '',
         });
         const linkResults = dependencyFileLinkGenerator.generate();
         linkResult = linkResults[0];

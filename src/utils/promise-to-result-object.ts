@@ -7,6 +7,6 @@ export type ResultObject<T> = {
 export default function toResultObject<T>() {
   return (promise: Promise<any>): Promise<ResultObject<T>> => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return promise.then(val => ({ success: true, val })).catch(error => ({ success: false, error, val: null }));
+    return promise.then((val) => ({ success: true, val })).catch((error) => ({ success: false, error, val: null }));
   };
 }

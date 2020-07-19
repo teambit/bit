@@ -7,7 +7,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 // legacy test as it tests lots of the originallySharedDir functionality
-describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
+describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -69,9 +69,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
+      isString.dists.forEach((dist) => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isString.files.forEach(file => expect(file.relativePath.startsWith('src/is-string')).to.be.true);
+      isString.files.forEach((file) => expect(file.relativePath.startsWith('src/is-string')).to.be.true);
     });
     describe('changing to absolute syntax and tagging', () => {
       before(() => {
@@ -90,7 +90,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+        padLeftModel.dists.forEach((dist) => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should not add the dist.entry if it was not removed before', () => {
         helper.scopeHelper.reInitLocalScope();
@@ -103,7 +103,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.command.tagComponent('string/pad-left', 'msg', '-f');
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+        padLeftModel.dists.forEach((dist) => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       describe('importing back to the original repo', () => {
         before(() => {
@@ -175,7 +175,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         it('should delete the component from bit.map', () => {
           const bitMap = helper.bitMap.read();
-          Object.keys(bitMap).forEach(id => {
+          Object.keys(bitMap).forEach((id) => {
             expect(id).not.to.have.string('pad-left');
             expect(id).not.to.have.string('is-string');
           });
@@ -206,7 +206,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+        padLeftModel.dists.forEach((dist) => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should indicate that the dependency used custom-module-resolution', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
@@ -432,9 +432,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const overrides = {
           '*': {
             dependencies: {
-              'file://src/**/*': '-'
-            }
-          }
+              'file://src/**/*': '-',
+            },
+          },
         };
         helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();

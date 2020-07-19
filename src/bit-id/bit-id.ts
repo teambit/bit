@@ -171,13 +171,13 @@ export default class BitId {
         const name = id.substring(delimiterIndex + 1);
         return {
           scope,
-          name
+          name,
         };
       }
 
       return {
         scope: undefined,
-        name: id
+        name: id,
       };
     };
     const { scope, name } = getScopeAndName();
@@ -190,7 +190,7 @@ export default class BitId {
     return new BitId({
       scope,
       name,
-      version
+      version,
     });
   }
 
@@ -212,7 +212,7 @@ export default class BitId {
         scope,
         box,
         name,
-        version
+        version,
       });
     }
 
@@ -224,7 +224,7 @@ export default class BitId {
       return new BitId({
         box,
         name,
-        version
+        version,
       });
     }
 
@@ -235,7 +235,7 @@ export default class BitId {
       }
       return new BitId({
         name,
-        version
+        version,
       });
     }
 
@@ -254,7 +254,7 @@ export default class BitId {
     const suggestedName = scope.toLowerCase();
     let cleanName = suggestedName
       .split('')
-      .map(char => {
+      .map((char) => {
         if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
         return '';
       })

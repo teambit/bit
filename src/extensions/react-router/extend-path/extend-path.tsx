@@ -6,5 +6,5 @@ export function extendPath(prefix: string, path?: string | string[]) {
     return joinPath(prefix, path);
   }
 
-  return path.map(x => extendPath(prefix, x));
+  return path.map((x) => extendPath(prefix, x));
 }

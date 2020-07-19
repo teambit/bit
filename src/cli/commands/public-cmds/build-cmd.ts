@@ -10,7 +10,7 @@ export default class Build implements LegacyCommand {
   alias = '';
   opts = [
     ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
-    ['c', 'no-cache', 'ignore component cache when creating dist file']
+    ['c', 'no-cache', 'ignore component cache when creating dist file'],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -20,7 +20,7 @@ export default class Build implements LegacyCommand {
     [id]: string[],
     {
       noCache = false,
-      verbose = false
+      verbose = false,
     }: {
       noCache: boolean;
       verbose: boolean;
@@ -44,7 +44,7 @@ export default class Build implements LegacyCommand {
 learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components`);
       }
       return Object.keys(res)
-        .map(component => {
+        .map((component) => {
           const title = chalk.bold(component);
           // $FlowFixMe - res is an object
           const content = Array.isArray(res[component])

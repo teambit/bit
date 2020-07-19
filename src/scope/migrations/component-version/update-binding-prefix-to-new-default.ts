@@ -12,5 +12,5 @@ function updateBindingPrefixToNewDefault(versionModel: Record<string, any>): Rec
 
 export default {
   name: 'update bindingPrefix from "bit" to "@bit"',
-  migrate: updateBindingPrefixToNewDefault
+  migrate: updateBindingPrefixToNewDefault,
 };

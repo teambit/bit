@@ -56,17 +56,17 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     const subprocessP = execa.command(execOptions.command.join(' '), {
       shell: true,
       cwd,
-      stdio: ['ipc']
+      stdio: ['ipc'],
     });
 
-    subprocessP.on('message', function(msg: any) {
+    subprocessP.on('message', function (msg: any) {
       exec.emit('message', msg);
     });
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     subprocessP.stderr?.pipe(exec.stderr);
     subprocessP.stdout?.pipe(exec.stdout);
-    ['close', 'exit'].forEach(function(eventName: string) {
-      subprocessP.on(eventName, function(statusCode) {
+    ['close', 'exit'].forEach(function (eventName: string) {
+      subprocessP.on(eventName, function (statusCode) {
         exec.setStatus(statusCode);
       });
     });

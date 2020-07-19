@@ -1,5 +1,4 @@
-import { BuildContext } from '../builder';
-import { BuildTask, BuildResults } from '../builder';
+import { BuildTask, BuildContext, BuildResults } from '../builder';
 import { Compiler } from './types';
 
 /**
@@ -10,6 +9,6 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const compilerInstance: Compiler = context.env.getCompiler();
-    return compilerInstance.compileOnCapsules(context);
+    return compilerInstance.build(context);
   }
 }

@@ -36,7 +36,7 @@ export class OrgAvatar extends PureComponent<Props> {
       imageSize = size,
       fontSize = size * 0.35,
       className,
-      imgClassName
+      imgClassName,
       // hideTooltip = false
     } = this.props;
     // const { tooltipId } = this.state;

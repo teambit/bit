@@ -18,7 +18,7 @@ export default (async function deleteComponentsFiles(
 
   function getFilesToDelete(): DataToPersist {
     const dataToPersist = new DataToPersist();
-    bitIds.forEach(id => {
+    bitIds.forEach((id) => {
       const ignoreVersion = id.isLocal() || !id.hasVersion();
       const componentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion });
       if (!componentMap) {
@@ -37,7 +37,7 @@ export default (async function deleteComponentsFiles(
           dataToPersist.removePath(new RemovePath(distDir, true));
         }
       } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFilesForAuthor) {
-        const filesToRemove = componentMap.getAllFilesPaths().map(f => new RemovePath(f));
+        const filesToRemove = componentMap.getAllFilesPaths().map((f) => new RemovePath(f));
         dataToPersist.removeManyPaths(filesToRemove);
       }
       return null;

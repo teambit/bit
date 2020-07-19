@@ -10,9 +10,8 @@ import logger from '../../logger/logger';
 
 export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsuleList: CapsuleList) {
   await Promise.all(
-    capsules.map(capsule => {
-      // @ts-ignore
-      return symlinkComponent(capsule.component, capsuleList);
+    capsules.map((capsule) => {
+      return symlinkComponent(capsule.component.state._consumer, capsuleList);
     })
   );
 }
@@ -30,12 +29,11 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
       );
       return null;
     }
-    // @ts-ignore fix once the capsule has the correct component. change to devCapsule.component.state._consumer
-    const packageName = componentIdToPackageName(devCapsule.component as ConsumerComponent);
+    const packageName = componentIdToPackageName(devCapsule.component.state._consumer);
     const devCapsulePath = devCapsule.wrkDir;
     // @todo: this is a hack, the capsule should be the one responsible to symlink, this works only for FS capsules.
     const dest = path.join(componentCapsule.wrkDir, 'node_modules', packageName);
     return new Symlink(devCapsulePath, dest, component.id);
   });
-  await Promise.all(symlinks.map(symlink => symlink && symlink.write()));
+  await Promise.all(symlinks.map((symlink) => symlink && symlink.write()));
 }

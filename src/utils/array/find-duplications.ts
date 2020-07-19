@@ -5,5 +5,5 @@ export default function findDuplications(arr: any[]): any[] {
   if (uniq.length === arr.length) {
     return []; // no dup
   }
-  return uniq.filter(u => arr.filter(a => a === u).length > 1);
+  return uniq.filter((u) => arr.filter((a) => a === u).length > 1);
 }

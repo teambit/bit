@@ -14,7 +14,7 @@ export default (async function getScopeComponent({
   scopePath,
   showDependents,
   showDependencies,
-  loadScopeFromCache
+  loadScopeFromCache,
 }: {
   id: string;
   allVersions: boolean | null | undefined;

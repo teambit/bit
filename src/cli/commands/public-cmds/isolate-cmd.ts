@@ -19,16 +19,16 @@ export default class Isolate implements LegacyCommand {
     [
       '',
       'save-dependencies-as-components [boolean]',
-      'import the dependencies as bit components instead of as npm packages'
+      'import the dependencies as bit components instead of as npm packages',
     ],
     [
       '',
       'exclude-registry-prefix [boolean]',
-      "exclude the registry prefix from the component's name in the package.json"
+      "exclude the registry prefix from the component's name in the package.json",
     ],
     ['v', 'verbose [boolean]', 'print more logs'],
     ['', 'silent-client-result [boolean]', 'print environment install result'],
-    ['', 'use-capsule [boolean]', 'use capsule with fs-container']
+    ['', 'use-capsule [boolean]', 'use capsule with fs-container'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -67,7 +67,7 @@ export default class Isolate implements LegacyCommand {
       verbose: opts.verbose === true,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: false,
-      useCapsule: opts.useCapsule === true
+      useCapsule: opts.useCapsule === true,
     };
     return isolate(id, scopePath || process.cwd(), concreteOpts);
   }

@@ -11,9 +11,9 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 
 export function componentToPrintableForDiff(component: Component): Record<string, any> {
   const obj = {};
-  const parsePackages = packages => {
+  const parsePackages = (packages) => {
     return !R.isEmpty(packages) && !R.isNil(packages)
-      ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
+      ? Object.keys(packages).map((key) => `${key}@${packages[key]}`)
       : null;
   };
   const parseEnvFiles = (envExtension: EnvExtension | null | undefined): string[] | null | undefined => {
@@ -23,7 +23,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
+    return envExtension.files.map((file) => `${file.name} => ${file.relative}`).sort();
   };
   const {
     lang,
@@ -38,32 +38,32 @@ export function componentToPrintableForDiff(component: Component): Record<string
     testerPackageDependencies,
     files,
     mainFile,
-    deprecated
+    deprecated,
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.devDependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    ...testerPackageDependencies.devDependencies
+    ...testerPackageDependencies.devDependencies,
   };
   const allPackages = {
     ...packageDependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.dependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    ...testerPackageDependencies.dependencies
+    ...testerPackageDependencies.dependencies,
   };
   const allPeerPackages = {
     ...component.peerPackageDependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.peerDependencies,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    ...testerPackageDependencies.peerDependencies
+    ...testerPackageDependencies.peerDependencies,
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter(x => x);
+  const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter((x) => x);
   const overrides = component.overrides.componentOverridesData;
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -88,13 +88,13 @@ export function componentToPrintableForDiff(component: Component): Record<string
     .sort()
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .concat(parsePackages(allPackages))
-    .filter(x => x);
+    .filter((x) => x);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .sort()
     .concat(parsedDevPackageDependencies)
-    .filter(x => x);
+    .filter((x) => x);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
@@ -103,14 +103,14 @@ export function componentToPrintableForDiff(component: Component): Record<string
     files && !R.isEmpty(files) && !R.isNil(files)
       ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        files.filter(file => !file.test).map(file => normalize(file.relative))
+        files.filter((file) => !file.test).map((file) => normalize(file.relative))
       : null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.specs =
     files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
       ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        files.filter(file => file.test).map(file => normalize(file.relative))
+        files.filter((file) => file.test).map((file) => normalize(file.relative))
       : null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.deprecated = deprecated ? 'True' : null;
@@ -142,7 +142,7 @@ export function getDiffBetweenObjects(
 ): Record<string, any> {
   return diff.custom(
     {
-      equal: comparator
+      equal: comparator,
     },
     objectLeft,
     objectRight
@@ -195,7 +195,7 @@ export function diffBetweenComponentsObjects(
     if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];
     return dependenciesLeft.reduce((acc, dependencyLeft) => {
       const idStr = dependencyLeft.id.toString();
-      const dependencyRight = dependenciesRight.find(dep => dep.id.isEqual(dependencyLeft.id));
+      const dependencyRight = dependenciesRight.find((dep) => dep.id.isEqual(dependencyLeft.id));
       if (!dependencyRight) return acc;
       if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
       const fieldName = `Dependency ${idStr} relative-paths`;
@@ -238,7 +238,7 @@ export function diffBetweenComponentsObjects(
       const diffOutput = title + value;
       return { fieldName, diffOutput };
     })
-    .filter(x => x);
+    .filter((x) => x);
 
   const allDiffs = [...fieldsDiffOutput, ...fieldsEnvsConfigOutput, ...dependenciesOutput()];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

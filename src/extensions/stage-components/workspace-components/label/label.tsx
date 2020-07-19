@@ -27,7 +27,7 @@ export function LabelList(props: LabelListProps) {
   return (
     <div {...rest} className={classnames(className, styles.labelList)}>
       {children &&
-        children.map(x => (
+        children.map((x) => (
           <Label key={x} onPick={onPick}>
             {x}
           </Label>

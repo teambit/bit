@@ -6,6 +6,6 @@ export type BitConfig = {};
 
 export async function provideBit() {
   return {
-    manifestsMap
+    manifestsMap,
   };
 }

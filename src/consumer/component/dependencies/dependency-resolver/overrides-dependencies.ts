@@ -4,7 +4,7 @@ import {
   MANUALLY_REMOVE_DEPENDENCY,
   MANUALLY_ADD_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
-  DEPENDENCIES_FIELDS
+  DEPENDENCIES_FIELDS,
 } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -41,7 +41,7 @@ export default class OverridesDependencies {
 
   shouldIgnoreFile(file: string, fileType: FileType): boolean {
     const shouldIgnoreByGlobMatch = (patterns: string[]) => {
-      return patterns.some(pattern => minimatch(file, pattern));
+      return patterns.some((pattern) => minimatch(file, pattern));
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
     const ignoreField = this.component.overrides.getIgnoredFiles(field);
@@ -59,7 +59,7 @@ export default class OverridesDependencies {
 
   shouldIgnorePackageByType(packageName: string, field: string): boolean {
     const shouldIgnorePackage = (packages: string[]) => {
-      return packages.some(pkg => pkg === packageName);
+      return packages.some((pkg) => pkg === packageName);
     };
     const ignoreField = this.component.overrides.getIgnoredPackages(field);
     const ignore = shouldIgnorePackage(ignoreField);
@@ -71,7 +71,7 @@ export default class OverridesDependencies {
 
   shouldIgnorePeerPackage(packageName: string): boolean {
     const shouldIgnorePackage = (packages: string[]) => {
-      return packages.some(pkg => pkg === packageName);
+      return packages.some((pkg) => pkg === packageName);
     };
     const field = 'peerDependencies';
     const ignorePeer = this.component.overrides.getIgnoredPackages(field);
@@ -85,7 +85,7 @@ export default class OverridesDependencies {
   shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
     const shouldIgnore = (ids: string[]) => {
-      return ids.some(idStr => {
+      return ids.some((idStr) => {
         if (hasWildcard(idStr)) {
           // we don't support wildcards for components for now. it gets things complicated
           // and may cause unpredicted behavior especially for imported that the originally ignored
@@ -117,7 +117,7 @@ export default class OverridesDependencies {
     if (!componentIdStr.startsWith(OVERRIDE_COMPONENT_PREFIX)) return false;
     componentIdStr = componentIdStr.replace(OVERRIDE_COMPONENT_PREFIX, '');
     const shouldIgnore = (ids: string[]) => {
-      return ids.some(idStr => componentIdStr === idStr);
+      return ids.some((idStr) => componentIdStr === idStr);
     };
     const ignoreField = this.component.overrides.getIgnoredComponents(field);
     const ignore = shouldIgnore(ignoreField);
@@ -136,10 +136,10 @@ export default class OverridesDependencies {
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     const components = {};
     const packages = {};
-    DEPENDENCIES_FIELDS.forEach(depField => {
+    DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
       const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
-      Object.keys(overrides[depField]).forEach(dependency => {
+      Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
         const componentId = this._getComponentIdToAdd(
@@ -150,7 +150,7 @@ export default class OverridesDependencies {
           idsFromModel
         );
         if (componentId) {
-          const dependencyExist = existingDependencies[depField].find(d =>
+          const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutScopeAndVersion(componentId)
           );
           if (!dependencyExist) {
@@ -209,7 +209,7 @@ export default class OverridesDependencies {
       if (!packageJson) return null;
       for (const depField of DEPENDENCIES_FIELDS) {
         if (packageJson[depField]) {
-          const found = Object.keys(packageJson[depField]).find(pkg => pkg === dependency);
+          const found = Object.keys(packageJson[depField]).find((pkg) => pkg === dependency);
           if (found) return packageJson[depField][dependency];
         }
       }

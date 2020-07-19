@@ -9,7 +9,7 @@ const newline = /\r\n|\r|\n/g;
 function converts(text: string | Buffer, to: string) {
   if (Buffer.isBuffer(text)) {
     if (isBinaryFileSync(text)) return text; // don't touch binary files
-    newLines.forEach(newLine => {
+    newLines.forEach((newLine) => {
       // $FlowFixMe text is Buffer here
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (newLine !== to) text = replaceBuffer(text, newLine, to);

@@ -3,7 +3,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('default scope functionality', function() {
+describe('default scope functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

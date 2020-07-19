@@ -29,7 +29,7 @@ export function resolvePackageData(
   const packageData: ResolvedPackageData = {
     fullPath: packageFullPath,
     name: '',
-    componentId: undefined
+    componentId: undefined,
   };
   enrichDataFromDependent(packageData, dependentDir);
   enrichDataFromDependency(packageData);

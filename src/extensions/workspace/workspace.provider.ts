@@ -14,6 +14,8 @@ import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
+import { CapsuleListCmd } from './capsule-list.cmd';
+import { CapsuleCreateCmd } from './capsule-create.cmd';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -76,7 +78,7 @@ export default async function provideWorkspace(
       //     return workspace.loadExtensions(componentConfig.extensions);
       //   }
       // );
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async id => {
+      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
         const componentId = await workspace.resolveComponentId(id);
         // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
         // which in turn run this event, which will make and infinite loop
@@ -86,7 +88,7 @@ export default async function provideWorkspace(
         await workspace.loadExtensions(extensions);
         return {
           defaultScope,
-          extensions: extensions
+          extensions: extensions,
         };
       });
 
@@ -94,6 +96,11 @@ export default async function provideWorkspace(
       graphql.register(workspaceSchema);
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
+
+      const capsuleListCmd = new CapsuleListCmd(isolator);
+      const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
+      cli.register(capsuleListCmd);
+      cli.register(capsuleCreateCmd);
 
       return workspace;
     }

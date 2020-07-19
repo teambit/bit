@@ -19,12 +19,12 @@ export default class ValidateNpmExec extends Diagnosis {
     const npmVersion = await npmClient.getNpmVersion();
     if (npmVersion) {
       return {
-        valid: true
+        valid: true,
       };
     }
     return {
       valid: false,
-      data: {}
+      data: {},
     };
   }
 }

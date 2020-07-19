@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 
 // @todo: since the introduction of Environment extension, the flows config should not be set
 // on the component but inside the env. We'll need to figure out how to get it to work
-describe.skip('flows functionality', function() {
+describe.skip('flows functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -30,8 +30,8 @@ describe.skip('flows functionality', function() {
 
       const flowExtensionConfig = {
         tasks: {
-          build: [`@bit/${helper.scopes.remote}.extensions.typescript:transpile`]
-        }
+          build: [`@bit/${helper.scopes.remote}.extensions.typescript:transpile`],
+        },
       };
       helper.extensions.addExtensionToVariant('*', tsExtensionKey, {});
       helper.extensions.addExtensionToVariant('*', 'flows', flowExtensionConfig);
@@ -56,7 +56,7 @@ describe.skip('flows functionality', function() {
       });
       it('should import the extensions as well into the scope', () => {
         const scopeList = helper.command.listLocalScopeParsed('--scope');
-        const ids = scopeList.map(entry => entry.id);
+        const ids = scopeList.map((entry) => entry.id);
         expect(ids).to.include(`${helper.scopes.remote}/extensions/typescript`);
       });
       it('should not show the component as modified', () => {

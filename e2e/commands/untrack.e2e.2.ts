@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit untrack command', function() {
+describe('bit untrack command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

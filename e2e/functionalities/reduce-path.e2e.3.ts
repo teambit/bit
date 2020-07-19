@@ -7,7 +7,7 @@ import { FailedLoadForTag } from '../../src/consumer/component/exceptions/failed
 
 chai.use(require('chai-fs'));
 
-describe('reduce-path functionality (eliminate the original shared-dir among component files and its dependencies)', function() {
+describe('reduce-path functionality (eliminate the original shared-dir among component files and its dependencies)', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -214,8 +214,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         const compilerName = `${helper.scopes.globalRemote}/compilers/typescript@${tsCompilerVersion}`;
         helper.bitJson.addKeyVal('env', {
           compiler: {
-            [compilerName]: tsconfigES5
-          }
+            [compilerName]: tsconfigES5,
+          },
         });
         helper.fs.createFile('utils', 'is-type.ts', fixtures.isTypeTS);
         helper.command.addComponent('utils/is-type.ts', { i: 'utils/is-type' });

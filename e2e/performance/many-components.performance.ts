@@ -50,7 +50,7 @@ const maxFlattenedDependencies = 100;
  * export 3,000 with maxFlattenedDependencies of 100 => 94 sec
  * import 3,000 with maxFlattenedDependencies of 100 => 736 sec
  */
-describe('many components', function() {
+describe('many components', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -63,7 +63,7 @@ describe('many components', function() {
   describe('basic commands', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const getImp = index => {
+      const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
           return `require('./comp${index - maxFlattenedDependencies}');`;

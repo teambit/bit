@@ -10,7 +10,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe('bit eject command', function() {
+describe('bit eject command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -54,7 +54,7 @@ describe('bit eject command', function() {
     });
   });
 
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('using a registry', function() {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('using a registry', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -104,7 +104,7 @@ describe('bit eject command', function() {
         });
         it('should delete the component from bit.map', () => {
           const bitMap = helper.bitMap.read();
-          Object.keys(bitMap).forEach(id => {
+          Object.keys(bitMap).forEach((id) => {
             expect(id).not.to.have.string('foo');
           });
         });
@@ -113,7 +113,7 @@ describe('bit eject command', function() {
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
-          const ids = listScope.map(l => l.id);
+          const ids = listScope.map((l) => l.id);
           expect(ids).to.include(`${helper.scopes.remote}/bar/foo`);
         });
         describe('importing the component after ejecting it', () => {
@@ -289,7 +289,7 @@ describe('bit eject command', function() {
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.read();
-            Object.keys(bitMap).forEach(id => {
+            Object.keys(bitMap).forEach((id) => {
               expect(id).not.to.have.string('foo');
             });
           });
@@ -336,7 +336,7 @@ describe('bit eject command', function() {
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.read();
-            Object.keys(bitMap).forEach(id => {
+            Object.keys(bitMap).forEach((id) => {
               expect(id).not.to.have.string('foo');
             });
           });
@@ -345,7 +345,7 @@ describe('bit eject command', function() {
           });
           it('should not delete the objects from the scope', () => {
             const listScope = helper.command.listLocalScopeParsed('--scope');
-            const ids = listScope.map(l => l.id);
+            const ids = listScope.map((l) => l.id);
             expect(ids).to.include(`${helper.scopes.remote}/bar/foo`);
           });
         });
@@ -395,7 +395,7 @@ describe('bit eject command', function() {
             });
             it('should delete the component from bit.map', () => {
               const bitMap = helper.bitMap.read();
-              Object.keys(bitMap).forEach(id => {
+              Object.keys(bitMap).forEach((id) => {
                 expect(id).not.to.have.string('is-string');
               });
             });

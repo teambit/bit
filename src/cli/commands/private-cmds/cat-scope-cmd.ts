@@ -11,7 +11,7 @@ export default class CatScope implements LegacyCommand {
   opts = [
     ['f', 'full', 'show all of the objects in the scope'],
     ['j', 'json', 'print the objects as a json format'],
-    ['e', 'json-extra', 'add hash and object type to the json']
+    ['e', 'json-extra', 'add hash and object type to the json'],
   ] as CommandOptions;
 
   action(
@@ -19,18 +19,18 @@ export default class CatScope implements LegacyCommand {
     {
       full,
       json,
-      jsonExtra
+      jsonExtra,
     }: { full: boolean | null | undefined; json: boolean | null | undefined; jsonExtra: boolean | null | undefined }
   ): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json, jsonExtra }));
+    return catScope(scopePath || process.cwd(), full).then((payload) => ({ payload, full, json, jsonExtra }));
   }
 
   report({
     payload,
     full,
     json,
-    jsonExtra
+    jsonExtra,
   }: {
     payload: ModelComponent[];
     full: boolean | null | undefined;
@@ -38,7 +38,7 @@ export default class CatScope implements LegacyCommand {
     jsonExtra: boolean | null | undefined;
   }): string {
     if (jsonExtra) {
-      payload.forEach(obj => {
+      payload.forEach((obj) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         obj.hash = obj.hash().toString();
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -52,17 +52,17 @@ export default class CatScope implements LegacyCommand {
     if (!full) {
       const header = [
         { value: 'Id', width: 70, headerColor: 'cyan' },
-        { value: 'Object', width: 50, headerColor: 'cyan' }
+        { value: 'Object', width: 50, headerColor: 'cyan' },
       ];
       const opts = {
-        align: 'left'
+        align: 'left',
       };
 
       const table = new Table(header, [], opts);
-      payload.forEach(co => table.push([co.id(), `obj: ${co.hash().toString()}`]));
+      payload.forEach((co) => table.push([co.id(), `obj: ${co.hash().toString()}`]));
       return table.render();
     }
 
-    return payload.map(co => `> ${co.hash().toString()}\n\n${co.id()}\n`).join('\n');
+    return payload.map((co) => `> ${co.hash().toString()}\n\n${co.id()}\n`).join('\n');
   }
 }

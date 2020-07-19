@@ -16,7 +16,7 @@ m (manual) to merge the modified files with the specified version and leave the 
         value = value.toLowerCase();
         const options = ['o', 't', 'm'];
         return options.includes(value);
-      }
-    }
-  }
+      },
+    },
+  },
 };

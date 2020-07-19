@@ -5,5 +5,5 @@
  */
 export default function filterAsync(array: any[], filter): Promise<any[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return Promise.all(array.map(entry => filter(entry))).then(results => array.filter(() => results.shift()));
+  return Promise.all(array.map((entry) => filter(entry))).then((results) => array.filter(() => results.shift()));
 }

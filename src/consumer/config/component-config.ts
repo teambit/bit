@@ -59,7 +59,7 @@ export default class ComponentConfig extends AbstractConfig {
       tester,
       lang,
       bindingPrefix,
-      extensions
+      extensions,
     });
     this.defaultScope = defaultScope;
     this.overrides = overrides;
@@ -69,7 +69,7 @@ export default class ComponentConfig extends AbstractConfig {
   toPlainObject() {
     const superObject = super.toPlainObject();
     const componentObject = R.merge(superObject, {
-      overrides: this.overrides
+      overrides: this.overrides,
     });
     const isPropDefaultOrEmpty = (val, key) => {
       if (key === 'overrides') return !R.isEmpty(val);
@@ -119,7 +119,7 @@ export default class ComponentConfig extends AbstractConfig {
       defaultScope: object.defaultScope,
       lang,
       bindingPrefix,
-      overrides
+      overrides,
     });
 
     // TODO: run runOnLoadEvent
@@ -135,7 +135,7 @@ export default class ComponentConfig extends AbstractConfig {
       compiler: component.compiler || {},
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester: component.tester || {},
-      overrides: component.overrides.componentOverridesData
+      overrides: component.overrides.componentOverridesData,
     });
 
     // TODO: run runOnLoadEvent
@@ -156,7 +156,7 @@ export default class ComponentConfig extends AbstractConfig {
         return;
       }
       // both, model and consumer have extensions
-      component.extensions.forEach(extension => {
+      component.extensions.forEach((extension) => {
         const extensionFromConsumer = this.extensions.findExtension(extension.stringId);
         if (!extensionFromConsumer) {
           this.extensions.push(extension);
@@ -198,7 +198,7 @@ export default class ComponentConfig extends AbstractConfig {
     const mergedObject = R.mergeAll([
       legacyWorkspaceConfigToMerge,
       componentConfigFromWorkspaceToMerge,
-      componentConfig
+      componentConfig,
     ]);
     mergedObject.extensions = ExtensionDataList.fromConfigObject(mergedObject.extensions);
     // Do not try to load extension for itself (usually happen when using '*' pattern)
@@ -218,7 +218,7 @@ export default class ComponentConfig extends AbstractConfig {
    */
   static async loadConfigFromFolder({
     componentDir,
-    workspaceDir
+    workspaceDir,
   }: {
     componentDir: PathOsBasedAbsolute | undefined;
     workspaceDir: PathOsBasedAbsolute;
@@ -276,7 +276,7 @@ export default class ComponentConfig extends AbstractConfig {
       config,
       bitJsonPath,
       packageJsonFile,
-      componentHasWrittenConfig
+      componentHasWrittenConfig,
     };
   }
 
@@ -294,7 +294,7 @@ export default class ComponentConfig extends AbstractConfig {
     componentId,
     componentDir,
     workspaceDir,
-    workspaceConfig
+    workspaceConfig,
   }: {
     consumer: Consumer;
     componentId: BitId;
@@ -318,13 +318,13 @@ export default class ComponentConfig extends AbstractConfig {
       componentConfig = new ComponentConfig({
         extensions: wsComponentConfig.extensions,
         defaultScope,
-        bindingPrefix
+        bindingPrefix,
       });
       // Legacy project
     } else {
       const { config, bitJsonPath, packageJsonFile, componentHasWrittenConfig } = await this.loadConfigFromFolder({
         componentDir,
-        workspaceDir
+        workspaceDir,
       });
       componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(consumer, componentId, config, workspaceConfig);
 
@@ -413,7 +413,7 @@ export default class ComponentConfig extends AbstractConfig {
  * @returns {Promise<any>} A merge results of the added config by all the extensions
  */
 async function runOnAddConfigEvent(configsRegistry: AddConfigRegistry, extensions: ExtensionDataList): Promise<any> {
-  const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
+  const extensionsConfigModificationsP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
     return func(extensions);

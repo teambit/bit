@@ -19,11 +19,11 @@ export default (async function untrack(
     const componentsToUntrack = hasWildcard(componentIds)
       ? ComponentsList.filterComponentsByWildcard(newComponents, componentIds)
       : newComponents;
-    componentsToUntrack.forEach(componentId => consumer.bitMap.removeComponent(componentId));
+    componentsToUntrack.forEach((componentId) => consumer.bitMap.removeComponent(componentId));
     await consumer.onDestroy();
     return { untrackedComponents: componentsToUntrack, unRemovableComponents, missingComponents: missing };
   }
-  componentIds.forEach(componentId => {
+  componentIds.forEach((componentId) => {
     const bitId = consumer.getParsedIdIfExist(componentId);
     if (!bitId) {
       missing.push(componentId);

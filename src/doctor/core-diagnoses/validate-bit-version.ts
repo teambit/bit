@@ -40,19 +40,19 @@ export default class ValidateBitVersion extends Diagnosis {
         return {
           valid: false,
           data: {
-            latestVersion: bitLatestVersion
-          }
+            latestVersion: bitLatestVersion,
+          },
         };
       }
       return {
-        valid: true
+        valid: true,
       };
     }
     return {
       valid: false,
       data: {
-        latestVersion: null
-      }
+        latestVersion: null,
+      },
     };
   }
 }

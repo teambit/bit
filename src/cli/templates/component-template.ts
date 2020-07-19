@@ -6,7 +6,7 @@ import paintDocumentation from './docs-template';
 import {
   componentToPrintableForDiff,
   getDiffBetweenObjects,
-  prettifyFieldName
+  prettifyFieldName,
 } from '../../consumer/component-ops/components-object-diff';
 import { DependenciesInfo } from '../../scope/graph/scope-graph';
 
@@ -15,13 +15,13 @@ const tableColumnConfig = {
   columns: {
     1: {
       alignment: 'left',
-      width: COLUMN_WIDTH
+      width: COLUMN_WIDTH,
     },
     2: {
       alignment: 'left',
-      width: COLUMN_WIDTH
-    }
-  }
+      width: COLUMN_WIDTH,
+    },
+  },
 };
 
 export default function paintComponent(
@@ -37,9 +37,9 @@ export default function paintComponent(
   function paintWithoutCompare() {
     const printableComponent = componentToPrintableForDiff(component);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    printableComponent.scopesList = (component.scopesList || []).map(s => s.name).join('\n');
+    printableComponent.scopesList = (component.scopesList || []).map((s) => s.name).join('\n');
     const rows = getFields()
-      .map(field => {
+      .map((field) => {
         const arr = [];
 
         const title = prettifyFieldName(field);
@@ -54,7 +54,7 @@ export default function paintComponent(
             arr.push(
               // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               printableComponent[field]
-                .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
+                .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
                 .join(' ')
                 .trim()
             );
@@ -63,7 +63,7 @@ export default function paintComponent(
         }
         return arr;
       })
-      .filter(x => x);
+      .filter((x) => x);
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
@@ -88,7 +88,7 @@ export default function paintComponent(
     const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
 
     const rows = getFields()
-      .map(field => {
+      .map((field) => {
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
@@ -98,7 +98,7 @@ export default function paintComponent(
           arr.push(
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableComponentToCompare[field]
-              .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
+              .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
@@ -110,7 +110,7 @@ export default function paintComponent(
           arr.push(
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableOriginalComponent[field]
-              .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
+              .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
@@ -120,7 +120,7 @@ export default function paintComponent(
         }
         return arr;
       })
-      .filter(x => x);
+      .filter((x) => x);
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = generateDependenciesTable();
@@ -141,14 +141,14 @@ export default function paintComponent(
       'peerDependencies',
       'files',
       'specs',
-      'deprecated'
+      'deprecated',
     ];
     if (detailed) {
       const extraFields = [
         'overridesDependencies',
         'overridesDevDependencies',
         'overridesPeerDependencies',
-        'scopesList'
+        'scopesList',
       ];
       fields.push(...extraFields);
     }
@@ -173,7 +173,7 @@ export default function paintComponent(
     }
     const getDependenciesRows = (dependencies, title?: string) => {
       const dependencyRows = [];
-      dependencies.forEach(dependency => {
+      dependencies.forEach((dependency) => {
         let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
         dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
         const row = [dependencyId];
@@ -217,7 +217,7 @@ export default function paintComponent(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Immediate Dependency'),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependent type')
+      c.cyan('Dependent type'),
     ]);
     const allDependenciesRows = getAllDependenciesRows(dependentsInfo);
 
@@ -240,7 +240,7 @@ export default function paintComponent(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Immediate Dependent'),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependency type')
+      c.cyan('Dependency type'),
     ]);
     const allDependenciesRows = getAllDependenciesRows(dependenciesInfo);
 

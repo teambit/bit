@@ -22,8 +22,8 @@ describe('getLinkContent', () => {
         const importSpecifier = [
           {
             mainFile: { isDefault: false, name: 'isString' },
-            linkFile: { isDefault: true, name: 'isString' }
-          }
+            linkFile: { isDefault: true, name: 'isString' },
+          },
         ];
         linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
@@ -42,8 +42,8 @@ describe('getLinkContent', () => {
         const importSpecifier = [
           {
             mainFile: { isDefault: true, name: 'isString' },
-            linkFile: { isDefault: true, name: 'isString' }
-          }
+            linkFile: { isDefault: true, name: 'isString' },
+          },
         ];
         linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
@@ -62,8 +62,8 @@ describe('getLinkContent', () => {
         const importSpecifier = [
           {
             mainFile: { isDefault: false, name: 'isString' },
-            linkFile: { isDefault: false, name: 'isString' }
-          }
+            linkFile: { isDefault: false, name: 'isString' },
+          },
         ];
         linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
@@ -82,8 +82,8 @@ describe('getLinkContent', () => {
         const importSpecifier = [
           {
             mainFile: { isDefault: true, name: 'isString' },
-            linkFile: { isDefault: false, name: 'isString' }
-          }
+            linkFile: { isDefault: false, name: 'isString' },
+          },
         ];
         linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });

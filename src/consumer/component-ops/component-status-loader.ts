@@ -28,7 +28,7 @@ export class ComponentStatusLoader {
 
   async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
     const results: ComponentStatusResult[] = [];
-    await BluebirdPromise.mapSeries(ids, async id => {
+    await BluebirdPromise.mapSeries(ids, async (id) => {
       const status = await this.getComponentStatusById(id);
       results.push({ id, status });
     });

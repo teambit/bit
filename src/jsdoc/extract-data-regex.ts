@@ -43,7 +43,7 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
   let name = '';
   let render = '';
 
-  commentsAst.tags.forEach(tag => {
+  commentsAst.tags.forEach((tag) => {
     switch (tag.title) {
       case 'desc':
       case 'description':
@@ -99,7 +99,7 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
     render,
     properties,
     static: isStatic,
-    filePath: pathNormalizeToLinux(filePath)
+    filePath: pathNormalizeToLinux(filePath),
   };
   doclets.push(doclet);
 }

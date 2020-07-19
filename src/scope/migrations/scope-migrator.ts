@@ -117,7 +117,7 @@ const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migrat
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: BitRawObject) {
   const refs = rawObject.refs();
-  refs.forEach(ref => {
+  refs.forEach((ref) => {
     index[ref] = rawObject;
   });
 }

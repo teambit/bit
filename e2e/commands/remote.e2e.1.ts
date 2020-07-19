@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { ScopeNotFound } from '../../src/scope/exceptions';
 
-describe('bit remote command', function() {
+describe('bit remote command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

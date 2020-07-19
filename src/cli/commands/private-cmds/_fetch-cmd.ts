@@ -17,7 +17,7 @@ export default class Fetch implements LegacyCommand {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['n', 'no-dependencies', 'do not include component dependencies'],
-    ['', 'lanes', 'provided ids are lanes']
+    ['', 'lanes', 'provided ids are lanes'],
   ] as CommandOptions;
 
   action([path, args]: [string, string], { noDependencies, lanes }: any): Promise<any> {

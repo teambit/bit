@@ -5,7 +5,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit extension system', function() {
+describe('bit extension system', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

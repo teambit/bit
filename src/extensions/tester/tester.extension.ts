@@ -49,7 +49,7 @@ export class TesterExtension {
     /**
      * default test regex for which files tester to apply on.
      */
-    testRegex: '*.{spec,test}.{js,jsx,ts,tsx}'
+    testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
   };
 
   static provider([cli, envs, workspace]: [CLIExtension, Environments, Workspace], config: TesterExtensionConfig) {

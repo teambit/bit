@@ -7,7 +7,7 @@ import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER,
-  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
+  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
 import { PathOsBasedAbsolute, PathOsBased } from '../../utils/path';
@@ -106,7 +106,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
     defaultScope,
-    overrides = ConsumerOverrides.load()
+    overrides = ConsumerOverrides.load(),
   }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     if (packageManager !== 'npm' && packageManager !== 'yarn') {
@@ -145,7 +145,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       manageWorkspaces: this.manageWorkspaces,
       resolveModules: this.resolveModules,
       defaultScope: this.defaultScope,
-      overrides: this.overrides.overrides
+      overrides: this.overrides.overrides,
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
@@ -252,7 +252,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultScope,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      overrides
+      overrides,
     } = object;
 
     return new WorkspaceConfig({
@@ -273,7 +273,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist),
       defaultScope,
-      overrides: ConsumerOverrides.load(overrides)
+      overrides: ConsumerOverrides.load(overrides),
     });
   }
 
@@ -321,7 +321,7 @@ export default class WorkspaceConfig extends AbstractConfig {
 
     const [bitJsonFile, packageJsonFile] = await Promise.all([
       this.loadBitJson(bitJsonPath), // $FlowFixMe
-      this.loadPackageJson(packageJsonPath)
+      this.loadPackageJson(packageJsonPath),
     ]);
     const bitJsonConfig = bitJsonFile || {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -362,7 +362,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { componentsDefaultDirectory, dependenciesDirectory } = object;
     const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory };
-    Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
+    Object.keys(pathsToValidate).forEach((field) => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {
         throw new InvalidConfigPropPath(fieldName, pathToValidate);

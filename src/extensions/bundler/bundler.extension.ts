@@ -44,7 +44,7 @@ export class BundlerExtension {
     const envRuntime = await this.envs.createEnvironment(components || (await this.workspace.list()));
     const executionResponse = await envRuntime.run(this.devService);
 
-    this._componentServers = executionResponse.map(res => res.res);
+    this._componentServers = executionResponse.map((res) => res.res);
     this.indexByComponent();
     return this._componentServers;
   }
@@ -55,7 +55,7 @@ export class BundlerExtension {
    */
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
-    const server = this._componentServers.find(componentServer => componentServer.hasComponent(component));
+    const server = this._componentServers.find((componentServer) => componentServer.hasComponent(component));
 
     return server;
   }

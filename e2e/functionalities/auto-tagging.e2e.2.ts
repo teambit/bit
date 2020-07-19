@@ -7,7 +7,7 @@ import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 
 chai.use(require('chai-fs'));
 
-describe('auto tagging functionality', function() {
+describe('auto tagging functionality', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -366,13 +366,13 @@ describe('auto tagging functionality', function() {
         expect(barC.flattenedDependencies).to.deep.include({
           scope: helper.scopes.remote,
           name: 'bar/d',
-          version: '0.0.2'
+          version: '0.0.2',
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barC.flattenedDependencies).to.deep.include({
           scope: helper.scopes.remote,
           name: 'bar/e',
-          version: '0.0.2'
+          version: '0.0.2',
         });
 
         const barD = helper.command.catComponent(`${helper.scopes.remote}/bar/d@latest`);
@@ -385,7 +385,7 @@ describe('auto tagging functionality', function() {
         expect(barD.flattenedDependencies).to.deep.include({
           scope: helper.scopes.remote,
           name: 'bar/e',
-          version: '0.0.2'
+          version: '0.0.2',
         });
       });
       it('bit-status should not show any component as modified', () => {
@@ -583,11 +583,11 @@ describe('auto tagging functionality', function() {
     it('should not auto-tag the dependents', () => {
       expect(output).to.have.string('1 component(s) tagged');
       const scopeList = helper.command.listLocalScopeParsed();
-      const barFoo: any = scopeList.find(c => c.id === 'bar/foo');
+      const barFoo: any = scopeList.find((c) => c.id === 'bar/foo');
       expect(barFoo.localVersion).to.equal('0.0.1');
-      const isString: any = scopeList.find(c => c.id === 'utils/is-string');
+      const isString: any = scopeList.find((c) => c.id === 'utils/is-string');
       expect(isString.localVersion).to.equal('0.0.1');
-      const isType: any = scopeList.find(c => c.id === 'utils/is-type');
+      const isType: any = scopeList.find((c) => c.id === 'utils/is-type');
       expect(isType.localVersion).to.equal('0.0.2');
     });
     describe('then tagging the dependent of the skipped dependency', () => {
@@ -596,7 +596,7 @@ describe('auto tagging functionality', function() {
       });
       it('should update the flattened-dependencies of the dependent of that dependent', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
-        const isTypeDep = barFoo.flattenedDependencies.find(d => d.name === 'utils/is-type');
+        const isTypeDep = barFoo.flattenedDependencies.find((d) => d.name === 'utils/is-type');
         expect(isTypeDep.version).to.equal('0.0.2');
       });
     });

@@ -17,7 +17,7 @@ export function DefaultAvatar(props: DefaultAvatarProps) {
   const {
     // account = {},
     size,
-    className
+    className,
     // imgClassName,
     // hideTooltip = false,
   } = props;
@@ -29,7 +29,7 @@ export function DefaultAvatar(props: DefaultAvatarProps) {
         width: `${size}px`,
         height: `${size}px`,
         fontSize: `${size * 0.35}px`,
-        lineHeight: `${size}px`
+        lineHeight: `${size}px`,
       }}
     >
       ?

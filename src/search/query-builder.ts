@@ -10,20 +10,20 @@ const boost = {
   functionNames: 2,
   tokenizedFunctionNames: 2,
   minDescription: 1,
-  stemmedMinDescription: 0.5
+  stemmedMinDescription: 0.5,
 };
 
 function queryItem(field, queryStr): Object {
   return {
     AND: { [field]: queryStr.toLowerCase().split(' ') },
-    BOOST: boost[field]
+    BOOST: boost[field],
   };
 }
 
 function buildQuery(queryStr: string): Array<Object> {
   const queryStrWithoutStopwords = queryStr
     .split(' ')
-    .filter(word => !stopwords.includes(word))
+    .filter((word) => !stopwords.includes(word))
     .join(' ');
   const tokenizedQuery = tokenizeStr(queryStr);
   const query = [];

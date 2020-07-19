@@ -79,7 +79,7 @@ export class ComponentConfigFile {
       componentId: this.componentId.toObject(),
       propagate: this.propagate,
       defaultScope: this.defaultScope,
-      extensions: this.extensions.toConfigObject()
+      extensions: this.extensions.toConfigObject(),
     };
   }
 
