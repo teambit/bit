@@ -139,7 +139,9 @@ export class CompositionsExtension {
     bundler.registerTarget({
       entry: compositions.compositionsPreviewTarget.bind(compositions),
     });
-    workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
+    if (workspace) {
+      workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
+    }
 
     return compositions;
   }
