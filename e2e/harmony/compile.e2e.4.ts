@@ -24,12 +24,12 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.bitJsonc.addDefaultScope();
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       const environments = {
         env: '@teambit/react',
         config: {},
       };
       helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {

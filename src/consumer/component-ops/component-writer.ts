@@ -20,7 +20,6 @@ import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Artifact } from '../component/sources/artifact';
-import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 import { BitIds } from '../../bit-id';
 
 export type ComponentWriterProps = {
@@ -183,7 +182,7 @@ export default class ComponentWriter {
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       if (this.applyExtensionsAddedConfig) {
-        this._mergePackageJsonPropsFromExtensions(packageJson);
+        packageJson.mergePropsFromExtensions(this.component);
       }
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
@@ -243,22 +242,6 @@ export default class ComponentWriter {
       wrapDir: this.component.wrapDir,
       onLanesOnly: this.saveOnLane,
     });
-  }
-
-  /**
-   * these changes were added by extensions
-   */
-  _mergePackageJsonPropsFromExtensions(packageJson: PackageJsonFile) {
-    // The special keys will be merged in other place
-    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    if (!this.component.extensionsAddedConfig || R.isEmpty(this.component.extensionsAddedConfig)) return;
-    const valuesToMerge = R.omit(specialKeys, this.component.extensionsAddedConfig);
-    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
-      const value = replacePlaceHolderWithComponentValue(this.component, valuesToMerge[current]);
-      acc[current] = value;
-      return acc;
-    }, {});
-    packageJson.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   /**

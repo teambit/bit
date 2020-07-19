@@ -12,6 +12,7 @@ import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonVinyl from './package-json-vinyl';
 import { Capsule } from '../../extensions/isolator';
+import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
@@ -214,6 +215,22 @@ export default class PackageJsonFile {
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = R.clone(this.packageJsonObject);
     return clone;
+  }
+
+  /**
+   * these changes were added by extensions
+   */
+  mergePropsFromExtensions(component: Component) {
+    // The special keys will be merged in other place
+    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
+    if (!component.extensionsAddedConfig || R.isEmpty(component.extensionsAddedConfig)) return;
+    const valuesToMerge = R.omit(specialKeys, component.extensionsAddedConfig);
+    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
+      const value = replacePlaceHolderWithComponentValue(component, valuesToMerge[current]);
+      acc[current] = value;
+      return acc;
+    }, {});
+    this.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   static propsNonUserChangeable() {
