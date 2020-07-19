@@ -378,6 +378,7 @@ export default class NodeModuleLinker {
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    packageJson.mergePropsFromExtensions(component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 

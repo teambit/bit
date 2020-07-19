@@ -202,12 +202,15 @@ export class ScopeExtension implements ComponentFactory {
 
   private async createStateFromVersion(id: ComponentID, version: Version): Promise<State> {
     const consumerComponent = await this.legacyScope.getConsumerComponent(id._legacy);
-    return new State(
-      new Config(version.mainFile, version.extensions),
+    const state = new State(
+      // We use here the consumerComponent.extensions instead of version.extensions
+      // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
+      new Config(version.mainFile, consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       this.legacyScope.getConsumerComponent(id._legacy)
     );
+    return state;
   }
 
   /**

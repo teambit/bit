@@ -308,14 +308,15 @@ export default class ComponentConfig extends AbstractConfig {
     if (!workspaceConfig.isLegacy) {
       const onLoadResults = await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId);
       const wsComponentConfig = onLoadResults[0];
-      const defaultScope = wsComponentConfig.componentWorkspaceMetaData.defaultScope;
-      const defaultOwner = wsComponentConfig.componentWorkspaceMetaData.defaultOwner;
+      const defaultScope = wsComponentConfig.defaultScope;
+      const splittedScope = defaultScope.split('.');
+      const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
       let bindingPrefix = DEFAULT_REGISTRY_DOMAIN_PREFIX;
       if (defaultOwner && defaultOwner !== DEFAULT_REGISTRY_DOMAIN_PREFIX) {
         bindingPrefix = defaultOwner.startsWith('@') ? defaultOwner : `@${defaultOwner}`;
       }
       componentConfig = new ComponentConfig({
-        extensions: wsComponentConfig.componentExtensions,
+        extensions: wsComponentConfig.extensions,
         defaultScope,
         bindingPrefix,
       });

@@ -287,7 +287,7 @@ export default class CommandHelper {
   createCapsuleHarmony(id: string): string {
     const output = this.runCmd(`bit capsule-create ${id} --json`);
     const capsules = JSON.parse(output);
-    const capsule = capsules.find((c) => c.id === id);
+    const capsule = capsules.find((c) => c.id.includes(id));
     if (!capsule)
       throw new Error(
         `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map((c) => c.id).join(', ')}`
