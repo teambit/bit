@@ -14,7 +14,7 @@ import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
-import { WorkspaceExtConfig, WorkspaceComponentConfig } from './types';
+import { WorkspaceExtConfig } from './types';
 import { LogPublisher } from '../types';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
@@ -298,7 +298,6 @@ export default class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const componentConfigFile = await this.componentConfigFile(componentId);
-    let defaultScope;
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
@@ -431,15 +430,8 @@ export default class Workspace implements ComponentFactory {
       // Core extension
       if (!extensionEntry.extensionId) {
         return extensionEntry.stringId;
-      } else {
-        // We assume it's already resolved earlier
-        return extensionEntry.extensionId.toString();
-        // const hasVersion = extensionEntry.extensionId.hasVersion();
-        // const useBitmapVersion = !hasVersion;
-        // // Assuming extensionId always has scope - do not allow extension id without scope
-        // const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, useBitmapVersion);
-        // return resolvedId.toString();
       }
+      return extensionEntry.extensionId.toString();
     });
     const extensionsIds = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;

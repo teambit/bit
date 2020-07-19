@@ -88,7 +88,7 @@ export default async function provideWorkspace(
         await workspace.loadExtensions(extensions);
         return {
           defaultScope,
-          extensions: extensions,
+          extensions,
         };
       });
 

@@ -5,6 +5,8 @@ import { AbstractVinyl } from '../component/sources';
 import { Artifact } from '../component/sources/artifact';
 import Source from '../../scope/models/source';
 
+const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
+
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
@@ -166,8 +168,6 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return ExtensionDataList.fromArray(merged);
   }
 }
-
-const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 
 function ignoreVersionPredicate(extensionEntry1: ExtensionDataEntry, extensionEntry2: ExtensionDataEntry) {
   if (extensionEntry1.extensionId && extensionEntry2.extensionId) {
