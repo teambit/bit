@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
 import 'reset-css';
-import { SideBar } from '../side-bar';
 import styles from './workspace.module.scss';
 // import { Component } from '../../../component/component.ui';
 // import { defaultComponent } from './default-component';
@@ -10,6 +9,8 @@ import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
+import { Corner } from '../../../stage-components/corner';
+import { SideBar } from '../../../stage-components/side-bar';
 
 const WORKSPACE = gql`
   {
@@ -57,14 +58,6 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         </div>
       </div>
     </WorkspaceProvider>
-  );
-}
-
-function Corner({ name }: { name: string }) {
-  return (
-    <div className={styles.corner}>
-      <span className={styles.avatar}>A</span> {name}
-    </div>
   );
 }
 

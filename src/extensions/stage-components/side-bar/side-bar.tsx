@@ -4,7 +4,7 @@ import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
-import { ComponentID } from '../../../component';
+import { ComponentID } from '../../component';
 
 type SideBarProps = {
   components: ComponentID[];

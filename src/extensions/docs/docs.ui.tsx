@@ -14,3 +14,5 @@ export class DocsUI {
     return docs;
   }
 }
+
+export default DocsUI;
