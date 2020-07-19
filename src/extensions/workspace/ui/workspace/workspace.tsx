@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
 import 'reset-css';
+import { NavLink } from 'react-router-dom';
 import { SideBar } from '../side-bar';
 import styles from './workspace.module.scss';
 // import { Component } from '../../../component/component.ui';
@@ -73,9 +74,9 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
 
 function Corner({ name }: { name: string }) {
   return (
-    <div className={styles.corner}>
+    <NavLink to="/" className={styles.corner}>
       <span className={styles.avatar}>A</span> {name}
-    </div>
+    </NavLink>
   );
 }
 
