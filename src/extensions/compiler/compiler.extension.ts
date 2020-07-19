@@ -3,7 +3,7 @@ import { Environments } from '../environments';
 import { Workspace } from '../workspace';
 import { CLIExtension } from '../cli';
 import { CompileCmd } from './compiler.cmd';
-import { WorkspaceCompiler } from './compile';
+import { WorkspaceCompiler } from './workspace-compiler';
 import { CompilerTask } from './compiler.task';
 import { Extensions } from '../../constants';
 import { BitId } from '../../bit-id';

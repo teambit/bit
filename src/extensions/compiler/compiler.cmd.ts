@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '../cli';
-import { WorkspaceCompiler } from './compile';
+import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
   name = 'compile [component...]';
