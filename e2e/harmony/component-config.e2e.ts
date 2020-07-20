@@ -119,7 +119,7 @@ describe('component config', function () {
         componentJson = helper.componentJson.read('bar');
       });
       it('should have extensions from models in component.json', () => {
-        expect(componentJson.extensions).to.deep.equal({ 'dummy-extension@0.0.1': config });
+        expect(componentJson.extensions).to.deep.equal({ 'my-scope/dummy-extension@0.0.1': config });
       });
     });
   });

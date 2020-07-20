@@ -1,8 +1,6 @@
 import chai, { expect } from 'chai';
-import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import { ComponentConfigFileAlreadyExistsError } from '../../src/extensions/workspace';
 
 chai.use(require('chai-fs'));
 

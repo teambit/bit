@@ -10,7 +10,7 @@ import { sortObject } from '../../utils';
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
   id: string;
-  config: Object;
+  config: Record<string, any>;
 };
 
 export class ExtensionDataEntry {

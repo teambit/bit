@@ -279,8 +279,8 @@ function titleRight(field: string, leftVersion?: string, rightVersion?: string):
 
 function configsOutput(
   fieldName: string,
-  leftConfig?: object,
-  rightConfig?: Object,
+  leftConfig?: Record<string, any>,
+  rightConfig?: Record<string, any>,
   leftVersion?: string,
   rightVersion?: string
 ): ConfigDiff | undefined {
