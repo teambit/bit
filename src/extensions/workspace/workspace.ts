@@ -31,7 +31,7 @@ import Config from '../component/config';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
-import { OnComponentChange } from './on-component-change';
+import { OnComponentChange, OnComponentChangeOptions, OnComponentChangeResult } from './on-component-change';
 
 export type EjectConfResult = {
   configPath: string;
@@ -239,10 +239,19 @@ export default class Workspace implements ComponentFactory {
     return component;
   }
 
-  async triggerOnComponentChange(id: ComponentID, options: { noCache?: boolean; verbose?: boolean }) {
+  async triggerOnComponentChange(
+    id: ComponentID,
+    options: OnComponentChangeOptions
+  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
     const component = await this.get(id);
-    const onChangeFunctions = this.onComponentChangeSlot.values();
-    return BluebirdPromise.mapSeries(onChangeFunctions, (func) => func(component, options));
+    const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ '@teambit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
+      const onChangeResult = await onChangeFunc(component, options);
+      results.push({ extensionId: extension, results: onChangeResult });
+    });
+
+    return results;
   }
 
   private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {

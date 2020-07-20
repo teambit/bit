@@ -13,7 +13,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { Environments } from '../environments';
 import { Compiler } from './types';
 import { Component } from '../component';
-import { OnComponentChangeOptions } from '../workspace/on-component-change';
+import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -106,8 +106,14 @@ export class WorkspaceCompiler {
     this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
   }
 
-  async onComponentChange(component: Component, options: OnComponentChangeOptions) {
-    return this.compileComponents([component.id.toString()], options);
+  async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
+    const buildResults = await this.compileComponents([component.id.toString()], options);
+    return {
+      results: buildResults,
+      toString() {
+        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+      },
+    };
   }
 
   async compileComponents(

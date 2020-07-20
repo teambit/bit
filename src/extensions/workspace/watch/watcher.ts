@@ -1,4 +1,3 @@
-/* eslint no-console: 0 */
 import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
 import R from 'ramda';
@@ -10,13 +9,11 @@ import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../
 import { pathNormalizeToLinux } from '../../../utils';
 import { Consumer } from '../../../consumer';
 import { ComponentID } from '../../component';
+import logger from '../../../logger/logger';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
-// :TODO @david we should refactor this extension to few separate classes and focus this file on the api...
 export class Watcher {
-  static id = '@teambit/watcher';
-
   constructor(
     private workspace: Workspace,
     private trackDirs: { [dir: string]: string } = {},
@@ -35,10 +32,10 @@ export class Watcher {
 
   async watchAll() {
     // TODO: run build in the beginning of process (it's work like this in other envs)
-    const watcher = this._getWatcher();
-    console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
-    console.log(chalk.yellow(`node version: ${process.version}`));
-    const log = console.log.bind(console);
+    const watcher = this.getWatcher();
+    const log = logger.console.bind(logger);
+    log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
+    log(chalk.yellow(`node version: ${process.version}`));
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
@@ -52,15 +49,15 @@ export class Watcher {
       });
       watcher.on('change', (p) => {
         log(`file ${p} has been changed`);
-        this._handleChange(p).catch((err) => reject(err));
+        this.handleChange(p).catch((err) => reject(err));
       });
       watcher.on('add', (p) => {
         log(`file ${p} has been added`);
-        this._handleChange(p, true).catch((err) => reject(err));
+        this.handleChange(p, true).catch((err) => reject(err));
       });
       watcher.on('unlink', (p) => {
         log(`file ${p} has been removed`);
-        this._handleChange(p).catch((err) => reject(err));
+        this.handleChange(p).catch((err) => reject(err));
       });
       watcher.on('error', (err) => {
         log(`Watcher error ${err}`);
@@ -69,29 +66,27 @@ export class Watcher {
     });
   }
 
-  // @david is this component supposed to be public? otherwise - :TODO make this private.
-  async _handleChange(filePath: string, isNew = false) {
+  private async handleChange(filePath: string, isNew = false) {
     const start = new Date().getTime();
-    const componentId = await this._getBitIdByPathAndReloadConsumer(filePath, isNew);
-    let resultMsg: string;
+    const componentId = await this.getBitIdByPathAndReloadConsumer(filePath, isNew);
+    let resultMsg = '';
     if (componentId) {
       if (this.isComponentWatchedExternally(componentId)) {
         // update capsule, once done, it automatically triggers the external watcher
         await this.workspace.load([componentId]);
       } else {
         const idStr = componentId.toString();
-        console.log(`running build for ${chalk.bold(idStr)}`);
-        // TODO: Make sure the log for build is printed to console
-        // TODO: make sure this is a slot.
+        logger.console(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
         const options = {
           noCache: false,
           verbose: this.verbose,
         };
         const buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId), options);
-        const buildResultsFlattened = R.flatten(buildResults);
-        const buildPaths = buildResultsFlattened[0].buildResults;
-        if (buildPaths && buildPaths.length) {
-          resultMsg = `\t${chalk.cyan(buildPaths.join('\n\t'))}`;
+        if (buildResults && buildResults.length) {
+          buildResults.forEach((extensionResult) => {
+            logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
+            logger.console(`\t${extensionResult.results.toString()}`);
+          });
         } else {
           resultMsg = `${idStr} doesn't have a compiler, nothing to build`;
         }
@@ -102,23 +97,21 @@ export class Watcher {
 
     const duration = new Date().getTime() - start;
     loader.stop();
-    // @ts-ignore :TODO @david refactor to use logger
-    console.log(resultMsg);
-    console.log(`took ${duration}ms`);
-    console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
+    logger.console(resultMsg);
+    logger.console(`took ${duration}ms`);
+    logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
-  // :TODO @david we should document all extension public apis.
-  isComponentWatchedExternally(componentId: BitId) {
+  private isComponentWatchedExternally(componentId: BitId) {
     const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId)));
     if (watcherData) {
-      console.log(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
+      logger.console(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
     }
     return false;
   }
 
-  async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {
+  private async getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
     let componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
     if (!isNew && !componentId) {
@@ -145,8 +138,8 @@ export class Watcher {
     return componentId;
   }
 
-  _getWatcher() {
-    const pathsToWatch = this._getPathsToWatch();
+  private getWatcher() {
+    const pathsToWatch = this.getPathsToWatch();
     return chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // Using the function way since the regular way not working as expected
@@ -167,7 +160,7 @@ export class Watcher {
     });
   }
 
-  _getPathsToWatch(): string[] {
+  private getPathsToWatch(): string[] {
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
     const paths = componentsFromBitMap.map((componentMap) => {
       const componentId = componentMap.id.toString();
@@ -178,7 +171,7 @@ export class Watcher {
       const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
       const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
       if (this.verbose) {
-        console.log(`watching ${chalk.bold(componentId)}\n${absPaths.join('\n')}`);
+        logger.console(`watching ${chalk.bold(componentId)}\n${absPaths.join('\n')}`);
       }
       return absPaths;
     });
