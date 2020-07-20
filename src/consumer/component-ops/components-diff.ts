@@ -78,7 +78,7 @@ export default (async function componentsDiff(
     diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
-    await updateFieldsAndEnvsDiff(fromVersionComponent, component, diffResult);
+    await updateFieldsDiff(fromVersionComponent, component, diffResult);
 
     return diffResult;
   }
@@ -103,7 +103,7 @@ export default (async function componentsDiff(
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toVersionComponent = await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository);
-    await updateFieldsAndEnvsDiff(fromVersionComponent, toVersionComponent, diffResult);
+    await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult);
 
     return diffResult;
   }
@@ -120,16 +120,12 @@ export default (async function componentsDiff(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, component.id.version, component.id.version);
     // $FlowFixMe we made sure already that component.componentFromModel is defined
-    await updateFieldsAndEnvsDiff(component.componentFromModel, component, diffResult);
+    await updateFieldsDiff(component.componentFromModel, component, diffResult);
 
     return diffResult;
   }
 
-  async function updateFieldsAndEnvsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
-    const envsFilesDiff = await getEnvFilesDiff(tmp, consumer, componentA, componentB);
-    // $FlowFixMe diffResult.filesDiff is populated at this point
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    diffResult.filesDiff = diffResult.filesDiff.concat(envsFilesDiff);
+  async function updateFieldsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
     diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose);
     diffResult.hasDiff = hasDiff(diffResult);
   }
@@ -160,27 +156,6 @@ async function getOneFileDiff(
     .substr(diffStart)
     .replace(regExpA, `--- ${fileName} (${fileALabel})\n`)
     .replace(regExpB, `+++ ${fileName} (${fileBLabel})\n`);
-}
-
-async function getEnvFilesDiff(
-  tmp: Tmp,
-  consumer: Consumer,
-  componentA: Component,
-  componentB: Component
-): Promise<FileDiff[]> {
-  const envs = ['compiler', 'tester'];
-  const envsDiffP = envs.map((env) => {
-    const filesA = componentA[env] && componentA[env].files ? componentA[env].files : [];
-    const filesB = componentB[env] && componentB[env].files ? componentB[env].files : [];
-    const filesAVersion = componentA.version;
-    const filesBVersion = componentB.version;
-    if (!filesAVersion || !filesBVersion) {
-      throw new Error('diffBetweenComponentsObjects component does not have a version');
-    }
-    return getFilesDiff(tmp, filesA, filesB, filesAVersion, filesBVersion, 'name');
-  });
-  const envsDiff = await Promise.all(envsDiffP);
-  return R.flatten(envsDiff);
 }
 
 async function getFilesDiff(

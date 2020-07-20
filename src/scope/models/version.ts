@@ -180,12 +180,18 @@ export default class Version extends BitObject {
       });
     };
 
+    const getExtensions = (extensions: ExtensionDataList) => {
+      const sortedConfigOnly = extensions.sortById().toConfigArray();
+      return sortedConfigOnly;
+    };
+
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
-        key === 'overrides'
+        key === 'overrides' ||
+        key === 'extensions'
       ) {
         return !R.isEmpty(val);
       }
@@ -217,6 +223,7 @@ export default class Version extends BitObject {
           bindingPrefix: obj.bindingPrefix,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides,
+          extensions: getExtensions(this.extensions),
         },
         filterFunction
       )
