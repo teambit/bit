@@ -260,12 +260,12 @@ function getExtensionsConfigOutput(componentLeft: Component, componentRight: Com
 
 function labelLeft(leftVersion?: string, rightVersion?: string) {
   const sameVersions = areVersionsTheSame(leftVersion, rightVersion);
-  return sameVersions ? `${leftVersion} original` : rightVersion;
+  return sameVersions ? `${leftVersion} original` : leftVersion;
 }
 
 function labelRight(leftVersion?: string, rightVersion?: string) {
   const sameVersions = areVersionsTheSame(leftVersion, rightVersion);
-  return sameVersions ? `${rightVersion} modified` : leftVersion;
+  return sameVersions ? `${rightVersion} modified` : rightVersion;
 }
 
 function areVersionsTheSame(leftVersion?: string, rightVersion?: string) {
