@@ -7,6 +7,7 @@ import arrayDifference from 'array-difference';
 import Component from '../component/consumer-component';
 import { FieldsDiff } from './components-diff';
 import { Consumer } from '..';
+import { ExtensionDataList } from '../config';
 
 type ConfigDiff = {
   fieldName: string;
@@ -18,6 +19,11 @@ export function componentToPrintableForDiff(component: Component): Record<string
     return !R.isEmpty(packages) && !R.isNil(packages)
       ? Object.keys(packages).map((key) => `${key}@${packages[key]}`)
       : null;
+  };
+
+  const parseExtensions = (extensions?: ExtensionDataList) => {
+    if (!extensions || R.isEmpty(extensions)) return null;
+    return extensions.map((extension) => extension.stringId);
   };
 
   const {
@@ -32,6 +38,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     compilerPackageDependencies,
     testerPackageDependencies,
     files,
+    extensions,
     mainFile,
     deprecated,
   } = component;
@@ -103,6 +110,8 @@ export function componentToPrintableForDiff(component: Component): Record<string
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         files.filter((file) => file.test).map((file) => normalize(file.relative))
       : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  obj.extensions = parseExtensions(extensions);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.deprecated = deprecated ? 'True' : null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
