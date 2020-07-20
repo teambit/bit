@@ -11,10 +11,8 @@ export type WorkspaceComponentGridProps = {
 };
 
 export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridProps) {
-  // hack to limit the size of the components when there are only a few components
-  const limitWidth = components.length < 3;
   return (
-    <div className={classNames(styles.container, { [styles.limitLength]: limitWidth })}>
+    <div className={styles.container}>
       <ComponentGrid>
         {components.map((component, index) => {
           const compositions = R.path(['compositions'], component);
