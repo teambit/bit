@@ -46,6 +46,13 @@ export default class ComponentJsonHelper {
     this.addKeyVal('extensions', extensions, componentRelativeDir);
   }
 
+  removeExtension(extensionId: string, componentRelativeDir = 'bar') {
+    const componentJson = this.read(componentRelativeDir);
+    const extensions = componentJson.extensions || {};
+    delete extensions[extensionId];
+    this.addKeyVal('extensions', extensions, componentRelativeDir);
+  }
+
   setPropagate(propagateVal: boolean, componentRelativeDir = 'bar') {
     this.addKeyVal('propagate', propagateVal, componentRelativeDir);
   }
