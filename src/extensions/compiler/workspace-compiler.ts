@@ -12,6 +12,8 @@ import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { Environments } from '../environments';
 import { Compiler } from './types';
+import { Component } from '../component';
+import { OnComponentChangeOptions } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -100,7 +102,13 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: Environments) {}
+  constructor(private workspace: Workspace, private envs: Environments) {
+    this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+  }
+
+  async onComponentChange(component: Component, options: OnComponentChangeOptions) {
+    return this.compileComponents([component.id.toString()], options);
+  }
 
   async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all

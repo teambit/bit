@@ -1,7 +1,5 @@
-import React from 'react';
-import { Color } from 'ink';
-import { Command, CommandOptions } from '../cli';
-import { WatcherExtension } from './watch.extension';
+import { Command, CommandOptions } from '../../cli';
+import { Watcher } from './watcher';
 
 export class WatchCommand implements Command {
   name = 'watch';
@@ -15,12 +13,11 @@ export class WatchCommand implements Command {
     /**
      * watcher extension.
      */
-    private watch: WatcherExtension
+    private watcher: Watcher
   ) {}
 
-  // :TODO we should only use `report` here. no reason for interactive.
-  async render(cliArgs: [], { verbose = false }: { verbose?: boolean }): Promise<React.ReactElement> {
-    await this.watch.watch({ verbose });
-    return <Color>watcher terminated</Color>;
+  async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
+    await this.watcher.watch({ verbose });
+    return 'watcher terminated';
   }
 }
