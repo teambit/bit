@@ -39,8 +39,8 @@ describe('extensions config diff', function () {
       });
       it('should show it in bit diff', () => {
         output = helper.command.diff();
-        expect(output).to.have.string('--- Extensions (undefined original)');
-        expect(output).to.have.string('+++ Extensions (undefined modified)');
+        expect(output).to.have.string('--- Extensions (0.0.1 original)');
+        expect(output).to.have.string('+++ Extensions (0.0.1 modified)');
         expect(output).to.have.string('- [ ext1@0.0.1, ext2@0.0.1, ext3@0.0.1 ]');
         expect(output).to.have.string('+ [ ext1@0.0.1, ext2@0.0.1, ext3@0.0.1, ext4@0.0.1 ]');
         expect(output).to.have.string('--- Ext4@0.0.1 configuration (0.0.1 original)');
@@ -59,8 +59,8 @@ describe('extensions config diff', function () {
       });
       it('should show it in bit diff', () => {
         output = helper.command.diff();
-        expect(output).to.have.string('--- Extensions (undefined original)');
-        expect(output).to.have.string('+++ Extensions (undefined modified)');
+        expect(output).to.have.string('--- Extensions (0.0.1 original)');
+        expect(output).to.have.string('+++ Extensions (0.0.1 modified)');
         expect(output).to.have.string('- [ ext1@0.0.1, ext2@0.0.1, ext3@0.0.1 ]');
         expect(output).to.have.string('+ [ ext1@0.0.1, ext2@0.0.1 ]');
         expect(output).to.have.string('--- Ext3@0.0.1 configuration (0.0.1 original)');
