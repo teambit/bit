@@ -103,7 +103,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
 export class WorkspaceCompiler {
   constructor(private workspace: Workspace, private envs: Environments) {
-    this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+    if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
   }
 
   async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
