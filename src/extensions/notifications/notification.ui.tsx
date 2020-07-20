@@ -3,7 +3,7 @@ import { v1 } from 'uuid';
 
 import { NotificationApi, MessageLevel } from './notification-api';
 import { NotificationCenter, NotificationCenterProps } from './ui/notification-center';
-import { NotificationContext, Message } from './ui/notification-context';
+import { NotificationContext } from './ui/notification-context';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 
@@ -33,7 +33,7 @@ export default class NotificationUI implements NotificationApi {
       content: {
         id,
         message,
-        level: level,
+        level,
         time: new Date().toISOString(),
       },
     });
@@ -67,8 +67,6 @@ export default class NotificationUI implements NotificationApi {
   };
 
   private renderContext = ({ children }: { children: ReactNode }) => {
-    const notificationApi = this;
-
-    return <NotificationContext.Provider value={notificationApi}>{children}</NotificationContext.Provider>;
+    return <NotificationContext.Provider value={this}>{children}</NotificationContext.Provider>;
   };
 }

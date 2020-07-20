@@ -71,7 +71,7 @@ export class UIRuntimeExtension {
     this.hudSlot.register(element);
   };
 
-  //** adds global context at the ui root */
+  // ** adds global context at the ui root */
   registerContext(context: ContextType) {
     this.contextSlot.register(context);
   }
