@@ -252,6 +252,8 @@ export default class Workspace implements ComponentFactory {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
     const extensions = component?.config.extensions ?? new ExtensionDataList();
+    // Add the default scope to the extension because we enforce it in config files
+    await this.addDefaultScopeToExtensionsList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     if (!componentDir) {
       throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
@@ -567,6 +569,24 @@ export default class Workspace implements ComponentFactory {
         // Assuming extensionId always has scope - do not allow extension id without scope
         const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, false);
         extensionEntry.extensionId = resolvedId._legacy;
+      }
+    });
+    return Promise.all(resolveMergedExtensionsP);
+  }
+
+  /**
+   * This will mutate the original extensions list and make sure all extensions has the ids with the scope / default scope
+   *
+   * @param {ExtensionDataList} extensions
+   * @returns {Promise<void[]>}
+   * @memberof Workspace
+   */
+  addDefaultScopeToExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
+    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
+      if (extensionEntry.extensionId && !extensionEntry.extensionId.hasScope()) {
+        const componentId = ComponentID.fromLegacy(extensionEntry.extensionId);
+        const defaultScope = await this.componentDefaultScope(componentId);
+        extensionEntry.extensionId = extensionEntry.extensionId.changeScope(defaultScope);
       }
     });
     return Promise.all(resolveMergedExtensionsP);

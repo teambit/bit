@@ -1,11 +1,17 @@
 /* eslint-disable max-classes-per-file */
 import R, { forEachObjIndexed } from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { BitId, BitIds } from '../../bit-id';
 import { AbstractVinyl } from '../component/sources';
 import { Artifact } from '../component/sources/artifact';
 import Source from '../../scope/models/source';
+import { sortObject } from '../../utils';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
+type ConfigOnlyEntry = {
+  id: string;
+  config: Record<string, any>;
+};
 
 export class ExtensionDataEntry {
   constructor(
@@ -108,8 +114,23 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigObject() {
     const res = {};
-    this.forEach((entry) => (res[entry.stringId] = entry.config));
+    this.forEach((entry) => {
+      if (entry.config && !R.isEmpty(entry.config)) {
+        res[entry.stringId] = entry.config;
+      }
+    });
     return res;
+  }
+
+  toConfigArray(): ConfigOnlyEntry[] {
+    const arr = this.map((entry) => {
+      // Remove extensions without config
+      if (entry.config && !R.isEmpty(entry.config)) {
+        return { id: entry.stringId, config: entry.config };
+      }
+      return undefined;
+    });
+    return compact(arr);
   }
 
   clone(): ExtensionDataList {
@@ -119,6 +140,15 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   _filterLegacy(): ExtensionDataList {
     return ExtensionDataList.fromArray(this.filter((ext) => !ext.isLegacy));
+  }
+
+  sortById(): ExtensionDataList {
+    const arr = R.sortBy(R.prop('stringId'), this);
+    // Also sort the config
+    arr.forEach((entry) => {
+      entry.config = sortObject(entry.config);
+    });
+    return ExtensionDataList.fromArray(arr);
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any }): ExtensionDataList {
