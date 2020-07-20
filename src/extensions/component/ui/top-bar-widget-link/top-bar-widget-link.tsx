@@ -1,7 +1,9 @@
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, NavLinkProps, useRouteMatch } from 'react-router-dom';
 
+import { useRouteMatch } from 'react-router-dom';
+import { NavLink, NavLinkProps } from '../../../react-router/nav-link';
+import { extendPath } from '../../../react-router/extend-path';
 import styles from './top-bar-widget-link.module.scss';
 
 export function TopBarWidgetLink(props: NavLinkProps) {
@@ -12,7 +14,7 @@ export function TopBarWidgetLink(props: NavLinkProps) {
       {...props}
       className={classnames(props.className, styles.widgetLink)}
       activeClassName={classnames(props.className, styles.active)}
-      to={`${url}/${props.to}`}
+      href={extendPath(url, props.href)}
     >
       {props.children}
     </NavLink>

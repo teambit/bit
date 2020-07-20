@@ -1,6 +1,7 @@
 import React, { useContext, useCallback } from 'react';
 import classNames from 'classnames';
-import { NavLink } from 'react-router-dom';
+
+import { NavLink } from '../../../../react-router/nav-link';
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
@@ -22,7 +23,7 @@ export function ComponentView(props: TreeNodeProps) {
 
   return (
     <NavLink
-      to={`/${node.id}`}
+      href={`/${node.id}`}
       className={classNames(indentClass, clickable, hoverable, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}

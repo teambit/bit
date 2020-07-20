@@ -1,9 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-// import { NavLink, NavLinkProps, useRouteMatch } from 'react-router-dom';
-// import { Button } from '@bit/bit.evangelist.elements.button';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
-// import { themedText } from '@bit/bit.base-ui.text.themed-text';
 
 // placeholder until we publish the component from react new project
 import { VersionTag } from '../../../stage-components/workspace-components/version-tag';
@@ -41,7 +38,7 @@ export function TopBar({ navigationSlot, widgetSlot, className, version }: TopBa
           <Icon className={classnames(styles.icon)} of="dependency" />
         </span> */}
         {widgetLinks.map((widget, index) => (
-          <TopBarWidgetLink key={index} to={widget.to} className={styles.widget}>
+          <TopBarWidgetLink key={index} href={widget.href} className={styles.widget}>
             <Icon className={classnames(styles.icon)} of="changelog" />
           </TopBarWidgetLink>
         ))}
