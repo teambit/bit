@@ -157,6 +157,8 @@ export function diffBetweenComponentsObjects(
 ): FieldsDiff[] | null | undefined {
   const printableLeft = componentToPrintableForDiff(componentLeft);
   const printableRight = componentToPrintableForDiff(componentRight);
+  const leftVersion = componentLeft.version;
+  const rightVersion = componentRight.version;
   const fieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);
   if (!componentLeft.version || !componentRight.version) {
     throw new Error('diffBetweenComponentsObjects component does not have a version');
@@ -178,7 +180,8 @@ export function diffBetweenComponentsObjects(
     return `+ ${printFieldValue(fieldValue)}\n`;
   };
   const fieldsDiffOutput = Object.keys(fieldsDiff).map((field: string) => {
-    const title = titleLeft(field) + chalk.bold(titleRight(field));
+    const title =
+      titleLeft(field, leftVersion, rightVersion) + chalk.bold(titleRight(field, leftVersion, rightVersion));
     const value = chalk.red(printFieldLeft(field)) + chalk.green(printFieldRight(field));
     const diffOutput = title + value;
     return { fieldName: field, diffOutput };
@@ -195,7 +198,8 @@ export function diffBetweenComponentsObjects(
       if (!dependencyRight) return acc;
       if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
       const fieldName = `Dependency ${idStr} relative-paths`;
-      const title = titleLeft(fieldName) + chalk.bold(titleRight(fieldName));
+      const title =
+        titleLeft(fieldName, leftVersion, rightVersion) + chalk.bold(titleRight(fieldName, leftVersion, rightVersion));
       const getValue = (fieldValue: Record<string, any>, left: boolean) => {
         if (R.isEmpty(fieldValue)) return '';
         const sign = left ? '-' : '+';
