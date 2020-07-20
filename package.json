@@ -318,6 +318,7 @@
     "@types/fs-extra": "^8.1.0",
     "@types/get-port": "^4.2.0",
     "@types/graphlib": "^2.1.5",
+    "@types/history": "^4.7.6",
     "@types/lodash.head": "^4.0.6",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.27",
