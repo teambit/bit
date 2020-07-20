@@ -6,7 +6,7 @@ import { UIRoot } from './ui-root.ui';
 import { GraphQlUI } from '../graphql/graphql.ui';
 import { ReactRouterUI } from '../react-router/react-router.ui';
 import { ClientContext } from './ui/client-context';
-import { Compose } from './Compose';
+import { Compose } from './compose';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
