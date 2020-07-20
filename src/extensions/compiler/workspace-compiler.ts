@@ -2,7 +2,7 @@
 import path from 'path';
 import BluebirdPromise from 'bluebird';
 import { Workspace } from '../workspace';
-import { DEFAULT_DIST_DIRNAME } from './../../constants';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { BitId, BitIds } from '../../bit-id';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -51,6 +51,9 @@ export class ComponentCompiler {
 
   private throwOnCompileErrors() {
     if (this.compileErrors.length) {
+      this.compileErrors.forEach((errorItem) =>
+        logger.error(`compilation error at ${errorItem.path}`, errorItem.error)
+      );
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
       throw new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);

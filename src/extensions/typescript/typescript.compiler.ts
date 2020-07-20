@@ -24,7 +24,7 @@ export class TypescriptCompiler implements Compiler {
   ): { outputText: string; outputPath: string }[] | null {
     const supportedExtensions = ['.ts', '.tsx'];
     const fileExtension = path.extname(options.filePath);
-    if (!supportedExtensions.includes(fileExtension)) {
+    if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
