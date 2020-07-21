@@ -219,7 +219,9 @@ export default class Workspace implements ComponentFactory {
       consumerComponent
     );
 
-    if (!component) return this.newComponentFromState(state);
+    if (!component) {
+      return this.executeLoadSlot(this.newComponentFromState(state));
+    }
 
     component.state = state;
     return this.executeLoadSlot(component);

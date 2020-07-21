@@ -44,7 +44,7 @@ export function Compositions() {
   useEffect(() => {
     selectComposition(component.compositions[0]);
   }, [component]);
-
+  const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
   return (
     <PanelContainer className={styles.compositionsPage}>
       <ComponentComposition component={component} composition={selected}></ComponentComposition>
@@ -56,7 +56,12 @@ export function Compositions() {
             <Tab>dependencies</Tab>
           </TabList>
           <TabPanel>
-            <CompositionsPanel onSelect={selectComposition} compositions={component.compositions} active={selected} />
+            <CompositionsPanel
+              onSelect={selectComposition}
+              url={compositionUrl}
+              compositions={component.compositions}
+              active={selected}
+            />
           </TabPanel>
           <TabPanel>
             {properties && properties.length > 0 ? (
