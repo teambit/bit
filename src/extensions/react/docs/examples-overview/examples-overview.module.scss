@@ -1,19 +1,16 @@
-
-
-.topRow {
+.examples {
 	display: flex;
-    align-items: baseline;
-    margin-bottom: 20px;
+	flex-wrap: wrap;
 }
 
-.marginBottom {
-	margin-bottom: 30px;
-}
-
-.marginRight {
-	margin-right: 10px;
-}
-
-.maxWidth {
-	max-width: 700px;
+.playCard  {
+	margin-bottom: 16px;
+	
+	&:not(:last-child){
+		margin-right : 16px;
+	}
+	
+	> :not(:last-child) {
+		margin-bottom: 8px;
+	}
 }

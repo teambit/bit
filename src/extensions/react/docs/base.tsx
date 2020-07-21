@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React, { HTMLAttributes, FC } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
@@ -10,11 +10,17 @@ import { CompositionsSummary } from './compositions-summary/compositions-summary
 import { Properties } from './properties/properties';
 // import { ThemeContext } from './theme-context';
 import { ComponentOverview } from './component-overview';
-import { ExamplesOverview } from './examples-overview';
+import { ExamplesOverview, ExampleProps } from './examples-overview';
 import styles from './base.module.scss';
 
 export type DocsSectionProps = {
-  docs: any;
+  docs: {
+    examples?: ExampleProps[];
+    default?: FC<any>;
+    labels?: string[];
+    abstract?: string;
+    compositions?: React.ComponentType[];
+  };
   compositions: React.ComponentType[];
   componentId: string;
 } & HTMLAttributes<HTMLDivElement>;
@@ -65,12 +71,14 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   const component = ComponentModel.from(data.workspace.getComponent);
   const docsModel = data.workspace.getDocs;
 
-  // @todo uri we should pass all this as props properly to the template.
-  const Content = isFunction(docs.default) ? docs.default : () => <div></div>;
-  const labels = docs.labels || [];
-  const examples = docs.examples || [];
-  const abstract = docs.abstract || docsModel.abstract || '';
-  const overviewCompositions = docs.compositions || compositions;
+  const {
+    examples = [],
+    labels = [],
+    abstract = docsModel.abstract,
+    compositions: overviewCompositions = compositions,
+  } = docs;
+
+  const Content = isFunction(docs.default) ? docs.default : () => null;
 
   return (
     <ThemeContext>
