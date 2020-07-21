@@ -12,6 +12,7 @@ import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { Environments } from '../environments';
 import { Compiler } from './types';
+import { ComponentID } from '../component';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -65,10 +66,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   }
 
   private get componentDir() {
-    const relativeComponentDir = this.component.componentMap?.getComponentDir();
-    if (!relativeComponentDir)
-      throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
-    return path.join(this.workspace.path, relativeComponentDir);
+    return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {
@@ -106,7 +104,7 @@ export class WorkspaceCompiler {
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
-    const bitIds = this.getBitIds(componentsIds);
+    const bitIds = await this.getBitIds(componentsIds);
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
@@ -162,12 +160,10 @@ export class WorkspaceCompiler {
     return buildResults;
   }
 
-  private getBitIds(componentsIds: Array<string | BitId>): BitId[] {
-    if (componentsIds.length) {
-      return componentsIds.map((compId) =>
-        compId instanceof BitId ? compId : this.workspace.consumer.getParsedId(compId)
-      );
-    }
-    return this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
+  private async getBitIds(componentsIds: Array<string | BitId>): Promise<BitId[]> {
+    const ids: ComponentID[] = componentsIds.length
+      ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
+      : this.workspace.getAllComponentIds();
+    return ids.map((id) => id._legacy);
   }
 }

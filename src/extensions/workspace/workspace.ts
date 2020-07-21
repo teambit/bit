@@ -145,6 +145,15 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
+  /**
+   * get all workspace component-ids, include vendor components.
+   * (exclude nested dependencies in case dependencies are saved as components and not packages)
+   */
+  getAllComponentIds(): ComponentID[] {
+    const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+    return bitIds.map((id) => new ComponentID(id));
+  }
+
   async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
