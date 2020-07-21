@@ -53,8 +53,7 @@ export class TypescriptCompiler implements Compiler {
       throw new Error(error);
     }
 
-    const replaceExtToJs = (filePath) => filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
-    const outputPath = replaceExtToJs(options.filePath);
+    const outputPath = this.replaceFileExtToJs(options.filePath);
     const outputFiles = [{ outputText: result.outputText, outputPath }];
     if (result.sourceMapText) {
       outputFiles.push({
@@ -111,7 +110,22 @@ export class TypescriptCompiler implements Compiler {
       return { id, errors };
     });
 
-    return { artifacts: [{ dirName: 'dist' }], components };
+    return { artifacts: [{ dirName: this.getDistDir() }], components };
+  }
+
+  /**
+   * returns the dist directory on the capsule
+   */
+  getDistDir() {
+    return 'dist';
+  }
+
+  /**
+   * given a source file, return its parallel in the dists. e.g. index.ts => dist/index.js
+   */
+  getDistPathBySrcPath(srcPath: string) {
+    const fileWithJSExt = this.replaceFileExtToJs(srcPath);
+    return path.join(this.getDistDir(), fileWithJSExt);
   }
 
   private writeTypes(rootDir: string) {
@@ -121,5 +135,10 @@ export class TypescriptCompiler implements Compiler {
 
       fs.outputFileSync(path.join(rootDir, 'types', filename), contents);
     });
+  }
+
+  private replaceFileExtToJs(filePath: string): string {
+    const fileExtension = path.extname(filePath);
+    return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
   }
 }
