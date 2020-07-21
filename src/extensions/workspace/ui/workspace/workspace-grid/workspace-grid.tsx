@@ -1,5 +1,4 @@
 import React from 'react';
-import classNames from 'classnames';
 import R from 'ramda';
 import { ComponentGrid } from '@bit/bit.explorer.ui.component-grid';
 import { ComponentCard } from '@bit/bit.explorer.ui.component-card';
@@ -21,7 +20,7 @@ export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridPro
               <ComponentCard
                 id={R.path(['legacyComponentId', 'name'], component)}
                 size={14093}
-                description="Base title component, to be styled by composing components sjkdhlkjdf sdjkhflksjdf jksdhfl."
+                description="Base title component, to be styled by composing components."
               />
               {compositions && compositions.length > 0 && (
                 <ComponentComposition component={component} composition={compositions[0]} />
