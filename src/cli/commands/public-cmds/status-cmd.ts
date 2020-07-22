@@ -18,6 +18,8 @@ export const statusFailureMsg = 'issues found';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
+export const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
+  please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
 
 export default class Status implements LegacyCommand {
   name = 'status';
@@ -170,12 +172,10 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
-    const individualFilesDesc = `\nthese components were added as individual files and not as directories, which are invalid in Harmony
-please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.\n`;
     const individualFilesOutput = immutableUnshift(
       componentsWithIndividualFiles.map((c) => format(c.id.toString(), false, 'individual files')).sort(),
       componentsWithIndividualFiles.length
-        ? chalk.underline.white('components with individual files') + individualFilesDesc
+        ? `${chalk.underline.white('components with individual files')}\n${individualFilesDesc}\n`
         : ''
     ).join('\n');
 

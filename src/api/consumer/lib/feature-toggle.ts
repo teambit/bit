@@ -59,6 +59,10 @@ export function isLaneEnabled() {
   return isFeatureEnabled(LANES_FEATURE);
 }
 
+export function isHarmonyEnabled() {
+  return isFeatureEnabled(HARMONY_FEATURE);
+}
+
 export function throwForUsingLaneIfDisabled() {
   if (isLaneEnabled()) return;
   throw new GeneralError(`lanes/snaps features are disabled.
