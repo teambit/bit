@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { ExtensionDataList } from './extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from './extension-data';
+import { BitId } from '../../bit-id';
 
 describe('ExtensionDataList', () => {
   describe('merge lists', () => {
@@ -52,6 +53,66 @@ describe('ExtensionDataList', () => {
       expect(mergedAsObject['my-scope/ext4']).to.deep.equal({
         conf1: 'val1',
       });
+    });
+  });
+  describe('sort lists', () => {
+    let sorted;
+    before(() => {
+      const list = ExtensionDataList.fromConfigObject({
+        'my-scope/ext3': {
+          conf1: 'val1',
+        },
+        'my-scope/ext1': {
+          conf1: 'val2',
+          conf4: 'val4',
+        },
+        'my-scope/ext4': {
+          conf1: 'val1',
+        },
+      });
+
+      sorted = list.sortById();
+    });
+    it('should sort the list by ids', () => {
+      expect(sorted[0].stringId).to.equal('my-scope/ext1');
+      expect(sorted[1].stringId).to.equal('my-scope/ext3');
+      expect(sorted[2].stringId).to.equal('my-scope/ext4');
+    });
+  });
+  describe('to config array', () => {
+    let configArr;
+    before(() => {
+      const configEntry = new ExtensionDataEntry(undefined, BitId.parse('my-scope/ext1', true), undefined, {
+        conf1: 'val1',
+      });
+      const dataEntry = new ExtensionDataEntry(
+        undefined,
+        BitId.parse('my-scope/ext2', true),
+        undefined,
+        {},
+        { data1: 'val1' }
+      );
+      const dataConfigEntry = new ExtensionDataEntry(
+        undefined,
+        BitId.parse('my-scope/ext3', true),
+        undefined,
+        { conf3: 'val3' },
+        { data3: 'val3' }
+      );
+      const list = ExtensionDataList.fromArray([configEntry, dataEntry, dataConfigEntry]);
+      configArr = list.toConfigArray();
+    });
+    it('should not have entries with data only', () => {
+      expect(configArr.length).to.equal(2);
+    });
+    it('should have entries with config only', () => {
+      expect(configArr[0].id.toString()).to.equal('my-scope/ext1');
+      expect(configArr[0].config).to.deep.equal({ conf1: 'val1' });
+    });
+    it('should have entries with data and config but without the data', () => {
+      expect(configArr[1].id.toString()).to.equal('my-scope/ext3');
+      expect(configArr[1].config).to.deep.equal({ conf3: 'val3' });
+      expect(configArr[1].data).to.be.undefined;
     });
   });
 });

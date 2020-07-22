@@ -1,12 +1,42 @@
 
 .linkWrapper {
   padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  &:hover {
+    background-color: var(--border-color, #ededed);
+    border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: var(--text-muted);
+      //TODO - fix hover effect and timing of icon
+      transition: visibility 200ms, opacity 100ms ease-in-out;
+    }
+  }
   &.active {
     display: flex;
     align-items: center;
     background-color: var(--base-color);
     color: var(--bg-base);
     border-radius: 8px;
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: inherit;
+    }
+  }
+  .left {
+    display: flex;
+    flex-grow: 1;
+  }
+  .right {
+    opacity: 0;
+    visibility: hidden;
+    font-size: 13px;
+    transition: visibility 200ms, opacity 100ms ease-in-out;
   }
 }
 
@@ -16,6 +46,11 @@
 .panelLink {
   cursor: pointer;
   width: 100%;
+  text-decoration: none;
+  color: inherit;
+  &:active {
+    color: inherit;
+  }
 }
 
 .composition {

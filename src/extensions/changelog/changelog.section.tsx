@@ -10,7 +10,7 @@ export class ChangelogSection implements Section {
     children: <ChangeLogPage className={styles.changeLog} versions={versionsArray} />,
   };
   navigationLink = {
-    to: '~changelog',
+    href: '~changelog',
     children: 'Changelog',
   };
 }

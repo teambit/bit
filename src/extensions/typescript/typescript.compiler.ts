@@ -4,6 +4,7 @@ import ts from 'typescript';
 import { Compiler } from '../compiler';
 import { Network } from '../isolator';
 import { BuildResults } from '../builder';
+import { TranspileOpts, TranspileOutput } from '../compiler/types';
 
 export class TypescriptCompiler implements Compiler {
   constructor(
@@ -18,13 +19,10 @@ export class TypescriptCompiler implements Compiler {
     private types: string[]
   ) {}
 
-  transpileFile(
-    fileContent: string,
-    options: { componentDir: string; filePath: string }
-  ): { outputText: string; outputPath: string }[] | null {
+  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
     const supportedExtensions = ['.ts', '.tsx'];
     const fileExtension = path.extname(options.filePath);
-    if (!supportedExtensions.includes(fileExtension)) {
+    if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
@@ -53,8 +51,7 @@ export class TypescriptCompiler implements Compiler {
       throw new Error(error);
     }
 
-    const replaceExtToJs = (filePath) => filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
-    const outputPath = replaceExtToJs(options.filePath);
+    const outputPath = this.replaceFileExtToJs(options.filePath);
     const outputFiles = [{ outputText: result.outputText, outputPath }];
     if (result.sourceMapText) {
       outputFiles.push({
@@ -111,7 +108,26 @@ export class TypescriptCompiler implements Compiler {
       return { id, errors };
     });
 
-    return { artifacts: [{ dirName: 'dist' }], components };
+    return { artifacts: [{ dirName: this.getDistDir() }], components };
+  }
+
+  /**
+   * returns the dist directory on the capsule
+   */
+  getDistDir() {
+    return 'dist';
+  }
+
+  /**
+   * given a source file, return its parallel in the dists. e.g. index.ts => dist/index.js
+   */
+  getDistPathBySrcPath(srcPath: string) {
+    const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
+    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+  }
+
+  isFileSupported(filePath: string): boolean {
+    return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
   private writeTypes(rootDir: string) {
@@ -121,5 +137,11 @@ export class TypescriptCompiler implements Compiler {
 
       fs.outputFileSync(path.join(rootDir, 'types', filename), contents);
     });
+  }
+
+  private replaceFileExtToJs(filePath: string): string {
+    if (!this.isFileSupported(filePath)) return filePath;
+    const fileExtension = path.extname(filePath);
+    return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
   }
 }

@@ -12,7 +12,7 @@ export class OverviewSection implements Section {
   ) {}
 
   navigationLink = {
-    to: '',
+    href: '',
     exact: true,
     children: 'Overview',
   };

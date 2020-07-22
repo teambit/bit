@@ -20,6 +20,9 @@ import { BundlerExtension } from '../bundler';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { OnComponentLoad } from './on-component-load';
+import { OnComponentChange } from './on-component-change';
+import { WatchCommand } from './watch/watch.cmd';
+import { Watcher } from './watch/watcher';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -35,6 +38,8 @@ export type WorkspaceDeps = [
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
+
+export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 
 export type WorkspaceCoreConfig = {
   /**
@@ -54,7 +59,7 @@ export type WorkspaceCoreConfig = {
 export default async function provideWorkspace(
   [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot]: [OnComponentLoadSlot],
+  [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -79,7 +84,8 @@ export default async function provideWorkspace(
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony,
-        onComponentLoadSlot
+        onComponentLoadSlot,
+        onComponentChangeSlot
       );
 
       ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
@@ -106,6 +112,8 @@ export default async function provideWorkspace(
       const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
       cli.register(capsuleListCmd);
       cli.register(capsuleCreateCmd);
+      const watcher = new Watcher(workspace);
+      cli.register(new WatchCommand(watcher));
       component.registerHost(workspace);
 
       return workspace;

@@ -1,0 +1,68 @@
+$animationTime: 300ms;
+
+.notificationCenter {
+	position: fixed;
+	right: 16px;
+	bottom: 8px;
+	
+	// TODO - overflow
+}
+
+.timestamp {
+	font-size: 0.85em;
+	text-align: right;
+}
+
+.notification {
+	margin: 8px 0;
+	transform-origin: right bottom;
+	max-height: 100vh;
+	transition: all $animationTime, max-height $animationTime / 2 ease-out;
+	
+	animation: enter $animationTime forwards;
+	
+	button {
+		border: none;
+		background: inherit;
+		float: right;
+	}
+	
+	&.dismissing {
+		animation: exit $animationTime forwards ;
+		overflow: hidden;
+		max-height: 0px;
+		margin: 0px;
+		padding: 0px;
+	}
+}
+
+@keyframes exit {
+	0%{
+		transform: scale(1) translate(0%, 0);
+		opacity: 1;
+	}
+	
+	99% {
+		transform: scale(0.1) translate(200%, 0);
+		opacity: 0;
+	}
+	100% {
+		visibility: hidden;
+	}
+}
+
+@keyframes enter {
+	0% {
+		transform: scale(0.1) translate(200%, 0);
+		opacity: 0;
+	}
+
+	99%{
+		transform: scale(1) translate(0%, 0);
+		opacity: 1;
+	}	
+}
+
+:export {
+	dismissTime: $animationTime / 1ms;
+}

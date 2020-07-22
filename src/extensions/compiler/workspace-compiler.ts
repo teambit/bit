@@ -2,7 +2,7 @@
 import path from 'path';
 import BluebirdPromise from 'bluebird';
 import { Workspace } from '../workspace';
-import { DEFAULT_DIST_DIRNAME } from './../../constants';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { BitId, BitIds } from '../../bit-id';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -12,6 +12,8 @@ import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { Environments } from '../environments';
 import { Compiler } from './types';
+import { Component } from '../component';
+import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -32,7 +34,6 @@ export class ComponentCompiler {
   ) {}
 
   async compile(): Promise<BuildResult> {
-    // const { component, compilerName: compilerId, compilerInstance } = componentAndNewCompiler;
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
@@ -51,6 +52,9 @@ export class ComponentCompiler {
 
   private throwOnCompileErrors() {
     if (this.compileErrors.length) {
+      this.compileErrors.forEach((errorItem) =>
+        logger.error(`compilation error at ${errorItem.path}`, errorItem.error)
+      );
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
       throw new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);
@@ -73,15 +77,18 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {
     const options = { componentDir: this.componentDir, filePath: file.relative };
+    const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
-    try {
-      compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
-    } catch (error) {
-      this.compileErrors.push({ path: file.path, error });
-      return;
+    if (isFileSupported) {
+      try {
+        compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
+      } catch (error) {
+        this.compileErrors.push({ path: file.path, error });
+        return;
+      }
     }
     const base = this.distDir;
-    if (compileResults) {
+    if (isFileSupported && compileResults) {
       this.dists.push(
         ...compileResults.map(
           (result) =>
@@ -100,7 +107,19 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: Environments) {}
+  constructor(private workspace: Workspace, private envs: Environments) {
+    if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+  }
+
+  async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
+    const buildResults = await this.compileComponents([component.id.toString()], options);
+    return {
+      results: buildResults,
+      toString() {
+        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+      },
+    };
+  }
 
   async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all
