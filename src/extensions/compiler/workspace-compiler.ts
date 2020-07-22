@@ -71,9 +71,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   }
 
   private get componentDir(): PathOsBasedAbsolute {
-    const compDir = this.workspace.componentDir(new ComponentID(this.component.id));
-    if (!compDir) throw new Error(`ComponentCompiler.componentDir expects to have component-dir`);
-    return compDir;
+    return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {

@@ -50,7 +50,7 @@ export class WorkspaceUIRoot implements UIRoot {
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
-  ): PathOsBased | undefined {
+  ): PathOsBased {
     return this.workspace.componentDir(componentId, bitMapOptions, options);
   }
 
