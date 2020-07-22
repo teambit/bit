@@ -35,7 +35,6 @@ export class ComponentCompiler {
   ) {}
 
   async compile(): Promise<BuildResult> {
-    // const { component, compilerName: compilerId, compilerInstance } = componentAndNewCompiler;
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
@@ -76,15 +75,18 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {
     const options = { componentDir: this.componentDir, filePath: file.relative };
+    const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
-    try {
-      compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
-    } catch (error) {
-      this.compileErrors.push({ path: file.path, error });
-      return;
+    if (isFileSupported) {
+      try {
+        compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
+      } catch (error) {
+        this.compileErrors.push({ path: file.path, error });
+        return;
+      }
     }
     const base = this.distDir;
-    if (compileResults) {
+    if (isFileSupported && compileResults) {
       this.dists.push(
         ...compileResults.map(
           (result) =>

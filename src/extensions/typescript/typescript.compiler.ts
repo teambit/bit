@@ -4,6 +4,7 @@ import ts from 'typescript';
 import { Compiler } from '../compiler';
 import { Network } from '../isolator';
 import { BuildResults } from '../builder';
+import { TranspileOpts, TranspileOutput } from '../compiler/types';
 
 export class TypescriptCompiler implements Compiler {
   constructor(
@@ -18,10 +19,7 @@ export class TypescriptCompiler implements Compiler {
     private types: string[]
   ) {}
 
-  transpileFile(
-    fileContent: string,
-    options: { componentDir: string; filePath: string }
-  ): { outputText: string; outputPath: string }[] | null {
+  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
     const supportedExtensions = ['.ts', '.tsx'];
     const fileExtension = path.extname(options.filePath);
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
@@ -124,8 +122,12 @@ export class TypescriptCompiler implements Compiler {
    * given a source file, return its parallel in the dists. e.g. index.ts => dist/index.js
    */
   getDistPathBySrcPath(srcPath: string) {
-    const fileWithJSExt = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExt);
+    const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
+    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+  }
+
+  isFileSupported(filePath: string): boolean {
+    return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
   private writeTypes(rootDir: string) {
@@ -138,6 +140,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   private replaceFileExtToJs(filePath: string): string {
+    if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
   }
