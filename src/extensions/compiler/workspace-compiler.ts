@@ -15,6 +15,7 @@ import { Compiler } from './types';
 import { ComponentID } from '../component';
 import { Component } from '../component';
 import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -62,15 +63,17 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private get distDir() {
+  private get distDir(): PathOsBasedRelative {
     const packageName = componentIdToPackageName(this.component);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = DEFAULT_DIST_DIRNAME;
     return path.join(packageDir, distDirName);
   }
 
-  private get componentDir() {
-    return this.workspace.componentDir(new ComponentID(this.component.id));
+  private get componentDir(): PathOsBasedAbsolute {
+    const compDir = this.workspace.componentDir(new ComponentID(this.component.id));
+    if (!compDir) throw new Error(`ComponentCompiler.componentDir expects to have component-dir`);
+    return compDir;
   }
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {
