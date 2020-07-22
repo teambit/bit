@@ -1,8 +1,10 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Component } from '../component';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
+import { Component, ComponentExtension } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { environmentsSchema } from './environments.graphql';
+import { GraphQLExtension } from '../graphql';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -25,13 +27,16 @@ export class Environments {
     </svg>`;
   }
 
-  static dependencies = [];
-
   constructor(
     /**
      * environments extension configuration.
      */
     readonly config: EnvsConfig,
+
+    /**
+     * harmony context.
+     */
+    private context: Harmony,
 
     /**
      * slot for allowing extensions to register new environment.
@@ -55,6 +60,27 @@ export class Environments {
     const env = this.envSlot.get(envId);
     if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
     return env;
+  }
+
+  /**
+   * get an environment Descriptor.
+   */
+  getDescriptor(component: Component) {
+    //TODO: @guy after fix core extension then take it from core extension
+    const extension = component.config.extensions.findExtension(Environments.id);
+    if (!extension) return;
+    const envId = extension.config.env;
+    const instance = this.context.get<any>(envId);
+    const iconFn = instance.icon;
+    const defaultIcon = `
+      <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="25" cy="25" r="20"/>
+      </svg>`;
+    const icon = iconFn ? iconFn() : defaultIcon;
+    return {
+      id: envId,
+      icon,
+    };
   }
 
   /**
@@ -101,9 +127,16 @@ export class Environments {
   static slots = [Slot.withType<Environment>()];
 
   static defaultConfig = {};
+  static dependencies = [GraphQLExtension, ComponentExtension];
 
-  static async provider(_deps: [], config: EnvsConfig, [envSlot]: [EnvsRegistry]) {
-    const envs = new Environments(config, envSlot);
+  static async provider(
+    [graphql]: [GraphQLExtension],
+    config: EnvsConfig,
+    [envSlot]: [EnvsRegistry],
+    context: Harmony
+  ) {
+    const envs = new Environments(config, context, envSlot);
+    graphql.register(environmentsSchema(envs));
     return envs;
   }
 }
