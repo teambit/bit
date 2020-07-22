@@ -29,8 +29,9 @@ import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
-import { OnComponentLoadSlot } from './workspace.provider';
+import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
+import { OnComponentChange, OnComponentChangeOptions, OnComponentChangeResult } from './on-component-change';
 
 export type EjectConfResult = {
   configPath: string;
@@ -85,7 +86,12 @@ export default class Workspace implements ComponentFactory {
     /**
      * on component load slot.
      */
-    private onComponentLoadSlot: OnComponentLoadSlot
+    private onComponentLoadSlot: OnComponentLoadSlot,
+
+    /**
+     * on component change slot.
+     */
+    private onComponentChangeSlot: OnComponentChangeSlot
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -100,6 +106,11 @@ export default class Workspace implements ComponentFactory {
 
   onComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
+    return this;
+  }
+
+  registerOnComponentChange(onComponentChangeFunc: OnComponentChange) {
+    this.onComponentChangeSlot.register(onComponentChangeFunc);
     return this;
   }
 
@@ -217,7 +228,9 @@ export default class Workspace implements ComponentFactory {
       consumerComponent
     );
 
-    if (!component) return this.newComponentFromState(state);
+    if (!component) {
+      return this.executeLoadSlot(this.newComponentFromState(state));
+    }
 
     component.state = state;
     return this.executeLoadSlot(component);
@@ -235,6 +248,21 @@ export default class Workspace implements ComponentFactory {
     await Promise.all(promises);
 
     return component;
+  }
+
+  async triggerOnComponentChange(
+    id: ComponentID,
+    options: OnComponentChangeOptions
+  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
+    const component = await this.get(id);
+    const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ '@teambit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
+      const onChangeResult = await onChangeFunc(component, options);
+      results.push({ extensionId: extension, results: onChangeResult });
+    });
+
+    return results;
   }
 
   private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {

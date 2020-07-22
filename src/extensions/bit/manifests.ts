@@ -20,7 +20,6 @@ import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
 import { GraphQLExtension } from '../graphql';
-import { WatcherExtension } from '../watch';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
@@ -61,6 +60,5 @@ export const manifestsMap = {
   // TODO: take from the extension itself & change name to follow convention
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
-  [WatcherExtension.name]: WatcherExtension,
   [WorkspaceExt.name]: WorkspaceExt,
 };

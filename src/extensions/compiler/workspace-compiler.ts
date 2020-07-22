@@ -2,7 +2,7 @@
 import path from 'path';
 import BluebirdPromise from 'bluebird';
 import { Workspace } from '../workspace';
-import { DEFAULT_DIST_DIRNAME } from './../../constants';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { BitId, BitIds } from '../../bit-id';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -13,6 +13,8 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { Environments } from '../environments';
 import { Compiler } from './types';
 import { ComponentID } from '../component';
+import { Component } from '../component';
+import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -52,6 +54,9 @@ export class ComponentCompiler {
 
   private throwOnCompileErrors() {
     if (this.compileErrors.length) {
+      this.compileErrors.forEach((errorItem) =>
+        logger.error(`compilation error at ${errorItem.path}`, errorItem.error)
+      );
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
       throw new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);
@@ -98,7 +103,19 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: Environments) {}
+  constructor(private workspace: Workspace, private envs: Environments) {
+    if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
+  }
+
+  async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
+    const buildResults = await this.compileComponents([component.id.toString()], options);
+    return {
+      results: buildResults,
+      toString() {
+        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+      },
+    };
+  }
 
   async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all
