@@ -10,13 +10,12 @@ import { Environments } from '../environments';
 import { GraphQLExtension } from '../graphql';
 import { createWebpackConfig } from './webpack/webpack.config';
 import { BundlerExtension } from '../bundler/bundler.extension';
-import { WatcherExtension } from '../watch';
 import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
 import { createRoot } from './create-root';
 import { sha1 } from '../../utils';
 
-export type UIDeps = [CLIExtension, Environments, GraphQLExtension, BundlerExtension, WatcherExtension];
+export type UIDeps = [CLIExtension, Environments, GraphQLExtension, BundlerExtension];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 

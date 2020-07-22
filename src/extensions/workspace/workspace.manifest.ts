@@ -12,6 +12,7 @@ import { CLIExtension } from '../cli';
 import { UIExtension } from '../ui';
 import { BundlerExtension } from '../bundler';
 import { OnComponentLoad } from './on-component-load';
+import { OnComponentChange } from './on-component-change';
 
 export default {
   name: EXT_NAME,
@@ -27,7 +28,7 @@ export default {
     UIExtension,
     BundlerExtension,
   ],
-  slots: [Slot.withType<OnComponentLoad>()],
+  slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>()],
   provider: workspaceProvider,
   defineRuntime: 'browser',
 } as ExtensionManifest;

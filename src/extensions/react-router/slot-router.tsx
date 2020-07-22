@@ -1,8 +1,9 @@
 import React from 'react';
-import { Switch, Route, useRouteMatch, RouteProps, NavLinkProps } from 'react-router-dom';
+import { Switch, Route, useRouteMatch, RouteProps } from 'react-router-dom';
 
-import { extendPath } from './extend-path/extend-path';
+import { extendPath } from './extend-path';
 import { SlotRegistry } from '../../api';
+import { NavLinkProps } from './nav-link';
 
 export type RouteSlot = SlotRegistry<RouteProps>;
 export type NavigationSlot = SlotRegistry<NavLinkProps>;

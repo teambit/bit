@@ -19,6 +19,17 @@ export class StencilCompiler implements Compiler {
     ];
   }
 
+  getDistDir(): string {
+    throw new Error('Method not implemented.');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getDistPathBySrcPath(srcPath: string): string {
+    throw new Error('Method not implemented.');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isFileSupported(filePath: string): boolean {
+    throw new Error('Method not implemented.');
+  }
   // TODO: remove this once use context
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   build(context: BuildContext): Promise<BuildResults> {

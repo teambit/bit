@@ -98,7 +98,7 @@ export class CompositionsExtension {
   async onComponentLoad(component: Component): Promise<ExtensionData> {
     const compositions = this.readCompositions(component);
     return {
-      compositionList: compositions.map((composition) => composition.toObject()),
+      compositions: compositions.map((composition) => composition.toObject()),
     };
   }
 

@@ -12,7 +12,7 @@ export class CompositionsSection implements Section {
   ) {}
 
   navigationLink = {
-    to: '~compositions',
+    href: '~compositions',
     children: 'Compositions',
   };
 

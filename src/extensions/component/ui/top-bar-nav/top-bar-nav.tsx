@@ -1,21 +1,22 @@
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, NavLinkProps, useRouteMatch } from 'react-router-dom';
+import { useRouteMatch } from 'react-router-dom';
 
 import styles from './top-bar-nav.module.scss';
-import { extendPath } from '../../../react-router/extend-path/extend-path';
+import { extendPath } from '../../../react-router/extend-path';
+import { NavLink, NavLinkProps } from '../../../react-router/nav-link';
 
 export function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
-  const { to } = props;
-  const target = typeof to === 'string' ? extendPath(url, to) : to;
+  const { href } = props;
+  const target = extendPath(url, href);
 
   return (
     <NavLink
       {...props}
       className={classnames(props.className, styles.topBarLink)}
       activeClassName={classnames(props.className, styles.active)}
-      to={target}
+      href={target}
     />
   );
 }

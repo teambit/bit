@@ -140,4 +140,45 @@ describe('compile extension', function () {
       });
     });
   });
+  describe('component with unsupported compiler files', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJsonc.addDefaultScope();
+      const environments = {
+        env: '@teambit/react',
+        config: {},
+      };
+      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+      helper.fixtures.populateComponentsTS(1, undefined, true);
+      helper.fs.outputFile('comp1/style.css', 'h1{}');
+      helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
+      helper.command.runCmd('bit compile');
+    });
+    it('should copy non-supported files to the dists', () => {
+      const nmComponent = path.join(
+        helper.scopes.localPath,
+        'node_modules',
+        `@${helper.scopes.remote}`,
+        'comp1',
+        'dist'
+      );
+      expect(nmComponent).to.be.a.directory();
+      expect(path.join(nmComponent, 'index.js')).to.be.a.file();
+      expect(path.join(nmComponent, 'style.css')).to.be.a.file();
+      expect(path.join(nmComponent, 'types.d.ts')).to.be.a.file();
+
+      const styleContent = fs.readFileSync(path.join(nmComponent, 'style.css'));
+      expect(styleContent.toString()).to.be.equal('h1{}');
+    });
+    describe('tag the components', () => {
+      before(() => {
+        helper.command.tagAllComponents();
+      });
+      it('should copy unsupported files inside the capsule', () => {
+        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        expect(path.join(capsule, 'dist')).to.be.a.directory();
+        expect(path.join(capsule, 'dist/style.css')).to.be.a.file();
+      });
+    });
+  });
 });

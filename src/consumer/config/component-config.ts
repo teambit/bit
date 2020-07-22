@@ -144,31 +144,6 @@ export default class ComponentConfig extends AbstractConfig {
   mergeWithComponentData(component: Component) {
     this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
     this.lang = this.lang || component.lang;
-    // @todo: make sure with Gilad that this logic aligns with him
-    // some extensions are saved in the model but are not loaded by loadFromFileSystem.
-    // e.g. the compiler extension is not configured in workspace.jsonc, but it saved in the model
-    // with the artifacts.
-    // this function makes sure to add all missing extensions and artifacts from the model
-    const populateExtensions = () => {
-      if (!component.extensions.length) return;
-      if (!this.extensions.length) {
-        this.extensions = component.extensions;
-        return;
-      }
-      // both, model and consumer have extensions
-      component.extensions.forEach((extension) => {
-        const extensionFromConsumer = this.extensions.findExtension(extension.stringId);
-        if (!extensionFromConsumer) {
-          this.extensions.push(extension);
-          return;
-        }
-        // same extension exists in both, consumer and model. make sure the artifacts are populated
-        if (extension.artifacts.length && !extensionFromConsumer.artifacts.length) {
-          extensionFromConsumer.artifacts = extension.artifacts;
-        }
-      });
-    };
-    populateExtensions();
   }
 
   /**

@@ -1,6 +1,8 @@
 import React from 'react';
-import { RouteProps, NavLinkProps } from 'react-router-dom';
+import { RouteProps } from 'react-router-dom';
 import { Slot } from '@teambit/harmony';
+
+import { NavLinkProps } from '../react-router/nav-link';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
 

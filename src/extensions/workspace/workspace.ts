@@ -29,8 +29,9 @@ import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
-import { OnComponentLoadSlot } from './workspace.provider';
+import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
+import { OnComponentChange, OnComponentChangeOptions, OnComponentChangeResult } from './on-component-change';
 
 export type EjectConfResult = {
   configPath: string;
@@ -85,7 +86,12 @@ export default class Workspace implements ComponentFactory {
     /**
      * on component load slot.
      */
-    private onComponentLoadSlot: OnComponentLoadSlot
+    private onComponentLoadSlot: OnComponentLoadSlot,
+
+    /**
+     * on component change slot.
+     */
+    private onComponentChangeSlot: OnComponentChangeSlot
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -100,6 +106,11 @@ export default class Workspace implements ComponentFactory {
 
   onComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
+    return this;
+  }
+
+  registerOnComponentChange(onComponentChangeFunc: OnComponentChange) {
+    this.onComponentChangeSlot.register(onComponentChangeFunc);
     return this;
   }
 
@@ -230,6 +241,21 @@ export default class Workspace implements ComponentFactory {
     return component;
   }
 
+  async triggerOnComponentChange(
+    id: ComponentID,
+    options: OnComponentChangeOptions
+  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
+    const component = await this.get(id);
+    const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ '@teambit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
+      const onChangeResult = await onChangeFunc(component, options);
+      results.push({ extensionId: extension, results: onChangeResult });
+    });
+
+    return results;
+  }
+
   private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
@@ -254,6 +280,8 @@ export default class Workspace implements ComponentFactory {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
     const extensions = component?.config.extensions ?? new ExtensionDataList();
+    // Add the default scope to the extension because we enforce it in config files
+    await this.addDefaultScopeToExtensionsList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
     if (!componentDir) {
       throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
@@ -569,6 +597,24 @@ export default class Workspace implements ComponentFactory {
         // Assuming extensionId always has scope - do not allow extension id without scope
         const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, false);
         extensionEntry.extensionId = resolvedId._legacy;
+      }
+    });
+    return Promise.all(resolveMergedExtensionsP);
+  }
+
+  /**
+   * This will mutate the original extensions list and make sure all extensions has the ids with the scope / default scope
+   *
+   * @param {ExtensionDataList} extensions
+   * @returns {Promise<void[]>}
+   * @memberof Workspace
+   */
+  addDefaultScopeToExtensionsList(extensions: ExtensionDataList): Promise<void[]> {
+    const resolveMergedExtensionsP = extensions.map(async (extensionEntry) => {
+      if (extensionEntry.extensionId && !extensionEntry.extensionId.hasScope()) {
+        const componentId = ComponentID.fromLegacy(extensionEntry.extensionId);
+        const defaultScope = await this.componentDefaultScope(componentId);
+        extensionEntry.extensionId = extensionEntry.extensionId.changeScope(defaultScope);
       }
     });
     return Promise.all(resolveMergedExtensionsP);
