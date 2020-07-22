@@ -9,14 +9,14 @@ export function componentSchema(componentExtension: ComponentExtension) {
   return {
     typeDefs: gql`
       type ComponentID {
-        name: String
+        name: String!
         version: String
         scope: String
       }
 
       type Tag {
-        version: String
-        snap: Snap
+        version: String!
+        snap: Snap!
       }
 
       type Snap {
@@ -24,13 +24,13 @@ export function componentSchema(componentExtension: ComponentExtension) {
         hash: String!
 
         # time of the snapshot.
-        timestamp: String
+        timestamp: String!
 
         # parents of the snap
-        parents: [Snap]
+        parents: [Snap]!
 
         # snapper
-        author: Author
+        author: Author!
 
         # snapshot message
         message: String
@@ -38,23 +38,23 @@ export function componentSchema(componentExtension: ComponentExtension) {
 
       type Author {
         # display name of the snapper.
-        displayName: String
+        displayName: String!
 
         # author of the snapper.
-        email: String
+        email: String!
       }
 
       type Tag {
         # semver assigned to the tag.
-        version: String
+        version: String!
 
         # tag snapshot.
-        snap: Snap
+        snap: Snap!
       }
 
       type Component {
         # id of the component.
-        id: ComponentID
+        id: ComponentID!
 
         # head snap of the component.
         head: Snap
@@ -63,28 +63,30 @@ export function componentSchema(componentExtension: ComponentExtension) {
         headTag: Tag
 
         # display name of the component
-        displayName: String
+        displayName: String!
 
         # determines whether the component is new.
-        isNew: Boolean
+        isNew: Boolean!
 
         # determines whether the component is modified since its last version.
-        isModified: Boolean
+        isModified: Boolean!
 
         # package name of the component.
         packageName: String
 
         # list of component releases.
-        tags: [Tag]
-      }
+        tags: [Tag]!
 
-      type ComponentMeta {
-        id: ComponentID
-        displayName: String
+        # state of the component
+        state: State
       }
 
       type ComponentHost {
-        get(id: String!): Component
+        # load a component.
+        get(id: String!, withState: Boolean): Component
+
+        # list components
+        list(offset: Number, limit: Number): [Component]!
       }
 
       type Query {
@@ -123,7 +125,10 @@ export function componentSchema(componentExtension: ComponentExtension) {
       ComponentHost: {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
           const componentId = await host.resolveComponentId(id);
-          return host.get(componentId);
+          return host.get(componentId, false);
+        },
+        list: async (host: ComponentFactory, { offset, limit }: { offset: number; limit: number }) => {
+          return host.list();
         },
       },
       Query: {

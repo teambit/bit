@@ -11,12 +11,6 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
 
         # path of the scope.
         path: String
-
-        # list of components contained in the scope.
-        components: [ComponentMeta]
-
-        # get a specific component.
-        get(id: String!): Component
       }
 
       type Query {
@@ -27,9 +21,6 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
       Scope: {
         name: (scope: ScopeExtension) => scope.name,
         components: (scope: ScopeExtension) => scope.list(),
-        get: async (scope: ScopeExtension, { id }: { id: string }) => {
-          return scope.get(ComponentID.fromString(id));
-        },
       },
       Query: {
         scope: () => scopeExtension,

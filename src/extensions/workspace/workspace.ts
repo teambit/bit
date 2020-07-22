@@ -208,7 +208,7 @@ export default class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID): Promise<Component> {
+  async get(id: ComponentID, withState?: boolean = true): Promise<Component> {
     const consumerComponent = await this.consumer.loadComponent(id._legacy);
     const component = await this.scope.get(id);
 
