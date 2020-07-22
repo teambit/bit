@@ -35,4 +35,9 @@ export interface Compiler extends ConcreteService {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string;
+
+  /**
+   * only supported files matching get compiled. others, are copied to the dist dir.
+   */
+  isFileSupported(filePath: string): boolean;
 }
