@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { DevServerService } from './dev-server.service';
-import { Environments } from '../environments';
+import { Environments, ExecutionContext } from '../environments';
 import { GraphQLExtension } from '../graphql';
 import { devServerSchema } from './dev-server.graphql';
 import { ComponentServer } from './component-server';
@@ -59,11 +59,19 @@ export class BundlerExtension {
   }
 
   /**
-   * bundle components.
-   * @param components defaults to all components in the workspace.
+   * compute entry files for bundling components in a given execution context.
    */
-  async bundle(components?: Component[]) {
-    return components;
+  async computeEntries(context: ExecutionContext) {
+    const slotEntries = await Promise.all(
+      this.runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
+    );
+
+    const slotPaths = slotEntries.reduce((acc, current) => {
+      acc = acc.concat(current);
+      return acc;
+    });
+
+    return slotPaths;
   }
 
   /**
@@ -92,7 +100,9 @@ export class BundlerExtension {
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
     const bundler = new BundlerExtension(envs, new DevServerService(runtimeSlot), runtimeSlot);
+
     graphql.register(devServerSchema(bundler));
+
     return bundler;
   }
 }

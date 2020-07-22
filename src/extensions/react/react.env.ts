@@ -3,13 +3,14 @@ import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { BuildTask } from '../builder';
+import { BuildTask, BuildContext } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
-import { DevServer, DevServerContext } from '../bundler';
+import { DevServer, BundlerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
+import { Bundler } from '../bundler/bundler';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -79,12 +80,16 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext): DevServer {
+  getDevServer(context: BundlerContext): DevServer {
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
 
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+  }
+
+  async getBundler(context: BuildContext): Promise<Bundler> {
+    return this.webpack.createBundler(context, webpackConfigFactory());
   }
 
   /**

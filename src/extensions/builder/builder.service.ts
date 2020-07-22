@@ -4,6 +4,7 @@ import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
 import { LogPublisher } from '../types';
 import { BuildTask } from './types';
+import { TaskSlot } from './builder.extension';
 
 export class BuilderService implements EnvService {
   constructor(
@@ -16,7 +17,16 @@ export class BuilderService implements EnvService {
      * workspace extension.
      */
     private workspace: Workspace,
-    private logger: LogPublisher
+
+    /**
+     * logger extension.
+     */
+    private logger: LogPublisher,
+
+    /**
+     * task slot (e.g tasks registered by other extensions.).
+     */
+    private taskSlot: TaskSlot
   ) {}
 
   /**
@@ -28,7 +38,9 @@ export class BuilderService implements EnvService {
       throw new Error(`Builder service expects ${context.id} to implement getPipe()`);
     }
     const buildTasks: BuildTask[] = context.env.getPipe(context);
-    const buildPipe = BuildPipe.from(buildTasks, this.logger);
+    // merge with extension registered tasks.
+    const mergedTasks = buildTasks.concat(this.taskSlot.values());
+    const buildPipe = BuildPipe.from(mergedTasks, this.logger);
     this.logger.info(
       context.id,
       `start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`

@@ -43,8 +43,8 @@ export default class Core {
     return '1.0.0';
   }
 
-  getDescriptor(id: string): ExtensionDescriptor {
-    const instance = this.harmony.get<any>(id);
+  getDescriptor(extensionId: string): ExtensionDescriptor {
+    const instance = this.harmony.get<any>(extensionId);
     const iconFn = instance.icon;
     const defaultIcon = `
       <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">

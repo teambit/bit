@@ -64,7 +64,6 @@ export class UIExtension {
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
-    // const devServers = await this.bundler.devServer(components);
     return server;
   }
 
@@ -83,7 +82,7 @@ export class UIExtension {
     return this.uiRootSlot.register(uiRoot);
   }
 
-  private getUiRootOrThrow(uiRootName: string): UIRoot {
+  getUiRootOrThrow(uiRootName: string): UIRoot {
     const uiSlot = this.uiRootSlot.get(uiRootName);
     if (!uiSlot) throw new UnknownUI(uiRootName);
     return uiSlot;

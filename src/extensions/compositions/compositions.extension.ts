@@ -15,7 +15,7 @@ export type CompositionsConfig = {
   /**
    * regex for detection of composition files
    */
-  extension: string;
+  regex: string;
 };
 
 /**
@@ -98,7 +98,7 @@ export class CompositionsExtension {
   async onComponentLoad(component: Component): Promise<ExtensionData> {
     const compositions = this.readCompositions(component);
     return {
-      compositions: compositions.map((composition) => composition.toObject()),
+      compositionList: compositions.map((composition) => composition.toObject()),
     };
   }
 
@@ -116,6 +116,10 @@ export class CompositionsExtension {
   private async getTemplate(context: ExecutionContext) {
     return context.env.getMounter();
   }
+
+  static defaultConfig = {
+    regex: '/compositions.ts/',
+  };
 
   static dependencies = [
     BundlerExtension,

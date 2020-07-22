@@ -11,6 +11,7 @@ export class Composition {
      * identifier of the composition
      */
     readonly identifier: string,
+
     /**
      * file path in which the composition is contained.
      */
@@ -19,7 +20,6 @@ export class Composition {
 
   get displayName() {
     const text = this.identifier.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-
     return capitalize(text);
   }
 

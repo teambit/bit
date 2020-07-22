@@ -1,5 +1,5 @@
 import { ExecutionContext } from '../environments';
 
-export interface DevServerContext extends ExecutionContext {
+export interface BundlerContext extends ExecutionContext {
   entry: string[];
 }

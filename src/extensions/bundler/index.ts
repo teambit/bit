@@ -1,3 +1,5 @@
 export { DevServer } from './dev-server';
 export { BundlerExtension } from './bundler.extension';
-export { DevServerContext } from './dev-server-context';
+export { BundlerContext } from './dev-server-context';
+export { Bundler } from './bundler';
+export { Bundle } from './bundle';
