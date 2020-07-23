@@ -10,6 +10,7 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { SchemaExtension } from '../schema';
 import { ExtensionData } from '../workspace/on-component-load';
+import { CompositionPreviewDefinition } from './compositions.preview-definition';
 
 export type CompositionsConfig = {
   /**
@@ -140,9 +141,12 @@ export class CompositionsExtension {
     const compositions = new CompositionsExtension(preview, workspace, schema);
 
     graphql.register(compositionsSchema(compositions));
-    bundler.registerTarget({
-      entry: compositions.compositionsPreviewTarget.bind(compositions),
-    });
+    // bundler.registerTarget([{
+    //   entry: compositions.compositionsPreviewTarget.bind(compositions),
+    // });
+
+    preview.registerDefinition(new CompositionPreviewDefinition(compositions));
+
     if (workspace) {
       workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
     }

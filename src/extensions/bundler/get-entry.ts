@@ -6,7 +6,7 @@ import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { ComponentID } from '../component';
 
 export type ComponentDir = {
-  componentDir: (
+  componentDir?: (
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options?: { relative: boolean }

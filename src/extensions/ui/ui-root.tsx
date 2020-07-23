@@ -1,8 +1,9 @@
-import { Component, ComponentID } from '../component';
-import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
-import { PathOsBased } from '../../utils/path';
+import { Component } from '../component';
+import { ComponentDir } from '../bundler/get-entry';
 
-export interface UIRoot {
+// TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
+// would never have componentDir and as it has nothing to do with `UIRoot`.
+export interface UIRoot extends ComponentDir {
   /**
    * unique name of the ui.
    */
@@ -27,13 +28,6 @@ export interface UIRoot {
    * listener for when the dev server starts. can be used for running the watcher.
    */
   postStart?(options: PostStartOptions, uiRoot: UIRoot): Promise<void>;
-
-  // :TODO remove this from here.
-  componentDir?(
-    componentId: ComponentID,
-    bitMapOptions?: GetBitMapComponentOptions,
-    options?: { relative: boolean }
-  ): PathOsBased | undefined;
 }
 
 export type PostStartOptions = {

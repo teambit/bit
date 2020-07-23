@@ -1,3 +1,4 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { generateLink } from './generate-link';
@@ -6,32 +7,94 @@ import { BundlerExtension } from '../bundler';
 import { BuilderExtension } from '../builder';
 import { PreviewTask } from './preview.task';
 import { UIExtension } from '../ui';
+import { PreviewDefinition } from './preview-definition';
+import { ExecutionContext } from '../environments';
+
+export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export class PreviewExtension {
+  constructor(
+    /**
+     * slot for preview definitions.
+     */
+    private previewSlot: PreviewDefinitionRegistry
+  ) {}
+
   /**
    * write a link for a loading custom modules dynamically.
    * @param prefix write
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
    */
-  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule?: string) {
+  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule?: string, dirName?: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     // :TODO @uri please generate a random file in a temporary directory
-    const targetPath = resolve(join(__dirname, `/__${prefix}-${Date.now()}.js`));
+    const targetPath = resolve(join(dirName || __dirname, `/__${prefix}-${Date.now()}.js`));
     writeFileSync(targetPath, contents);
 
     return targetPath;
   }
 
-  static dependencies = [BundlerExtension, BuilderExtension, UIExtension];
+  getDefs() {
+    return this.previewSlot.values();
+  }
 
-  static async provider([bundler, builder, ui]: [BundlerExtension, BuilderExtension, UIExtension]) {
-    bundler.registerTarget({
-      entry: async () => [require.resolve('./preview.runtime')],
+  async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
+    const previewMain = require.resolve('./preview.runtime');
+    const previews = this.previewSlot.values();
+
+    const paths = previews.map(async (previewDef) => {
+      const map = await previewDef.getModuleMap(context.components);
+
+      const withPaths = map.map<string[]>((files) => {
+        return files.map((file) => file.path);
+      });
+
+      const link = this.writeLink(
+        previewDef.prefix,
+        withPaths,
+        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
+      );
+
+      const outputFiles = map
+        .toArray()
+        .flatMap(([, files]) => {
+          return files.map((file) => file.path);
+        })
+        .concat([previewMain, link]);
+
+      return outputFiles;
     });
 
-    builder.registerTask(new PreviewTask(bundler, ui.getUiRootOrThrow('@teambit/workspace')));
+    const resolved = await Promise.all(paths);
+    return resolved.flatMap((array) => array).concat([previewMain]);
+  }
 
-    return new PreviewExtension();
+  /**
+   * register a new preview definition.
+   */
+  registerDefinition(previewDef: PreviewDefinition) {
+    this.previewSlot.register(previewDef);
+  }
+
+  static slots = [Slot.withType<PreviewDefinition>()];
+
+  static dependencies = [BundlerExtension, BuilderExtension, UIExtension];
+
+  static async provider(
+    [bundler, builder, ui]: [BundlerExtension, BuilderExtension, UIExtension],
+    config,
+    [previewSlot]: [PreviewDefinitionRegistry]
+  ) {
+    const preview = new PreviewExtension(previewSlot);
+    bundler.registerTarget([
+      {
+        entry: preview.getPreviewTarget.bind(preview),
+      },
+    ]);
+
+    builder.registerTask(new PreviewTask(bundler, preview));
+
+    return preview;
   }
 }

@@ -23,12 +23,6 @@ export class WebpackExtension {
     private bundler: BundlerExtension
   ) {}
 
-  async createBundler(context: BuildContext, config: any): Promise<Bundler> {
-    const compiler = await this.createMultiCompiler(context, config);
-
-    return new WebpackBundler(compiler);
-  }
-
   /**
    * create an instance of bit-compliant webpack dev server for a set of components
    * @param components array of components to launch.
@@ -40,34 +34,17 @@ export class WebpackExtension {
     return new WebpackDevServer(compiler, mergedConfig.devServer);
   }
 
-  async build(context: BuildContext, config: any) {
-    const compiler = await this.createMultiCompiler(context, config);
-    compiler.run((err, stats) => {
-      console.log(err, stats);
-    });
-  }
-
   getWebpackConfig(context: BundlerContext, config: any) {
     return merge(this.createConfig(context.entry, this.workspace.path), config);
   }
 
-  private async createMultiCompiler(context: BuildContext, config: any): Promise<MultiCompiler> {
-    const extensionEntries = await this.bundler.computeEntries(context);
-
-    const entries = context.capsuleGraph.capsules.map(({ capsule }) => {
-      const main = capsule.component.config.main;
-      return {
-        path: capsule.path,
-        entries: [join(capsule.wrkDir, main)].concat(extensionEntries),
-      };
-    });
-
-    const configs = entries.map((entry) => {
-      const webpackConf = merge(previewConfigFactory(entry.entries, entry.path), config);
+  createBundler(context: BundlerContext, config: any) {
+    const configs = context.targets.map((target) => {
+      const webpackConf = merge(previewConfigFactory(target.entries, target.path), config);
       return webpackConf;
     });
 
-    return webpack(configs);
+    return new WebpackBundler(webpack(configs));
   }
 
   private createConfig(entry: string[], rootPath: string) {

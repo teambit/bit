@@ -25,5 +25,5 @@ export interface ComponentFactory {
   /**
    * list all components in the host.
    */
-  list(): Component[];
+  // list(): Promise<Component[]>;
 }

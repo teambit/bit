@@ -7,6 +7,7 @@ import { devServerSchema } from './dev-server.graphql';
 import { ComponentServer } from './component-server';
 import { BrowserRuntime } from './browser-runtime';
 import { UIRoot } from '../ui';
+import { BundlerContext } from './dev-server-context';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
@@ -61,7 +62,7 @@ export class BundlerExtension {
   /**
    * compute entry files for bundling components in a given execution context.
    */
-  async computeEntries(context: ExecutionContext) {
+  async computeEntries(context: BundlerContext) {
     const slotEntries = await Promise.all(
       this.runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
     );
@@ -78,8 +79,11 @@ export class BundlerExtension {
    * register a new browser runtime environment.
    * @param browserRuntime
    */
-  registerTarget(browserRuntime: BrowserRuntime) {
-    this.runtimeSlot.register(browserRuntime);
+  registerTarget(browserRuntime: BrowserRuntime[]) {
+    browserRuntime.map((runtime) => {
+      return this.runtimeSlot.register(runtime);
+    });
+
     return this;
   }
 

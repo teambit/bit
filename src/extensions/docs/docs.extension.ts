@@ -67,9 +67,9 @@ export class DocsExtension {
   static async provider([bundler, preview]: [BundlerExtension, PreviewExtension]) {
     const docs = new DocsExtension(preview);
 
-    bundler.registerTarget({
-      entry: docs.docsPreviewTarget.bind(docs),
-    });
+    // bundler.registerTarget({
+    //   entry: docs.docsPreviewTarget.bind(docs),
+    // });
 
     return docs;
   }
