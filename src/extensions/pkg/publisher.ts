@@ -91,7 +91,7 @@ export class Publisher {
 
   /**
    * only components that use pkg extension and configure "publishConfig" with their own registry
-   * should be published. ignore the rest.
+   * or custom "name", should be published. ignore the rest.
    */
   private async getIdsToPublish(componentIds: string[]): Promise<string[]> {
     const bitIds = await Promise.all(componentIds.map((id) => this.scope.getParsedId(id)));
@@ -106,7 +106,7 @@ export class Publisher {
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension('@teambit/pkg');
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.name;
+    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {

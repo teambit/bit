@@ -48,7 +48,7 @@ Configure the `publishConfig` prop with your registry data. For example:
 }
 ```
 
-The auto-publishing during export is triggered only when this `publishConfig` is set
+The auto-publishing during export is triggered only when this `publishConfig` or `name` is set
 
 #### Placeholders
 
