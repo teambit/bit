@@ -32,6 +32,7 @@ import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeOptions, OnComponentChangeResult } from './on-component-change';
+import { IsolateComponentsOptions } from '../isolator/isolator.extension';
 
 export type EjectConfResult = {
   configPath: string;
@@ -156,11 +157,10 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
-  async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
-    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
+  async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
-    opts = Object.assign(opts || {}, { consumer: this.consumer });
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
     const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
@@ -168,7 +168,8 @@ export default class Workspace implements ComponentFactory {
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
     const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
-    const capsuleList = await this.isolateEnv.isolateComponents(this.consumer.getPath(), components, opts);
+    opts.baseDir = opts.baseDir || this.consumer.getPath();
+    const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     return new Network(
       capsuleList,
       graph,
