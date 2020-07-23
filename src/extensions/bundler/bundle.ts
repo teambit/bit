@@ -1,1 +1,3 @@
-export class Bundle {}
+export class Bundle {
+  constructor(readonly errors: Error) {}
+}

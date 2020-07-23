@@ -8,6 +8,7 @@ const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
 
 const postcssNormalize = require('postcss-normalize');
+const { EnvironmentPlugin } = require('webpack');
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -231,7 +232,6 @@ module.exports = function () {
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
-
                 plugins: [
                   [
                     require.resolve('babel-plugin-named-asset-import'),
@@ -364,6 +364,7 @@ module.exports = function () {
       ],
     },
     plugins: [
+      new EnvironmentPlugin({ NODE_ENV: 'production' }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional

@@ -8,6 +8,7 @@ import { PreviewDefinition } from './preview-definition';
 import { Capsule } from '../isolator';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Target } from '../bundler/dev-server-context';
+import { Compiler } from '../compiler';
 
 export class PreviewTask implements BuildTask {
   constructor(
@@ -44,9 +45,13 @@ export class PreviewTask implements BuildTask {
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
 
-    await bundler.run();
+    const bundlerResult = await bundler.run();
     // const buildOutputs = await Promise.all(promises);
+    const errors = bundlerResult.stats.flatMap((stat) => {
+      return stat.compilation.errors;
+    });
 
+    console.log(errors);
     return {
       components: buildOutputs,
       artifacts: [{ dirName: 'public' }],
@@ -56,7 +61,7 @@ export class PreviewTask implements BuildTask {
   private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([capsule.component]);
-      const paths = this.getPathsFromMap(capsule, moduleMap);
+      const paths = this.getPathsFromMap(capsule, moduleMap, context);
       const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
 
       const link = this.preview.writeLink(
@@ -79,9 +84,14 @@ export class PreviewTask implements BuildTask {
     return moduleMaps.flatMap((_) => _);
   }
 
-  private getPathsFromMap(capsule: Capsule, moduleMap: ComponentMap<AbstractVinyl[]>): ComponentMap<string[]> {
+  private getPathsFromMap(
+    capsule: Capsule,
+    moduleMap: ComponentMap<AbstractVinyl[]>,
+    context: BuildContext
+  ): ComponentMap<string[]> {
+    const compiler: Compiler = context.env.getCompiler(context);
     return moduleMap.map((files) => {
-      return files.map((file) => join(capsule.path, file.relative));
+      return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
     });
   }
 }

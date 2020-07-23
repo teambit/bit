@@ -3,11 +3,12 @@ import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
-import { BuildTask, BuildContext } from '../builder';
+import { BuildTask } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { DevServer, BundlerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
+import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler/bundler';
@@ -89,7 +90,7 @@ export class ReactEnv implements Environment {
   }
 
   async getBundler(context: BundlerContext): Promise<Bundler> {
-    return this.webpack.createBundler(context, webpackConfigFactory());
+    return this.webpack.createBundler(context, previewConfigFactory());
   }
 
   /**

@@ -5,7 +5,7 @@ import { CompositionsExtension } from './compositions.extension';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class CompositionPreviewDefinition implements PreviewDefinition {
-  readonly prefix: 'compositions';
+  readonly prefix = 'compositions';
 
   constructor(private compositions: CompositionsExtension) {}
 

@@ -66,6 +66,10 @@ export class Component {
     return this.state.filesystem;
   }
 
+  getState() {
+    if (this._state) return Promise.resolve(this._state);
+  }
+
   get headTag() {
     if (!this.head) return undefined;
     return this.tags.byHash(this.head.hash);
