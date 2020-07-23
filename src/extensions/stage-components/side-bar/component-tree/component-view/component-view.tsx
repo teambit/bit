@@ -1,6 +1,7 @@
 import React, { useContext, useCallback } from 'react';
 import classNames from 'classnames';
 import { Image } from '@bit/bit.evangelist.elements.image';
+import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { NavLink } from '../../../../react-router/nav-link';
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
@@ -29,11 +30,15 @@ export function ComponentView(props: TreeNodeProps) {
       activeClassName={styles.active}
       onClick={handleClick}
     >
-      <div>
+      <div className={styles.left}>
         <Image alt="react env" className={styles.icon} src="tutorial-icons/react.svg" />
         <span>{getName(node.id)}</span>
       </div>
-      <ComponentStatus status="new" />
+      <div className={styles.right}>
+        <Icon of="note-deprecated" className={styles.componentIcon} />
+        <Icon of="Internal" className={styles.componentIcon} />
+        <ComponentStatus status="new" />
+      </div>
     </NavLink>
   );
 }

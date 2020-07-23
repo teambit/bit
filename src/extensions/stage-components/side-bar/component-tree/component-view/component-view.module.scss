@@ -18,14 +18,26 @@
 	&.active {
 		color: $w10;
 		background: $p50;
+		.right {
+			.componentIcon {
+				color: $w10;
+			}
+		}
 		&:hover {
 			background: $p50;
 		}
 	}
 
-	> div {
+	.icon {
+		width: 16px;
+		height: 16px;
+	}
+	
+	.left {
 		display: flex;
 		align-items: center;
+		flex: 1;
+    	min-width: 0;
 		> span {
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -34,10 +46,15 @@
 		}
 	}
 
-	.icon {
-		width: 16px;
-	    height: 16px;
 
+	.right {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		.componentIcon {
+			color: var(--text-muted);
+			margin-right: 8px;
+		}
 	}
 	
 }
