@@ -33,7 +33,7 @@ export function ComponentView(props: TreeNodeProps) {
         <Image alt="react env" className={styles.icon} src="tutorial-icons/react.svg" />
         <span>{getName(node.id)}</span>
       </div>
-      <ComponentStatus status="error" />
+      <ComponentStatus status="new" />
     </NavLink>
   );
 }
