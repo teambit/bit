@@ -27,6 +27,11 @@ export class Publisher {
   ) {}
 
   async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+    // @todo: replace by `workspace.byPatter` once ready.
+    if (componentIds.length === 1 && componentIds[0] === '*') {
+      const all = this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
+      componentIds = all.map((id) => id.toString());
+    }
     this.options = options;
     const capsules = await this.getComponentCapsules(componentIds);
     return this.publishMultipleCapsules(capsules);
@@ -79,6 +84,7 @@ export class Publisher {
       return [];
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
+    this.logger.debug('publisher', `total ${idsToPublish.length} to publish out of ${componentIds.length}`);
     const network = await this.workspace.createNetwork(idsToPublish);
     return network.seedersCapsules;
   }
@@ -100,7 +106,7 @@ export class Publisher {
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension('@teambit/pkg');
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.publishConfig;
+    return pkgExt.config?.packageJson?.name;
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
