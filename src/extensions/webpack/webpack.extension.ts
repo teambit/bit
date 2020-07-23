@@ -1,14 +1,10 @@
-import { join } from 'path';
-import webpack, { MultiCompiler } from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
+import webpack from 'webpack';
+import WebpackDevServer, { Configuration } from 'webpack-dev-server';
 import merge from 'webpack-merge';
 import { DevServer, BundlerContext, BundlerExtension } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
-import configFactory from './config/webpack.config';
-import previewConfigFactory from './config/webpack.preview.config';
-import { Bundler } from '../bundler/bundler';
+import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
-import { BuildContext } from '../builder';
 
 export class WebpackExtension {
   constructor(
@@ -34,17 +30,12 @@ export class WebpackExtension {
     return new WebpackDevServer(compiler, mergedConfig.devServer);
   }
 
-  getWebpackConfig(context: BundlerContext, config: any) {
+  getWebpackConfig(context: BundlerContext, config: Configuration) {
     return merge(this.createConfig(context.entry, this.workspace.path), config);
   }
 
-  createBundler(context: BundlerContext, config: any) {
-    const configs = context.targets.map((target) => {
-      const webpackConf = merge(previewConfigFactory(target.entries, target.path), config);
-      return webpackConf;
-    });
-
-    return new WebpackBundler(webpack(configs));
+  createBundler(context: BundlerContext, envConfig: Configuration) {
+    return new WebpackBundler(context.targets, envConfig);
   }
 
   private createConfig(entry: string[], rootPath: string) {

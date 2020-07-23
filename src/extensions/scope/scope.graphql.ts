@@ -11,6 +11,8 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
 
         # path of the scope.
         path: String
+
+        components: [Component]!
       }
 
       type Query {

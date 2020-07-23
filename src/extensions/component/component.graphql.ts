@@ -76,17 +76,16 @@ export function componentSchema(componentExtension: ComponentExtension) {
 
         # list of component releases.
         tags: [Tag]!
-
-        # state of the component
-        state: State
       }
 
       type ComponentHost {
         # load a component.
         get(id: String!, withState: Boolean): Component
+      }
 
-        # list components
-        list(offset: Number, limit: Number): [Component]!
+      type ComponentMeta {
+        id: String!
+        displayName: String!
       }
 
       type Query {

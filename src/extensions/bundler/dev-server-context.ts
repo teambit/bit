@@ -1,4 +1,5 @@
 import { BuildContext } from '../builder';
+import { Capsule } from '../isolator';
 
 export type Target = {
   /**
@@ -9,7 +10,7 @@ export type Target = {
   /**
    * root path of the target
    */
-  path: string;
+  capsule: Capsule;
 };
 
 export interface BundlerContext extends BuildContext {
