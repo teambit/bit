@@ -65,17 +65,18 @@ export class Environments {
   /**
    * get an environment Descriptor.
    */
-  getDescriptor(component: Component) {
-    //TODO: @guy after fix core extension then take it from core extension
-    const extension = component.config.extensions.findExtension(Environments.id);
-    if (!extension) return;
-    const envId = extension.config.env;
-    const instance = this.context.get<any>(envId);
-    const iconFn = instance.icon;
+  getDescriptor(component: Component): { id: string; icon: string } {
     const defaultIcon = `
       <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
           <circle cx="25" cy="25" r="20"/>
       </svg>`;
+    // TODO: @guy after fix core extension then take it from core extension
+    const extension = component.config.extensions.findExtension(Environments.id);
+    if (!extension) return { id: Environments.id, icon: defaultIcon };
+    const envId = extension.config.env;
+    const instance = this.context.get<any>(envId);
+    const iconFn = instance.icon;
+
     const icon = iconFn ? iconFn() : defaultIcon;
     return {
       id: envId,
