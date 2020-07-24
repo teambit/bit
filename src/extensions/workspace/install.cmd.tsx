@@ -1,8 +1,9 @@
 import { Command } from '../cli';
 import Workspace from './workspace';
+import { ComponentID } from '../component';
 
 export default class InstallCmd implements Command {
-  name = 'install';
+  name = 'install [id...]';
   description = 'install all component dependencies';
   alias = 'in';
   group = 'component';
@@ -11,8 +12,10 @@ export default class InstallCmd implements Command {
 
   constructor(private workspace: Workspace) {}
 
-  async report() {
-    const results = await this.workspace.install();
-    return `Successfully installed ${results.length} component(s)`;
+  async report([rawIds]: [string[]]) {
+    const ids = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
+    const results = await this.workspace.install(ids);
+    console.log(results);
+    return `Successfully installed ${results} component(s)`;
   }
 }

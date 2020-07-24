@@ -11,14 +11,21 @@ export class DependencyGraph {
     const consumerComponent: ConsumerComponent = this.component.state._consumer;
 
     return {
-      devDependencies: this.toPackageJson(this.component, consumerComponent.devDependencies),
-      dependencies: this.toPackageJson(this.component, consumerComponent.dependencies),
+      devDependencies: {
+        ...this.toPackageJson(this.component, consumerComponent.devDependencies),
+        ...consumerComponent.packageDependencies,
+      },
+      dependencies: {
+        ...this.toPackageJson(this.component, consumerComponent.dependencies),
+        ...consumerComponent.devPackageDependencies,
+      },
     };
   }
 
   private toPackageJson(component: Component, dependencies: Dependencies) {
     const newVersion = '0.0.1-new';
     return dependencies.getAllIds().reduce((acc, depId: BitId) => {
+      if (!depId.hasVersion()) return acc;
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
       const packageName = componentIdToPackageName({
         ...component.state._consumer,

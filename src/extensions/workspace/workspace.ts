@@ -512,8 +512,8 @@ export default class Workspace implements ComponentFactory {
     await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
-  private async getComponentsDirectory() {
-    const components = await this.list();
+  private async getComponentsDirectory(ids: ComponentID[]) {
+    const components = ids.length ? await this.getMany(ids) : await this.list();
     // @ts-ignore until won't return undefined.
     return ComponentMap.as<string>(components, (component) => {
       return this.componentDir(component.id, {}, { relative: true });
@@ -526,9 +526,9 @@ export default class Workspace implements ComponentFactory {
    * @returns
    * @memberof Workspace
    */
-  async install() {
+  async install(ids: ComponentID[]) {
     const installer = this.dependencyResolver.getInstaller();
-    const output = await installer.install(this.path, await this.getComponentsDirectory());
+    const output = await installer.install(this.path, await this.getComponentsDirectory(ids));
     console.log(output);
     //      this.reporter.info('Installing component dependencies');
     //      this.reporter.setStatusText('Installing');

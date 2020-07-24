@@ -4,12 +4,17 @@ import { PackageManager, InstallationStream } from '../dependency-resolver/packa
 import { ComponentMap } from '../component/component-map';
 import { Component, ComponentID } from '../component';
 import { DependencyResolverExtension } from '../dependency-resolver';
+import { PkgExtension } from '../pkg';
 
 // better to use the workspace name here.
-const ROOT_NAME = 'root';
+const ROOT_NAME = 'workspace';
 
 export class PnpmPackageManager implements PackageManager {
-  constructor(private depResolver: DependencyResolverExtension) {}
+  constructor(
+    private depResolver: DependencyResolverExtension,
+
+    private pkg: PkgExtension
+  ) {}
 
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<InstallationStream> {
     const workspace = {
@@ -25,13 +30,13 @@ export class PnpmPackageManager implements PackageManager {
 
     const components = this.computeManifests(componentDirectoryMap, rootDir);
 
-    await install(workspace, components, rootDir);
+    return install(workspace, components, rootDir);
   }
 
   private computeManifests(componentDirectoryMap: ComponentMap<string>, rootDir: string) {
     return componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
       acc[join(rootDir, dir)] = {
-        name: component.id.fullName,
+        name: this.pkg.getPackageName(component),
         version: this.getVersion(component.id),
         ...this.computeDependencies(component),
       };
@@ -51,7 +56,7 @@ export class PnpmPackageManager implements PackageManager {
 
   private listWorkspaceDependencies(componentDirectoryMap: ComponentMap<string>) {
     return componentDirectoryMap.toArray().reduce((acc, [component]) => {
-      acc[component.id.fullName] = `${ROOT_NAME}:${this.getVersion(component.id)}`;
+      acc[this.pkg.getPackageName(component)] = `${ROOT_NAME}:${this.getVersion(component.id)}`;
       return acc;
     }, {});
   }

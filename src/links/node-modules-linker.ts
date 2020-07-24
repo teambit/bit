@@ -378,6 +378,10 @@ export default class NodeModuleLinker {
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    if (packageJson.packageJsonObject.version === 'latest') {
+      packageJson.packageJsonObject.version = '0.0.1-new';
+    }
+
     packageJson.mergePropsFromExtensions(component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }

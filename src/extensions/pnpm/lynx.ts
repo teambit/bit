@@ -1,12 +1,11 @@
-import createResolver from '@pnpm/default-resolver';
 import { createFetchFromRegistry } from '@pnpm/fetch';
 import createFetcher from '@pnpm/tarball-fetcher';
 import { mutateModules, MutatedProject } from 'supi';
 import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
+import { createResolver } from './create-resolver';
 
 async function createStoreController(storeDir: string): Promise<StoreController> {
-  const registry = 'https://registry.npmjs.org/';
-  const rawConfig = { registry };
+  const rawConfig = { '@bit:registry': 'https://node.bit.dev' };
   const fetchFromRegistry = createFetchFromRegistry({});
   const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
   const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
@@ -49,6 +48,10 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
     storeController: await createStoreController(storeDir),
     update: true,
     workspacePackages,
+    registries: {
+      default: 'https://registry.npmjs.org/',
+      '@bit': 'https://node.bit.dev/',
+    },
   };
-  await mutateModules(packagesToBuild, opts);
+  return mutateModules(packagesToBuild, opts);
 }
