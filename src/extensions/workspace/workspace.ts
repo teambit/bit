@@ -532,15 +532,15 @@ export default class Workspace implements ComponentFactory {
     console.log(output);
     //      this.reporter.info('Installing component dependencies');
     //      this.reporter.setStatusText('Installing');
-    const components = await this.list();
-    // this.reporter.info('Isolating Components');
-    const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
-    // this.reporter.info('Installing workspace dependencies');
-    await removeExistingLinksInNodeModules(isolatedEnvs);
-    await this.dependencyResolver.folderInstall(process.cwd());
-    await symlinkCapsulesInNodeModules(isolatedEnvs);
-    // this.reporter.end();
-    return isolatedEnvs;
+    // const components = await this.list();
+    // // this.reporter.info('Isolating Components');
+    // const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
+    // // this.reporter.info('Installing workspace dependencies');
+    // await removeExistingLinksInNodeModules(isolatedEnvs);
+    // await this.dependencyResolver.folderInstall(process.cwd());
+    // await symlinkCapsulesInNodeModules(isolatedEnvs);
+    // // this.reporter.end();
+    // return isolatedEnvs;
   }
 
   /**
