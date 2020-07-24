@@ -5,7 +5,6 @@ import createStore, { ResolveFunction, StoreController } from '@pnpm/package-sto
 import { createResolver } from './create-resolver';
 
 async function createStoreController(storeDir: string): Promise<StoreController> {
-  const rawConfig = { '@bit:registry': 'https://node.bit.dev' };
   const fetchFromRegistry = createFetchFromRegistry({});
   const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
   const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {

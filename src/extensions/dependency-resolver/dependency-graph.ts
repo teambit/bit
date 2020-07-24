@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { readFileSync } from 'fs-extra';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { Dependencies } from '../../consumer/component/dependencies';
@@ -32,7 +31,7 @@ export class DependencyGraph {
   private toPackageJson(component: Component, dependencies: Dependencies) {
     const newVersion = '0.0.1-new';
     return dependencies.getAllIds().reduce((acc, depId: BitId) => {
-      if (!depId.hasVersion()) return acc;
+      if (!depId.hasVersion() || depId.version === '0.0.1') return acc;
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
       const packageName = componentIdToPackageName({
         ...component.state._consumer,

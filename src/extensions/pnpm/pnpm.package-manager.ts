@@ -6,6 +6,7 @@ import { Component, ComponentID } from '../component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { PkgExtension } from '../pkg';
 
+const userHome = require('user-home');
 // better to use the workspace name here.
 const ROOT_NAME = 'workspace';
 
@@ -17,6 +18,8 @@ export class PnpmPackageManager implements PackageManager {
   ) {}
 
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<InstallationStream> {
+    const storeDir: string = join(userHome, '.pnpm-store');
+
     const workspace = {
       rootDir,
       manifest: {
@@ -30,7 +33,7 @@ export class PnpmPackageManager implements PackageManager {
 
     const components = this.computeManifests(componentDirectoryMap, rootDir);
 
-    return install(workspace, components, rootDir);
+    return install(workspace, components, storeDir);
   }
 
   private computeManifests(componentDirectoryMap: ComponentMap<string>, rootDir: string) {
