@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { ScopeExtension } from './scope.extension';
-import { ComponentID } from '../component';
 
 export function scopeSchema(scopeExtension: ScopeExtension) {
   return {

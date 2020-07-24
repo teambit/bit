@@ -13,12 +13,15 @@ import { ExecutionContext } from '../environments';
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export class PreviewExtension {
+  static id = '@teambit/preview';
   constructor(
     /**
      * slot for preview definitions.
      */
     private previewSlot: PreviewDefinitionRegistry
   ) {}
+
+  getPreview;
 
   /**
    * write a link for a loading custom modules dynamically.

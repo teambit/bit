@@ -67,12 +67,14 @@ export class PreviewTask implements BuildTask {
       const files = paths
         .toArray()
         .flatMap(([, file]) => file)
-        .concat([link, previewMain]);
+        .concat([link]);
 
       if (template) return files.concat([template]);
       return files;
     });
+
     const moduleMaps = await Promise.all(moduleMapsPromise);
+    moduleMaps.concat([previewMain]);
 
     return moduleMaps.flatMap((_) => _);
   }
