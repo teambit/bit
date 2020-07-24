@@ -24,7 +24,7 @@ export class CapsuleCreateCmd implements Command {
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
     ['d', 'install-packages', 'install packages by the package-manager'],
-    ['p', 'package-manager <name>', 'npm, yarn on pnpm, default to npm'],
+    ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
