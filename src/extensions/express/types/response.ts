@@ -1,3 +1,3 @@
 import express from 'express';
 
-export interface Response extends express.Response {}
+export type Response = {} & express.Response;

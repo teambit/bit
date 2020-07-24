@@ -1,3 +1,3 @@
 import express from 'express';
 
-export interface Request extends express.Request {}
+export type Request = {} & express.Request;

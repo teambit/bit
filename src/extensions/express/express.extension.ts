@@ -1,8 +1,8 @@
-import _ from 'lodash';
+import { flatten, lowerCase, concat } from 'lodash';
 import express from 'express';
 import cors from 'cors';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { Route, Request, Response, NextFunction } from './types';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Route, Request, Response } from './types';
 import { LoggerExt, Logger, LogPublisher } from '../logger';
 
 export type ExpressConfig = {
@@ -35,15 +35,17 @@ export class ExpressExtension {
   async listen(port?: number) {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
-    const allRoutes = _.concat(routes, internalRoutes);
+    const allRoutes = concat(routes, internalRoutes);
     const serverPort = port || this.config.port;
     const app = express();
     app.use(cors());
 
-    allRoutes.map((routeInfo) => {
+    allRoutes.forEach((routeInfo) => {
       const { method, namespace, path, middlewares } = routeInfo;
+      // TODO: handle case in which extension doesn't provide '/' in path
       app[method](`/${namespace}${path}`, middlewares);
     });
+
     app.listen(serverPort);
   }
 
@@ -58,25 +60,25 @@ export class ExpressExtension {
   private createRootRoutes() {
     return [
       {
-        namespace: '@teambit/express',
+        namespace: ExpressExtension.id,
         method: 'get',
-        path: '/healthz',
-        middlewares: [async (req: Request, res: Response, next?: NextFunction) => res.send('ok')],
+        path: '/_health',
+        middlewares: [async (req: Request, res: Response) => res.send('ok')],
       },
     ];
   }
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
-    const routes = routesSlots.map(([extensionId, routes]) => {
+    const routeEntries = routesSlots.map(([extensionId, routes]) => {
       return routes.map((route) => ({
         namespace: extensionId,
-        method: _.lowerCase(route.method),
+        method: lowerCase(route.method),
         path: route.route,
         middlewares: route.middlewares,
       }));
     });
 
-    return _.flatten(routes);
+    return flatten(routeEntries);
   }
 
   static id = '@teambit/express';

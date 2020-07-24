@@ -6,9 +6,10 @@ import { ComponentMap } from '../component/component-map';
 import { BundlerExtension } from '../bundler';
 import { BuilderExtension } from '../builder';
 import { PreviewTask } from './preview.task';
-import { UIExtension } from '../ui';
 import { PreviewDefinition } from './preview-definition';
 import { ExecutionContext } from '../environments';
+import { ExpressExtension } from '../express';
+import { PreviewRoute } from './preview.route';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -82,10 +83,10 @@ export class PreviewExtension {
 
   static slots = [Slot.withType<PreviewDefinition>()];
 
-  static dependencies = [BundlerExtension, BuilderExtension, UIExtension];
+  static dependencies = [BundlerExtension, BuilderExtension, ExpressExtension];
 
   static async provider(
-    [bundler, builder, ui]: [BundlerExtension, BuilderExtension, UIExtension],
+    [bundler, builder, express]: [BundlerExtension, BuilderExtension, ExpressExtension],
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
   ) {
@@ -95,6 +96,8 @@ export class PreviewExtension {
         entry: preview.getPreviewTarget.bind(preview),
       },
     ]);
+
+    express.register([new PreviewRoute(preview)]);
 
     builder.registerTask(new PreviewTask(bundler, preview));
 

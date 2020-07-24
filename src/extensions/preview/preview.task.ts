@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { flatten } from 'lodash';
 import { BuildTask, BuildContext, BuildResults } from '../builder';
 import { BundlerExtension, Bundler, BundlerContext, BundlerComponentResult, Target } from '../bundler';
 import { ComponentMap } from '../component';
@@ -76,7 +77,7 @@ export class PreviewTask implements BuildTask {
     const moduleMaps = await Promise.all(moduleMapsPromise);
     moduleMaps.concat([previewMain]);
 
-    return moduleMaps.flatMap((_) => _);
+    return flatten(moduleMaps);
   }
 
   private getPathsFromMap(
