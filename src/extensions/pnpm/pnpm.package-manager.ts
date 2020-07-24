@@ -38,15 +38,15 @@ export class PnpmPackageManager implements PackageManager {
       acc[join(rootDir, dir)] = {
         name: this.pkg.getPackageName(component),
         version: this.getVersion(component.id),
-        ...this.computeDependencies(component),
+        ...this.computeDependencies(component, rootDir),
       };
 
       return acc;
     }, {});
   }
 
-  private computeDependencies(component: Component) {
-    return this.depResolver.getDependencies(component).toJson();
+  private computeDependencies(component: Component, rootDir: string) {
+    return this.depResolver.getDependencies(component).toJson(rootDir);
   }
 
   private getVersion(id: ComponentID): string {
