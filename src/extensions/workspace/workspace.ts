@@ -33,6 +33,7 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentMap } from '../component';
 
 export type EjectConfResult = {
   configPath: string;
@@ -511,6 +512,14 @@ export default class Workspace implements ComponentFactory {
     await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
+  private async getComponentsDirectory() {
+    const components = await this.list();
+    // @ts-ignore until won't return undefined.
+    return ComponentMap.as<string>(components, (component) => {
+      return this.componentDir(component.id, {}, { relative: true });
+    });
+  }
+
   /**
    * Install dependencies for all components in the workspace
    *
@@ -518,6 +527,9 @@ export default class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install() {
+    const installer = this.dependencyResolver.getInstaller();
+    const output = await installer.install(this.path, await this.getComponentsDirectory());
+    console.log(output);
     //      this.reporter.info('Installing component dependencies');
     //      this.reporter.setStatusText('Installing');
     const components = await this.list();

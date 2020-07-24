@@ -10,43 +10,21 @@ import { DependenciesOverridesData } from '../../consumer/config/component-overr
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
 import { Logger } from '../logger';
-import PackageManager from './package-manager';
+import PackageManagerLegacy from './package-manager-legacy';
+import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { Capsule } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
+import { DependencyInstaller } from './dependency-installer';
+import { PackageManagerNotFound } from './exceptions';
+import { Component } from '../component';
+import { DependencyGraph } from './dependency-graph';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
+export type PackageManagerSlot = SlotRegistry<PackageManager>;
 
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
-  static dependencies = [Environments, Logger];
-  static slots = [Slot.withType<DependenciesPolicy>()];
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
-    /**
-     * default package manager.
-     */
-    packageManager: 'npm',
-    policy: {},
-    packageManagerArgs: [],
-    strictPeerDependencies: true,
-  };
-  static async provider(
-    [envs, logger]: [Environments, Logger],
-    config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry]: [PoliciesRegistry]
-  ) {
-    const packageManager = new PackageManager(config.packageManager, logger);
-    const dependencyResolver = new DependencyResolverExtension(config, packageManager, policiesRegistry, envs);
-    ConsumerComponent.registerOnComponentOverridesLoading(
-      DependencyResolverExtension.id,
-      async (configuredExtensions: ExtensionDataList) => {
-        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
-        return transformPoliciesToLegacyDepsOverrides(policies);
-      }
-    );
-
-    return dependencyResolver;
-  }
 
   constructor(
     /**
@@ -57,7 +35,7 @@ export class DependencyResolverExtension {
     /**
      * package manager client.
      */
-    private packageManager: PackageManager,
+    private packageManager: PackageManagerLegacy,
 
     /**
      * Registry for changes by other extensions.
@@ -67,8 +45,70 @@ export class DependencyResolverExtension {
     /**
      * envs extension.
      */
-    private envs: Environments
+    private envs: Environments,
+
+    private packageManagerSlot: PackageManagerSlot
   ) {}
+
+  /**
+   * register a new package manager to the dependency resolver.
+   */
+  registerPackageManager(packageManager: PackageManager) {
+    this.packageManagerSlot.register(packageManager);
+  }
+
+  getDependencies(component: Component): DependencyGraph {
+    // we should support multiple components here as an entry
+    return new DependencyGraph(component);
+  }
+
+  getInstaller() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+
+    if (!packageManager) {
+      throw new PackageManagerNotFound(this.config.packageManager);
+    }
+
+    return new DependencyInstaller(packageManager);
+  }
+
+  static dependencies = [Environments, Logger];
+
+  static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
+
+  static defaultConfig: DependencyResolverWorkspaceConfig = {
+    /**
+     * default package manager.
+     */
+    packageManager: '@teambit/npm',
+    policy: {},
+    packageManagerArgs: [],
+    strictPeerDependencies: true,
+  };
+
+  static async provider(
+    [envs, logger]: [Environments, Logger],
+    config: DependencyResolverWorkspaceConfig,
+    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
+  ) {
+    const packageManager = new PackageManagerLegacy(config.packageManager, logger);
+    const dependencyResolver = new DependencyResolverExtension(
+      config,
+      packageManager,
+      policiesRegistry,
+      envs,
+      packageManagerSlot
+    );
+    ConsumerComponent.registerOnComponentOverridesLoading(
+      DependencyResolverExtension.id,
+      async (configuredExtensions: ExtensionDataList) => {
+        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
+        return transformPoliciesToLegacyDepsOverrides(policies);
+      }
+    );
+
+    return dependencyResolver;
+  }
 
   get packageManagerName(): string {
     return this.config.packageManager;

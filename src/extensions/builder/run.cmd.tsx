@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
 import { Reporter } from '../reporter';
-import { onCapsuleInstalled, beforeInstallingCapsules } from '../dependency-resolver/package-manager';
+import { onCapsuleInstalled, beforeInstallingCapsules } from '../dependency-resolver/package-manager-legacy';
 
 export class BuilderCmd implements Command {
   name = 'run-new [pattern]';

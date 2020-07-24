@@ -12,7 +12,7 @@ import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
 import { LoggerExt, Logger } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { WorkspaceExt } from '../workspace';
 
 export interface PackageJsonProps {
   [key: string]: any;

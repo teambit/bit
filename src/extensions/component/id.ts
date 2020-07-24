@@ -20,6 +20,13 @@ export class ComponentID {
   }
 
   /**
+   * determine whether ID has a version.
+   */
+  hasVersion() {
+    return this._legacy.hasVersion();
+  }
+
+  /**
    * resolves the version of the component ID.
    */
   get version() {
