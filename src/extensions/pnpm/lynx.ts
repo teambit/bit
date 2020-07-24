@@ -1,7 +1,7 @@
-const supi = require('supi');
-const createResolver = require('@pnpm/npm-resolver').default;
-const createStore = require('@pnpm/package-store').default;
-const createFetcher = require('@pnpm/tarball-fetcher').default;
+import createResolver from '@pnpm/npm-resolver';
+import createFetcher from '@pnpm/tarball-fetcher';
+import supi from 'supi';
+import createStore from '@pnpm/package-store';
 
 async function createStoreController(storeDir) {
   const registry = 'https://registry.npmjs.org/';
@@ -23,10 +23,12 @@ async function createStoreController(storeDir) {
 }
 
 async function install(rootPathToManifest, pathsToManifests, storeDir) {
-  let packagesToBuild = []; // supi will use this to install the packages
-  let workspacePackages = {}; // supi will use this to link packages to eachother
+  const packagesToBuild: any = []; // supi will use this to install the packages
+  const workspacePackages = {}; // supi will use this to link packages to eachother
+
+  // eslint-disable-next-line
   for (const rootDir in pathsToManifests) {
-    let manifest = pathsToManifests[rootDir];
+    const manifest = pathsToManifests[rootDir];
     packagesToBuild.push({
       buildIndex: 0, // workspace components should be installed before the root
       manifest,
