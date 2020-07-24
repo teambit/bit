@@ -9,7 +9,11 @@ export default class Move implements LegacyCommand {
   description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#moving-and-renaming-files`;
   alias = 'mv';
   opts = [
-    ['c', 'component', 'move component files that are spread over multiple directories to one directory'],
+    [
+      'c',
+      'component',
+      'move component files that are spread over multiple directories to one directory. synopsis: "move <component-id> <directory>"',
+    ],
   ] as CommandOptions;
   loader = true;
 

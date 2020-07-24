@@ -14,8 +14,8 @@ import { Environments } from '../environments';
 import { Compiler } from './types';
 import { ComponentID } from '../component';
 import { Component } from '../component';
-import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { OnComponentChangeResult } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -110,8 +110,8 @@ export class WorkspaceCompiler {
     if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
   }
 
-  async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
-    const buildResults = await this.compileComponents([component.id.toString()], options);
+  async onComponentChange(component: Component): Promise<OnComponentChangeResult> {
+    const buildResults = await this.compileComponents([component.id.toString()], {});
     return {
       results: buildResults,
       toString() {

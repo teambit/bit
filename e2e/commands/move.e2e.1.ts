@@ -299,6 +299,39 @@ console.log(barFoo());`;
         expect(componentMap.mainFile).to.equal('foo.js');
       });
     });
+    describe('when there is no trackDir nor rootDir and running from an inner dir', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.outputFile('src/foo.js');
+        helper.fs.outputFile('src/test/foo.spec.js');
+        helper.command.addComponent('src/foo.js src/test/foo.spec.js', { i: 'foo', m: 'src/foo.js' });
+        helper.fs.createNewDirectoryInLocalWorkspace('components');
+        output = helper.command.runCmd(
+          'bit move --component foo foo',
+          path.join(helper.scopes.localPath, 'components')
+        );
+      });
+      it('should output the file changes', () => {
+        const outputClean = removeChalkCharacters(output);
+        expect(outputClean).to.have.string('from src/foo.js to components/foo/foo.js');
+        expect(outputClean).to.have.string('from src/test/foo.spec.js to components/foo/foo.spec.js');
+      });
+      it('should move the files to the specified dir', () => {
+        const rootDir = path.join(helper.scopes.localPath, 'components/foo');
+        expect(path.join(rootDir, 'foo.js')).to.be.a.file();
+        expect(path.join(rootDir, 'foo.spec.js')).to.be.a.file();
+      });
+      it('should update bitmap with the changes', () => {
+        const bitMap = helper.bitMap.read();
+        const componentMap = bitMap.foo;
+        expect(componentMap.rootDir).to.equal('components/foo');
+        const files = componentMap.files.map((f) => f.relativePath);
+        expect(files).to.have.lengthOf(2);
+        expect(files).to.deep.equal(['foo.js', 'foo.spec.js']);
+        expect(componentMap.mainFile).to.equal('foo.js');
+      });
+    });
     describe('when there is trackDir', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();

@@ -1,7 +1,8 @@
 import { loadScope } from '../../../scope';
-import { loadConsumerIfExist } from '../../../consumer';
+import { loadConsumerIfExist, loadConsumer } from '../../../consumer';
 import logger from '../../../logger/logger';
 import { MigrationResult } from '../../../migration/migration-helper';
+import { HarmonyMigrator } from '../../../consumer/migrations/harmony-migrator';
 
 /**
  * Running migration process for consumer and / or scope - to update the stores (bitObjects, bit.map.json) to the current version
@@ -11,7 +12,7 @@ import { MigrationResult } from '../../../migration/migration-helper';
  * @param {boolean} verbose - print debug logs
  * @returns {Promise<MigrationResult>} - wether the process run and wether it successeded
  */
-export default (async function migrate(
+export default async function migrate(
   scopePath: string,
   verbose: boolean
 ): Promise<MigrationResult | null | undefined> {
@@ -37,4 +38,12 @@ export default (async function migrate(
   logger.silly('migrate.migrate, running migration process for scope in consumer');
   if (verbose) console.log('running migration process for scope in consumer'); // eslint-disable-line no-console
   return scope.migrate(verbose);
-});
+}
+
+export async function migrateToHarmony() {
+  const consumer = await loadConsumer();
+  const harmonyMigrator = new HarmonyMigrator(consumer);
+  const results = harmonyMigrator.migrate();
+  await consumer.onDestroy();
+  return results;
+}

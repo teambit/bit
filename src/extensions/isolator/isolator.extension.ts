@@ -25,10 +25,22 @@ export type ListResults = {
   capsules: string[];
 };
 
-async function createCapsulesFromComponents(components: Component[], baseDir: string, orchOptions): Promise<Capsule[]> {
+export type IsolateComponentsOptions = {
+  baseDir?: string;
+  installPackages?: boolean;
+  packageManager?: string;
+  alwaysNew?: boolean;
+  name?: string;
+};
+
+async function createCapsulesFromComponents(
+  components: Component[],
+  baseDir: string,
+  opts: IsolateComponentsOptions
+): Promise<Capsule[]> {
   const capsules: Capsule[] = await Promise.all(
     map((component: Component) => {
-      return Capsule.createFromComponent(component, baseDir, orchOptions);
+      return Capsule.createFromComponent(component, baseDir, opts);
     }, components)
   );
   return capsules;
@@ -44,18 +56,15 @@ export class IsolatorExtension {
   }
   constructor(private dependencyResolver: DependencyResolverExtension) {}
 
-  public async isolateComponents(baseDir: string, components: Component[], opts?: {}): Promise<CapsuleList> {
+  public async isolateComponents(components: Component[], opts: IsolateComponentsOptions): Promise<CapsuleList> {
     const config = Object.assign(
-      {},
       {
         installPackages: true,
-        packageManager: undefined,
       },
       opts
     );
-    const capsulesDir = path.join(CAPSULES_BASE_DIR, hash(baseDir)); // TODO: move this logic elsewhere
+    const capsulesDir = path.join(CAPSULES_BASE_DIR, hash(opts.baseDir)); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
-
     const capsuleList = new CapsuleList(
       ...capsules.map((c) => {
         const id = c.component.id;

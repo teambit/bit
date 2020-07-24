@@ -60,15 +60,25 @@ export default class PackageManager {
     const packageManager = opts.packageManager || this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
     this.emitter.emit('beforeInstallingCapsules', capsules.length);
-    if (packageManager === 'npm' || packageManager === 'yarn') {
+    if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async (capsule) => {
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
-        const installProc =
-          packageManager === 'npm'
-            ? execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' })
-            : execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        const execOptions = { cwd: capsule.wrkDir };
+        const getExecCall = () => {
+          switch (packageManager) {
+            case 'npm':
+              return execa('npm', ['install', '--no-package-lock'], execOptions);
+            case 'yarn':
+              return execa('yarn', [], execOptions);
+            case 'pnpm':
+              return execa('pnpm', ['install'], execOptions);
+            default:
+              throw new Error(`unsupported package manager ${packageManager}`);
+          }
+        };
+        const installProc = getExecCall();
         logPublisher.info(componentId, packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'); // TODO: better
         logPublisher.info(componentId, '');
         installProc.stdout!.on('data', (d) => logPublisher.info(componentId, d.toString()));
