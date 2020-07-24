@@ -1,20 +1,19 @@
-import createResolver from '@pnpm/npm-resolver';
+import createResolver from '@pnpm/default-resolver';
+import { createFetchFromRegistry } from '@pnpm/fetch';
 import createFetcher from '@pnpm/tarball-fetcher';
-import supi from 'supi';
-import createStore from '@pnpm/package-store';
+import { mutateModules, MutatedProject } from 'supi';
+import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
 
-async function createStoreController(storeDir) {
+async function createStoreController(storeDir: string): Promise<StoreController> {
   const registry = 'https://registry.npmjs.org/';
   const rawConfig = { registry };
-  const resolver = createResolver({
+  const fetchFromRegistry = createFetchFromRegistry({});
+  const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
+  const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
     metaCache: new Map(),
-    rawConfig,
     storeDir,
   });
-  const fetcher = createFetcher({
-    rawConfig,
-    registry,
-  });
+  const fetcher = createFetcher(fetchFromRegistry, getCredentials, {});
   const storeController = await createStore(resolver, fetcher, {
     storeDir,
     verifyStoreIntegrity: true,
@@ -22,8 +21,8 @@ async function createStoreController(storeDir) {
   return storeController;
 }
 
-async function install(rootPathToManifest, pathsToManifests, storeDir) {
-  const packagesToBuild: any = []; // supi will use this to install the packages
+export async function install(rootPathToManifest, pathsToManifests, storeDir: string) {
+  const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
   const workspacePackages = {}; // supi will use this to link packages to eachother
 
   // eslint-disable-next-line
@@ -51,7 +50,5 @@ async function install(rootPathToManifest, pathsToManifests, storeDir) {
     update: true,
     workspacePackages,
   };
-  await supi.mutateModules(packagesToBuild, opts);
+  await mutateModules(packagesToBuild, opts);
 }
-
-module.exports = install;

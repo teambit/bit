@@ -1,5 +1,5 @@
 import { join } from 'path';
-import lynx from './lynx';
+import { install } from './lynx';
 import { PackageManager, InstallationStream } from '../dependency-resolver/package-manager';
 import { ComponentMap } from '../component/component-map';
 import { Component, ComponentID } from '../component';
@@ -25,7 +25,7 @@ export class PnpmPackageManager implements PackageManager {
 
     const components = this.computeManifests(componentDirectoryMap, rootDir);
 
-    await lynx(workspace, components, rootDir);
+    await install(workspace, components, rootDir);
   }
 
   private computeManifests(componentDirectoryMap: ComponentMap<string>, rootDir: string) {
