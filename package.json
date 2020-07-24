@@ -329,6 +329,7 @@
     "@types/chai-fs": "^2.0.2",
     "@types/chai-string": "^1.4.2",
     "@types/classnames": "^2.2.10",
+    "@types/cors": "^2.8.6",
     "@types/didyoumean": "^1.2.0",
     "@types/fs-extra": "^8.1.0",
     "@types/get-port": "^4.2.0",
