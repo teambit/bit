@@ -157,6 +157,15 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
+  /**
+   * get all workspace component-ids, include vendor components.
+   * (exclude nested dependencies in case dependencies are saved as components and not packages)
+   */
+  getAllComponentIds(): ComponentID[] {
+    const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+    return bitIds.map((id) => new ComponentID(id));
+  }
+
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
@@ -283,9 +292,6 @@ export default class Workspace implements ComponentFactory {
     // Add the default scope to the extension because we enforce it in config files
     await this.addDefaultScopeToExtensionsList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    if (!componentDir) {
-      throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
-    }
     const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
@@ -346,17 +352,18 @@ export default class Workspace implements ComponentFactory {
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
-  ): PathOsBased | undefined {
+  ): PathOsBased {
     const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
+    if (!relativeComponentDir) {
+      throw new GeneralError(`workspace.componentDir failed finding the component directory for ${componentId.toString()}.
+if you migrated to Harmony, please run "bit status" to fix such errors`);
+    }
     if (options.relative) {
       return relativeComponentDir;
     }
 
-    if (relativeComponentDir) {
-      return path.join(this.path, relativeComponentDir);
-    }
-    return undefined;
+    return path.join(this.path, relativeComponentDir);
   }
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
@@ -458,10 +465,6 @@ export default class Workspace implements ComponentFactory {
    */
   private isVendorComponent(componentId: ComponentID): boolean {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    // Shouldn't happen for harmony workspaces
-    if (!relativeComponentDir) {
-      return false;
-    }
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
     if (pathIsInside(relativeComponentDir, vendorDir)) {
       return true;
