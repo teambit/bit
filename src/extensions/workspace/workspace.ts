@@ -514,9 +514,7 @@ export default class Workspace implements ComponentFactory {
   private async getComponentsDirectory(ids: ComponentID[]) {
     const components = ids.length ? await this.getMany(ids) : await this.list();
     // @ts-ignore until won't return undefined.
-    return ComponentMap.as<string>(components, (component) => {
-      return this.componentDir(component.id, {}, { relative: true });
-    });
+    return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
   }
 
   /**

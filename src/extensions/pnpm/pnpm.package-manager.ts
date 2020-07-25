@@ -47,13 +47,13 @@ export class PnpmPackageManager implements PackageManager {
       },
     };
 
-    const components = this.computeManifests(componentDirectoryMap, rootDir);
+    const components = this.computeManifests(componentDirectoryMap);
     await install(workspace, components, storeDir);
   }
 
-  private computeManifests(componentDirectoryMap: ComponentMap<string>, rootDir: string) {
+  private computeManifests(componentDirectoryMap: ComponentMap<string>) {
     return componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
-      acc[join(rootDir, dir)] = {
+      acc[dir] = {
         name: this.pkg.getPackageName(component),
         version: this.getVersion(component.id),
         ...this.computeDependencies(component),
