@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
 import { Reporter } from '../reporter';
-import { onCapsuleInstalled, beforeInstallingCapsules } from '../dependency-resolver/package-manager-legacy';
+// import { onCapsuleInstalled, beforeInstallingCapsules } from '../dependency-resolver/package-manager-legacy';
 
 export class BuilderCmd implements Command {
   name = 'run-new [pattern]';
@@ -17,8 +17,8 @@ export class BuilderCmd implements Command {
 
   async report([userPattern]: [string], { verbose }: { verbose: boolean }): Promise<string> {
     this.reporter.title('Starting "build"');
-    let capsulesInstalled = 0;
-    let totalCapsules = 0;
+    // let capsulesInstalled = 0;
+    // let totalCapsules = 0;
     // onCapsuleInstalled((componentName) => {
     //   capsulesInstalled += 1;
     //   this.reporter.setStatusText(

@@ -11,28 +11,9 @@ import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 
-// TODO:
-// this is a hack in order to pass events from here to flows (and later install)
-// we need to solve this hack by changing the dependency chain of the relevant extensions
-// essentially flattening the structure so that we have less extensions to pass this event through
-//
-// at the time of writing, it's Flows => Workspace => Isolator => PackageManager
-let emitter = null;
-export function onCapsuleInstalled(cb) {
-  // @ts-ignore - this is a hack
-  emitter.on('capsuleInstalled', (componentName) => cb(componentName));
-}
-export function beforeInstallingCapsules(cb) {
-  // @ts-ignore - this is a hack
-  emitter.on('beforeInstallingCapsules', (numCapsules) => cb(numCapsules));
-}
-
 export default class PackageManager {
   private emitter = new EventEmitter();
-  constructor(readonly packageManagerName: string, readonly logger: Logger) {
-    // @ts-ignore - this is a hack
-    emitter = this.emitter;
-  }
+  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
 
   get name() {
     return this.packageManagerName;
