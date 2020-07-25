@@ -4,13 +4,14 @@ import chalk from 'chalk';
 import { Logger, LogEntry, LogLevel } from '../logger';
 import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
+import { LONG_PROCESS_EVENT } from '../logger/long-process-logger';
 
 export default class Reporter {
   private outputShouldBeSuppressed = false;
   private statusLine = new StatusLine();
   constructor(private logger: Logger) {
     this.outputShouldBeSuppressed = process.argv.includes('--json') || process.argv.includes('-j');
-    this.logger.subscribe('setStatus', this.setStatusCallback.bind(this));
+    this.logger.subscribe(LONG_PROCESS_EVENT, this.setStatusCallback.bind(this));
     process.on('SIGWINCH', () => {
       const columnCount = getColumnCount();
       if (columnCount < this.statusLine.minimumLength + this.statusLine.buffer) {
