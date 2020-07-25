@@ -10,6 +10,7 @@ export default class Reporter {
   private statusLine = new StatusLine();
   constructor(private logger: Logger) {
     this.outputShouldBeSuppressed = process.argv.includes('--json') || process.argv.includes('-j');
+    this.logger.subscribe('setStatus', this.setStatusCallback.bind(this));
     process.on('SIGWINCH', () => {
       const columnCount = getColumnCount();
       if (columnCount < this.statusLine.minimumLength + this.statusLine.buffer) {
@@ -19,6 +20,9 @@ export default class Reporter {
         this.statusLine.reRender();
       }
     });
+  }
+  setStatusCallback(message: string) {
+    this.setStatusText(message);
   }
   suppressOutput() {
     this.outputShouldBeSuppressed = true;
