@@ -44,6 +44,6 @@ export class BuilderCmd implements Command {
     ) => console.log('result', `Env: ${result.env}\nResult: success`));
     this.reporter.end();
 
-    return `compiled ${results.length} components successfully`;
+    return `compiled all components successfully`;
   }
 }
