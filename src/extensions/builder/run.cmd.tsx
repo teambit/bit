@@ -1,36 +1,38 @@
+import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
 import { Reporter } from '../reporter';
+import { LogPublisher } from '../types';
 
 export class BuilderCmd implements Command {
-  name = 'run-new [pattern]';
+  name = 'run [pattern]';
   description = 'run set of tasks for build';
   alias = '';
   group = '';
   private = true;
   shortDescription = '';
-  options = [['v', 'verbose', 'print log stdout to the screen']] as CommandOptions;
+  options = [] as CommandOptions;
 
-  constructor(private builder: BuilderExtension, private workspace: Workspace, private reporter: Reporter) {}
+  constructor(
+    private builder: BuilderExtension,
+    private workspace: Workspace,
+    private logger: LogPublisher,
+    private reporter: Reporter
+  ) {}
 
-  async report([userPattern]: [string], { verbose }: { verbose: boolean }): Promise<string> {
-    this.reporter.title('Starting "build"');
+  async report([userPattern]: [string]): Promise<string> {
+    const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
-    this.reporter.title('Loading components');
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
-    this.reporter.title('🎬  Executing build');
-    this.reporter.setStatusText('⏳ Executing build');
-    if (verbose) {
-      this.reporter.subscribeAll();
-    }
     const results = await this.builder.build(components);
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console
     ) => console.log('result', `Env: ${result.env}\nResult: success`));
+    longProcessLogger.done();
     this.reporter.end();
 
-    return `compiled ${results.length} components successfully`;
+    return chalk.green('the build has been completed');
   }
 }

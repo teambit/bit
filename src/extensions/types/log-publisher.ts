@@ -6,5 +6,5 @@ export type LogPublisher = {
   info: (...any) => void;
   warn: (...any) => void;
   error: (...any) => void;
-  createLongProcessLogger: (message: string, totalItems: number) => LogLongProcess;
+  createLongProcessLogger: (message: string, totalItems?: number) => LogLongProcess;
 };
