@@ -516,7 +516,6 @@ if you migrated to Harmony, please run "bit status" to fix such errors`);
 
   private async getComponentsDirectory(ids: ComponentID[]) {
     const components = ids.length ? await this.getMany(ids) : await this.list();
-    // @ts-ignore until won't return undefined.
     return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
   }
 
