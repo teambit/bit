@@ -8,24 +8,26 @@ export class LogLongProcess {
     private logPublisher: LogPublisher,
     private extensionName: string,
     private emitter: EventEmitter,
-    private message: string,
+    private processDescription: string,
     private totalItems: number,
-    private currentItem = 0
+    private currentItem = 0,
+    private start = new Date().getTime()
   ) {
-    const output = `${this.extensionName}, ${this.message} (total: ${this.totalItems})`;
+    const output = `${this.extensionName}, ${this.processDescription} (total: ${this.totalItems})`;
     logPublisher.info(undefined, output);
     emitter.emit(LONG_PROCESS_EVENT, output);
   }
 
   processItem(itemName = '') {
     this.currentItem += 1;
-    const output = `${this.extensionName}, ${this.message} (${this.totalItems}/${this.currentItem}). ${itemName}`;
+    const output = `${this.extensionName}, ${this.processDescription} (${this.totalItems}/${this.currentItem}). ${itemName}`;
     this.logPublisher.info(undefined, output);
     this.emitter.emit(LONG_PROCESS_EVENT, output);
   }
 
   done() {
-    this.logPublisher.info(undefined, `${this.extensionName}, ${this.message} (finished)`);
+    const duration = new Date().getTime() - this.start;
+    this.logPublisher.info(undefined, `${this.extensionName}, ${this.processDescription} (completed in ${duration}ms)`);
     this.emitter.emit(LONG_PROCESS_EVENT, '');
   }
 }

@@ -45,8 +45,8 @@ export default class Logger {
       error(componentId, messages) {
         emitAndLogToFile(componentId, messages, 'error');
       },
-      createLongProcessLogger(message: string, totalItems: number): LogLongProcess {
-        return new LogLongProcess(this, extensionName, emitter, message, totalItems);
+      createLongProcessLogger(processDescription: string, totalItems: number): LogLongProcess {
+        return new LogLongProcess(this, extensionName, emitter, processDescription, totalItems);
       },
     };
   }
