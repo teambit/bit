@@ -3,7 +3,7 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component } from '../component';
+import { Component, ComponentMap } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
@@ -86,8 +86,11 @@ export class IsolatorExtension {
         })
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
+      const installer = this.dependencyResolver.getInstaller();
+      await installer.install(capsulesDir, this.toComponentMap(capsules));
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList);
     }
+
     // rewrite the package-json with the component dependencies in it. the original package.json
     // that was written before, didn't have these dependencies in order for the package-manager to
     // be able to install them without crushing when the versions don't exist yet
@@ -99,6 +102,15 @@ export class IsolatorExtension {
     });
 
     return capsuleList;
+  }
+
+  private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
+    const tuples = capsules.map((capsule) => {
+      return [capsule.component.id, [capsule.component, capsule.path]];
+    });
+
+    // @ts-ignore
+    return new ComponentMap(tuples);
   }
 
   async list(consumer: Consumer): Promise<ListResults> {

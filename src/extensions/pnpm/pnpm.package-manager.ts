@@ -22,8 +22,14 @@ export class PnpmPackageManager implements PackageManager {
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<void> {
     const storeDir: string = join(userHome, '.pnpm-store');
     // TODO: @gilad please fix asap and compute deps with the new dep resolver.
-    // eslint-disable-next-line
-    const packageJson = require(join(rootDir, 'package.json'));
+    let packageJson;
+
+    try {
+      // eslint-disable-next-line
+      packageJson = require(join(rootDir, 'package.json'));
+    } catch (err) {
+      packageJson = { dependencies: {}, devDependencies: {} };
+    }
 
     const workspace = {
       rootDir,
