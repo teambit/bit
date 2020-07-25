@@ -13,7 +13,7 @@ import { Publisher } from './publisher';
 import { LoggerExt, Logger } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
 import { Component } from '../component';
-import { WorkspaceExt } from '../workspace';
+import { WorkspaceExt, Workspace } from '../workspace';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export interface PackageJsonProps {

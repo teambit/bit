@@ -135,7 +135,3 @@ export interface DependenciesDefinition {
   devDependencies?: DependencyDefinition[];
   peerDependencies?: DependencyDefinition[];
 }
-
-export type installOpts = {
-  packageManager?: string;
-};

@@ -1,19 +1,12 @@
 import R from 'ramda';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import {
-  DependenciesPolicy,
-  DependencyResolverVariantConfig,
-  DependencyResolverWorkspaceConfig,
-  installOpts,
-} from './types';
+import { DependenciesPolicy, DependencyResolverVariantConfig, DependencyResolverWorkspaceConfig } from './types';
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
 import { Logger } from '../logger';
-import PackageManagerLegacy from './package-manager-legacy';
 import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
-import { Capsule } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyInstaller } from './dependency-installer';
 import { PackageManagerNotFound } from './exceptions';
@@ -31,11 +24,6 @@ export class DependencyResolverExtension {
      * Dependency resolver  extension configuration.
      */
     readonly config: DependencyResolverWorkspaceConfig,
-
-    /**
-     * package manager client.
-     */
-    private packageManager: PackageManagerLegacy,
 
     /**
      * Registry for changes by other extensions.
@@ -62,6 +50,9 @@ export class DependencyResolverExtension {
     return new DependencyGraph(component);
   }
 
+  /**
+   * get a component dependency installer.
+   */
   getInstaller() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
 
@@ -70,44 +61,6 @@ export class DependencyResolverExtension {
     }
 
     return new DependencyInstaller(packageManager);
-  }
-
-  static dependencies = [Environments, Logger];
-
-  static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
-
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
-    /**
-     * default package manager.
-     */
-    packageManager: '@teambit/npm',
-    policy: {},
-    packageManagerArgs: [],
-    strictPeerDependencies: true,
-  };
-
-  static async provider(
-    [envs, logger]: [Environments, Logger],
-    config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
-  ) {
-    const packageManager = new PackageManagerLegacy(config.packageManager, logger);
-    const dependencyResolver = new DependencyResolverExtension(
-      config,
-      packageManager,
-      policiesRegistry,
-      envs,
-      packageManagerSlot
-    );
-    ConsumerComponent.registerOnComponentOverridesLoading(
-      DependencyResolverExtension.id,
-      async (configuredExtensions: ExtensionDataList) => {
-        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
-        return transformPoliciesToLegacyDepsOverrides(policies);
-      }
-    );
-
-    return dependencyResolver;
   }
 
   get packageManagerName(): string {
@@ -119,14 +72,6 @@ export class DependencyResolverExtension {
    */
   registerDependenciesPolicies(policy: DependenciesPolicy): void {
     return this.policiesRegistry.register(policy);
-  }
-
-  async capsulesInstall(capsules: Capsule[], opts: installOpts = { packageManager: this.packageManagerName }) {
-    return this.packageManager.capsulesInstall(capsules, opts);
-  }
-
-  async folderInstall(folder: string, opts: installOpts = { packageManager: this.packageManagerName }) {
-    return this.packageManager.runInstallInFolder(folder, opts);
   }
 
   /**
@@ -159,6 +104,38 @@ export class DependencyResolverExtension {
     }
     const result = mergePolices([policiesFromEnv, policiesFromHooks, policiesFromConfig]);
     return result;
+  }
+
+  static dependencies = [Environments, Logger];
+
+  static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
+
+  static defaultConfig: DependencyResolverWorkspaceConfig = {
+    /**
+     * default package manager.
+     */
+    packageManager: '@teambit/npm',
+    policy: {},
+    packageManagerArgs: [],
+    strictPeerDependencies: true,
+  };
+
+  static async provider(
+    [envs]: [Environments],
+    config: DependencyResolverWorkspaceConfig,
+    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
+  ) {
+    // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
+    const dependencyResolver = new DependencyResolverExtension(config, policiesRegistry, envs, packageManagerSlot);
+    ConsumerComponent.registerOnComponentOverridesLoading(
+      DependencyResolverExtension.id,
+      async (configuredExtensions: ExtensionDataList) => {
+        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
+        return transformPoliciesToLegacyDepsOverrides(policies);
+      }
+    );
+
+    return dependencyResolver;
   }
 }
 

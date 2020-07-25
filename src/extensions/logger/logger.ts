@@ -25,6 +25,7 @@ export default class Logger {
     const emitter = this.eventEmitter;
     const emitAndLogToFile = (componentId, messages, logLevel) => {
       emitter.emit(extensionName, { componentId, messages, logLevel });
+      if (componentId) return legacyLogger[logLevel](messages);
       legacyLogger[logLevel](`${componentId}, ${messages}`);
     };
     return {

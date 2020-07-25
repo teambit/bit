@@ -21,7 +21,6 @@ import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
-import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
@@ -528,19 +527,10 @@ export default class Workspace implements ComponentFactory {
    */
   async install(ids: ComponentID[]) {
     const installer = this.dependencyResolver.getInstaller();
-    const output = await installer.install(this.path, await this.getComponentsDirectory(ids));
-    console.log(output);
-    //      this.reporter.info('Installing component dependencies');
-    //      this.reporter.setStatusText('Installing');
-    // const components = await this.list();
-    // // this.reporter.info('Isolating Components');
-    // const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
-    // // this.reporter.info('Installing workspace dependencies');
-    // await removeExistingLinksInNodeModules(isolatedEnvs);
-    // await this.dependencyResolver.folderInstall(process.cwd());
-    // await symlinkCapsulesInNodeModules(isolatedEnvs);
-    // // this.reporter.end();
-    // return isolatedEnvs;
+    const installationMap = await this.getComponentsDirectory(ids);
+    await installer.install(this.path, await this.getComponentsDirectory(ids));
+
+    return installationMap;
   }
 
   /**

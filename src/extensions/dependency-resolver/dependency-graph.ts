@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { Dependencies } from '../../consumer/component/dependencies';
@@ -8,13 +7,8 @@ import { BitId } from '../../bit-id';
 export class DependencyGraph {
   constructor(private component: Component) {}
 
-  toJson(rootDir: string) {
+  toJson() {
     const consumerComponent: ConsumerComponent = this.component.state._consumer;
-    // TODO: @gilad please fix asap and compute deps with the new dep resolver.
-
-    // eslint-disable-next-line
-    const packageJson = require(join(rootDir, 'package.json'));
-    // const missing = consumerComponent.issues.missin
 
     return {
       devDependencies: {

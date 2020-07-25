@@ -85,7 +85,7 @@ export class IsolatorExtension {
           return packageJsonHasChanged;
         })
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
-      await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
+      // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList);
     }
     // rewrite the package-json with the component dependencies in it. the original package.json

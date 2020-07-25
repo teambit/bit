@@ -1,10 +1,12 @@
 import { join } from 'path';
 import { install } from './lynx';
-import { PackageManager, InstallationStream } from '../dependency-resolver/package-manager';
+import { logConverter } from './log-converter';
+import { PackageManager } from '../dependency-resolver/package-manager';
 import { ComponentMap } from '../component/component-map';
 import { Component, ComponentID } from '../component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { PkgExtension } from '../pkg';
+import { LogPublisher } from '../logger';
 
 const userHome = require('user-home');
 // better to use the workspace name here.
@@ -13,12 +15,15 @@ const ROOT_NAME = 'workspace';
 export class PnpmPackageManager implements PackageManager {
   constructor(
     private depResolver: DependencyResolverExtension,
-
-    private pkg: PkgExtension
+    private pkg: PkgExtension,
+    private logger: LogPublisher
   ) {}
 
-  async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<InstallationStream> {
+  async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<void> {
     const storeDir: string = join(userHome, '.pnpm-store');
+    // TODO: @gilad please fix asap and compute deps with the new dep resolver.
+    // eslint-disable-next-line
+    const packageJson = require(join(rootDir, 'package.json'));
 
     const workspace = {
       rootDir,
@@ -27,13 +32,18 @@ export class PnpmPackageManager implements PackageManager {
         name: ROOT_NAME,
         // not relevant
         version: '1.0.0',
-        dependencies: this.listWorkspaceDependencies(componentDirectoryMap),
+        dependencies: {
+          ...this.listWorkspaceDependencies(componentDirectoryMap),
+          ...packageJson.dependencies,
+        },
+        devDependencies: {
+          ...packageJson.devDependencies,
+        },
       },
     };
 
     const components = this.computeManifests(componentDirectoryMap, rootDir);
-
-    return install(workspace, components, storeDir);
+    await install(workspace, components, storeDir);
   }
 
   private computeManifests(componentDirectoryMap: ComponentMap<string>, rootDir: string) {
@@ -41,15 +51,15 @@ export class PnpmPackageManager implements PackageManager {
       acc[join(rootDir, dir)] = {
         name: this.pkg.getPackageName(component),
         version: this.getVersion(component.id),
-        ...this.computeDependencies(component, rootDir),
+        ...this.computeDependencies(component),
       };
 
       return acc;
     }, {});
   }
 
-  private computeDependencies(component: Component, rootDir: string) {
-    return this.depResolver.getDependencies(component).toJson(rootDir);
+  private computeDependencies(component: Component) {
+    return this.depResolver.getDependencies(component).toJson();
   }
 
   private getVersion(id: ComponentID): string {

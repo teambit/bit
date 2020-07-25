@@ -10,7 +10,7 @@ export class DependencyInstaller {
   ) {}
 
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>) {
-    const res = await this.packageManager.install(rootDir, componentDirectoryMap);
-    return res;
+    await this.packageManager.install(rootDir, componentDirectoryMap);
+    return componentDirectoryMap;
   }
 }

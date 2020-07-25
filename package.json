@@ -109,6 +109,7 @@
     "@bit/bit.evangelist.input.input": "^0.1.1",
     "@bit/bit.utils.fs.sub-paths": "0.0.4",
     "@graphql-modules/core": "^0.7.17",
+    "@pnpm/default-reporter": "^7.5.0",
     "@pnpm/default-resolver": "^10.0.3",
     "@pnpm/fetch": "^2.1.2",
     "@pnpm/logger": "^3.2.2",

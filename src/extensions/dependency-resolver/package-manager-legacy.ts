@@ -10,7 +10,6 @@ import { Logger, LogPublisher } from '../logger';
 import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import { installOpts } from './types';
 
 // TODO:
 // this is a hack in order to pass events from here to flows (and later install)
@@ -56,8 +55,8 @@ export default class PackageManager {
     await safeUnlink('yarn.lock');
     await safeUnlink('package-lock.json');
   }
-  async capsulesInstall(capsules: Capsule[], opts: installOpts = {}) {
-    const packageManager = opts.packageManager || this.packageManagerName;
+  async capsulesInstall(capsules: Capsule[], opts: {} = {}) {
+    const packageManager = this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
     this.emitter.emit('beforeInstallingCapsules', capsules.length);
     if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
@@ -97,10 +96,10 @@ export default class PackageManager {
     return null;
   }
 
-  async runInstallInFolder(folder: string, opts: installOpts = {}) {
+  async runInstallInFolder(folder: string, opts: {} = {}) {
     // TODO: remove this hack once harmony supports ownExtensionName
     const logPublisher: LogPublisher = this.logger.createLogPublisher('packageManager');
-    const packageManager = opts.packageManager || this.packageManagerName;
+    const packageManager = this.packageManagerName;
     if (packageManager === 'yarn') {
       const child = execa('yarn', [], { cwd: folder, stdio: 'pipe' });
       pipeOutput(child);

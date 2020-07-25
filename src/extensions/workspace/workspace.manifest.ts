@@ -13,6 +13,7 @@ import { UIExtension } from '../ui';
 import { BundlerExtension } from '../bundler';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
+import { ReporterExt } from '../reporter';
 
 export default {
   name: EXT_NAME,
@@ -27,6 +28,7 @@ export default {
     GraphQLExtension,
     UIExtension,
     BundlerExtension,
+    ReporterExt,
   ],
   slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>()],
   provider: workspaceProvider,

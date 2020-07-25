@@ -23,6 +23,7 @@ import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
+import { Reporter } from '../reporter';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -34,7 +35,8 @@ export type WorkspaceDeps = [
   Logger,
   GraphQLExtension,
   UIExtension,
-  BundlerExtension
+  BundlerExtension,
+  Reporter
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -57,7 +59,19 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
+  [
+    cli,
+    scope,
+    component,
+    isolator,
+    dependencyResolver,
+    variants,
+    logger,
+    graphql,
+    ui,
+    bundler,
+    reporter,
+  ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
@@ -105,7 +119,7 @@ export default async function provideWorkspace(
       const workspaceSchema = getWorkspaceSchema(workspace);
       ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
       graphql.register(workspaceSchema);
-      cli.register(new InstallCmd(workspace));
+      cli.register(new InstallCmd(workspace, reporter));
       cli.register(new EjectConfCmd(workspace));
 
       const capsuleListCmd = new CapsuleListCmd(isolator);
