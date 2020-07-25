@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import { BuildTask, BuildContext, BuildResults } from '../builder';
 import { Compiler } from './types';
 import { Capsule } from '../isolator';
@@ -23,7 +24,7 @@ export class CompilerTask implements BuildTask {
     component.filesystem.files.forEach((file) => {
       if (!compiler.isFileSupported(file.path)) {
         const content = file.contents;
-        capsule.fs.writeFileSync(path.join(compiler.getDistDir(), file.relative), content);
+        fs.outputFileSync(path.join(capsule.path, compiler.getDistDir(), file.relative), content);
       }
     });
   }
