@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { install } from './lynx';
-import { logConverter } from './log-converter';
+// import { logConverter } from './log-converter';
 import { PackageManager } from '../dependency-resolver/package-manager';
 import { ComponentMap } from '../component/component-map';
 import { Component, ComponentID } from '../component';
