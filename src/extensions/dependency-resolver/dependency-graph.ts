@@ -14,6 +14,7 @@ export class DependencyGraph {
       devDependencies: {
         ...this.toPackageJson(this.component, consumerComponent.devDependencies),
         ...consumerComponent.packageDependencies,
+        ...consumerComponent.peerPackageDependencies,
       },
       dependencies: {
         ...this.toPackageJson(this.component, consumerComponent.dependencies),

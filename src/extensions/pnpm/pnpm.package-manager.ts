@@ -34,7 +34,6 @@ export class PnpmPackageManager implements PackageManager {
     const workspace = {
       rootDir,
       manifest: {
-        // not relevant
         name: ROOT_NAME,
         // not relevant
         version: '1.0.0',
