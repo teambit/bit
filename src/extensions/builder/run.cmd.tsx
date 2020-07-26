@@ -22,15 +22,17 @@ export class BuilderCmd implements Command {
   ) {}
 
   async report([userPattern]: [string]): Promise<string> {
+    this.reporter.start();
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const results = await this.builder.build(components);
+    longProcessLogger.done();
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console
     ) => console.log('result', `Env: ${result.env}\nResult: success`));
-    longProcessLogger.done();
+
     this.reporter.end();
 
     return chalk.green('the build has been completed');

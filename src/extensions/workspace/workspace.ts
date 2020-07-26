@@ -134,8 +134,7 @@ export default class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(): Promise<Component[]> {
-    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    const ids = this.getAllComponentIds();
     return this.getMany(ids);
   }
 
