@@ -33,7 +33,7 @@ export interface UIRoot {
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options?: { relative: boolean }
-  ): PathOsBased | undefined;
+  ): PathOsBased;
 }
 
 export type PostStartOptions = {

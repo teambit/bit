@@ -28,6 +28,7 @@ export async function publishComponentsToRegistry({
 }): Promise<PublishResults> {
   const consumer = await loadConsumer();
   let postExportResults;
+  logger.debug(`publish-during-export, running onPostExport on ${newIdsOnRemote.length} components`);
   try {
     postExportResults = await Promise.all(consumer.scope.onPostExport.map((func) => func(newIdsOnRemote)));
   } catch (err) {

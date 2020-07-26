@@ -121,7 +121,7 @@ to change that directory, use bit move without --component flag`);
     moveSync(fromAbsolute, path.join(toAbsolute, file.name));
     return { from: file.relativePath, to: pathJoinLinux(toRelative, file.name) };
   });
-  componentMap.addRootDirToDistributedFiles(to);
+  componentMap.addRootDirToDistributedFiles(toRelative);
   consumer.bitMap.markAsChanged();
   return [{ id, changes }];
 }

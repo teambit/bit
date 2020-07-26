@@ -37,7 +37,11 @@ export default class Init implements LegacyCommand {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
-    ['', 'harmony', 'EXPERIMENTAL. create a new workspace using the experimental Harmony version'],
+    [
+      '',
+      'harmony',
+      'EXPERIMENTAL. create a new workspace using the experimental Harmony version. to migrate, run bit migrate --harmony',
+    ],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process'],
   ] as CommandOptions;
 

@@ -1,14 +1,14 @@
 import chalk from 'chalk';
-import _ from 'lodash';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '.';
 import CapsuleList from '../isolator/capsule-list';
 
 type CreateOpts = {
   baseDir?: string;
-  alwaysNew: boolean;
+  alwaysNew?: boolean;
   id: string;
-  installPackages: boolean;
+  installPackages?: boolean;
+  packageManager?: string;
 };
 
 export class CapsuleCreateCmd implements Command {
@@ -19,22 +19,23 @@ export class CapsuleCreateCmd implements Command {
   private = true;
   alias = '';
   options = [
-    ['b', 'baseDir <name>', 'set base dir of all capsules'],
-    ['a', 'alwaysNew', 'create new environment for capsule'],
+    ['b', 'base-dir <name>', 'set base dir of all capsules'],
+    ['a', 'always-new', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
-    ['d', 'installPackages', 'install packages in capsule with npm'],
+    ['d', 'install-packages', 'install packages by the package-manager'],
+    ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 
   async create(
     [componentIds]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false }: CreateOpts
+    { baseDir, alwaysNew = false, id, installPackages = false, packageManager = 'npm' }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
-    const capsuleOptions = _.omitBy({ baseDir, installPackages, alwaysNew, name: id }, _.isNil);
+    const capsuleOptions = { baseDir, installPackages, alwaysNew, name: id, packageManager };
     const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
     const capsules = isolatedEnvironment.capsules;
     return capsules;

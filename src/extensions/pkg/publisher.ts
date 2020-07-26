@@ -27,6 +27,11 @@ export class Publisher {
   ) {}
 
   async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+    // @todo: replace by `workspace.byPatter` once ready.
+    if (componentIds.length === 1 && componentIds[0] === '*') {
+      const all = this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
+      componentIds = all.map((id) => id.toString());
+    }
     this.options = options;
     const capsules = await this.getComponentCapsules(componentIds);
     return this.publishMultipleCapsules(capsules);
@@ -79,13 +84,14 @@ export class Publisher {
       return [];
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
+    this.logger.debug('publisher', `total ${idsToPublish.length} to publish out of ${componentIds.length}`);
     const network = await this.workspace.createNetwork(idsToPublish);
     return network.seedersCapsules;
   }
 
   /**
    * only components that use pkg extension and configure "publishConfig" with their own registry
-   * should be published. ignore the rest.
+   * or custom "name", should be published. ignore the rest.
    */
   private async getIdsToPublish(componentIds: string[]): Promise<string[]> {
     const bitIds = await Promise.all(componentIds.map((id) => this.scope.getParsedId(id)));
@@ -100,7 +106,7 @@ export class Publisher {
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension('@teambit/pkg');
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.publishConfig;
+    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
