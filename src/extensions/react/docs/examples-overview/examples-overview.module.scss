@@ -1,15 +1,4 @@
-.examples {
-	display: flex;
-	flex-wrap: wrap;
-}
-
-.playCard  {
-	margin-bottom: 16px;
-	
-	&:not(:last-child){
-		margin-right : 16px;
-	}
-	
+.exampleSection {
 	> :not(:last-child) {
 		margin-bottom: 8px;
 	}

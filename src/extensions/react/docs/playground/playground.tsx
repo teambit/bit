@@ -18,7 +18,7 @@ export type PlaygroundProps = {
 export function Playground({ code, scope }: PlaygroundProps) {
   return (
     <LiveProvider code={code} scope={scope} theme={prismTheme}>
-      <LivePreview />
+      <LivePreview className={classNames(styles.preview, roundnessClass.default)} />
       <LiveError className={classNames(errorClass, styles.error)} />
       <LiveEditor className={classNames(roundnessClass.default, styles.editor)} />
     </LiveProvider>
