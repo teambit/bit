@@ -2,7 +2,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { GraphQLExtension } from '../graphql';
 
@@ -55,7 +55,8 @@ export class Environments {
   getEnvFromExtensions(extensions: ExtensionDataList): Environment | null {
     const extension = extensions.findExtension(Environments.id);
     if (!extension) return null;
-    const envId = extension.config.env;
+    const envId = this.getEnvId(extension);
+    if (!envId) return null;
     // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
     const env = this.envSlot.get(envId);
     if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
@@ -65,15 +66,16 @@ export class Environments {
   /**
    * get an environment Descriptor.
    */
-  getDescriptor(component: Component): { id: string; icon: string } {
+  getDescriptor(component: Component): { id: string; icon: string } | null {
     const defaultIcon = `
       <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
           <circle cx="25" cy="25" r="20"/>
       </svg>`;
     // TODO: @guy after fix core extension then take it from core extension
     const extension = component.config.extensions.findExtension(Environments.id);
-    if (!extension) return { id: Environments.id, icon: defaultIcon };
-    const envId = extension.config.env;
+    if (!extension) return null;
+    const envId = this.getEnvId(extension);
+    if (!envId) return null;
     const instance = this.context.get<any>(envId);
     const iconFn = instance.icon;
 
@@ -96,6 +98,9 @@ export class Environments {
   private createRuntime(components: Component[]): Runtime {
     return new Runtime(this.aggregateByDefs(components));
   }
+  private getEnvId(extension: ExtensionDataEntry): string | null {
+    return extension.config.env;
+  }
 
   // :TODO can be refactorerd to few utilities who will make repeating this very easy.
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
@@ -106,7 +111,8 @@ export class Environments {
       const extension = current.config.extensions.findExtension(Environments.id);
       // this can also be handled better
       if (!extension) return;
-      const envId = extension.config.env;
+      const envId = this.getEnvId(extension);
+      if (!envId) return null;
       // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
       const env = this.envSlot.get(envId);
       if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
