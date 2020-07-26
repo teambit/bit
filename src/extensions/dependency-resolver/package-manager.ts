@@ -75,7 +75,7 @@ export default class PackageManager {
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
-    longProcessLogger.done();
+    longProcessLogger.end();
     return null;
   }
 

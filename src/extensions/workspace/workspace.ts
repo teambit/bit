@@ -318,7 +318,7 @@ export default class Workspace implements ComponentFactory {
       return this.get(id);
     });
     const components = await componentsP;
-    longProcessLogger.done();
+    longProcessLogger.end();
     return components;
   }
 

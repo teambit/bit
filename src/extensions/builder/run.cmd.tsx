@@ -27,7 +27,7 @@ export class BuilderCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const results = await this.builder.build(components);
-    longProcessLogger.done();
+    longProcessLogger.end();
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console

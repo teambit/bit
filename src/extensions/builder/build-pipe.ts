@@ -26,7 +26,7 @@ export class BuildPipe {
       const components = await taskProcess.saveTaskResults();
       return components;
     });
-    longProcessLogger.done();
+    longProcessLogger.end();
     return results;
   }
 

@@ -36,6 +36,25 @@ Ends the current phase (this is optional as the same effect can be achieved by s
 otherwise the app will hang.
 
 ### Logger
+
+#### createLongProcessLogger: (processDescription: string, totalItems?: number) => LongProcessLogger;
+Returns an instance of LongProcessLogger and start logging the process description.
+
+If the process involves iteration over a list of items, such as running tag on a list of components, then pass the `totalItems` as the total number of the components in the list.
+
+Later, during the iteration, call `logProgress(componentName)` on the `LongProcessLogger` instance.
+once done, call `end()`, which logs the duration of the process in ms.
+
+if the reporter is used, the status-line will show all messages in the terminal. Something like the following:
+```
+@teambit/workspace, loading components (total: 20)
+@teambit/workspace, loading components (1/20). ui/button
+@teambit/workspace, loading components (2/20). ui/form
+...
+@teambit/workspace, loading components (20/20). ui/page
+@teambit/workspace, loading components (completed in 200ms)
+```
+
 #### info(...messages)
 Emits messages as-is to the log. They will receive a unique color according to the id with which the logger was instantiated.
 
