@@ -1,9 +1,10 @@
 import React from 'react';
 import classNames from 'classnames';
 import styles from './component-status.module.scss';
+import { StatusTypes } from '../recursive-tree';
 
 export type ComponentStatusProps = {
-  status?: 'modified' | 'error' | 'new' | 'staged';
+  status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentStatus({ status, className }: ComponentStatusProps) {

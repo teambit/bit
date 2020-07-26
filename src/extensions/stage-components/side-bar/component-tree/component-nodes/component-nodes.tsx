@@ -20,7 +20,7 @@ export function ScopeView({ node, depth }: TreeNodeProps) {
     </>
   );
 }
-export function NamespaceView({ node, depth }: TreeNodeProps) {
+export function NamespaceView({ node, depth, status }: TreeNodeProps) {
   const [collapsed, collapse] = useState(false);
 
   return (
@@ -34,9 +34,7 @@ export function NamespaceView({ node, depth }: TreeNodeProps) {
             <Icon className={styles.arrow} of="fat-arrow-down" />
             <span>{getName(node.id)}</span>
           </div>
-          <div>
-            <StatusDot status="new" />
-          </div>
+          <div>{status && <StatusDot status="new" />}</div>
         </div>
       )}
 

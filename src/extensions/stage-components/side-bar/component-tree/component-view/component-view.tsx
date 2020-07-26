@@ -12,8 +12,13 @@ import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import styles from './component-view.module.scss';
 import { ComponentStatus } from '../component-status/component-status';
 
-export function ComponentView(props: TreeNodeProps) {
-  const { node } = props;
+export type ComponentViewProps = {
+  isDeprecated?: boolean;
+  isInternal?: boolean;
+} & TreeNodeProps;
+
+export function ComponentView(props: ComponentViewProps) {
+  const { node, isDeprecated, isInternal } = props;
   const { onSelect } = useContext(ComponentTreeContext);
 
   const handleClick = useCallback(
@@ -35,9 +40,9 @@ export function ComponentView(props: TreeNodeProps) {
         <span>{getName(node.id)}</span>
       </div>
       <div className={styles.right}>
-        <Icon of="note-deprecated" className={styles.componentIcon} />
-        <Icon of="Internal" className={styles.componentIcon} />
-        <ComponentStatus status="new" />
+        {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
+        {isInternal && <Icon of="Internal" className={styles.componentIcon} />}
+        {node.status && <ComponentStatus status="new" />}
       </div>
     </NavLink>
   );
