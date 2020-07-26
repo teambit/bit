@@ -3,7 +3,7 @@ import type { LogPublisher } from '../types';
 
 export const LONG_PROCESS_EVENT = 'longProcess';
 
-export class LogLongProcess {
+export class LongProcessLogger {
   constructor(
     private logPublisher: LogPublisher,
     private extensionName: string,
@@ -19,7 +19,7 @@ export class LogLongProcess {
     emitter.emit(LONG_PROCESS_EVENT, output);
   }
 
-  processItem(itemName = '') {
+  logProgress(itemName = '') {
     this.currentItem += 1;
     const output = `${this.extensionName}, ${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
     this.logPublisher.info(undefined, output);

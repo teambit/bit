@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 // TODO: change to module path once types become a component
 import { LogPublisher } from '../types';
 import legacyLogger from '../../logger/logger';
-import { LogLongProcess } from './long-process-logger';
+import { LongProcessLogger } from './long-process-logger';
 
 export enum LogLevel {
   SILLY = 'silly',
@@ -45,8 +45,8 @@ export default class Logger {
       error(componentId, messages) {
         emitAndLogToFile(componentId, messages, 'error');
       },
-      createLongProcessLogger(processDescription: string, totalItems?: number): LogLongProcess {
-        return new LogLongProcess(this, extensionName, emitter, processDescription, totalItems);
+      createLongProcessLogger(processDescription: string, totalItems?: number): LongProcessLogger {
+        return new LongProcessLogger(this, extensionName, emitter, processDescription, totalItems);
       },
     };
   }

@@ -70,7 +70,7 @@ export default class PackageManager {
         });
         await installProc;
         linkBitBinInCapsule(capsule);
-        longProcessLogger.processItem(componentId);
+        longProcessLogger.logProgress(componentId);
       });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);

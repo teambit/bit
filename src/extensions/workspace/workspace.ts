@@ -314,7 +314,7 @@ export default class Workspace implements ComponentFactory {
     const idsWithoutEmpty = compact(ids);
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      longProcessLogger.processItem(id.toString());
+      longProcessLogger.logProgress(id.toString());
       return this.get(id);
     });
     const components = await componentsP;

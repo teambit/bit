@@ -1,4 +1,4 @@
-import { LogLongProcess } from '../logger/long-process-logger';
+import { LongProcessLogger } from '../logger/long-process-logger';
 
 export type LogPublisher = {
   silly: (...any) => void;
@@ -6,5 +6,5 @@ export type LogPublisher = {
   info: (...any) => void;
   warn: (...any) => void;
   error: (...any) => void;
-  createLongProcessLogger: (message: string, totalItems?: number) => LogLongProcess;
+  createLongProcessLogger: (message: string, totalItems?: number) => LongProcessLogger;
 };
