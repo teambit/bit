@@ -19,7 +19,7 @@ export class TesterService implements EnvService {
 
     const testMatch = components.reduce((acc: string[], component: any) => {
       const specs = component.specs.map((specFile) =>
-        join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: true }) || '', specFile)
+        join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: true }), specFile)
       );
 
       acc = acc.concat(specs);

@@ -12,8 +12,10 @@ import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { Environments } from '../environments';
 import { Compiler } from './types';
+import { ComponentID } from '../component';
 import { Component } from '../component';
-import { OnComponentChangeOptions, OnComponentChangeResult } from '../workspace/on-component-change';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { OnComponentChangeResult } from '../workspace/on-component-change';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -61,18 +63,15 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private get distDir() {
+  private get distDir(): PathOsBasedRelative {
     const packageName = componentIdToPackageName(this.component);
     const packageDir = path.join('node_modules', packageName);
     const distDirName = DEFAULT_DIST_DIRNAME;
     return path.join(packageDir, distDirName);
   }
 
-  private get componentDir() {
-    const relativeComponentDir = this.component.componentMap?.getComponentDir();
-    if (!relativeComponentDir)
-      throw new Error(`compileWithNewCompilersOnWorkspace expect to get only components with rootDir`);
-    return path.join(this.workspace.path, relativeComponentDir);
+  private get componentDir(): PathOsBasedAbsolute {
+    return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
   private async compileOneFileWithNewCompiler(file: SourceFile) {
@@ -111,8 +110,8 @@ export class WorkspaceCompiler {
     if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
   }
 
-  async onComponentChange(component: Component, options: OnComponentChangeOptions): Promise<OnComponentChangeResult> {
-    const buildResults = await this.compileComponents([component.id.toString()], options);
+  async onComponentChange(component: Component): Promise<OnComponentChangeResult> {
+    const buildResults = await this.compileComponents([component.id.toString()], {});
     return {
       results: buildResults,
       toString() {
@@ -125,7 +124,7 @@ export class WorkspaceCompiler {
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
-    const bitIds = this.getBitIds(componentsIds);
+    const bitIds = await this.getBitIds(componentsIds);
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
@@ -181,12 +180,10 @@ export class WorkspaceCompiler {
     return buildResults;
   }
 
-  private getBitIds(componentsIds: Array<string | BitId>): BitId[] {
-    if (componentsIds.length) {
-      return componentsIds.map((compId) =>
-        compId instanceof BitId ? compId : this.workspace.consumer.getParsedId(compId)
-      );
-    }
-    return this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
+  private async getBitIds(componentsIds: Array<string | BitId>): Promise<BitId[]> {
+    const ids: ComponentID[] = componentsIds.length
+      ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
+      : this.workspace.getAllComponentIds();
+    return ids.map((id) => id._legacy);
   }
 }
