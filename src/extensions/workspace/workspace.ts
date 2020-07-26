@@ -33,6 +33,8 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceComponent } from './workspace-component';
 
 export type EjectConfResult = {
   configPath: string;
@@ -48,7 +50,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace implements ComponentFactory {
+export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -127,8 +129,12 @@ export default class Workspace implements ComponentFactory {
 
   /**
    * provides status of all components in the workspace.
+   * TODO: support multiple ids, allow id to be optional (all workspace components)
    */
-  status() {}
+  async getComponentStatus(id: ComponentID): Promise<ComponentStatus> {
+    const status = await this.consumer.getComponentStatusById(id._legacy);
+    return ComponentStatus.fromLegacy(status);
+  }
 
   /**
    * list all workspace components.
@@ -233,8 +239,8 @@ export default class Workspace implements ComponentFactory {
       return this.executeLoadSlot(this.newComponentFromState(state));
     }
 
-    component.state = state;
-    return this.executeLoadSlot(component);
+    const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
+    return this.executeLoadSlot(workspaceComponent);
   }
 
   private async executeLoadSlot(component: Component) {
@@ -271,7 +277,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   private newComponentFromState(state: State): Component {
-    return new Component(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
+    return new WorkspaceComponent(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -623,3 +629,5 @@ if you migrated to Harmony, please run "bit status" to fix such errors`);
     return Promise.all(resolveMergedExtensionsP);
   }
 }
+
+export default Workspace;

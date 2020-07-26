@@ -109,16 +109,16 @@ export class Component {
   /**
    * determines whether this component is modified in the workspace.
    */
-  isModified() {
+  isModified(): Promise<boolean> {
     if (!this.head) return true;
-    return this.state.hash !== this.head.hash;
+    return Promise.resolve(this.state.hash !== this.head.hash);
   }
 
   /**
    * determines whether this component is new.
    */
-  isNew() {
-    return this.head === null;
+  isNew(): Promise<boolean> {
+    return Promise.resolve(this.head === null);
   }
 
   // TODO: @david after snap we need to make sure to refactor here.
