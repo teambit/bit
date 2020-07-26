@@ -15,6 +15,7 @@ import { ComponentStatus } from '../component-status/component-status';
 export type ComponentViewProps = {
   isDeprecated?: boolean;
   isInternal?: boolean;
+  // env?: 'react' | 'angular' | 'vue' | 'stencil';
 } & TreeNodeProps;
 
 export function ComponentView(props: ComponentViewProps) {
@@ -36,6 +37,7 @@ export function ComponentView(props: ComponentViewProps) {
       onClick={handleClick}
     >
       <div className={styles.left}>
+        {/* TODO - get env from backend */}
         <Image alt="react env" className={styles.icon} src="tutorial-icons/react.svg" />
         <span>{getName(node.id)}</span>
       </div>
