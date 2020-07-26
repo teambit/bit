@@ -5,7 +5,6 @@ import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
-import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
