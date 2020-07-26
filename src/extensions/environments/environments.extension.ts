@@ -112,18 +112,19 @@ export class Environments {
       // this can also be handled better
       if (!extension) return;
       const envId = this.getEnvId(extension);
-      if (!envId) return null;
-      // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
-      const env = this.envSlot.get(envId);
-      if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
+      if (envId) {
+        // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
+        const env = this.envSlot.get(envId);
+        if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
 
-      // handle config as well when aggregating envs.
-      if (map[envId]) map[envId].components.push(current);
-      else
-        map[envId] = {
-          components: [current],
-          env,
-        };
+        // handle config as well when aggregating envs.
+        if (map[envId]) map[envId].components.push(current);
+        else
+          map[envId] = {
+            components: [current],
+            env,
+          };
+      }
     }, {});
 
     return Object.keys(map).map((key) => {
