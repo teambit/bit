@@ -19,7 +19,7 @@ export function Notification({ entry }: { entry: Message }) {
     setTimeout(() => {
       notificationApi.dismiss(id);
     }, DISMISS_TIME);
-  }, [id]);
+  }, [id, notificationApi]);
 
   return (
     <Card className={classNames(styles.notification, isDismissing && styles.dismissing)}>

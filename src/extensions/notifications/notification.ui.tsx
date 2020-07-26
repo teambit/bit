@@ -60,6 +60,9 @@ export default class NotificationUI implements NotificationApi {
 
   private render = (props: Omit<NotificationCenterProps, 'notifications'>) => {
     // this code assumes a single place of render per instance of NotificationUI
+
+    // eslint says hook cannot be used inside a class component. It's ok, this class is not a react component
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [messages, dispatch] = useReducer(notificationReducer, []);
     this.dispatch = dispatch;
 
