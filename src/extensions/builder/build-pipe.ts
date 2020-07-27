@@ -2,6 +2,7 @@ import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
 import { BuildTask, BuildContext } from './types';
 import { LogPublisher } from '../types';
+import loader from '../../cli/loader';
 
 export class BuildPipe {
   constructor(
@@ -24,6 +25,7 @@ export class BuildPipe {
       taskProcess.throwIfErrorsFound();
       this.logger.info(task.extensionId, `task "${task.extensionId}" has completed successfully`);
       const components = await taskProcess.saveTaskResults();
+      loader.stopAndPersist();
       return components;
     });
     longProcessLogger.end();

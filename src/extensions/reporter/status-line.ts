@@ -1,6 +1,5 @@
 import stc from 'string-to-color';
 import chalk from 'chalk';
-import debounce from 'debounce';
 import getColumnCount from './get-column-count';
 import loader from '../../cli/loader';
 
@@ -8,12 +7,6 @@ import loader from '../../cli/loader';
 // the idea is to assume we have a longer status line to make
 // up for the js runtime speed
 const SPACE_BUFFER = 10;
-
-/**
- * time in ms.
- * the timeout is to allow for multiple logs (or multiple `SIGWINCH` events) to pass through
- */
-const TIME_BETWEEN_RE_RENDERING = 25;
 
 function clearStatusRow() {
   // eslint-disable-next-line no-console
@@ -27,9 +20,7 @@ export default class StatusLine {
   private text = '';
   private ids: Array<string> = [];
   private ended = false;
-  constructor() {
-    this.reRender = debounce(this.reRender, TIME_BETWEEN_RE_RENDERING);
-  }
+
   addId(id) {
     this.ids.push(id);
   }

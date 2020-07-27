@@ -1,4 +1,5 @@
-import ora, { Ora } from 'ora';
+import chalk from 'chalk';
+import ora, { Ora, PersistOptions } from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 
 export class Loader {
@@ -58,7 +59,11 @@ export class Loader {
     return this;
   }
 
-  stopAndPersist(options): Loader {
+  /**
+   * persist the last loader message with the given symbol.
+   * to replace the text, use the `options.text`.
+   */
+  stopAndPersist(options: PersistOptions = { symbol: chalk.green('✔') }): Loader {
     if (this.spinner) this.spinner.stopAndPersist(options);
     return this;
   }

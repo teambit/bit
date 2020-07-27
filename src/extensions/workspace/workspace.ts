@@ -33,6 +33,7 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import loader from '../../cli/loader';
 
 export type EjectConfResult = {
   configPath: string;
@@ -166,6 +167,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
@@ -178,6 +180,8 @@ export default class Workspace implements ComponentFactory {
     const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
+    longProcessLogger.end();
+    loader.stopAndPersist();
     return new Network(
       capsuleList,
       graph,
