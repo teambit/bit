@@ -11,14 +11,15 @@ import { clickable } from '../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import styles from './component-view.module.scss';
 import { ComponentStatus } from '../component-status/component-status';
+import { PayloadType } from '../payload-type';
 
-export type ComponentViewProps = {
+export type ComponentViewProps<Payload = any> = {
   isDeprecated?: boolean;
   isInternal?: boolean;
   // env?: 'react' | 'angular' | 'vue' | 'stencil';
-} & TreeNodeProps;
+} & TreeNodeProps<Payload>;
 
-export function ComponentView(props: ComponentViewProps) {
+export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const { node, isDeprecated, isInternal } = props;
   const { onSelect } = useContext(ComponentTreeContext);
 
