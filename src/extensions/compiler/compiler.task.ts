@@ -7,6 +7,7 @@ import { Capsule } from '../isolator';
  * compiler build task. Allows to compile components during component build.
  */
 export class CompilerTask implements BuildTask {
+  readonly description = 'compile components';
   constructor(readonly extensionId: string) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
