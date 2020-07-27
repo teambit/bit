@@ -1,12 +1,12 @@
 import ora from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 
-let _loader;
+let _loader: ora.Ora | null;
 
 type Loader = {
   on: () => Loader;
   off: () => Loader | null | undefined;
-  start: (text: string | null | undefined) => Loader | null | undefined;
+  start: (text?: string | null | undefined) => Loader | null | undefined;
   stop: () => Loader | null | undefined;
   setText: (text: string | null | undefined) => Loader | null | undefined;
   get: () => Loader | null | undefined;
@@ -55,7 +55,48 @@ function stop(): Loader {
 }
 
 function on(): Loader {
-  if (!_loader) _loader = ora({ spinner: SPINNER_TYPE, text: '' });
+  if (_loader) return loader;
+  // we send a proxy to the spinner instance rather than process.stdout
+  // so that we would be able to bypass our monkey-patch of process.stdout
+  // this is so that we won't have a case where the stdout "write" method
+  // triggers itself through the spinner by doing "spinner.start()" or "spinner.stop()"
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  const stdoutProxy = new Proxy(process.stdout, {
+    get(obj, prop) {
+      if (prop === 'write') {
+        return originalStdoutWrite;
+      }
+      return obj[prop];
+    },
+  });
+  const spinner = ora({ spinner: SPINNER_TYPE, text: '', stream: stdoutProxy });
+  // @ts-ignore
+  // here we monkey-patch the process.stdout stream so that whatever is printed
+  // does not break the status line with the spinner, and that this line always
+  // remains at the bottom of the screen
+  process.stdout.write = (buffer, encoding, callback) => {
+    const wasSpinning = spinner.isSpinning;
+    if (wasSpinning) {
+      spinner.stop();
+    }
+    originalStdoutWrite(buffer, encoding, callback);
+    if (wasSpinning) {
+      spinner.start();
+    }
+  };
+  // @ts-ignore
+  process.stderr.write = (buffer, encoding, callback) => {
+    const wasSpinning = spinner.isSpinning;
+    if (wasSpinning) {
+      spinner.stop();
+    }
+    originalStderrWrite(buffer, encoding, callback);
+    if (wasSpinning) {
+      spinner.start();
+    }
+  };
+  _loader = spinner;
   return loader;
 }
 

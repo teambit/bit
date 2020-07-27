@@ -73,6 +73,7 @@ export class TagCmd implements Command {
       scope,
     }: TagOptions
   ): Promise<any> {
+    this.reporter.start();
     function getVersion(): string | undefined {
       if (scope) return scope;
       if (all && isString(all)) return all;
