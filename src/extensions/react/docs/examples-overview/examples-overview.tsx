@@ -1,12 +1,11 @@
 import React from 'react';
+import classNames from 'classnames';
 import { Section, SectionProps } from '@bit/bit.test-scope.ui.section';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
 import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
-import { Card } from '@bit/bit.base-ui.surfaces.card';
 import { Playground, CodeScope } from '../playground';
 
 import styles from './examples-overview.module.scss';
-import classNames from 'classnames';
 
 export type ExamplesOverviewProps = {
   examples: ExampleProps[];
@@ -17,17 +16,17 @@ export type ExampleProps = {
   scope: CodeScope;
   title?: string;
   description?: string;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function ExamplesOverview({ examples, ...rest }: ExamplesOverviewProps) {
   if (examples.length <= 0) return null;
 
   return (
-    <>
+    <div {...rest}>
       {examples.map((example, idx) => (
         <ExampleSection key={idx} example={example} />
       ))}
-    </>
+    </div>
   );
 }
 
