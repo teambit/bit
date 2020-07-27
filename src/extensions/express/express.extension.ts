@@ -1,8 +1,9 @@
-import { flatten, lowerCase, concat } from 'lodash';
+import { flatten, lowerCase, concat, startsWith } from 'lodash';
 import express from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Request, Response } from './types';
+import { errorHandle, notFound } from './middlewares';
 import { LoggerExt, Logger, LogPublisher } from '../logger';
 
 export type ExpressConfig = {
@@ -42,10 +43,11 @@ export class ExpressExtension {
 
     allRoutes.forEach((routeInfo) => {
       const { method, namespace, path, middlewares } = routeInfo;
-      // TODO: handle case in which extension doesn't provide '/' in path
-      app[method](`/${namespace}${path}`, middlewares);
+      app[method](`/${namespace}${startsWith('/', path) ? '' : '/'}${path}`, middlewares);
     });
 
+    app.use(notFound);
+    app.use(errorHandle);
     app.listen(serverPort);
   }
 
