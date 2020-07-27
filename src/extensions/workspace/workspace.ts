@@ -1,4 +1,5 @@
 import path from 'path';
+import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
@@ -139,10 +140,10 @@ export class Workspace implements ComponentFactory {
   /**
    * list all workspace components.
    */
-  async list(): Promise<Component[]> {
+  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
     const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
-    return this.getMany(ids);
+    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
   /**

@@ -32,7 +32,7 @@ export default (workspace: Workspace) => {
       type Workspace {
         name: String
         path: String
-        components: [Component]
+        components(offset: Int, limit: Int): [Component]
         getComponent(id: String!): Component
       }
 
@@ -49,8 +49,8 @@ export default (workspace: Workspace) => {
       Workspace: {
         path: (ws) => ws.path,
         name: (ws) => ws.name,
-        components: async (ws: Workspace) => {
-          return ws.list();
+        components: async (ws: Workspace, { offset, limit }: { offset: number; limit: number }) => {
+          return ws.list({ offset, limit });
         },
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
           const componentID = await ws.resolveComponentId(id);

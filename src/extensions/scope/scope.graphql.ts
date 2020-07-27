@@ -13,7 +13,7 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
         path: String
 
         # list of components contained in the scope.
-        components: [ComponentMeta]
+        components(offset: Int, limit: Int): [Component]
 
         # get a specific component.
         get(id: String!): Component
@@ -23,10 +23,11 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
         scope: Scope
       }
     `,
+    //TODO: guy Scope Extension ext return error, need to ask ran about it
     resolvers: {
       Scope: {
         name: (scope: ScopeExtension) => scope.name,
-        components: (scope: ScopeExtension) => scope.list(),
+        components: (scope: ScopeExtension, filter?: { offset: number; limit: number }) => scope.list(filter),
         get: async (scope: ScopeExtension, { id }: { id: string }) => {
           return scope.get(ComponentID.fromString(id));
         },
