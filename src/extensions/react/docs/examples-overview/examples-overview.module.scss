@@ -1,19 +1,5 @@
-
-
-.topRow {
-	display: flex;
-    align-items: baseline;
-    margin-bottom: 20px;
-}
-
-.marginBottom {
-	margin-bottom: 30px;
-}
-
-.marginRight {
-	margin-right: 10px;
-}
-
-.maxWidth {
-	max-width: 700px;
+.exampleSection {
+	> :not(:last-child) {
+		margin-bottom: 8px;
+	}
 }
