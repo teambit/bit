@@ -12,6 +12,7 @@ import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
 import { GraphQLExtension } from '../graphql';
 import { builderSchema } from './builder.graphql';
+import { TagCmd } from './tag.cmd';
 
 /**
  * extension config type.
@@ -116,6 +117,7 @@ export class BuilderExtension {
     if (scope) scope.onTag(func);
 
     cli.register(new BuilderCmd(builder, workspace, logPublisher, reporter));
+    cli.register(new TagCmd(logPublisher, reporter));
     return builder;
   }
 }
