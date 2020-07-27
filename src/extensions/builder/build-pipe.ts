@@ -25,7 +25,7 @@ export class BuildPipe {
       taskProcess.throwIfErrorsFound();
       this.logger.info(task.extensionId, `task "${task.extensionId}" has completed successfully`);
       const components = await taskProcess.saveTaskResults();
-      loader.stopAndPersist();
+      loader.succeed();
       return components;
     });
     longProcessLogger.end();

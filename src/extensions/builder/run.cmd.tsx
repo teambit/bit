@@ -29,7 +29,7 @@ export class BuilderCmd implements Command {
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const results = await this.builder.build(components);
     longProcessLogger.end();
-    loader.stopAndPersist();
+    loader.succeed();
     this.reporter.end();
     // @todo: decide about the output
     results.forEach((

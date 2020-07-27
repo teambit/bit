@@ -59,11 +59,7 @@ export class Loader {
     return this;
   }
 
-  /**
-   * persist the last loader message with the given symbol.
-   * to replace the text, use the `options.text`.
-   */
-  stopAndPersist(options: PersistOptions = { symbol: chalk.green('✔') }): Loader {
+  stopAndPersist(options?: PersistOptions): Loader {
     if (this.spinner) this.spinner.stopAndPersist(options);
     return this;
   }

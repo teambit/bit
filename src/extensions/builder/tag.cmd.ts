@@ -168,7 +168,7 @@ export class TagCmd implements Command {
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
     longProcessLogger.end();
-    loader.stopAndPersist();
+    loader.succeed();
     return (
       warningsOutput +
       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
