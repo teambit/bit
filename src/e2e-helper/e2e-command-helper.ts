@@ -148,15 +148,9 @@ export default class CommandHelper {
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
-  // @todo: change to tagAllComponents
-  tagAllComponentsNew(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
-  }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
-    return this.tagAllComponentsNew(options, version, assertTagged);
+    return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);

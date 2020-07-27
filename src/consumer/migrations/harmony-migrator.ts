@@ -45,7 +45,7 @@ before starting the migration, please re-init the workspace as harmony by follow
       logger.console(results.changedToRootDir.join('\n'));
     }
     logger.console(
-      chalk.white.bold('please run "bit status" to make sure the workspace is error-free before continue working')
+      chalk.white.bold('\nplease run "bit status" to make sure the workspace is error-free before continue working')
     );
   }
 }
