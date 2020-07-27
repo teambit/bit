@@ -1,4 +1,4 @@
-import { resolve, join } from 'path';
+import { resolve } from 'path';
 import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
