@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import ora, { Ora, PersistOptions } from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 
