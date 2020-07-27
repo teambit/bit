@@ -67,10 +67,7 @@ export class Environments {
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): { id: string; icon: string } | null {
-    const defaultIcon = `
-      <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="25" cy="25" r="20"/>
-      </svg>`;
+    const defaultIcon = `https://static.bit.dev/brands/logo-js.svg`;
     // TODO: @guy after fix core extension then take it from core extension
     const extension = component.config.extensions.findExtension(Environments.id);
     if (!extension) return null;

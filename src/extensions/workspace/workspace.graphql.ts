@@ -7,7 +7,7 @@ export default (workspace: Workspace) => {
     typeDefs: gql`
       type ComponentStatus {
         # is the component modified.
-        isModified: boolean
+        isModified: Boolean
 
         # is the new component new.
         isNew: Boolean
@@ -19,10 +19,10 @@ export default (workspace: Workspace) => {
         isStaged: Boolean
 
         # does the component exists in the workspace.
-        isInWorkspace: boolean
+        isInWorkspace: Boolean
 
         # does the component exists in the scope.
-        isInScope: boolean
+        isInScope: Boolean
       }
 
       extend type Component {
@@ -32,7 +32,7 @@ export default (workspace: Workspace) => {
       type Workspace {
         name: String
         path: String
-        components: [WorkspaceComponent]
+        components: [Component]
         getComponent(id: String!): Component
       }
 

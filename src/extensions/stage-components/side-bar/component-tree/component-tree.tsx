@@ -7,17 +7,18 @@ import { ComponentTreeContextProvider } from './component-tree-context';
 
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
+import { Component } from '../../../workspace/ui/workspace/workspace-model';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
-  components: string[];
+  components: Component[];
 };
 
 export function ComponentTree(props: ComponentTreeProps) {
   const { components, onSelect, selected } = props;
 
-  const rootNode = useMemo(() => inflateToTree(components), [components]);
+  const rootNode = useMemo(() => inflateToTree(components.map((component) => component.id.fullName)), [components]);
 
   return (
     <div className={styles.componentTree} style={indentStyle(0)}>

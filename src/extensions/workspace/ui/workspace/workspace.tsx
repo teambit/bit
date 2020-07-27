@@ -23,6 +23,16 @@ const WORKSPACE = gql`
           version
           scope
         }
+        getStatus {
+          isInScope
+          isStaged
+          isModified
+          isDeleted
+        }
+        env {
+          id
+          icon
+        }
       }
     }
   }

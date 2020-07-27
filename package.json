@@ -9,6 +9,7 @@
     "precommit": "lint-staged",
     "ts-coverage": "type-coverage",
     "check-types": "tsc",
+    "ts-watch": "tsc -w",
     "lint": "tsc && eslint \"{src,e2e}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{src,e2e}/**/*.{ts,tsx}\" --format table",
     "lint:html": "eslint \"{src,e2e}/**/*.{ts,tsx}\" --format html -o eslint-report.html",

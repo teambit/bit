@@ -36,13 +36,13 @@ export class ComponentStatus {
 
   static fromLegacy(status: LegacyComponentStatus) {
     return new ComponentStatus(
-      status.modified,
-      status.newlyCreated,
-      status.deleted,
-      status.staged,
+      !!status.modified,
+      !!status.newlyCreated,
+      !!status.deleted,
+      !!status.staged,
       !status.notExist,
       !status.missingFromScope,
-      status.nested
+      !!status.nested
     );
   }
 }

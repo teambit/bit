@@ -1,10 +1,20 @@
 // import { ComponentMeta } from '../../../component/component.ui';
 import { ComponentID } from '../../../component/id';
+import { ComponentStatus } from '../../workspace-component/component-status';
+
+export type Component = {
+  id: ComponentID;
+  status: ComponentStatus;
+  env: {
+    id: string;
+    icon: string;
+  };
+};
 
 export type WorkspaceProps = {
   name: string;
   path: string;
-  components: any[];
+  components: Component[];
 };
 
 export class Workspace {
@@ -22,14 +32,20 @@ export class Workspace {
     /**
      * components container in the workspace.
      */
-    readonly components: ComponentID[]
+    readonly components: Component[]
   ) {}
 
   static from({ name, path, components }: WorkspaceProps) {
     return new Workspace(
       name,
       path,
-      components.map((value) => ComponentID.fromObject(value.id))
+      components.map((value) => {
+        return {
+          id: ComponentID.fromObject(value.id),
+          status: value.status,
+          env: value.env,
+        };
+      })
     );
   }
 }
