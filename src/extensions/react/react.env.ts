@@ -10,6 +10,7 @@ import { DevServer, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
+import { pathNormalizeToLinux } from '../../utils';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -67,7 +68,7 @@ export class ReactEnv implements Environment {
     const tsconfig = require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
-      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')],
+      types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
     });
   }
 
