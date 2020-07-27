@@ -1,6 +1,6 @@
 
 .linkWrapper {
-  padding: 12px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -14,6 +14,11 @@
       color: var(--text-muted);
       //TODO - fix hover effect and timing of icon
       transition: visibility 200ms, opacity 100ms ease-in-out;
+      .icon {
+        &:hover {
+          color: var(--text-highlight);
+        }
+      }
     }
   }
   &.active {
@@ -26,6 +31,12 @@
       visibility: unset;
       opacity: 1;
       color: inherit;
+      .icon {
+        &:hover {
+          color: inherit;
+          font-weight: bold;
+        }
+      }
     }
   }
   .left {
@@ -48,6 +59,7 @@
   width: 100%;
   text-decoration: none;
   color: inherit;
+  padding: 12px 0;
   &:active {
     color: inherit;
   }
