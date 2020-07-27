@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { Logger, LogEntry, LogLevel } from '../logger';
 import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
+import { LONG_PROCESS_EVENT } from '../logger/long-process-logger';
 
 export default class Reporter {
   private outputShouldBeSuppressed = false;
@@ -19,6 +20,9 @@ export default class Reporter {
         this.statusLine.reRender();
       }
     });
+  }
+  setStatusCallback(message: string) {
+    this.setStatusText(message);
   }
   suppressOutput() {
     this.outputShouldBeSuppressed = true;
@@ -103,6 +107,9 @@ export default class Reporter {
 
   unsubscribe(extensionName) {
     this.logger.unsubscribe(extensionName);
+  }
+  start() {
+    this.logger.subscribe(LONG_PROCESS_EVENT, this.setStatusCallback.bind(this));
   }
   end() {
     this.statusLine.clear();
