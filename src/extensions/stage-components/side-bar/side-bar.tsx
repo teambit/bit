@@ -5,6 +5,7 @@ import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
 import { ComponentID } from '../../component';
+import { OverviewLink } from './overview-link/overview-link';
 
 type SideBarProps = {
   components: ComponentID[];
@@ -25,11 +26,11 @@ export function SideBar({ components, selected, ...rest }: SideBarProps) {
     },
     [history]
   );
-
   return (
     <div {...rest}>
+      <OverviewLink />
       <div className={styles.inputWrapper}>
-        <Input placeholder="Find components" error={false} className={styles.input} />
+        <Input placeholder="Components" error={false} className={styles.input} />
         <Icon of="discovery" className={styles.searchIcon} />
       </div>
       <ComponentTree selected={selected} onSelect={handleSelect} components={componentIds} />
