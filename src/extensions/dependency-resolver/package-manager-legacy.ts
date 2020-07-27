@@ -39,7 +39,7 @@ export default class PackageManager {
   async capsulesInstall(capsules: Capsule[], opts: {} = {}) {
     const packageManager = this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
-    this.emitter.emit('beforeInstallingCapsules', capsules.length);
+    const longProcessLogger = logPublisher.createLongProcessLogger('installing capsules', capsules.length);
     if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async (capsule) => {
@@ -69,11 +69,12 @@ export default class PackageManager {
         });
         await installProc;
         linkBitBinInCapsule(capsule);
-        this.emitter.emit('capsuleInstalled', componentId);
+        longProcessLogger.logProgress(componentId);
       });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
+    longProcessLogger.end();
     return null;
   }
 
