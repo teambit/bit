@@ -1,5 +1,4 @@
 import { EnvService, ExecutionContext } from '../environments';
-import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
 import { LogPublisher } from '../types';
@@ -7,11 +6,6 @@ import { BuildTask } from './types';
 
 export class BuilderService implements EnvService {
   constructor(
-    /**
-     * isolator extension.
-     */
-    private isolator: IsolatorExtension,
-
     /**
      * workspace extension.
      */

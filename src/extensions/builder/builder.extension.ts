@@ -5,7 +5,6 @@ import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
-import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
@@ -92,7 +91,6 @@ export class BuilderExtension {
     Environments,
     WorkspaceExt,
     ScopeExtension,
-    IsolatorExtension,
     ReporterExt,
     LoggerExt,
     CoreExt,
@@ -100,25 +98,24 @@ export class BuilderExtension {
     ComponentExtension,
   ];
 
-  static async provider([cli, envs, workspace, scope, isolator, reporter, logger, core, graphql]: [
+  static async provider([cli, envs, workspace, scope, reporter, logger, core, graphql]: [
     CLIExtension,
     Environments,
     Workspace,
     ScopeExtension,
-    IsolatorExtension,
     Reporter,
     Logger,
     Core,
     GraphQLExtension
   ]) {
     const logPublisher = logger.createLogPublisher(BuilderExtension.id);
-    const builderService = new BuilderService(isolator, workspace, logPublisher);
+    const builderService = new BuilderService(workspace, logPublisher);
     const builder = new BuilderExtension(envs, workspace, builderService, scope, core);
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new BuilderCmd(builder, workspace, reporter));
+    cli.register(new BuilderCmd(builder, workspace, logPublisher, reporter));
     return builder;
   }
 }

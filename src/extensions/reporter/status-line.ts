@@ -9,12 +9,18 @@ import getColumnCount from './get-column-count';
 // up for the js runtime speed
 const SPACE_BUFFER = 10;
 
+/**
+ * time in ms.
+ * the timeout is to allow for multiple logs (or multiple `SIGWINCH` events) to pass through
+ */
+const TIME_BETWEEN_RE_RENDERING = 25;
+
 function clearStatusRow() {
   // eslint-disable-next-line no-console
   console.log(`\r${Array(getColumnCount()).fill(' ').join('')}`);
 }
 
-// we send a proxy to the spinner instance rather than proxess.stdout
+// we send a proxy to the spinner instance rather than process.stdout
 // so that we would be able to bypass our monkey-patch of process.stdout
 // this is so that we won't have a case where the stdout "write" method
 // triggers itself through the spinner by doing "spinner.start()" or "spinner.stop()"
@@ -38,7 +44,7 @@ export default class StatusLine {
   private ids: Array<string> = [];
   private ended = false;
   constructor() {
-    this.reRender = debounce(this.reRender, 100);
+    this.reRender = debounce(this.reRender, TIME_BETWEEN_RE_RENDERING);
     // @ts-ignore
     // here we monkey-patch the process.stdout stream so that whatever is printed
     // does not break the status line with the spinner, and that this line always
