@@ -45,13 +45,21 @@ If the process involves iteration over a list of items, such as running tag on a
 Later, during the iteration, call `logProgress(componentName)` on the `LongProcessLogger` instance.
 once done, call `end()`, which logs the duration of the process in ms.
 
-if the reporter is used, the status-line will show all messages in the terminal. Something like the following:
+The reporter can be used to show the progress in the status-line. To enable this, call `this.reporter.start()`. Once done, call `this.reporter.end()`.
+
+Here is an example of the messages produced by this longProcessLogger. If the reporter is used, the status-line always shows the last message.
 ```
 @teambit/workspace, loading components (total: 20)
 @teambit/workspace, loading components (1/20). ui/button
 @teambit/workspace, loading components (2/20). ui/form
 ...
 @teambit/workspace, loading components (20/20). ui/page
+@teambit/workspace, loading components (completed in 200ms)
+```
+
+An example when there is no `totalItems`.
+```
+@teambit/workspace, loading components
 @teambit/workspace, loading components (completed in 200ms)
 ```
 
