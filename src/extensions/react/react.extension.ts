@@ -57,7 +57,7 @@ export class ReactExtension {
    */
 
   icon() {
-    return 'https://static.bit.dev/tutorial-icons/react.svg';
+    return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
   /**
