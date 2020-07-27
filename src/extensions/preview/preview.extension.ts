@@ -10,6 +10,9 @@ import { PreviewDefinition } from './preview-definition';
 import { ExecutionContext } from '../environments';
 import { ExpressExtension } from '../express';
 import { PreviewRoute } from './preview.route';
+import { Component } from '../component';
+import { PreviewArtifactNotFound } from './exceptions';
+import { PreviewArtifact } from './preview-artifact';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -22,7 +25,14 @@ export class PreviewExtension {
     private previewSlot: PreviewDefinitionRegistry
   ) {}
 
-  getPreview;
+  async getPreview(component: Component): PreviewArtifact {
+    const entry = component.config.extensions.findCoreExtension(PreviewExtension.id);
+    if (!entry) throw new PreviewArtifactNotFound(component.id);
+    const artifacts = entry.artifacts;
+    if (!artifacts) throw new PreviewArtifactNotFound(component.id);
+
+    return new PreviewArtifact(artifacts);
+  }
 
   /**
    * write a link for a loading custom modules dynamically.

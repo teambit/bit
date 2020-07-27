@@ -5,8 +5,12 @@ import { PreviewExtension } from './preview.extension';
 export function previewSchema(previewExtension: PreviewExtension) {
   return {
     typeDefs: gql`
+      type Preview {
+        url: String!
+      }
+
       extend type Component {
-        preview: String
+        preview: Preview
       }
     `,
     resolvers: {

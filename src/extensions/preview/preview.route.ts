@@ -9,11 +9,14 @@ export class PreviewRoute implements Route {
     private preview: PreviewExtension
   ) {}
 
-  route = '/';
+  // TODO: check how to fix wildcard for component
+  route = 'preview/*';
   method = 'get';
-  middlewares = [
-    async (req: Request, res: Response) => {
-      res.send('hi there');
-    },
-  ];
+
+  async middleware(req: Request, res: Response) {
+    const component = req.component;
+    const artifact = this.preview.getPreview(component);
+    const file = artifact.getFile(req.params);
+    res.send(file);
+  }
 }

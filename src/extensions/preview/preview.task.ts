@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { flatten } from 'lodash';
 import { BuildTask, BuildContext, BuildResults } from '../builder';
-import { BundlerExtension, Bundler, BundlerContext, BundlerComponentResult, Target } from '../bundler';
+import { BundlerExtension, Bundler, BundlerContext, Target } from '../bundler';
 import { ComponentMap } from '../component';
 import { PreviewExtension } from './preview.extension';
 import { PreviewDefinition } from './preview-definition';
@@ -47,8 +47,13 @@ export class PreviewTask implements BuildTask {
 
     return {
       components: componentResults,
+      // TODO: @guy rename to `preview` instead of `public`.
       artifacts: [{ dirName: 'public' }],
     };
+  }
+
+  getPreviewDirectory() {
+    return 'preview';
   }
 
   private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {

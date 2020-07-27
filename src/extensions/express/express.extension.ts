@@ -9,7 +9,7 @@ export type ExpressConfig = {
   port: number;
 };
 
-export type RouteRegistry = SlotRegistry<Route[]>;
+export type RouteSlot = SlotRegistry<Route[]>;
 
 export class ExpressExtension {
   constructor(
@@ -21,7 +21,7 @@ export class ExpressExtension {
     /**
      * slot for registering graphql modules
      */
-    private moduleSlot: RouteRegistry,
+    private moduleSlot: RouteSlot,
 
     /**
      * logger extension.
@@ -89,7 +89,7 @@ export class ExpressExtension {
     port: 4001,
   };
 
-  static async provider([loggerFactory]: [Logger], config: ExpressConfig, [moduleSlot]: [RouteRegistry]) {
+  static async provider([loggerFactory]: [Logger], config: ExpressConfig, [moduleSlot]: [RouteSlot]) {
     const logger = loggerFactory.createLogPublisher(ExpressExtension.id);
     return new ExpressExtension(config, moduleSlot, logger);
   }

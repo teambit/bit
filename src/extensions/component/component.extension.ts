@@ -4,6 +4,8 @@ import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
 import { ComponentFactory } from './component-factory';
 import { HostNotFound } from './exceptions';
+import { Route, ExpressExtension, RouteSlot } from '../express';
+import { ComponentRoute } from './component.route';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -31,13 +33,19 @@ export class ComponentExtension {
     return host;
   }
 
-  static slots = [Slot.withType<ComponentFactory>()];
+  static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route>()];
 
-  static dependencies = [GraphQLExtension];
+  static dependencies = [GraphQLExtension, ExpressExtension];
 
-  static async provider([graphql]: [GraphQLExtension], config, [hostSlot]: [ComponentHostSlot]) {
+  static async provider(
+    [graphql, express]: [GraphQLExtension, ExpressExtension],
+    config,
+    [hostSlot, routeSlot]: [ComponentHostSlot, RouteSlot]
+  ) {
     const componentExtension = new ComponentExtension(hostSlot);
     graphql.register(componentSchema(componentExtension));
+    express.register(new ComponentRoute(routeSlot));
+
     return componentExtension;
   }
 }
