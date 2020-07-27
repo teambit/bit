@@ -1,7 +1,11 @@
 import React from 'react';
-import { Section } from '@bit/bit.test-scope.ui.section';
+import classNames from 'classnames';
+import { Section, SectionProps } from '@bit/bit.test-scope.ui.section';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
-import { Playground } from '../playground';
+import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
+import { Playground, CodeScope } from '../playground';
+
+import styles from './examples-overview.module.scss';
 
 export type ExamplesOverviewProps = {
   examples: ExampleProps[];
@@ -9,15 +13,33 @@ export type ExamplesOverviewProps = {
 
 export type ExampleProps = {
   code: string;
-  scope: string;
-};
+  scope: CodeScope;
+  title?: string;
+  description?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function ExamplesOverview({ examples, ...rest }: ExamplesOverviewProps) {
   if (examples.length <= 0) return null;
+
   return (
-    <Section {...rest}>
-      {examples.length > 0 && <LinkedHeading link="/~compositions">Examples</LinkedHeading>}
-      {examples.length > 0 && <Playground code={examples[0].code} scope={[examples[0].scope]} />}
+    <div {...rest}>
+      {examples.map((example, idx) => (
+        <ExampleSection key={idx} example={example} />
+      ))}
+    </div>
+  );
+}
+
+export type ExampleSectionProps = {
+  example: ExampleProps;
+} & SectionProps;
+
+function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
+  return (
+    <Section {...rest} className={classNames(className, styles.exampleSection)}>
+      {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
+      {example.description && <Paragraph>{example.description}</Paragraph>}
+      <Playground code={example.code} scope={example.scope} />
     </Section>
   );
 }

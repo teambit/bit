@@ -6,6 +6,7 @@ import { Publisher } from './publisher';
  * publish build task is running "publish --dry-run" to avoid later npm errors during export
  */
 export class PublishDryRunTask implements BuildTask {
+  readonly description = "publish dry-run (to make sure it's possible to publish later)";
   constructor(readonly extensionId: string, private publisher: Publisher) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {

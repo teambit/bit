@@ -36,7 +36,7 @@ function generateRandomStr(size = 8) {
 
 function getCapsuleDirByComponentName(compilerOutput, componentName) {
   const outputSplit = compilerOutput.split('\n');
-  const componentOutput = outputSplit.find(o => o.includes(componentName));
+  const componentOutput = outputSplit.find(o => o.includes(componentName) && o.includes('generated a capsule'));
   if (!componentOutput) {
     throw new Error(
       'the output of capsule compiler is expected to include the build component name (see the console.log inside the compile function)'

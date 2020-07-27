@@ -1,5 +1,4 @@
 import { EnvService, ExecutionContext } from '../environments';
-import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
 import { LogPublisher } from '../types';
@@ -8,11 +7,6 @@ import { TaskSlot } from './builder.extension';
 
 export class BuilderService implements EnvService {
   constructor(
-    /**
-     * isolator extension.
-     */
-    private isolator: IsolatorExtension,
-
     /**
      * workspace extension.
      */
@@ -47,12 +41,7 @@ export class BuilderService implements EnvService {
     );
 
     const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(
-        context.components.map((component) => component.id.toString()),
-        {
-          peerDependencies: true,
-        }
-      ),
+      capsuleGraph: await this.workspace.createNetwork(context.components.map((component) => component.id.toString())),
     });
 
     const components = await buildPipe.execute(buildContext);

@@ -1,25 +1,35 @@
 .inputWrapper {
-	width: calc(100% - 32px);
-	margin: 16px;
+	margin: 8px;
 	position: relative;
 
 	.input {
 		box-sizing: border-box;
+		border-color: transparent;
+		border-width: 1px;
+		border-style: solid;
 		width: 100%;
-		padding-left: 48px;
-		background-color: var(----bg-base);
-		color: var(--text-muted);
+		padding: 8px 35px 8px 8px;
+		background-color: var(----bg-base, #ffffff);
+		// color: var(--text-muted);
 		font-size: 14px;
+		transition: border-color 300ms ease-in-out;
+		&::placeholder {
+			color: var(--text-highlight);
+		}
+		&:hover {
+			border-color: var(--border-color, #ededed);
+		}
 		&:focus {
 			outline: none;
+			border-color: var(--border-color, #ededed);
 		}
 	}
 
 	.searchIcon {
 		position: absolute;
 		font-size: 13px;
-		left: 17px;
-		top: 17px;
+		right: 8px;
+		top: calc(50% - 7px);
 		color: var(--text-muted);
 	}
 }

@@ -16,7 +16,7 @@ export class DocsPreview {
     private graphql: GraphQlUI
   ) {}
 
-  render(componentId: string, modules: any, [compositions]: [any]) {
+  render = (componentId: string, modules: any, [compositions]: [any]) => {
     if (!modules.componentMap[componentId]) {
       modules.mainModule.default(this.graphql.getProvider, componentId, {}, compositions);
       return;
@@ -29,7 +29,7 @@ export class DocsPreview {
       modules.componentMap[componentId][0],
       compositions
     );
-  }
+  };
 
   static dependencies = [Preview, GraphQlUI];
 
@@ -37,7 +37,7 @@ export class DocsPreview {
     const docsPreview = new DocsPreview(preview, graphql);
     preview.registerPreview({
       name: 'overview',
-      render: docsPreview.render.bind(docsPreview),
+      render: docsPreview.render,
       include: ['compositions'],
     });
 

@@ -5,7 +5,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding-right: 16px;
+	padding-right: 8px;
 	font-size: inherit;
 	
 	//TODO - move to a link component
@@ -15,15 +15,47 @@
 	box-sizing: border-box;
 	border-left: 0px solid transparent;
 
-	> span {
-		color: $y70;
-	}
-	
 	&.active {
 		color: $w10;
-        background: $p50;
-        &:hover {
-            background: $p50;
-        }
+		background: $p50;
+		.right {
+			.componentIcon {
+				color: $w10;
+			}
+		}
+		&:hover {
+			background: $p50;
+		}
 	}
+
+	.icon {
+		width: 16px;
+		height: 16px;
+		opacity: 0.8;
+	}
+
+	.left {
+		display: flex;
+		align-items: center;
+		flex: 1;
+    	min-width: 0;
+		> span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			padding: 0 8px;
+		}
+	}
+
+
+	.right {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		.componentIcon {
+			color: var(--text-muted);
+			margin-right: 8px;
+		}
+	}
+	
 }

@@ -6,7 +6,6 @@ import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
-import { IsolatorExtension } from '../isolator';
 import { CLIExtension } from '../cli';
 import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
@@ -15,6 +14,7 @@ import { CoreExt, Core } from '../core';
 import { GraphQLExtension } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
+import { TagCmd } from './tag.cmd';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -111,7 +111,6 @@ export class BuilderExtension {
     Environments,
     WorkspaceExt,
     ScopeExtension,
-    IsolatorExtension,
     ReporterExt,
     LoggerExt,
     CoreExt,
@@ -120,12 +119,11 @@ export class BuilderExtension {
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, isolator, reporter, logger, core, graphql]: [
+    [cli, envs, workspace, scope, reporter, logger, core, graphql]: [
       CLIExtension,
       Environments,
       Workspace,
       ScopeExtension,
-      IsolatorExtension,
       Reporter,
       Logger,
       Core,
@@ -135,13 +133,14 @@ export class BuilderExtension {
     [taskSlot]: [TaskSlot]
   ) {
     const logPublisher = logger.createLogPublisher(BuilderExtension.id);
-    const builderService = new BuilderService(isolator, workspace, logPublisher, taskSlot);
+    const builderService = new BuilderService(workspace, logPublisher, taskSlot);
     const builder = new BuilderExtension(envs, workspace, builderService, scope, core, taskSlot);
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new BuilderCmd(builder, workspace, reporter));
+    cli.register(new BuilderCmd(builder, workspace, logPublisher, reporter));
+    cli.register(new TagCmd(logPublisher, reporter));
     return builder;
   }
 }

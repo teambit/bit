@@ -31,7 +31,8 @@ import Config from '../component/config';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
-import { OnComponentChange, OnComponentChangeOptions, OnComponentChangeResult } from './on-component-change';
+import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
+import { IsolateComponentsOptions } from '../isolator/isolator.extension';
 
 export type EjectConfResult = {
   configPath: string;
@@ -133,8 +134,7 @@ export default class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(): Promise<Component[]> {
-    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    const ids = this.getAllComponentIds();
     return this.getMany(ids);
   }
 
@@ -156,11 +156,19 @@ export default class Workspace implements ComponentFactory {
     return this.getMany(componentIds);
   }
 
-  async createNetwork(seeders: string[], opts?: {}): Promise<Network> {
-    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}`);
+  /**
+   * get all workspace component-ids, include vendor components.
+   * (exclude nested dependencies in case dependencies are saved as components and not packages)
+   */
+  getAllComponentIds(): ComponentID[] {
+    const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+    return bitIds.map((id) => new ComponentID(id));
+  }
+
+  async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
-    opts = Object.assign(opts || {}, { consumer: this.consumer });
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
     const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
@@ -168,7 +176,8 @@ export default class Workspace implements ComponentFactory {
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
     const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
-    const capsuleList = await this.isolateEnv.isolateComponents(this.consumer.getPath(), components, opts);
+    opts.baseDir = opts.baseDir || this.consumer.getPath();
+    const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     return new Network(
       capsuleList,
       graph,
@@ -242,14 +251,13 @@ export default class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentChange(
-    id: ComponentID,
-    options: OnComponentChangeOptions
+    id: ComponentID
   ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
     const component = await this.get(id);
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ '@teambit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
-      const onChangeResult = await onChangeFunc(component, options);
+      const onChangeResult = await onChangeFunc(component);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -283,9 +291,6 @@ export default class Workspace implements ComponentFactory {
     // Add the default scope to the extension because we enforce it in config files
     await this.addDefaultScopeToExtensionsList(extensions);
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    if (!componentDir) {
-      throw new GeneralError(`the component ${id.toString()} doesn't have a root dir`);
-    }
     const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
@@ -307,11 +312,13 @@ export default class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+      longProcessLogger.logProgress(id.toString());
       return this.get(id);
     });
     const components = await componentsP;
-
+    longProcessLogger.end();
     return components;
   }
 
@@ -346,17 +353,18 @@ export default class Workspace implements ComponentFactory {
     componentId: ComponentID,
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
-  ): PathOsBased | undefined {
+  ): PathOsBased {
     const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
+    if (!relativeComponentDir) {
+      throw new GeneralError(`workspace.componentDir failed finding the component directory for ${componentId.toString()}.
+if you migrated to Harmony, please run "bit status" to fix such errors`);
+    }
     if (options.relative) {
       return relativeComponentDir;
     }
 
-    if (relativeComponentDir) {
-      return path.join(this.path, relativeComponentDir);
-    }
-    return undefined;
+    return path.join(this.path, relativeComponentDir);
   }
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
@@ -458,10 +466,6 @@ export default class Workspace implements ComponentFactory {
    */
   private isVendorComponent(componentId: ComponentID): boolean {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    // Shouldn't happen for harmony workspaces
-    if (!relativeComponentDir) {
-      return false;
-    }
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
     if (pathIsInside(relativeComponentDir, vendorDir)) {
       return true;
