@@ -21,7 +21,12 @@ export class WorkspaceUI {
     /**
      * component ui extension.
      */
-    private componentUi: ComponentUI
+    private componentUi: ComponentUI,
+
+    /**
+     * menu slot
+     */
+    private menuSlot: RouteSlot
   ) {}
 
   /**
@@ -38,11 +43,16 @@ export class WorkspaceUI {
       children: this.componentUi.getComponentUI(WorkspaceUI.id),
     });
 
+    this.menuSlot.register({
+      path: this.componentUi.routePath,
+      children: this.componentUi.getMenu(WorkspaceUI.id),
+    });
+
     return {
       routes: [
         {
           path: '/',
-          children: <Workspace routeSlot={this.routeSlot} />,
+          children: <Workspace menuSlot={this.menuSlot} routeSlot={this.routeSlot} />,
         },
       ],
     };
@@ -53,10 +63,14 @@ export class WorkspaceUI {
   // TODO: @gilad we must automate this.
   static id = '@teambit/workspace';
 
-  static slots = [Slot.withType<RouteProps>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider([ui, componentUi]: [UIRuntimeExtension, ComponentUI], config, [routeSlot]: [RouteSlot]) {
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi);
+  static async provider(
+    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
+    config,
+    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+  ) {
+    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot);
     ui.registerRoot(workspaceUI.root);
 
     return workspaceUI;
