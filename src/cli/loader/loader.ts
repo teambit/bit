@@ -1,4 +1,4 @@
-import ora, { Ora } from 'ora';
+import ora, { Ora, PersistOptions } from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 
 export class Loader {
@@ -58,7 +58,7 @@ export class Loader {
     return this;
   }
 
-  stopAndPersist(options): Loader {
+  stopAndPersist(options?: PersistOptions): Loader {
     if (this.spinner) this.spinner.stopAndPersist(options);
     return this;
   }

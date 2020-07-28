@@ -1,4 +1,4 @@
-import { resolve, join } from 'path';
+import { resolve } from 'path';
 import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
@@ -12,6 +12,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler/bundler';
+import { pathNormalizeToLinux } from '../../utils';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -69,7 +70,7 @@ export class ReactEnv implements Environment {
     const tsconfig = require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
-      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')],
+      types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
     });
   }
 

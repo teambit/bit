@@ -19,7 +19,9 @@ export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
 export const individualFilesDesc = `these components were added as individual files and not as directories, which are invalid in Harmony
-  please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
+please make sure each component has its own directory and re-add it. alternatively, use "bit move --component" to help with the move.`;
+const trackDirDesc = `these components were added by an older version of Bit and therefore have "trackDir" record in the .bitmap file
+please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export default class Status implements LegacyCommand {
   name = 'status';
@@ -49,6 +51,7 @@ export default class Status implements LegacyCommand {
     mergePendingComponents,
     componentsDuringMergeState,
     componentsWithIndividualFiles,
+    componentsWithTrackDirs,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -64,6 +67,7 @@ export default class Status implements LegacyCommand {
           mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
           componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
           componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
+          componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
         },
         null,
         2
@@ -179,6 +183,13 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
         : ''
     ).join('\n');
 
+    const trackDirOutput = immutableUnshift(
+      componentsWithTrackDirs.map((c) => format(c.id.toString(), false, 'trackDir record')).sort(),
+      componentsWithTrackDirs.length
+        ? `${chalk.underline.white('components with trackDir record')}\n${trackDirDesc}\n`
+        : ''
+    ).join('\n');
+
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -200,6 +211,7 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
           autoTagPendingOutput,
           invalidComponentOutput,
           individualFilesOutput,
+          trackDirOutput,
         ]
           .filter((x) => x)
           .join(chalk.underline('\n                         \n') + chalk.white('\n')) +

@@ -3,6 +3,7 @@ import pMapSeries from 'p-map-series';
 import merge from 'webpack-merge';
 import configFactory from './config/webpack.config';
 import { Bundler, Target, BundlerComponentResult } from '../bundler';
+import { LogPublisher } from '../types';
 
 export class WebpackBundler implements Bundler {
   constructor(
@@ -14,21 +15,22 @@ export class WebpackBundler implements Bundler {
     /**
      * webpack configuration provided by the consuming env.
      */
-    private envConfig: Configuration
+    private envConfig: Configuration,
+
+    private logger: LogPublisher
   ) {}
 
   async run(): Promise<BundlerComponentResult[]> {
     const compilers = this.getConfig().map((config) => webpack(config));
+    const longProcessLogger = this.logger.createLongProcessLogger('bundling components', compilers.length);
     const componentOutput = await pMapSeries(compilers, (compiler: Compiler) => {
+      const componentId = this.getIdByPath(compiler.outputPath);
+      longProcessLogger.logProgress(componentId.toString());
       return new Promise((resolve, reject) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
           if (err) return reject(err);
-          console.log(
-            'completed bundling component...',
-            this.getIdByPath(stats.compilation.outputOptions.path).toString()
-          );
           const info = stats.toJson();
           return resolve({
             errors: info.errors,
@@ -38,7 +40,7 @@ export class WebpackBundler implements Bundler {
         });
       });
     });
-
+    longProcessLogger.end();
     return componentOutput;
   }
 
