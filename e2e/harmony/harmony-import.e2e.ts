@@ -1,6 +1,4 @@
 import chai, { expect } from 'chai';
-import path from 'path';
-import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { SchemaName } from '../../src/consumer/component/component-schema';
@@ -28,7 +26,7 @@ describe('import component on Harmony', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
     });
-    it.only('should import successfully with the schema prop', () => {
+    it('should import successfully with the schema prop', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
       expect(comp1).to.have.property('schema');
       expect(comp1.schema).to.equal(SchemaName.Harmony);
