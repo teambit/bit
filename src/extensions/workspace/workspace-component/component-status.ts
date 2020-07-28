@@ -3,7 +3,6 @@ import { ComponentID } from '../../component';
 
 export class ComponentStatus {
   constructor(
-    private id: ComponentID,
     /**
      * is the component modified.
      */
@@ -35,34 +34,23 @@ export class ComponentStatus {
     readonly isInScope: boolean,
 
     /**
-     *  the component is not deprecated
-     */
-
-    readonly isDeprecated: boolean,
-    /**
      *  the component is not authored and not imported.
      */
     readonly nested?: boolean
   ) {}
 
-  /**
-   *  the component have internal namespace
-   */
-  get isInternal(): boolean {
-    if (this.id.namespace.startsWith('internal')) return true;
-    return false;
+  status(): string {
+    return 'new';
   }
 
-  static fromLegacy(id: ComponentID, status: LegacyComponentStatus, deprecated: boolean) {
+  static fromLegacy(status: LegacyComponentStatus) {
     return new ComponentStatus(
-      id,
       !!status.modified,
       !!status.newlyCreated,
       !!status.deleted,
       !!status.staged,
       !status.notExist,
       !status.missingFromScope,
-      !!deprecated,
       !!status.nested
     );
   }

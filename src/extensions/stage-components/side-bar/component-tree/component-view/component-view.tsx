@@ -24,8 +24,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const envId = _.get(payload, ['env', 'envId']);
   const icon = _.get(payload, ['env', 'icon']);
   const isNew = _.get(payload, ['status', 'isNew']);
-  const isDeprecated = _.get(payload, ['status', 'isDeprecated']);
-  const isInternal = _.get(payload, ['status', 'isInternal']);
 
   const { onSelect } = useContext(ComponentTreeContext);
 
@@ -47,11 +45,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
         {icon && <img src={icon} alt={envId} />}
         <span>{getName(node.id)}</span>
       </div>
-      <div className={styles.right}>
-        {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
-        {isInternal && <Icon of="Internal" className={styles.componentIcon} />}
-        {isNew && <ComponentStatus status="new" />}
-      </div>
+      <div className={styles.right}>{isNew && <ComponentStatus status="new" />}</div>
     </NavLink>
   );
 }

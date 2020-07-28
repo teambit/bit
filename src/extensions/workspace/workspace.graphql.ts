@@ -23,12 +23,6 @@ export default (workspace: Workspace) => {
 
         # does the component exists in the scope.
         isInScope: Boolean
-
-        # does the component is deprecated
-        isDeprecated: Boolean
-
-        # the component have internal namespace
-        isInternal: Boolean
       }
 
       type ComponentIssues {
