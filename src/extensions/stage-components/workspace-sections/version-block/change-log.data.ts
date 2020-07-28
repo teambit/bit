@@ -29,13 +29,13 @@ export type Component = {
 // name is TBD
 export type Version = {
   id: SemVer;
-  time: TimeStamp;
+  timestamp: TimeStamp;
   labels?: string[];
   isLatest?: boolean;
   ciStatus: JobStatus;
   testStatus: JobStatus;
   message: string;
-  contributors: AccountObj;
+  contributors: AccountObj[];
 };
 
 export type AccountObj = {
