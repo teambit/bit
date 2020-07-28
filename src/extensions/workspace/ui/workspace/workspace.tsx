@@ -25,7 +25,6 @@ const WORKSPACE = gql`
         }
         status {
           isNew
-          isDeprecated
           isInScope
           isStaged
           isModified
