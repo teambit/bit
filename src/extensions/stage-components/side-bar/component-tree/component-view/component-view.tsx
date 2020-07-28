@@ -43,7 +43,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        {icon && <img src={icon.url} alt={envId} />}
+        {icon && <img src={icon} alt={envId} />}
         <span>{getName(node.id)}</span>
       </div>
 

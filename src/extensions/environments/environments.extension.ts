@@ -17,7 +17,7 @@ export type EnvOptions = {};
 
 export type Descriptor = {
   id: string;
-  icon: { url: string };
+  icon: string;
 };
 
 export class Environments {
@@ -84,9 +84,7 @@ export class Environments {
     const icon = iconFn ? iconFn() : defaultIcon;
     return {
       id: envId,
-      icon: {
-        url: icon,
-      },
+      icon,
     };
   }
 
