@@ -14,15 +14,16 @@ export const versionExample1: Version = {
   contributors: [
     {
       name: 'oded',
+      displayName: 'oded reuveny',
       accountType: AccountTypes.user,
-      profileImage:
-        'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+      // profileImage:
+      //   'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
     },
     {
       name: 'oded',
       accountType: AccountTypes.user,
-      profileImage:
-        'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+      // profileImage:
+      //   'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
     },
     {
       name: 'oded',
@@ -127,8 +128,8 @@ export const versionExample2: Version = {
   timestamp: '2020-01-31 23:02:51.561Z',
   ciStatus: JobStatus.fail,
   testStatus: JobStatus.pass,
-  message:
-    'Support overrides of the workspace defaultScope per components Use workspaces default Scope to generate node-modules links for pre-export components',
+  message: '',
+  // 'Support overrides of the workspace defaultScope per components Use workspaces default Scope to generate node-modules links for pre-export components',
   contributors: [
     {
       name: 'gilad',

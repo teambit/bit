@@ -17,14 +17,18 @@ export function ChangeLogPage({ versions, className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   if (!versions) return <div>No tags yet</div>;
   const tags = component.tags.toArray();
-
+  console.log('tags', tags);
   return (
     <div className={classNames(styles.changeLogPage, className)}>
+      {/* <div className={styles.top}> */}
       <H1 className={styles.title}>History</H1>
       <Separator className={styles.separator} />
+      {/* </div> */}
+      {/* <div className={styles.versions}> */}
       {versions.map((version, index) => (
         <VersionBlock key={index} version={version} />
       ))}
+      {/* </div> */}
     </div>
   );
 }
