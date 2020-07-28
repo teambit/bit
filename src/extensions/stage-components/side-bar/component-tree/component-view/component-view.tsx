@@ -2,7 +2,7 @@ import React, { useContext, useCallback } from 'react';
 import _ from 'lodash';
 import classNames from 'classnames';
 // import { Image } from '@bit/bit.evangelist.elements.image';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
+// import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { NavLink } from '../../../../react-router/nav-link';
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
@@ -24,7 +24,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const envId = _.get(payload, ['env', 'envId']);
   const icon = _.get(payload, ['env', 'icon']);
   const isNew = _.get(payload, ['status', 'isNew']);
-  //const isDeprecated = _.get(payload, ['status', 'isNew']);
+  // const isDeprecated = _.get(payload, ['status', 'isNew']);
 
   const { onSelect } = useContext(ComponentTreeContext);
 

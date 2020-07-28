@@ -216,7 +216,7 @@ export class ScopeExtension implements ComponentFactory {
       new Config(version.mainFile, consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
-      this.legacyScope.getConsumerComponent(id._legacy)
+      consumerComponent
     );
     return state;
   }

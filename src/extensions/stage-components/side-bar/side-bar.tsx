@@ -7,7 +7,7 @@ import styles from './styles.module.scss';
 import { ComponentID } from '../../component';
 import { OverviewLink } from './overview-link/overview-link';
 
-//TODO: guy fix type to support scope and workspace compoents status
+// TODO: guy fix type to support scope and workspace compoents status
 export type Component = {
   id: ComponentID;
   status?: any;

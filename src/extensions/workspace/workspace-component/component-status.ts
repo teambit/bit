@@ -1,5 +1,4 @@
 import { ComponentStatus as LegacyComponentStatus } from '../../../consumer/component-ops/component-status-loader';
-import { ComponentID } from '../../component';
 
 export class ComponentStatus {
   constructor(

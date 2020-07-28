@@ -133,9 +133,8 @@ export class Workspace implements ComponentFactory {
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
-    const deprecated = component.state._consumer.deprecated;
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
-    return ComponentStatus.fromLegacy(component.id, status, deprecated);
+    return ComponentStatus.fromLegacy(status);
   }
 
   /**
