@@ -1,10 +1,18 @@
 
 .row {
 	font-size: var(--p-xs);
-	display: flex;
+    display: flex;
+    flex-wrap: wrap;
 	align-items: center;
 	color: var(--text-muted);
-	margin-bottom: 25px;
+    margin-bottom: 15px;
+    > div {
+        margin-bottom: 10px;
+    }
+    .users {
+        display: flex;
+        align-items: center;
+    }
 }
 
 

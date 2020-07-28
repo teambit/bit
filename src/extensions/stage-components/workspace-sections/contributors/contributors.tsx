@@ -13,13 +13,17 @@ export type ContributorsProps = {
 export function Contributors({ contributors, timestamp }: ContributorsProps) {
   return (
     <div className={styles.row}>
-      {contributors.map((user, index) => (
-        <UserAvatar key={index} size={20} account={user} className={styles.marginRight} />
-      ))}
-      <div className={classNames(styles.marginRight)}>
-        {calcUsers(contributors)} <span>released this</span>
+      <div className={styles.avatars}>
+        {contributors.map((user, index) => (
+          <UserAvatar key={index} size={20} account={user} className={styles.marginRight} />
+        ))}
       </div>
-      <TimeAgo className={styles.marginRight} date={timestamp} />
+      <div className={styles.users}>
+        <div className={classNames(styles.marginRight)}>
+          {calcUsers(contributors)} <span>released this</span>
+        </div>
+        <TimeAgo className={styles.marginRight} date={timestamp} />
+      </div>
     </div>
   );
 }
