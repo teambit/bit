@@ -13,7 +13,7 @@ export type ScopeProps = {
   routeSlot: RouteSlot;
 };
 
-//TODO: add status and env to scope
+// TODO: add env to scope
 const SCOPE = gql`
   {
     scope {

@@ -23,7 +23,6 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
         scope: Scope
       }
     `,
-    //TODO: guy Scope Extension ext return error, need to ask ran about it
     resolvers: {
       Scope: {
         name: (scope: ScopeExtension) => scope.name,

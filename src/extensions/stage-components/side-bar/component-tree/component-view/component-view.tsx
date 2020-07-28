@@ -1,7 +1,7 @@
 import React, { useContext, useCallback } from 'react';
 import _ from 'lodash';
 import classNames from 'classnames';
-import { Image } from '@bit/bit.evangelist.elements.image';
+// import { Image } from '@bit/bit.evangelist.elements.image';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import { NavLink } from '../../../../react-router/nav-link';
 import { TreeNodeProps } from '../recursive-tree';
@@ -44,7 +44,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        {/* TODO - get env from backend */}
         {icon && <img src={icon} alt={envId} />}
         <span>{getName(node.id)}</span>
       </div>
