@@ -5,6 +5,7 @@ import { DevServer, BundlerContext, BundlerExtension } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
+import { LoggerExt, Logger, LogPublisher } from '../logger';
 
 export class WebpackExtension {
   constructor(
@@ -16,7 +17,12 @@ export class WebpackExtension {
     /**
      * bundler extension.
      */
-    private bundler: BundlerExtension
+    private bundler: BundlerExtension,
+
+    /**
+     * Logger extension
+     */
+    private logger: LogPublisher
   ) {}
 
   /**
@@ -35,18 +41,21 @@ export class WebpackExtension {
   }
 
   createBundler(context: BundlerContext, envConfig: Configuration) {
-    return new WebpackBundler(context.targets, envConfig);
+    return new WebpackBundler(context.targets, envConfig, this.logger);
   }
 
   private createConfig(entry: string[], rootPath: string) {
     return configFactory(rootPath, entry);
   }
 
+  static id = '@teambit/webpack';
+
   static slots = [];
 
-  static dependencies = [WorkspaceExt, BundlerExtension];
+  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExt];
 
-  static async provide([workspace, bundler]: [Workspace, BundlerExtension]) {
-    return new WebpackExtension(workspace, bundler);
+  static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, Logger]) {
+    const logPublisher = logger.createLogPublisher(WebpackExtension.id);
+    return new WebpackExtension(workspace, bundler, logPublisher);
   }
 }
