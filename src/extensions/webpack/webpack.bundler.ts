@@ -61,7 +61,10 @@ export class WebpackBundler implements Bundler {
 
   private getConfig() {
     return this.targets.map((target) => {
-      return merge(configFactory(target.entries, target.capsule.path), this.envConfig);
+      return merge(
+        configFactory(target.entries, target.capsule.path, target.capsule.component.id.fullName),
+        this.envConfig
+      );
     });
   }
 

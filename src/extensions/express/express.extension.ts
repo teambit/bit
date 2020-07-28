@@ -42,8 +42,9 @@ export class ExpressExtension {
     app.use(cors());
 
     allRoutes.forEach((routeInfo) => {
-      const { method, namespace, path, middlewares } = routeInfo;
-      app[method](`/${namespace}${startsWith('/', path) ? '' : '/'}${path}`, middlewares);
+      const { method, path, middlewares } = routeInfo;
+      // TODO: @guy make sure to support single middleware here.
+      app[method](path, middlewares);
     });
 
     app.use(notFound);
@@ -83,6 +84,22 @@ export class ExpressExtension {
     return flatten(routeEntries);
   }
 
+  applyRouteSlot(routeSlot: RouteSlot, req: Request, res: Response) {
+    // TODO: @guy please make sure we select everything and communicate errors back to users properly.
+    const extensionRoutes = routeSlot.values();
+    const routes = flatten(extensionRoutes);
+
+    const actualRoute = routes.find((route) => {
+      // TODO: @guy please '/' properly.
+      const path = route.route.split('/')[1] || route;
+      return path === req.params.path;
+    });
+
+    if (!actualRoute) return res.send('path not found'); // TODO: @guy handle properly with 404 and exception handling.
+    // TODO: @guy properly handle passing data to routes contextually.
+    return actualRoute.middlewares[0](req, res);
+  }
+
   static id = '@teambit/express';
   static slots = [Slot.withType<Route[]>()];
   static dependencies = [LoggerExt];
@@ -91,8 +108,8 @@ export class ExpressExtension {
     port: 4001,
   };
 
-  static async provider([loggerFactory]: [Logger], config: ExpressConfig, [moduleSlot]: [RouteSlot]) {
+  static async provider([loggerFactory]: [Logger], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
     const logger = loggerFactory.createLogPublisher(ExpressExtension.id);
-    return new ExpressExtension(config, moduleSlot, logger);
+    return new ExpressExtension(config, routeSlot, logger);
   }
 }

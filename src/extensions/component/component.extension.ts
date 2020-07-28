@@ -16,7 +16,12 @@ export class ComponentExtension {
     /**
      * slot for component hosts to register.
      */
-    private hostSlot: ComponentHostSlot
+    private hostSlot: ComponentHostSlot,
+
+    /**
+     * slot for registering new component routes.
+     */
+    private routeSlot: RouteSlot
   ) {}
 
   /**
@@ -27,13 +32,21 @@ export class ComponentExtension {
     return this;
   }
 
+  registerRoute(route: Route[]) {
+    this.routeSlot.register(route);
+    return this;
+  }
+
+  /**
+   * get component host by extension ID.
+   */
   getHost(id: string): ComponentFactory {
     const host = this.hostSlot.get(id);
     if (!host) throw new HostNotFound();
     return host;
   }
 
-  static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route>()];
+  static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];
 
   static dependencies = [GraphQLExtension, ExpressExtension];
 
@@ -42,9 +55,9 @@ export class ComponentExtension {
     config,
     [hostSlot, routeSlot]: [ComponentHostSlot, RouteSlot]
   ) {
-    const componentExtension = new ComponentExtension(hostSlot);
+    const componentExtension = new ComponentExtension(hostSlot, routeSlot);
     graphql.register(componentSchema(componentExtension));
-    express.register(new ComponentRoute(routeSlot));
+    express.register([new ComponentRoute(routeSlot, express, componentExtension)]);
 
     return componentExtension;
   }

@@ -5,7 +5,7 @@ export class PreviewArtifact {
 
   getFile(path: string) {
     return this.artifacts.find((file) => {
-      return file.path === path;
+      return file.relative === path;
     });
   }
 }
