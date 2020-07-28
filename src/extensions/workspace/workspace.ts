@@ -24,7 +24,6 @@ import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
-import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
@@ -33,6 +32,7 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 
 export type EjectConfResult = {
   configPath: string;
@@ -357,8 +357,7 @@ export default class Workspace implements ComponentFactory {
     const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
     if (!relativeComponentDir) {
-      throw new GeneralError(`workspace.componentDir failed finding the component directory for ${componentId.toString()}.
-if you migrated to Harmony, please run "bit status" to fix such errors`);
+      throw new NoComponentDir(componentId.toString());
     }
     if (options.relative) {
       return relativeComponentDir;
