@@ -23,13 +23,17 @@ export class WebpackBundler implements Bundler {
       return new Promise((resolve, reject) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
-        compiler.run((err, stats) => {
+        return compiler.run((err, stats) => {
           if (err) return reject(err);
-          console.log('completed bundling component...');
-          resolve({
-            errors: stats.compilation.errors,
+          console.log(
+            'completed bundling component...',
+            this.getIdByPath(stats.compilation.outputOptions.path).toString()
+          );
+          const info = stats.toJson();
+          return resolve({
+            errors: info.errors,
             id: this.getIdByPath(stats.compilation.outputOptions.path),
-            warnings: stats.compilation.warnings,
+            warnings: info.warnings,
           });
         });
       });
