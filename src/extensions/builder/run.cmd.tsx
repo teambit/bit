@@ -4,6 +4,7 @@ import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
 import { Reporter } from '../reporter';
 import { LogPublisher } from '../types';
+import loader from '../../cli/loader';
 
 export class BuilderCmd implements Command {
   name = 'run [pattern]';
@@ -28,12 +29,12 @@ export class BuilderCmd implements Command {
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const results = await this.builder.build(components);
     longProcessLogger.end();
+    loader.succeed();
+    this.reporter.end();
     // @todo: decide about the output
     results.forEach((
       result // eslint-disable-next-line no-console
     ) => console.log('result', `Env: ${result.env}\nResult: success`));
-
-    this.reporter.end();
 
     return chalk.green('the build has been completed');
   }

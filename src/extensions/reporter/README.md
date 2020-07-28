@@ -73,5 +73,3 @@ This is done by not "taking over" the user's terminal using terminal [raw mode](
 The only interactive part of the reporter is the last line. It is controlled and cleared as needed using a carriage return (`\r`) and the number of
 spaces in `process.stdout.columns` in order to be sure to clear the line from the user's terminal. (eg. `\r                 /*...*/ `)
 This is done whenever we wish to log to the screen (eg. with the logger methods) and whenever the screen is resized by listening to `SIGWINCH` events.
-
-The status line re-renders itself on a debounced timer of 100ms to allow for multiple logs (or multiple `SIGWINCH` events) to pass through.

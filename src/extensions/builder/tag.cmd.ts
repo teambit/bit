@@ -9,6 +9,7 @@ import hasWildcard from '../../utils/string/has-wildcard';
 import { Command, CommandOptions } from '../cli';
 import { LogPublisher } from '../types';
 import { Reporter } from '../reporter';
+import loader from '../../cli/loader';
 
 type TagOptions = {
   message?: string;
@@ -73,7 +74,6 @@ export class TagCmd implements Command {
       scope,
     }: TagOptions
   ): Promise<any> {
-    this.reporter.start();
     function getVersion(): string | undefined {
       if (scope) return scope;
       if (all && isString(all)) return all;
@@ -133,6 +133,8 @@ export class TagCmd implements Command {
   }
 
   async report([id, version]: string[], options: TagOptions): Promise<string> {
+    this.reporter.start();
+    const longProcessLogger = this.logger.createLongProcessLogger('tag');
     const results: TagResults = await this.action([id, version], options);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
@@ -165,7 +167,8 @@ export class TagCmd implements Command {
       if (!components.length) return '';
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
-
+    longProcessLogger.end();
+    loader.succeed();
     return (
       warningsOutput +
       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
