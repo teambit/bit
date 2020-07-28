@@ -417,7 +417,7 @@ describe('bit show command', function () {
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.command.tagAllComponentsNew();
+        helper.command.tagAllComponents();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
@@ -639,7 +639,7 @@ Circle.defaultProps = {
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
       helper.command.addComponent('baz/baz.js');
       helper.command.linkAndRewire();
-      helper.command.tagAllComponentsNew();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponentsAndRewire();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
