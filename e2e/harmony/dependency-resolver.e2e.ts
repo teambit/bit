@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('dependency-resolver extension', function () {
+describe.only('dependency-resolver extension', function () {
   let helper: Helper;
   this.timeout(0);
   before(() => {
