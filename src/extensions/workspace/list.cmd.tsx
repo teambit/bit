@@ -3,7 +3,7 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Command } from '../cli';
-import Workspace from './workspace';
+import { Workspace } from './workspace';
 
 export class ListCmd implements Command {
   constructor(private workspace: Workspace) {}

@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
 import R from 'ramda';
 import chalk from 'chalk';
-import Workspace from '../workspace';
+import { Workspace } from '../workspace';
 import loader from '../../../cli/loader';
 import { BitId } from '../../../bit-id';
 import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../../constants';

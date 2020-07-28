@@ -1,6 +1,6 @@
 import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
-import Workspace from './workspace';
+import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';

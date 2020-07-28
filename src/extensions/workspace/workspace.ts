@@ -1,4 +1,5 @@
 import path from 'path';
+import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
@@ -32,6 +33,8 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceComponent } from './workspace-component';
 import loader from '../../cli/loader';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 
@@ -49,7 +52,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace implements ComponentFactory {
+export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -129,14 +132,18 @@ export default class Workspace implements ComponentFactory {
   /**
    * provides status of all components in the workspace.
    */
-  status() {}
+  async getComponentStatus(component: Component): Promise<ComponentStatus> {
+    const status = await this.consumer.getComponentStatusById(component.id._legacy);
+    return ComponentStatus.fromLegacy(status);
+  }
 
   /**
    * list all workspace components.
    */
-  async list(): Promise<Component[]> {
-    const ids = this.getAllComponentIds();
-    return this.getMany(ids);
+  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
+    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
+    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
   /**
@@ -237,7 +244,8 @@ export default class Workspace implements ComponentFactory {
     }
 
     component.state = state;
-    return this.executeLoadSlot(component);
+    const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
+    return this.executeLoadSlot(workspaceComponent);
   }
 
   private async executeLoadSlot(component: Component) {
@@ -274,7 +282,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   private newComponentFromState(state: State): Component {
-    return new Component(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
+    return new WorkspaceComponent(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -627,3 +635,5 @@ export default class Workspace implements ComponentFactory {
     return Promise.all(resolveMergedExtensionsP);
   }
 }
+
+export default Workspace;
