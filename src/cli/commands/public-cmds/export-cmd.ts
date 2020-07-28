@@ -159,8 +159,12 @@ ${exportedLanes.map((l) => `${chalk.bold(l.name)} (${l.components.length} compon
           return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
         })
         .join('\n');
-      const failedTitle = `\n\n${chalk.red('failed publishing the following components\n')}`;
-      const successTitle = `\n\n${chalk.green('published the following component(s) successfully\n')}`;
+      const failedTitle = `\n\n${chalk.red(
+        'failed publishing the following components, please run "bit publish" to re-try\n'
+      )}`;
+      const successTitle = `\n\n${chalk.green(
+        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
+      )}`;
       const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
       const successOutput = successCompsStr ? successTitle + successCompsStr : '';
       return successOutput + failedOutput;
