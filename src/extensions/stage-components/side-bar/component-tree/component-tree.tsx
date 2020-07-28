@@ -7,7 +7,7 @@ import { ComponentTreeContextProvider } from './component-tree-context';
 
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
-import { Component } from '../../../workspace/ui/workspace/workspace-model';
+import { Component } from './../side-bar';
 import { PayloadType } from './payload-type';
 
 type ComponentTreeProps = {

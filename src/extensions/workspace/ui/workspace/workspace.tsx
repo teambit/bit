@@ -23,7 +23,9 @@ const WORKSPACE = gql`
           version
           scope
         }
-        getStatus {
+        status {
+          isNew
+          isDeprecated
           isInScope
           isStaged
           isModified

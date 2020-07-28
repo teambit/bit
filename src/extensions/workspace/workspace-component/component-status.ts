@@ -1,7 +1,9 @@
 import { ComponentStatus as LegacyComponentStatus } from '../../../consumer/component-ops/component-status-loader';
+import { ComponentID } from '../../component';
 
 export class ComponentStatus {
   constructor(
+    private id: ComponentID,
     /**
      * is the component modified.
      */
@@ -31,17 +33,36 @@ export class ComponentStatus {
      * does the component exists in the scope.
      */
     readonly isInScope: boolean,
-    readonly nested?: boolean // TODO: check with @david
+
+    /**
+     *  the component is not deprecated
+     */
+
+    readonly isDeprecated: boolean,
+    /**
+     *  the component is not authored and not imported.
+     */
+    readonly nested?: boolean
   ) {}
 
-  static fromLegacy(status: LegacyComponentStatus) {
+  /**
+   *  the component have internal namespace
+   */
+  get isInternal(): boolean {
+    if (this.id.namespace.startsWith('internal')) return true;
+    return false;
+  }
+
+  static fromLegacy(id: ComponentID, status: LegacyComponentStatus, deprecated: boolean) {
     return new ComponentStatus(
+      id,
       !!status.modified,
       !!status.newlyCreated,
       !!status.deleted,
       !!status.staged,
       !status.notExist,
       !status.missingFromScope,
+      !!deprecated,
       !!status.nested
     );
   }

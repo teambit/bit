@@ -23,10 +23,24 @@ export default (workspace: Workspace) => {
 
         # does the component exists in the scope.
         isInScope: Boolean
+
+        # does the component is deprecated
+        isDeprecated: Boolean
+
+        # the component have internal namespace
+        isInternal: Boolean
+      }
+
+      type ComponentIssues {
+        issue: String
       }
 
       extend type Component {
-        getStatus: ComponentStatus
+        status: ComponentStatus
+      }
+
+      extend type Component {
+        getIssues: [ComponentIssues]
       }
 
       type Workspace {
@@ -42,8 +56,11 @@ export default (workspace: Workspace) => {
     `,
     resolvers: {
       Component: {
-        getStatus: async (wsComponent: WorkspaceComponent) => {
+        status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
+        },
+        issues: async (wsComponent: WorkspaceComponent) => {
+          return wsComponent.getIssues();
         },
       },
       Workspace: {
