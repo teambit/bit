@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command } from '../cli';
-import Workspace from './workspace';
+import { Workspace } from './workspace';
 import { Reporter } from '../reporter';
 
 export default class InstallCmd implements Command {

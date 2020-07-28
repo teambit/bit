@@ -3,7 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
+import { AUTO_TAGGED_MSG } from '../../src/api/consumer/lib/tag';
 
 chai.use(require('chai-fs'));
 

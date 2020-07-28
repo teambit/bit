@@ -13,6 +13,7 @@ export type ScopeProps = {
   routeSlot: RouteSlot;
 };
 
+// TODO: add env to scope
 const SCOPE = gql`
   {
     scope {
@@ -39,7 +40,7 @@ export function Scope({ routeSlot }: ScopeProps) {
   }
 
   const scope = ScopeModel.from(data);
-  const ids = scope.components.map((component) => component.id);
+  const ids = scope.components.map((component) => component);
 
   return (
     <ScopeProvider scope={scope}>

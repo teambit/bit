@@ -8,8 +8,9 @@ import { clickable } from '../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import { StatusDot } from '../status-dot/status-dot';
 import styles from './component-nodes.module.scss';
+import { PayloadType } from '../payload-type';
 
-export function ScopeView({ node, depth }: TreeNodeProps) {
+export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
   return (
     <>
       <div className={classNames(indentClass, styles.scope)}>{node.id}</div>
@@ -20,7 +21,7 @@ export function ScopeView({ node, depth }: TreeNodeProps) {
     </>
   );
 }
-export function NamespaceView({ node, depth, status }: TreeNodeProps) {
+export function NamespaceView({ node, depth, status }: TreeNodeProps<PayloadType>) {
   const [collapsed, collapse] = useState(false);
 
   return (

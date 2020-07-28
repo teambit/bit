@@ -7,14 +7,21 @@ import styles from './styles.module.scss';
 import { ComponentID } from '../../component';
 import { OverviewLink } from './overview-link/overview-link';
 
+// TODO: guy fix type to support scope and workspace compoents status
+export type Component = {
+  id: ComponentID;
+  status?: any;
+  env?: { id: string; icon: string };
+};
+
 type SideBarProps = {
-  components: ComponentID[];
+  components: Component[];
   selected?: string;
   onSelectComponent?: (component: ComponentID) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function SideBar({ components, selected, ...rest }: SideBarProps) {
-  const componentIds = useMemo(() => components.map((id) => id.fullName), [components]);
+  const componentsData = useMemo(() => components.map((component) => component), [components]);
   const history = useHistory();
 
   const handleSelect = useCallback(
@@ -33,7 +40,7 @@ export function SideBar({ components, selected, ...rest }: SideBarProps) {
         <Input placeholder="Components" error={false} className={styles.input} />
         <Icon of="discovery" className={styles.searchIcon} />
       </div>
-      <ComponentTree selected={selected} onSelect={handleSelect} components={componentIds} />
+      <ComponentTree selected={selected} onSelect={handleSelect} components={componentsData} />
     </div>
   );
 }

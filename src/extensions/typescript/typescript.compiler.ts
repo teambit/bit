@@ -66,11 +66,8 @@ export class TypescriptCompiler implements Compiler {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
 
-    capsuleDirs.forEach((capsuleDir) => {
-      fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2));
-
-      this.writeTypes(capsuleDir);
-    });
+    await this.writeTsConfig(capsuleDirs);
+    await this.writeTypes(capsuleDirs);
 
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
@@ -130,13 +127,20 @@ export class TypescriptCompiler implements Compiler {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
-  private writeTypes(rootDir: string) {
-    this.types.forEach((typePath) => {
-      const contents = fs.readFileSync(typePath, 'utf8');
-      const filename = path.basename(typePath);
+  private async writeTypes(dirs: string[]) {
+    await Promise.all(
+      this.types.map(async (typePath) => {
+        const contents = await fs.readFile(typePath, 'utf8');
+        const filename = path.basename(typePath);
 
-      fs.outputFileSync(path.join(rootDir, 'types', filename), contents);
-    });
+        await Promise.all(dirs.map((dir) => fs.outputFile(path.join(dir, 'types', filename), contents)));
+      })
+    );
+  }
+
+  private async writeTsConfig(dirs: string[]) {
+    const tsconfigStr = JSON.stringify(this.tsConfig, undefined, 2);
+    await Promise.all(dirs.map((capsuleDir) => fs.writeFile(path.join(capsuleDir, 'tsconfig.json'), tsconfigStr)));
   }
 
   private replaceFileExtToJs(filePath: string): string {
