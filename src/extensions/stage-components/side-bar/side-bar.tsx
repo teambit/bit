@@ -9,7 +9,6 @@ import { OverviewLink } from './overview-link/overview-link';
 import { Descriptor } from '../../environments/environments.extension';
 import { DeprecationInfo } from '../../deprecation/deprecation.extension';
 
-//TODO: guy fix type to support scope and workspace compoents status
 export type Component = {
   id: ComponentID;
   status?: any;

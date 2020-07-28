@@ -6,12 +6,10 @@ export type Issue = {
 
 // TODO: write issue components
 export class Issues {
-  constructor /** Issues array */() {} // public Issues: Issue[]
-
+  // constructor /** Issues array */() {} // public Issues: Issue[]
   // addIssue(issue: Issue) {
   //   // this.Issues.push(issue)
   // }
-
   // static fromLegacy(issues: Issue) {
   //   //return new Issue();
   // }

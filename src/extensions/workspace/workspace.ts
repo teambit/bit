@@ -243,6 +243,7 @@ export class Workspace implements ComponentFactory {
       return this.executeLoadSlot(this.newComponentFromState(state));
     }
 
+    component.state = state;
     const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
     return this.executeLoadSlot(workspaceComponent);
   }
