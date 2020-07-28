@@ -26,6 +26,7 @@ import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
 import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
+import { DefaultEnvExtension } from '../default-env/default-env.extension';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -61,4 +62,5 @@ export const manifestsMap = {
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WorkspaceExt.name]: WorkspaceExt,
+  [DefaultEnvExtension.id]: DefaultEnvExtension,
 };
