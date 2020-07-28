@@ -25,7 +25,6 @@ import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
-import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
@@ -36,6 +35,8 @@ import { OnComponentChange, OnComponentChangeResult } from './on-component-chang
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
+import loader from '../../cli/loader';
+import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 
 export type EjectConfResult = {
   configPath: string;
@@ -174,6 +175,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
@@ -186,6 +188,8 @@ export class Workspace implements ComponentFactory {
     const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
+    longProcessLogger.end();
+    loader.succeed();
     return new Network(
       capsuleList,
       graph,
@@ -320,11 +324,13 @@ export class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+      longProcessLogger.logProgress(id.toString());
       return this.get(id);
     });
     const components = await componentsP;
-
+    longProcessLogger.end();
     return components;
   }
 
@@ -363,8 +369,7 @@ export class Workspace implements ComponentFactory {
     const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
     if (!relativeComponentDir) {
-      throw new GeneralError(`workspace.componentDir failed finding the component directory for ${componentId.toString()}.
-if you migrated to Harmony, please run "bit status" to fix such errors`);
+      throw new NoComponentDir(componentId.toString());
     }
     if (options.relative) {
       return relativeComponentDir;

@@ -9,7 +9,7 @@ import { LabelList } from '@bit/bit.test-scope.ui.label-list';
 
 export type ComponentOverviewProps = {
   displayName: string;
-  abstract: string;
+  abstract?: string;
   version: string;
   labels: string[];
   packageName: string;
@@ -20,7 +20,7 @@ export function ComponentOverview({ displayName, abstract, labels, packageName, 
     <Section {...rest}>
       <div className={textColumn}>
         <H1>{displayName}</H1>
-        <Subtitle>{abstract}</Subtitle>
+        {abstract && <Subtitle>{abstract}</Subtitle>}
         <LabelList>{labels}</LabelList>
         <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
       </div>

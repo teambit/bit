@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import * as fixtures from '../../src/fixtures/fixtures';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { FailedLoadForTag } from '../../src/consumer/component/exceptions/failed-load-for-tag';
+import { NoComponentDir } from '../../src/consumer/component/exceptions/no-component-dir';
 
 chai.use(require('chai-fs'));
 
@@ -82,126 +83,80 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   // most are skipped because we ended up not supporting this move from the old functionality to the new one
   // we might support it in the future in a different way, so I'm leaving it them as skipped
   describe('moving from old-functionality to the new one', () => {
-    describe.skip('when there is trackDir and not relative paths', () => {
+    describe('when there is trackDir and not relative paths', () => {
       let output;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js');
         helper.command.addComponent('src', { i: 'foo' });
-        output = helper.command.tagAllComponentsNew();
+        helper.scopeHelper.switchFromLegacyToHarmony();
       });
-      it('should tag successfully without errors', () => {
-        expect(output).to.have.string('1 component(s) tagged');
+      it('bit status should suggest running migration', () => {
+        const status = helper.command.statusJson();
+        expect(status.componentsWithTrackDirs).to.have.lengthOf(1);
+        expect(status.componentsWithTrackDirs[0]).to.equal('foo');
       });
-      it('should replace trackDir by rootDir', () => {
-        const bitMap = helper.bitMap.read();
-        const componentMap = bitMap['foo@0.0.1'];
-        expect(componentMap).to.not.have.property('trackDir');
-        expect(componentMap).to.have.property('rootDir');
-        expect(componentMap.rootDir).to.equal('src');
-        expect(componentMap.files[0].relativePath).to.equal('foo.js');
+      describe('tagging the component', () => {
+        before(() => {
+          output = helper.command.tagAllComponents();
+        });
+        it('should tag successfully without errors', () => {
+          expect(output).to.have.string('1 component(s) tagged');
+        });
+        it('should replace trackDir by rootDir', () => {
+          const bitMap = helper.bitMap.read();
+          const componentMap = bitMap['foo@0.0.1'];
+          expect(componentMap).to.not.have.property('trackDir');
+          expect(componentMap).to.have.property('rootDir');
+          expect(componentMap.rootDir).to.equal('src');
+          expect(componentMap.files[0].relativePath).to.equal('foo.js');
+        });
       });
     });
-    describe.skip('when there is trackDir and relative paths', () => {
+    describe('when there is trackDir and relative paths', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo/foo.js', 'require("../bar/bar");');
         helper.fs.outputFile('src/bar/bar.js');
         helper.command.addComponent('src/foo', { i: 'foo' });
         helper.command.addComponent('src/bar', { i: 'bar' });
+        helper.scopeHelper.switchFromLegacyToHarmony();
       });
-      it('should throw an error when --allow-relative-paths was not used', () => {
-        const cmd = () => helper.command.tagAllComponentsNew();
+      it('should throw an error on tag', () => {
+        const cmd = () => helper.command.tagAllComponents();
         const error = new FailedLoadForTag(['foo'], [], []);
         helper.general.expectToThrow(cmd, error);
       });
-      describe('when using --allow-relative-paths', () => {
-        let output;
-        before(() => {
-          output = helper.command.tagAllComponents();
-        });
-        it('should succeed', () => {
-          expect(output).to.have.string('2 component(s) tagged');
-        });
-        it('should remove the trackDir and add rootDir of "." instead', () => {
-          const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['foo@0.0.1'];
-          expect(componentMap).to.not.have.property('trackDir');
-          expect(componentMap).to.have.property('rootDir');
-          expect(componentMap.rootDir).to.equal('.');
-        });
-      });
     });
-    describe.skip('when there is no trackDir and no relative paths', () => {
+    describe('when an individual file was added, no trackDir and no relative paths', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.js');
         helper.command.addComponent('foo.js');
+        helper.scopeHelper.switchFromLegacyToHarmony();
       });
-      it('should throw an error when --allow-files was not used', () => {
-        const cmd = () => helper.command.tagAllComponentsNew();
-        const error = new FailedLoadForTag([], ['foo'], []);
+      it('bit status should show the component an invalid', () => {
+        const status = helper.command.status();
+        expect(status).to.have.string('invalid components');
+      });
+      it('should throw an error about individual files used', () => {
+        const cmd = () => helper.command.tagAllComponents();
+        const error = new NoComponentDir('foo');
         helper.general.expectToThrow(cmd, error);
       });
-      describe('when using --allow-files', () => {
-        let output;
-        before(() => {
-          output = helper.command.tagAllComponents();
-        });
-        it('should succeed', () => {
-          expect(output).to.have.string('1 component(s) tagged');
-        });
-        it('should remove the trackDir and add rootDir of "." instead', () => {
-          const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['foo@0.0.1'];
-          expect(componentMap).to.not.have.property('trackDir');
-          expect(componentMap).to.have.property('rootDir');
-          expect(componentMap.rootDir).to.equal('.');
-        });
-      });
     });
-    describe.skip('when there is no trackDir and relative paths are used', () => {
+    describe('when there is no trackDir and relative paths are used', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('src/foo.js', 'require("./bar");');
         helper.fs.outputFile('src/bar.js');
         helper.command.addComponent('src/foo.js', { i: 'foo' });
         helper.command.addComponent('src/bar.js', { i: 'bar' });
+        helper.scopeHelper.switchFromLegacyToHarmony();
       });
-      it('should throw an error when --allow-relative-paths and --allow-files were not used', () => {
-        const cmd = () => helper.command.tagAllComponentsNew();
-        const error = new FailedLoadForTag(['foo'], ['bar', 'foo'], []);
-        helper.general.expectToThrow(cmd, error);
-      });
-      it('should still throw an error when --allow-relative-paths is used but not --allow-files', () => {
-        const cmd = () => helper.command.tagAllComponentsNew('--allow-relative-paths');
-        const error = new FailedLoadForTag([], ['bar', 'foo'], []);
-        helper.general.expectToThrow(cmd, error);
-      });
-      it('should still throw an error when --allow-files is used but not --allow-relative-paths', () => {
-        const cmd = () => helper.command.tagAllComponentsNew('--allow-files');
-        const error = new FailedLoadForTag(['foo'], [], []);
-        helper.general.expectToThrow(cmd, error);
-      });
-      describe('when using both --allow-relative-paths and --allow-files', () => {
-        let output;
-        before(() => {
-          output = helper.command.tagAllComponents();
-        });
-        it('should succeed', () => {
-          expect(output).to.have.string('2 component(s) tagged');
-        });
-        it('should add rootDir of "." for both components', () => {
-          const bitMap = helper.bitMap.read();
-          const componentMapFoo = bitMap['foo@0.0.1'];
-          expect(componentMapFoo).to.not.have.property('trackDir');
-          expect(componentMapFoo).to.have.property('rootDir');
-          expect(componentMapFoo.rootDir).to.equal('.');
-          const componentMapBar = bitMap['bar@0.0.1'];
-          expect(componentMapBar).to.not.have.property('trackDir');
-          expect(componentMapBar).to.have.property('rootDir');
-          expect(componentMapBar.rootDir).to.equal('.');
-        });
+      it('bit status should show them as invalid', () => {
+        const status = helper.command.statusJson();
+        expect(status.invalidComponents).to.have.lengthOf(2);
       });
     });
     describe('using typescript (3.1.40) with capsule', () => {
@@ -328,7 +283,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
                   helper.command.moveComponent('bar/foo', 'component/bar/foo');
                   helper.command.moveComponent('utils/is-string', 'component/utils/is-string');
                   helper.command.moveComponent('utils/is-type', 'component/utils/is-type');
-                  helper.command.tagAllComponentsNew();
+                  helper.command.tagAllComponents();
                   helper.command.exportAllComponents();
                 });
                 it('should still work', () => {
