@@ -3,22 +3,25 @@ import ConsumerComponent from '../../consumer/component';
 import { Dependencies } from '../../consumer/component/dependencies';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { BitId } from '../../bit-id';
+import { DependenciesObjectDefinition } from './types';
 
 export class DependencyGraph {
   constructor(private component: Component) {}
 
-  toJson() {
+  toJson(): DependenciesObjectDefinition {
     const consumerComponent: ConsumerComponent = this.component.state._consumer;
 
     return {
       devDependencies: {
         ...this.toPackageJson(this.component, consumerComponent.devDependencies),
         ...consumerComponent.packageDependencies,
-        ...consumerComponent.peerPackageDependencies,
       },
       dependencies: {
         ...this.toPackageJson(this.component, consumerComponent.dependencies),
         ...consumerComponent.devPackageDependencies,
+      },
+      peerDependencies: {
+        ...consumerComponent.peerPackageDependencies,
       },
     };
   }

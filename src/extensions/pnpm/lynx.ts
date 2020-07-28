@@ -23,7 +23,7 @@ async function createStoreController(storeDir: string): Promise<StoreController>
 
 export async function install(rootPathToManifest, pathsToManifests, storeDir: string, logFn?: (log: LogBase) => void) {
   const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
-  const workspacePackages = {}; // supi will use this to link packages to eachother
+  const workspacePackages = {}; // supi will use this to link packages to each other
 
   // eslint-disable-next-line
   for (const rootDir in pathsToManifests) {

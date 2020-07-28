@@ -1,6 +1,7 @@
 export { DependencyResolverExtension } from './dependency-resolver.extension';
 export {
-  DependenciesDefinition,
+  DependenciesObjectDefinition,
+  LegacyDependenciesDefinition,
   SemverVersion,
   SemverVersionRule,
   DependencyResolverWorkspaceConfig,

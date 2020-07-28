@@ -4,6 +4,8 @@ import { PathLinux } from '../../utils/path';
  * Allowed values are valid semver values and the "-" sign.
  */
 export type SemverVersion = string;
+export type PackageName = string;
+
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
@@ -66,6 +68,7 @@ export interface RawComponentState {
   config: ComponentConfig;
 }
 
+export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 export type DependencyType = 'package' | 'component';
 
 /**
@@ -106,7 +109,7 @@ export type RelativePath = {
   importSource?: string; // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.
 };
 
-interface DependencyDefinition {
+interface LegacyDependencyDefinition {
   dependencyId: string;
   dependencyVersion: SemverVersion;
   type: DependencyType;
@@ -130,8 +133,17 @@ interface FileDependencyDefinition {
 
 export type FileDependenciesDefinition = FileDependencyDefinition[];
 
-export interface DependenciesDefinition {
-  dependencies?: DependencyDefinition[];
-  devDependencies?: DependencyDefinition[];
-  peerDependencies?: DependencyDefinition[];
+export interface LegacyDependenciesDefinition {
+  dependencies?: LegacyDependencyDefinition[];
+  devDependencies?: LegacyDependencyDefinition[];
+  peerDependencies?: LegacyDependencyDefinition[];
 }
+
+export interface DependenciesObjectDefinition {
+  dependencies?: DepObjectValue;
+  devDependencies?: DepObjectValue;
+  peerDependencies?: DepObjectValue;
+}
+
+export type DepObjectValue = Record<PackageName, SemverVersion>;
+export type DepObjectKeyName = 'dependencies' | 'devDependencies' | 'peerDependencies';
