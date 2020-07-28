@@ -15,6 +15,11 @@ export type EnvsConfig = {
 
 export type EnvOptions = {};
 
+export type Descriptor = {
+  id: string;
+  icon: { url: string };
+};
+
 export class Environments {
   static id = '@teambit/envs';
 
@@ -66,7 +71,7 @@ export class Environments {
   /**
    * get an environment Descriptor.
    */
-  getDescriptor(component: Component): { id: string; icon: string } | null {
+  getDescriptor(component: Component): Descriptor | null {
     const defaultIcon = `https://static.bit.dev/extensions-icons/default.svg`;
     // TODO: @guy after fix core extension then take it from core extension
     const extension = component.config.extensions.findExtension(Environments.id);
@@ -79,7 +84,9 @@ export class Environments {
     const icon = iconFn ? iconFn() : defaultIcon;
     return {
       id: envId,
-      icon,
+      icon: {
+        url: icon,
+      },
     };
   }
 
