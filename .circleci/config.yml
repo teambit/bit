@@ -649,14 +649,15 @@ jobs:
         run: which bit
       -
         run: 'cd bit && ls -la node_modules/@bit'
-      -
-        run:
-          name: 'bit link in explorer'
-          command: 'cd explorer && bit link'
+
       -
         run:
           name: 'link components from explorer to bit'
           command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run: 'cd bit && ls -la node_modules/@bit'
       -
