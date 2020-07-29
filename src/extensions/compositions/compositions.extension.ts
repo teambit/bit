@@ -1,4 +1,3 @@
-import { BundlerExtension } from '../bundler';
 import { Component, ComponentFactoryExt } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component/component-map';
@@ -10,12 +9,13 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { SchemaExtension } from '../schema';
 import { ExtensionData } from '../workspace/on-component-load';
+import { CompositionPreviewDefinition } from './compositions.preview-definition';
 
 export type CompositionsConfig = {
   /**
    * regex for detection of composition files
    */
-  extension: string;
+  regex: string;
 };
 
 /**
@@ -74,27 +74,6 @@ export class CompositionsExtension {
     });
   }
 
-  async compositionsPreviewTarget(context: ExecutionContext) {
-    const compositionsMap = this.getCompositionFiles(context.components);
-    const template = await this.getTemplate(context);
-    const notEmpty = compositionsMap.filter((value) => value.length !== 0);
-    const withPaths = notEmpty.map<string[]>((files) => {
-      return files.map((file) => file.path);
-    });
-
-    const link = this.preview.writeLink(
-      'compositions',
-      withPaths.filter((value) => value.length !== 0),
-      template
-    );
-
-    const targetFiles = compositionsMap.toArray().flatMap(([, files]) => {
-      return files.map((file) => file.path);
-    });
-
-    return targetFiles.concat(link);
-  }
-
   async onComponentLoad(component: Component): Promise<ExtensionData> {
     const compositions = this.readCompositions(component);
     return {
@@ -117,17 +96,13 @@ export class CompositionsExtension {
     return context.env.getMounter();
   }
 
-  static dependencies = [
-    BundlerExtension,
-    PreviewExtension,
-    GraphQLExtension,
-    WorkspaceExt,
-    SchemaExtension,
-    ComponentFactoryExt,
-  ];
+  static defaultConfig = {
+    regex: '/compositions.ts/',
+  };
 
-  static async provider([bundler, preview, graphql, workspace, schema]: [
-    BundlerExtension,
+  static dependencies = [PreviewExtension, GraphQLExtension, WorkspaceExt, SchemaExtension, ComponentFactoryExt];
+
+  static async provider([preview, graphql, workspace, schema]: [
     PreviewExtension,
     GraphQLExtension,
     Workspace,
@@ -136,9 +111,8 @@ export class CompositionsExtension {
     const compositions = new CompositionsExtension(preview, workspace, schema);
 
     graphql.register(compositionsSchema(compositions));
-    bundler.registerTarget({
-      entry: compositions.compositionsPreviewTarget.bind(compositions),
-    });
+    preview.registerDefinition(new CompositionPreviewDefinition(compositions));
+
     if (workspace) {
       workspace.onComponentLoad(compositions.onComponentLoad.bind(compositions));
     }

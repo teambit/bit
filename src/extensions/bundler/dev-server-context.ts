@@ -1,5 +1,19 @@
-import { ExecutionContext } from '../environments';
+import { BuildContext } from '../builder';
+import { Capsule } from '../isolator';
 
-export interface DevServerContext extends ExecutionContext {
+export type Target = {
+  /**
+   * entries of the target.
+   */
+  entries: string[];
+
+  /**
+   * root path of the target
+   */
+  capsule: Capsule;
+};
+
+export interface BundlerContext extends BuildContext {
   entry: string[];
+  targets: Target[];
 }

@@ -19,6 +19,7 @@ export class Preview {
    */
   render() {
     const { previewName, componentId } = this.getLocation();
+    console.log(previewName, componentId);
     const name = previewName || this.getDefault();
 
     const preview = this.getPreview(name);
@@ -74,6 +75,8 @@ export class Preview {
       componentId: before,
     };
   }
+
+  static id = '@teambit/preview';
 
   static slots = [Slot.withType<PreviewType>()];
 

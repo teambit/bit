@@ -123,6 +123,9 @@ export function componentSchema(componentExtension: ComponentExtension) {
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
         },
+        // list: async (host: ComponentFactory, { offset, limit }: { offset: number; limit: number }) => {
+        // return host.list();
+        // },
       },
       Query: {
         getHost: (componentExt: ComponentExtension, { id }: { id: string }) => {

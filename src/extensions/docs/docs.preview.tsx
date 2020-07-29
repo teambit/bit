@@ -2,6 +2,8 @@ import { Preview } from '../preview/preview.preview';
 import { GraphQlUI } from '../graphql/graphql.ui';
 
 export class DocsPreview {
+  static id = '@teambit/docs';
+
   constructor(
     /**
      * preview extension.
