@@ -1,7 +1,7 @@
 import webpack from 'webpack';
 import WebpackDevServer, { Configuration } from 'webpack-dev-server';
 import merge from 'webpack-merge';
-import { DevServer, BundlerContext, BundlerExtension } from '../bundler';
+import { DevServer, BundlerContext, BundlerExtension, DevServerContext } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
@@ -30,13 +30,13 @@ export class WebpackExtension {
    * @param components array of components to launch.
    * @param config webpack config. will be merged to the base webpack config as seen at './config'
    */
-  createDevServer(context: BundlerContext, config: any): DevServer {
+  createDevServer(context: DevServerContext, config: any): DevServer {
     const mergedConfig = this.getWebpackConfig(context, config);
     const compiler = webpack(mergedConfig);
     return new WebpackDevServer(compiler, mergedConfig.devServer);
   }
 
-  getWebpackConfig(context: BundlerContext, config: Configuration) {
+  getWebpackConfig(context: DevServerContext, config: Configuration) {
     return merge(this.createConfig(context.entry, this.workspace.path), config);
   }
 

@@ -5,7 +5,7 @@ import { selectPort } from './select-port';
 import { ComponentServer } from './component-server';
 import { BindError } from './exceptions';
 import { BrowserRuntimeSlot } from './bundler.extension';
-import { BundlerContext } from './dev-server-context';
+import { DevServerContext } from './dev-server-context';
 import { UIRoot } from '../ui';
 import { getEntry } from './get-entry';
 
@@ -42,7 +42,7 @@ export class DevServerService implements EnvService {
   /**
    * builds the execution context for the dev server.
    */
-  private async buildContext(context: ExecutionContext): Promise<BundlerContext> {
+  private async buildContext(context: ExecutionContext): Promise<DevServerContext> {
     const uiRoot = this._uiRoot;
     if (!uiRoot) throw new Error('a root must be provided by UI root');
 

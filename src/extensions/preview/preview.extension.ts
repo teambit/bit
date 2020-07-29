@@ -31,6 +31,7 @@ export class PreviewExtension {
     const artifacts = entry.artifacts;
     if (!artifacts) throw new PreviewArtifactNotFound(component.id);
 
+    // @ts-ignore
     return new PreviewArtifact(artifacts);
   }
 

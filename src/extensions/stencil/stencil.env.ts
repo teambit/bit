@@ -2,7 +2,7 @@ import { Environment } from '../environments';
 import { Tester } from '../tester';
 import { BuildTask } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
-import { DevServer, BundlerContext } from '../bundler';
+import { DevServer, DevServerContext } from '../bundler';
 import { StencilExtension } from './stencil.extension';
 import { WebpackExtension } from '../webpack';
 import webpackConfig from './webpack/webpack.config';
@@ -52,7 +52,7 @@ export class StencilEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: BundlerContext): DevServer {
+  getDevServer(context: DevServerContext): DevServer {
     return this.webpack.createDevServer(context, webpackConfig());
   }
 

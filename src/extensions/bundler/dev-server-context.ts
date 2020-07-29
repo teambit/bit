@@ -1,5 +1,6 @@
 import { BuildContext } from '../builder';
 import { Capsule } from '../isolator';
+import { ExecutionContext } from '../environments';
 
 export type Target = {
   /**
@@ -14,6 +15,9 @@ export type Target = {
 };
 
 export interface BundlerContext extends BuildContext {
-  entry: string[];
   targets: Target[];
+}
+
+export interface DevServerContext extends ExecutionContext {
+  entry: string[];
 }

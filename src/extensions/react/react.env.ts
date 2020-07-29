@@ -6,7 +6,7 @@ import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
-import { DevServer, BundlerContext } from '../bundler';
+import { DevServer, BundlerContext, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
@@ -82,7 +82,7 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: BundlerContext): DevServer {
+  getDevServer(context: DevServerContext): DevServer {
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
