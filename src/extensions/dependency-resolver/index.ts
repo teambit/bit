@@ -8,4 +8,5 @@ export {
   DependencyResolverVariantConfig,
   RawComponentState,
   DependencyType,
+  ComponentsManifestsMap,
 } from './types';

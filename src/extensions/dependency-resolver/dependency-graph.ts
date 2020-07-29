@@ -5,6 +5,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { BitId } from '../../bit-id';
 import { DependenciesObjectDefinition } from './types';
 
+// TODO: consider raname this class, it's not really a graph since it has only the first level
 export class DependencyGraph {
   constructor(private component: Component) {}
 

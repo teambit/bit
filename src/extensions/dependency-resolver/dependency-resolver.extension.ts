@@ -1,6 +1,13 @@
+import { SemVer } from 'semver';
 import R from 'ramda';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import { DependenciesPolicy, DependencyResolverVariantConfig, DependencyResolverWorkspaceConfig } from './types';
+import {
+  DependenciesPolicy,
+  DependencyResolverVariantConfig,
+  DependencyResolverWorkspaceConfig,
+  DependenciesObjectDefinition,
+  WorkspaceDependenciesPolicy,
+} from './types';
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
@@ -12,6 +19,8 @@ import { DependencyInstaller } from './dependency-installer';
 import { PackageManagerNotFound } from './exceptions';
 import { Component } from '../component';
 import { DependencyGraph } from './dependency-graph';
+import { WorkspaceManifest } from './manifest/workspace-manifest';
+import { ROOT_NAME } from './constants';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
@@ -48,6 +57,20 @@ export class DependencyResolverExtension {
   getDependencies(component: Component): DependencyGraph {
     // we should support multiple components here as an entry
     return new DependencyGraph(component);
+  }
+
+  getWorkspacePolicy(): WorkspaceDependenciesPolicy {
+    return this.config.policy;
+  }
+
+  getWorkspaceManifest(
+    name: string = ROOT_NAME,
+    version: SemVer = new SemVer('1.0.0'),
+    dependencies: DependenciesObjectDefinition,
+    rootDir: string,
+    components: Component[]
+  ): WorkspaceManifest {
+    return WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components);
   }
 
   /**

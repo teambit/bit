@@ -6,6 +6,7 @@ import {
   DepObjectKeyName,
   PackageName,
   DepObjectValue,
+  ComponentsManifestsMap,
 } from '../types';
 import { Manifest } from './manifest';
 import { ComponentManifest } from './component-manifest';
@@ -34,8 +35,6 @@ export type DedupedDependencies = {
   issus?: DedupedDependenciesIssues;
 };
 
-type ComponentStringId = string;
-
 type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 
 type PackageNameIndexItem = {
@@ -51,7 +50,7 @@ export class WorkspaceManifest extends Manifest {
     public version: SemVer,
     public dependencies: DependenciesObjectDefinition,
     private rootDir: string,
-    public componentsManifest: ComponentManifest[]
+    public componentsManifestsMap: ComponentsManifestsMap
   ) {
     super(name, version, dependencies);
   }
@@ -69,8 +68,8 @@ export class WorkspaceManifest extends Manifest {
   ): WorkspaceManifest {
     const componentDependenciesMap: ComponentDependenciesMap = buildComponentDependenciesMap(components);
     const dedupedDependencies = dedupeDependencies(dependencies, componentDependenciesMap);
-    const componentsManifests = getComponentsManifests(dedupedDependencies, components);
-    const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifests);
+    const componentsManifestsMap = getComponentsManifests(dedupedDependencies, components);
+    const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifestsMap);
     return workspaceManifest;
   }
 }
@@ -80,13 +79,13 @@ export class WorkspaceManifest extends Manifest {
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {Component[]} components
- * @returns {ComponentManifest[]}
+ * @returns {ComponentsManifestsMap}
  */
 function getComponentsManifests(
   dedupedDependencies: DedupedDependencies,
   components: Component[]
-): ComponentManifest[] {
-  const componentsManifests: ComponentManifest[] = [];
+): ComponentsManifestsMap {
+  const componentsManifests: ComponentsManifestsMap = new Map();
   components.forEach((component) => {
     const packageName = componentIdToPackageName(component.state._consumer);
     if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
@@ -95,7 +94,7 @@ function getComponentsManifests(
       ) as DependenciesObjectDefinition;
       const version = component.id.hasVersion() ? (component.id.version as string) : '0.0.1-new';
       const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component);
-      componentsManifests.push(manifest);
+      componentsManifests.set(packageName, manifest);
     }
   });
   return componentsManifests;

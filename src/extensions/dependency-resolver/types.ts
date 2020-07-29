@@ -1,5 +1,6 @@
 import { ComponentFS, ComponentConfig } from '../component';
 import { PathLinux } from '../../utils/path';
+import { ComponentManifest } from './manifest/component-manifest';
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
@@ -32,8 +33,15 @@ export interface DependenciesPolicy {
   peerDependencies?: DependenciesPolicyObject;
 }
 
+export interface WorkspaceDependenciesPolicy {
+  // There is no dev dependencies here since to decide if a dependency is a dev dependency or runtime dependency
+  // we calculate it based on the dev files pattern
+  dependencies?: DependenciesPolicyObject;
+  peerDependencies?: DependenciesPolicyObject;
+}
+
 export interface DependencyResolverWorkspaceConfig {
-  policy: DependenciesPolicy;
+  policy: WorkspaceDependenciesPolicy;
   /**
    * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
@@ -147,3 +155,5 @@ export interface DependenciesObjectDefinition {
 
 export type DepObjectValue = Record<PackageName, SemverVersion>;
 export type DepObjectKeyName = 'dependencies' | 'devDependencies' | 'peerDependencies';
+
+export type ComponentsManifestsMap = Map<PackageName, ComponentManifest>;
