@@ -196,6 +196,9 @@ module.exports = function () {
       alias: {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
+        // TODO: @uri please remember to remove after publishing evangelist and base-ui
+        react: require.resolve('react'),
+        'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
