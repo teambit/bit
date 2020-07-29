@@ -223,7 +223,7 @@ export default class Version extends BitObject {
           bindingPrefix: obj.bindingPrefix,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides,
-          extensions: getExtensions(this.extensions),
+          // extensions: getExtensions(this.extensions),
         },
         filterFunction
       )
