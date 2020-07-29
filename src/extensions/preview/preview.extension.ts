@@ -25,7 +25,7 @@ export class PreviewExtension {
     private previewSlot: PreviewDefinitionRegistry
   ) {}
 
-  async getPreview(component: Component): PreviewArtifact {
+  async getPreview(component: Component): Promise<PreviewArtifact> {
     const entry = component.config.extensions.findCoreExtension(PreviewExtension.id);
     if (!entry) throw new PreviewArtifactNotFound(component.id);
     const artifacts = entry.artifacts;

@@ -7,6 +7,6 @@ import { NextFunction } from './next';
  */
 export interface Route {
   method: string;
-  route: string;
+  route: string | RegExp;
   middlewares: ((req: Request, res: Response, next?: NextFunction) => Promise<any>)[];
 }

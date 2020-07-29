@@ -1,3 +1,4 @@
+import { flatten, lowerCase } from 'lodash';
 /* eslint-disable max-classes-per-file */
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GraphQLExtension } from '../graphql';
@@ -19,9 +20,9 @@ export class ComponentExtension {
     private hostSlot: ComponentHostSlot,
 
     /**
-     * slot for registering new component routes.
+     * Express Extension
      */
-    private routeSlot: RouteSlot
+    private express: ExpressExtension
   ) {}
 
   /**
@@ -32,8 +33,13 @@ export class ComponentExtension {
     return this;
   }
 
-  registerRoute(route: Route[]) {
-    this.routeSlot.register(route);
+  registerRoute(routes: Route[]) {
+    const routeEntries = routes.map((route: Route) => {
+      return new ComponentRoute(route.route, route.middlewares, this);
+    });
+
+    //this.routeSlot.register(routeEntries);
+    this.express.register(flatten(routeEntries));
     return this;
   }
 
@@ -55,9 +61,8 @@ export class ComponentExtension {
     config,
     [hostSlot, routeSlot]: [ComponentHostSlot, RouteSlot]
   ) {
-    const componentExtension = new ComponentExtension(hostSlot, routeSlot);
+    const componentExtension = new ComponentExtension(hostSlot, express);
     graphql.register(componentSchema(componentExtension));
-    express.register([new ComponentRoute(routeSlot, express, componentExtension)]);
 
     return componentExtension;
   }
