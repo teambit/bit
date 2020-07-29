@@ -7,7 +7,7 @@ export default (workspace: Workspace) => {
       type Workspace {
         name: String
         path: String
-        components: [ComponentMeta]
+        components: [Component]
         getComponent(id: String!): Component
       }
 

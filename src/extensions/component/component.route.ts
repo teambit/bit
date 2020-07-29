@@ -13,10 +13,10 @@ export class ComponentRoute implements Route {
   method = 'get';
   middlewares = [
     async (req: Request, res: Response) => {
-      // TODO @guy: hack we should fix this. (consider moving this route to scope extension.)
+      // TODO @guy: hack we should fix this. (consider moving this route to scope extension.
       const host = this.componentExtension.getHost('@teambit/scope');
       const component = await host.get(ComponentID.fromString(req.params.id, false));
-      // @ts-ignore
+      // @ts-ignore TODO: move to by typed.
       req.component = component;
 
       this.express.applyRouteSlot(this.routeSlot, req, res);
