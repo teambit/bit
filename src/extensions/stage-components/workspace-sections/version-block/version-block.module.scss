@@ -43,3 +43,8 @@
 .commitMessage {
 	font-size: 15px;
 }
+.emptyMessage {
+	font-size: 15px;
+	font-style: italic;
+	color: var(--text-muted);
+}

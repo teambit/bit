@@ -45,8 +45,13 @@ export function VersionBlock({ version, className, ...rest }: VersionBlockProps)
       <div className={classNames(styles.right, className)} {...rest}>
         <H3 className={styles.versionTitle}>v{version.id}</H3>
         <Contributors contributors={version.contributors} timestamp={version.timestamp} />
-        <div className={styles.commitMessage}>{version.message}</div>
+        {commitMessage(version.message)}
       </div>
     </div>
   );
+}
+
+function commitMessage(message: string) {
+  if (!message || message === '') return <div className={styles.emptyMessage}>No commit message</div>;
+  return <div className={styles.commitMessage}>{message}</div>;
 }

@@ -5,10 +5,7 @@
     flex-wrap: wrap;
 	align-items: center;
 	color: var(--text-muted);
-    margin-bottom: 15px;
-    > div {
-        margin-bottom: 10px;
-    }
+    margin-bottom: 25px;
     .users {
         display: flex;
         align-items: center;
@@ -22,5 +19,8 @@
 
 
 .name {
-	font-weight: bold;
+    font-weight: bold;
+    &.displayName {
+        text-transform: capitalize;
+    }
 }
