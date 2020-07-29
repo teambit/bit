@@ -1,3 +1,4 @@
+import mime from 'mime';
 import { Route, Request, Response } from '../express';
 import { PreviewExtension } from './preview.extension';
 
@@ -23,6 +24,7 @@ export class PreviewRoute implements Route {
       // TODO: 404 again how to handle.
       if (!file) return res.status(404).jsonp({ error: 'not found' });
       const contents = file.contents;
+      res.set('Content-Type', mime.getType(`${file.cwd}/${file.path}`)!);
       res.send(contents.toString());
     },
   ];
