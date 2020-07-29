@@ -54,7 +54,7 @@ export function componentSchema(componentExtension: ComponentExtension) {
 
       type Component {
         # id of the component.
-        id: ComponentID!
+        id: ComponentID
 
         # head snap of the component.
         head: Snap

@@ -75,7 +75,7 @@ export class PreviewExtension {
         .flatMap(([, files]) => {
           return files.map((file) => file.path);
         })
-        .concat([previewMain, link]);
+        .concat([link]);
 
       return outputFiles;
     });
@@ -107,8 +107,6 @@ export class PreviewExtension {
         entry: preview.getPreviewTarget.bind(preview),
       },
     ]);
-
-    // express.register([new PreviewRoute(preview)]);
 
     builder.registerTask(new PreviewTask(bundler, preview));
 

@@ -5,7 +5,7 @@ import { DocsExtension } from './docs.extension';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class DocsPreviewDefinition implements PreviewDefinition {
-  readonly prefix = 'docs';
+  readonly prefix = 'overview';
 
   constructor(
     /**

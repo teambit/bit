@@ -27,7 +27,8 @@ export class DevServerService implements EnvService {
   }
 
   async run(context: ExecutionContext) {
-    const devServer: DevServer = context.env.getDevServer(await this.buildContext(context));
+    const devServerContext = await this.buildContext(context);
+    const devServer: DevServer = context.env.getDevServer(devServerContext);
     const port = await selectPort();
     const server = devServer.listen(port);
     const address = server.address();
