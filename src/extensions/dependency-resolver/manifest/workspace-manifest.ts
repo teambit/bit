@@ -206,7 +206,11 @@ function addDepToDepIdIndex(index: PackageNameIndex, origin: PackageName, lifecy
  * @param {PackageNameIndex} depIdIndex
  * @returns {DedupedDependencies}
  */
-function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependencies {}
+function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependencies {
+  // Handle peer dependnecies
+  // handle git urls
+  // Handle logical or (||)
+}
 
 /**
  * This is the third phase of the deduping process
