@@ -1039,6 +1039,7 @@ workflows:
             - set_ssh_key
             - set_bitsrc_registry
             - configure-bit
+            - link_react_new_project_and_explorer
             # - pack
       -
         performance_e2e_test:
