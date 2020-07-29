@@ -207,12 +207,20 @@ jobs:
           command: 'cd react-new-project && bit link'
       -
         run:
+          name: 'bit compile in react-new-project'
+          command: 'cd react-new-project && bit compile'
+      -
+        run:
           name: 'link components from react-new-proejct to bit'
           command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'bit link in explorer'
           command: 'cd explorer && bit link'
+      -
+        run:
+          name: 'bit compile in explorer'
+          command: 'cd explorer && bit compile'
       -
         run:
           name: 'link components from explorer to bit'
@@ -598,6 +606,8 @@ jobs:
         attach_workspace:
           at: ./
       -
+        run: 'cd bit && ls -la node_modules/@bit'
+      -
         run: 'sudo npm i -g yarn'
       -
         run:
@@ -645,6 +655,19 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
+      -
+        run: 'cd bit && ls -la node_modules/@bit'
+
+      -
+        run:
+          name: 'link components from explorer to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        run: 'cd bit && ls -la node_modules/@bit'
       -
         run:
           name: 'Run e2e tests'
@@ -1039,6 +1062,7 @@ workflows:
             - set_ssh_key
             - set_bitsrc_registry
             - configure-bit
+            - link_react_new_project_and_explorer
             # - pack
       -
         performance_e2e_test:
