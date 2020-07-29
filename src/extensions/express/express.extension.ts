@@ -1,4 +1,4 @@
-import { flatten, lowerCase, concat, startsWith } from 'lodash';
+import { flatten, lowerCase, concat } from 'lodash';
 import express from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -82,23 +82,6 @@ export class ExpressExtension {
     });
 
     return flatten(routeEntries);
-  }
-
-  applyRouteSlot(routeSlot: RouteSlot, req: Request, res: Response) {
-    // TODO: @guy please make sure we select everything and communicate errors back to users properly.
-    const extensionRoutes = routeSlot.values();
-    const routes = flatten(extensionRoutes);
-
-    // const actualRoute = routes.find((route) => {
-    //   // TODO: @guy please '/' properly.
-    //   const path = route.route.split('/')[1] || route;
-    //   //TODO: fix it with path name
-    //   return path === req.params[1];
-    // });
-
-    //if (!actualRoute) return res.send('path not found'); // TODO: @guy handle properly with 404 and exception handling.
-    // TODO: @guy properly handle passing data to routes contextually.
-    //return actualRoute.middlewares[0](req, res);
   }
 
   static id = '@teambit/express';

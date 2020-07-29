@@ -1,3 +1,3 @@
 import express from 'express';
 
-export interface NextFunction extends express.NextFunction {}
+export type NextFunction = express.NextFunction;

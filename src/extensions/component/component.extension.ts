@@ -1,11 +1,11 @@
-import { flatten, lowerCase } from 'lodash';
+import { flatten } from 'lodash';
 /* eslint-disable max-classes-per-file */
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
 import { ComponentFactory } from './component-factory';
 import { HostNotFound } from './exceptions';
-import { Route, ExpressExtension, RouteSlot } from '../express';
+import { Route, ExpressExtension } from '../express';
 import { ComponentRoute } from './component.route';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
@@ -38,7 +38,6 @@ export class ComponentExtension {
       return new ComponentRoute(route.route, route.middlewares, this);
     });
 
-    //this.routeSlot.register(routeEntries);
     this.express.register(flatten(routeEntries));
     return this;
   }
@@ -59,7 +58,7 @@ export class ComponentExtension {
   static async provider(
     [graphql, express]: [GraphQLExtension, ExpressExtension],
     config,
-    [hostSlot, routeSlot]: [ComponentHostSlot, RouteSlot]
+    [hostSlot]: [ComponentHostSlot]
   ) {
     const componentExtension = new ComponentExtension(hostSlot, express);
     graphql.register(componentSchema(componentExtension));

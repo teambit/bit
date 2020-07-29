@@ -1,4 +1,4 @@
-import { Route, Request, Response, RouteSlot, ExpressExtension } from '../express';
+import { Route, Request, Response } from '../express';
 import { ComponentExtension } from './component.extension';
 import { ComponentID } from './id';
 import { NextFunction } from '../express/types';
@@ -17,7 +17,7 @@ export class ComponentRoute implements Route {
 
   get componentMiddlewares() {
     return [
-      //TODO : fix next type
+      // TODO: fix next type
       async (req: Request, res: Response, next: any) => {
         const [componentPath, path] = Object.values(req.params);
         req.params.path = path;

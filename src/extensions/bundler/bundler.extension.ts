@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { DevServerService } from './dev-server.service';
-import { Environments, ExecutionContext } from '../environments';
+import { Environments } from '../environments';
 import { GraphQLExtension } from '../graphql';
 import { devServerSchema } from './dev-server.graphql';
 import { ComponentServer } from './component-server';
