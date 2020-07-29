@@ -1,17 +1,13 @@
+import chalk from 'chalk';
 import { EnvService, ExecutionContext } from '../environments';
-import { IsolatorExtension } from '../isolator';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
 import { LogPublisher } from '../types';
 import { BuildTask } from './types';
+import loader from '../../cli/loader';
 
 export class BuilderService implements EnvService {
   constructor(
-    /**
-     * isolator extension.
-     */
-    private isolator: IsolatorExtension,
-
     /**
      * workspace extension.
      */
@@ -23,6 +19,9 @@ export class BuilderService implements EnvService {
    * runs a pipeline of tasks on all components in the execution context.
    */
   async run(context: ExecutionContext) {
+    const title = `running build for environment ${context.id}, total ${context.components.length} components`;
+    const longProcessLogger = this.logger.createLongProcessLogger(title);
+    loader.stopAndPersist({ prefixText: '🌍', text: chalk.bold(title) });
     // make build pipe accessible throughout the context.
     if (!context.env.getPipe) {
       throw new Error(`Builder service expects ${context.id} to implement getPipe()`);
@@ -35,14 +34,12 @@ export class BuilderService implements EnvService {
     );
 
     const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(
-        context.components.map((component) => component.id.toString()),
-        this.workspace.consumer
-      ),
+      capsuleGraph: await this.workspace.createNetwork(context.components.map((component) => component.id.toString())),
     });
 
     const components = await buildPipe.execute(buildContext);
-
+    longProcessLogger.end();
+    loader.succeed();
     return { id: context.id, components };
   }
 }

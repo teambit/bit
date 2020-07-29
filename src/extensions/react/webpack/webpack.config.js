@@ -46,7 +46,7 @@ module.exports = function (workspaceDir) {
         },
         {
           test: /\.s(a|c)ss$/,
-          exclude: /\.module.(s(a|c)ss)$/,
+          exclude: /\.module\.s(a|c)ss$/,
           loader: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -59,8 +59,23 @@ module.exports = function (workspaceDir) {
           ],
         },
         {
+          test: /\.module.css$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
           test: /\.css$/,
-          exclude: /\.(s(a|c)ss)$/,
+          exclude: /\.module\.css$/,
           loader: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],

@@ -10,7 +10,7 @@ type TimeAgoProps = {
 export function TimeAgo(props: TimeAgoProps) {
   const { date, className, ...rest } = props;
 
-  const [refreshIdx, forceUpdate] = useReducer(x => x + 1, 0);
+  const [refreshIdx, forceUpdate] = useReducer((x) => x + 1, 0);
 
   useEffect(() => {
     const tId = setInterval(() => forceUpdate(), 1000 * 60);

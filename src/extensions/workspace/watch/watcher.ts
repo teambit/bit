@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
 import R from 'ramda';
 import chalk from 'chalk';
-import Workspace from '../workspace';
+import { Workspace } from '../workspace';
 import loader from '../../../cli/loader';
 import { BitId } from '../../../bit-id';
 import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../../../constants';
@@ -10,6 +10,7 @@ import { pathNormalizeToLinux } from '../../../utils';
 import { Consumer } from '../../../consumer';
 import { ComponentID } from '../../component';
 import logger from '../../../logger/logger';
+import { build } from '../../../api/consumer';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
@@ -69,37 +70,49 @@ export class Watcher {
   private async handleChange(filePath: string, isNew = false) {
     const start = new Date().getTime();
     const componentId = await this.getBitIdByPathAndReloadConsumer(filePath, isNew);
-    let resultMsg = '';
-    if (componentId) {
-      if (this.isComponentWatchedExternally(componentId)) {
-        // update capsule, once done, it automatically triggers the external watcher
-        await this.workspace.load([componentId]);
-      } else {
-        const idStr = componentId.toString();
-        logger.console(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
-        const options = {
-          noCache: false,
-          verbose: this.verbose,
-        };
-        const buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId), options);
-        if (buildResults && buildResults.length) {
-          buildResults.forEach((extensionResult) => {
-            logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
-            logger.console(`\t${extensionResult.results.toString()}`);
-          });
-        } else {
-          resultMsg = `${idStr} doesn't have a compiler, nothing to build`;
-        }
-      }
-    } else {
-      resultMsg = `file ${filePath} is not part of any component, ignoring it`;
+    if (!componentId) {
+      logger.console(`file ${filePath} is not part of any component, ignoring it`);
+      return this.completeWatch(start);
     }
+    if (this.isComponentWatchedExternally(componentId)) {
+      // update capsule, once done, it automatically triggers the external watcher
+      await this.workspace.load([componentId]);
+      return this.completeWatch(start);
+    }
+    const component = await this.workspace.consumer.loadComponent(componentId);
+    const idStr = componentId.toString();
+    if (component.isLegacy) {
+      await this.buildLegacy(idStr);
+      return this.completeWatch(start);
+    }
+    logger.console(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
+    const buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId));
+    if (buildResults && buildResults.length) {
+      buildResults.forEach((extensionResult) => {
+        logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
+        logger.console(`\t${extensionResult.results.toString()}`);
+      });
+      return this.completeWatch(start);
+    }
+    logger.console(`${idStr} doesn't have a compiler, nothing to build`);
+    return this.completeWatch(start);
+  }
 
+  private completeWatch(start: number) {
     const duration = new Date().getTime() - start;
     loader.stop();
-    logger.console(resultMsg);
     logger.console(`took ${duration}ms`);
     logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
+  }
+
+  private async buildLegacy(idStr: string) {
+    logger.console(`running build for ${chalk.bold(idStr)}`);
+    const buildResults = await build(idStr, false, this.verbose, this.workspace.path);
+    if (buildResults) {
+      logger.console(`\t${chalk.cyan(buildResults.join('\n\t'))}`);
+    } else {
+      logger.console(`${idStr} doesn't have a compiler, nothing to build`);
+    }
   }
 
   private isComponentWatchedExternally(componentId: BitId) {

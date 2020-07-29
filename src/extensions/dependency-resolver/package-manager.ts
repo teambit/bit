@@ -12,28 +12,9 @@ import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import { installOpts } from './types';
 
-// TODO:
-// this is a hack in order to pass events from here to flows (and later install)
-// we need to solve this hack by changing the dependency chain of the relevant extensions
-// essentially flattening the structure so that we have less extensions to pass this event through
-//
-// at the time of writing, it's Flows => Workspace => Isolator => PackageManager
-let emitter = null;
-export function onCapsuleInstalled(cb) {
-  // @ts-ignore - this is a hack
-  emitter.on('capsuleInstalled', (componentName) => cb(componentName));
-}
-export function beforeInstallingCapsules(cb) {
-  // @ts-ignore - this is a hack
-  emitter.on('beforeInstallingCapsules', (numCapsules) => cb(numCapsules));
-}
-
 export default class PackageManager {
   private emitter = new EventEmitter();
-  constructor(readonly packageManagerName: string, readonly logger: Logger) {
-    // @ts-ignore - this is a hack
-    emitter = this.emitter;
-  }
+  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
 
   get name() {
     return this.packageManagerName;
@@ -59,16 +40,26 @@ export default class PackageManager {
   async capsulesInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
-    this.emitter.emit('beforeInstallingCapsules', capsules.length);
-    if (packageManager === 'npm' || packageManager === 'yarn') {
+    const longProcessLogger = logPublisher.createLongProcessLogger('installing capsules', capsules.length);
+    if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async (capsule) => {
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
-        const installProc =
-          packageManager === 'npm'
-            ? execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' })
-            : execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        const execOptions = { cwd: capsule.wrkDir };
+        const getExecCall = () => {
+          switch (packageManager) {
+            case 'npm':
+              return execa('npm', ['install', '--no-package-lock'], execOptions);
+            case 'yarn':
+              return execa('yarn', [], execOptions);
+            case 'pnpm':
+              return execa('pnpm', ['install'], execOptions);
+            default:
+              throw new Error(`unsupported package manager ${packageManager}`);
+          }
+        };
+        const installProc = getExecCall();
         logPublisher.info(componentId, packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'); // TODO: better
         logPublisher.info(componentId, '');
         installProc.stdout!.on('data', (d) => logPublisher.info(componentId, d.toString()));
@@ -79,11 +70,12 @@ export default class PackageManager {
         });
         await installProc;
         linkBitBinInCapsule(capsule);
-        this.emitter.emit('capsuleInstalled', componentId);
+        longProcessLogger.logProgress(componentId);
       });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
+    longProcessLogger.end();
     return null;
   }
 

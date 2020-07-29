@@ -5,7 +5,6 @@ import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
 import { expect } from 'chai';
-import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
@@ -13,6 +12,7 @@ import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -148,15 +148,9 @@ export default class CommandHelper {
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
-  // @todo: change to tagAllComponents
-  tagAllComponentsNew(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
-  }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
-    return this.tagAllComponentsNew(options, version, assertTagged);
+    return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);

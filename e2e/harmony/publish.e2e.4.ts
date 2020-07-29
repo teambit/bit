@@ -181,7 +181,7 @@ describe('publish functionality', function () {
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });
     it('builder should show the npm error about invalid name', () => {
-      const output = helper.general.runWithTryCatch('bit run-new');
+      const output = helper.general.runWithTryCatch('bit run');
       expect(output).to.have.string('npm ERR! Invalid name: "invalid/name/comp1"');
     });
   });

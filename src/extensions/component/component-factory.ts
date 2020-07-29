@@ -21,4 +21,9 @@ export interface ComponentFactory {
    * load extension.
    */
   loadExtensions: (extensions: ExtensionDataList) => Promise<void>;
+
+  /**
+   * list all components in the host.
+   */
+  list(filter?: { offset: number; limit: number }): Promise<Component[]>;
 }

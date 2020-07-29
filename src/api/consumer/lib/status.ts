@@ -21,6 +21,8 @@ export type StatusResult = {
   outdatedComponents: Component[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
+  componentsWithIndividualFiles: Component[];
+  componentsWithTrackDirs: Component[];
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -76,5 +78,7 @@ export default (async function status(): Promise<StatusResult> {
     outdatedComponents,
     mergePendingComponents,
     componentsDuringMergeState,
+    componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
+    componentsWithTrackDirs: await componentsList.listComponentsWithTrackDir(),
   };
 });

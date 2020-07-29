@@ -42,6 +42,8 @@ export function getInvalidComponentLabel(error: Error) {
       return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
     case 'IncorrectRootDir':
       return `component has relative import statements (replace to module paths or use "bit link --rewire" to replace.`;
+    case 'NoComponentDir':
+      return `component files were added individually without root directory (invalid on Harmony. re-add as a directory or use "bit move --component" to help with the move)`;
     default:
       return error.name;
   }

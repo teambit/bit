@@ -2,6 +2,7 @@ import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
 import { BuildTask, BuildContext } from './types';
 import { LogPublisher } from '../types';
+import loader from '../../cli/loader';
 
 export class BuildPipe {
   constructor(
@@ -16,18 +17,19 @@ export class BuildPipe {
    * execute a pipeline of build tasks.
    */
   async execute(buildContext: BuildContext) {
-    return pMapSeries(this.tasks, async (task: BuildTask) => {
-      this.logger.info(
-        task.extensionId,
-        `running task "${task.extensionId}" on ${buildContext.components.length} components`
-      );
+    const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
+    const results = await pMapSeries(this.tasks, async (task: BuildTask) => {
+      longProcessLogger.logProgress(`${task.extensionId} ${task.description || ''}`);
       const taskResult = await task.execute(buildContext);
       const taskProcess = new TaskProcess(task, taskResult, buildContext);
       taskProcess.throwIfErrorsFound();
       this.logger.info(task.extensionId, `task "${task.extensionId}" has completed successfully`);
       const components = await taskProcess.saveTaskResults();
+      loader.succeed();
       return components;
     });
+    longProcessLogger.end();
+    return results;
   }
 
   /**

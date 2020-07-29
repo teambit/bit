@@ -5,15 +5,25 @@ import { Input } from '@bit/bit.evangelist.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
 import { ComponentID } from '../../component';
+import { OverviewLink } from './overview-link/overview-link';
+import { Descriptor } from '../../environments/environments.extension';
+import { DeprecationInfo } from '../../deprecation/deprecation.extension';
+
+export type Component = {
+  id: ComponentID;
+  status?: any;
+  deprection?: DeprecationInfo;
+  env?: Descriptor;
+};
 
 type SideBarProps = {
-  components: ComponentID[];
+  components: Component[];
   selected?: string;
   onSelectComponent?: (component: ComponentID) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function SideBar({ components, selected, ...rest }: SideBarProps) {
-  const componentIds = useMemo(() => components.map((id) => id.fullName), [components]);
+  const componentsData = useMemo(() => components.map((component) => component), [components]);
   const history = useHistory();
 
   const handleSelect = useCallback(
@@ -25,14 +35,14 @@ export function SideBar({ components, selected, ...rest }: SideBarProps) {
     },
     [history]
   );
-
   return (
     <div {...rest}>
+      <OverviewLink />
       <div className={styles.inputWrapper}>
-        <Input placeholder="Find components" error={false} className={styles.input} />
+        <Input placeholder="Components" error={false} className={styles.input} />
         <Icon of="discovery" className={styles.searchIcon} />
       </div>
-      <ComponentTree selected={selected} onSelect={handleSelect} components={componentIds} />
+      <ComponentTree selected={selected} onSelect={handleSelect} components={componentsData} />
     </div>
   );
 }
