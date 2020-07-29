@@ -34,6 +34,10 @@ const WORKSPACE = gql`
         deprecation {
           isDeprecate
         }
+        server {
+          env
+          url
+        }
         env {
           id
           icon

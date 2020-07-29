@@ -14,17 +14,14 @@ export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridPro
     <div className={styles.container}>
       <ComponentGrid>
         {components.map((component, index) => {
-          const compositions = R.path(['compositions'], component);
           return (
             <div key={index}>
               <ComponentCard
-                id={R.path(['legacyComponentId', 'name'], component)}
+                id={R.path(['id', 'fullName'], component)}
                 size={14093}
-                description="Base title component, to be styled by composing components."
+                description={component.abstract}
+                preview={<ComponentComposition component={component} />}
               />
-              {compositions && compositions.length > 0 && (
-                <ComponentComposition component={component} composition={compositions[0]} />
-              )}
             </div>
           );
         })}

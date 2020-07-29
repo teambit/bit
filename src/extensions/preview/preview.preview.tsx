@@ -19,7 +19,6 @@ export class Preview {
    */
   render() {
     const { previewName, componentId } = this.getLocation();
-    console.log(previewName, componentId);
     const name = previewName || this.getDefault();
 
     const preview = this.getPreview(name);
