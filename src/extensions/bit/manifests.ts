@@ -26,6 +26,7 @@ import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
 import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
+import { DdeprecationExtension } from '../deprecation';
 import { DefaultEnvExtension } from '../default-env/default-env.extension';
 
 export const manifestsMap = {
@@ -62,5 +63,6 @@ export const manifestsMap = {
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WorkspaceExt.name]: WorkspaceExt,
+  [DdeprecationExtension.name]: DdeprecationExtension,
   [DefaultEnvExtension.id]: DefaultEnvExtension,
 };

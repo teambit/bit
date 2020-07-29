@@ -30,6 +30,9 @@ const WORKSPACE = gql`
           isModified
           isDeleted
         }
+        deprecation {
+          isDeprecate
+        }
         env {
           id
           icon
