@@ -2,7 +2,6 @@ import commander from 'commander';
 import { LegacyCommand, CommandOptions } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { camelCase, first } from '../utils';
-import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
