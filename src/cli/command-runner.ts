@@ -16,6 +16,7 @@ export class CommandRunner {
   async runCommand() {
     try {
       await this.runMigrateIfNeeded();
+      this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
         return await this.runJsonHandler();
       }
@@ -44,11 +45,14 @@ export class CommandRunner {
     return Boolean(this.command.render);
   }
 
+  /**
+   * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
+   * implements json() method)
+   */
   private async runJsonHandler() {
     if (!this.flags.json) return null;
     if (!this.command.json) throw new Error(`command "${this.command.name}" doesn't implement "json" method`);
     const result = await this.command.json(this.args, this.flags);
-    loader.off();
     const code = result.code || 0;
     const data = result.data || result;
     return this.writeAndExit(JSON.stringify(data, null, 2), code);
@@ -70,6 +74,19 @@ export class CommandRunner {
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
     return this.writeAndExit(`${data}\n`, exitCode);
+  }
+
+  /**
+   * the loader and logger.console write output to the console during the command execution.
+   * for internals commands, such as, _put, _fetch, the command.loader = false.
+   */
+  private determineConsoleWritingDuringCommand() {
+    if (this.command.loader && !this.flags.json) {
+      loader.on();
+      logger.shouldWriteToConsole = true;
+    } else {
+      logger.shouldWriteToConsole = false;
+    }
   }
 
   private writeAndExit(data: string, exitCode: number) {

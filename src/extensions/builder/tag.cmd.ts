@@ -50,7 +50,6 @@ export class TagCmd implements Command {
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
   ] as CommandOptions;
-  loader = true;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 

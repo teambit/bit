@@ -52,13 +52,9 @@ export async function execAction(command: Command, concrete, args): Promise<any>
     args: relevantArgs,
     flags,
   });
-  if (command.loader && !flags.json) {
-    loader.on();
-  }
   if (flags[TOKEN_FLAG_NAME]) {
     globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
   }
-  logger.shouldWriteToConsole = !flags.json;
   const commandRunner = new CommandRunner(command, relevantArgs, flags);
   return commandRunner.runCommand();
 }
