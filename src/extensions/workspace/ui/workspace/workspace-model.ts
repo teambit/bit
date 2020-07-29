@@ -1,14 +1,14 @@
 // import { ComponentMeta } from '../../../component/component.ui';
 import { ComponentID } from '../../../component/id';
 import { ComponentStatus } from '../../workspace-component/component-status';
+import { DeprecationInfo } from '../../../deprecation/deprecation.extension';
+import { Descriptor } from '../../../environments/environments.extension';
 
 export type Component = {
   id: ComponentID;
   status: ComponentStatus;
-  env: {
-    id: string;
-    icon: string;
-  };
+  deprection: DeprecationInfo;
+  env: Descriptor;
 };
 
 export type WorkspaceProps = {
@@ -42,6 +42,7 @@ export class Workspace {
       components.map((value) => {
         return {
           id: ComponentID.fromObject(value.id),
+          deprection: value.deprection,
           status: value.status,
           env: value.env,
         };

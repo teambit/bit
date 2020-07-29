@@ -31,11 +31,7 @@ export class BuilderCmd implements Command {
     longProcessLogger.end();
     loader.succeed();
     this.reporter.end();
-    // @todo: decide about the output
-    results.forEach((
-      result // eslint-disable-next-line no-console
-    ) => console.log('result', `Env: ${result.env}\nResult: success`));
 
-    return chalk.green('the build has been completed');
+    return chalk.green(`the build has been completed. total: ${results.length} environments`);
   }
 }

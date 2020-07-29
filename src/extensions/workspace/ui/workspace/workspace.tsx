@@ -25,11 +25,13 @@ const WORKSPACE = gql`
         }
         status {
           isNew
-          isDeprecated
           isInScope
           isStaged
           isModified
           isDeleted
+        }
+        deprecation {
+          isDeprecate
         }
         env {
           id

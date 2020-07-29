@@ -20,13 +20,15 @@ import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
 import { GraphQLExtension } from '../graphql';
+import { PnpmExtension } from '../pnpm';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
 import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
-import { PnpmExtension } from '../pnpm';
+import { DdeprecationExtension } from '../deprecation';
+import { DefaultEnvExtension } from '../default-env/default-env.extension';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -63,4 +65,6 @@ export const manifestsMap = {
   [BuilderExtension.id]: BuilderExtension,
   [VariantsExt.name]: VariantsExt,
   [WorkspaceExt.name]: WorkspaceExt,
+  [DdeprecationExtension.name]: DdeprecationExtension,
+  [DefaultEnvExtension.id]: DefaultEnvExtension,
 };

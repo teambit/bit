@@ -55,7 +55,7 @@ export class PkgExtension {
     const logPublisher = logger.createLogPublisher(PkgExtension.id);
     const packer = new Packer(isolator, scope?.legacyScope, workspace);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
+    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher, logPublisher);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
