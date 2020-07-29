@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { AccountObj } from '../version-block/change-log.data';
 import { TimeAgo } from '../../workspace-components/time-ago';
-import { UserAvatar } from '../../workspace-components/Avatar';
+import Avatar from '../../workspace-components/Avatar';
 import styles from './contributors.module.scss';
 
 export type ContributorsProps = {
@@ -14,7 +14,7 @@ export function Contributors({ contributors, timestamp }: ContributorsProps) {
   return (
     <div className={styles.row}>
       {contributors.slice(0, 3).map((user, index) => (
-        <UserAvatar key={index} size={20} account={user} className={styles.marginRight} />
+        <Avatar key={index} size={20} account={user} className={styles.marginRight} />
       ))}
       <div className={classNames(styles.marginRight)}>
         {calcUsers(contributors)} <span>released this</span>
@@ -43,5 +43,6 @@ function calcUsers(contributors: AccountObj[]) {
 
 function singleUserName(user: AccountObj) {
   if (user.displayName) return <span className={classNames(styles.name, styles.displayName)}>{user.displayName}</span>;
+  if (!user.name) return <span className={styles.name}>unknown</span>;
   return <span className={styles.name}>{user.name}</span>;
 }

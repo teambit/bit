@@ -13,6 +13,12 @@ export const versionExample1: Version = {
   isLatest: true,
   contributors: [
     {
+      // name: 'oded',
+      // accountType: AccountTypes.user,
+      // profileImage:
+      //   'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
+    },
+    {
       name: 'oded',
       displayName: 'oded reuveny',
       accountType: AccountTypes.user,
@@ -24,12 +30,6 @@ export const versionExample1: Version = {
       accountType: AccountTypes.user,
       // profileImage:
       //   'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
-    },
-    {
-      name: 'oded',
-      accountType: AccountTypes.user,
-      profileImage:
-        'https://bitsrc.imgix.net/11b8acfbc5f7a64c0ecec1e2a8d4b4866eaf4431.png?size=41&w=41&h=41&fill=fillmax&bg=fff',
     },
     {
       name: 'oded',

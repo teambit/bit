@@ -39,8 +39,8 @@ export type Version = {
 };
 
 export type AccountObj = {
-  name: string;
-  accountType: AccountTypes;
+  name?: string;
+  accountType?: AccountTypes;
   displayName?: string;
   profileImage?: string;
 };
