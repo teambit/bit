@@ -53,7 +53,8 @@ export class PreviewTask implements BuildTask {
   }
 
   getPreviewDirectory() {
-    return 'preview';
+    // TODO: @guy please make sure to wire it to a config as above.
+    return 'public';
   }
 
   private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {

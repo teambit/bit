@@ -8,7 +8,6 @@ import { BuilderExtension } from '../builder';
 import { PreviewTask } from './preview.task';
 import { PreviewDefinition } from './preview-definition';
 import { ExecutionContext } from '../environments';
-import { ExpressExtension } from '../express';
 import { PreviewRoute } from './preview.route';
 import { Component, ComponentExtension } from '../component';
 import { PreviewArtifactNotFound } from './exceptions';
@@ -31,7 +30,7 @@ export class PreviewExtension {
     const artifacts = entry.artifacts;
     if (!artifacts) throw new PreviewArtifactNotFound(component.id);
 
-    // @ts-ignore
+    // @ts-ignore TODO: remove after @david fixes issue with artifacts type.
     return new PreviewArtifact(artifacts);
   }
 
