@@ -26,6 +26,8 @@ import { UIExtension } from '../ui';
 import { ScopeUIRoot } from './scope.ui-root';
 import { GraphQLExtension } from '../graphql';
 import { scopeSchema } from './scope.graphql';
+import { CLIExtension } from '../cli';
+import { ExportCmd } from './export/export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -226,13 +228,14 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension];
+  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension];
 
   static async provider(
-    [componentExt, ui, graphql]: [ComponentExtension, UIExtension, GraphQLExtension],
+    [componentExt, ui, graphql, cli]: [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
   ) {
+    cli.register(new ExportCmd());
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;

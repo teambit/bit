@@ -1,15 +1,15 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { exportAction } from '../../api/consumer';
-import { BitId } from '../../bit-id';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../constants';
-import { EjectResults } from '../../consumer/component-ops/eject-components';
-import ejectTemplate from '../../cli/templates/eject-template';
-import GeneralError from '../../error/general-error';
-import { Lane } from '../../scope/models';
-import { throwForUsingLaneIfDisabled } from '../../api/consumer/lib/feature-toggle';
-import { PublishResults } from '../../scope/component-ops/publish-during-export';
-import { Command, CommandOptions } from '../cli';
+import { exportAction } from '../../../api/consumer';
+import { BitId } from '../../../bit-id';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
+import { EjectResults } from '../../../consumer/component-ops/eject-components';
+import ejectTemplate from '../../../cli/templates/eject-template';
+import GeneralError from '../../../error/general-error';
+import { Lane } from '../../../scope/models';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { PublishResults } from '../../../scope/component-ops/publish-during-export';
+import { Command, CommandOptions } from '../../cli';
 
 type ExportResults = {
   componentsIds: BitId[];
@@ -56,7 +56,7 @@ export class ExportCmd implements Command {
   migration = true;
   remoteOp = true;
 
-  async action(
+  async report(
     [remote, ids]: [string, string[]],
     {
       eject = false,
@@ -68,7 +68,7 @@ export class ExportCmd implements Command {
       rewire = false,
       lanes = false,
     }: any
-  ): Promise<ExportResults> {
+  ): Promise<string> {
     if (lanes) throwForUsingLaneIfDisabled();
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
@@ -79,7 +79,14 @@ export class ExportCmd implements Command {
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
       );
     }
-    return exportAction({
+    const {
+      componentsIds,
+      nonExistOnBitMap,
+      missingScope,
+      exportedLanes,
+      ejectResults,
+      publishResults,
+    } = await exportAction({
       ids,
       remote,
       eject,
@@ -91,18 +98,6 @@ export class ExportCmd implements Command {
       force,
       lanes,
     });
-  }
-
-  async report([remote, ids]: [string, string[]], exportOptions: any): Promise<string> {
-    const {
-      componentsIds,
-      nonExistOnBitMap,
-      missingScope,
-      exportedLanes,
-      ejectResults,
-      publishResults,
-    } = await this.action([remote, ids], exportOptions);
-    const { includeDependencies } = exportOptions;
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
     }
