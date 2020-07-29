@@ -185,7 +185,7 @@ export class ScopeExtension implements ComponentFactory {
     await Promise.all(
       Object.keys(modelComponent.versions).map(async (versionStr: string) => {
         const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-        //TODO: what to return if no version in objects
+        // TODO: what to return if no version in objects
         if (version) {
           const snap = this.createSnapFromVersion(version);
           const tag = new Tag(snap, new SemVer(versionStr));
