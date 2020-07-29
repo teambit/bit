@@ -80,9 +80,8 @@ export class PreviewTask implements BuildTask {
     });
 
     const moduleMaps = await Promise.all(moduleMapsPromise);
-    moduleMaps.concat([previewMain]);
 
-    return flatten(moduleMaps);
+    return flatten(moduleMaps.concat([previewMain]));
   }
 
   private getPathsFromMap(

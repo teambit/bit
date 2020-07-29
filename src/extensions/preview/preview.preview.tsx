@@ -30,7 +30,6 @@ export class Preview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            console.log('preview', PREVIEW_MODULES[prevName]);
             if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
             return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
