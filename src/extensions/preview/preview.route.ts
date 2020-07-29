@@ -10,7 +10,7 @@ export class PreviewRoute implements Route {
   ) {}
 
   // TODO: check how to fix wildcard for component
-  route = '/preview/:file*';
+  route = '/preview/(.*)';
   method = 'get';
 
   middlewares = [
@@ -19,9 +19,10 @@ export class PreviewRoute implements Route {
       const component: any = req.component as any;
       const artifact = await this.preview.getPreview(component);
       // TODO: please fix file path concatenation here.
-      const file = artifact.getFile(`public${req.params[1]}`);
+      const file = artifact.getFile(`public/${req.params.path}`);
       // TODO: 404 again how to handle.
-      const contents = file ? file.contents : '';
+      if (!file) return res.status(404).jsonp({ error: 'not found' });
+      const contents = file.contents;
       res.send(contents.toString());
     },
   ];
