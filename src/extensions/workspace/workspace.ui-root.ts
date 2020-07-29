@@ -56,5 +56,6 @@ export class WorkspaceUIRoot implements UIRoot {
 
   async postStart(options: PostStartOptions, uiRoot: UIRoot) {
     await this.bundler.devServer(await this.workspace.byPattern(options.pattern || ''), uiRoot);
+    await this.workspace.watcher.watchAll();
   }
 }

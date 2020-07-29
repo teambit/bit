@@ -37,6 +37,7 @@ import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import loader from '../../cli/loader';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
+import { Watcher } from './watch/watcher';
 
 export type EjectConfResult = {
   configPath: string;
@@ -101,6 +102,11 @@ export class Workspace implements ComponentFactory {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
   }
+
+  /**
+   * watcher api.
+   */
+  readonly watcher = new Watcher(this);
 
   /**
    * root path of the Workspace.
