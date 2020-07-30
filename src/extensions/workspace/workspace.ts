@@ -17,7 +17,7 @@ import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
@@ -35,8 +35,8 @@ import { OnComponentChange, OnComponentChangeResult } from './on-component-chang
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
-import loader from '../../cli/loader';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
+import { Watcher } from './watch/watcher';
 
 export type EjectConfResult = {
   configPath: string;
@@ -79,7 +79,7 @@ export class Workspace implements ComponentFactory {
 
     private variants: Variants,
 
-    private logger: LogPublisher,
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -101,6 +101,11 @@ export class Workspace implements ComponentFactory {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
   }
+
+  /**
+   * watcher api.
+   */
+  readonly watcher = new Watcher(this);
 
   /**
    * root path of the Workspace.
@@ -188,7 +193,7 @@ export class Workspace implements ComponentFactory {
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return new Network(
       capsuleList,
       graph,

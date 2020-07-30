@@ -1,10 +1,9 @@
-import chalk from 'chalk';
 import { EnvService, ExecutionContext } from '../environments';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 import { BuildTask } from './types';
-import loader from '../../cli/loader';
+import { TaskSlot } from './builder.extension';
 
 export class BuilderService implements EnvService {
   constructor(
@@ -12,7 +11,16 @@ export class BuilderService implements EnvService {
      * workspace extension.
      */
     private workspace: Workspace,
-    private logger: LogPublisher
+
+    /**
+     * logger extension.
+     */
+    private logger: Logger,
+
+    /**
+     * task slot (e.g tasks registered by other extensions.).
+     */
+    private taskSlot: TaskSlot
   ) {}
 
   /**
@@ -21,17 +29,16 @@ export class BuilderService implements EnvService {
   async run(context: ExecutionContext) {
     const title = `running build for environment ${context.id}, total ${context.components.length} components`;
     const longProcessLogger = this.logger.createLongProcessLogger(title);
-    loader.stopAndPersist({ prefixText: '🌍', text: chalk.bold(title) });
+    this.logger.consoleTitle(title);
     // make build pipe accessible throughout the context.
     if (!context.env.getPipe) {
       throw new Error(`Builder service expects ${context.id} to implement getPipe()`);
     }
     const buildTasks: BuildTask[] = context.env.getPipe(context);
-    const buildPipe = BuildPipe.from(buildTasks, this.logger);
-    this.logger.info(
-      context.id,
-      `start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`
-    );
+    // merge with extension registered tasks.
+    const mergedTasks = buildTasks.concat(this.taskSlot.values());
+    const buildPipe = BuildPipe.from(mergedTasks, this.logger);
+    this.logger.info(`start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`);
 
     const buildContext = Object.assign(context, {
       capsuleGraph: await this.workspace.createNetwork(context.components.map((component) => component.id.toString())),
@@ -39,7 +46,7 @@ export class BuilderService implements EnvService {
 
     const components = await buildPipe.execute(buildContext);
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return { id: context.id, components };
   }
 }

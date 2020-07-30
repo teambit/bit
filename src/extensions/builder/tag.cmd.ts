@@ -7,9 +7,7 @@ import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../..
 import GeneralError from '../../error/general-error';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { Command, CommandOptions } from '../cli';
-import { LogPublisher } from '../types';
-import { Reporter } from '../reporter';
-import loader from '../../cli/loader';
+import { Logger } from '../logger';
 
 type TagOptions = {
   message?: string;
@@ -50,11 +48,10 @@ export class TagCmd implements Command {
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
   ] as CommandOptions;
-  loader = true;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(private logger: LogPublisher, private reporter: Reporter) {}
+  constructor(private logger: Logger) {}
 
   async action(
     [id, version]: string[],
@@ -133,7 +130,6 @@ export class TagCmd implements Command {
   }
 
   async report([id, version]: string[], options: TagOptions): Promise<string> {
-    this.reporter.start();
     const longProcessLogger = this.logger.createLongProcessLogger('tag');
     const results: TagResults = await this.action([id, version], options);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
@@ -168,7 +164,7 @@ export class TagCmd implements Command {
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return (
       warningsOutput +
       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +

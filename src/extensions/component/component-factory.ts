@@ -10,7 +10,7 @@ export interface ComponentFactory {
   /**
    * returns a component by ID.
    */
-  get(id: ComponentID | string): Promise<Component | undefined>;
+  get(id: ComponentID | string, withState?: boolean): Promise<Component | undefined>;
 
   /**
    * returns a specific state of a component by hash or semver.

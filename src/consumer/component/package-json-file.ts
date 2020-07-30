@@ -182,6 +182,12 @@ export default class PackageJsonFile {
     delete this.packageJsonObject.dependencies[dependency];
   }
 
+  copyPeerDependenciesToDev() {
+    const devDeps = this.packageJsonObject.devDependencies || {};
+    const peerDeps = this.packageJsonObject.peerDependencies || {};
+    this.packageJsonObject.devDependencies = { ...devDeps, ...peerDeps };
+  }
+
   replaceDependencies(dependencies: Record<string, any>) {
     Object.keys(dependencies).forEach((dependency) => {
       DEPENDENCIES_FIELDS.forEach((dependencyField) => {

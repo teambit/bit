@@ -2,7 +2,6 @@ import commander from 'commander';
 import { LegacyCommand, CommandOptions } from './legacy-command';
 import { Commands } from '../legacy-extensions/extension';
 import { camelCase, first } from '../utils';
-import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
@@ -52,13 +51,9 @@ export async function execAction(command: Command, concrete, args): Promise<any>
     args: relevantArgs,
     flags,
   });
-  if (command.loader && !flags.json) {
-    loader.on();
-  }
   if (flags[TOKEN_FLAG_NAME]) {
     globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
   }
-  logger.shouldWriteToConsole = !flags.json;
   const commandRunner = new CommandRunner(command, relevantArgs, flags);
   return commandRunner.runCommand();
 }
@@ -101,6 +96,13 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
 
   if (command.remoteOp) {
     command.options.push(['', TOKEN_FLAG, 'authentication token']);
+  }
+  if (!command.internal) {
+    command.options.push([
+      '',
+      'log [level]',
+      'print log messages to the screen, options are: [silly, debug, info, warn, error], the default is info',
+    ]);
   }
 
   if (packageManagerArgs) {

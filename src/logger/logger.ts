@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import winston, { Logger } from 'winston';
 import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
@@ -57,6 +56,17 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
 });
 
+/**
+ * the method signatures of debug/info/error/etc are similar to Winston.logger.
+ * the way how it is formatted in the log file is according to the `customPrint` function above.
+ *
+ * Note about logging Error objects (with stacktrace).
+ * when throwing an error in the code, it shows it formatted nicely in the log. and also in the console when
+ * BIT_LOG is used.
+ * when using logger.error(error), it shows undefined, because it expects a message as the first parameter.
+ * when using logger.error(message, error), it shows the error serialized and unclear.
+ * normally, no need to call logger.error(). once an error is thrown, it is already logged.
+ */
 class BitLogger {
   logger: Logger;
   /**
@@ -74,31 +84,30 @@ class BitLogger {
     });
   }
 
-  silly(...args: any[]) {
-    // @ts-ignore
-    this.logger.silly(...args);
+  silly(message: string, ...meta: any[]) {
+    this.logger.silly(message, ...meta);
   }
 
-  debug(...args: any[]) {
-    // @ts-ignore
-    this.logger.debug(...args);
+  debug(message: string, ...meta: any[]) {
+    this.logger.debug(message, ...meta);
   }
 
-  warn(...args: any[]) {
-    // @ts-ignore
-    this.logger.warn(...args);
+  warn(message: string, ...meta: any[]) {
+    this.logger.warn(message, ...meta);
   }
 
-  info(...args: any[]) {
-    // @ts-ignore
-    this.logger.info(...args);
+  info(message: string, ...meta: any[]) {
+    this.logger.info(message, ...meta);
   }
 
-  error(...args: any[]) {
-    // @ts-ignore
-    this.logger.error(...args);
+  error(message: string, ...meta: any[]) {
+    this.logger.error(message, ...meta);
   }
 
+  /**
+   * use this instead of calling `console.log()`, this way it won't break commands that don't
+   * expect output during the execution.
+   */
   console(msg: string | Error, level = 'info', color?: string) {
     let actualMessage = msg;
     if (msg instanceof Error) {
@@ -158,7 +167,7 @@ class BitLogger {
     this.addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
   }
 
-  addToLoggerAndToBreadCrumb(
+  private addToLoggerAndToBreadCrumb(
     level: string,
     category: string,
     message: string,
@@ -260,9 +269,13 @@ function addBreadCrumb(category: string, message: string, data: Record<string, a
  * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
  */
 if (process.env.BIT_LOG) {
+  writeLogToScreen(process.env.BIT_LOG);
+}
+
+export function writeLogToScreen(levelOrPrefix = '') {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  const isLevel = levels.includes(process.env.BIT_LOG);
-  const prefixes = process.env.BIT_LOG.split(',');
+  const isLevel = levels.includes(levelOrPrefix);
+  const prefixes = levelOrPrefix.split(',');
   const filterPrefix = winston.format((info) => {
     if (isLevel) return info;
     if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
@@ -270,7 +283,7 @@ if (process.env.BIT_LOG) {
   });
   logger.logger.add(
     new winston.transports.Console({
-      level: isLevel ? process.env.BIT_LOG : 'silly',
+      level: isLevel ? levelOrPrefix : 'info',
       format: winston.format.combine(
         filterPrefix(),
         winston.format.printf((info) => info.message)

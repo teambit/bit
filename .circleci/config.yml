@@ -86,6 +86,25 @@ jobs:
           root: .
           paths:
             - react-new-project
+  setup_explorer_project:
+    <<: *defaults
+    steps:
+      -
+        run:
+          name: 'checkout explorer project'
+          command: 'git clone https://github.com/teambit/explorer.git'
+      -
+        restore_cache:
+          key: bitsrc-registry3
+      -
+        run:
+          name: 'install dependencies'
+          command: 'cd explorer && npm i'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - explorer
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -164,7 +183,7 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
-  link_react_new_project:
+  link_react_new_project_and_explorer:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -188,13 +207,30 @@ jobs:
           command: 'cd react-new-project && bit link'
       -
         run:
+          name: 'bit compile in react-new-project'
+          command: 'cd react-new-project && bit compile'
+      -
+        run:
           name: 'link components from react-new-proejct to bit'
           command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        run:
+          name: 'bit link in explorer'
+          command: 'cd explorer && bit link'
+      -
+        run:
+          name: 'bit compile in explorer'
+          command: 'cd explorer && bit compile'
+      -
+        run:
+          name: 'link components from explorer to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
       -
         persist_to_workspace:
           root: .
           paths:
             - react-new-project
+            - explorer
             - bit/node_modules
   validate-git-tag-and-version:
     <<: *defaults
@@ -619,6 +655,14 @@ jobs:
         run: which bit
       -
         run:
+          name: 'link components from explorer to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
+      -
+        run:
+          name: 'link components from react-new-proejct to bit'
+          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
+      -
+        run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
@@ -952,6 +996,10 @@ workflows:
           requires:
             - set_bitsrc_registry
       -
+        setup_explorer_project:
+          requires:
+            - set_bitsrc_registry
+      -
         install_npm_deps:
           requires:
             - checkout_code
@@ -965,10 +1013,11 @@ workflows:
           requires:
             - build
       -
-        link_react_new_project:
+        link_react_new_project_and_explorer:
           requires:
             - configure-bit
             - setup_react_new_project
+            - setup_explorer_project
       -
         unit_test:
           requires:
@@ -976,15 +1025,15 @@ workflows:
       -
         lint:
           requires:
-            - link_react_new_project
+            - link_react_new_project_and_explorer
       -
         check_types:
           requires:
-            - link_react_new_project
+            - link_react_new_project_and_explorer
       -
         generate_types:
           requires:
-            - link_react_new_project
+            - link_react_new_project_and_explorer
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1006,6 +1055,7 @@ workflows:
             - set_ssh_key
             - set_bitsrc_registry
             - configure-bit
+            - link_react_new_project_and_explorer
             # - pack
       -
         performance_e2e_test:
