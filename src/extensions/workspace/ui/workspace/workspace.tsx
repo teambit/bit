@@ -75,6 +75,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
+          {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
           <Route exact path="/">
             <WorkspaceComponentGrid />
           </Route>
