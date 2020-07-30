@@ -15,7 +15,6 @@ export function ChangeLogPage({ versions, className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   if (!versions) return <div>No tags yet</div>;
   const tags = component.tags.toArray();
-  const latest = component.tags.getLatest();
 
   return (
     <div className={classNames(styles.changeLogPage, className)}>

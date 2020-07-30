@@ -14,12 +14,7 @@ export function notFound(req: express.Request, res: express.Response, next: expr
   next(err);
 }
 
-export function errorHandle(
-  err: ResponseError,
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
+export function errorHandle(err: ResponseError, req: express.Request, res: express.Response) {
   res.status(err.status || 500);
   return res.jsonp({
     message: err.message,
