@@ -3,8 +3,6 @@ import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
 import styles from './workspace.module.scss';
-// import { Component } from '../../../component/component.ui';
-// import { defaultComponent } from './default-component';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
