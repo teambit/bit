@@ -5,7 +5,7 @@ import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
 import { isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
-import logger from '../logger/logger';
+import logger, { writeLogToScreen } from '../logger/logger';
 
 export class CommandRunner {
   constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}
@@ -86,6 +86,10 @@ export class CommandRunner {
       logger.shouldWriteToConsole = true;
     } else {
       logger.shouldWriteToConsole = false;
+    }
+    if (this.flags.log) {
+      const logValue = typeof this.flags.log === 'string' ? this.flags.log : '';
+      writeLogToScreen(logValue);
     }
   }
 

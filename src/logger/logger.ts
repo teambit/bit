@@ -269,9 +269,13 @@ function addBreadCrumb(category: string, message: string, data: Record<string, a
  * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
  */
 if (process.env.BIT_LOG) {
+  writeLogToScreen(process.env.BIT_LOG);
+}
+
+export function writeLogToScreen(levelOrPrefix = '') {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  const isLevel = levels.includes(process.env.BIT_LOG);
-  const prefixes = process.env.BIT_LOG.split(',');
+  const isLevel = levels.includes(levelOrPrefix);
+  const prefixes = levelOrPrefix.split(',');
   const filterPrefix = winston.format((info) => {
     if (isLevel) return info;
     if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
@@ -279,7 +283,7 @@ if (process.env.BIT_LOG) {
   });
   logger.logger.add(
     new winston.transports.Console({
-      level: isLevel ? process.env.BIT_LOG : 'silly',
+      level: isLevel ? levelOrPrefix : 'info',
       format: winston.format.combine(
         filterPrefix(),
         winston.format.printf((info) => info.message)

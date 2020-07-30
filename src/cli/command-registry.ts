@@ -97,6 +97,13 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   if (command.remoteOp) {
     command.options.push(['', TOKEN_FLAG, 'authentication token']);
   }
+  if (!command.internal) {
+    command.options.push([
+      '',
+      'log [level]',
+      'print log messages to the screen, options are: [silly, debug, info, warn, error], the default is info',
+    ]);
+  }
 
   if (packageManagerArgs) {
     command._packageManagerArgs = packageManagerArgs;
