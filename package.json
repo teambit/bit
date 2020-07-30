@@ -285,6 +285,7 @@
     "sass-loader": "^8.0.2",
     "sass-lookup": "^3.0.0",
     "semver": "^5.4.1",
+    "semver-intersect": "^1.4.0",
     "serialize-error": "^5.0.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",

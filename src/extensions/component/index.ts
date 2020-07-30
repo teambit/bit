@@ -1,7 +1,6 @@
 export { default as Component } from './component';
 export { default as ComponentFactoryExt, ComponentExtension } from './component.extension';
 export { ComponentID } from './id';
-export { ComponentMap } from './component-map';
 export { default as ComponentFS } from './component-fs';
 export { default as ComponentConfig } from './config';
 export { ComponentFactory } from './component-factory';
