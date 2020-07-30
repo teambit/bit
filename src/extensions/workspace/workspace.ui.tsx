@@ -39,14 +39,8 @@ export class WorkspaceUI {
       path: this.componentUi.routePath,
       children: this.componentUi.getComponentUI(WorkspaceUI.id),
     });
-    // TODO - @ran we need a way to register more than one slot entry per extension.
-    // this.routeSlot.register({
-    //   path: '/',
-    //   exact: true,
-    //   // children: this.componentUi.getComponentUI(WorkspaceUI.id),
-    //   children: <WorkspaceComponentGrid />,
-    // });
   }
+
   get root(): UIRoot {
     return {
       routes: [

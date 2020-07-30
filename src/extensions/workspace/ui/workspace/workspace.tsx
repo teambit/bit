@@ -10,7 +10,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { Corner } from '../../../stage-components/corner';
 import { SideBar } from '../../../stage-components/side-bar';
-import { WorkspaceComponentGrid } from './workspace-grid';
+import { WorkspaceOverview } from './workspace-overview';
 
 const WORKSPACE = gql`
   {
@@ -75,7 +75,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
           <SlotRouter slot={routeSlot} />
           {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
           <Route exact path="/">
-            <WorkspaceComponentGrid />
+            <WorkspaceOverview />
           </Route>
         </div>
       </div>

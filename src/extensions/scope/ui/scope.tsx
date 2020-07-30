@@ -2,7 +2,7 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { Route } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
-import { ScopeComponentGrid } from './scope-grid';
+import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeModel } from './scope-model';
 import { useDataQuery } from '../../ui/ui/data/use-data-query';
@@ -54,7 +54,7 @@ export function Scope({ routeSlot }: ScopeProps) {
           {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
           {/* TODO - scope still uses ComponentMeta so we dont get all the data here */}
           <Route exact path="/">
-            <ScopeComponentGrid />
+            <ScopeOverview />
           </Route>
         </div>
       </div>
