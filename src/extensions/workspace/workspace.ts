@@ -188,7 +188,7 @@ export class Workspace implements ComponentFactory {
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return new Network(
       capsuleList,
       graph,

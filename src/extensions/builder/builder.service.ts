@@ -35,7 +35,7 @@ export class BuilderService implements EnvService {
 
     const components = await buildPipe.execute(buildContext);
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return { id: context.id, components };
   }
 }

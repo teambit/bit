@@ -33,7 +33,8 @@ export class LogPublisher {
     return new LongProcessLogger(this, this.extensionName, processDescription, totalItems);
   }
   /**
-   * status line is the last line on the screen. it gets changed every time this method is called
+   * single status-line on the bottom of the screen.
+   * the text is replaced every time this method is called.
    */
   setStatusLine(text: string) {
     loader.setTextAndRestart(text);
