@@ -16,7 +16,14 @@ export function notFound(req: express.Request, res: express.Response, next: expr
   next(err);
 }
 
-export function errorHandle(err: ResponseError, req: express.Request, res: express.Response) {
+// DO not remove unused next, it's needed for express to catch errors!
+// eslint-disable-next-line promise/no-callback-in-promise
+export function errorHandle(
+  err: ResponseError,
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   res.status(err.status || 500);
   return res.jsonp({
     message: err.message,
