@@ -1,7 +1,7 @@
 import { EnvService, ExecutionContext } from '../environments';
 import { Workspace } from '../workspace';
 import { BuildPipe } from './build-pipe';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 import { BuildTask } from './types';
 import { TaskSlot } from './builder.extension';
 
@@ -15,7 +15,7 @@ export class BuilderService implements EnvService {
     /**
      * logger extension.
      */
-    private logger: LogPublisher,
+    private logger: Logger,
 
     /**
      * task slot (e.g tasks registered by other extensions.).

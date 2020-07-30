@@ -1,4 +1,4 @@
-import type { LogPublisher } from './log-publisher';
+import type { Logger } from './logger';
 
 /**
  * use it for a long running process. upon creation it logs the `processDescription`.
@@ -11,7 +11,7 @@ import type { LogPublisher } from './log-publisher';
  */
 export class LongProcessLogger {
   constructor(
-    private logPublisher: LogPublisher,
+    private logPublisher: Logger,
     private extensionName: string,
     private processDescription: string,
     private totalItems?: number,
@@ -23,25 +23,25 @@ export class LongProcessLogger {
 
   logProgress(itemName = '') {
     this.currentItem += 1;
-    const message = `${this.extensionName}, ${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
+    const message = `${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
     this.logPublisher.debug(message);
-    this.logPublisher.setStatusLine(message);
+    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
   }
 
   end() {
     const duration = new Date().getTime() - this.startTime;
-    const message = `${this.extensionName}, ${this.processDescription} (completed in ${duration}ms)`;
+    const message = `${this.processDescription} (completed in ${duration}ms)`;
     this.logAndConsole(message);
   }
 
   private start() {
     const totalItemsStr = this.totalItems ? `(total: ${this.totalItems})` : '';
-    const message = `${this.extensionName}, ${this.processDescription} ${totalItemsStr}`;
+    const message = `${this.processDescription} ${totalItemsStr}`;
     this.logAndConsole(message);
   }
 
   private logAndConsole(message: string) {
     this.logPublisher.info(message);
-    this.logPublisher.setStatusLine(message);
+    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
   }
 }

@@ -7,7 +7,7 @@ import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../..
 import GeneralError from '../../error/general-error';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { Command, CommandOptions } from '../cli';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 
 type TagOptions = {
   message?: string;
@@ -51,7 +51,7 @@ export class TagCmd implements Command {
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(private logger: LogPublisher) {}
+  constructor(private logger: Logger) {}
 
   async action(
     [id, version]: string[],

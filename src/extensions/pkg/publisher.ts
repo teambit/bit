@@ -2,7 +2,7 @@ import execa from 'execa';
 import Bluebird from 'bluebird';
 import { IsolatorExtension, Capsule } from '../isolator';
 import { Scope } from '../../scope';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 import { BitId, BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
@@ -21,7 +21,7 @@ export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
   constructor(
     private isolator: IsolatorExtension,
-    private logger: LogPublisher,
+    private logger: Logger,
     private scope: Scope,
     private workspace: Workspace,
     public options: PublisherOptions = {}

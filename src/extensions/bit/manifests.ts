@@ -11,7 +11,7 @@ import { FlowsExt } from '../flows';
 // import { GitExt } from '../git';
 import { InsightsExt } from '../insights';
 import { IsolatorExtension } from '../isolator';
-import { LoggerExt } from '../logger';
+import { LoggerExtension } from '../logger';
 import { PkgExtension } from '../pkg';
 import { ReactExtension } from '../react';
 import { ScopeExtension } from '../scope';
@@ -49,7 +49,7 @@ export const manifestsMap = {
   [DependencyResolverExtension.id]: DependencyResolverExtension,
   [InsightsExt.name]: InsightsExt,
   [IsolatorExtension.id]: IsolatorExtension,
-  [LoggerExt.name]: LoggerExt,
+  [LoggerExtension.id]: LoggerExtension,
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
   [ReactExtension.name]: ReactExtension,

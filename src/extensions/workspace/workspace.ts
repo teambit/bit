@@ -17,7 +17,7 @@ import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
@@ -80,7 +80,7 @@ export class Workspace implements ComponentFactory {
 
     private variants: Variants,
 
-    private logger: LogPublisher,
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 

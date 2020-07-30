@@ -4,7 +4,7 @@ import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
-import { Logger } from '../logger';
+import { Logger, LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
@@ -31,7 +31,7 @@ export type WorkspaceDeps = [
   IsolatorExtension,
   DependencyResolverExtension,
   Variants,
-  Logger,
+  LoggerExtension,
   GraphQLExtension,
   UIExtension,
   BundlerExtension
@@ -81,7 +81,7 @@ export default async function provideWorkspace(
         isolator,
         dependencyResolver,
         variants,
-        logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
+        logger.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony,
         onComponentLoadSlot,

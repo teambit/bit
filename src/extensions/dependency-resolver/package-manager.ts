@@ -2,18 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
-import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
-import { Logger, LogPublisher } from '../logger';
 import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import { installOpts } from './types';
+import { Logger } from '../logger';
 
 export default class PackageManager {
-  private emitter = new EventEmitter();
   constructor(readonly packageManagerName: string, readonly logger: Logger) {}
 
   get name() {
@@ -39,8 +37,7 @@ export default class PackageManager {
   }
   async capsulesInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
-    const logPublisher = this.logger.createLogPublisher('packageManager');
-    const longProcessLogger = logPublisher.createLongProcessLogger('installing capsules', capsules.length);
+    const longProcessLogger = this.logger.createLongProcessLogger('installing capsules', capsules.length);
     if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async (capsule) => {
@@ -60,12 +57,12 @@ export default class PackageManager {
           }
         };
         const installProc = getExecCall();
-        logPublisher.info(`${componentId}, ${packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'}`); // TODO: better
-        installProc.stdout!.on('data', (d) => logPublisher.info(`${componentId}, ${d.toString()}`));
-        installProc.stderr!.on('data', (d) => logPublisher.warn(`${componentId}, ${d.toString()}`));
+        this.logger.info(`${componentId}, ${packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'}`); // TODO: better
+        installProc.stdout!.on('data', (d) => this.logger.info(`${componentId}, ${d.toString()}`));
+        installProc.stderr!.on('data', (d) => this.logger.warn(`${componentId}, ${d.toString()}`));
         installProc.on('error', (e) => {
           console.error(e); // eslint-disable-line no-console
-          logPublisher.error(`${componentId}, ${e}`);
+          this.logger.error(`${componentId}, ${e}`);
         });
         await installProc;
         linkBitBinInCapsule(capsule);
@@ -79,8 +76,6 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    // TODO: remove this hack once harmony supports ownExtensionName
-    const logPublisher: LogPublisher = this.logger.createLogPublisher('packageManager');
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'yarn') {
       const child = execa('yarn', [], { cwd: folder, stdio: 'pipe' });
@@ -90,12 +85,12 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      logPublisher.info(`${folder} $ npm install`);
+      this.logger.info(`${folder} $ npm install`);
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', (d) => logPublisher.info(`${folder}, ${d.toString()}`));
+        child.stdout.on('data', (d) => this.logger.info(`${folder}, ${d.toString()}`));
         // @ts-ignore
-        child.stderr.on('data', (d) => logPublisher.warn(`${folder}, ${d.toString()}`));
+        child.stderr.on('data', (d) => this.logger.warn(`${folder}, ${d.toString()}`));
         child.on('error', (e) => {
           reject(e);
         });

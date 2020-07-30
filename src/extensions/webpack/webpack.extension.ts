@@ -5,7 +5,7 @@ import { DevServer, BundlerContext, BundlerExtension, DevServerContext } from '.
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
-import { LoggerExt, Logger, LogPublisher } from '../logger';
+import { LoggerExtension, Logger } from '../logger';
 
 export class WebpackExtension {
   constructor(
@@ -22,7 +22,7 @@ export class WebpackExtension {
     /**
      * Logger extension
      */
-    private logger: LogPublisher
+    private logger: Logger
   ) {}
 
   /**
@@ -52,10 +52,10 @@ export class WebpackExtension {
 
   static slots = [];
 
-  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExt];
+  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExtension];
 
-  static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, Logger]) {
-    const logPublisher = logger.createLogPublisher(WebpackExtension.id);
+  static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, LoggerExtension]) {
+    const logPublisher = logger.createLogger(WebpackExtension.id);
     return new WebpackExtension(workspace, bundler, logPublisher);
   }
 }

@@ -1,7 +1,7 @@
 import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
 import { BuildTask, BuildContext } from './types';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 import loader from '../../cli/loader';
 
 export class BuildPipe {
@@ -10,7 +10,7 @@ export class BuildPipe {
      * array of services to apply on the components.
      */
     readonly tasks: BuildTask[],
-    readonly logger: LogPublisher
+    readonly logger: Logger
   ) {}
 
   /**
@@ -35,7 +35,7 @@ export class BuildPipe {
   /**
    * create a build pipe from an array of tasks.
    */
-  static from(tasks: BuildTask[], logger: LogPublisher) {
+  static from(tasks: BuildTask[], logger: Logger) {
     return new BuildPipe(tasks, logger);
   }
 }
