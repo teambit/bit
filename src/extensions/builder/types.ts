@@ -27,7 +27,7 @@ export interface BuildTask {
   extensionId: string;
   /**
    * description of what the task does.
-   * if available, the logger will log it and the reporter will show it in the status-line.
+   * if available, the logger will log it show it in the status-line.
    * it's helpful to distinguish multiple tasks of the same extension.
    */
   description?: string;

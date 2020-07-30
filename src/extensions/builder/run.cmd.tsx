@@ -2,9 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
-import { Reporter } from '../reporter';
-import { LogPublisher } from '../types';
-import loader from '../../cli/loader';
+import { LogPublisher } from '../logger';
 
 export class BuilderCmd implements Command {
   name = 'run [pattern]';
@@ -15,22 +13,15 @@ export class BuilderCmd implements Command {
   shortDescription = '';
   options = [] as CommandOptions;
 
-  constructor(
-    private builder: BuilderExtension,
-    private workspace: Workspace,
-    private logger: LogPublisher,
-    private reporter: Reporter
-  ) {}
+  constructor(private builder: BuilderExtension, private workspace: Workspace, private logger: LogPublisher) {}
 
   async report([userPattern]: [string]): Promise<string> {
-    this.reporter.start();
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const results = await this.builder.build(components);
     longProcessLogger.end();
-    loader.succeed();
-    this.reporter.end();
+    this.logger.consoleSuccess();
 
     return chalk.green(`the build has been completed. total: ${results.length} environments`);
   }

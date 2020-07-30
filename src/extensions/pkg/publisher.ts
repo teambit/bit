@@ -1,7 +1,7 @@
 import execa from 'execa';
 import { IsolatorExtension, Capsule } from '../isolator';
 import { Scope } from '../../scope';
-import { LogPublisher } from '../types';
+import { LogPublisher } from '../logger';
 import { BitId, BitIds } from '../../bit-id';
 import { ComponentID } from '../component';
 import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
@@ -63,14 +63,14 @@ export class Publisher {
     try {
       // @todo: once capsule.exec works properly, replace this
       const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
-      this.logger.debug(componentIdStr, `successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
-      this.logger.debug(componentIdStr, `stdout: ${stdout}`);
-      this.logger.debug(componentIdStr, `stderr: ${stderr}`);
+      this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
+      this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
+      this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
       data = stdout;
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
-      this.logger.error(componentIdStr, errorMsg);
-      if (err.stderr) this.logger.error(componentIdStr, err.stderr);
+      this.logger.error(`${componentIdStr}, ${errorMsg}`);
+      if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
     const id = capsule.component.id;
@@ -84,7 +84,7 @@ export class Publisher {
       return [];
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
-    this.logger.debug('publisher', `total ${idsToPublish.length} to publish out of ${componentIds.length}`);
+    this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
     const network = await this.workspace.createNetwork(idsToPublish);
     return network.seedersCapsules;
   }

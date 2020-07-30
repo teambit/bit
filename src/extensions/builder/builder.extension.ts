@@ -6,7 +6,6 @@ import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { CLIExtension } from '../cli';
-import { ReporterExt, Reporter } from '../reporter';
 import { LoggerExt, Logger } from '../logger';
 import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
@@ -92,19 +91,17 @@ export class BuilderExtension {
     Environments,
     WorkspaceExt,
     ScopeExtension,
-    ReporterExt,
     LoggerExt,
     CoreExt,
     GraphQLExtension,
     ComponentExtension,
   ];
 
-  static async provider([cli, envs, workspace, scope, reporter, logger, core, graphql]: [
+  static async provider([cli, envs, workspace, scope, logger, core, graphql]: [
     CLIExtension,
     Environments,
     Workspace,
     ScopeExtension,
-    Reporter,
     Logger,
     Core,
     GraphQLExtension
@@ -116,8 +113,8 @@ export class BuilderExtension {
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new BuilderCmd(builder, workspace, logPublisher, reporter));
-    cli.register(new TagCmd(logPublisher, reporter));
+    cli.register(new BuilderCmd(builder, workspace, logPublisher));
+    cli.register(new TagCmd(logPublisher));
     return builder;
   }
 }

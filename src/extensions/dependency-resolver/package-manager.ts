@@ -60,13 +60,12 @@ export default class PackageManager {
           }
         };
         const installProc = getExecCall();
-        logPublisher.info(componentId, packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'); // TODO: better
-        logPublisher.info(componentId, '');
-        installProc.stdout!.on('data', (d) => logPublisher.info(componentId, d.toString()));
-        installProc.stderr!.on('data', (d) => logPublisher.warn(componentId, d.toString()));
+        logPublisher.info(`${componentId}, ${packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'}`); // TODO: better
+        installProc.stdout!.on('data', (d) => logPublisher.info(`${componentId}, ${d.toString()}`));
+        installProc.stderr!.on('data', (d) => logPublisher.warn(`${componentId}, ${d.toString()}`));
         installProc.on('error', (e) => {
-          console.log('error:', e); // eslint-disable-line no-console
-          logPublisher.error(componentId, e);
+          console.error(e); // eslint-disable-line no-console
+          logPublisher.error(`${componentId}, ${e}`);
         });
         await installProc;
         linkBitBinInCapsule(capsule);
@@ -91,13 +90,12 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      logPublisher.info(folder, '$ npm install');
-      logPublisher.info(folder, '');
+      logPublisher.info(`${folder} $ npm install`);
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', (d) => logPublisher.info(folder, d.toString()));
+        child.stdout.on('data', (d) => logPublisher.info(`${folder}, ${d.toString()}`));
         // @ts-ignore
-        child.stderr.on('data', (d) => logPublisher.warn(folder, d.toString()));
+        child.stderr.on('data', (d) => logPublisher.warn(`${folder}, ${d.toString()}`));
         child.on('error', (e) => {
           reject(e);
         });

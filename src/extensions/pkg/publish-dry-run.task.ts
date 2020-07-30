@@ -1,7 +1,7 @@
 import { BuildContext } from '../builder';
 import { BuildTask, BuildResults } from '../builder';
 import { Publisher } from './publisher';
-import { LogPublisher } from '../types';
+import { LogPublisher } from '../logger';
 
 /**
  * publish build task is running "publish --dry-run" to avoid later npm errors during export
@@ -14,10 +14,7 @@ export class PublishDryRunTask implements BuildTask {
     this.publisher.options.dryRun = true;
     const capsules = context.capsuleGraph.capsules.getAllCapsules();
     const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.config.extensions));
-    this.logger.info(
-      'dry-run',
-      `going to run publish dry-run on ${capsulesToPublish.length} out of ${capsules.length}`
-    );
+    this.logger.info(`going to run publish dry-run on ${capsulesToPublish.length} out of ${capsules.length}`);
     const results = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     return {
       components: results,
