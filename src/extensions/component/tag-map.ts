@@ -1,4 +1,6 @@
 import { SemVer } from 'semver';
+import latestSemver from 'latest-semver';
+import { CouldNotFindLatest } from './exceptions';
 // eslint-disable-next-line import/no-cycle
 import { Tag } from './tag';
 import { Hash } from './hash';
@@ -10,6 +12,16 @@ export class TagMap extends Map<SemVer, Tag> {
   byHash(hash: Hash) {
     const tag = Array.from(this.values()).find((currTag) => currTag.snap.hash === hash);
     return tag;
+  }
+
+  /**
+   * get the latest semver from the tag map.
+   */
+  getLatest() {
+    const versions = this.toArray().map((tag) => tag.version.raw);
+    const latest = latestSemver(versions);
+    if (!latest) throw new CouldNotFindLatest(versions);
+    return latestSemver(versions);
   }
 
   /**

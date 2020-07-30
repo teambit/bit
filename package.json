@@ -202,6 +202,7 @@
     "jest-watch-typeahead": "^0.6.0",
     "jfs": "^0.3.0",
     "join-path": "^1.1.1",
+    "latest-semver": "^3.0.0",
     "level-mem": "^5.0.1",
     "level-party": "^4.0.0",
     "lodash": "^4.17.15",
