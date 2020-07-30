@@ -22,7 +22,9 @@ export class WorkspaceUI {
      * component ui extension.
      */
     private componentUi: ComponentUI
-  ) {}
+  ) {
+    this.registerExplicitRoutes();
+  }
 
   /**
    * register a route to the workspace.
@@ -32,12 +34,20 @@ export class WorkspaceUI {
     return this;
   }
 
-  get root(): UIRoot {
+  private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
       children: this.componentUi.getComponentUI(WorkspaceUI.id),
     });
-
+    // TODO - @ran we need a way to register more than one slot entry per extension.
+    // this.routeSlot.register({
+    //   path: '/',
+    //   exact: true,
+    //   // children: this.componentUi.getComponentUI(WorkspaceUI.id),
+    //   children: <WorkspaceComponentGrid />,
+    // });
+  }
+  get root(): UIRoot {
     return {
       routes: [
         {

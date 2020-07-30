@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
+import { Route } from 'react-router-dom';
 import 'reset-css';
 import styles from './workspace.module.scss';
 // import { Component } from '../../../component/component.ui';
@@ -11,7 +12,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { Corner } from '../../../stage-components/corner';
 import { SideBar } from '../../../stage-components/side-bar';
-import { WorkspaceComponentGrid } from './workspace-grid/workspace-grid';
+import { WorkspaceComponentGrid } from './workspace-grid';
 
 const WORKSPACE = gql`
   {
@@ -74,7 +75,9 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
-          <WorkspaceComponentGrid components={workspace.components} />
+          <Route exact path="/">
+            <WorkspaceComponentGrid />
+          </Route>
         </div>
       </div>
     </WorkspaceProvider>
