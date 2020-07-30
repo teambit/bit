@@ -1,1 +1,1 @@
-export { errorHandle, notFound } from './error';
+export { catchErrors, errorHandle, notFound } from './error';
