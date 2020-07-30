@@ -3,7 +3,7 @@ import workspaceProvider from './workspace.provider';
 import { ScopeExtension } from '../scope';
 import { ComponentExtension } from '../component';
 import { IsolatorExtension } from '../isolator';
-import { LoggerExt } from '../logger';
+import { LoggerExtension } from '../logger';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
@@ -23,7 +23,7 @@ export default {
     IsolatorExtension,
     DependencyResolverExtension,
     VariantsExt,
-    LoggerExt,
+    LoggerExtension,
     GraphQLExtension,
     UIExtension,
     BundlerExtension,
