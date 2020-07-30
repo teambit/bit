@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { Icon } from '@bit/bit.evangelist.elements.icon';
 import styles from './copy-box.module.scss';
 
-type CopyBoxProps = { children: string } & React.HTMLAttributes<HTMLDivElement>;
+export type CopyBoxProps = { children: string } & React.HTMLAttributes<HTMLDivElement>;
 
 export function CopyBox({ children, className, ...rest }: CopyBoxProps) {
   const handleClick = () => {

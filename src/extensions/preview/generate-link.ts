@@ -1,8 +1,8 @@
 // :TODO refactor to building an AST and generate source code based on it.
 export function generateLink(prefix: string, componentMap: any, defaultModule?: string): string {
   return `
-import { linkModules } from './preview.preview';
-import harmony from '@teambit/harmony';
+import { linkModules } from '${require.resolve('./preview.preview')}';
+import harmony from '${require.resolve('@teambit/harmony')}';
 ${defaultModule ? `const defaultModule = require('${defaultModule}'` : ''});
 
 linkModules('${prefix}', defaultModule, {

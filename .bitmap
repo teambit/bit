@@ -11,7 +11,8 @@
         ],
         "mainFile": "src/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type.js",
         "origin": "AUTHORED",
-        "exported": true
+        "exported": true,
+        "lanes": []
     },
-    "version": "14.7.5-dev.1"
+    "version": "14.8.8"
 }

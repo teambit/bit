@@ -7,7 +7,6 @@ const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
 const html = require('./html');
-
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const sockPort = process.env.WDS_SOCKET_PORT;

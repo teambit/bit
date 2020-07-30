@@ -14,9 +14,20 @@ export interface BuildContext extends ExecutionContext {
   capsuleGraph: Network;
 }
 
+export type ArtifactProps = {
+  dirName: string;
+};
+
+export type ComponentResult = {
+  id: ComponentID;
+  data?: any;
+  errors: Array<Error | string>;
+  warning?: string[];
+};
+
 export interface BuildResults {
-  components: Array<{ id: ComponentID; data?: any; errors: Array<Error | string>; warning?: string[] }>;
-  artifacts: Array<{ dirName: string }>;
+  components: ComponentResult[];
+  artifacts: ArtifactProps[];
 }
 
 export interface BuildTask {

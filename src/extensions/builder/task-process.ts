@@ -87,6 +87,6 @@ export class TaskProcess {
  * returns the paths inside the capsule
  */
 async function getFilesFromCapsule(capsule: Capsule, dir: string): Promise<string[]> {
-  const files = glob.sync('*', { cwd: path.join(capsule.wrkDir, dir), nodir: true });
+  const files = glob.sync('**', { cwd: path.join(capsule.wrkDir, dir), nodir: true });
   return files.map((file) => path.join(dir, file));
 }
