@@ -606,8 +606,6 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'cd bit && ls -la node_modules/@bit'
-      -
         run: 'sudo npm i -g yarn'
       -
         run:
@@ -655,19 +653,6 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
-      -
-        run: 'cd bit && ls -la node_modules/@bit'
-
-      -
-        run:
-          name: 'link components from explorer to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
-      -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
-      -
-        run: 'cd bit && ls -la node_modules/@bit'
       -
         run:
           name: 'link components from explorer to bit'
