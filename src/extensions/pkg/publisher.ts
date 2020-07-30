@@ -1,4 +1,5 @@
 import execa from 'execa';
+import Bluebird from 'bluebird';
 import { IsolatorExtension, Capsule } from '../isolator';
 import { Scope } from '../../scope';
 import { LogPublisher } from '../logger';
@@ -48,8 +49,13 @@ export class Publisher {
   }
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
-    const resultsP = capsules.map((capsule) => this.publishOneCapsule(capsule));
-    return Promise.all(resultsP);
+    const longProcessLogger = this.logger.createLongProcessLogger('publish components', capsules.length);
+    const results = Bluebird.mapSeries(capsules, (capsule) => {
+      longProcessLogger.logProgress(capsule.component.id.toString());
+      return this.publishOneCapsule(capsule);
+    });
+    longProcessLogger.end();
+    return results;
   }
 
   private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
