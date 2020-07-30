@@ -1,5 +1,5 @@
 import mime from 'mime';
-import { Route, Request, Response, NextFunction } from '../express';
+import { Route, Request, Response } from '../express';
 import { PreviewExtension } from './preview.extension';
 
 export class PreviewRoute implements Route {
