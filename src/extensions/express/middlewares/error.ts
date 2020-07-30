@@ -6,6 +6,8 @@ interface ResponseError {
 }
 
 export const catchErrors = (action: any) => (req: express.Request, res: express.Response, next: express.NextFunction) =>
+  // TODO: @guy please take care of it
+  // eslint-disable-next-line promise/no-callback-in-promise
   action(req, res, next).catch(next);
 
 export function notFound(req: express.Request, res: express.Response, next: express.NextFunction) {
