@@ -4,7 +4,7 @@ import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
-import { Logger, LoggerExtension } from '../logger';
+import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';

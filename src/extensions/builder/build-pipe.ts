@@ -2,7 +2,6 @@ import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
 import { BuildTask, BuildContext } from './types';
 import { Logger } from '../logger';
-import loader from '../../cli/loader';
 
 export class BuildPipe {
   constructor(

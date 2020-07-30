@@ -35,7 +35,6 @@ import { OnComponentChange, OnComponentChangeResult } from './on-component-chang
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
-import loader from '../../cli/loader';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
 
