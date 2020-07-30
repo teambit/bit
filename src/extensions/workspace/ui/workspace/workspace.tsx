@@ -2,8 +2,6 @@ import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
 import 'reset-css';
 import styles from './workspace.module.scss';
-// import { Component } from '../../../component/component.ui';
-// import { defaultComponent } from './default-component';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
@@ -11,6 +9,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { Corner } from '../../../stage-components/corner';
 import { SideBar } from '../../../stage-components/side-bar';
+import { WorkspaceComponentGrid } from './workspace-grid/workspace-grid';
 
 const WORKSPACE = gql`
   {
@@ -32,6 +31,10 @@ const WORKSPACE = gql`
         }
         deprecation {
           isDeprecate
+        }
+        server {
+          env
+          url
         }
         env {
           id
@@ -69,6 +72,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
+          <WorkspaceComponentGrid components={workspace.components} />
         </div>
       </div>
     </WorkspaceProvider>
