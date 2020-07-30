@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [14.8.9-dev.1] - 2020-07-30
+
+- first version for harmony beta
+
+
 ## [[14.8.8] - 2020-07-13](https://github.com/teambit/bit/releases/tag/v14.8.8)
 
 ### Bug Fixes

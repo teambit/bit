@@ -17,4 +17,8 @@ export class ScopeModel {
       components.map((component) => ComponentMeta.from(component))
     );
   }
+
+  static empty() {
+    return new ScopeModel('', []);
+  }
 }
