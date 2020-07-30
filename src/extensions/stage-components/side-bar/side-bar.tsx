@@ -39,7 +39,7 @@ export function SideBar({ components, selected, ...rest }: SideBarProps) {
     <div {...rest}>
       <OverviewLink />
       <div className={styles.inputWrapper}>
-        <Input placeholder="Components" error={false} className={styles.input} />
+        <Input placeholder="Search" error={false} className={styles.input} />
         <Icon of="discovery" className={styles.searchIcon} />
       </div>
       <ComponentTree selected={selected} onSelect={handleSelect} components={componentsData} />

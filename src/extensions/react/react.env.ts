@@ -6,10 +6,12 @@ import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
-import { DevServer, DevServerContext } from '../bundler';
+import { DevServer, BundlerContext, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
+import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
+import { Bundler } from '../bundler/bundler';
 import { pathNormalizeToLinux } from '../../utils';
 
 /**
@@ -86,6 +88,10 @@ export class ReactEnv implements Environment {
     });
 
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+  }
+
+  async getBundler(context: BundlerContext): Promise<Bundler> {
+    return this.webpack.createBundler(context, previewConfigFactory());
   }
 
   /**
