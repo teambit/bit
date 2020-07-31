@@ -2,7 +2,7 @@ import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { ScopeExtension } from '../scope';
 import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
-import { loadConsumerIfExist } from '../../consumer';
+import { loadConsumerIfExist, Consumer } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
@@ -62,65 +62,69 @@ export default async function provideWorkspace(
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
 ) {
+  const consumer = await getConsumer();
+  if (!consumer) return undefined;
+  const workspace = new Workspace(
+    config,
+    consumer,
+    scope,
+    component,
+    isolator,
+    dependencyResolver,
+    variants,
+    logger.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
+    undefined,
+    harmony,
+    onComponentLoadSlot,
+    onComponentChangeSlot
+  );
+
+  ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
+    const componentId = await workspace.resolveComponentId(id);
+    // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
+    // which in turn run this event, which will make and infinite loop
+    const componentFromScope = await workspace.scope.get(componentId);
+    const extensions = await workspace.componentExtensions(componentId, componentFromScope);
+    const defaultScope = await workspace.componentDefaultScope(componentId);
+    await workspace.loadExtensions(extensions);
+    return {
+      defaultScope,
+      extensions,
+    };
+  });
+
+  const workspaceSchema = getWorkspaceSchema(workspace);
+  ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
+  graphql.register(workspaceSchema);
+  cli.register(new InstallCmd(workspace));
+  cli.register(new EjectConfCmd(workspace));
+
+  const capsuleListCmd = new CapsuleListCmd(isolator);
+  const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
+  cli.register(capsuleListCmd);
+  cli.register(capsuleCreateCmd);
+  const watcher = new Watcher(workspace);
+  cli.register(new WatchCommand(watcher));
+  component.registerHost(workspace);
+
+  return workspace;
+}
+
+async function getConsumer(): Promise<Consumer | undefined> {
   // don't use loadConsumer() here because the consumer might not be available.
+  // specifically, commands with `skipWorkspace=true` don't require the consumer.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
-  // open bit init --reset.
+  // using "bit init --reset".
   // keep in mind that here is the first place where the consumer is loaded.
   // an unresolved issue here is when running tasks, such as "bit run build" outside of a consumer.
   // we'll have to fix this asap.
   try {
-    const consumer = await loadConsumerIfExist();
-
-    if (consumer) {
-      const workspace = new Workspace(
-        config,
-        consumer,
-        scope,
-        component,
-        isolator,
-        dependencyResolver,
-        variants,
-        logger.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
-        undefined,
-        harmony,
-        onComponentLoadSlot,
-        onComponentChangeSlot
-      );
-
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
-        const componentId = await workspace.resolveComponentId(id);
-        // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
-        // which in turn run this event, which will make and infinite loop
-        const componentFromScope = await workspace.scope.get(componentId);
-        const extensions = await workspace.componentExtensions(componentId, componentFromScope);
-        const defaultScope = await workspace.componentDefaultScope(componentId);
-        await workspace.loadExtensions(extensions);
-        return {
-          defaultScope,
-          extensions,
-        };
-      });
-
-      const workspaceSchema = getWorkspaceSchema(workspace);
-      ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
-      graphql.register(workspaceSchema);
-      cli.register(new InstallCmd(workspace));
-      cli.register(new EjectConfCmd(workspace));
-
-      const capsuleListCmd = new CapsuleListCmd(isolator);
-      const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
-      cli.register(capsuleListCmd);
-      cli.register(capsuleCreateCmd);
-      const watcher = new Watcher(workspace);
-      cli.register(new WatchCommand(watcher));
-      component.registerHost(workspace);
-
-      return workspace;
-    }
-
-    return undefined;
+    return await loadConsumerIfExist();
   } catch (err) {
-    return undefined;
+    if (process.argv.includes('init') && !process.argv.includes('-r')) {
+      return undefined;
+    }
+    throw err;
   }
 }
