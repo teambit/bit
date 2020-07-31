@@ -6,6 +6,8 @@ import { Command } from '../cli';
 import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
 
+const chalk = require('chalk');
+
 export class TestCmd implements Command {
   // TODO: @david please call legacy tester in case of legacy workspace.
   name = 'test [pattern]';
@@ -20,26 +22,23 @@ export class TestCmd implements Command {
 
   async render([userPattern]: [string]) {
     const pattern = userPattern && userPattern.toString();
-    const results = await this.tester.test(
-      pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list()
+    const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
+
+    // TODO: @david please add logger here instead.
+    // eslint-disable-next-line no-console
+    console.log(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
+    const envs = await this.tester.test(components);
+
+    return (
+      <Box>
+        {envs.map((env, key) => {
+          return <Env key={key} env={env.env} results={env.res} />;
+        })}
+      </Box>
     );
-
-    return <Envs envs={results} />;
   }
-}
-
-function Envs({ envs }: any) {
-  return (
-    <Box>
-      {envs.map((env, key) => {
-        return <Env key={key} env={env.env} results={env.res} />;
-      })}
-    </Box>
-  );
 }
 
 function Env({ env }: any) {
   return <Color cyan>{env}</Color>;
 }
-
-// function TestResults() {}
