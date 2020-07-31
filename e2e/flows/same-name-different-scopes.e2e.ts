@@ -12,15 +12,14 @@ describe('two components with the same name but different scope-name', function 
     helper.scopeHelper.destroy();
   });
   describe('importing from another scope', () => {
-    // let anotherScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
-      // anotherScope = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
+      helper.command.tagScope('0.0.2');
       helper.command.exportComponent('bar/foo', scopeName);
 
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -29,7 +28,7 @@ describe('two components with the same name but different scope-name', function 
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.runCmd(`bit import ${scopeName}/bar/foo --objects`);
     });
-    it.only('bit status should show the component as new', () => {
+    it('bit status should show the component as new', () => {
       const status = helper.command.statusJson();
       expect(status.newComponents).to.have.lengthOf(1);
     });
