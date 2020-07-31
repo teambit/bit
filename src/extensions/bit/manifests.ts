@@ -29,6 +29,7 @@ import { CompositionsExtension } from '../compositions';
 import { DdeprecationExtension as DeprecationExtension } from '../deprecation';
 import { DefaultEnvExtension } from '../default-env/default-env.extension';
 import { ExpressExtension } from '../express';
+import { AspectExtension } from '../aspect';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -67,4 +68,5 @@ export const manifestsMap = {
   [DeprecationExtension.name]: DeprecationExtension,
   [DefaultEnvExtension.id]: DefaultEnvExtension,
   [ExpressExtension.id]: ExpressExtension,
+  [AspectExtension.id]: AspectExtension,
 };

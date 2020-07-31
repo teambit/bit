@@ -55,6 +55,13 @@ export class ReactEnv implements Environment {
     private tester: TesterExtension
   ) {}
 
+  private _tsconfig: any;
+
+  setTsConfig(tsconfig: any) {
+    this._tsconfig = tsconfig;
+    return this;
+  }
+
   /**
    * returns a component tester.
    */
@@ -65,9 +72,9 @@ export class ReactEnv implements Environment {
   /**
    * returns a component compiler.
    */
-  getCompiler(): Compiler {
+  getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = require('./typescript/tsconfig.json');
+    const tsconfig = targetConfig || this._tsconfig || require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
