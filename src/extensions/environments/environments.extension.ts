@@ -109,7 +109,7 @@ export class Environments {
 
     allNames.forEach((key: string) => {
       const fn = sourceEnv[key];
-      if (!fn.bind || targetEnv[key]) return;
+      if (!fn || !fn.bind || targetEnv[key]) return;
       targetEnv[key] = fn.bind(sourceEnv);
     });
 
