@@ -13,16 +13,9 @@ export function componentSchema(componentExtension: ComponentExtension) {
         scope: String
       }
 
-      type Version {
-        major: Int
-        minor: Int
-        patch: Int
-        version: String
-      }
-
       type Tag {
         # semver assigned to the tag.
-        version: Version!
+        version: String!
         # tag snapshot.
 
         snap: Snap!
@@ -97,7 +90,7 @@ export function componentSchema(componentExtension: ComponentExtension) {
       Component: {
         id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
-        headTag: (component: Component) => component.headTag,
+        headTag: (component: Component) => component.headTag?.toObject(),
         latest: (component: Component) => component.latest,
         tags: (component) => {
           // graphql doesn't support map types
