@@ -91,6 +91,9 @@ export class ReactEnv implements Environment {
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
   }
 
+  /**
+   * get an instance of a bundler for generating component preview.
+   */
   async getBundler(context: BundlerContext): Promise<Bundler> {
     return this.webpack.createBundler(context, previewConfigFactory());
   }

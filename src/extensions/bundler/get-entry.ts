@@ -21,17 +21,17 @@ export async function getEntry(
   uiRoot: ComponentDir,
   runtimeSlot: BrowserRuntimeSlot
 ): Promise<string[]> {
-  const mainFiles = context.components.map((component) => {
-    const path = join(
-      // :TODO check how it works with david. Feels like a side-effect.
-      // this.workspace.componentDir(component.id, {}, { relative: true }),
-      // @ts-ignore
-      uiRoot.componentDir(component.id, {}, { relative: true }),
-      component.config.main
-    );
+  // const mainFiles = context.components.map((component) => {
+  //   const path = join(
+  //     // :TODO check how it works with david. Feels like a side-effect.
+  //     // this.workspace.componentDir(component.id, {}, { relative: true }),
+  //     // @ts-ignore
+  //     uiRoot.componentDir(component.id, {}, { relative: true }),
+  //     component.config.main
+  //   );
 
-    return path;
-  });
+  //   return path;
+  // });
 
   const slotEntries = await Promise.all(
     runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
@@ -42,7 +42,5 @@ export async function getEntry(
     return acc;
   });
 
-  const paths = mainFiles.concat(slotPaths);
-
-  return paths;
+  return slotPaths;
 }

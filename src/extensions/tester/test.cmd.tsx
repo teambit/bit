@@ -7,7 +7,8 @@ import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
 
 export class TestCmd implements Command {
-  name = 'test-new [pattern]';
+  // TODO: @david please call legacy tester in case of legacy workspace.
+  name = 'test [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
   private = true;
