@@ -80,6 +80,11 @@ export class UIExtension {
     return server;
   }
 
+  registerOnStart(onStartFn: OnStart) {
+    this.registerOnStart(onStartFn);
+    return this;
+  }
+
   private async invokeOnStart(): Promise<void> {
     const promises = this.onStartSlot.values().map((fn) => fn());
     await Promise.all(promises);
