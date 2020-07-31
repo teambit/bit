@@ -51,7 +51,7 @@ export class UIExtension {
      */
     private express: ExpressExtension,
 
-    private
+    private onStartSlot: OnStartSlot
   ) {}
 
   static runtimes = {
@@ -76,7 +76,13 @@ export class UIExtension {
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
+    await this.invokeOnStart();
     return server;
+  }
+
+  private async invokeOnStart(): Promise<void> {
+    const promises = this.onStartSlot.values().map((fn) => fn());
+    await Promise.all(promises);
   }
 
   private async generateRoot(extensionPaths: string[], rootExtensionName: string) {
