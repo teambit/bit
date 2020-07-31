@@ -3,6 +3,7 @@ import { EnvService, ExecutionContext } from '../environments';
 import { Tester, TestResults } from './tester';
 import { detectTestFiles } from './utils';
 import { Workspace } from '../workspace';
+import { NoTestFilesFound } from './exceptions';
 
 export class TesterService implements EnvService {
   constructor(
@@ -25,6 +26,10 @@ export class TesterService implements EnvService {
       acc = acc.concat(specs);
       return acc;
     }, []);
+
+    if (!testMatch.length) {
+      throw new NoTestFilesFound(this.testsRegex);
+    }
 
     const testerContext = Object.assign(context, {
       release: false,
