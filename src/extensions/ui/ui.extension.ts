@@ -20,6 +20,10 @@ export type UIDeps = [CLIExtension, Environments, GraphQLExtension, BundlerExten
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
+export type OnStart = () => void;
+
+export type OnStartSlot = SlotRegistry<OnStart>;
+
 export class UIExtension {
   constructor(
     /**
@@ -45,7 +49,9 @@ export class UIExtension {
     /**
      * express extension.
      */
-    private express: ExpressExtension
+    private express: ExpressExtension,
+
+    private
   ) {}
 
   static runtimes = {
@@ -96,10 +102,14 @@ export class UIExtension {
 
   static dependencies = [CLIExtension, Environments, GraphQLExtension, BundlerExtension, ExpressExtension];
 
-  static slots = [Slot.withType<UIRoot>()];
+  static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
-  static async provider([cli, envs, graphql, bundler, express]: UIDeps, config, [uiRootSlot]: [UIRootRegistry]) {
-    const ui = new UIExtension(envs, graphql, bundler, uiRootSlot, express);
+  static async provider(
+    [cli, envs, graphql, bundler, express]: UIDeps,
+    config,
+    [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
+  ) {
+    const ui = new UIExtension(envs, graphql, bundler, uiRootSlot, express, onStartSlot);
     cli.register(new StartCmd(ui));
     return ui;
   }

@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
-import { BuilderCmd } from './build.cmd';
+import { BuilderCmd } from './run.cmd';
 import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';

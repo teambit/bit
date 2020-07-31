@@ -7,7 +7,7 @@ import { LogPublisher } from '../types';
 import loader from '../../cli/loader';
 
 export class BuilderCmd implements Command {
-  name = 'build [pattern]';
+  name = 'run [pattern]';
   description = 'run set of tasks for build';
   alias = '';
   group = '';
