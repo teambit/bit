@@ -5,7 +5,7 @@ import { empty } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Build implements LegacyCommand {
-  name = 'build [id]';
+  name = 'buildx [id]';
   description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components`;
   alias = '';
   opts = [
