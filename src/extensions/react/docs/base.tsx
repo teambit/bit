@@ -20,6 +20,7 @@ export type DocsSectionProps = {
     labels?: string[];
     abstract?: string;
     compositions?: React.ComponentType[];
+    displayName?: string;
   };
   compositions: React.ComponentType[];
   componentId: string;
@@ -76,6 +77,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
     labels = [],
     abstract = docsModel.abstract,
     compositions: overviewCompositions = compositions,
+    displayName = component.displayName,
   } = docs;
 
   const Content = isFunction(docs.default) ? docs.default : () => null;
@@ -84,7 +86,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
     <ThemeContext>
       <div className={classNames(styles.docsMainBlock)} {...rest}>
         <ComponentOverview
-          displayName={component.displayName}
+          displayName={displayName}
           version={component.version}
           abstract={abstract}
           labels={labels}
