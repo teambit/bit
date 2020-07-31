@@ -11,10 +11,9 @@ import { FlowsExt } from '../flows';
 // import { GitExt } from '../git';
 import { InsightsExt } from '../insights';
 import { IsolatorExtension } from '../isolator';
-import { LoggerExt } from '../logger';
+import { LoggerExtension } from '../logger';
 import { PkgExtension } from '../pkg';
 import { ReactExtension } from '../react';
-import { ReporterExt } from '../reporter';
 import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
@@ -52,12 +51,11 @@ export const manifestsMap = {
   [DependencyResolverExtension.id]: DependencyResolverExtension,
   [InsightsExt.name]: InsightsExt,
   [IsolatorExtension.id]: IsolatorExtension,
-  [LoggerExt.name]: LoggerExt,
+  [LoggerExtension.id]: LoggerExtension,
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
   [ReactExtension.name]: ReactExtension,
   [StencilExtension.name]: StencilExtension,
-  [ReporterExt.name]: ReporterExt,
   [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
   [TesterExtension.id]: TesterExtension,

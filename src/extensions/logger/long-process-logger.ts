@@ -1,7 +1,4 @@
-import { EventEmitter } from 'events';
-import type { LogPublisher } from '../types';
-
-export const LONG_PROCESS_EVENT = 'longProcess';
+import type { Logger } from './logger';
 
 /**
  * use it for a long running process. upon creation it logs the `processDescription`.
@@ -9,14 +6,13 @@ export const LONG_PROCESS_EVENT = 'longProcess';
  * components, then pass the `totalItems` as the total components in the list.
  * later, during the iteration, call `logProgress(componentName)`.
  * once done, call `end()`.
- * if the reporter is used, the status-line will show all messages in the terminal.
+ * the status-line will show all messages in the terminal.
  * see README for more data.
  */
 export class LongProcessLogger {
   constructor(
-    private logPublisher: LogPublisher,
+    private logPublisher: Logger,
     private extensionName: string,
-    private emitter: EventEmitter,
     private processDescription: string,
     private totalItems?: number,
     private currentItem = 0,
@@ -27,24 +23,25 @@ export class LongProcessLogger {
 
   logProgress(itemName = '') {
     this.currentItem += 1;
-    const message = `${this.extensionName}, ${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
-    this.logAndEmit(message);
+    const message = `${this.processDescription} (${this.currentItem}/${this.totalItems}). ${itemName}`;
+    this.logPublisher.debug(message);
+    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
   }
 
   end() {
     const duration = new Date().getTime() - this.startTime;
-    const message = `${this.extensionName}, ${this.processDescription} (completed in ${duration}ms)`;
-    this.logAndEmit(message);
+    const message = `${this.processDescription} (completed in ${duration}ms)`;
+    this.logAndConsole(message);
   }
 
   private start() {
     const totalItemsStr = this.totalItems ? `(total: ${this.totalItems})` : '';
-    const message = `${this.extensionName}, ${this.processDescription} ${totalItemsStr}`;
-    this.logAndEmit(message);
+    const message = `${this.processDescription} ${totalItemsStr}`;
+    this.logAndConsole(message);
   }
 
-  private logAndEmit(message: string) {
-    this.logPublisher.info(undefined, message);
-    this.emitter.emit(LONG_PROCESS_EVENT, message);
+  private logAndConsole(message: string) {
+    this.logPublisher.info(message);
+    this.logPublisher.setStatusLine(`${this.extensionName}, ${message}`);
   }
 }

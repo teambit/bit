@@ -9,7 +9,7 @@ import {
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
-import { Logger } from '../logger';
+import { LoggerExtension } from '../logger';
 import PackageManager from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { Capsule } from '../isolator';
@@ -19,7 +19,7 @@ export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
-  static dependencies = [Environments, Logger];
+  static dependencies = [Environments, LoggerExtension];
   static slots = [Slot.withType<DependenciesPolicy>()];
   static defaultConfig: DependencyResolverWorkspaceConfig = {
     /**
@@ -31,11 +31,11 @@ export class DependencyResolverExtension {
     strictPeerDependencies: true,
   };
   static async provider(
-    [envs, logger]: [Environments, Logger],
+    [envs, logger]: [Environments, LoggerExtension],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry]: [PoliciesRegistry]
   ) {
-    const packageManager = new PackageManager(config.packageManager, logger);
+    const packageManager = new PackageManager(config.packageManager, logger.createLogger('packageManager'));
     const dependencyResolver = new DependencyResolverExtension(config, packageManager, policiesRegistry, envs);
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverExtension.id,

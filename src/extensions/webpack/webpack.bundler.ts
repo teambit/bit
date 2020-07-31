@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 import merge from 'webpack-merge';
 import configFactory from './config/webpack.config';
 import { Bundler, Target, BundlerComponentResult } from '../bundler';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 
 export class WebpackBundler implements Bundler {
   constructor(
@@ -17,7 +17,7 @@ export class WebpackBundler implements Bundler {
      */
     private envConfig: Configuration,
 
-    private logger: LogPublisher
+    private logger: Logger
   ) {}
 
   async run(): Promise<BundlerComponentResult[]> {

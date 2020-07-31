@@ -1,17 +1,26 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
-import ejectTemplate from '../../templates/eject-template';
+import ejectTemplate from '../../../cli/templates/eject-template';
 import GeneralError from '../../../error/general-error';
 import { Lane } from '../../../scope/models';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { PublishResults } from '../../../scope/component-ops/publish-during-export';
+import { Command, CommandOptions } from '../../cli';
 
-export default class Export implements LegacyCommand {
+type ExportResults = {
+  componentsIds: BitId[];
+  nonExistOnBitMap: BitId[];
+  missingScope: BitId[];
+  exportedLanes: Lane[];
+  ejectResults: EjectResults | null | undefined;
+  publishResults: PublishResults;
+};
+
+export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
@@ -21,7 +30,7 @@ export default class Export implements LegacyCommand {
   https://${BASE_DOCS_DOMAIN}/docs/export
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
-  opts = [
+  options = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['a', 'all', 'export all components include non-staged'],
     [
@@ -47,7 +56,7 @@ export default class Export implements LegacyCommand {
   migration = true;
   remoteOp = true;
 
-  action(
+  async report(
     [remote, ids]: [string, string[]],
     {
       eject = false,
@@ -59,7 +68,7 @@ export default class Export implements LegacyCommand {
       rewire = false,
       lanes = false,
     }: any
-  ): Promise<any> {
+  ): Promise<string> {
     if (lanes) throwForUsingLaneIfDisabled();
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
@@ -70,7 +79,14 @@ export default class Export implements LegacyCommand {
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
       );
     }
-    return exportAction({
+    const {
+      componentsIds,
+      nonExistOnBitMap,
+      missingScope,
+      exportedLanes,
+      ejectResults,
+      publishResults,
+    } = await exportAction({
       ids,
       remote,
       eject,
@@ -81,32 +97,7 @@ export default class Export implements LegacyCommand {
       codemod: rewire,
       force,
       lanes,
-    }).then((results) => ({
-      ...results,
-      remote,
-      includeDependencies,
-    }));
-  }
-
-  report({
-    componentsIds,
-    nonExistOnBitMap,
-    missingScope,
-    exportedLanes,
-    ejectResults,
-    publishResults,
-    remote,
-    includeDependencies,
-  }: {
-    componentsIds: BitId[];
-    nonExistOnBitMap: BitId[];
-    missingScope: BitId[];
-    exportedLanes: Lane[];
-    ejectResults: EjectResults | null | undefined;
-    publishResults: PublishResults;
-    remote: string;
-    includeDependencies: boolean;
-  }): string {
+    });
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
     }
@@ -120,17 +111,17 @@ export default class Export implements LegacyCommand {
     const nonExistOnBitMapOutput = () => {
       // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
       if (R.isEmpty(nonExistOnBitMap) || includeDependencies) return '';
-      const ids = nonExistOnBitMap.map((id) => id.toString()).join(', ');
+      const idsStr = nonExistOnBitMap.map((id) => id.toString()).join(', ');
       return chalk.yellow(
-        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
+        `${idsStr}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
       );
     };
     const missingScopeOutput = () => {
       if (R.isEmpty(missingScope)) return '';
-      const ids = missingScope.map((id) => id.toString()).join(', ');
+      const idsStr = missingScope.map((id) => id.toString()).join(', ');
       return chalk.yellow(
         `the following component(s) were not exported: ${chalk.bold(
-          ids
+          idsStr
         )}.\nplease specify <remote> to export them, or set a "defaultScope" in your workspace config\n\n`
       );
     };
@@ -159,8 +150,12 @@ ${exportedLanes.map((l) => `${chalk.bold(l.name)} (${l.components.length} compon
           return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
         })
         .join('\n');
-      const failedTitle = `\n\n${chalk.red('failed publishing the following components\n')}`;
-      const successTitle = `\n\n${chalk.green('published the following component(s) successfully\n')}`;
+      const failedTitle = `\n\n${chalk.red(
+        'failed publishing the following components, please run "bit publish" to re-try\n'
+      )}`;
+      const successTitle = `\n\n${chalk.green(
+        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
+      )}`;
       const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
       const successOutput = successCompsStr ? successTitle + successCompsStr : '';
       return successOutput + failedOutput;
