@@ -1,11 +1,8 @@
-import { PaperError } from '../../cli';
-
-export class CouldNotFindLatest extends PaperError {
-  constructor(private semverArray: string[]) {
-    super();
+export class CouldNotFindLatest extends Error {
+  constructor(semverArray: string[]) {
+    super(`could not find latest semver in array: ${semverArray.join(', ')}`);
   }
-
   report() {
-    return `could not find latest semver in array: ${this.semverArray.join(', ')}`;
+    return this.message;
   }
 }
