@@ -103,6 +103,7 @@ function addOneOccurrenceToRoot(
 
 /**
  * Handle a case where the package appear as a peer for all its deponents
+ * in that case we won't hoist it to the root, we will only notify about conflicts
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
@@ -126,6 +127,7 @@ function handlePeersOnly(
     // Add to peers for each component to make sure we are getting warning from the package manager about missing peers
     indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
   } catch (e) {
+    indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
     // There are peer version with conflicts, let the user know about it
     const conflictedComponents = indexItems.map((item) => {
       return {
