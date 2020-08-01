@@ -5,6 +5,7 @@ import { TesterService } from './tester.service';
 import { Component } from '../component';
 import { TesterTask } from './tester.task';
 import { CLIExtension } from '../cli';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export type TesterExtensionConfig = {
   /**
@@ -53,6 +54,7 @@ export class TesterExtension {
   };
 
   static provider([cli, envs, workspace]: [CLIExtension, Environments, Workspace], config: TesterExtensionConfig) {
+    if (!workspace) throw new ConsumerNotFound();
     // @todo: Ran to fix.
     // @ts-ignore
     const tester = new TesterExtension(

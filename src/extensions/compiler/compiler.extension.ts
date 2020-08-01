@@ -7,6 +7,7 @@ import { WorkspaceCompiler } from './workspace-compiler';
 import { CompilerTask } from './compiler.task';
 import { Extensions } from '../../constants';
 import { BitId } from '../../bit-id';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export class CompilerExtension {
   static id = Extensions.compiler;
@@ -22,6 +23,7 @@ export class CompilerExtension {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
   static async provider([cli, workspace, envs]: [CLIExtension, Workspace, Environments]) {
+    if (!workspace) throw new ConsumerNotFound();
     const compilerTask = new CompilerTask(CompilerExtension.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     const compilerExtension = new CompilerExtension(workspaceCompiler, compilerTask);

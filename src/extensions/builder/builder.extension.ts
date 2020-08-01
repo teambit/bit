@@ -14,6 +14,7 @@ import { GraphQLExtension } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
 import { TagCmd } from './tag.cmd';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -129,6 +130,7 @@ export class BuilderExtension {
     config,
     [taskSlot]: [TaskSlot]
   ) {
+    if (!workspace) throw new ConsumerNotFound();
     const logger = loggerExt.createLogger(BuilderExtension.id);
     const builderService = new BuilderService(workspace, logger, taskSlot);
     const builder = new BuilderExtension(envs, workspace, builderService, scope, core, taskSlot);
