@@ -48,7 +48,7 @@ export class ExpressExtension {
   }
 
   private createRootRoutes() {
-    // TODO: @guy refactor to service aspect.
+    // TODO: @guy refactor health to service aspect.
     return [
       {
         namespace: ExpressExtension.id,
