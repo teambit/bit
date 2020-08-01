@@ -143,6 +143,16 @@ function handlePeersOnly(
   return false;
 }
 
+/**
+ * This will handle a case when there is only exact version in the index
+ * In such case it will take the most common version and hoist it to the root
+ * It will set all the other version in the corresponding components
+ * This assume the items has been already checked to contain only exact versions
+ *
+ * @param {DedupedDependencies} dedupedDependencies
+ * @param {PackageName} packageName
+ * @param {PackageNameIndexItem[]} indexItems
+ */
 function handleExactVersionsOnly(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
@@ -164,6 +174,16 @@ function handleExactVersionsOnly(
   indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
 }
 
+/**
+ * This will handle a case when there is only ranges in the index
+ * In such case it will search for an intersection with the most components and hoist it to the root
+ * It will set all the other ranges in the corresponding components
+ * This assume the items has been already checked to contain only ranges
+ *
+ * @param {DedupedDependencies} dedupedDependencies
+ * @param {PackageName} packageName
+ * @param {PackageNameIndexItem[]} indexItems
+ */
 function handleRangesOnly(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
@@ -188,6 +208,18 @@ function handleRangesOnly(
   indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
 }
 
+/**
+ * This will handle a case when there is both ranges and exact versions in the index
+ * it will find the best range and see how many components it fits
+ * it will find the most common version and see how many components it fits
+ * Then it will take the best of them and hoist into the root and put others in the components
+ * TODO: this can be improved by adding to the ranges count the satisfying exact versions
+ *
+ * @param {DedupedDependencies} dedupedDependencies
+ * @param {PackageName} packageName
+ * @param {PackageNameIndexItem[]} indexItems
+ * @param {ItemsGroupedByRangeOrVersion} groups
+ */
 function handleRangesAndVersions(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
@@ -212,6 +244,14 @@ function handleRangesAndVersions(
   indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
 }
 
+/**
+ * Finding the best range - a range the intersect as many ranges as possible
+ * it will work by create all the possible combination of the ranges
+ * then try to intersect them based on the number of the ranges (items) and how many times they appear in the original array
+ *
+ * @param {SemverVersion[]} ranges
+ * @returns {BestRange}
+ */
 function findBestRange(ranges: SemverVersion[]): BestRange {
   const counts = countBy((item) => item)(ranges);
   const result: BestRange = {
@@ -253,6 +293,12 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
   return result;
 }
 
+/**
+ * Check if a package should be a dev dependency or runtime dependency by checking if it appears as runtime dependency at least once
+ *
+ * @param {PackageNameIndexItem[]} indexItems
+ * @returns {DependencyLifecycleType}
+ */
 function getLifecycleType(indexItems: PackageNameIndexItem[]): DependencyLifecycleType {
   let result: DependencyLifecycleType = DEV_DEP_LIFECYCLE_TYPE;
   indexItems.forEach((item) => {
@@ -264,6 +310,12 @@ function getLifecycleType(indexItems: PackageNameIndexItem[]): DependencyLifecyc
   return result;
 }
 
+/**
+ * Find the version that appears the most
+ *
+ * @param {SemverVersion[]} versions
+ * @returns {MostCommonVersion}
+ */
 function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
   const counts = countBy((item) => item)(versions);
   const result: MostCommonVersion = {
@@ -278,6 +330,14 @@ function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
   return result;
 }
 
+/**
+ * A wrapper function used to be passed to map on index items and add it to a component dependency in the deduped dependencies if it's filter function return false
+ *
+ * @param {DedupedDependencies} dedupedDependencies
+ * @param {PackageName} packageName
+ * @param {(item: PackageNameIndexItem) => boolean} [filterFunc]
+ * @returns
+ */
 function addToComponentDependenciesMapInDeduped(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
@@ -302,6 +362,12 @@ function addToComponentDependenciesMapInDeduped(
   };
 }
 
+/**
+ * Get an array of index items and group them to items with ranges and items with exact version
+ *
+ * @param {PackageNameIndexItem[]} indexItems
+ * @returns {ItemsGroupedByRangeOrVersion}
+ */
 function groupByRangeOrVersion(indexItems: PackageNameIndexItem[]): ItemsGroupedByRangeOrVersion {
   const result: ItemsGroupedByRangeOrVersion = {
     ranges: [],
