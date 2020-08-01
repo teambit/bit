@@ -81,7 +81,7 @@ export class UIExtension {
   }
 
   registerOnStart(onStartFn: OnStart) {
-    this.registerOnStart(onStartFn);
+    this.onStartSlot.register(onStartFn);
     return this;
   }
 

@@ -3,6 +3,7 @@ import { UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { loadExtensionsByManifests } from './load-extensions-by-manifests';
 // TODO: change to module path once utils are tracked as components
 import { ResolvedComponent } from '../resolved-component';
+import { CompilerExtension } from '../../compiler';
 
 // TODO: take for some other place like config
 // TODO: consider pass it from outside into the function
@@ -18,7 +19,9 @@ export async function loadResolvedExtensions(
   const manifests = resolvedExtensions.map((resolvedExtension) => {
     const compId = resolvedExtension.component.id.toString();
     try {
-      const manifest = resolvedExtension.require();
+      // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
+      const aspect = resolvedExtension.require();
+      const manifest = aspect.default;
       manifest.id = compId;
       return manifest;
     } catch (e) {

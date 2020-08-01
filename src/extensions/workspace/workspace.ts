@@ -37,6 +37,7 @@ import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export type EjectConfResult = {
   configPath: string;
@@ -520,8 +521,11 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    let resolvedExtensions: ResolvedComponent[] = [];
-    resolvedExtensions = await this.load(extensionsToLoad);
+    const resolvedExtensions: any = await this.requireComponents(
+      extensionsToLoad.map((id) => this.resolveComponentId(id))
+    );
+    // let resolvedExtensions: ResolvedComponent[] = [];
+    // resolvedExtensions = await this.load(extensionsToLoad);
     // TODO: change to use the new reporter API, in order to implement this
     // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
     //
@@ -529,6 +533,23 @@ export class Workspace implements ComponentFactory {
     // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
     // level passed to it).
     await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+  }
+
+  async requireComponents(ids: ComponentID[]) {
+    const components = await this.getMany(ids);
+    const promises = components.map(async (component) => {
+      const packageName = componentIdToPackageName(component.state._consumer);
+
+      return {
+        component,
+        require: () => {
+          // eslint-disable-next-line
+          return require(path.join(this.path, 'node_modules', packageName));
+        },
+      };
+    });
+
+    return Promise.all(promises);
   }
 
   /**

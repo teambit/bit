@@ -1,5 +1,5 @@
 import { flatten, lowerCase, concat } from 'lodash';
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Request, Response } from './types';
@@ -34,21 +34,8 @@ export class ExpressExtension {
    * start a express server.
    */
   async listen(port?: number) {
-    const internalRoutes = this.createRootRoutes();
-    const routes = this.createRoutes();
-    const allRoutes = concat(routes, internalRoutes);
     const serverPort = port || this.config.port;
-    const app = express();
-    app.use(cors());
-
-    allRoutes.forEach((routeInfo) => {
-      const { method, path, middlewares } = routeInfo;
-      // TODO: @guy make sure to support single middleware here.
-      app[method](path, middlewares);
-    });
-
-    app.use(notFound);
-    app.use(errorHandle);
+    const app = this.createApp();
     app.listen(serverPort);
   }
 
@@ -61,6 +48,7 @@ export class ExpressExtension {
   }
 
   private createRootRoutes() {
+    // TODO: @guy refactor to service aspect.
     return [
       {
         namespace: ExpressExtension.id,
@@ -70,6 +58,25 @@ export class ExpressExtension {
       },
     ];
   }
+
+  createApp(): Express {
+    const internalRoutes = this.createRootRoutes();
+    const routes = this.createRoutes();
+    const allRoutes = concat(routes, internalRoutes);
+    const app = express();
+    app.use(cors());
+
+    allRoutes.forEach((routeInfo) => {
+      const { method, path, middlewares } = routeInfo;
+      // TODO: @guy make sure to support single middleware here.
+      app[method](path, middlewares);
+    });
+
+    app.use(notFound);
+    app.use(errorHandle);
+    return app;
+  }
+
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
     const routeEntries = routesSlots.map(([extensionId, routes]) => {

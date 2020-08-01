@@ -1,5 +1,5 @@
 import { createServer } from 'http';
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import { PubSub } from 'graphql-subscriptions';
 import graphqlHTTP from 'express-graphql';
@@ -50,12 +50,13 @@ export class GraphQLExtension {
   /**
    * start a graphql server.
    */
-  async listen(port?: number) {
+  async listen(port?: number, optionalApp?: Express) {
+    // TODO: refactor to express extension.
     const schema = this.createRootModule();
     const serverPort = port || this.config.port;
     const subscriptionsPath = '/subscriptions';
 
-    const app = express();
+    const app = optionalApp || express();
     app.use(cors());
     app.use(
       '/graphql',

@@ -10,7 +10,7 @@ const chalk = require('chalk');
 
 export class TestCmd implements Command {
   // TODO: @david please call legacy tester in case of legacy workspace.
-  name = 'test [pattern]';
+  name = 'tst [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
   private = true;
