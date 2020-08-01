@@ -1,3 +1,4 @@
+import { countBy, sortBy, forEachObjIndexed, uniq, prop } from 'ramda';
 import {
   createShorthand,
   ensureCompatible,
@@ -9,9 +10,31 @@ import {
 } from 'semver-intersect';
 import semver, { Range, SemVer } from 'semver';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
-import { DedupedDependencies, dedupeDependencies } from './dedupe-dependencies';
-import { PackageName, DependenciesObjectDefinition } from '../../types';
-import { PEER_DEP_LIFECYCLE_TYPE, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../constants';
+import { DedupedDependencies, dedupeDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
+import { PackageName, DependenciesObjectDefinition, SemverVersion, DependencyLifecycleType } from '../../types';
+import {
+  PEER_DEP_LIFECYCLE_TYPE,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+  DEV_DEP_LIFECYCLE_TYPE,
+  RUNTIME_DEP_LIFECYCLE_TYPE,
+} from '../../constants';
+
+type ItemsGroupedByRangeOrVersion = {
+  ranges: PackageNameIndexItem[];
+  versions: PackageNameIndexItem[];
+};
+
+type MostCommonVersion = {
+  version: SemverVersion;
+  count: number;
+};
+
+type BestRange = {
+  count: number;
+  ranges: SemverVersion[];
+  intersectedRange: SemverVersion;
+};
+
 /**
  * This is the second phase of the deduping process.
  * It will get the index calculated in the first phase (with dep id as key)
@@ -29,18 +52,30 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
       peerDependencies: {},
     },
     componentDependenciesMap: new Map<PackageName, DependenciesObjectDefinition>(),
+    issus: {
+      peerConflicts: [],
+    },
   };
 
+  // TODO: handle git urls
+
   depIdIndex.forEach((indexItems, packageName) => {
-    if (indexItems.length === 1) {
-      return addOneOccurrenceToRoot(result, packageName, indexItems[0]);
+    let toContinue;
+    toContinue = addOneOccurrenceToRoot(result, packageName, indexItems);
+    if (!toContinue) return;
+    toContinue = handlePeersOnly(result, packageName, indexItems);
+    if (!toContinue) return;
+    const groupedByRangeOrVersion = groupByRangeOrVersion(indexItems);
+    if (groupedByRangeOrVersion.versions.length > 0 && groupedByRangeOrVersion.ranges.length === 0) {
+      handleExactVersionsOnly(result, packageName, indexItems);
+    } else if (groupedByRangeOrVersion.versions.length === 0 && groupedByRangeOrVersion.ranges.length > 0) {
+      handleRangesOnly(result, packageName, indexItems);
+    } else {
+      handleRangesAndVersions(result, packageName, indexItems, groupedByRangeOrVersion);
     }
   });
 
   return result;
-  // Handle peer dependnecies
-  // handle git urls
-  // Handle logical or (||)
 }
 
 /**
@@ -53,10 +88,261 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
 function addOneOccurrenceToRoot(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItem: PackageNameIndexItem
-): void {
+  indexItems: PackageNameIndexItem[]
+): boolean {
+  if (indexItems.length > 1) {
+    return true;
+  }
+  const indexItem = indexItems[0];
   if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
     const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
     dedupedDependencies.rootDependencies[keyName][packageName] = indexItem.range;
   }
+  return false;
+}
+
+/**
+ * Handle a case where the package appear as a peer for all its deponents
+ *
+ * @param {DedupedDependencies} dedupedDependencies
+ * @param {PackageName} packageName
+ * @param {PackageNameIndexItem[]} indexItems
+ * @returns {boolean}
+ */
+function handlePeersOnly(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  indexItems: PackageNameIndexItem[]
+): boolean {
+  const nonPeerItems = indexItems.filter((item) => {
+    return item.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE;
+  });
+  if (nonPeerItems.length > 0) {
+    return true;
+  }
+  const allRanges = indexItems.map((item) => item.range);
+  try {
+    intersect(...allRanges);
+    // Add to peers for each component to make sure we are getting warning from the package manager about missing peers
+    indexItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName));
+  } catch (e) {
+    // There are peer version with conflicts, let the user know about it
+    const conflictedComponents = indexItems.map((item) => {
+      return {
+        componentPackageName: item.origin,
+        range: item.range,
+      };
+    });
+    const issue: DedupedDependenciesPeerConflicts = {
+      packageName,
+      conflictedComponents,
+      conflictMessage: e.message,
+    };
+    dedupedDependencies.issus?.peerConflicts.push(issue);
+  }
+  return false;
+}
+
+function handleExactVersionsOnly(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  indexItems: PackageNameIndexItem[]
+): void {
+  const allVersions = indexItems.map((item) => item.range);
+
+  // Add most common version to root
+  const mostCommonVersion = findMostCommonVersion(allVersions).version;
+  const lifeCycleType = getLifecycleType(indexItems);
+  const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
+  dedupedDependencies.rootDependencies[depKeyName][packageName] = mostCommonVersion;
+
+  const filterFunc = (item) => {
+    if (item.range === mostCommonVersion) return true;
+    return false;
+  };
+
+  indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
+}
+
+function handleRangesOnly(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  indexItems: PackageNameIndexItem[]
+): void {
+  const rangesVersions = indexItems.map((item) => item.range);
+  const bestRange = findBestRange(rangesVersions);
+  const lifeCycleType = getLifecycleType(indexItems);
+  const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
+  dedupedDependencies.rootDependencies[depKeyName][packageName] = bestRange.intersectedRange;
+
+  indexItems.forEach((item) => {
+    if (bestRange.ranges.includes(item.range)) return;
+    addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName)(item);
+  });
+
+  const filterFunc = (item) => {
+    if (bestRange.ranges.includes(item.range)) return true;
+    return false;
+  };
+
+  indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
+}
+
+function handleRangesAndVersions(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  indexItems: PackageNameIndexItem[],
+  groups: ItemsGroupedByRangeOrVersion
+): void {
+  const allVersions = groups.versions.map((item) => item.range);
+  const mostCommonVersion = findMostCommonVersion(allVersions);
+  const rangesVersions = indexItems.map((item) => item.range);
+  const bestRange = findBestRange(rangesVersions);
+  let filterFunc = (item) => {
+    if (bestRange.ranges.includes(item.range)) return true;
+    return false;
+  };
+
+  if (bestRange.count < mostCommonVersion.count) {
+    filterFunc = (item) => {
+      if (item.range === mostCommonVersion) return true;
+      return false;
+    };
+  }
+  indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
+}
+
+function findBestRange(ranges: SemverVersion[]): BestRange {
+  const counts = countBy((item) => item)(ranges);
+  const result: BestRange = {
+    ranges: [],
+    intersectedRange: '0.0.0',
+    count: 0,
+  };
+  const uniqRanges = uniq(ranges);
+  const rangesCombinations = arrayCombinations<SemverVersion>(uniqRanges);
+  const countMultipleRanges = (items: SemverVersion[]): number => {
+    return items.reduce((acc, curr) => {
+      return acc + counts[curr];
+    }, 0);
+  };
+  // The count is count of the items and for each item how many times it appear in the original ranges
+  // Since there might be same range multiple time in the original ranges array.
+
+  const rangesCombinationsWithTotalCount = rangesCombinations.map((combination) => {
+    return {
+      combination,
+      total: countMultipleRanges(combination),
+    };
+  });
+
+  const sortByTotal = sortBy(prop('total'));
+  const sortedByTotal = sortByTotal(rangesCombinationsWithTotalCount).reverse();
+  let i = 0;
+  // Since it's already sorted by count, once we found match we can stop looping
+  while (result.count === 0 && i < sortedByTotal.length) {
+    const combinationWithTotal = sortedByTotal[i];
+    try {
+      const intersectedRange = intersect(combinationWithTotal.combination);
+      result.intersectedRange = intersectedRange;
+      result.ranges = combinationWithTotal.combination;
+      result.count = combinationWithTotal.total;
+    } catch (e) {}
+    i++;
+  }
+  return result;
+}
+
+function getLifecycleType(indexItems: PackageNameIndexItem[]): DependencyLifecycleType {
+  let result: DependencyLifecycleType = DEV_DEP_LIFECYCLE_TYPE;
+  indexItems.forEach((item) => {
+    if (item.lifecycleType === RUNTIME_DEP_LIFECYCLE_TYPE) {
+      result = RUNTIME_DEP_LIFECYCLE_TYPE;
+      return;
+    }
+  });
+  return result;
+}
+
+function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
+  const counts = countBy((item) => item)(versions);
+  const result: MostCommonVersion = {
+    version: '0.0.0',
+    count: 0,
+  };
+  forEachObjIndexed((count, version) => {
+    if (count > result.count) {
+      (result.version = version), (result.count = count);
+    }
+  }, counts);
+  return result;
+}
+
+function addToComponentDependenciesMapInDeduped(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  filterFunc?: (item: PackageNameIndexItem) => boolean
+) {
+  return (indexItem: PackageNameIndexItem) => {
+    if (filterFunc && typeof filterFunc === 'function') {
+      const toFilter = filterFunc(indexItem);
+      if (toFilter) return;
+    }
+    let compEntry = dedupedDependencies.componentDependenciesMap.get(indexItem.origin);
+    const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
+    if (!compEntry) {
+      compEntry = {
+        dependencies: {},
+        devDependencies: {},
+        peerDependencies: {},
+      };
+    }
+    compEntry[depKeyName] = Object.assign({}, compEntry[depKeyName], { [packageName]: indexItem.range });
+    dedupedDependencies.componentDependenciesMap.set(indexItem.origin, compEntry);
+  };
+}
+
+function groupByRangeOrVersion(indexItems: PackageNameIndexItem[]): ItemsGroupedByRangeOrVersion {
+  const result: ItemsGroupedByRangeOrVersion = {
+    ranges: [],
+    versions: [],
+  };
+  indexItems.forEach((item) => {
+    const parsed = parseRange(item.range);
+    if (parsed.condition === '=') {
+      result.versions.push(item);
+      return;
+    }
+    result.ranges.push(item);
+  });
+  return result;
+}
+
+// Taken from https://web.archive.org/web/20140418004051/http://dzone.com/snippets/calculate-all-combinations
+/**
+ * Return all combinations of array items. for example:
+ * arrayCombinations([1,2]) == [[1], [2], [1,2]];
+ *
+ * @param {Array<T>} array
+ * @returns {Array<T[]>}
+ */
+function arrayCombinations<T>(array: Array<T>): Array<T[]> {
+  const fn = function (n, src, got, all) {
+    if (n == 0) {
+      if (got.length > 0) {
+        all[all.length] = got;
+      }
+      return;
+    }
+    for (var j = 0; j < src.length; j++) {
+      fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
+    }
+    return;
+  };
+  var all: Array<T[]> = [];
+  for (var i = 0; i < array.length; i++) {
+    fn(i, array, [], all);
+  }
+  all.push(array);
+  return all;
 }

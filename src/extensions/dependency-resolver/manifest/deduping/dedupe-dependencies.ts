@@ -1,13 +1,12 @@
 import { indexByDepId } from './index-by-dep-id';
 import { hoistDependencies } from './hoist-dependencies';
 import { mergeWithRootDeps } from './merge-with-root';
-import { PackageName, DependenciesObjectDefinition } from '../../types';
-import { SemVer } from 'semver';
+import { PackageName, DependenciesObjectDefinition, SemverVersion } from '../../types';
 import { ComponentDependenciesMap } from '../workspace-manifest';
 
 export type conflictedComponent = {
   componentPackageName: PackageName;
-  range: SemVer;
+  range: SemverVersion;
 };
 
 export type DedupedDependenciesPeerConflicts = {
