@@ -16,14 +16,12 @@ export function notFound(req: express.Request, res: express.Response, next: expr
   next(err);
 }
 
-// DO not remove unused next, it's needed for express to catch errors!
-// eslint-disable-next-line promise/no-callback-in-promise
 export function errorHandle(
   err: ResponseError,
   req: express.Request,
   res: express.Response,
   // TODO: Do not remove unused next, it's needed for express to catch errors!
-  // eslint-disable-next-line promise/no-callback-in-promise
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
   res.status(err.status || 500);
