@@ -1,10 +1,10 @@
 import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
-import { H1 } from '@bit/bit.evangelist.elements.heading';
+import { H1 } from '@teambit.evangelist.elements.heading';
 // import { Avatar } from '../../../workspace-components/avatar';
-import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
-import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
-import { mutedText } from '@bit/bit.base-ui.text.muted-text';
+import { PossibleSizes } from '@teambit.base-ui.theme.sizes';
+import { Paragraph } from '@teambit.base-ui.text.paragraph';
+import { mutedText } from '@teambit.base-ui.text.muted-text';
 import { LabelList } from '../../workspace-components/label';
 import { Separator } from '../../workspace-components/separator';
 import { VersionTag } from '../../workspace-components/version-tag';

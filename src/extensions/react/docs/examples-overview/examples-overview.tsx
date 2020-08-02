@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { Section, SectionProps } from '@bit/bit.test-scope.ui.section';
 import { LinkedHeading } from '@bit/bit.test-scope.ui.linked-heading';
-import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
+import { Paragraph } from '@teambit.base-ui.text.paragraph';
 import { Playground, CodeScope } from '../playground';
 
 import styles from './examples-overview.module.scss';

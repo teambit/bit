@@ -1,5 +1,5 @@
 import React from 'react';
-import { textColumn } from '@bit/bit.base-ui.layout.page-frame';
+import { textColumn } from '@teambit.base-ui.layout.page-frame';
 import { Section } from '@bit/bit.test-scope.ui.section';
 import { H1 } from '@bit/bit.test-scope.ui.heading';
 import { Subtitle } from '@bit/bit.test-scope.ui.sub-title';

@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { H2 } from '@bit/bit.evangelist.elements.heading';
+import { H2 } from '@teambit.evangelist.elements.heading';
 import styles from './title.module.scss';
 
 type TitleProps = {} & React.HTMLAttributes<HTMLDivElement>;
