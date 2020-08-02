@@ -35,6 +35,16 @@ type BestRange = {
   intersectedRange: SemverVersion;
 };
 
+type CombinationWithTotal = {
+  combination: SemverVersion[];
+  total: number;
+};
+
+type VersionWithTotal = {
+  version: SemverVersion;
+  total: number;
+};
+
 /**
  * This is the second phase of the deduping process.
  * It will get the index calculated in the first phase (with dep id as key)
@@ -230,18 +240,25 @@ function handleRangesAndVersions(
 ): void {
   const allVersions = groups.versions.map((item) => item.range);
   const mostCommonVersion = findMostCommonVersion(allVersions);
+  // Include versions here since we might have a specific version which match the best version as well
   const rangesVersions = indexItems.map((item) => item.range);
   const bestRange = findBestRange(rangesVersions);
+  const lifeCycleType = getLifecycleType(indexItems);
+  const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
+
   let filterFunc = (item) => {
     if (bestRange.ranges.includes(item.range)) return true;
     return false;
   };
 
   if (bestRange.count < mostCommonVersion.count) {
+    dedupedDependencies.rootDependencies[depKeyName][packageName] = mostCommonVersion.version;
     filterFunc = (item) => {
       if (item.range === mostCommonVersion) return true;
       return false;
     };
+  } else {
+    dedupedDependencies.rootDependencies[depKeyName][packageName] = bestRange.intersectedRange;
   }
   indexItems.forEach(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
 }
@@ -255,12 +272,45 @@ function handleRangesAndVersions(
  * @returns {BestRange}
  */
 function findBestRange(ranges: SemverVersion[]): BestRange {
-  const counts = countBy((item) => item)(ranges);
   const result: BestRange = {
     ranges: [],
     intersectedRange: '0.0.0',
     count: 0,
   };
+
+  const sortedByTotal = getSortedRangesCombination(ranges);
+  let i = 0;
+  // Since it's already sorted by count, once we found match we can stop looping
+  while (result.count === 0 && i < sortedByTotal.length) {
+    const combinationWithTotal = sortedByTotal[i];
+    try {
+      const intersectedRange = intersect(...combinationWithTotal.combination);
+      result.intersectedRange = intersectedRange;
+      result.ranges = combinationWithTotal.combination;
+      result.count = combinationWithTotal.total;
+    } catch (e) {}
+    i++;
+  }
+  return result;
+}
+
+function getSortedVersionsWithTotal(versions: SemverVersion[]): VersionWithTotal[] {
+  const counts = countBy((item) => item)(versions);
+  const uniqVersions = uniq(versions);
+  const versionsWithTotalCount = uniqVersions.map((version) => {
+    return {
+      version,
+      total: counts[version],
+    };
+  });
+
+  const sortByTotal = sortBy(prop('total'));
+  const sortedByTotal = sortByTotal(versionsWithTotalCount).reverse();
+  return sortedByTotal;
+}
+
+function getSortedRangesCombination(ranges: SemverVersion[]): CombinationWithTotal[] {
+  const counts = countBy((item) => item)(ranges);
   const uniqRanges = uniq(ranges);
   const rangesCombinations = arrayCombinations<SemverVersion>(uniqRanges);
   const countMultipleRanges = (items: SemverVersion[]): number => {
@@ -280,19 +330,7 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
 
   const sortByTotal = sortBy(prop('total'));
   const sortedByTotal = sortByTotal(rangesCombinationsWithTotalCount).reverse();
-  let i = 0;
-  // Since it's already sorted by count, once we found match we can stop looping
-  while (result.count === 0 && i < sortedByTotal.length) {
-    const combinationWithTotal = sortedByTotal[i];
-    try {
-      const intersectedRange = intersect(...combinationWithTotal.combination);
-      result.intersectedRange = intersectedRange;
-      result.ranges = combinationWithTotal.combination;
-      result.count = combinationWithTotal.total;
-    } catch (e) {}
-    i++;
-  }
-  return result;
+  return sortedByTotal;
 }
 
 /**

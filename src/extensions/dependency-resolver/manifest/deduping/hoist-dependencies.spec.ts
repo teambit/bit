@@ -8,7 +8,6 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '../../constants';
 import { DedupedDependencies } from './dedupe-dependencies';
-import { dependencies } from '@stencil/core/compiler';
 import { SemverVersion, DepObjectKeyName, DependencyLifecycleType } from '../../types';
 
 const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
@@ -223,7 +222,180 @@ describe('hoistDependencies', () => {
     });
   });
 
-  describe('dependency that appears with both ranges and exact versions', () => {});
+  describe('dependency that appears with both ranges and exact versions', () => {
+    let dependencyName = 'package-dependency';
+    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    describe('when there is a version which satisfy more components than the best range', () => {
+      before(() => {
+        index = new Map();
+        const items = generateItemsFromArrays(
+          undefined,
+          ['^4.0.0', '5.0.0', '5.0.0', '5.0.0', '^4.0.4'],
+          DEV_DEP_LIFECYCLE_TYPE
+        );
+        index.set(dependencyName, items);
+        dedupedDependencies = hoistDependencies(index);
+      });
+      it('should hoist the best version to the root', () => {
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '5.0.0');
+      });
+      it('should not put the dependency in components that matches the best version', () => {
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`, dedupedDependencies);
+      });
+      it('should put other ranges in the components', () => {
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`,
+          depKeyName,
+          dependencyName,
+          '^4.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-4`,
+          depKeyName,
+          dependencyName,
+          '^4.0.4'
+        );
+      });
+    });
+    describe('when there is a best range which satisfy more components than the most common version', () => {
+      before(() => {
+        index = new Map();
+        const items = generateItemsFromArrays(
+          undefined,
+          ['^4.0.0', '^4.0.2', '5.0.0', '5.0.0', '^4.0.4'],
+          DEV_DEP_LIFECYCLE_TYPE
+        );
+        index.set(dependencyName, items);
+        dedupedDependencies = hoistDependencies(index);
+      });
+      it('should hoist the best range to the root', () => {
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '^4.0.4');
+      });
+      it('should not put the dependency in components that matches the best range', () => {
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-4`, dedupedDependencies);
+      });
+      it('should put other ranges in the components', () => {
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+      });
+    });
+    describe('when there is a best range which is not the best alone but combine with version its the best', () => {
+      // there is best version which matches 4 components (5.0.0)
+      // there is best range which intersect 4 ranges (^4.0.5)
+      // there is range that intersects 2 components and version that match 3 components (should return this version -
+      // that practically matches 5 components. (^6.0.2(3) + 6.0.4(2))
+      before(() => {
+        index = new Map();
+        const items = generateItemsFromArrays(
+          undefined,
+          [
+            '^4.0.0',
+            '^4.0.2',
+            '5.0.0',
+            '5.0.0',
+            '^4.0.4',
+            '^4.0.5',
+            '5.0.0',
+            '5.0.0',
+            '^6.0.0',
+            '^6.0.1',
+            '^6.0.2',
+            '6.0.4',
+            '6.0.4',
+          ],
+          DEV_DEP_LIFECYCLE_TYPE
+        );
+        index.set(dependencyName, items);
+        dedupedDependencies = hoistDependencies(index);
+      });
+      it('should hoist the best range to the root', () => {
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '6.0.4');
+      });
+      it('should not put the dependency in components that matches the best range or the combined version', () => {
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-8`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-9`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-10`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-11`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-12`, dedupedDependencies);
+      });
+      it('should put other ranges in the components', () => {
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`,
+          depKeyName,
+          dependencyName,
+          '^4.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`,
+          depKeyName,
+          dependencyName,
+          '^4.0.2'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-4`,
+          depKeyName,
+          dependencyName,
+          '^4.0.4'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-5`,
+          depKeyName,
+          dependencyName,
+          '^4.0.5'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-6`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-7`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+      });
+    });
+  });
 });
 
 const generateItemsFromArrays = (
