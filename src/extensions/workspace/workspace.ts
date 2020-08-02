@@ -1,4 +1,5 @@
 import path from 'path';
+import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
@@ -16,7 +17,7 @@ import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
@@ -32,8 +33,10 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
-import loader from '../../cli/loader';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
+import { Watcher } from './watch/watcher';
 
 export type EjectConfResult = {
   configPath: string;
@@ -49,7 +52,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace implements ComponentFactory {
+export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -76,7 +79,7 @@ export default class Workspace implements ComponentFactory {
 
     private variants: Variants,
 
-    private logger: LogPublisher,
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -98,6 +101,11 @@ export default class Workspace implements ComponentFactory {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
   }
+
+  /**
+   * watcher api.
+   */
+  readonly watcher = new Watcher(this);
 
   /**
    * root path of the Workspace.
@@ -129,14 +137,18 @@ export default class Workspace implements ComponentFactory {
   /**
    * provides status of all components in the workspace.
    */
-  status() {}
+  async getComponentStatus(component: Component): Promise<ComponentStatus> {
+    const status = await this.consumer.getComponentStatusById(component.id._legacy);
+    return ComponentStatus.fromLegacy(status);
+  }
 
   /**
    * list all workspace components.
    */
-  async list(): Promise<Component[]> {
-    const ids = this.getAllComponentIds();
-    return this.getMany(ids);
+  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
+    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
+    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
   /**
@@ -181,7 +193,7 @@ export default class Workspace implements ComponentFactory {
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
-    loader.succeed();
+    this.logger.consoleSuccess();
     return new Network(
       capsuleList,
       graph,
@@ -237,7 +249,8 @@ export default class Workspace implements ComponentFactory {
     }
 
     component.state = state;
-    return this.executeLoadSlot(component);
+    const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
+    return this.executeLoadSlot(workspaceComponent);
   }
 
   private async executeLoadSlot(component: Component) {
@@ -274,7 +287,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   private newComponentFromState(state: State): Component {
-    return new Component(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
+    return new WorkspaceComponent(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -627,3 +640,5 @@ export default class Workspace implements ComponentFactory {
     return Promise.all(resolveMergedExtensionsP);
   }
 }
+
+export default Workspace;

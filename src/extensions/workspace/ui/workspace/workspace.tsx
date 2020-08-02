@@ -1,9 +1,8 @@
 import React, { ReactNode } from 'react';
 import { gql } from 'apollo-boost';
+import { Route } from 'react-router-dom';
 import 'reset-css';
 import styles from './workspace.module.scss';
-// import { Component } from '../../../component/component.ui';
-// import { defaultComponent } from './default-component';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
@@ -11,6 +10,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { Corner } from '../../../stage-components/corner';
 import { SideBar } from '../../../stage-components/side-bar';
+import { WorkspaceOverview } from './workspace-overview';
 
 const WORKSPACE = gql`
   {
@@ -22,6 +22,24 @@ const WORKSPACE = gql`
           name
           version
           scope
+        }
+        status {
+          isNew
+          isInScope
+          isStaged
+          isModified
+          isDeleted
+        }
+        deprecation {
+          isDeprecate
+        }
+        server {
+          env
+          url
+        }
+        env {
+          id
+          icon
         }
       }
     }
@@ -55,6 +73,10 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
+          {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
+          <Route exact path="/">
+            <WorkspaceOverview />
+          </Route>
         </div>
       </div>
     </WorkspaceProvider>

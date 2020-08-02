@@ -1,23 +1,33 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, ComponentType } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
-import { ComponentView } from './component-view';
+import { ComponentView, ComponentViewProps } from './component-view';
 import { ComponentTreeContextProvider } from './component-tree-context';
 
 import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
+import { Component } from './../side-bar';
+import { PayloadType } from './payload-type';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
-  components: string[];
+  components: Component[];
 };
 
 export function ComponentTree(props: ComponentTreeProps) {
   const { components, onSelect, selected } = props;
 
-  const rootNode = useMemo(() => inflateToTree(components), [components]);
+  const rootNode = useMemo(
+    () =>
+      inflateToTree(
+        components,
+        (c) => c.id.fullName,
+        (c) => c as PayloadType
+      ),
+    [components]
+  );
 
   return (
     <div className={styles.componentTree} style={indentStyle(0)}>
@@ -30,7 +40,7 @@ export function ComponentTree(props: ComponentTreeProps) {
   );
 }
 
-function RootNode({ node }: { node: TreeNode }) {
+function RootNode({ node }: { node: TreeNode<PayloadType> }) {
   if (!node.id) {
     if (!node.children) return null;
 
@@ -48,7 +58,7 @@ function RootNode({ node }: { node: TreeNode }) {
   return <Node node={node} depth={0} />;
 }
 
-function getTreeNodeComponent(node: TreeNode) {
+function getTreeNodeComponent(node: TreeNode<PayloadType>): ComponentType<ComponentViewProps<PayloadType>> {
   const { children } = node;
 
   if (!children) return ComponentView;

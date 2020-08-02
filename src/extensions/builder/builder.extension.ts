@@ -1,3 +1,4 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { BuilderCmd } from './run.cmd';
@@ -6,13 +7,15 @@ import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { ScopeExtension } from '../scope';
 import { CLIExtension } from '../cli';
-import { ReporterExt, Reporter } from '../reporter';
-import { LoggerExt, Logger } from '../logger';
+import { LoggerExtension } from '../logger';
 import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
 import { GraphQLExtension } from '../graphql';
 import { builderSchema } from './builder.graphql';
+import { BuildTask } from './types';
 import { TagCmd } from './tag.cmd';
+
+export type TaskSlot = SlotRegistry<BuildTask>;
 
 /**
  * extension config type.
@@ -51,7 +54,12 @@ export class BuilderExtension {
     /**
      * core extension.
      */
-    private core: Core
+    private core: Core,
+
+    /**
+     * slot for registering build tasks.
+     */
+    private taskSlot: TaskSlot
   ) {}
 
   async tagListener(ids: BitId[]) {
@@ -71,6 +79,14 @@ export class BuilderExtension {
   }
 
   /**
+   * register a build task to apply on all component build pipelines.
+   */
+  registerTask(task: BuildTask) {
+    this.taskSlot.register(task);
+    return this;
+  }
+
+  /**
    * return a list of artifacts for the given hash and component id.
    */
   async getArtifacts(id: ComponentID, hash: string): Promise<ExtensionArtifact[]> {
@@ -87,37 +103,41 @@ export class BuilderExtension {
     return extensionArtifacts;
   }
 
+  static slots = [Slot.withType<BuildTask>()];
+
   static dependencies = [
     CLIExtension,
     Environments,
     WorkspaceExt,
     ScopeExtension,
-    ReporterExt,
-    LoggerExt,
+    LoggerExtension,
     CoreExt,
     GraphQLExtension,
     ComponentExtension,
   ];
 
-  static async provider([cli, envs, workspace, scope, reporter, logger, core, graphql]: [
-    CLIExtension,
-    Environments,
-    Workspace,
-    ScopeExtension,
-    Reporter,
-    Logger,
-    Core,
-    GraphQLExtension
-  ]) {
-    const logPublisher = logger.createLogPublisher(BuilderExtension.id);
-    const builderService = new BuilderService(workspace, logPublisher);
-    const builder = new BuilderExtension(envs, workspace, builderService, scope, core);
+  static async provider(
+    [cli, envs, workspace, scope, loggerExt, core, graphql]: [
+      CLIExtension,
+      Environments,
+      Workspace,
+      ScopeExtension,
+      LoggerExtension,
+      Core,
+      GraphQLExtension
+    ],
+    config,
+    [taskSlot]: [TaskSlot]
+  ) {
+    const logger = loggerExt.createLogger(BuilderExtension.id);
+    const builderService = new BuilderService(workspace, logger, taskSlot);
+    const builder = new BuilderExtension(envs, workspace, builderService, scope, core, taskSlot);
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
 
-    cli.register(new BuilderCmd(builder, workspace, logPublisher, reporter));
-    cli.register(new TagCmd(logPublisher, reporter));
+    cli.register(new BuilderCmd(builder, workspace, logger));
+    cli.register(new TagCmd(logger));
     return builder;
   }
 }

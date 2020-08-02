@@ -1,5 +1,3 @@
-// import { AddressInfo } from 'net';
-import { join } from 'path';
 import { AddressInfo } from 'net';
 import { EnvService, ExecutionContext } from '../environments';
 import { DevServer } from './dev-server';
@@ -9,6 +7,7 @@ import { BindError } from './exceptions';
 import { BrowserRuntimeSlot } from './bundler.extension';
 import { DevServerContext } from './dev-server-context';
 import { UIRoot } from '../ui';
+import { getEntry } from './get-entry';
 
 export class DevServerService implements EnvService {
   constructor(
@@ -28,13 +27,15 @@ export class DevServerService implements EnvService {
   }
 
   async run(context: ExecutionContext) {
-    const devServer: DevServer = context.env.getDevServer(await this.buildContext(context));
+    const devServerContext = await this.buildContext(context);
+    const devServer: DevServer = context.env.getDevServer(devServerContext);
     const port = await selectPort();
     const server = devServer.listen(port);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
 
+    // TODO: refactor to replace with a component server instance.
     return new ComponentServer(context.components, port, hostname, context.envRuntime);
   }
 
@@ -42,42 +43,12 @@ export class DevServerService implements EnvService {
    * builds the execution context for the dev server.
    */
   private async buildContext(context: ExecutionContext): Promise<DevServerContext> {
-    return Object.assign(context, {
-      entry: await this.getEntry(context),
-    });
-  }
-
-  /**
-   * computes the bundler entry.
-   */
-  private async getEntry(context: ExecutionContext): Promise<string[]> {
     const uiRoot = this._uiRoot;
     if (!uiRoot) throw new Error('a root must be provided by UI root');
-    const mainFiles = context.components.map((component) => {
-      const path = join(
-        // :TODO check how it works with david. Feels like a side-effect.
-        // this.workspace.componentDir(component.id, {}, { relative: true }),
-        // @ts-ignore
-        uiRoot.componentDir(component.id, {}, { relative: true }),
-        // @ts-ignore
-        component.config.main
-      );
 
-      return path;
+    return Object.assign(context, {
+      entry: await getEntry(context, uiRoot, this.runtimeSlot),
     });
-
-    const slotEntries = await Promise.all(
-      this.runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
-    );
-
-    const slotPaths = slotEntries.reduce((acc, current) => {
-      acc = acc.concat(current);
-      return acc;
-    });
-
-    const paths = mainFiles.concat(slotPaths);
-
-    return paths;
   }
 
   private getHostname(address: string | AddressInfo | null) {

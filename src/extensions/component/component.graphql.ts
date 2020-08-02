@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
-import { ComponentMeta } from './component-meta';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { ComponentExtension } from './component.extension';
 import { ComponentFactory } from './component-factory';
@@ -9,14 +8,17 @@ export function componentSchema(componentExtension: ComponentExtension) {
   return {
     typeDefs: gql`
       type ComponentID {
-        name: String
+        name: String!
         version: String
         scope: String
       }
 
       type Tag {
-        version: String
-        snap: Snap
+        # semver assigned to the tag.
+        version: String!
+        # tag snapshot.
+
+        snap: Snap!
       }
 
       type Snap {
@@ -24,13 +26,13 @@ export function componentSchema(componentExtension: ComponentExtension) {
         hash: String!
 
         # time of the snapshot.
-        timestamp: String
+        timestamp: String!
 
         # parents of the snap
-        parents: [Snap]
+        parents: [Snap]!
 
         # snapper
-        author: Author
+        author: Author!
 
         # snapshot message
         message: String
@@ -38,23 +40,14 @@ export function componentSchema(componentExtension: ComponentExtension) {
 
       type Author {
         # display name of the snapper.
-        displayName: String
+        displayName: String!
 
         # author of the snapper.
-        email: String
+        email: String!
       }
-
-      type Tag {
-        # semver assigned to the tag.
-        version: String
-
-        # tag snapshot.
-        snap: Snap
-      }
-
       type Component {
         # id of the component.
-        id: ComponentID
+        id: ComponentID!
 
         # head snap of the component.
         head: Snap
@@ -62,29 +55,31 @@ export function componentSchema(componentExtension: ComponentExtension) {
         # head tag of the component.
         headTag: Tag
 
+        # latest version of the component.
+        latest: String
+
         # display name of the component
-        displayName: String
+        displayName: String!
 
         # determines whether the component is new.
-        isNew: Boolean
+        isNew: Boolean!
 
         # determines whether the component is modified since its last version.
-        isModified: Boolean
+        isModified: Boolean!
 
         # package name of the component.
         packageName: String
 
         # list of component releases.
-        tags: [Tag]
-      }
-
-      type ComponentMeta {
-        id: ComponentID
-        displayName: String
+        tags: [Tag]!
       }
 
       type ComponentHost {
-        get(id: String!): Component
+        # load a component.
+        get(id: String!, withState: Boolean): Component
+
+        # list components
+        list(offset: Int, limit: Int): [Component]!
       }
 
       type Query {
@@ -92,14 +87,11 @@ export function componentSchema(componentExtension: ComponentExtension) {
       }
     `,
     resolvers: {
-      ComponentMeta: {
-        id: (component: ComponentMeta) => component.id.toObject(),
-        displayName: (component: ComponentMeta) => component.displayName,
-      },
       Component: {
         id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
-        headTag: (component: Component) => component.headTag,
+        headTag: (component: Component) => component.headTag?.toObject(),
+        latest: (component: Component) => component.latest,
         tags: (component) => {
           // graphql doesn't support map types
           return component.tags.toArray().map((tag) => tag.toObject());
@@ -123,8 +115,15 @@ export function componentSchema(componentExtension: ComponentExtension) {
       ComponentHost: {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
           const componentId = await host.resolveComponentId(id);
-          return host.get(componentId);
+          const comp = await host.get(componentId);
+          return comp;
         },
+        list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
+          return host.list(filter);
+        },
+        // list: async (host: ComponentFactory, { offset, limit }: { offset: number; limit: number }) => {
+        // return host.list();
+        // },
       },
       Query: {
         getHost: (componentExt: ComponentExtension, { id }: { id: string }) => {

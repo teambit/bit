@@ -17,7 +17,7 @@ export function OverviewLink() {
         activeClassName={styles.active}
         className={classNames(hoverable, clickable, styles.overviewLink)}
       >
-        Gallery
+        Components
         <Icon of="comps" className={styles.icon} />
       </NavLink>
       <Separator className={styles.separator} />

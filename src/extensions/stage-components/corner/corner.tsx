@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import styles from './corner.module.scss';
 
 export type CornerProps = {
@@ -10,8 +11,8 @@ export type CornerProps = {
 
 export function Corner({ name }: CornerProps) {
   return (
-    <div className={styles.corner}>
+    <NavLink to="/" className={styles.corner}>
       <span className={styles.avatar}>A</span> {name}
-    </div>
+    </NavLink>
   );
 }

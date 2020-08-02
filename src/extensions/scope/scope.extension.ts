@@ -1,4 +1,6 @@
+import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
+import BluebirdPromise from 'bluebird';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
@@ -24,7 +26,8 @@ import { UIExtension } from '../ui';
 import { ScopeUIRoot } from './scope.ui-root';
 import { GraphQLExtension } from '../graphql';
 import { scopeSchema } from './scope.graphql';
-import { ComponentMeta } from '../component/component-meta';
+import { CLIExtension } from '../cli';
+import { ExportCmd } from './export/export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -130,9 +133,23 @@ export class ScopeExtension implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(): Promise<ComponentMeta[]> {
+  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
     const modelComponents = await this.legacyScope.list();
-    return modelComponents.map((component) => this.buildMetaComponent(component));
+    const componentsIds = await Promise.all(
+      modelComponents.map((component) => ComponentID.fromLegacy(component.toBitId()))
+    );
+    return this.getMany(
+      filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
+    );
+  }
+
+  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+    const idsWithoutEmpty = compact(ids);
+    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+      return this.get(id);
+    });
+    const components = await componentsP;
+    return compact(components);
   }
 
   /**
@@ -164,23 +181,19 @@ export class ScopeExtension implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId);
   }
 
-  private buildMetaComponent(component: ModelComponent): ComponentMeta {
-    const id = component.toBitId().serialize();
-    return ComponentMeta.from({
-      id,
-    });
-  }
-
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
 
     await Promise.all(
       Object.keys(modelComponent.versions).map(async (versionStr: string) => {
         const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-        const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
+        // TODO: what to return if no version in objects
+        if (version) {
+          const snap = this.createSnapFromVersion(version);
+          const tag = new Tag(snap, new SemVer(versionStr));
 
-        tagMap.set(tag.version, tag);
+          tagMap.set(tag.version, tag);
+        }
       })
     );
 
@@ -208,7 +221,7 @@ export class ScopeExtension implements ComponentFactory {
       new Config(version.mainFile, consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
-      this.legacyScope.getConsumerComponent(id._legacy)
+      consumerComponent
     );
     return state;
   }
@@ -218,13 +231,14 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension];
+  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension];
 
   static async provider(
-    [componentExt, ui, graphql]: [ComponentExtension, UIExtension, GraphQLExtension],
+    [componentExt, ui, graphql, cli]: [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
   ) {
+    cli.register(new ExportCmd());
     const legacyScope = await loadScopeIfExist();
     if (!legacyScope) {
       return undefined;
