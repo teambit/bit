@@ -18,19 +18,16 @@ export default class InstallCmd implements Command {
     private workspace: Workspace,
 
     /**
-     * reporter extension.
+     * logger extension.
      */
     private logger: Logger
   ) {}
 
   async report([rawIds]: [string[]]) {
-    // this.reporter.title(`🎬 resolving dependencies in workspace '${this.workspace.name}'`);
     const startTime = Date.now();
-    // eslint-disable-next-line no-console
-    console.log(`Resolving dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
+    this.logger.consoleTitle(`Resolving dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const ids = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
     // @ts-ignore until david and gilad will handle resolveComponentId
-    // this.reporter.subscribeAll();
     const components = await this.workspace.install(ids);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);

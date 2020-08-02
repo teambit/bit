@@ -13,7 +13,7 @@ export class ComponentManifest extends Manifest {
     super(name, version, dependencies);
   }
 
-  get dir() {
-    // TODO: take the dir from the component
-  }
+  // get dir() {
+  //   // TODO: take the dir from the component
+  // }
 }

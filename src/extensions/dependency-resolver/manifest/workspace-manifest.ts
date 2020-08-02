@@ -16,7 +16,9 @@ import { RUNTIME_DEP_LIFECYCLE_TYPE, DEV_DEP_LIFECYCLE_TYPE, PEER_DEP_LIFECYCLE_
 import { dedupeDependencies, DedupedDependencies } from './deduping';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
-
+export type ManifestToJsonOptions = {
+  includeDir?: boolean;
+};
 export class WorkspaceManifest extends Manifest {
   constructor(
     public name: string,
@@ -44,6 +46,17 @@ export class WorkspaceManifest extends Manifest {
     const componentsManifestsMap = getComponentsManifests(dedupedDependencies, components);
     const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifestsMap);
     return workspaceManifest;
+  }
+
+  toJson(options: ManifestToJsonOptions = {}): Record<string, any> {
+    const manifest = super.toJson();
+    if (options.includeDir) {
+      return {
+        rootDir: this.dir,
+        manifest,
+      };
+    }
+    return manifest;
   }
 }
 

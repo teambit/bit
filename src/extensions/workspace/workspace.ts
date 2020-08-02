@@ -545,8 +545,7 @@ export class Workspace implements ComponentFactory {
   async install(ids: ComponentID[]) {
     const installer = this.dependencyResolver.getInstaller();
     const installationMap = await this.getComponentsDirectory(ids);
-    await installer.install(this.path, await this.getComponentsDirectory(ids));
-
+    await installer.install(this.path, installationMap);
     return installationMap;
   }
 
