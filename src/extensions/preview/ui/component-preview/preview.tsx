@@ -29,7 +29,7 @@ export type ComponentPreviewProps = {
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
   const serverUrl = `http://localhost:4001/${component.id.fullName}/@/preview`;
 
-  const url = `${component.server.url || serverUrl}/#${component.id.fullName}${
+  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.fullName}${
     `?preview=${previewName}&${queryParams && queryParams}` || ''
   }`;
 
