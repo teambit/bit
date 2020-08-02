@@ -1,7 +1,6 @@
 import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
-import { mutedText } from '@teambit.base-ui.text.muted-text';
-// import { Image } from '@teambit.evangelist.elements.image';
+import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
 // import { VersionTag } from '../../workspace-components/version-tag';
 import { TimeAgo } from '../../workspace-components/time-ago';
 // import { Status } from '../../workspace-components/status';

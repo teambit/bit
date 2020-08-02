@@ -1,7 +1,7 @@
 import React from 'react';
 import copy from 'copy-to-clipboard';
 import classNames from 'classnames';
-import { Icon } from '@teambit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import styles from './copy-box.module.scss';
 
 export type CopyBoxProps = { children: string } & React.HTMLAttributes<HTMLDivElement>;

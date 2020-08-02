@@ -3,8 +3,8 @@ import classNames from 'classnames';
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 
 import prismTheme from 'prism-react-renderer/themes/github';
-import { errorClass } from '@teambit.base-ui.input.error';
-import { roundnessClass } from '@teambit.base-ui.css-components.roundness';
+import { errorClass } from '@teambit/base-ui-temp.input.error';
+import { roundnessClass } from '@teambit/base-ui-temp.css-components.roundness';
 
 import styles from './playground.module.scss';
 

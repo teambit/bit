@@ -1,8 +1,8 @@
 import React from 'react';
 import classNames from 'classnames';
-import { PossibleSizes } from '@teambit.base-ui.theme.sizes';
-import { Grid } from '@teambit.base-ui.layout.grid-component';
-import { H5 } from '@teambit.evangelist.elements.heading';
+import { PossibleSizes } from '@teambit/base-ui-temp.theme.sizes';
+import { Grid } from '@teambit/base-ui-temp.layout.grid-component';
+import { H5 } from '@teambit/evangelist-temp.elements.heading';
 import { CopyBox } from '../copy-box';
 import styles from './install-methods.module.scss';
 

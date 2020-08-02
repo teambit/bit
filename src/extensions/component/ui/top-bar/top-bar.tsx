@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import { Icon } from '@teambit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 
 // placeholder until we publish the component from react new project
 import { VersionTag } from '../../../stage-components/workspace-components/version-tag';

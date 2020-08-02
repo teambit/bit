@@ -1,8 +1,7 @@
 import React, { useContext, useCallback } from 'react';
 import _ from 'lodash';
 import classNames from 'classnames';
-// import { Image } from '@teambit.evangelist.elements.image';
-import { Icon } from '@teambit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '../../../../react-router/nav-link';
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
