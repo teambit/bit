@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension, ListResults } from '../isolator/isolator.extension';
-import { loadConsumerIfExist } from '../../consumer';
+import { IsolatorExtension } from '../isolator/isolator.extension';
+import { Workspace } from './workspace';
 
 export class CapsuleListCmd implements Command {
   name = 'capsule-list';
@@ -12,25 +12,19 @@ export class CapsuleListCmd implements Command {
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorExtension) {}
-
-  async getList(): Promise<ListResults> {
-    // TODO: remove this consumer loading from here. it shouldn't be here
-    const consumer = await loadConsumerIfExist();
-    // TODO: throw a proper error instance
-    if (!consumer) throw new Error('no consumer found');
-    const results = await this.isolator.list(consumer);
-    return results;
-  }
+  constructor(private isolator: IsolatorExtension, private workspace: Workspace) {}
 
   async report() {
-    const list = await this.getList();
+    const list = await this.isolator.list(this.workspace.path);
+    const rootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
     // TODO: improve output
-    return chalk.green(`found ${list.capsules.length} capsule(s) for workspace ${list.workspace}`);
+    return chalk.green(`found ${list.capsules.length} capsule(s) for workspace ${list.workspace}.
+capsules root-dir: ${rootDir}
+use --json to get the list of all capsules`);
   }
 
   async json() {
-    const list = await this.getList();
+    const list = await this.isolator.list(this.workspace.path);
     return list;
   }
 }

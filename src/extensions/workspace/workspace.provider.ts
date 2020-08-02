@@ -108,7 +108,7 @@ export default async function provideWorkspace(
       cli.register(new InstallCmd(workspace));
       cli.register(new EjectConfCmd(workspace));
 
-      const capsuleListCmd = new CapsuleListCmd(isolator);
+      const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
       const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
       cli.register(capsuleListCmd);
       cli.register(capsuleCreateCmd);

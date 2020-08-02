@@ -146,7 +146,6 @@ describe('bit show command', function () {
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
         const outputCompiler = output.compiler;
-        expect(outputCompiler.files).to.be.an('array').that.is.empty;
         expect(outputCompiler.config).to.be.an('object').that.is.empty;
         expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
       });
@@ -206,7 +205,6 @@ describe('bit show command', function () {
         });
         it('should display the compiler of the component', () => {
           const outputCompiler = output.compiler;
-          expect(outputCompiler.files).to.be.an('array').that.is.empty;
           expect(outputCompiler.config).to.be.an('object').that.is.empty;
           expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
         });
