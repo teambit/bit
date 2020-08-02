@@ -11,6 +11,8 @@ import { DedupedDependencies } from './dedupe-dependencies';
 import { dependencies } from '@stencil/core/compiler';
 import { SemverVersion, DepObjectKeyName, DependencyLifecycleType } from '../../types';
 
+const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
+
 describe('hoistDependencies', () => {
   let index: PackageNameIndex;
   let dependentComponentName = 'dependent-component';
@@ -135,7 +137,37 @@ describe('hoistDependencies', () => {
     });
   });
 
-  describe('dependency that appears only with exact versions', () => {});
+  describe('dependency that appears only with exact versions', () => {
+    let dependencyName = 'package-dependency';
+    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    before(() => {
+      index = new Map();
+      const items = generateItemsFromArrays(
+        undefined,
+        ['4.0.0', '5.0.0', '4.0.0', '5.0.0', '4.0.1', '4.0.0'],
+        DEV_DEP_LIFECYCLE_TYPE
+      );
+      index.set(dependencyName, items);
+      dedupedDependencies = hoistDependencies(index);
+    });
+    it('should hoist the most common version to the root', () => {
+      expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '4.0.0');
+    });
+    it('should not put the most common version in the components that has it', () => {
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`, dedupedDependencies);
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-5`, dedupedDependencies);
+    });
+    it('should put other versions in the components', () => {
+      expectComponentDependenciesMapToHave(
+        dedupedDependencies,
+        `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`,
+        depKeyName,
+        dependencyName,
+        '5.0.0'
+      );
+    });
+  });
 
   describe('dependency that appears only with ranges', () => {});
 
@@ -167,7 +199,7 @@ const generateItemsFromArrays = (
 
 const generateItems = (
   numOfItems = 3,
-  dependentComponentNamePrefix = 'dependent-component',
+  dependentComponentNamePrefix = DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX,
   range: SemverVersion = '1.0.0',
   lifecycleType: DependencyLifecycleType = RUNTIME_DEP_LIFECYCLE_TYPE
 ): PackageNameIndexItem[] => {
@@ -182,6 +214,20 @@ const expectAllComponentsDependenciesMapToBeEmpty = (dedupedDependencies: Dedupe
 
 const expectComponentDependenciesMapToBeEmpty = (dependentName: string, dedupedDependencies: DedupedDependencies) => {
   expect(dedupedDependencies.componentDependenciesMap.get(dependentName)).to.be.undefined;
+};
+
+const expectComponentDependenciesMapToHave = (
+  dedupedDependencies: DedupedDependencies,
+  dependentName: string,
+  dependecyKeyName: string,
+  dependencyName: string,
+  dependencyVersion: SemverVersion
+) => {
+  const comp = dedupedDependencies.componentDependenciesMap.get(dependentName);
+  if (!comp) {
+    throw new Error(`component ${dependentName} does not found on dedupedDependencies components map`);
+  }
+  expect(comp[dependecyKeyName]).to.have.property(dependencyName, dependencyVersion);
 };
 
 const expectRootToHave = (
