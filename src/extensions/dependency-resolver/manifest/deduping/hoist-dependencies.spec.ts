@@ -166,10 +166,62 @@ describe('hoistDependencies', () => {
         dependencyName,
         '5.0.0'
       );
+      expectComponentDependenciesMapToHave(
+        dedupedDependencies,
+        `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`,
+        depKeyName,
+        dependencyName,
+        '5.0.0'
+      );
     });
   });
 
-  describe('dependency that appears only with ranges', () => {});
+  describe('dependency that appears only with ranges', () => {
+    let dependencyName = 'package-dependency';
+    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    before(() => {
+      index = new Map();
+      const items = generateItemsFromArrays(
+        undefined,
+        ['^4.0.0', '^5.0.0', '^4.0.0', '^5.0.0', '^5.0.1', '^4.0.1', '^4.0.4'],
+        DEV_DEP_LIFECYCLE_TYPE
+      );
+      index.set(dependencyName, items);
+      dedupedDependencies = hoistDependencies(index);
+    });
+    it('should hoist the best range to the root', () => {
+      expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '^4.0.4');
+    });
+    it('should not put the dependency in components that matches the best range', () => {
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`, dedupedDependencies);
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-5`, dedupedDependencies);
+      expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-6`, dedupedDependencies);
+    });
+    it('should put other ranges in the components', () => {
+      expectComponentDependenciesMapToHave(
+        dedupedDependencies,
+        `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`,
+        depKeyName,
+        dependencyName,
+        '^5.0.0'
+      );
+      expectComponentDependenciesMapToHave(
+        dedupedDependencies,
+        `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`,
+        depKeyName,
+        dependencyName,
+        '^5.0.0'
+      );
+      expectComponentDependenciesMapToHave(
+        dedupedDependencies,
+        `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-4`,
+        depKeyName,
+        dependencyName,
+        '^5.0.1'
+      );
+    });
+  });
 
   describe('dependency that appears with both ranges and exact versions', () => {});
 });

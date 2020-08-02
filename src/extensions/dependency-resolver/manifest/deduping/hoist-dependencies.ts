@@ -285,7 +285,7 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
   while (result.count === 0 && i < sortedByTotal.length) {
     const combinationWithTotal = sortedByTotal[i];
     try {
-      const intersectedRange = intersect(combinationWithTotal.combination);
+      const intersectedRange = intersect(...combinationWithTotal.combination);
       result.intersectedRange = intersectedRange;
       result.ranges = combinationWithTotal.combination;
       result.count = combinationWithTotal.total;
@@ -376,7 +376,7 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexItem[]): ItemsGrouped
     versions: [],
   };
   indexItems.forEach((item) => {
-    const parsed = parseRange(item.range);
+    const parsed = parseRange(semver.validRange(item.range));
     if (parsed.condition === '=') {
       result.versions.push(item);
       return;
