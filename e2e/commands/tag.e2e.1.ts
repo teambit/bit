@@ -957,4 +957,25 @@ describe('bit tag command', function () {
       expect(output).to.have.string('this dependency was not included in the tag command');
     });
   });
+  describe('tag on Harmony', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope();
+      helper.fixtures.populateComponents();
+      helper.command.linkAndRewire();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.tagScope('0.0.2');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponent).to.be.empty;
+    });
+    // this happens as a result of package.json in the node_modules for author point to the wrong
+    // version. currently, the version is removed.
+    it('should not show the dependency with an older version', () => {
+      const show = helper.command.showComponentParsed('comp1');
+      expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
+    });
+  });
 });

@@ -383,6 +383,9 @@ export default class NodeModuleLinker {
     }
 
     packageJson.mergePropsFromExtensions(component);
+    // delete the version, otherwise, we have to maintains it. such as, when tagging, it should be
+    // changed to the new tagged version.
+    delete packageJson.packageJsonObject.version;
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 
