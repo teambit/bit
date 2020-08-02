@@ -1,1 +1,1 @@
-export { DdeprecationExtension } from './deprecation.extension';
+export { DeprecationExtension } from './deprecation.extension';

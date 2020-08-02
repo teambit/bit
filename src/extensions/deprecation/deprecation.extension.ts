@@ -6,7 +6,7 @@ export type DeprecationInfo = {
   isDeprecate: boolean;
 };
 
-export class DdeprecationExtension {
+export class DeprecationExtension {
   static dependencies = [GraphQLExtension, ComponentExtension];
   static id = '@teambit/deprecation';
 
@@ -19,7 +19,7 @@ export class DdeprecationExtension {
   }
 
   static async provider([graphql]: [GraphQLExtension]) {
-    const deprecation = new DdeprecationExtension();
+    const deprecation = new DeprecationExtension();
     graphql.register(deprecationSchema(deprecation));
   }
 }

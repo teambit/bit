@@ -35,7 +35,7 @@ export class ComponentExtension {
 
   registerRoute(routes: Route[]) {
     const routeEntries = routes.map((route: Route) => {
-      return new ComponentRoute(route.route, route.middlewares, this);
+      return new ComponentRoute(route, this);
     });
 
     this.express.register(flatten(routeEntries));

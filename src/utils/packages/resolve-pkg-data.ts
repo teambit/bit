@@ -79,8 +79,10 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   const packageInfo = PackageJson.loadSync(packageDir);
 
   // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
-  // or when using custom-module-resolution it may be empty or the name/version are empty
-  if (!packageInfo || !packageInfo.name || !packageInfo.version) {
+  // or when using custom-module-resolution it may be empty
+  // the version can be empty when creating the package.json for author, that's fine, we still
+  // need the component-id in this case.
+  if (!packageInfo || !packageInfo.name) {
     return;
   }
   packageData.name = packageInfo.name;

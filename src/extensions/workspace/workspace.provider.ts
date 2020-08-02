@@ -64,6 +64,7 @@ export default async function provideWorkspace(
 ) {
   const consumer = await getConsumer();
   if (!consumer) return undefined;
+
   const workspace = new Workspace(
     config,
     consumer,
@@ -99,7 +100,7 @@ export default async function provideWorkspace(
   cli.register(new InstallCmd(workspace));
   cli.register(new EjectConfCmd(workspace));
 
-  const capsuleListCmd = new CapsuleListCmd(isolator);
+  const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
@@ -110,15 +111,22 @@ export default async function provideWorkspace(
   return workspace;
 }
 
+/**
+ * don't use loadConsumer() here, which throws ConsumerNotFound because some commands don't require
+ * the consumer to be available. such as, `bit init` or `bit list --remote`.
+ * most of the commands do need the consumer. the legacy commands that need the consumer throw an
+ * error when is missing. in the new/Harmony commands, such as `bis compile`, the workspace object
+ * is passed to the provider, so before using it, make sure it exists.
+ * keep in mind that you can't verify it in the provider itself, because the provider is running
+ * always for all commands before anything else is happening.
+ *
+ * the reason for the try/catch when loading the consumer is because some bit files (e.g. bit.json)
+ * can be corrupted and in this case we do want to throw an error explaining this. the only command
+ * allow in such a case is `bit init --reset`, which fixes the corrupted files. sadly, at this
+ * stage we don't have the commands objects, so we can't check the command/flags from there. we
+ * need to check the `process.argv.` directly instead, which is not 100% accurate.
+ */
 async function getConsumer(): Promise<Consumer | undefined> {
-  // don't use loadConsumer() here because the consumer might not be available.
-  // specifically, commands with `skipWorkspace=true` don't require the consumer.
-  // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
-  // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
-  // using "bit init --reset".
-  // keep in mind that here is the first place where the consumer is loaded.
-  // an unresolved issue here is when running tasks, such as "bit run build" outside of a consumer.
-  // we'll have to fix this asap.
   try {
     return await loadConsumerIfExist();
   } catch (err) {
