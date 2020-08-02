@@ -3,7 +3,6 @@ import { splitWhen, equals } from 'ramda';
 import didYouMean from 'didyoumean';
 import { Command } from '../../cli/command';
 import CommandRegistry from './registry';
-import { Reporter, ReporterExt } from '../reporter';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
@@ -14,10 +13,10 @@ import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIExtension {
   readonly groups: { [k: string]: string } = {};
-  static dependencies = [ReporterExt];
+  static dependencies = [];
 
-  static provider([reporter]: [Reporter]) {
-    const cli = new CLIExtension(new CommandRegistry({}), reporter);
+  static provider() {
+    const cli = new CLIExtension(new CommandRegistry({}));
     return CLIProvider([cli]);
   }
 
@@ -25,8 +24,7 @@ export class CLIExtension {
     /**
      * paper's command registry
      */
-    private registry: CommandRegistry,
-    private reporter: Reporter
+    private registry: CommandRegistry
   ) {}
 
   private setDefaults(command: Command) {
@@ -82,13 +80,6 @@ export class CLIExtension {
 
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
-    if (this.shouldOutputJson()) {
-      this.reporter.suppressOutput();
-    }
-  }
-  private shouldOutputJson() {
-    const showCommand = commander.commands.find((c) => c._name === 'show');
-    return showCommand.versions;
   }
   private throwForNonExistsCommand(commandName: string) {
     const commands = Object.keys(this.commands);

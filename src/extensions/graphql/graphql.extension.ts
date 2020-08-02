@@ -8,7 +8,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { GraphQLModule } from '@graphql-modules/core';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { Schema } from './schema';
-import { LoggerExt, Logger, LogPublisher } from '../logger';
+import { LoggerExtension, Logger } from '../logger';
 
 export type GraphQLConfig = {
   port: number;
@@ -42,7 +42,7 @@ export class GraphQLExtension {
     /**
      * logger extension.
      */
-    readonly logger: LogPublisher
+    readonly logger: Logger
   ) {}
 
   private modules = new Map<string, GraphQLModule>();
@@ -152,15 +152,15 @@ export class GraphQLExtension {
     port: 4000,
   };
 
-  static dependencies = [LoggerExt];
+  static dependencies = [LoggerExtension];
 
   static async provider(
-    [loggerFactory]: [Logger],
+    [loggerFactory]: [LoggerExtension],
     config: GraphQLConfig,
     [moduleSlot]: [SchemaRegistry],
     context: Harmony
   ) {
-    const logger = loggerFactory.createLogPublisher(GraphQLExtension.id);
+    const logger = loggerFactory.createLogger(GraphQLExtension.id);
     return new GraphQLExtension(config, moduleSlot, context, new PubSub(), logger);
   }
 }
