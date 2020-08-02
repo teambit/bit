@@ -22,6 +22,8 @@ export function errorHandle(
   err: ResponseError,
   req: express.Request,
   res: express.Response,
+  // TODO: Do not remove unused next, it's needed for express to catch errors!
+  // eslint-disable-next-line promise/no-callback-in-promise
   next: express.NextFunction
 ) {
   res.status(err.status || 500);
