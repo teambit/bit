@@ -27,9 +27,7 @@ import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
-    const foundDependency = componentsToTag.find(
-      (component) => component.id.isEqualWithoutVersion(id) || component.id.isEqualWithoutScopeAndVersion(id)
-    );
+    const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
   componentsToTag.forEach((oneComponentToTag) => {

@@ -4,7 +4,7 @@ import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
-import { Logger } from '../logger';
+import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Variants } from '../variants';
@@ -23,7 +23,7 @@ import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
-import { Reporter } from '../reporter';
+import { EXT_NAME } from './constants';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -32,11 +32,10 @@ export type WorkspaceDeps = [
   IsolatorExtension,
   DependencyResolverExtension,
   Variants,
-  Logger,
+  LoggerExtension,
   GraphQLExtension,
   UIExtension,
-  BundlerExtension,
-  Reporter
+  BundlerExtension
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -59,19 +58,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [
-    cli,
-    scope,
-    component,
-    isolator,
-    dependencyResolver,
-    variants,
-    logger,
-    graphql,
-    ui,
-    bundler,
-    reporter,
-  ]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, loggerExt, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
@@ -85,6 +72,8 @@ export default async function provideWorkspace(
   // we'll have to fix this asap.
   try {
     const consumer = await loadConsumerIfExist();
+    // TODO: get the 'worksacpe' name in a better way
+    const logger = loggerExt.createLogger(EXT_NAME);
 
     if (consumer) {
       const workspace = new Workspace(
@@ -95,14 +84,14 @@ export default async function provideWorkspace(
         isolator,
         dependencyResolver,
         variants,
-        logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
+        logger,
         undefined,
         harmony,
         onComponentLoadSlot,
         onComponentChangeSlot
       );
 
-      ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
+      ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
         const componentId = await workspace.resolveComponentId(id);
         // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
         // which in turn run this event, which will make and infinite loop
@@ -119,7 +108,7 @@ export default async function provideWorkspace(
       const workspaceSchema = getWorkspaceSchema(workspace);
       ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
       graphql.register(workspaceSchema);
-      cli.register(new InstallCmd(workspace, reporter));
+      cli.register(new InstallCmd(workspace, logger));
       cli.register(new EjectConfCmd(workspace));
 
       const capsuleListCmd = new CapsuleListCmd(isolator);

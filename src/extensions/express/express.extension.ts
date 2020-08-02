@@ -4,7 +4,7 @@ import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Request, Response } from './types';
 import { errorHandle, notFound } from './middlewares';
-import { LoggerExt, Logger, LogPublisher } from '../logger';
+import { LoggerExtension, Logger } from '../logger';
 
 export type ExpressConfig = {
   port: number;
@@ -27,7 +27,7 @@ export class ExpressExtension {
     /**
      * logger extension.
      */
-    readonly logger: LogPublisher
+    readonly logger: Logger
   ) {}
 
   /**
@@ -86,14 +86,14 @@ export class ExpressExtension {
 
   static id = '@teambit/express';
   static slots = [Slot.withType<Route[]>()];
-  static dependencies = [LoggerExt];
+  static dependencies = [LoggerExtension];
 
   static defaultConfig = {
     port: 4001,
   };
 
-  static async provider([loggerFactory]: [Logger], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
-    const logger = loggerFactory.createLogPublisher(ExpressExtension.id);
+  static async provider([loggerFactory]: [LoggerExtension], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
+    const logger = loggerFactory.createLogger(ExpressExtension.id);
     return new ExpressExtension(config, routeSlot, logger);
   }
 }

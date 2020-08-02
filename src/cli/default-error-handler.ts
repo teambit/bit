@@ -697,8 +697,5 @@ export default (err: Error): { message: string; error: Error } => {
   sendToAnalyticsAndSentry(err);
   const errorMessage = getErrMsg();
   logger.error(`user gets the following error: ${errorMessage}`);
-  logger.silly(err.stack);
-  // eslint-disable-next-line no-console
-  if (process.env.BIT_DEBUG) console.error(err); // todo: remove once we have a good mechanism to handle it
   return { message: chalk.red(errorMessage), error: err };
 };

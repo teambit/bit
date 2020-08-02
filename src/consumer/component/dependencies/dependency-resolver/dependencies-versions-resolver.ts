@@ -73,7 +73,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       ];
     } else {
       // @todo: change this once vendors feature is in.
-      const getCurrentVersion = () => (id.hasVersion() ? id.version : null);
+      const getCurrentVersion = () => (id.hasVersion() ? id : null);
       strategies = [getFromComponentConfig, getCurrentVersion, getFromBitMap, getFromModel];
     }
 

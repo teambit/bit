@@ -3,7 +3,7 @@ import workspaceProvider from './workspace.provider';
 import { ScopeExtension } from '../scope';
 import { ComponentExtension } from '../component';
 import { IsolatorExtension } from '../isolator';
-import { LoggerExt } from '../logger';
+import { LoggerExtension } from '../logger';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { VariantsExt } from '../variants';
 import { EXT_NAME } from './constants';
@@ -13,7 +13,6 @@ import { UIExtension } from '../ui';
 import { BundlerExtension } from '../bundler';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
-import { ReporterExt } from '../reporter';
 
 export default {
   name: EXT_NAME,
@@ -24,11 +23,10 @@ export default {
     IsolatorExtension,
     DependencyResolverExtension,
     VariantsExt,
-    LoggerExt,
+    LoggerExtension,
     GraphQLExtension,
     UIExtension,
     BundlerExtension,
-    ReporterExt,
   ],
   slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>()],
   provider: workspaceProvider,

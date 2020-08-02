@@ -4,16 +4,12 @@ import { PackageManager } from '../dependency-resolver/package-manager';
 import { ComponentMap } from '../component/component-map';
 import { DependencyResolverExtension, ComponentsManifestsMap } from '../dependency-resolver';
 import { PkgExtension } from '../pkg';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 
 const userHome = require('user-home');
 
 export class PnpmPackageManager implements PackageManager {
-  constructor(
-    private depResolver: DependencyResolverExtension,
-    private pkg: PkgExtension,
-    private logger: LogPublisher
-  ) {}
+  constructor(private depResolver: DependencyResolverExtension, private pkg: PkgExtension, private logger: Logger) {}
 
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<void> {
     const storeDir: string = join(userHome, '.pnpm-store');

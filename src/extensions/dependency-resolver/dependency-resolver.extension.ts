@@ -11,7 +11,7 @@ import {
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
-import { Logger } from '../logger';
+import { LoggerExtension } from '../logger';
 import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import ConsumerComponent from '../../consumer/component';
@@ -129,7 +129,7 @@ export class DependencyResolverExtension {
     return result;
   }
 
-  static dependencies = [Environments, Logger];
+  static dependencies = [Environments, LoggerExtension];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -144,7 +144,7 @@ export class DependencyResolverExtension {
   };
 
   static async provider(
-    [envs]: [Environments],
+    [envs, logger]: [Environments, LoggerExtension],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {

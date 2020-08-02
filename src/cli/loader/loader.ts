@@ -29,6 +29,15 @@ export class Loader {
     return this;
   }
 
+  setTextAndRestart(text: string): Loader {
+    if (this.spinner) {
+      this.spinner.stop();
+      this.spinner.text = text;
+      this.spinner.start();
+    }
+    return this;
+  }
+
   get(): Ora | null {
     return this.spinner;
   }

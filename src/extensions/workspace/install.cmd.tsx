@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command } from '../cli';
 import { Workspace } from './workspace';
-import { Reporter } from '../reporter';
+import { Logger } from '../logger';
 
 export default class InstallCmd implements Command {
   name = 'install [id...]';
@@ -20,7 +20,7 @@ export default class InstallCmd implements Command {
     /**
      * reporter extension.
      */
-    private reporter: Reporter
+    private logger: Logger
   ) {}
 
   async report([rawIds]: [string[]]) {
