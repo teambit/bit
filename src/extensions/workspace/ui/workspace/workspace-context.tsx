@@ -1,4 +1,4 @@
 import { createContext } from 'react';
+import { Workspace as WorkspaceModel } from './workspace-model';
 
-// @ts-ignore
-export const WorkspaceContext = createContext<WorkspaceModel>();
+export const WorkspaceContext = createContext<WorkspaceModel>(WorkspaceModel.empty());
