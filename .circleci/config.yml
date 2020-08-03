@@ -859,8 +859,6 @@ jobs:
         run:
           name: setting bit registry
           command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
-      -
-        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
       # stage registry
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
