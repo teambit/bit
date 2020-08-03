@@ -67,44 +67,6 @@ jobs:
           root: /home/circleci
           paths:
             - bit
-  setup_react_new_project:
-    <<: *defaults
-    steps:
-      -
-        run:
-          name: 'checkout react new project'
-          command: 'git clone https://github.com/teambit/react-new-project.git'
-      -
-        restore_cache:
-          key: bitsrc-registry5
-      -
-        run:
-          name: 'install dependencies'
-          command: 'cd react-new-project && npm i'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - react-new-project
-  setup_explorer_project:
-    <<: *defaults
-    steps:
-      -
-        run:
-          name: 'checkout explorer project'
-          command: 'git clone https://github.com/teambit/explorer.git'
-      -
-        restore_cache:
-          key: bitsrc-registry5
-      -
-        run:
-          name: 'install dependencies'
-          command: 'cd explorer && npm i'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - explorer
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -189,55 +151,6 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
-  link_react_new_project_and_explorer:
-    <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        run:
-          name: 'npm link bit to global'
-          command: cd bit && npm link
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        restore_cache:
-          key: bit-global-config-v1
-      -
-        run:
-          name: 'bit link in react-new-project'
-          command: 'cd react-new-project && bit link'
-      -
-        run:
-          name: 'bit compile in react-new-project'
-          command: 'cd react-new-project && bit compile'
-      -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
-      -
-        run:
-          name: 'bit link in explorer'
-          command: 'cd explorer && bit link'
-      -
-        run:
-          name: 'bit compile in explorer'
-          command: 'cd explorer && bit compile'
-      -
-        run:
-          name: 'link components from explorer to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - react-new-project
-            - explorer
-            - bit/node_modules
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -582,10 +495,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run:
-      #     name: 'link components from react-new-proejct to bit'
-      #     command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'run TSC'
@@ -659,14 +568,6 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
-      -
-        run:
-          name: 'link components from explorer to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
-      -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'Run e2e tests'
@@ -1009,14 +910,6 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       -
-        setup_react_new_project:
-          requires:
-            - set_npm_registries
-      -
-        setup_explorer_project:
-          requires:
-            - set_npm_registries
-      -
         install_npm_deps:
           requires:
             - checkout_code
@@ -1030,27 +923,15 @@ workflows:
           requires:
             - build
       -
-        link_react_new_project_and_explorer:
-          requires:
-            - configure-bit
-            - setup_react_new_project
-            - setup_explorer_project
-      -
         unit_test:
           requires:
             - build
       -
-        lint:
-          requires:
-            - link_react_new_project_and_explorer
+        lint
       -
-        check_types:
-          requires:
-            - link_react_new_project_and_explorer
+        check_types
       -
-        generate_types:
-          requires:
-            - link_react_new_project_and_explorer
+        generate_types
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1072,7 +953,6 @@ workflows:
             - set_ssh_key
             - set_npm_registries
             - configure-bit
-            - link_react_new_project_and_explorer
             # - pack
       -
         performance_e2e_test:
