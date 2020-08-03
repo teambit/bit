@@ -346,7 +346,7 @@
     "@types/open": "^6.2.1",
     "@types/p-map-series": "^1.0.2",
     "@types/puppeteer": "^3.0.1",
-    "@types/react": "^16.9.43",
+    "@types/react": "16.9.43",
     "@types/react-router-dom": "^5.1.5",
     "@types/react-tabs": "^2.3.2",
     "@types/socket.io-client": "^1.4.33",

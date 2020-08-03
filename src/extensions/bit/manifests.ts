@@ -25,7 +25,7 @@ import { PreviewExtension } from '../preview/preview.extension';
 import { DocsExtension } from '../docs/docs.extension';
 import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
-import { DdeprecationExtension as DeprecationExtension } from '../deprecation';
+import { DeprecationExtension } from '../deprecation';
 import { DefaultEnvExtension } from '../default-env/default-env.extension';
 import { ExpressExtension } from '../express';
 import { AspectExtension } from '../aspect';

@@ -71,6 +71,11 @@ export class Component {
     return this.tags.byHash(this.head.hash);
   }
 
+  get latest(): string | undefined {
+    if (!this.head) return undefined;
+    return this.tags.getLatest();
+  }
+
   stringify(): string {
     return JSON.stringify({
       id: this.id,

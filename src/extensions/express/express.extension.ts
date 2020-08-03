@@ -2,8 +2,8 @@ import { flatten, lowerCase, concat } from 'lodash';
 import express, { Express } from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Route, Request, Response } from './types';
-import { errorHandle, notFound } from './middlewares';
+import { Route, Middleware, Request, Response } from './types';
+import { errorHandle, notFound, catchErrors } from './middlewares';
 import { LoggerExtension, Logger } from '../logger';
 
 export type ExpressConfig = {
@@ -69,7 +69,7 @@ export class ExpressExtension {
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
-      app[method](path, middlewares);
+      app[method](path, this.catchErrorsMiddlewares(middlewares));
     });
 
     app.use(notFound);
@@ -89,6 +89,10 @@ export class ExpressExtension {
     });
 
     return flatten(routeEntries);
+  }
+
+  private catchErrorsMiddlewares(middlewares: Middleware[]) {
+    return middlewares.map((middleware) => catchErrors(middleware));
   }
 
   static id = '@teambit/express';
