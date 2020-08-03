@@ -57,8 +57,8 @@ export class UIRuntimeExtension {
       <GraphqlProvider>
         <ClientContext>
           <Compose components={contexts}>
-            {hudItems}
             {routes}
+            {hudItems}
           </Compose>
         </ClientContext>
       </GraphqlProvider>,

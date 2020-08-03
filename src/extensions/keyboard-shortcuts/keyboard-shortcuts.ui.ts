@@ -40,6 +40,8 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
     });
   }
 
+  private reverseMap: Map<CommandId, Set<Keybinding>> = new Map();
+
   private exec(key: Keybinding) {
     const { commandRegistryUi } = this;
 
@@ -49,25 +51,48 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
     commandRegistryUi.run(command);
   }
 
+  private _getReverse = (command: CommandId) => {
+    if (!this.reverseMap.has(command)) {
+      this.reverseMap.set(command, new Set());
+    }
+
+    return this.reverseMap.get(command)!;
+  };
+
   set = (key: Keybinding, command: CommandId) => {
     // TODO - consider supporting multiple commands per key
     if (super.has(key)) throw new Error(`duplicate keyboard keybinding "${key}"`);
 
     this.mousetrap.bind(key, this.exec.bind(this, key));
+
+    this._getReverse(command).add(key);
     return super.set(key, command);
   };
 
   delete = (key: Keybinding) => {
     this.mousetrap.unbind(key);
+
+    const command = this.get(key);
+    if (command) this._getReverse(command).delete(key);
+
     return super.delete(key);
   };
 
   clear = () => {
     this.mousetrap.reset();
+    this.reverseMap.clear();
     return super.clear();
   };
 
   trigger = (key: Keybinding) => {
     this.mousetrap.trigger(key);
   };
+
+  findKeybindings(command: string) {
+    const keySet = this.reverseMap.get(command);
+
+    // returns first value.
+    const iter = keySet?.values()?.next();
+    return iter?.done ? undefined : iter?.value;
+  }
 }

@@ -1,11 +1,27 @@
-import React, { useCallback, createRef, useEffect, useState } from 'react';
+import React, { useCallback, createRef, useEffect, useState, useMemo } from 'react';
+import Fuze from 'fuse.js';
 import classNames from 'classnames';
 import { Card } from '@bit/bit.base-ui.surfaces.card';
 import styles from './command-bar.module.scss';
+import { CommandBarOption } from './command-bar-item';
+import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';
+import { Hotkeys } from '../../stage-components/elements/key';
 
-export type CommandBarProps = { visible: boolean; onClose: () => void; onSubmit: (command: string) => void };
+export type CommandObj = {
+  id: string;
+  key?: Keybinding;
+  name: string;
+  description?: string;
+};
 
-export function CommandBar({ visible = false, onClose, onSubmit }: CommandBarProps) {
+export type CommandBarProps = {
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (command: string) => void;
+  autoComplete: (filter: string, limit?: number) => Fuze.FuseResult<CommandObj>[];
+};
+
+export function CommandBar({ visible = false, onClose, onSubmit, autoComplete }: CommandBarProps) {
   const inputRef = createRef<HTMLInputElement>();
   const [value, setValue] = useState('');
 
@@ -15,7 +31,7 @@ export function CommandBar({ visible = false, onClose, onSubmit }: CommandBarPro
         case 'Escape':
           return onClose();
         default:
-          return undefined;
+          return;
       }
     },
     [value, onClose]
@@ -24,6 +40,10 @@ export function CommandBar({ visible = false, onClose, onSubmit }: CommandBarPro
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   }, []);
+
+  const options = useMemo(() => {
+    return autoComplete(value);
+  }, [value, autoComplete]);
 
   useEffect(() => {
     setValue('');
@@ -48,6 +68,13 @@ export function CommandBar({ visible = false, onClose, onSubmit }: CommandBarPro
           onKeyDown={handleKeyDown}
         />
       </form>
+      {options.map((x) => (
+        <CommandBarOption key={x.item.id} onClick={() => onSubmit(x.item.id)}>
+          {x.item.key && <Hotkeys className={styles.commandKeys}>{x.item.key}</Hotkeys>}
+          <div>{x.item.name}</div>
+          <div className={styles.commandDescription}>{x.item.description}</div>
+        </CommandBarOption>
+      ))}
     </Card>
   );
 }

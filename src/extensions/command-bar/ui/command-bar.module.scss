@@ -1,37 +1,50 @@
 .commandBar {
-	display: none;
+  display: none;
 
-	position: fixed;
-	top: 16px;
-	left: 50%;
-	transform: translate(-50%, 0);
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, 0);
 
-	width: 521px;
-	max-width: 90%;
+  width: 521px;
+  max-width: 90%;
 
-	&.visible {
-		display: block;
-	}
-	
-	> form {
-		display: flex;
-	}
+  &.visible {
+    display: block;
+  }
+
+  > form {
+    display: flex;
+  }
 }
 
 .commandBar {
-	padding: 8px;
-	z-index: 8000;
+  padding: 8px;
+  z-index: 8000;
+}
+
+// TODO - use evangelist input
+.input {
+  padding: 11px 18px;
+  font-size: inherit;
+  font-family: inherit;
+  border-radius: 7px;
+  border: solid 1px var(--border-color, #ededed);
+  background-color: var(--bg-dent, #f6f6f6);
 }
 
 .input {
-	padding: 11px 18px;
-	font-size: inherit;
-	font-family: inherit;
-	border-radius: 7px;
-	border: solid 1px var(--border-color, #ededed);
-	background-color: var(--bg-dent, #f6f6f6);
+  :not(:last-child) {
+    margin-bottom: 8px;
+  }
+  width: 100%;
 }
 
-.input { 
-	width: 100%;
+.commandKeys {
+  float: right;
+  font-size: 0.764em;
+}
+
+.commandDescription {
+  font-size: 0.85em;
 }

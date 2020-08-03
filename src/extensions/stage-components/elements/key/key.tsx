@@ -5,12 +5,13 @@ import { keySymbols } from './key-characters';
 
 export type KbdProps = { children: string } & React.HTMLAttributes<HTMLElement>;
 
-export function Hotkeys({ children }: { children: string }) {
+type HotkeysProps = { children: string } & React.HTMLAttributes<HTMLDivElement>;
+export function Hotkeys({ children, className, ...rest }: HotkeysProps) {
   // TODO - support all separators - sequence (' '), AND ('+'), OR (string[])
   const split = children.split('+').map((x) => x.trim());
 
   return (
-    <div className={styles.hotkeys}>
+    <div {...rest} className={classNames(className, styles.hotkeys)}>
       {split.map((x, idx) => (
         <Key key={idx}>{x}</Key>
       ))}
