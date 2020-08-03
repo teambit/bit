@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { AccountObj } from '../version-block/change-log.data';
 import { TimeAgo } from '../../workspace-components/time-ago';
-import Avatar from '../../workspace-components/Avatar';
+import { UserAvatar } from '../../workspace-components/Avatar';
 import styles from './contributors.module.scss';
 
 export type ContributorsProps = {
@@ -10,11 +10,11 @@ export type ContributorsProps = {
   timestamp: string;
 };
 
-export function Contributors({ contributors, timestamp }: ContributorsProps) {
+export function Contributors({ contributors = [], timestamp }: ContributorsProps) {
   return (
     <div className={styles.row}>
       {contributors.slice(0, 3).map((user, index) => (
-        <Avatar key={index} size={20} account={user} className={styles.marginRight} />
+        <UserAvatar key={index} size={20} account={user || {}} className={styles.marginRight} />
       ))}
       <div className={classNames(styles.marginRight)}>
         {calcUsers(contributors)} <span>released this</span>
