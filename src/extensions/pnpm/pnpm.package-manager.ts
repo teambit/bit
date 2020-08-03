@@ -29,7 +29,8 @@ export class PnpmPackageManager implements PackageManager {
       undefined,
       rootDepObject,
       rootDir,
-      components
+      components,
+      true
     );
     const rootManifest = workspaceManifest.toJson({ includeDir: true });
     const componentsManifests = this.computeComponentsManifests(

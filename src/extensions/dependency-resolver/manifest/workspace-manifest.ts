@@ -9,11 +9,12 @@ import {
 } from '../types';
 import { Manifest } from './manifest';
 import { ComponentManifest } from './component-manifest';
-import { Component } from '../../component';
+import { Component, ComponentID } from '../../component';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
 import { DependencyGraph } from '../dependency-graph';
 import { RUNTIME_DEP_LIFECYCLE_TYPE, DEV_DEP_LIFECYCLE_TYPE, PEER_DEP_LIFECYCLE_TYPE } from '../constants';
 import { dedupeDependencies, DedupedDependencies } from './deduping';
+import { Dependencies, Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export type ManifestToJsonOptions = {
@@ -39,9 +40,13 @@ export class WorkspaceManifest extends Manifest {
     version: SemVer,
     dependencies: DependenciesObjectDefinition,
     rootDir: string,
-    components: Component[]
+    components: Component[],
+    filterComponentsFromManifests = true
   ): WorkspaceManifest {
-    const componentDependenciesMap: ComponentDependenciesMap = buildComponentDependenciesMap(components);
+    const componentDependenciesMap: ComponentDependenciesMap = buildComponentDependenciesMap(
+      components,
+      filterComponentsFromManifests
+    );
     const dedupedDependencies = dedupeDependencies(dependencies, componentDependenciesMap);
     const componentsManifestsMap = getComponentsManifests(dedupedDependencies, components);
     const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifestsMap);
@@ -64,15 +69,30 @@ export class WorkspaceManifest extends Manifest {
  * Get the components and build a map with the package name (from the component) as key and the dependencies as values
  *
  * @param {Component[]} components
+ * @param {boolean} [filterComponentsFromManifests=true] - filter existing components from the dep graphs
  * @returns
  */
-function buildComponentDependenciesMap(components: Component[]) {
+function buildComponentDependenciesMap(components: Component[], filterComponentsFromManifests = true) {
   const result = new Map<PackageName, DependenciesObjectDefinition>();
+  let filterFn;
+  if (filterComponentsFromManifests) {
+    filterFn = (componentsToFilterOut: Component[]): DependenciesFilterFunction => (
+      dependency: Dependency
+    ): boolean => {
+      // Remove dependencies which has no version (they are new in the workspace)
+      if (!dependency.id.hasVersion()) return false;
+      const existingComponent = componentsToFilterOut.find((component) => {
+        return component.id.isEqual(ComponentID.fromLegacy(dependency.id));
+      });
+      if (existingComponent) return false;
+      return true;
+    };
+  }
 
   components.forEach((component) => {
     const packageName = componentIdToPackageName(component.state._consumer);
     const depGraph = new DependencyGraph(component);
-    const depObject = depGraph.toJson();
+    const depObject = depGraph.toJson(filterFn(components));
     result.set(packageName, depObject);
   });
   return result;

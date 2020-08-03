@@ -68,9 +68,17 @@ export class DependencyResolverExtension {
     version: SemVer = new SemVer('1.0.0'),
     dependencies: DependenciesObjectDefinition,
     rootDir: string,
-    components: Component[]
+    components: Component[],
+    filterComponentsFromManifests = true
   ): WorkspaceManifest {
-    return WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components);
+    return WorkspaceManifest.createFromComponents(
+      name,
+      version,
+      dependencies,
+      rootDir,
+      components,
+      filterComponentsFromManifests
+    );
   }
 
   /**
