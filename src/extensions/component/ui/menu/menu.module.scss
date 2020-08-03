@@ -1,12 +1,16 @@
 .topBar {
 	display: flex;
 	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	height: 100%;
 }
 
 .navigation {
 	display: flex;
 	list-style: none;
 	height: 100%;
+	padding-left: 28px;
 
 	> li {
 		display: block;

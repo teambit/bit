@@ -1,5 +1,6 @@
 import React from 'react';
 import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
+import styles from './top-bar.module.scss';
 
 export type TopBarProps = {
   /**
@@ -18,7 +19,7 @@ export type TopBarProps = {
  */
 export function TopBar({ Corner, menu }: TopBarProps) {
   return (
-    <div>
+    <div className={styles.topbar}>
       <Corner />
       <SlotRouter slot={menu} />
     </div>
