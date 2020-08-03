@@ -864,7 +864,7 @@ jobs:
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
-          key: windows_bitsrc-registry-v4
+          key: windows_bitsrc-registry-v5
           # key: windows_bitsrc-registry-stg-v1
           paths:
             - C:\Users\circleci\.npmrc
@@ -880,7 +880,7 @@ jobs:
           at: .
       -
         restore_cache:
-          key: windows_bitsrc-registry-v4
+          key: windows_bitsrc-registry-v5
           # key: windows_bitsrc-registry-stg-v1
       # -
       #   run: 'npm config list'
