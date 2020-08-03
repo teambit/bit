@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
-import { ThemeContext } from '@bit/bit.test-scope.theme.theme-context';
+import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
 import { ComponentModel } from '../../component/ui';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
