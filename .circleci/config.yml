@@ -846,6 +846,14 @@ jobs:
         run:
           name: setting npmjs regisry
           command: Add-Content C:\Users\circleci\.npmrc '//registry.npmjs.org/:_authToken=$Env:tempVarDebug'
+      -
+        run:
+          name: setting npmjs regisry
+          command: Add-Content C:\Users\circleci\.npmrc ("//registry.npmjs.org/:_authToken2=" + $Env:tempVarDebug)
+      -
+        run:
+          name: setting npmjs regisry
+          command: Add-Content C:\Users\circleci\.npmrc '//registry.npmjs.org/:_authToken3=($Env:tempVarDebug)'
       # prod registry
       # -
         # run: npm config set @bit:registry https://node.bit.dev
