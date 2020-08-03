@@ -927,11 +927,17 @@ workflows:
           requires:
             - build
       -
-        lint
+        lint:
+          requires:
+            - install_npm_deps
       -
-        check_types
+        check_types:
+          requires:
+            - install_npm_deps
       -
-        generate_types
+        generate_types:
+          requires:
+            - build
       -
         generate_docs:
           <<: *semver_tags_only_filters
