@@ -86,7 +86,14 @@ export class Watcher {
       return this.completeWatch(start);
     }
     logger.console(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
-    const buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId));
+    let buildResults;
+    try {
+      buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId));
+    } catch (err) {
+      // do not exist the watch process on errors, just print them
+      logger.console(err.message || err);
+      return this.completeWatch(start);
+    }
     if (buildResults && buildResults.length) {
       buildResults.forEach((extensionResult) => {
         logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
