@@ -6,8 +6,6 @@ import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
 import { PostStartOptions } from '../ui/ui-root';
 
-// const commandBar = require.resolve('../command-bar/command-bar.ui');
-
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
     /**
@@ -40,6 +38,7 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('../commands/commands.ui'),
       require.resolve('../keyboard-shortcuts/keyboard-shortcuts.ui'),
       require.resolve('../cheat-sheet/cheat-sheet.ui'),
+      require.resolve('../command-bar/command-bar.ui'),
     ];
   }
 

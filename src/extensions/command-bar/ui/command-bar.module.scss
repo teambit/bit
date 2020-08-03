@@ -1,0 +1,37 @@
+.commandBar {
+	display: none;
+
+	position: fixed;
+	top: 16px;
+	left: 50%;
+	transform: translate(-50%, 0);
+
+	width: 521px;
+	max-width: 90%;
+
+	&.visible {
+		display: block;
+	}
+	
+	> form {
+		display: flex;
+	}
+}
+
+.commandBar {
+	padding: 8px;
+	z-index: 8000;
+}
+
+.input {
+	padding: 11px 18px;
+	font-size: inherit;
+	font-family: inherit;
+	border-radius: 7px;
+	border: solid 1px var(--border-color, #ededed);
+	background-color: var(--bg-dent, #f6f6f6);
+}
+
+.input { 
+	width: 100%;
+}
