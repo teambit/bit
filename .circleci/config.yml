@@ -127,11 +127,11 @@ jobs:
     <<: *defaults
     steps:
       # npmjs regisry
-      -
-        run:
-          name: setting npmjs regisry
-          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: npm whoami
+      # -
+      #   run:
+      #     name: setting npmjs regisry
+      #     command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      # - run: npm whoami
       # prod registry
       -
         run: npm config set @bit:registry https://node.bit.dev
