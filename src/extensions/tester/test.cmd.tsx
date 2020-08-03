@@ -5,6 +5,7 @@ import { Box, Color } from 'ink';
 import { Command } from '../cli';
 import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export class TestCmd implements Command {
   name = 'test-new [pattern]';
@@ -18,6 +19,7 @@ export class TestCmd implements Command {
   constructor(private tester: TesterExtension, private workspace: Workspace) {}
 
   async render([userPattern]: [string]) {
+    if (!this.workspace) throw new ConsumerNotFound();
     const pattern = userPattern && userPattern.toString();
     const results = await this.tester.test(
       pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list()

@@ -16,6 +16,7 @@ import { ComponentID } from '../component';
 import { Component } from '../component';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import { OnComponentChangeResult } from '../workspace/on-component-change';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -124,6 +125,7 @@ export class WorkspaceCompiler {
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const bitIds = await this.getBitIds(componentsIds);
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
