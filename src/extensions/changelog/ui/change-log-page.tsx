@@ -11,7 +11,6 @@ type ChangeLogPageProps = {
   versions: Version[];
 } & HTMLAttributes<HTMLDivElement>;
 
-// @graphqlConnector()
 export function ChangeLogPage({ versions, className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   if (!versions) return <div>No tags yet</div>;

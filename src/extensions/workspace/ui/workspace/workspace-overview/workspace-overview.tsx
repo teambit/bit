@@ -1,15 +1,14 @@
-import React from 'react';
-import R from 'ramda';
+import React, { useContext } from 'react';
 import { ComponentGrid } from '@bit/bit.explorer.ui.component-grid';
 import { ComponentCard } from '@bit/bit.explorer.ui.component-card';
 import { ComponentComposition } from '../../../../compositions/ui';
-import styles from './workspace-grid.module.scss';
+import { WorkspaceContext } from '../workspace-context';
+import styles from './workspace-overview.module.scss';
 
-export type WorkspaceComponentGridProps = {
-  components: any[];
-};
+export function WorkspaceOverview() {
+  const workspace = useContext(WorkspaceContext);
+  const { components } = workspace;
 
-export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridProps) {
   return (
     <div className={styles.container}>
       <ComponentGrid>
@@ -17,9 +16,8 @@ export function WorkspaceComponentGrid({ components }: WorkspaceComponentGridPro
           return (
             <div key={index}>
               <ComponentCard
-                id={R.path(['id', 'fullName'], component)}
-                size={14093}
-                description={component.abstract}
+                id={component.id.fullName}
+                // footer={<CardFooter slot={}></CardFooter>}
                 preview={<ComponentComposition component={component} />}
               />
             </div>

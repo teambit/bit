@@ -103,30 +103,15 @@ export default class Show implements LegacyCommand {
       component.scopesList = component.componentFromModel.scopesList;
     }
     if (json) {
-      const makeEnvFilesReadable = (env) => {
-        if (!env) return undefined;
-        if (env.files && env.files.length) {
-          const readableFiles = env.files.map((file) => file.toReadableString());
-          return readableFiles;
-        }
-        return [];
-      };
-
       const makeComponentReadable = (comp: ConsumerComponent) => {
         if (!comp) return comp;
         const componentObj = comp.toObject();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentObj.files = comp.files.map((file) => file.toReadableString());
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentObj.dists = componentObj.dists.getAsReadable();
-        if (comp.compiler) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          componentObj.compiler.files = makeEnvFilesReadable(comp.compiler);
-        }
-        if (comp.tester) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          componentObj.tester.files = makeEnvFilesReadable(comp.tester);
+        if (comp.extensions && comp.extensions.length) {
+          componentObj.extensions.forEach(
+            (extension) => (extension.artifacts = extension.artifacts.map((file) => file.toReadableString()))
+          );
         }
 
         if (comp.componentMap) {

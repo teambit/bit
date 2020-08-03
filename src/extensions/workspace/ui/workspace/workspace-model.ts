@@ -46,4 +46,8 @@ export class Workspace {
       })
     );
   }
+
+  static empty() {
+    return new Workspace('', '', []);
+  }
 }
