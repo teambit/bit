@@ -10,6 +10,7 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { CreateExtConfig } from './types';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
@@ -23,6 +24,7 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const templateExtName = this.config?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
