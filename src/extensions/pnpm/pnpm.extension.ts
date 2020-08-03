@@ -11,7 +11,6 @@ export class PnpmExtension {
   static async provider([depResolver, pkg, loggerExt]: [DependencyResolverExtension, PkgExtension, LoggerExtension]) {
     const logger = loggerExt.createLogger(PnpmExtension.id);
     depResolver.registerPackageManager(new PnpmPackageManager(depResolver, pkg, logger));
-
     return new PnpmExtension();
   }
 }

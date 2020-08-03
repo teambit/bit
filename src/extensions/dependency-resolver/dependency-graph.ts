@@ -12,10 +12,9 @@ export class DependencyGraph {
   toJson(filterFunc?: DependenciesFilterFunction): DependenciesObjectDefinition {
     const consumerComponent: ConsumerComponent = this.component.state._consumer;
 
-    return {
+    const json = {
       devDependencies: {
         ...this.toPackageJson(this.component, consumerComponent.devDependencies),
-        filterFunc,
         ...consumerComponent.packageDependencies,
       },
       dependencies: {
@@ -26,6 +25,7 @@ export class DependencyGraph {
         ...consumerComponent.peerPackageDependencies,
       },
     };
+    return json;
   }
 
   private toPackageJson(component: Component, dependencies: Dependencies, filterFunc?: DependenciesFilterFunction) {

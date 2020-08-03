@@ -13,7 +13,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<void> {
     const storeDir: string = join(userHome, '.pnpm-store');
-    const workspacePolicy = this.depResolver.getWorkspacePolicy();
+    const workspacePolicy = this.depResolver.getWorkspacePolicy() || {};
     const rootDepObject = {
       dependencies: {
         ...workspacePolicy.dependencies,

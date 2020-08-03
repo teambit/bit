@@ -82,7 +82,12 @@ function buildComponentDependenciesMap(components: Component[], filterComponents
       // Remove dependencies which has no version (they are new in the workspace)
       if (!dependency.id.hasVersion()) return false;
       const existingComponent = componentsToFilterOut.find((component) => {
-        return component.id.isEqual(ComponentID.fromLegacy(dependency.id));
+        const depNewId = ComponentID.fromLegacy(dependency.id);
+        // For new components, the component has no version but the dependency id has version 0.0.1
+        if (!component.id.hasVersion()) {
+          return component.id.toString() === dependency.id.toStringWithoutVersion();
+        }
+        return component.id.isEqual(depNewId);
       });
       if (existingComponent) return false;
       return true;
