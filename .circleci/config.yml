@@ -856,16 +856,24 @@ jobs:
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
+        run:
+          name: setting bit registry
+          command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
+      -
         run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
       # stage registry
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
       # -
+      #   run:
+      #     name: setting bit registry
+      #     command: Add-Content C:\Users\circleci\.npmrc ("//node-stg.bit.dev/:_authToken=" + $Env:registryStgToken)
+      # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
           key: windows_bitsrc-registry-v5
-          # key: windows_bitsrc-registry-stg-v1
+          # key: windows_bitsrc-registry-stg-v2
           paths:
             - C:\Users\circleci\.npmrc
   windows_install_npm_deps:
@@ -881,7 +889,7 @@ jobs:
       -
         restore_cache:
           key: windows_bitsrc-registry-v5
-          # key: windows_bitsrc-registry-stg-v1
+          # key: windows_bitsrc-registry-stg-v2
       # -
       #   run: 'npm config list'
       -
@@ -941,7 +949,7 @@ jobs:
       -
         restore_cache:
           key: windows_bitsrc-registry-v1
-          # key: windows_bitsrc-registry-stg-v1
+          # key: windows_bitsrc-registry-stg-v2
       # -
       #   restore_cache:
       #     keys:
