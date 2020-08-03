@@ -532,7 +532,7 @@ export class Workspace implements ComponentFactory {
     // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
     // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
     // level passed to it).
-    await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+    await loadResolvedExtensions(this.harmony, resolvedExtensions, this.logger, false);
   }
 
   async requireComponents(ids: ComponentID[]) {
