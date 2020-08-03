@@ -127,12 +127,10 @@ jobs:
     <<: *defaults
     steps:
       # npmjs regisry
-      -
-        run:
-          name: setting npmjs regisry
-          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: echo $npmjsRegistryToken
-      - run: cat ~/.npmrc
+      # -
+      #   run:
+      #     name: setting npmjs regisry
+      #     command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       # - run: npm whoami
       # prod registry
       -
