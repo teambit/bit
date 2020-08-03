@@ -72,7 +72,7 @@ export class WorkspaceManifest extends Manifest {
   }
 
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
-    const manifest = super.toJson();
+    const manifest = super.toJson(options);
     if (options.includeDir) {
       return {
         rootDir: this.dir,
