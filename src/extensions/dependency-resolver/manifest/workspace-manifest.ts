@@ -33,7 +33,6 @@ export class WorkspaceManifest extends Manifest {
     private rootDir: string,
     public componentsManifestsMap: ComponentsManifestsMap
   ) {
-    console.log('cons, name', name);
     super(name, version, dependencies);
   }
 

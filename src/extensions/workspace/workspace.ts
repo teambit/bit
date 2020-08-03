@@ -6,6 +6,7 @@ import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
+import { link } from '../../api/consumer';
 import { ScopeExtension } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
@@ -546,6 +547,11 @@ export class Workspace implements ComponentFactory {
     const installer = this.dependencyResolver.getInstaller();
     const installationMap = await this.getComponentsDirectory(ids);
     await installer.install(this.path, installationMap);
+    const stringIds = ids.map((id) => id.toString());
+    // TODO: add the links results to the output
+    this.logger.setStatusLine('linking components');
+    await link(stringIds, false);
+    this.logger.consoleSuccess();
     return installationMap;
   }
 

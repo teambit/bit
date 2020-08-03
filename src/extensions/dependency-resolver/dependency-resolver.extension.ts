@@ -76,8 +76,10 @@ export class DependencyResolverExtension {
       createManifestForComponentsWithoutDependencies: true,
     }
   ): WorkspaceManifest {
-    this.logger.consoleTitle('deduping dependencies for installation');
-    return WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components, options);
+    this.logger.setStatusLine('deduping dependencies for installation');
+    const res = WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components, options);
+    this.logger.consoleSuccess();
+    return res;
   }
 
   /**
