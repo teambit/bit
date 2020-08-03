@@ -26,8 +26,8 @@ export default class InstallCmd implements Command {
   async report([rawIds]: [string[]]) {
     const startTime = Date.now();
     this.logger.consoleTitle(`Resolving dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
-    const ids = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
-    // @ts-ignore until david and gilad will handle resolveComponentId
+    const idsP = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
+    const ids = await Promise.all(idsP);
     const components = await this.workspace.install(ids);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);
