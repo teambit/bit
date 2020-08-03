@@ -123,9 +123,14 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
-  set_bitsrc_registry:
+  set_npm_registries:
     <<: *defaults
     steps:
+      # npmjs regisry
+      -
+        run:
+          name: setting npmjs regisry
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       # prod registry
       -
         run: npm config set @bit:registry https://node.bit.dev
@@ -832,9 +837,14 @@ jobs:
           paths:
             - id_rsa
             - id_rsa.pub
-  windows_set_bitsrc_registry:
+  windows_set_npm_registries:
     <<: *windows_defaults
     steps:
+      # npmjs regisry
+      -
+        run:
+          name: setting npmjs regisry
+          command: Add-Content C:\Users\circleci\.npmrc '//registry.npmjs.org/:_authToken=$Env:npmjsRegistryToken'
       # prod registry
       # -
         # run: npm config set @bit:registry https://node.bit.dev
@@ -990,20 +1000,20 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
-      - set_bitsrc_registry
+      - set_npm_registries
       -
         setup_react_new_project:
           requires:
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         setup_explorer_project:
           requires:
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1053,7 +1063,7 @@ workflows:
                 - bit-hub-tests
           requires:
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
             - configure-bit
             - link_react_new_project_and_explorer
             # - pack
@@ -1074,7 +1084,7 @@ workflows:
           requires:
             - build
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
   windows_e2e:
     jobs:
       - windows_approval_job:
@@ -1085,13 +1095,13 @@ workflows:
       # - windows_set_ssh_key:
       #     requires:
       #       - windows_approval_job
-      - windows_set_bitsrc_registry:
+      - windows_set_npm_registries:
           requires:
             - windows_approval_job
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code
-            - windows_set_bitsrc_registry
+            - windows_set_npm_registries
       - windows_build:
           requires:
             - windows_install_npm_deps
@@ -1099,7 +1109,7 @@ workflows:
           requires:
             - windows_build
             # - windows_set_ssh_key
-            - windows_set_bitsrc_registry
+            - windows_set_npm_registries
   deploy:
     jobs:
       - checkout_code:
@@ -1214,12 +1224,12 @@ workflows:
                 - prod
     jobs:
       - checkout_code
-      - set_bitsrc_registry
+      - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1239,12 +1249,12 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
-      - set_bitsrc_registry
+      - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1253,5 +1263,5 @@ workflows:
         bit_hub_e2e_test:
           requires:
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
             - build
