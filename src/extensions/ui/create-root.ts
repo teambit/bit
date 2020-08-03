@@ -1,4 +1,5 @@
 import { parse } from 'path';
+import camelCase from 'camelcase';
 
 export async function createRoot(extensionsPaths: string[], rootExtensionName?: string) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
@@ -29,5 +30,6 @@ function getIdentifiers(extensionsPaths: string[]): string {
 }
 
 function getIdentifier(path: string): string {
-  return parse(path).name.split('.')[0];
+  const filename = parse(path).name.split('.')[0];
+  return camelCase(filename);
 }

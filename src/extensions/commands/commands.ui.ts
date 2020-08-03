@@ -1,4 +1,7 @@
-export type CommandOptions = {};
+export type CommandOptions = {
+  name: string;
+  description?: string;
+};
 export type CommandHandler = (...arg: any[]) => any;
 export type CommandEntry = CommandOptions & {
   handler: CommandHandler;

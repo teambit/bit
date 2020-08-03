@@ -1,10 +1,11 @@
 import Mousetrap from 'mousetrap';
-import CommandRegistryUi, { CommandId } from '../commands.ui/commands.ui';
+import CommandRegistryUi, { CommandId } from '../commands/commands.ui';
+import { hotkeys } from './hotkeys';
 
 // consider expanding this to be `string | string[]`
 export type Keybinding = string;
 
-type SerializedKeybinding = {
+export type SerializedKeybinding = {
   key: Keybinding;
   command: CommandId;
 };
@@ -14,17 +15,21 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
   static slots = [];
   static async provider([commandRegistryUi]: [CommandRegistryUi] /* config, slots: [] */) {
     const keyboardShortcuts = new KeyboardShortcuts(commandRegistryUi);
+    keyboardShortcuts.load(hotkeys);
     return keyboardShortcuts;
   }
-
-  private mousetrap = new Mousetrap();
 
   constructor(private commandRegistryUi: CommandRegistryUi) {
     super();
   }
 
+  private mousetrap = new Mousetrap();
+
   load(keybindings: SerializedKeybinding[]) {
-    keybindings.forEach(({ key, command }) => this.set(key, command));
+    keybindings.forEach(({ key, command }) => {
+      if (key.startsWith('-')) this.delete(key.slice(1));
+      else this.set(key, command);
+    });
   }
   toObj(): SerializedKeybinding[] {
     return Array.from(super.entries()).map(([key, command]) => {
