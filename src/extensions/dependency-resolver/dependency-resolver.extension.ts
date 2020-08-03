@@ -11,7 +11,7 @@ import {
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
-import { LoggerExtension } from '../logger';
+import { LoggerExtension, Logger } from '../logger';
 import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import ConsumerComponent from '../../consumer/component';
@@ -19,7 +19,7 @@ import { DependencyInstaller } from './dependency-installer';
 import { PackageManagerNotFound } from './exceptions';
 import { Component } from '../component';
 import { DependencyGraph } from './dependency-graph';
-import { WorkspaceManifest } from './manifest/workspace-manifest';
+import { WorkspaceManifest, CreateFromComponentsOptions } from './manifest/workspace-manifest';
 import { ROOT_NAME } from './constants';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
@@ -43,6 +43,8 @@ export class DependencyResolverExtension {
      * envs extension.
      */
     private envs: Environments,
+
+    private logger: Logger,
 
     private packageManagerSlot: PackageManagerSlot
   ) {}
@@ -69,16 +71,13 @@ export class DependencyResolverExtension {
     dependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    filterComponentsFromManifests = true
+    options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+    }
   ): WorkspaceManifest {
-    return WorkspaceManifest.createFromComponents(
-      name,
-      version,
-      dependencies,
-      rootDir,
-      components,
-      filterComponentsFromManifests
-    );
+    this.logger.consoleTitle('deduping dependencies for installation');
+    return WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components, options);
   }
 
   /**
@@ -152,12 +151,19 @@ export class DependencyResolverExtension {
   };
 
   static async provider(
-    [envs, logger]: [Environments, LoggerExtension],
+    [envs, loggerExt]: [Environments, LoggerExtension],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
-    const dependencyResolver = new DependencyResolverExtension(config, policiesRegistry, envs, packageManagerSlot);
+    const logger = loggerExt.createLogger(DependencyResolverExtension.id);
+    const dependencyResolver = new DependencyResolverExtension(
+      config,
+      policiesRegistry,
+      envs,
+      logger,
+      packageManagerSlot
+    );
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverExtension.id,
       async (configuredExtensions: ExtensionDataList) => {

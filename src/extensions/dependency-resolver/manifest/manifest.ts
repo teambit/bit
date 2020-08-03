@@ -1,6 +1,10 @@
 import { SemVer } from 'semver';
 import { DependenciesObjectDefinition } from '../types';
 
+export interface ManifestToJsonOptions {
+  copyPeerToRuntime?: boolean;
+}
+
 export class Manifest {
   constructor(public name: string, public version: SemVer, public dependencies: DependenciesObjectDefinition) {}
 
@@ -9,13 +13,19 @@ export class Manifest {
   //   throw new GeneralError('not implemented');
   // }
 
-  toJson(): Record<string, any> {
+  toJson(options: ManifestToJsonOptions = {}): Record<string, any> {
+    let dependencies = this.dependencies.dependencies || {};
+    let devDependencies = this.dependencies.devDependencies || {};
+    let peerDependencies = this.dependencies.peerDependencies || {};
+    if (options.copyPeerToRuntime) {
+      dependencies = Object.assign(peerDependencies, dependencies);
+    }
     const manifest = {
-      name,
+      name: this.name,
       version: this.version.version,
-      dependencies: this.dependencies.dependencies || {},
-      devDependencies: this.dependencies.devDependencies || {},
-      peerDependencies: this.dependencies.peerDependencies || {},
+      dependencies,
+      devDependencies,
+      peerDependencies,
     };
     // if (options.includeDir) {
     //   return {

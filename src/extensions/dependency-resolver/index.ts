@@ -10,3 +10,4 @@ export {
   DependencyType,
   ComponentsManifestsMap,
 } from './types';
+export { CreateFromComponentsOptions } from './manifest/workspace-manifest';

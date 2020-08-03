@@ -34,7 +34,7 @@ export class DependencyGraph {
       dependenciesToUse = dependencies.filter(filterFunc);
     }
     const newVersion = '0.0.1-new';
-    return dependencies.getAllIds().reduce((acc, depId: BitId) => {
+    return dependenciesToUse.getAllIds().reduce((acc, depId: BitId) => {
       const dependencyVersion = depId.hasVersion() ? depId.version : newVersion;
       const packageName = componentIdToPackageName({
         ...component.state._consumer,

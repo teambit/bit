@@ -7,7 +7,7 @@ import {
   DepObjectValue,
   ComponentsManifestsMap,
 } from '../types';
-import { Manifest } from './manifest';
+import { Manifest, ManifestToJsonOptions } from './manifest';
 import { ComponentManifest } from './component-manifest';
 import { Component, ComponentID } from '../../component';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
@@ -17,8 +17,13 @@ import { dedupeDependencies, DedupedDependencies } from './deduping';
 import { Dependencies, Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
-export type ManifestToJsonOptions = {
+export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   includeDir?: boolean;
+}
+
+export type CreateFromComponentsOptions = {
+  filterComponentsFromManifests: boolean;
+  createManifestForComponentsWithoutDependencies: boolean;
 };
 export class WorkspaceManifest extends Manifest {
   constructor(
@@ -28,6 +33,7 @@ export class WorkspaceManifest extends Manifest {
     private rootDir: string,
     public componentsManifestsMap: ComponentsManifestsMap
   ) {
+    console.log('cons, name', name);
     super(name, version, dependencies);
   }
 
@@ -41,19 +47,26 @@ export class WorkspaceManifest extends Manifest {
     dependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    filterComponentsFromManifests = true
+    options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+    }
   ): WorkspaceManifest {
     const componentDependenciesMap: ComponentDependenciesMap = buildComponentDependenciesMap(
       components,
-      filterComponentsFromManifests
+      options.filterComponentsFromManifests
     );
     const dedupedDependencies = dedupeDependencies(dependencies, componentDependenciesMap);
-    const componentsManifestsMap = getComponentsManifests(dedupedDependencies, components);
+    const componentsManifestsMap = getComponentsManifests(
+      dedupedDependencies,
+      components,
+      options.createManifestForComponentsWithoutDependencies
+    );
     const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifestsMap);
     return workspaceManifest;
   }
 
-  toJson(options: ManifestToJsonOptions = {}): Record<string, any> {
+  toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson();
     if (options.includeDir) {
       return {
@@ -112,15 +125,25 @@ function buildComponentDependenciesMap(components: Component[], filterComponents
  */
 function getComponentsManifests(
   dedupedDependencies: DedupedDependencies,
-  components: Component[]
+  components: Component[],
+  createManifestForComponentsWithoutDependencies = true
 ): ComponentsManifestsMap {
   const componentsManifests: ComponentsManifestsMap = new Map();
   components.forEach((component) => {
     const packageName = componentIdToPackageName(component.state._consumer);
-    if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
-      const dependencies = dedupedDependencies.componentDependenciesMap.get(
-        packageName
-      ) as DependenciesObjectDefinition;
+    if (
+      dedupedDependencies.componentDependenciesMap.has(packageName) ||
+      createManifestForComponentsWithoutDependencies
+    ) {
+      const blankDependencies: DependenciesObjectDefinition = {
+        dependencies: {},
+        devDependencies: {},
+        peerDependencies: {},
+      };
+      let dependencies = blankDependencies;
+      if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
+        dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as DependenciesObjectDefinition;
+      }
       const version = component.id.hasVersion() ? (component.id.version as string) : '0.0.1-new';
       const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component);
       componentsManifests.set(packageName, manifest);

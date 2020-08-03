@@ -2,7 +2,11 @@ import { join } from 'path';
 import { install } from './lynx';
 import { PackageManager } from '../dependency-resolver/package-manager';
 import { ComponentMap } from '../component/component-map';
-import { DependencyResolverExtension, ComponentsManifestsMap } from '../dependency-resolver';
+import {
+  DependencyResolverExtension,
+  ComponentsManifestsMap,
+  CreateFromComponentsOptions,
+} from '../dependency-resolver';
 import { PkgExtension } from '../pkg';
 import { Logger } from '../logger';
 
@@ -24,15 +28,19 @@ export class PnpmPackageManager implements PackageManager {
     };
 
     const components = componentDirectoryMap.toArray().map(([component]) => component);
+    const options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+    };
     const workspaceManifest = this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
       rootDepObject,
       rootDir,
       components,
-      true
+      options
     );
-    const rootManifest = workspaceManifest.toJson({ includeDir: true });
+    const rootManifest = workspaceManifest.toJson({ includeDir: true, copyPeerToRuntime: true });
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap
