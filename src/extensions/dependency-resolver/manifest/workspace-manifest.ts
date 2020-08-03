@@ -61,7 +61,13 @@ export class WorkspaceManifest extends Manifest {
       components,
       options.createManifestForComponentsWithoutDependencies
     );
-    const workspaceManifest = new WorkspaceManifest(name, version, dependencies, rootDir, componentsManifestsMap);
+    const workspaceManifest = new WorkspaceManifest(
+      name,
+      version,
+      dedupedDependencies.rootDependencies,
+      rootDir,
+      componentsManifestsMap
+    );
     return workspaceManifest;
   }
 
