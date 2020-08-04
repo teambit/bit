@@ -4,10 +4,10 @@ import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { Input } from '@teambit/evangelist-temp.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
-import { ComponentID } from '../../component';
 import { OverviewLink } from './overview-link/overview-link';
-import { Descriptor } from '../../environments/environments.extension';
-import { DeprecationInfo } from '../../deprecation/deprecation.extension';
+import { ComponentID } from '../../../extensions/component';
+import { DeprecationInfo } from '../../../extensions/deprecation/deprecation.extension';
+import { Descriptor } from '../../../extensions/environments/environments.extension';
 
 export type Component = {
   id: ComponentID;
