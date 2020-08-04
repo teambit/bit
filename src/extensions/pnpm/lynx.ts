@@ -1,24 +1,57 @@
 import defaultReporter from '@pnpm/default-reporter';
-import { createFetchFromRegistry } from '@pnpm/fetch';
+// import createClient from '@pnpm/client'
+// import { createFetchFromRegistry } from '@pnpm/fetch';
 import { LogBase, streamParser } from '@pnpm/logger';
-import createFetcher from '@pnpm/tarball-fetcher';
+// import createFetcher from '@pnpm/tarball-fetcher';
 import { mutateModules, MutatedProject } from 'supi';
-import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
-import { createResolver } from './create-resolver';
+// import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
+import { StoreController } from '@pnpm/package-store';
+import { createNewStoreController } from '@pnpm/store-connection-manager';
+// TODO: this should be taken from - @pnpm/store-connection-manager
+// it's not taken from there since it's not exported.
+// here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
+import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
+
+import getConfig from '@pnpm/config';
+// import { createResolver } from './create-resolver';
 
 async function createStoreController(storeDir: string): Promise<StoreController> {
-  const fetchFromRegistry = createFetchFromRegistry({});
-  const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
-  const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
-    metaCache: new Map(),
-    storeDir,
+  // const fetchFromRegistry = createFetchFromRegistry({});
+  // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
+  // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
+  //   metaCache: new Map(),
+  //   storeDir,
+  // });
+  // const fetcher = createFetcher(fetchFromRegistry, getCredentials, {});
+  // const { resolve, fetchers } = createClient({
+  //   // authConfig,
+  //   metaCache: new Map(),
+  //   // retry: retryOpts,
+  //   storeDir,
+  //   // ...resolveOpts,
+  //   // ...fetchOpts,
+  // })
+  // const storeController = await createStore(resolve, fetchers, {
+  //   storeDir,
+  //   verifyStoreIntegrity: true,
+  // });
+  const pnpmConfig = await getConfig({
+    cliOptions: {
+      // 'global': true,
+      // 'link-workspace-packages': true,
+    },
+    packageManager: {
+      name: 'pnpm',
+      version: '1.0.0',
+    },
   });
-  const fetcher = createFetcher(fetchFromRegistry, getCredentials, {});
-  const storeController = await createStore(resolver, fetcher, {
+  const opts: CreateNewStoreControllerOptions = {
     storeDir,
+    rawConfig: pnpmConfig.config.rawConfig,
     verifyStoreIntegrity: true,
-  });
-  return storeController;
+  };
+  const { ctrl } = await createNewStoreController(opts);
+  return ctrl;
 }
 
 export async function install(rootPathToManifest, pathsToManifests, storeDir: string, logFn?: (log: LogBase) => void) {

@@ -45,6 +45,8 @@ export class PnpmPackageManager implements PackageManager {
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap
     );
+    this.logger.debug('root manifest for installation', rootManifest);
+    this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');
     await install(rootManifest, componentsManifests, storeDir);
     this.logger.consoleSuccess('installing dependencies');
