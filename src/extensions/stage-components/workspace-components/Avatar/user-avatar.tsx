@@ -2,7 +2,7 @@
 
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { AccountObj } from './avatar';
 // import Tooltip from 'components/Tooltip';
 import { addQueryParams, getInitials } from './utils';
