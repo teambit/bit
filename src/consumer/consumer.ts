@@ -860,7 +860,8 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    let consumer;
+    let consumer: Consumer | undefined;
+
     if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
