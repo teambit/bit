@@ -5,8 +5,10 @@ import { keySymbols } from './key-characters';
 
 export type KbdProps = { children: string } & React.HTMLAttributes<HTMLElement>;
 
-type HotkeysProps = { children: string } & React.HTMLAttributes<HTMLDivElement>;
+type HotkeysProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
 export function Hotkeys({ children, className, ...rest }: HotkeysProps) {
+  if (!children) return null;
+
   // TODO - support all separators - sequence (' '), AND ('+'), OR (string[])
   const split = children.split('+').map((x) => x.trim());
 

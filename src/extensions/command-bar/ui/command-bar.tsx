@@ -2,10 +2,11 @@ import React, { useCallback, createRef, useEffect, useState, useMemo } from 'rea
 import Fuze from 'fuse.js';
 import classNames from 'classnames';
 import { Card } from '@bit/bit.base-ui.surfaces.card';
-import styles from './command-bar.module.scss';
 import { CommandBarOption } from './command-bar-item';
 import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';
 import { Hotkeys } from '../../stage-components/elements/key';
+import { CommandId } from '../../commands/commands.ui';
+import styles from './command-bar.module.scss';
 
 export type CommandObj = {
   id: string;
@@ -19,60 +20,67 @@ export type CommandBarProps = {
   onClose: () => void;
   onSubmit: (command: string) => void;
   autoComplete: (filter: string, limit?: number) => Fuze.FuseResult<CommandObj>[];
+  getHotkeys: (command: CommandId) => Keybinding | undefined;
 };
 
-export function CommandBar({ visible = false, onClose, onSubmit, autoComplete }: CommandBarProps) {
+const MIN_ACTIVE_IDX = 0;
+
+export function CommandBar({ visible = false, onClose, onSubmit, autoComplete, getHotkeys }: CommandBarProps) {
   const inputRef = createRef<HTMLInputElement>();
   const [value, setValue] = useState('');
+  const [activeIdx, setActive] = useState(MIN_ACTIVE_IDX);
 
   useEffect(() => setValue(''), [visible]);
   useEffect(() => {
-    if (visible) {
-      inputRef.current?.focus();
-    }
+    if (visible) inputRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputRef.current, visible]);
 
+  const options = useMemo(() => {
+    // weird, but legit https://stackoverflow.com/questions/58102182
+    setActive(MIN_ACTIVE_IDX);
+    return autoComplete(value);
+  }, [value, autoComplete]);
+
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      switch (e.key) {
-        case 'Escape':
-          return onClose();
-        default:
-          return undefined;
+    (e: React.KeyboardEvent<HTMLInputElement>): void => {
+      if (e.key === 'Escape') {
+        return onClose();
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        return setActive((v) => Math.min(v + 1, options.length - 1));
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        return setActive((v) => Math.max(v - 1, MIN_ACTIVE_IDX));
+      }
+      if (e.key === 'Enter') {
+        const result = options[activeIdx]?.item.id as string | undefined;
+        if (!result) return undefined; // like vsc
+        return onSubmit(result);
       }
     },
-    [onClose]
+    [activeIdx, onClose, onSubmit, options]
   );
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   }, []);
 
-  const options = useMemo(() => {
-    return autoComplete(value);
-  }, [value, autoComplete]);
-
   return (
     <Card className={classNames(styles.commandBar, visible && styles.visible)}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit(value);
-        }}
-      >
-        <input
-          value={value}
-          onBlur={onClose}
-          onChange={handleChange}
-          className={styles.input}
-          ref={inputRef}
-          onKeyDown={handleKeyDown}
-        />
-      </form>
-      {options.map((x) => (
-        <CommandBarOption key={x.item.id} onClick={() => onSubmit(x.item.id)}>
-          {x.item.key && <Hotkeys className={styles.commandKeys}>{x.item.key}</Hotkeys>}
+      <input
+        value={value}
+        onBlur={onClose}
+        onChange={handleChange}
+        className={styles.input}
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+      />
+      {options.map((x, idx) => (
+        <CommandBarOption key={x.item.id} onClick={() => onSubmit(x.item.id)} active={idx === activeIdx}>
+          <Hotkeys className={styles.commandKeys}>{getHotkeys(x.item.id)}</Hotkeys>
           <div>{x.item.name}</div>
           <div className={styles.commandDescription}>{x.item.description}</div>
         </CommandBarOption>

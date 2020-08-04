@@ -88,11 +88,11 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
     this.mousetrap.trigger(key);
   };
 
-  findKeybindings(command: string) {
+  findKeybindings = (command: string) => {
     const keySet = this.reverseMap.get(command);
 
     // returns first value.
     const iter = keySet?.values()?.next();
     return iter?.done ? undefined : iter?.value;
-  }
+  };
 }

@@ -56,7 +56,6 @@ export default class CommandBarUI {
   };
 
   private searchCommands = (pattern: string, limit = 5) => {
-    if (!pattern.startsWith('>')) return [];
     this.refreshCommands();
 
     return this.fuseCommands.search(pattern, { limit });
@@ -78,7 +77,13 @@ export default class CommandBarUI {
     this.setVisibility = setVisibility;
 
     return (
-      <CommandBar visible={visible} onClose={this.close} onSubmit={this.execute} autoComplete={this.searchCommands} />
+      <CommandBar
+        visible={visible}
+        onClose={this.close}
+        onSubmit={this.execute}
+        autoComplete={this.searchCommands}
+        getHotkeys={this.keyboardShortcuts.findKeybindings}
+      />
     );
   };
 }
