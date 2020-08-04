@@ -1,7 +1,14 @@
 .changeLogPage {
-    padding: 80px 20px;
-}
-
-.title {
-    margin-bottom: 25px;
+    padding: 80px;
+    overflow-y: scroll;
+    .title {
+        margin-bottom: 25px;
+        font-size: var(--h-xs);
+    }
+    .separator {
+        margin-bottom: 0;
+    }
+    // .versions {
+    //     overflow-y: scroll;
+    // }
 }
