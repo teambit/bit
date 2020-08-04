@@ -6,6 +6,7 @@ import {
   DependencyResolverExtension,
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
+  DependenciesObjectDefinition,
 } from '../dependency-resolver';
 import { PkgExtension } from '../pkg';
 import { Logger } from '../logger';
@@ -15,18 +16,12 @@ const userHome = require('user-home');
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverExtension, private pkg: PkgExtension, private logger: Logger) {}
 
-  async install(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<void> {
+  async install(
+    rootDir: string,
+    rootDepsObject: DependenciesObjectDefinition,
+    componentDirectoryMap: ComponentMap<string>
+  ): Promise<void> {
     const storeDir: string = join(userHome, '.pnpm-store');
-    const workspacePolicy = this.depResolver.getWorkspacePolicy() || {};
-    const rootDepObject = {
-      dependencies: {
-        ...workspacePolicy.dependencies,
-      },
-      peerDependencies: {
-        ...workspacePolicy.peerDependencies,
-      },
-    };
-
     const components = componentDirectoryMap.toArray().map(([component]) => component);
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
@@ -35,7 +30,7 @@ export class PnpmPackageManager implements PackageManager {
     const workspaceManifest = this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      rootDepObject,
+      rootDepsObject,
       rootDir,
       components,
       options

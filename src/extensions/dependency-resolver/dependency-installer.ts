@@ -1,5 +1,6 @@
 import { PackageManager } from './package-manager';
 import { ComponentMap } from '../component/component-map';
+import { DependenciesObjectDefinition } from './types';
 
 export class DependencyInstaller {
   constructor(
@@ -9,8 +10,12 @@ export class DependencyInstaller {
     private packageManager: PackageManager
   ) {}
 
-  async install(rootDir: string, componentDirectoryMap: ComponentMap<string>) {
-    await this.packageManager.install(rootDir, componentDirectoryMap);
+  async install(
+    rootDir: string,
+    rootDepsObject: DependenciesObjectDefinition,
+    componentDirectoryMap: ComponentMap<string>
+  ) {
+    await this.packageManager.install(rootDir, rootDepsObject, componentDirectoryMap);
     return componentDirectoryMap;
   }
 }

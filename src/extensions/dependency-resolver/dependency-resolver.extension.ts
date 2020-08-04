@@ -176,6 +176,14 @@ export class DependencyResolverExtension {
 
     return dependencyResolver;
   }
+
+  getEmptyDepsObject(): DependenciesObjectDefinition {
+    return {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
+  }
 }
 
 function mergePolices(policies: DependenciesPolicy[]) {

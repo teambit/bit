@@ -87,7 +87,7 @@ export class IsolatorExtension {
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       const installer = this.dependencyResolver.getInstaller();
-      await installer.install(capsulesDir, this.toComponentMap(capsules));
+      await installer.install(capsulesDir, this.dependencyResolver.getEmptyDepsObject(), this.toComponentMap(capsules));
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
     }
 

@@ -547,7 +547,16 @@ export class Workspace implements ComponentFactory {
   async install(ids: ComponentID[]) {
     const installer = this.dependencyResolver.getInstaller();
     const installationMap = await this.getComponentsDirectory(ids);
-    await installer.install(this.path, installationMap);
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+    const rootDepsObject = {
+      dependencies: {
+        ...workspacePolicy.dependencies,
+      },
+      peerDependencies: {
+        ...workspacePolicy.peerDependencies,
+      },
+    };
+    await installer.install(this.path, rootDepsObject, installationMap);
     const stringIds = ids.map((id) => id.toString());
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
