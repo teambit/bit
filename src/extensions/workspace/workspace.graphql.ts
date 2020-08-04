@@ -25,8 +25,18 @@ export default (workspace: Workspace) => {
         isInScope: Boolean
       }
 
+      type Files {
+        fileName: String
+      }
+
+      type Issues {
+        name: String
+        files: [Files]
+      }
+
       type ComponentIssues {
-        issue: String
+        count: Int
+        issues: [Issues]
       }
 
       extend type Component {
@@ -34,7 +44,7 @@ export default (workspace: Workspace) => {
       }
 
       extend type Component {
-        getIssues: [ComponentIssues]
+        issuesDescriptor: ComponentIssues
       }
 
       type Workspace {
@@ -53,7 +63,7 @@ export default (workspace: Workspace) => {
         status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
         },
-        issues: async (wsComponent: WorkspaceComponent) => {
+        issuesDescriptor: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getIssues();
         },
       },

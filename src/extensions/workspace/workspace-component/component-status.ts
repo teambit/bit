@@ -38,10 +38,6 @@ export class ComponentStatus {
     readonly nested?: boolean
   ) {}
 
-  status(): string {
-    return 'new';
-  }
-
   static fromLegacy(status: LegacyComponentStatus) {
     return new ComponentStatus(
       !!status.modified,

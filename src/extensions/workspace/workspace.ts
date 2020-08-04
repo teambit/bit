@@ -37,6 +37,7 @@ import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
+import { Issues } from './workspace-component/issues';
 
 export type EjectConfResult = {
   configPath: string;
@@ -132,6 +133,14 @@ export class Workspace implements ComponentFactory {
     if (this.config.name) return this.config.name;
     const tokenizedPath = this.path.split('/');
     return tokenizedPath[tokenizedPath.length - 1];
+  }
+
+  /**
+   * get Component issues
+   */
+  async getComponentIssues(component: Component): Promise<any> {
+    const issues = component.state._consumer.issues;
+    return Issues.fromLegacy(issues);
   }
 
   /**
