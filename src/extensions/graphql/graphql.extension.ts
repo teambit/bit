@@ -59,6 +59,7 @@ export class GraphQLExtension {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
+    console.log(app);
     app.use(cors());
     app.use(
       '/graphql',
@@ -90,8 +91,10 @@ export class GraphQLExtension {
    * start a graphql server.
    */
   async listen(port?: number, server?: Server, app?: Express) {
+    console.log(server);
     const serverPort = port || this.config.port;
     const subServer = server || (await this.createServer({ app }));
+    console.log(subServer);
 
     subServer.listen(serverPort, () => {
       this.logger.info(`API Server over HTTP is now running on http://localhost:${serverPort}`);
@@ -163,7 +166,7 @@ export class GraphQLExtension {
 
   static defaultConfig = {
     port: 4000,
-    subscriptionsPath: 'subscriptions',
+    subscriptionsPath: '/subscriptions',
   };
 
   static dependencies = [LoggerExtension];
