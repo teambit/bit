@@ -27,6 +27,8 @@ It's possible to have the console as an extra layer so these messages will be pr
 
 To see the same massages above printed into the screen, use the global flag `--log [level]`. For example, `bit status --log=error`. Alternatively, you can set an environment variable `BIT_LOG` with the desired level.
 
+The format of the message logged to the console is **"MSG [META]"** The "[META]" part is the same as above.
+
 # Report progress
 During the command execution it's helpful to see the progress on the screen. The following options log to the file and in addition, print to the screen. Use only these methods and avoid calling `console.log` to not break the output (or potentially the JSON structure).
 
