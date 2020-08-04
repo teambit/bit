@@ -10,6 +10,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { Corner } from '../../../stage-components/corner';
 import { SideBar } from '../../../stage-components/side-bar';
+import { TopBar } from '../../../stage-components/top-bar';
 import { WorkspaceOverview } from './workspace-overview';
 
 const WORKSPACE = gql`
@@ -48,12 +49,13 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
+  menuSlot: RouteSlot;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
 
   if (!data) {
@@ -69,7 +71,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspace}>
-        <Corner name={workspace.name} />
+        <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
