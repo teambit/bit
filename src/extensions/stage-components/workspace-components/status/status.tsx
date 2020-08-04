@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import styles from './status.module.scss';
 import colors from './status-colors.module.scss';
-import { JobStatus } from '../../workspace-page/change-log.data';
+import { JobStatus } from '../../workspace-sections/version-block/change-log.data';
 
 type StatusProps = {
   status: JobStatus;

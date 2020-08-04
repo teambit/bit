@@ -11,6 +11,7 @@ export type ComponentModelProps = {
   displayName: string;
   packageName: string;
   compositions: CompositionProps[];
+  // TODO - @guy, why is this of type any?
   tags: any[];
 };
 

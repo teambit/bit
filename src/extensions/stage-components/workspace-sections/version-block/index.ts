@@ -1,1 +1,1 @@
-export { TagBlock } from './version-block';
+export { VersionBlock } from './version-block';
