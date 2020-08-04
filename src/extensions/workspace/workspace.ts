@@ -138,8 +138,9 @@ export class Workspace implements ComponentFactory {
   /**
    * get Component issues
    */
-  async getComponentIssues(component: Component): Promise<any> {
+  async getComponentIssues(component: Component): Promise<Issues | null> {
     const issues = component.state._consumer.issues;
+    if (!issues) return null;
     return Issues.fromLegacy(issues);
   }
 

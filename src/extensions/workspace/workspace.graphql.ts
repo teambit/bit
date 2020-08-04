@@ -27,6 +27,7 @@ export default (workspace: Workspace) => {
 
       type Files {
         fileName: String
+        reference: String
       }
 
       type Issues {

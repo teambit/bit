@@ -1,14 +1,16 @@
+import { BitId } from '../../../bit-id';
+
 export type Issue = {
   name: string;
   files: {
     fileName: string;
-    errors: any;
+    reference: string;
   }[];
 };
 
 export type LegacyIssues = {
   [errorName: string]: {
-    [file: string]: any;
+    [file: string]: BitId | string;
   };
 }[];
 
@@ -21,7 +23,9 @@ export class Issues {
 
   static fromLegacy(legacyIssues: LegacyIssues) {
     const issues = Object.entries(legacyIssues).map(([issueName, legacyFiles]) => {
-      const files = Object.entries(legacyFiles).map(([fileName, errors]) => ({ fileName, errors }));
+      const files = Object.entries(legacyFiles).map(([fileName, reference]) => {
+        return { fileName, reference: reference.toString() };
+      });
       return { name: issueName, files };
     });
 
