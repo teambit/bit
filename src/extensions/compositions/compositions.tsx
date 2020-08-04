@@ -3,12 +3,13 @@ import head from 'lodash.head';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import R from 'ramda';
-import { PropTable } from '@bit/bit.test-scope.ui.property-table';
+import { PropTable } from '@teambit/documenter-temp.ui.property-table';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui/ui/tabs';
 import { PanelContainer, Panel } from '../panel-ui/ui/panel-container';
+// import { useCompositions } from './ui/use-compositions';
 
 import styles from './compositions.module.scss';
 
@@ -33,6 +34,7 @@ const GET_COMPONENT = gql`
 
 export function Compositions() {
   const component = useContext(ComponentContext);
+  // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id.legacyComponentId.name },

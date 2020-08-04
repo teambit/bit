@@ -40,12 +40,12 @@
 }
 
 .default {
-	background-color: grey;
-	border: 1px solid grey;
+	background-color: var(--border-color);
+	border: 1px solid var(--border-color);
 	box-sizing: border-box;
 }
 
 :export {
 	//text without hash
-	defaultAvatarBgColor: str-slice(inspect(grey), 2);
+	defaultAvatarBgColor: str-slice(inspect(var(--border-color)), 2);
 }

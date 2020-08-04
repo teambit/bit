@@ -2,11 +2,12 @@
 
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { AccountObj } from './avatar';
 // import Tooltip from 'components/Tooltip';
+import { addQueryParams, getInitials } from './utils';
 import avatarColors from './avatar-colors.module.scss';
 import styles from './styles.module.scss';
-import { addQueryParams, getInitials } from './utils';
 // import { v1 } from 'uuid';
 
 type UserAvatarProps = {
@@ -45,6 +46,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0];
     const profileImageWithParams = addQueryParams(profileImage, imageSize);
+    // if(!account) return
     return (
       <div
         className={classNames(avatarColors[firstLetter], styles.avatar, className)}
@@ -55,9 +57,15 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
         {profileImageWithParams && (
           <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
         )}
-        <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
-          {getInitials(displayName || name)}
-        </span>
+        {displayName ||
+          (name && (
+            <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
+              {getInitials(displayName || name)}
+            </span>
+          ))}
+        {!displayName && !name && (
+          <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
+        )}
         {/* {tooltipId && (
 					<Tooltip
 						className={styles.tooltip}

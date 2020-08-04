@@ -1,8 +1,8 @@
 import React, { useContext, useCallback, useState } from 'react';
 import classNames from 'classnames';
-import { Card } from '@bit/bit.base-ui.surfaces.card';
-import { mutedText } from '@bit/bit.base-ui.text.muted-text';
-import { Separator } from '@bit/bit.base-ui.elements.separator';
+import { Card } from '@teambit/base-ui-temp.surfaces.card';
+import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
+import { Separator } from '@teambit/base-ui-temp.elements.separator';
 import { NotificationContext, Message } from '../notification-context';
 import styles from './notification.module.scss';
 import { TimeAgo } from '../../../stage-components/workspace-components/time-ago';

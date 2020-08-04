@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { TreeNodeProps, TreeLayer } from '../recursive-tree';
 import { indentStyle, indentClass } from '../indent';
 import { getName } from '../utils/get-name';
