@@ -25,16 +25,24 @@ export function CommandBar({ visible = false, onClose, onSubmit, autoComplete }:
   const inputRef = createRef<HTMLInputElement>();
   const [value, setValue] = useState('');
 
+  useEffect(() => setValue(''), [visible]);
+  useEffect(() => {
+    if (visible) {
+      inputRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputRef.current, visible]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       switch (e.key) {
         case 'Escape':
           return onClose();
         default:
-          return;
+          return undefined;
       }
     },
-    [value, onClose]
+    [onClose]
   );
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,13 +52,6 @@ export function CommandBar({ visible = false, onClose, onSubmit, autoComplete }:
   const options = useMemo(() => {
     return autoComplete(value);
   }, [value, autoComplete]);
-
-  useEffect(() => {
-    setValue('');
-    if (visible) {
-      inputRef.current?.focus();
-    }
-  }, [visible]);
 
   return (
     <Card className={classNames(styles.commandBar, visible && styles.visible)}>
@@ -62,6 +63,7 @@ export function CommandBar({ visible = false, onClose, onSubmit, autoComplete }:
       >
         <input
           value={value}
+          onBlur={onClose}
           onChange={handleChange}
           className={styles.input}
           ref={inputRef}
