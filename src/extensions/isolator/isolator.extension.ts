@@ -87,6 +87,7 @@ export class IsolatorExtension {
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       const installer = this.dependencyResolver.getInstaller();
+      // When using isolator we don't want to use the policy defined in the workspace directly, we only want to instal deps from components
       await installer.install(capsulesDir, this.dependencyResolver.getEmptyDepsObject(), this.toComponentMap(capsules));
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
     }
