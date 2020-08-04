@@ -96,7 +96,7 @@ export class DependencyResolverExtension {
       throw new PackageManagerNotFound(this.config.packageManager);
     }
 
-    if (cacheRootDir && !fs.pathExists(cacheRootDir)) {
+    if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
