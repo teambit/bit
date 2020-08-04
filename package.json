@@ -121,7 +121,7 @@
     "@teambit/documenter-temp.theme.theme-context": "^0.0.2",
     "@teambit/documenter-temp.ui.linked-heading": "^0.0.2",
     "@teambit/explorer-temp.ui.component-grid": "^0.0.1",
-    "@teambit/explorer-temp.ui.component-card": "^0.0.2",
+    "@teambit/explorer-temp.ui.component-card": "^0.0.3",
     "@graphql-modules/core": "^0.7.17",
     "@stencil/core": "^1.15.0",
     "@stencil/webpack": "0.0.6",
