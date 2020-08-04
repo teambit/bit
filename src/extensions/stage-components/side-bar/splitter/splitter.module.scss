@@ -1,0 +1,36 @@
+.collapsibleSplitter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    user-select: none;
+    // line-height: 0.5;
+    /* editor-front */
+    // background: #2A2A2A;
+    /* $editor-color */
+    /* background: #1E1E1E; */
+    // color: #878C9A;
+    /* $steel */
+}
+.handle {
+    font-weight: bold;
+    font-size: 24px;
+}
+:global(.row) {
+    &>.collapsibleSplitter {
+        width: 17px;
+        .actionBox {
+            position: absolute;
+            top: 6.8px;
+        }
+    }
+}
+:global(.column) {
+    &>.collapsibleSplitter {
+        height: 17px;
+        .actionBox {
+            position: absolute;
+            right: 11px;
+        }
+    }
+}
