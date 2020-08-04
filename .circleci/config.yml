@@ -67,44 +67,6 @@ jobs:
           root: /home/circleci
           paths:
             - bit
-  setup_react_new_project:
-    <<: *defaults
-    steps:
-      -
-        run:
-          name: 'checkout react new project'
-          command: 'git clone https://github.com/teambit/react-new-project.git'
-      -
-        restore_cache:
-          key: bitsrc-registry3
-      -
-        run:
-          name: 'install dependencies'
-          command: 'cd react-new-project && npm i'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - react-new-project
-  setup_explorer_project:
-    <<: *defaults
-    steps:
-      -
-        run:
-          name: 'checkout explorer project'
-          command: 'git clone https://github.com/teambit/explorer.git'
-      -
-        restore_cache:
-          key: bitsrc-registry3
-      -
-        run:
-          name: 'install dependencies'
-          command: 'cd explorer && npm i'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - explorer
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -123,9 +85,15 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
-  set_bitsrc_registry:
+  set_npm_registries:
     <<: *defaults
     steps:
+      # npmjs regisry
+      -
+        run:
+          name: setting npmjs regisry
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      # - run: npm whoami
       # prod registry
       -
         run: npm config set @bit:registry https://node.bit.dev
@@ -138,7 +106,7 @@ jobs:
         # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
-          key: bitsrc-registry3
+          key: bitsrc-registry5
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -155,7 +123,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry3
+          key: bitsrc-registry5
       -
         run:
           name: 'save SHA to a file'
@@ -183,55 +151,6 @@ jobs:
           paths:
             - bit/node_modules
             - bit/releases
-  link_react_new_project_and_explorer:
-    <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        run:
-          name: 'npm link bit to global'
-          command: cd bit && npm link
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        restore_cache:
-          key: bit-global-config-v1
-      -
-        run:
-          name: 'bit link in react-new-project'
-          command: 'cd react-new-project && bit link'
-      -
-        run:
-          name: 'bit compile in react-new-project'
-          command: 'cd react-new-project && bit compile'
-      -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
-      -
-        run:
-          name: 'bit link in explorer'
-          command: 'cd explorer && bit link'
-      -
-        run:
-          name: 'bit compile in explorer'
-          command: 'cd explorer && bit compile'
-      -
-        run:
-          name: 'link components from explorer to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - react-new-project
-            - explorer
-            - bit/node_modules
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -285,7 +204,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry3
+          key: bitsrc-registry5
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -576,10 +495,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run:
-      #     name: 'link components from react-new-proejct to bit'
-      #     command: 'cd bit && ln -s ../react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'run TSC'
@@ -634,7 +549,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry3
+          key: bitsrc-registry5
           # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
@@ -653,14 +568,6 @@ jobs:
           command: cd bit && npm link
       -
         run: which bit
-      -
-        run:
-          name: 'link components from explorer to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/explorer/node_modules/@bit/bit.explorer.* ./node_modules/@bit'
-      -
-        run:
-          name: 'link components from react-new-proejct to bit'
-          command: 'cd bit && ln -s /home/circleci/bit/react-new-project/node_modules/@bit/bit.test-scope.* ./node_modules/@bit'
       -
         run:
           name: 'Run e2e tests'
@@ -759,7 +666,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry3
+          key: bitsrc-registry5
           # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
@@ -832,9 +739,14 @@ jobs:
           paths:
             - id_rsa
             - id_rsa.pub
-  windows_set_bitsrc_registry:
+  windows_set_npm_registries:
     <<: *windows_defaults
     steps:
+      # npmjs regisry
+      -
+        run:
+          name: setting npmjs regisry
+          command: Add-Content C:\Users\circleci\.npmrc ("//registry.npmjs.org/:_authToken=" + $Env:npmjsRegistryToken)
       # prod registry
       # -
         # run: npm config set @bit:registry https://node.bit.dev
@@ -845,16 +757,22 @@ jobs:
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
       -
-        run: Add-Content C:\Users\circleci\.npmrc  "111=$Env:registryProdToken"
+        run:
+          name: setting bit registry
+          command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
       # stage registry
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
       # -
+      #   run:
+      #     name: setting bit registry
+      #     command: Add-Content C:\Users\circleci\.npmrc ("//node-stg.bit.dev/:_authToken=" + $Env:registryStgToken)
+      # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
       -
         save_cache:
-          key: windows_bitsrc-registry-v3
-          # key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v5
+          # key: windows_bitsrc-registry-stg-v2
           paths:
             - C:\Users\circleci\.npmrc
   windows_install_npm_deps:
@@ -869,8 +787,8 @@ jobs:
           at: .
       -
         restore_cache:
-          key: windows_bitsrc-registry-v3
-          # key: windows_bitsrc-registry-stg-v1
+          key: windows_bitsrc-registry-v5
+          # key: windows_bitsrc-registry-stg-v2
       # -
       #   run: 'npm config list'
       -
@@ -930,7 +848,7 @@ jobs:
       -
         restore_cache:
           key: windows_bitsrc-registry-v1
-          # key: windows_bitsrc-registry-stg-v1
+          # key: windows_bitsrc-registry-stg-v2
       # -
       #   restore_cache:
       #     keys:
@@ -990,20 +908,12 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
-      - set_bitsrc_registry
-      -
-        setup_react_new_project:
-          requires:
-            - set_bitsrc_registry
-      -
-        setup_explorer_project:
-          requires:
-            - set_bitsrc_registry
+      - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1013,27 +923,21 @@ workflows:
           requires:
             - build
       -
-        link_react_new_project_and_explorer:
-          requires:
-            - configure-bit
-            - setup_react_new_project
-            - setup_explorer_project
-      -
         unit_test:
           requires:
             - build
       -
         lint:
           requires:
-            - link_react_new_project_and_explorer
+            - install_npm_deps
       -
         check_types:
           requires:
-            - link_react_new_project_and_explorer
+            - install_npm_deps
       -
         generate_types:
           requires:
-            - link_react_new_project_and_explorer
+            - build
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1053,9 +957,8 @@ workflows:
                 - bit-hub-tests
           requires:
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
             - configure-bit
-            - link_react_new_project_and_explorer
             # - pack
       -
         performance_e2e_test:
@@ -1074,7 +977,7 @@ workflows:
           requires:
             - build
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
   windows_e2e:
     jobs:
       - windows_approval_job:
@@ -1085,13 +988,13 @@ workflows:
       # - windows_set_ssh_key:
       #     requires:
       #       - windows_approval_job
-      - windows_set_bitsrc_registry:
+      - windows_set_npm_registries:
           requires:
             - windows_approval_job
       - windows_install_npm_deps:
           requires:
             - windows_checkout_code
-            - windows_set_bitsrc_registry
+            - windows_set_npm_registries
       - windows_build:
           requires:
             - windows_install_npm_deps
@@ -1099,7 +1002,7 @@ workflows:
           requires:
             - windows_build
             # - windows_set_ssh_key
-            - windows_set_bitsrc_registry
+            - windows_set_npm_registries
   deploy:
     jobs:
       - checkout_code:
@@ -1214,12 +1117,12 @@ workflows:
                 - prod
     jobs:
       - checkout_code
-      - set_bitsrc_registry
+      - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1239,12 +1142,12 @@ workflows:
     jobs:
       - checkout_code
       - set_ssh_key
-      - set_bitsrc_registry
+      - set_npm_registries
       -
         install_npm_deps:
           requires:
             - checkout_code
-            - set_bitsrc_registry
+            - set_npm_registries
       -
         build:
           requires:
@@ -1253,5 +1156,5 @@ workflows:
         bit_hub_e2e_test:
           requires:
             - set_ssh_key
-            - set_bitsrc_registry
+            - set_npm_registries
             - build

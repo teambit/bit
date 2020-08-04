@@ -1,6 +1,6 @@
 import React, { HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
-import { H1 } from '@bit/bit.evangelist.elements.heading';
+import { H1 } from '@teambit/evangelist-temp.elements.heading';
 import { TagBlock } from '../../stage-components/workspace-sections/version-block';
 import { Version } from '../../stage-components/workspace-page/change-log.data';
 import { Separator } from '../../stage-components/workspace-components/separator';

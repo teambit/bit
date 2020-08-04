@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useReducer } from 'react';
 import classNames from 'classnames';
-import timeAgo from '@bit/bit.bit-dev-utils.time-ago';
+import timeAgo from '@teambit/utils-temp.utils.time-ago';
 import styles from './time-ago.module.scss';
 
 type TimeAgoProps = {

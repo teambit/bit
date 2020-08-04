@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import classNames from 'classnames';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
