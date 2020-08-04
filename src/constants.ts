@@ -236,6 +236,8 @@ export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
 export const CFG_FEATURE_TOGGLE = 'features';
 
+export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
+
 /**
  * git hooks
  */

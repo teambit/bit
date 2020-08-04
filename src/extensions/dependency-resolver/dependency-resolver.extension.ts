@@ -21,6 +21,8 @@ import { Component } from '../component';
 import { DependencyGraph } from './dependency-graph';
 import { WorkspaceManifest, CreateFromComponentsOptions } from './manifest/workspace-manifest';
 import { ROOT_NAME } from './constants';
+import { CFG_PACKAGE_MANAGER_CACHE } from '../../constants';
+import * as globalConfig from '../../api/consumer/lib/global-config';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
@@ -87,12 +89,13 @@ export class DependencyResolverExtension {
    */
   getInstaller() {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const cacheRootDir = globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
     }
-
-    return new DependencyInstaller(packageManager);
+    // TODO: we should somehow pass the cache root dir to the package manager constructor
+    return new DependencyInstaller(packageManager, cacheRootDir);
   }
 
   get packageManagerName(): string {

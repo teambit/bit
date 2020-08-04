@@ -11,3 +11,4 @@ export {
   ComponentsManifestsMap,
 } from './types';
 export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
+export { PackageManager, PackageManagerInstallOptions } from './package-manager';

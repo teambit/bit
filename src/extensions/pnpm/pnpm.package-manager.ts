@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { install } from './lynx';
-import { PackageManager } from '../dependency-resolver/package-manager';
+import { PackageManager, PackageManagerInstallOptions } from '../dependency-resolver';
 import { ComponentMap } from '../component/component-map';
 import {
   DependencyResolverExtension,
@@ -19,9 +19,12 @@ export class PnpmPackageManager implements PackageManager {
   async install(
     rootDir: string,
     rootDepsObject: DependenciesObjectDefinition,
-    componentDirectoryMap: ComponentMap<string>
+    componentDirectoryMap: ComponentMap<string>,
+    installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
-    const storeDir: string = join(userHome, '.pnpm-store');
+    const storeDir = installOptions?.cacheRootDir
+      ? join(installOptions?.cacheRootDir, '.pnpm-store')
+      : join(userHome, '.pnpm-store');
     const components = componentDirectoryMap.toArray().map(([component]) => component);
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
