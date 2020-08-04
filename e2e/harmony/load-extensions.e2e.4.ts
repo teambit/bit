@@ -28,7 +28,7 @@ describe('load extensions', function () {
     let output;
     describe('loading simple extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
@@ -40,7 +40,7 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('non-requireable-extension');
         helper.command.addComponent('non-requireable-extension');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
@@ -66,7 +66,7 @@ describe('load extensions', function () {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('extension-provider-error');
         helper.command.addComponent('extension-provider-error');
         helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
@@ -96,7 +96,7 @@ describe('load extensions', function () {
     const config = { key: 'val' };
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.copyFixtureExtensions('dummy-extension');
       helper.command.addComponent('dummy-extension');
       helper.fixtures.copyFixtureExtensions('non-requireable-extension');
