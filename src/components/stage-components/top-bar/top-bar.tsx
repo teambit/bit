@@ -1,6 +1,6 @@
 import React from 'react';
-import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
 import styles from './top-bar.module.scss';
+import { SlotRouter, RouteSlot } from '../../../extensions/react-router/slot-router';
 
 export type TopBarProps = {
   /**

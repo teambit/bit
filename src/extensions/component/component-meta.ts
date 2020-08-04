@@ -1,5 +1,5 @@
 import { ComponentID } from './id';
-import { capitalize } from '../utils/capitalize';
+import { capitalize } from '../../components/utils/capitalize';
 
 export class ComponentMeta {
   constructor(

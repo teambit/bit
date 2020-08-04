@@ -6,10 +6,10 @@ import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeModel } from './scope-model';
 import { useDataQuery } from '../../ui/ui/data/use-data-query';
-import { Corner } from '../../stage-components/corner';
 import { ScopeProvider } from './scope-provider';
-import { SideBar } from '../../stage-components/side-bar';
 import styles from './scope.module.scss';
+import { Corner } from '../../../components/stage-components/corner';
+import { SideBar } from '../../../components/stage-components/side-bar';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
