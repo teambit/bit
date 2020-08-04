@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Fuse from 'fuse.js';
 import KeyboardShortcuts from '../keyboard-shortcuts/keyboard-shortcuts.ui';
-import CommandRegistryUi from '../commands/commands.ui';
+import CommandRegistryUi, { CommandObj } from '../commands/commands.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
-import { CommandBar, CommandObj } from './ui/command-bar';
+import { CommandBar } from './ui/command-bar';
 
 export const commandBarCommands = {
   open: 'command-bar.open',
@@ -28,7 +28,7 @@ export default class CommandBarUI {
     });
     commandRegistryUi.set(commandBarCommands.close, { handler: commandBar.close, name: 'close command bar' });
 
-    uiRuntimeExtension.registerHudItem(<commandBar.render key="CommandBarUI" />);
+    uiRuntimeExtension.registerHudItem(<commandBar.Render key="CommandBarUI" />);
 
     return commandBar;
   }
@@ -43,38 +43,42 @@ export default class CommandBarUI {
     this.setVisibility?.(false);
   };
 
+  private fuseCommands = new Fuse<CommandObj>([], {
+    includeMatches: true,
+    // weight can be included here.
+    // fields loses weight the longer it gets, so it seems ok for now.
+    keys: ['key', 'name', 'description'],
+  });
+
   private execute = (action: string) => {
     this.commandRegistryUi.run(action);
     this.close();
   };
 
-  private listCommands = (pattern: string, limit: number = 5) => {
-    const { commandRegistryUi, keyboardShortcuts } = this;
+  private searchCommands = (pattern: string, limit = 5) => {
+    if (!pattern.startsWith('>')) return [];
+    this.refreshCommands();
 
-    // TODO - make efficient
-    const commands = Array.from(commandRegistryUi.entries()).map(([id, entry]) => ({
-      ...entry,
-      key: keyboardShortcuts.findKeybindings(id),
-      id,
-    }));
-
-    // TODO - fuse.setCollection
-    const fuse = new Fuse(commands, {
-      includeMatches: true,
-      keys: ['key', 'name', 'description'],
-    });
-
-    return fuse.search(pattern);
+    return this.fuseCommands.search(pattern, { limit });
   };
+
+  private _prevList?: CommandObj[] = undefined;
+  private refreshCommands() {
+    const commands = this.commandRegistryUi.list();
+    if (commands === this._prevList) return;
+
+    this.fuseCommands.setCollection(commands);
+    this._prevList = commands;
+  }
 
   private setVisibility?: (visible: boolean) => void;
 
-  render = () => {
+  Render = () => {
     const [visible, setVisibility] = useState(false);
     this.setVisibility = setVisibility;
 
     return (
-      <CommandBar visible={visible} onClose={this.close} onSubmit={this.execute} autoComplete={this.listCommands} />
+      <CommandBar visible={visible} onClose={this.close} onSubmit={this.execute} autoComplete={this.searchCommands} />
     );
   };
 }

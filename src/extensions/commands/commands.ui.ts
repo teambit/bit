@@ -5,6 +5,7 @@ export type CommandEntry = {
   handler: CommandHandler;
 };
 export type CommandId = string;
+export type CommandObj = CommandEntry & { id: CommandId };
 
 export default class CommandRegistryUi extends Map<CommandId, CommandEntry> {
   static dependencies = [];
@@ -21,4 +22,24 @@ export default class CommandRegistryUi extends Map<CommandId, CommandEntry> {
     const result = command.handler(...rest);
     return result as R;
   }
+
+  clear() {
+    this._asList = undefined;
+    return super.clear();
+  }
+  delete(key: CommandId) {
+    this._asList = undefined;
+    return super.delete(key);
+  }
+  set(key: CommandId, value: CommandEntry) {
+    this._asList = undefined;
+    return super.set(key, value);
+  }
+
+  // cached, to avoid re-creating array each time
+  private _asList?: CommandObj[] = undefined;
+  list = () => {
+    this._asList = this._asList || Array.from(this.entries()).map(([id, entry]) => ({ id, ...entry }));
+    return this._asList;
+  };
 }
