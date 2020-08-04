@@ -4,6 +4,7 @@ import { Slot } from '@teambit/harmony';
 import { NavLinkProps } from '../react-router/nav-link';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
+import { Menu } from './ui/menu';
 
 export type Server = {
   env: string;
@@ -21,12 +22,25 @@ export type MenuItem = {
 export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
-  constructor(private routeSlot: RouteSlot, private navSlot: NavigationSlot, private widgetSlot: NavigationSlot) {}
+  constructor(
+    private routeSlot: RouteSlot,
+
+    private navSlot: NavigationSlot,
+
+    /**
+     * slot for registering a new widget to the menu.
+     */
+    private widgetSlot: NavigationSlot
+  ) {}
 
   readonly routePath = `/:componentId(${componentIdUrlRegex})`;
 
   getComponentUI(host: string) {
-    return <Component navSlot={this.navSlot} routeSlot={this.routeSlot} widgetSlot={this.widgetSlot} host={host} />;
+    return <Component routeSlot={this.routeSlot} host={host} />;
+  }
+
+  getMenu(host: string) {
+    return <Menu navigationSlot={this.navSlot} widgetSlot={this.widgetSlot} host={host} />;
   }
 
   registerRoute(route: RouteProps) {

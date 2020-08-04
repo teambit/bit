@@ -10,8 +10,8 @@ export enum AccountTypes {
 }
 
 export type AccountObj = {
-  accountType: AccountTypes;
-  name: string;
+  accountType?: AccountTypes;
+  name?: string;
   displayName?: string;
   profileImage?: string;
 };
