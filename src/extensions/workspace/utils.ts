@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { ResolvedComponent } from '../utils/resolved-component';
+import { ResolvedComponent } from '../../components/utils/resolved-component';
 
 export async function symlinkCapsulesInNodeModules(isolatedEnvs: ResolvedComponent[]) {
   await Promise.all(

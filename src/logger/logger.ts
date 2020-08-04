@@ -28,6 +28,15 @@ export const baseFileTransportOpts = {
   tailable: true,
 };
 
+function getMetadata(info) {
+  if (!Object.keys(info.metadata).length) return '';
+  try {
+    return JSON.stringify(info.metadata, null, 2);
+  } catch (err) {
+    return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
+  }
+}
+
 export function getFormat() {
   return winston.format.combine(
     winston.format.metadata(),
@@ -36,20 +45,8 @@ export function getFormat() {
     winston.format.splat(), // does nothing?
     winston.format.errors({ stack: true }),
     winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-    winston.format.printf((info) => customPrint(info))
+    winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message} ${getMetadata(info)}`)
   );
-
-  function customPrint(info) {
-    const getMetadata = () => {
-      if (!Object.keys(info.metadata).length) return '';
-      try {
-        return JSON.stringify(info.metadata, null, 2);
-      } catch (err) {
-        return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
-      }
-    };
-    return `${info.timestamp} ${info.level}: ${info.message} ${getMetadata()}`;
-  }
 }
 
 const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
@@ -286,7 +283,8 @@ export function writeLogToScreen(levelOrPrefix = '') {
       level: isLevel ? levelOrPrefix : 'info',
       format: winston.format.combine(
         filterPrefix(),
-        winston.format.printf((info) => info.message)
+        winston.format.metadata(),
+        winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
       ),
     })
   );
