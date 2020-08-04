@@ -2,12 +2,13 @@ import { TypescriptCompiler } from './typescript.compiler';
 import { SchemaExtension } from '../schema';
 import { TypeScriptParser } from './typescript.parser';
 import { TypeScriptCompilerOptions } from './compiler-options';
+import { Compiler } from '../compiler';
 
 export class TypescriptExtension {
   /**
    * create a new compiler.
    */
-  createCompiler(options: TypeScriptCompilerOptions) {
+  createCompiler(options: TypeScriptCompilerOptions): Compiler {
     return new TypescriptCompiler(options.tsconfig, options.types);
   }
 

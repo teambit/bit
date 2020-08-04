@@ -1,23 +1,37 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { tagAction, tagAllAction } from '../../../api/consumer';
-import { TagResults } from '../../../api/consumer/lib/tag';
-import { isString } from '../../../utils';
-import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import hasWildcard from '../../../utils/string/has-wildcard';
+import { tagAction, tagAllAction } from '../../api/consumer';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../api/consumer/lib/tag';
+import { isString } from '../../utils';
+import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../constants';
+import GeneralError from '../../error/general-error';
+import hasWildcard from '../../utils/string/has-wildcard';
+import { Command, CommandOptions } from '../cli';
+import { Logger } from '../logger';
 
-export const NOTHING_TO_TAG_MSG = 'nothing to tag';
-export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
+type TagOptions = {
+  message?: string;
+  all?: boolean;
+  patch?: boolean;
+  minor?: boolean;
+  major?: boolean;
+  force?: boolean;
+  verbose?: boolean;
+  ignoreMissingDependencies?: boolean;
+  ignoreUnresolvedDependencies?: boolean;
+  ignoreNewestVersion?: boolean;
+  skipTests?: boolean;
+  skipAutoTag?: boolean;
+  scope?: string;
+};
 
-export default class Tag implements LegacyCommand {
+export class TagCmd implements Command {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
-  opts = [
+  options = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
     ['s', 'scope <version>', 'tag all components of the current scope'],
@@ -34,11 +48,12 @@ export default class Tag implements LegacyCommand {
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
   ] as CommandOptions;
-  loader = true;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  action(
+  constructor(private logger: Logger) {}
+
+  async action(
     [id, version]: string[],
     {
       message = '',
@@ -54,21 +69,7 @@ export default class Tag implements LegacyCommand {
       skipTests = false,
       skipAutoTag = false,
       scope,
-    }: {
-      message?: string;
-      all?: boolean;
-      patch?: boolean;
-      minor?: boolean;
-      major?: boolean;
-      force?: boolean;
-      verbose?: boolean;
-      ignoreMissingDependencies?: boolean;
-      ignoreUnresolvedDependencies?: boolean;
-      ignoreNewestVersion?: boolean;
-      skipTests?: boolean;
-      skipAutoTag?: boolean;
-      scope?: string;
-    }
+    }: TagOptions
   ): Promise<any> {
     function getVersion(): string | undefined {
       if (scope) return scope;
@@ -128,7 +129,9 @@ export default class Tag implements LegacyCommand {
     });
   }
 
-  report(results: TagResults): string {
+  async report([id, version]: string[], options: TagOptions): Promise<string> {
+    const longProcessLogger = this.logger.createLongProcessLogger('tag');
+    const results: TagResults = await this.action([id, version], options);
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
@@ -160,7 +163,8 @@ export default class Tag implements LegacyCommand {
       if (!components.length) return '';
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
-
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
     return (
       warningsOutput +
       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +

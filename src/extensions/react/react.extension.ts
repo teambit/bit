@@ -53,6 +53,14 @@ export class ReactExtension {
   ) {}
 
   /**
+   *  return extiontion icon
+   */
+
+  icon() {
+    return 'https://static.bit.dev/extensions-icons/react.svg';
+  }
+
+  /**
    * override the TS config of the extension.
    */
   overrideTsConfig() {}

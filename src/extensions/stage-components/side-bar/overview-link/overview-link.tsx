@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
-import { Separator } from '@bit/bit.test-scope.ui.separator';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Separator } from '@teambit/documenter-temp.ui.separator';
 import { NavLink } from '../../../react-router/nav-link';
 import { hoverable } from '../../../../to-eject/css-components/hoverable';
 import { clickable } from '../../../../to-eject/css-components/clickable';
@@ -17,7 +17,7 @@ export function OverviewLink() {
         activeClassName={styles.active}
         className={classNames(hoverable, clickable, styles.overviewLink)}
       >
-        Gallery
+        Components
         <Icon of="comps" className={styles.icon} />
       </NavLink>
       <Separator className={styles.separator} />

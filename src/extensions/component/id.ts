@@ -64,8 +64,8 @@ export class ComponentID {
   /**
    * generate a component ID from a string.
    */
-  static fromString(idStr: string) {
-    return new ComponentID(BitId.parse(idStr));
+  static fromString(idStr: string, hasScope?: boolean) {
+    return new ComponentID(BitId.parse(idStr, hasScope));
   }
 
   static fromObject(object: any) {

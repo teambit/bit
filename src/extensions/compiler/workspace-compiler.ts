@@ -16,6 +16,7 @@ import { ComponentID } from '../component';
 import { Component } from '../component';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import { OnComponentChangeResult } from '../workspace/on-component-change';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -124,13 +125,14 @@ export class WorkspaceCompiler {
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
     const bitIds = await this.getBitIds(componentsIds);
     const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
       const environment = this.envs.getEnvFromExtensions(c.extensions);
-      const compilerInstance = environment?.getCompiler();
+      const compilerInstance = environment?.getCompiler?.();
       // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
       // inside the component dir.
       if (compilerInstance && c.componentMap?.getComponentDir()) {

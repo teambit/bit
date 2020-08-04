@@ -63,6 +63,10 @@ export default class ScopeHelper {
   }
   reInitLocalScopeHarmony() {
     this.cleanLocalScope();
+    this.initHarmonyWorkspace();
+  }
+
+  initHarmonyWorkspace() {
     this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
   }
 
@@ -222,5 +226,10 @@ export default class ScopeHelper {
 
   getClonedRemoteScope(clonedScopePath: string) {
     return this.getClonedScope(clonedScopePath, this.scopes.remotePath);
+  }
+
+  switchFromLegacyToHarmony() {
+    fs.removeSync(path.join(this.scopes.localPath, 'bit.json'));
+    this.initHarmonyWorkspace();
   }
 }

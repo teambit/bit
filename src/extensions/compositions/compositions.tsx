@@ -3,7 +3,7 @@ import head from 'lodash.head';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import R from 'ramda';
-import { PropTable } from '@bit/bit.test-scope.ui.property-table';
+import { PropTable } from '@teambit/documenter-temp.ui.property-table';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';

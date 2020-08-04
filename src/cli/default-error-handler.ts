@@ -109,6 +109,7 @@ import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 import { PaperError } from '../extensions/cli';
 import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
+import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -386,6 +387,11 @@ please make sure it's not absolute and doesn't contain invalid characters`,
       `error: the component ${chalk.bold(
         err.componentId
       )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`,
+  ],
+  [
+    NoComponentDir,
+    (err) => `"${err.id}" doesn't have a component directory, which is invalid on Harmony.
+please run "bit status" to get more info`,
   ],
   [
     MissingMainFileMultipleComponents,
@@ -691,8 +697,5 @@ export default (err: Error): { message: string; error: Error } => {
   sendToAnalyticsAndSentry(err);
   const errorMessage = getErrMsg();
   logger.error(`user gets the following error: ${errorMessage}`);
-  logger.silly(err.stack);
-  // eslint-disable-next-line no-console
-  if (process.env.BIT_DEBUG) console.error(err); // todo: remove once we have a good mechanism to handle it
   return { message: chalk.red(errorMessage), error: err };
 };

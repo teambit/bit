@@ -1,7 +1,7 @@
 import pMapSeries from 'p-map-series';
 import { TaskProcess } from './task-process';
 import { BuildTask, BuildContext } from './types';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 
 export class BuildPipe {
   constructor(
@@ -9,7 +9,7 @@ export class BuildPipe {
      * array of services to apply on the components.
      */
     readonly tasks: BuildTask[],
-    readonly logger: LogPublisher
+    readonly logger: Logger
   ) {}
 
   /**
@@ -22,8 +22,9 @@ export class BuildPipe {
       const taskResult = await task.execute(buildContext);
       const taskProcess = new TaskProcess(task, taskResult, buildContext);
       taskProcess.throwIfErrorsFound();
-      this.logger.info(task.extensionId, `task "${task.extensionId}" has completed successfully`);
+      this.logger.info(`task "${task.extensionId}" has completed successfully`);
       const components = await taskProcess.saveTaskResults();
+      this.logger.consoleSuccess();
       return components;
     });
     longProcessLogger.end();
@@ -33,7 +34,7 @@ export class BuildPipe {
   /**
    * create a build pipe from an array of tasks.
    */
-  static from(tasks: BuildTask[], logger: LogPublisher) {
+  static from(tasks: BuildTask[], logger: Logger) {
     return new BuildPipe(tasks, logger);
   }
 }

@@ -27,7 +27,9 @@ export class WorkspaceUI {
      * menu slot
      */
     private menuSlot: RouteSlot
-  ) {}
+  ) {
+    this.registerExplicitRoutes();
+  }
 
   /**
    * register a route to the workspace.
@@ -37,7 +39,7 @@ export class WorkspaceUI {
     return this;
   }
 
-  get root(): UIRoot {
+  private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
       children: this.componentUi.getComponentUI(WorkspaceUI.id),
@@ -47,7 +49,9 @@ export class WorkspaceUI {
       path: this.componentUi.routePath,
       children: this.componentUi.getMenu(WorkspaceUI.id),
     });
+  }
 
+  get root(): UIRoot {
     return {
       routes: [
         {

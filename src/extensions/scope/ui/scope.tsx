@@ -1,6 +1,8 @@
 import React from 'react';
 import gql from 'graphql-tag';
+import { Route } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
+import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeModel } from './scope-model';
 import { useDataQuery } from '../../ui/ui/data/use-data-query';
@@ -13,6 +15,7 @@ export type ScopeProps = {
   routeSlot: RouteSlot;
 };
 
+// TODO: add env to scope
 const SCOPE = gql`
   {
     scope {
@@ -39,7 +42,7 @@ export function Scope({ routeSlot }: ScopeProps) {
   }
 
   const scope = ScopeModel.from(data);
-  const ids = scope.components.map((component) => component.id);
+  const ids = scope.components.map((component) => component);
 
   return (
     <ScopeProvider scope={scope}>
@@ -48,6 +51,11 @@ export function Scope({ routeSlot }: ScopeProps) {
         <SideBar components={ids} className={styles.sideBar} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
+          {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
+          {/* TODO - scope still uses ComponentMeta so we dont get all the data here */}
+          <Route exact path="/">
+            <ScopeOverview />
+          </Route>
         </div>
       </div>
     </ScopeProvider>

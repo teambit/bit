@@ -12,6 +12,11 @@ $topbarHeight: 64px;
 	border-right: 1px solid #e4e6ea;
 	width: 320px;
 
+	text-decoration: none;
+	color: var(--text-highlight);
+	&:active {
+		color: var(--text-highlight);
+	}
 	
 	.avatar {
 		margin-right: 8px;

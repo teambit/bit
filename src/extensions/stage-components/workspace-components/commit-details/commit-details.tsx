@@ -1,7 +1,7 @@
 import React from 'react';
-import { H5 } from '@bit/bit.evangelist.elements.heading';
-import { Paragraph } from '@bit/bit.base-ui.text.paragraph';
-import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
+import { H5 } from '@teambit/evangelist-temp.elements.heading';
+import { Paragraph } from '@teambit/base-ui-temp.text.paragraph';
+import { PossibleSizes } from '@teambit/base-ui-temp.theme.sizes';
 import styles from './commit-details.module.scss';
 
 type CommitDetailsProps = {

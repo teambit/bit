@@ -47,7 +47,7 @@ describe('relative paths flow (components requiring each other by relative paths
       describe('tagging the component', () => {
         let tagOutput;
         before(() => {
-          tagOutput = helper.command.tagAllComponentsNew();
+          tagOutput = helper.command.tagAllComponents();
         });
         it('should allow tagging the component', () => {
           expect(tagOutput).to.have.string('2 component(s) tagged');

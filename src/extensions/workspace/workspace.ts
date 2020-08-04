@@ -1,4 +1,5 @@
 import path from 'path';
+import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
@@ -16,7 +17,7 @@ import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
-import { LogPublisher } from '../types';
+import { Logger } from '../logger';
 import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
@@ -24,7 +25,6 @@ import legacyLogger from '../../logger/logger';
 import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
-import GeneralError from '../../error/general-error';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
 import Config from '../component/config';
@@ -33,6 +33,10 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceComponent } from './workspace-component';
+import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
+import { Watcher } from './watch/watcher';
 
 export type EjectConfResult = {
   configPath: string;
@@ -48,7 +52,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace implements ComponentFactory {
+export class Workspace implements ComponentFactory {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -75,7 +79,7 @@ export default class Workspace implements ComponentFactory {
 
     private variants: Variants,
 
-    private logger: LogPublisher,
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -97,6 +101,11 @@ export default class Workspace implements ComponentFactory {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
   }
+
+  /**
+   * watcher api.
+   */
+  readonly watcher = new Watcher(this);
 
   /**
    * root path of the Workspace.
@@ -128,14 +137,18 @@ export default class Workspace implements ComponentFactory {
   /**
    * provides status of all components in the workspace.
    */
-  status() {}
+  async getComponentStatus(component: Component): Promise<ComponentStatus> {
+    const status = await this.consumer.getComponentStatusById(component.id._legacy);
+    return ComponentStatus.fromLegacy(status);
+  }
 
   /**
    * list all workspace components.
    */
-  async list(): Promise<Component[]> {
-    const ids = this.getAllComponentIds();
-    return this.getMany(ids);
+  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
+    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
+    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
   /**
@@ -166,6 +179,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
@@ -178,10 +192,13 @@ export default class Workspace implements ComponentFactory {
     const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s))
+      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
 
@@ -233,7 +250,8 @@ export default class Workspace implements ComponentFactory {
     }
 
     component.state = state;
-    return this.executeLoadSlot(component);
+    const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
+    return this.executeLoadSlot(workspaceComponent);
   }
 
   private async executeLoadSlot(component: Component) {
@@ -270,7 +288,7 @@ export default class Workspace implements ComponentFactory {
   }
 
   private newComponentFromState(state: State): Component {
-    return new Component(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
+    return new WorkspaceComponent(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -357,8 +375,7 @@ export default class Workspace implements ComponentFactory {
     const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
     if (!relativeComponentDir) {
-      throw new GeneralError(`workspace.componentDir failed finding the component directory for ${componentId.toString()}.
-if you migrated to Harmony, please run "bit status" to fix such errors`);
+      throw new NoComponentDir(componentId.toString());
     }
     if (options.relative) {
       return relativeComponentDir;
@@ -624,3 +641,5 @@ if you migrated to Harmony, please run "bit status" to fix such errors`);
     return Promise.all(resolveMergedExtensionsP);
   }
 }
+
+export default Workspace;

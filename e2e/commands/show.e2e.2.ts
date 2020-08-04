@@ -146,7 +146,6 @@ describe('bit show command', function () {
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
         const outputCompiler = output.compiler;
-        expect(outputCompiler.files).to.be.an('array').that.is.empty;
         expect(outputCompiler.config).to.be.an('object').that.is.empty;
         expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
       });
@@ -206,7 +205,6 @@ describe('bit show command', function () {
         });
         it('should display the compiler of the component', () => {
           const outputCompiler = output.compiler;
-          expect(outputCompiler.files).to.be.an('array').that.is.empty;
           expect(outputCompiler.config).to.be.an('object').that.is.empty;
           expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
         });
@@ -417,7 +415,7 @@ describe('bit show command', function () {
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.command.tagAllComponentsNew();
+        helper.command.tagAllComponents();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
@@ -639,7 +637,7 @@ Circle.defaultProps = {
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
       helper.command.addComponent('baz/baz.js');
       helper.command.linkAndRewire();
-      helper.command.tagAllComponentsNew();
+      helper.command.tagAllComponents();
       helper.command.exportAllComponentsAndRewire();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();

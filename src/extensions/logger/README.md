@@ -1,53 +1,70 @@
-# Reporter
-The reporter extension is in charge of real-time reporting within Bit.
+# Create a logger
+In your extension, add `LoggerExtension` as a dependency and create a new logger by running
+```
+LoggerExtension.createLogger('your-extension-id');
+```
 
-It renders a single status-line on the bottom of the screen.
-It also renders a continuous log of real-time messages sent to it from an arbitrary amount of different sources.
+# Log to a file
+The following standard methods are available to log into a file. By default it's the `debug.log` file located at  `~/Library/Caches/Bit/logs` for Mac/Linux or  `$LOCALAPPDATA\Bit` for Windows.
 
-## Workflow
-The reporter works in "phases". A phase is a brief description of what Bit is doing now (eg. Installing, Building Capsules, etc.)
-In order for the reporter to start, we need to start a phase using the `startPhase` method. Once this is done, the reporter prints a title
-with the phase name to the screen, and starts showing all logs sent to it.
+```
+logger.silly(message: string, ...meta: any[]);
+logger.debug(message: string, ...meta: any[]);
+logger.info(message: string, ...meta: any[]);
+logger.warn(message: string, ...meta: any[]);
+logger.error(message: string, ...meta: any[]);
+```
 
-In order to send logs to the reporter, we must instantiate a Logger instance using the `createLogger` method.
-When we create a logger we provide it an id (preferably the component name), and it uses this id to give the logs a unique color.
-It will also display this id (in its appropriate color) in the status line.
+The message color is coded uniquely per extension-id. This way, it's easier to scroll the logs and distinguish between the extensions.
 
-Once we no longer wish for the reporter to report, we should use the `end` method to stop it.
-The reporter can always be started again with the `startPhase` method.
+The format of the message logged to the file is **"TIMESTAMP LEVEL: EXT-ID, MSG [META]"**. The "[META]" part is `JSON.stringify` of the second parameter in case it's an object. Otherwise, it's ignored.
 
-Logs sent to the reporter while not in a `phase` (between `startPhase` and `end`) will not be printed.
+JSON format is available as well. To use it, run  `bit config set log_json_format true`.
 
-If we wish to start a new phase (eg. we finished Installing and now we wish to start Building), we can use the `startPhase` method again.
-This will erase all the previous logger IDs from the status line. Stopping a phase with `end` before starting a new one is not necessary.
+It's possible to have the console as an extra layer so these messages will be printed to the screen as well, see below.
 
-## API
+## Log also to the console
 
-### Reporter
+To see the same massages above printed into the screen, use the global flag `--log [level]`. For example, `bit status --log=error`. Alternatively, you can set an environment variable `BIT_LOG` with the desired level.
 
-#### `startPhase(phaseName)`
-Starts a reporting phase with the phaseName. It (re)renders the status line and prints the phase name to the terminal.
-#### `suppressOutput()`
-Suppresses the output of the reporter. This cannot be undone and should be used in environments where we do not wish to have real time reporting at all (eg. JSON output).
-#### `createLogger(id)`
-Creates a `Logger` instance. The ID should be a component name. This might be enforced in the future.
-#### `end()`
-Ends the current phase (this is optional as the same effect can be achieved by starting a new phase). Should be performed at least once at the end of the workflow,
-otherwise the app will hang.
+# Report progress
+During the command execution it's helpful to see the progress on the screen. The following options log to the file and in addition, print to the screen. Use only these methods and avoid calling `console.log` to not break the output (or potentially the JSON structure).
 
-### Logger
+> Please note that these methods print to the screen only when a command is not considered "internal" (such commands normally run on the remote server) and when a command is not used with `--json` flag. To specifically disable console-printing to a command, set the `loader` property to `false`.
 
-#### createLongProcessLogger: (processDescription: string, totalItems?: number) => LongProcessLogger;
-Returns an instance of LongProcessLogger and start logging the process description.
+## Status Line (spinner)
+The status-line is a single line on the bottom of the screen, with a spinner/loader prefix. It's changing constantly during the command execution. This is the main indicator for the end-user of what's going on at the moment.
+
+To set the text of this status-line, call:
+```
+logger.setStatusLine(text: string);
+```
+
+Once the command completed, the spinner is stopped and the status-line is cleared. Then, the command results are printed. If, for some reason, it is needed to clear the status-line before, just call `logger.clearStatusLine()`.
+
+## Persist text
+Sometimes it's helpful to indicate that a phase has completed. Either successfully or failed. The following methods help with this:
+```
+// print to the screen with a green `✔` prefix. if message is empty, print the last logged message.
+logger.consoleSuccess(message?: string);
+
+// print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
+logger.consoleFailure(message?: string);
+```
+To print without any prefix, use `logger.console(message);`
+
+## Long Running Process Logger
+Run the following to get an instance of the `LongProcessLogger` and start logging the process description.
+```
+logger.createLongProcessLogger(processDescription: string, totalItems?: number): LongProcessLogger;
+```
 
 If the process involves iteration over a list of items, such as running tag on a list of components, then pass the `totalItems` as the total number of the components in the list.
 
 Later, during the iteration, call `logProgress(componentName)` on the `LongProcessLogger` instance.
 once done, call `end()`, which logs the duration of the process in ms.
 
-The reporter can be used to show the progress in the status-line. To enable this, call `this.reporter.start()`. Once done, call `this.reporter.end()`.
-
-Here is an example of the messages produced by this longProcessLogger. If the reporter is used, the status-line always shows the last message.
+Here is an example of the messages produced by this longProcessLogger. The status-line always shows the last message.
 ```
 @teambit/workspace, loading components (total: 20)
 @teambit/workspace, loading components (1/20). ui/button
@@ -62,43 +79,3 @@ An example when there is no `totalItems`.
 @teambit/workspace, loading components
 @teambit/workspace, loading components (completed in 200ms)
 ```
-
-#### info(...messages)
-Emits messages as-is to the log. They will receive a unique color according to the id with which the logger was instantiated.
-
-eg. `logger.info('foo', 'bar', 'baz', {some: { more: 'stuff' } })`
-#### warn(...messages)
-Emits messages to the log with a yellow `WARN:` prefix. They will receive a unique color according to the id with which the logger was instantiated.
-
-eg. `logger.warn('foo', 'bar', 'baz', {some: { more: 'stuff' } })`
-#### error(...messages)
-TBD
-#### debug(...messages)
-TBD
-#### onInfo(cb)
-Calls `cb` every time info is called.
-
-eg. `logger.onInfo((...messages) => {
-  // messages is a list of arguments sent to logger.info
-})`
-#### onWarn(cb)
-Calls `cb` every time warn is called.
-
-eg. `logger.onWarn((...messages) => {
-  // messages is a list of arguments sent to logger.warn
-})`
-#### onError(cb)
-TBD
-#### onDebug(cb)
-TBD
-
-## How does it work?
-This extension was written in order to provide an interactive terminal experience without breaking the terminal output when it is resized.
-It also allows scrolling back through the output once bit has exited.
-
-This is done by not "taking over" the user's terminal using terminal [raw mode](https://en.wikipedia.org/wiki/Terminal_mode).
-The only interactive part of the reporter is the last line. It is controlled and cleared as needed using a carriage return (`\r`) and the number of
-spaces in `process.stdout.columns` in order to be sure to clear the line from the user's terminal. (eg. `\r                 /*...*/ `)
-This is done whenever we wish to log to the screen (eg. with the logger methods) and whenever the screen is resized by listening to `SIGWINCH` events.
-
-The status line re-renders itself on a debounced timer of 100ms to allow for multiple logs (or multiple `SIGWINCH` events) to pass through.
