@@ -42,7 +42,7 @@ export class Watcher {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
         watcher.on('all', (event, path) => {
-          log(event, path);
+          log(`Event: "${event}". Path: ${path}`);
         });
       }
       watcher.on('ready', () => {

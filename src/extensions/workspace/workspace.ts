@@ -198,7 +198,8 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s))
+      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
 

@@ -4,7 +4,12 @@ import { ComponentID } from '../component';
 import { Capsule } from './capsule';
 
 export class Network {
-  constructor(public capsules: CapsuleList, public components: Graph, public seedersIds: ComponentID[]) {}
+  constructor(
+    public capsules: CapsuleList,
+    public components: Graph,
+    public seedersIds: ComponentID[],
+    public capsulesRootDir: string
+  ) {}
 
   get seedersCapsules(): Capsule[] {
     return this.seedersIds.map((seederId) => {

@@ -1,11 +1,11 @@
 import React from 'react';
-import { textColumn } from '@bit/bit.base-ui.layout.page-frame';
-import { Section } from '@bit/bit.test-scope.ui.section';
-import { H1 } from '@bit/bit.test-scope.ui.heading';
-import { Subtitle } from '@bit/bit.test-scope.ui.sub-title';
-import { Separator } from '@bit/bit.test-scope.ui.separator';
-import { ConsumableLink } from '@bit/bit.test-scope.ui.consumable-link';
-import { LabelList } from '@bit/bit.test-scope.ui.label-list';
+import { textColumn } from '@teambit/base-ui-temp.layout.page-frame';
+import { Section } from '@teambit/documenter-temp.ui.section';
+import { H1 } from '@teambit/documenter-temp.ui.heading';
+import { Subtitle } from '@teambit/documenter-temp.ui.sub-title';
+import { Separator } from '@teambit/documenter-temp.ui.separator';
+import { ConsumableLink } from '@teambit/documenter-temp.ui.consumable-link';
+import { LabelList } from '@teambit/documenter-temp.ui.label-list';
 
 export type ComponentOverviewProps = {
   displayName: string;
