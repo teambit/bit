@@ -1,5 +1,6 @@
 import { SemVer } from 'semver';
 import R from 'ramda';
+import fs from 'fs-extra';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import {
   DependenciesPolicy,
@@ -93,6 +94,11 @@ export class DependencyResolverExtension {
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
+    }
+
+    if (cacheRootDir && !fs.pathExists(cacheRootDir)) {
+      this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
+      fs.ensureDirSync(cacheRootDir);
     }
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyInstaller(packageManager, cacheRootDir);
