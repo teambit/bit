@@ -41,8 +41,8 @@ export class Watcher {
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
-        watcher.on('all', (event) => {
-          log(event);
+        watcher.on('all', (event, path) => {
+          log(`Event: "${event}". Path: ${path}`);
         });
       }
       watcher.on('ready', () => {
