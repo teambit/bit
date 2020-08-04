@@ -20,10 +20,10 @@ export type ComponentViewProps<Payload = any> = {
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const { node } = props;
   const { payload } = node;
-  const envId = _.get(payload, ['env', 'envId']);
-  const icon = _.get(payload, ['env', 'icon']);
+  const envId = _.get(payload, ['environment', 'envId']);
+  const icon = _.get(payload, ['environment', 'icon']);
   const isNew = _.get(payload, ['status', 'isNew']);
-  const isDeprecated = _.get(payload, ['deprection', 'isDeprecate']);
+  const isDeprecated = _.get(payload, ['deprecation', 'isDeprecate']);
 
   const { onSelect } = useContext(ComponentTreeContext);
 
