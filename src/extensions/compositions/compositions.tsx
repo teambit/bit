@@ -9,7 +9,7 @@ import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui/ui/tabs';
 import { PanelContainer, Panel } from '../panel-ui/ui/panel-container';
-import { useCompositions } from './ui/use-compositions';
+// import { useCompositions } from './ui/use-compositions';
 
 import styles from './compositions.module.scss';
 
