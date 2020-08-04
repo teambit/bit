@@ -567,7 +567,7 @@ jobs:
           name: 'npm link bit to global'
           command: cd bit && npm link
       -
-        run: which bit
+        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         run:
           name: 'Run e2e tests'
