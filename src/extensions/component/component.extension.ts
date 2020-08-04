@@ -45,10 +45,16 @@ export class ComponentExtension {
   /**
    * get component host by extension ID.
    */
-  getHost(id: string): ComponentFactory {
-    const host = this.hostSlot.get(id);
-    if (!host) throw new HostNotFound();
-    return host;
+  getHost(id?: string): ComponentFactory {
+    if (!id) {
+      const host = this.hostSlot.get(id);
+      if (!host) throw new HostNotFound();
+      return host;
+    }
+
+    const hosts = this.hostSlot.values();
+    const priorityHost = hosts.find((host) => host.priority);
+    return priorityHost || hosts[0];
   }
 
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];

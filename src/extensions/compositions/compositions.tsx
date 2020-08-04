@@ -14,7 +14,7 @@ import styles from './compositions.module.scss';
 
 const GET_COMPONENT = gql`
   query($id: String!) {
-    workspace {
+    getHost {
       getDocs(id: $id) {
         properties {
           name

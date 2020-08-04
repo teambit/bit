@@ -54,6 +54,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
  * API of the Bit Workspace
  */
 export class Workspace implements ComponentFactory {
+  priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
