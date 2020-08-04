@@ -2,7 +2,6 @@ import React from 'react';
 import { ComponentProvider } from './context';
 import styles from './component.module.scss';
 import { RouteSlot, SlotSubRouter } from '../../react-router/slot-router';
-import { ComponentModel } from './component-model';
 import { useComponent } from './use-component';
 
 export type ComponentProps = {

@@ -11,4 +11,4 @@
 //   }
 // };
 
-export interface WorkspaceSection {}
+// export interface WorkspaceSection {}

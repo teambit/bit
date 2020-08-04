@@ -5,8 +5,6 @@ import { NavLinkProps } from '../react-router/nav-link';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
 import { Menu } from './ui/menu';
-import { useComponent } from './ui/use-component';
-import { FullLoader } from '../../to-eject/full-loader';
 
 export type Server = {
   env: string;
