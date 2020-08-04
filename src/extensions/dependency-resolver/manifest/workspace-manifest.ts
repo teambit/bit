@@ -1,20 +1,12 @@
 import { SemVer } from 'semver';
-import {
-  DependenciesObjectDefinition,
-  DependencyLifecycleType,
-  DepObjectKeyName,
-  PackageName,
-  DepObjectValue,
-  ComponentsManifestsMap,
-} from '../types';
+import { DependenciesObjectDefinition, PackageName, ComponentsManifestsMap } from '../types';
 import { Manifest, ManifestToJsonOptions } from './manifest';
 import { ComponentManifest } from './component-manifest';
 import { Component, ComponentID } from '../../component';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
 import { DependencyGraph } from '../dependency-graph';
-import { RUNTIME_DEP_LIFECYCLE_TYPE, DEV_DEP_LIFECYCLE_TYPE, PEER_DEP_LIFECYCLE_TYPE } from '../constants';
 import { dedupeDependencies, DedupedDependencies } from './deduping';
-import { Dependencies, Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
+import { Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {

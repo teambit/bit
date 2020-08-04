@@ -1,7 +1,7 @@
+import { SemVer } from 'semver';
 import { forEachObjIndexed } from 'ramda';
 import { DependenciesObjectDefinition, DepObjectKeyName, DepObjectValue, PackageName } from '../../types';
 import { DedupedDependencies } from './dedupe-dependencies';
-import { SemVer } from 'semver';
 
 /**
  * This is the third phase of the deduping process
@@ -54,5 +54,5 @@ function isDepExistInAnyOfTheRootDedupedDependencies(depId: string, dedupedDepen
 }
 
 function isDepExistInDepObject(depId: string, depObjectValue: DepObjectValue = {}) {
-  return depObjectValue.hasOwnProperty(depId);
+  return !!depObjectValue[depId];
 }

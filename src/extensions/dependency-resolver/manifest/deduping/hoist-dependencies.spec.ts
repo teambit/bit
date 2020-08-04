@@ -8,18 +8,93 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '../../constants';
 import { DedupedDependencies } from './dedupe-dependencies';
-import { SemverVersion, DepObjectKeyName, DependencyLifecycleType } from '../../types';
+import { SemverVersion, DependencyLifecycleType } from '../../types';
 
 const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
 
+const generateItemsFromArrays = (
+  dependentComponentNamePrefix = 'dependent-component',
+  ranges: SemverVersion | SemverVersion[],
+  lifecycleTypes: DependencyLifecycleType | DependencyLifecycleType[]
+): PackageNameIndexItem[] => {
+  let size = 1;
+  if (Array.isArray(ranges)) {
+    size = ranges.length;
+  } else if (Array.isArray(lifecycleTypes)) {
+    size = lifecycleTypes.length;
+  }
+  const items: PackageNameIndexItem[] = [];
+  for (let i = 0; i <= size - 1; i += 1) {
+    const item: PackageNameIndexItem = {
+      range: Array.isArray(ranges) ? ranges[i] : ranges,
+      origin: `${dependentComponentNamePrefix}-${i}`,
+      lifecycleType: Array.isArray(lifecycleTypes) ? lifecycleTypes[i] : lifecycleTypes,
+    };
+    items.push(item);
+  }
+  return items;
+};
+
+const generateItems = (
+  numOfItems = 3,
+  dependentComponentNamePrefix = DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX,
+  range: SemverVersion = '1.0.0',
+  lifecycleType: DependencyLifecycleType = RUNTIME_DEP_LIFECYCLE_TYPE
+): PackageNameIndexItem[] => {
+  const ranges = Array(numOfItems).fill(range);
+  const lifecycleTypes = Array(numOfItems).fill(lifecycleType);
+  return generateItemsFromArrays(dependentComponentNamePrefix, ranges, lifecycleTypes);
+};
+
+const expectAllComponentsDependenciesMapToBeEmpty = (dedupedDependencies: DedupedDependencies) => {
+  expect(dedupedDependencies.componentDependenciesMap).to.be.empty;
+};
+
+const expectComponentDependenciesMapToBeEmpty = (dependentName: string, dedupedDependencies: DedupedDependencies) => {
+  expect(dedupedDependencies.componentDependenciesMap.get(dependentName)).to.be.undefined;
+};
+
+const expectComponentDependenciesMapToHave = (
+  dedupedDependencies: DedupedDependencies,
+  dependentName: string,
+  dependecyKeyName: string,
+  dependencyName: string,
+  dependencyVersion: SemverVersion
+) => {
+  const comp = dedupedDependencies.componentDependenciesMap.get(dependentName);
+  if (!comp) {
+    throw new Error(`component ${dependentName} does not found on dedupedDependencies components map`);
+  }
+  expect(comp[dependecyKeyName]).to.have.property(dependencyName, dependencyVersion);
+};
+
+const expectRootToHave = (
+  dedupedDependencies: DedupedDependencies,
+  dependecyKeyName: string,
+  dependencyName: string,
+  dependencyVersion: SemverVersion
+) => {
+  expect(dedupedDependencies.rootDependencies[dependecyKeyName]).to.have.property(dependencyName, dependencyVersion);
+};
+
+const expectRootToNotHaveDependency = (dedupedDependencies: DedupedDependencies, dependencyName: string) => {
+  expect(dedupedDependencies.rootDependencies.dependencies).to.not.have.property(dependencyName);
+  expect(dedupedDependencies.rootDependencies.devDependencies).to.not.have.property(dependencyName);
+  expect(dedupedDependencies.rootDependencies.peerDependencies).to.not.have.property(dependencyName);
+};
+
+const expectPeerIssuesToBeEmpty = (dedupedDependencies: DedupedDependencies) => {
+  expect(dedupedDependencies.issus?.peerConflicts).to.be.empty;
+};
+
 describe('hoistDependencies', () => {
   let index: PackageNameIndex;
-  let dependentComponentName = 'dependent-component';
+  const dependentComponentName = 'dependent-component';
   let dedupedDependencies: DedupedDependencies;
   describe('dependency that appears only once', () => {
     describe('item is exact version', () => {
-      let dependencyName = 'package-dependency';
-      let dependencyVersion = '1.0.0';
+      const dependencyName = 'package-dependency';
+      const dependencyVersion = '1.0.0';
       before(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
@@ -43,8 +118,8 @@ describe('hoistDependencies', () => {
       });
     });
     describe('item is range', () => {
-      let dependencyName = 'package-dependency';
-      let dependencyVersion = '^1.0.0';
+      const dependencyName = 'package-dependency';
+      const dependencyVersion = '^1.0.0';
       before(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
@@ -68,8 +143,8 @@ describe('hoistDependencies', () => {
       });
     });
     describe('item is peer dependency', () => {
-      let dependencyName = 'package-dependency';
-      let dependencyVersion = '1.0.0';
+      const dependencyName = 'package-dependency';
+      const dependencyVersion = '1.0.0';
       before(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
@@ -90,7 +165,7 @@ describe('hoistDependencies', () => {
   });
 
   describe('dependency that appears only as peer (in many components)', () => {
-    let dependencyName = 'package-dependency';
+    const dependencyName = 'package-dependency';
     describe('when there are no conflicts between versions', () => {
       before(() => {
         index = new Map();
@@ -109,8 +184,8 @@ describe('hoistDependencies', () => {
       });
     });
     describe('when there conflicts between versions for few dependencies', () => {
-      let dependencyName1 = 'package-dependency-1';
-      let dependencyName2 = 'package-dependency-2';
+      const dependencyName1 = 'package-dependency-1';
+      const dependencyName2 = 'package-dependency-2';
 
       before(() => {
         index = new Map();
@@ -137,8 +212,8 @@ describe('hoistDependencies', () => {
   });
 
   describe('dependency that appears only with exact versions', () => {
-    let dependencyName = 'package-dependency';
-    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    const dependencyName = 'package-dependency';
+    const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
     before(() => {
       index = new Map();
       const items = generateItemsFromArrays(
@@ -176,8 +251,8 @@ describe('hoistDependencies', () => {
   });
 
   describe('dependency that appears only with ranges', () => {
-    let dependencyName = 'package-dependency';
-    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    const dependencyName = 'package-dependency';
+    const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
     before(() => {
       index = new Map();
       const items = generateItemsFromArrays(
@@ -223,8 +298,8 @@ describe('hoistDependencies', () => {
   });
 
   describe('dependency that appears with both ranges and exact versions', () => {
-    let dependencyName = 'package-dependency';
-    let depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
+    const dependencyName = 'package-dependency';
+    const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
     describe('when there is a version which satisfy more components than the best range', () => {
       before(() => {
         index = new Map();
@@ -397,78 +472,3 @@ describe('hoistDependencies', () => {
     });
   });
 });
-
-const generateItemsFromArrays = (
-  dependentComponentNamePrefix = 'dependent-component',
-  ranges: SemverVersion | SemverVersion[],
-  lifecycleTypes: DependencyLifecycleType | DependencyLifecycleType[]
-): PackageNameIndexItem[] => {
-  let size = 1;
-  if (Array.isArray(ranges)) {
-    size = ranges.length;
-  } else if (Array.isArray(lifecycleTypes)) {
-    size = lifecycleTypes.length;
-  }
-  const items: PackageNameIndexItem[] = [];
-  for (let i = 0; i <= size - 1; i += 1) {
-    const item: PackageNameIndexItem = {
-      range: Array.isArray(ranges) ? ranges[i] : ranges,
-      origin: `${dependentComponentNamePrefix}-${i}`,
-      lifecycleType: Array.isArray(lifecycleTypes) ? lifecycleTypes[i] : lifecycleTypes,
-    };
-    items.push(item);
-  }
-  return items;
-};
-
-const generateItems = (
-  numOfItems = 3,
-  dependentComponentNamePrefix = DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX,
-  range: SemverVersion = '1.0.0',
-  lifecycleType: DependencyLifecycleType = RUNTIME_DEP_LIFECYCLE_TYPE
-): PackageNameIndexItem[] => {
-  const ranges = Array(numOfItems).fill(range);
-  const lifecycleTypes = Array(numOfItems).fill(lifecycleType);
-  return generateItemsFromArrays(dependentComponentNamePrefix, ranges, lifecycleTypes);
-};
-
-const expectAllComponentsDependenciesMapToBeEmpty = (dedupedDependencies: DedupedDependencies) => {
-  expect(dedupedDependencies.componentDependenciesMap).to.be.empty;
-};
-
-const expectComponentDependenciesMapToBeEmpty = (dependentName: string, dedupedDependencies: DedupedDependencies) => {
-  expect(dedupedDependencies.componentDependenciesMap.get(dependentName)).to.be.undefined;
-};
-
-const expectComponentDependenciesMapToHave = (
-  dedupedDependencies: DedupedDependencies,
-  dependentName: string,
-  dependecyKeyName: string,
-  dependencyName: string,
-  dependencyVersion: SemverVersion
-) => {
-  const comp = dedupedDependencies.componentDependenciesMap.get(dependentName);
-  if (!comp) {
-    throw new Error(`component ${dependentName} does not found on dedupedDependencies components map`);
-  }
-  expect(comp[dependecyKeyName]).to.have.property(dependencyName, dependencyVersion);
-};
-
-const expectRootToHave = (
-  dedupedDependencies: DedupedDependencies,
-  dependecyKeyName: string,
-  dependencyName: string,
-  dependencyVersion: SemverVersion
-) => {
-  expect(dedupedDependencies.rootDependencies[dependecyKeyName]).to.have.property(dependencyName, dependencyVersion);
-};
-
-const expectRootToNotHaveDependency = (dedupedDependencies: DedupedDependencies, dependencyName: string) => {
-  expect(dedupedDependencies.rootDependencies.dependencies).to.not.have.property(dependencyName);
-  expect(dedupedDependencies.rootDependencies.devDependencies).to.not.have.property(dependencyName);
-  expect(dedupedDependencies.rootDependencies.peerDependencies).to.not.have.property(dependencyName);
-};
-
-const expectPeerIssuesToBeEmpty = (dedupedDependencies: DedupedDependencies) => {
-  expect(dedupedDependencies.issus?.peerConflicts).to.be.empty;
-};

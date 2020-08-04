@@ -15,8 +15,8 @@ export class Manifest {
 
   toJson(options: ManifestToJsonOptions = {}): Record<string, any> {
     let dependencies = this.dependencies.dependencies || {};
-    let devDependencies = this.dependencies.devDependencies || {};
-    let peerDependencies = this.dependencies.peerDependencies || {};
+    const devDependencies = this.dependencies.devDependencies || {};
+    const peerDependencies = this.dependencies.peerDependencies || {};
     if (options.copyPeerToRuntime) {
       dependencies = Object.assign(peerDependencies, dependencies);
     }

@@ -1,16 +1,8 @@
 import { countBy, sortBy, forEachObjIndexed, uniq, prop } from 'ramda';
-import {
-  createShorthand,
-  ensureCompatible,
-  expandRanges,
-  formatIntersection,
-  intersect,
-  mergeBounds,
-  parseRange,
-} from 'semver-intersect';
-import semver, { Range, SemVer } from 'semver';
+import { intersect, parseRange } from 'semver-intersect';
+import semver from 'semver';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
-import { DedupedDependencies, dedupeDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
+import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
 import { PackageName, DependenciesObjectDefinition, SemverVersion, DependencyLifecycleType } from '../../types';
 import {
   PEER_DEP_LIFECYCLE_TYPE,
@@ -288,26 +280,27 @@ function findBestRange(ranges: SemverVersion[]): BestRange {
       result.intersectedRange = intersectedRange;
       result.ranges = combinationWithTotal.combination;
       result.count = combinationWithTotal.total;
+      // eslint-disable-next-line
     } catch (e) {}
-    i++;
+    i += 1;
   }
   return result;
 }
 
-function getSortedVersionsWithTotal(versions: SemverVersion[]): VersionWithTotal[] {
-  const counts = countBy((item) => item)(versions);
-  const uniqVersions = uniq(versions);
-  const versionsWithTotalCount = uniqVersions.map((version) => {
-    return {
-      version,
-      total: counts[version],
-    };
-  });
+// function getSortedVersionsWithTotal(versions: SemverVersion[]): VersionWithTotal[] {
+//   const counts = countBy((item) => item)(versions);
+//   const uniqVersions = uniq(versions);
+//   const versionsWithTotalCount = uniqVersions.map((version) => {
+//     return {
+//       version,
+//       total: counts[version],
+//     };
+//   });
 
-  const sortByTotal = sortBy(prop('total'));
-  const sortedByTotal = sortByTotal(versionsWithTotalCount).reverse();
-  return sortedByTotal;
-}
+//   const sortByTotal = sortBy(prop('total'));
+//   const sortedByTotal = sortByTotal(versionsWithTotalCount).reverse();
+//   return sortedByTotal;
+// }
 
 function getSortedRangesCombination(ranges: SemverVersion[]): CombinationWithTotal[] {
   const counts = countBy((item) => item)(ranges);
@@ -344,7 +337,6 @@ function getLifecycleType(indexItems: PackageNameIndexItem[]): DependencyLifecyc
   indexItems.forEach((item) => {
     if (item.lifecycleType === RUNTIME_DEP_LIFECYCLE_TYPE) {
       result = RUNTIME_DEP_LIFECYCLE_TYPE;
-      return;
     }
   });
   return result;
@@ -364,7 +356,8 @@ function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
   };
   forEachObjIndexed((count, version) => {
     if (count > result.count) {
-      (result.version = version), (result.count = count);
+      result.version = version;
+      result.count = count;
     }
   }, counts);
   return result;
@@ -434,19 +427,20 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexItem[]): ItemsGrouped
  */
 function arrayCombinations<T>(array: Array<T>): Array<T[]> {
   const fn = function (n, src, got, all) {
-    if (n == 0) {
+    if (n === 0) {
       if (got.length > 0) {
         all[all.length] = got;
       }
       return;
     }
-    for (var j = 0; j < src.length; j++) {
+    // eslint-disable-next-line
+    for (let j = 0; j < src.length; j++) {
       fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
     }
-    return;
   };
-  var all: Array<T[]> = [];
-  for (var i = 0; i < array.length; i++) {
+  const all: Array<T[]> = [];
+  // eslint-disable-next-line
+  for (let i = 0; i < array.length; i++) {
     fn(i, array, [], all);
   }
   all.push(array);

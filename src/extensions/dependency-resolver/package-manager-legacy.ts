@@ -89,9 +89,9 @@ export default class PackageManager {
       this.logger.info(`${folder} $ npm install`);
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', (d) => logPublisher.info(folder, d.toString()));
+        child.stdout.on('data', (d) => this.logger.info(`${folder} ${d.toString()}`));
         // @ts-ignore
-        child.stderr.on('data', (d) => logPublisher.warn(folder, d.toString()));
+        child.stderr.on('data', (d) => this.logger.warn(`${folder} ${d.toString()}`));
         child.on('error', (e) => {
           reject(e);
         });

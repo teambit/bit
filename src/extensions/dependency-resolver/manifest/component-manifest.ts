@@ -1,5 +1,5 @@
-import { Manifest } from './manifest';
 import { SemVer } from 'semver';
+import { Manifest } from './manifest';
 import { DependenciesObjectDefinition } from '../types';
 import { Component } from '../../component';
 
