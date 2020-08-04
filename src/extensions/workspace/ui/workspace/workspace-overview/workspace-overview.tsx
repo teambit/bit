@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { ComponentGrid } from '@bit/bit.explorer.ui.component-grid';
-import { ComponentCard } from '@bit/bit.explorer.ui.component-card';
+import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
+import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
 import { ComponentComposition } from '../../../../compositions/ui';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';

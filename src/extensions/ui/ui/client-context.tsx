@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Theme } from '@bit/bit.base-ui.theme.theme-provider';
+import { Theme } from '@teambit/base-ui-temp.theme.theme-provider';
 
 import { useLoaderApi, LoaderContext, LoaderRibbon } from './global-loader';
 

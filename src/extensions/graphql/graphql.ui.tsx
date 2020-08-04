@@ -49,7 +49,7 @@ export class GraphQlUI {
         createLink(httpLink, wsLink),
       ]),
       cache: new InMemoryCache({
-        // @ts-ignore @todo uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
+        // @ts-ignore TODO: @uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
         dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
       }),
     });
