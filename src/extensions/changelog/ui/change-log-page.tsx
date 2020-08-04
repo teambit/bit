@@ -1,7 +1,8 @@
 import React, { HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
-import { H1 } from '@bit/bit.evangelist.elements.heading';
-import { Separator } from '@bit/bit.test-scope.ui.separator';
+
+import { Separator } from '@teambit/documenter-temp.ui.separator';
+import { H1 } from '@teambit/documenter-temp.elements.heading';
 import { VersionBlock } from '../../stage-components/workspace-sections/version-block';
 import { ComponentContext } from '../../component/ui';
 import styles from './change-log-page.module.scss';
