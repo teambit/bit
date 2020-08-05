@@ -26,7 +26,7 @@ export type DocsSectionProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 const GET_COMPONENT = gql`
-  query($id: String!, $hostName: String!) {
+  query($id: String!) {
     getHost {
       get(id: $id) {
         id {
@@ -62,7 +62,7 @@ const GET_COMPONENT = gql`
  */
 export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useQuery(GET_COMPONENT, {
-    variables: { id: componentId, hostName: '@teambit/scope' },
+    variables: { id: componentId },
   });
   // :TODO @uri please add a proper loader with amir
   if (loading) return <div></div>;

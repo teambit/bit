@@ -26,7 +26,10 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
     resolvers: {
       Scope: {
         name: (scope: ScopeExtension) => scope.name,
-        components: (scope: ScopeExtension, filter?: { offset: number; limit: number }) => scope.list(filter),
+        components: (scope: ScopeExtension, props?: { offset: number; limit: number; cache?: boolean }) => {
+          if (!props) return scope.list();
+          return scope.list({ offset: props.offset, limit: props.limit }, props.cache);
+        },
         get: async (scope: ScopeExtension, { id }: { id: string }) => {
           return scope.get(ComponentID.fromString(id));
         },

@@ -6,17 +6,16 @@ import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
 import { CLIExtension } from '../cli';
 import { StartCmd } from './start.cmd';
-import { Environments } from '../environments';
 import { GraphQLExtension } from '../graphql';
 import { createWebpackConfig } from './webpack/webpack.config';
-import { BundlerExtension } from '../bundler/bundler.extension';
 import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
 import { createRoot } from './create-root';
 import { sha1 } from '../../utils';
 import { ExpressExtension } from '../express';
+import { ComponentExtension } from '../component';
 
-export type UIDeps = [CLIExtension, Environments, GraphQLExtension, BundlerExtension, ExpressExtension];
+export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -27,19 +26,9 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 export class UIExtension {
   constructor(
     /**
-     * envs extension.
-     */
-    private envs: Environments,
-
-    /**
      * graphql extension.
      */
     private graphql: GraphQLExtension,
-
-    /**
-     * bundler extension.
-     */
-    private bundler: BundlerExtension,
 
     /**
      * slot registry of ui roots.
@@ -51,7 +40,15 @@ export class UIExtension {
      */
     private express: ExpressExtension,
 
-    private onStartSlot: OnStartSlot
+    /**
+     * on start slot
+     */
+    private onStartSlot: OnStartSlot,
+
+    /**
+     * component extension.
+     */
+    private componentExtension: ComponentExtension
   ) {}
 
   static runtimes = {
@@ -64,6 +61,7 @@ export class UIExtension {
   }
 
   async createRuntime(uiRootName: string, pattern?: string) {
+    this.componentExtension.setHostPriority(uiRootName);
     const server = this.graphql.listen();
     this.express.listen();
     const uiRoot = this.getUiRootOrThrow(uiRootName);
@@ -111,16 +109,16 @@ export class UIExtension {
     return uiSlot;
   }
 
-  static dependencies = [CLIExtension, Environments, GraphQLExtension, BundlerExtension, ExpressExtension];
+  static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, envs, graphql, bundler, express]: UIDeps,
+    [cli, graphql, express, componentExtension]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
-    const ui = new UIExtension(envs, graphql, bundler, uiRootSlot, express, onStartSlot);
+    const ui = new UIExtension(graphql, uiRootSlot, express, onStartSlot, componentExtension);
     cli.register(new StartCmd(ui));
     return ui;
   }

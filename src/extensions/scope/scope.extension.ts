@@ -136,11 +136,13 @@ export class ScopeExtension implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
-    const modelComponents = await this.legacyScope.list();
-    const componentsIds = await Promise.all(
-      modelComponents.map((component) => ComponentID.fromLegacy(component.toBitId()))
-    );
+  async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
+    let modelComponents = await this.legacyScope.list();
+    if (!includeCache) {
+      modelComponents = modelComponents.filter((modelComponent) => modelComponent.scope === this.name);
+    }
+    const componentsIds = modelComponents.map((component) => ComponentID.fromLegacy(component.toBitId()));
+
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
     );

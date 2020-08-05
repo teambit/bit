@@ -10,6 +10,7 @@ import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
 import { Corner } from '../../../components/stage-components/corner';
 import { SideBar } from '../../../components/stage-components/side-bar';
+import { useScope } from './use-scope';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -35,13 +36,12 @@ const SCOPE = gql`
  * root component of the scope
  */
 export function Scope({ routeSlot }: ScopeProps) {
-  const { data, loading } = useDataQuery(SCOPE);
+  const { scope, loading } = useScope();
 
   if (loading) {
     return <FullLoader />;
   }
 
-  const scope = ScopeModel.from(data);
   const ids = scope.components.map((component) => component);
 
   return (

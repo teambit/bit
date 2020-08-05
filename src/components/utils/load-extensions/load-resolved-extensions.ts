@@ -4,7 +4,7 @@ import { UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { loadExtensionsByManifests } from './load-extensions-by-manifests';
 // TODO: change to module path once utils are tracked as components
 import { ResolvedComponent } from '../resolved-component';
-import { Logger } from '../../logger';
+import { Logger } from '../../../extensions/logger';
 
 // TODO: take for some other place like config
 // TODO: consider pass it from outside into the function
