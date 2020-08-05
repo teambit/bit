@@ -59,11 +59,11 @@ export class ExpressExtension {
     ];
   }
 
-  createApp(): Express {
+  createApp(expressApp?: Express): Express {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
-    const app = express();
+    const app = expressApp || express();
     app.use(cors());
 
     allRoutes.forEach((routeInfo) => {
@@ -72,8 +72,7 @@ export class ExpressExtension {
       app[method](path, this.catchErrorsMiddlewares(middlewares));
     });
 
-    app.use(notFound);
-    app.use(errorHandle);
+    //app.use(notFound);
     return app;
   }
 
