@@ -38,6 +38,7 @@ import { NoComponentDir } from '../../consumer/component/exceptions/no-component
 import { Watcher } from './watch/watcher';
 import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadResolvedExtensions } from '../../components/utils/load-extensions';
+import { DependencyLifecycleType } from '../dependency-resolver/types';
 
 export type EjectConfResult = {
   configPath: string;
@@ -47,6 +48,11 @@ export interface EjectConfOptions {
   propagate?: boolean;
   override?: boolean;
 }
+
+export type WorkspaceInstallOptions = {
+  variants: string;
+  lifecycleType: DependencyLifecycleType;
+};
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -544,7 +550,11 @@ export class Workspace implements ComponentFactory {
    * @returns
    * @memberof Workspace
    */
-  async install() {
+  async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (packages && packages.length) {
+      this.logger.debug(`installing the folloing packages: ${packages.join()}`);
+    }
+    this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();
     const stringIds = components.map((component) => component.id.toString());
     const installer = this.dependencyResolver.getInstaller();

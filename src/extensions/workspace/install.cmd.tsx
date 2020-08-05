@@ -1,15 +1,20 @@
 import chalk from 'chalk';
-import { Command } from '../cli';
-import { Workspace } from './workspace';
+import { Command, CommandOptions } from '../cli';
+import { Workspace, WorkspaceInstallOptions } from './workspace';
 import { Logger } from '../logger';
 
+type InstallCmdOptions = WorkspaceInstallOptions;
+
 export default class InstallCmd implements Command {
-  name = 'install [id...]';
-  description = 'install all component dependencies';
+  name = 'install [packages...]';
+  description = 'install dependencies';
   alias = 'in';
   group = 'component';
   shortDescription = '';
-  options = [];
+  options = [
+    ['v', 'variants <variants>', 'add packages to specific variants'],
+    ['t', 'type [lifecycleType]', 'runtime (default), dev or peer dependency'],
+  ] as CommandOptions;
 
   constructor(
     /**
@@ -23,13 +28,13 @@ export default class InstallCmd implements Command {
     private logger: Logger
   ) {}
 
-  async report([rawIds]: [string[]]) {
+  async report([packages]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
     this.logger.consoleTitle(`resolving dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     // const idsP = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
     // const ids = await Promise.all(idsP);
     this.logger.consoleSuccess('dependencies has been resolved');
-    const components = await this.workspace.install();
+    const components = await this.workspace.install(packages, options);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);
     return `Successfully resolved dependencies for ${chalk.cyan(
