@@ -585,7 +585,7 @@ jobs:
           path: bit/junit
       -
         store_artifacts:
-          path: ~/Library/Caches/Bit/logs/debug.log
+          path: ~/Library/Caches/Bit/logs
   performance_e2e_test:
     <<: *defaults
     resource_class: medium
