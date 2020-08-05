@@ -59,6 +59,7 @@ export type WorkspaceProps = {
  * main workspace component.
  */
 export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
+  // TODO - @oded find a way to reuse the sidebar collapse functionality between scope and workspace
   const [isSidebarOpen, toggleOpenness] = useState(true);
   const { data } = useDataQuery(WORKSPACE);
 
@@ -81,7 +82,7 @@ export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
       <div className={styles.workspaceWrapper}>
         <TopBar Corner={() => <Corner name={workspace.name} onClick={handleOpenness} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          <Left workspace={workspace} />
+          <SideBar components={workspace.components} />
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">
@@ -97,11 +98,3 @@ export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
 export type WorkspaceContextProps = {
   children: ReactNode;
 };
-
-function Left({ workspace }: any) {
-  return (
-    <div className={styles.left}>
-      <SideBar className={styles.sideBar} components={workspace.components} />
-    </div>
-  );
-}
