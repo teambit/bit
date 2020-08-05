@@ -135,8 +135,10 @@ export class BuilderExtension {
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
-
-    cli.register(new BuilderCmd(builder, workspace, logger));
+    if (workspace && !workspace.consumer.isLegacy) {
+      cli.unregister('build');
+      cli.register(new BuilderCmd(builder, workspace, logger));
+    }
     cli.register(new TagCmd(logger));
     return builder;
   }

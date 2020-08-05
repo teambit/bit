@@ -10,8 +10,7 @@ import { ConsumerNotFound } from '../../consumer/exceptions';
 const chalk = require('chalk');
 
 export class TestCmd implements Command {
-  // TODO: @david please call legacy tester in case of legacy workspace.
-  name = 'tst [pattern]';
+  name = 'test [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
   private = true;
