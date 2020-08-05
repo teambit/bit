@@ -16,8 +16,9 @@ import { ExpressExtension } from '../express';
 import { ComponentExtension } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
+import { LoggerExtension, Logger } from '../logger';
 
-export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
+export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension, LoggerExtension];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -43,6 +44,8 @@ export type RuntimeOptions = {
 };
 
 export class UIExtension {
+  static id = '@teambit/ui';
+
   constructor(
     /**
      * graphql extension.
@@ -67,7 +70,12 @@ export class UIExtension {
     /**
      * component extension.
      */
-    private componentExtension: ComponentExtension
+    private componentExtension: ComponentExtension,
+
+    /**
+     * ui logger instance.
+     */
+    private logger: Logger
   ) {}
 
   /**
@@ -99,9 +107,10 @@ export class UIExtension {
       uiRoot,
       uiRootExtension: name,
       ui: this,
+      logger: this.logger,
     });
 
-    uiServer.listen();
+    uiServer.start(dev);
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
     await this.invokeOnStart();
 
@@ -161,16 +170,17 @@ export class UIExtension {
     return getPort({ port: getPort.makeRange(3000, 3200) });
   }
 
-  static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
+  static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension, LoggerExtension];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, graphql, express, componentExtension]: UIDeps,
+    [cli, graphql, express, componentExtension, loggerExtension]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
-    const ui = new UIExtension(graphql, uiRootSlot, express, onStartSlot, componentExtension);
+    const logger = loggerExtension.createLogger(UIExtension.id);
+    const ui = new UIExtension(graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
     cli.register(new StartCmd(ui));
     cli.register(new UIBuildCmd(ui));
     return ui;

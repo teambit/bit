@@ -1,12 +1,14 @@
 import webpackDevMiddleware from 'webpack-dev-middleware';
+import webpackHotMiddleware from 'webpack-hot-middleware';
 import webpack from 'webpack';
 import getPort from 'get-port';
-import { Express } from 'express';
+import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
 import { GraphQLExtension } from '../graphql';
 import { ExpressExtension } from '../express';
 import { UIExtension } from './ui.extension';
 import { UIRoot } from './ui-root';
+import { Logger } from '../logger';
 
 export type UIServerProps = {
   graphql: GraphQLExtension;
@@ -14,6 +16,7 @@ export type UIServerProps = {
   ui: UIExtension;
   uiRoot: UIRoot;
   uiRootExtension: string;
+  logger: Logger;
 };
 
 export class UIServer {
@@ -22,7 +25,8 @@ export class UIServer {
     private express: ExpressExtension,
     private ui: UIExtension,
     private uiRoot: UIRoot,
-    private uiRootExtension: string
+    private uiRootExtension: string,
+    private logger: Logger
   ) {}
 
   /**
@@ -39,15 +43,19 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async listen(dev = true) {
-    const app = this.express.createApp();
+  async start(dev = false) {
+    // const app = this.express.createApp();
+    const app = express();
+    const port = await this.selectPort();
 
     if (dev) {
       this.configureWebpackMiddleware(app);
     }
 
     const server = await this.graphql.createServer({ app });
-    server.listen(await this.selectPort());
+
+    server.listen(port);
+    this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
   }
 
   private async selectPort() {
@@ -57,10 +65,20 @@ export class UIServer {
   private async configureWebpackMiddleware(app: Express) {
     const config = await this.getDevConfig();
     const compiler = webpack(config);
-    app.use(webpackDevMiddleware(compiler, config.devServer));
+    app.use(
+      webpackDevMiddleware(compiler, {
+        publicPath: config.output.publicPath,
+      })
+    );
+
+    app.use(
+      webpackHotMiddleware(compiler, {
+        log: this.logger.info.bind(this.logger),
+      })
+    );
   }
 
   static create(props: UIServerProps) {
-    return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension);
+    return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension, props.logger);
   }
 }
