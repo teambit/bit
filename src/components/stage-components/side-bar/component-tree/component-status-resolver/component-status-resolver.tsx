@@ -8,7 +8,6 @@ export type ComponentStatusResolverProps = {
 };
 
 export function ComponentStatusResolver({ status }: ComponentStatusResolverProps) {
-  console.log('status', status);
   if (!status) return null;
   if (status.isNew) {
     return (
