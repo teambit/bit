@@ -7,6 +7,7 @@ import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';
 import { Hotkeys } from '../../stage-components/elements/key';
 import { CommandId } from '../../commands/commands.ui';
 import styles from './command-bar.module.scss';
+import { DependencyList } from '../../component/dependencies/dependencies';
 
 export type CommandObj = {
   id: string;
@@ -43,23 +44,25 @@ export function CommandBar({ visible = false, onClose, onSubmit, autoComplete, g
   }, [value, autoComplete]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>): void => {
-      if (e.key === 'Escape') {
-        return onClose();
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        return setActive((v) => Math.min(v + 1, options.length - 1));
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        return setActive((v) => Math.max(v - 1, MIN_ACTIVE_IDX));
-      }
-      if (e.key === 'Enter') {
-        const result = options[activeIdx]?.item.id as string | undefined;
-        if (!result) return undefined; // like vsc
-        return onSubmit(result);
-      }
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const handlers = {
+        Escape: onClose,
+        ArrowDown: () => {
+          e.preventDefault();
+          setActive((v) => Math.min(v + 1, options.length - 1));
+        },
+        ArrowUp: () => {
+          e.preventDefault();
+          return setActive((v) => Math.max(v - 1, MIN_ACTIVE_IDX));
+        },
+        Enter: () => {
+          const result = options[activeIdx]?.item.id as string | undefined;
+          if (!result) return undefined; // like vsc
+          return onSubmit(result);
+        },
+      };
+
+      return e.key in handlers ? handlers[e.key]() : undefined;
     },
     [activeIdx, onClose, onSubmit, options]
   );
