@@ -72,8 +72,7 @@ export class ExpressExtension {
       app[method](path, this.catchErrorsMiddlewares(middlewares));
     });
 
-    app.use(notFound);
-    app.use(errorHandle);
+    //app.use(notFound);
     return app;
   }
 
