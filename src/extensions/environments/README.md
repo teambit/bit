@@ -9,7 +9,7 @@ The class of the environment extension needs to implement the `Environment` inte
 ```
 getPipe(): BuildTask[];
 ```
-There are the tasks that will be running on "bit tag"/"bit run". If you have a compiler setup, it should include `this.compiler.task`. Also, it is recommended to add the dry-run task of the publisher: `this.pkg.dryRunTask`.
+There are the tasks that will be running on "bit tag"/"bit build". If you have a compiler setup, it should include `this.compiler.task`. Also, it is recommended to add the dry-run task of the publisher: `this.pkg.dryRunTask`.
 See the react.env.ts for a detailed example.
 
 Also, it is recommended to implement the following:

@@ -44,13 +44,20 @@ export class CLIExtension {
     }
   }
   /**
-   * registers a new command in to `Paper`.
+   * registers a new command in to the CLI.
    */
   register(command: Command) {
     this.setDefaults(command);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     command.commands!.forEach((cmd) => this.setDefaults(cmd));
     this.registry.register(command);
+  }
+
+  /**
+   * helpful for having the same command name in different environments (legacy and Harmony)
+   */
+  unregister(commandName: string) {
+    delete this.commands[commandName];
   }
 
   /**

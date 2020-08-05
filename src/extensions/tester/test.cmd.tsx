@@ -8,7 +8,7 @@ import { Workspace } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export class TestCmd implements Command {
-  name = 'test-new [pattern]';
+  name = 'test [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
   private = true;

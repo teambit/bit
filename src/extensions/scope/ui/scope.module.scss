@@ -7,14 +7,15 @@
 	overflow: hidden;
 
 	grid-template:
-		'corner main'
+		'topbar topbar'
+		'navigation main'
 		'navigation main';
 
 	grid-template-columns: 264px 1fr;
 	grid-template-rows: auto 1fr;
 
 	> :nth-child(1) {
-		grid-area: corner;
+		grid-area: topbar;
 	}
 	
 	> :nth-child(2) {
