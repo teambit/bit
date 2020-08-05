@@ -2,10 +2,10 @@ import { PaperError } from '../../cli';
 
 export class PackageManagerNotFound extends PaperError {
   constructor(private packageManagerName: string) {
-    super();
+    super(`package manager: ${packageManagerName} was not found`);
   }
 
   report() {
-    return `package manager: ${this.packageManagerName} was not found`;
+    return this.message;
   }
 }
