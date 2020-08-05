@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import {
   UNABLE_TO_LOAD_EXTENSION,
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
-} from '../../src/extensions/utils/load-extensions/constants';
+} from '../../src/components/utils/load-extensions/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
