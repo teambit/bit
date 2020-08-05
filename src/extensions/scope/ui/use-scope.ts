@@ -17,14 +17,14 @@ const SCOPE = gql`
   }
 `;
 
-export function useScope() {
+export function useScope(): { scope?: ScopeModel } {
   const { data, loading } = useDataQuery(SCOPE);
 
-  if (loading) return { loading: true };
+  if (!data || loading) {
+    return {};
+  }
+
   const scope = ScopeModel.from(data);
 
-  return {
-    scope,
-    loading,
-  };
+  return { scope };
 }
