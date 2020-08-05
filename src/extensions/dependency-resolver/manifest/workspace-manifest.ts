@@ -1,12 +1,20 @@
 import { SemVer } from 'semver';
-import { DependenciesObjectDefinition, PackageName, ComponentsManifestsMap } from '../types';
+import {
+  DependenciesObjectDefinition,
+  PackageName,
+  ComponentsManifestsMap,
+  SemverVersion,
+  DepObjectValue,
+} from '../types';
 import { Manifest, ManifestToJsonOptions } from './manifest';
 import { ComponentManifest } from './component-manifest';
 import { Component, ComponentID } from '../../component';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
-import { DependencyGraph } from '../dependency-graph';
+import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
 import { dedupeDependencies, DedupedDependencies } from './deduping';
 import { Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
+import { MergeDependenciesFunc } from '../dependency-resolver.extension';
+import { BitId } from '../../../bit-id';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
@@ -32,22 +40,25 @@ export class WorkspaceManifest extends Manifest {
     return this.rootDir;
   }
 
-  static createFromComponents(
+  static async createFromComponents(
     name: string,
     version: SemVer,
-    dependencies: DependenciesObjectDefinition,
+    rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
     options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-    }
-  ): WorkspaceManifest {
-    const componentDependenciesMap: ComponentDependenciesMap = buildComponentDependenciesMap(
+    },
+    mergeDependenciesFunc: MergeDependenciesFunc
+  ): Promise<WorkspaceManifest> {
+    const componentDependenciesMap: ComponentDependenciesMap = await buildComponentDependenciesMap(
       components,
-      options.filterComponentsFromManifests
+      options.filterComponentsFromManifests,
+      rootDependencies,
+      mergeDependenciesFunc
     );
-    const dedupedDependencies = dedupeDependencies(dependencies, componentDependenciesMap);
+    const dedupedDependencies = dedupeDependencies(rootDependencies, componentDependenciesMap);
     const componentsManifestsMap = getComponentsManifests(
       dedupedDependencies,
       components,
@@ -82,7 +93,12 @@ export class WorkspaceManifest extends Manifest {
  * @param {boolean} [filterComponentsFromManifests=true] - filter existing components from the dep graphs
  * @returns
  */
-function buildComponentDependenciesMap(components: Component[], filterComponentsFromManifests = true) {
+async function buildComponentDependenciesMap(
+  components: Component[],
+  filterComponentsFromManifests = true,
+  rootDependencies: DependenciesObjectDefinition,
+  mergeDependenciesFunc: MergeDependenciesFunc
+): Promise<ComponentDependenciesMap> {
   const result = new Map<PackageName, DependenciesObjectDefinition>();
   let filterFn;
   if (filterComponentsFromManifests) {
@@ -104,13 +120,89 @@ function buildComponentDependenciesMap(components: Component[], filterComponents
     };
   }
 
-  components.forEach((component) => {
+  const buildResultsP = components.map(async (component) => {
     const packageName = componentIdToPackageName(component.state._consumer);
     const depGraph = new DependencyGraph(component);
-    const depObject = depGraph.toJson(filterFn(components));
+    const versionModifierFunc = generateVersionModifier(component, rootDependencies, mergeDependenciesFunc);
+    const depObject = await depGraph.toJson(filterFn(components), versionModifierFunc);
     result.set(packageName, depObject);
+    return Promise.resolve();
   });
+  if (buildResultsP.length) {
+    await Promise.all(buildResultsP);
+  }
   return result;
+}
+
+/**
+ * This will create a function that will modify the version of the component dependencies before calling the package manager install
+ * It's important for this use case:
+ * between 2 bit components we are not allowing a range, only a specific version as dependency
+ * therefor, when resolve a component dependency we take the version from the actual installed version in the file system
+ * imagine the following case
+ * I have in my policy my-dep:0.0.10
+ * during installation it is installed (hoisted to the root)
+ * now i'm changing it to be ^0.0.11
+ * On the next bit install, when I will look at the component deps I'll see it with version 0.0.10 always (that's resolved from the FS)
+ * so the version ^0.0.11 will be never installed.
+ * For installation purpose we want a different resolve method, we want to take the version from the policies so we will install the correct one
+ * this function will get the root deps / policy, and a function to merge the component policies (by the dep resolver extension).
+ * it will then search for the dep version in the component policy, than in the workspace policy and take it from there
+ * now in the described case, it will be change to ^0.0.11 and will be install correctly
+ * then on the next calculation for tagging it will have the installed version
+ *
+ * @param {Component} component
+ * @param {DependenciesObjectDefinition} rootDependencies
+ * @param {MergeDependenciesFunc} mergeDependenciesFunc
+ * @returns {DepVersionModifierFunc}
+ */
+function generateVersionModifier(
+  component: Component,
+  rootDependencies: DependenciesObjectDefinition,
+  mergeDependenciesFunc: MergeDependenciesFunc
+): DepVersionModifierFunc {
+  return async (depId: BitId, depPackageName: string, currentVersion: SemverVersion): Promise<SemverVersion> => {
+    const mergedPolicies = await mergeDependenciesFunc(component.config.extensions);
+    return (
+      getPackageVersionFromDepsObject(mergedPolicies, depPackageName) ||
+      getPackageVersionFromDepsObject(rootDependencies, depPackageName) ||
+      '0.0.1-new'
+    );
+  };
+}
+
+/**
+ * This will search for a version of a package in all types of deps (runtime, dev, peer) (it will ignore versions with "-")
+ *
+ * @param {DependenciesObjectDefinition} depsObject
+ * @param {string} depPackageName
+ * @returns {(SemverVersion | undefined)}
+ */
+function getPackageVersionFromDepsObject(
+  depsObject: DependenciesObjectDefinition,
+  depPackageName: string
+): SemverVersion | undefined {
+  return (
+    getVersionWithoutMinusFromSpecificDeps(depsObject.dependencies, depPackageName) ||
+    getVersionWithoutMinusFromSpecificDeps(depsObject.devDependencies, depPackageName) ||
+    getVersionWithoutMinusFromSpecificDeps(depsObject.peerDependencies, depPackageName)
+  );
+}
+
+/**
+ * This will get an object of {depId: version} and wil return the version if it's not "-"
+ *
+ * @param {DepObjectValue} [deps={}]
+ * @param {string} depPackageName
+ * @returns {(SemverVersion | undefined)}
+ */
+function getVersionWithoutMinusFromSpecificDeps(
+  deps: DepObjectValue = {},
+  depPackageName: string
+): SemverVersion | undefined {
+  if (!deps) return undefined;
+  if (deps[depPackageName] && deps[depPackageName] !== '-') return deps[depPackageName];
+  return undefined;
 }
 
 /**

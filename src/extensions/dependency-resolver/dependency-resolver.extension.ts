@@ -28,6 +28,8 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
 
+export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
+
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
 
@@ -68,19 +70,45 @@ export class DependencyResolverExtension {
     return this.config.policy;
   }
 
-  getWorkspaceManifest(
+  /**
+   * Create a workspace manifest
+   * The term workspace here is not the same as "bit workspace" but a workspace that represent a shared root
+   * for installation of many components (sometime it might point to the workspace path)
+   * in other case it can be for example the capsules root dir
+   *
+   * @param {string} [name=ROOT_NAME]
+   * @param {SemVer} [version=new SemVer('1.0.0')]
+   * @param {DependenciesObjectDefinition} dependencies
+   * @param {string} rootDir
+   * @param {Component[]} components
+   * @param {CreateFromComponentsOptions} [options={
+   *       filterComponentsFromManifests: true,
+   *       createManifestForComponentsWithoutDependencies: true,
+   *     }]
+   * @returns {WorkspaceManifest}
+   * @memberof DependencyResolverExtension
+   */
+  async getWorkspaceManifest(
     name: string = ROOT_NAME,
     version: SemVer = new SemVer('1.0.0'),
-    dependencies: DependenciesObjectDefinition,
+    rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
     options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
     }
-  ): WorkspaceManifest {
+  ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const res = WorkspaceManifest.createFromComponents(name, version, dependencies, rootDir, components, options);
+    const res = await WorkspaceManifest.createFromComponents(
+      name,
+      version,
+      rootDependencies,
+      rootDir,
+      components,
+      options,
+      this.mergeDependencies.bind(this)
+    );
     this.logger.consoleSuccess();
     return res;
   }

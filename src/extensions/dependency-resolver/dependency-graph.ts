@@ -3,22 +3,41 @@ import ConsumerComponent from '../../consumer/component';
 import { Dependencies, DependenciesFilterFunction } from '../../consumer/component/dependencies';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { BitId } from '../../bit-id';
-import { DependenciesObjectDefinition } from './types';
+import { DependenciesObjectDefinition, SemverVersion } from './types';
 
+export type DepVersionModifierFunc = (
+  depId: BitId,
+  depPackageName: string,
+  currentVersion: SemverVersion
+) => Promise<SemverVersion>;
 // TODO: consider raname this class, it's not really a graph since it has only the first level
 export class DependencyGraph {
   constructor(private component: Component) {}
 
-  toJson(filterFunc?: DependenciesFilterFunction): DependenciesObjectDefinition {
+  async toJson(
+    filterFunc?: DependenciesFilterFunction,
+    depVersionModifierFunc: DepVersionModifierFunc = defaultVersionModifier
+  ): Promise<DependenciesObjectDefinition> {
     const consumerComponent: ConsumerComponent = this.component.state._consumer;
-
+    const devCompDeps = await this.toPackageJson(
+      this.component,
+      consumerComponent.devDependencies,
+      filterFunc,
+      depVersionModifierFunc
+    );
+    const runtimeCompDeps = await this.toPackageJson(
+      this.component,
+      consumerComponent.dependencies,
+      filterFunc,
+      depVersionModifierFunc
+    );
     const json = {
-      devDependencies: {
-        ...this.toPackageJson(this.component, consumerComponent.devDependencies),
+      dependencies: {
+        ...runtimeCompDeps,
         ...consumerComponent.packageDependencies,
       },
-      dependencies: {
-        ...this.toPackageJson(this.component, consumerComponent.dependencies, filterFunc),
+      devDependencies: {
+        ...devCompDeps,
         ...consumerComponent.devPackageDependencies,
       },
       peerDependencies: {
@@ -28,21 +47,39 @@ export class DependencyGraph {
     return json;
   }
 
-  private toPackageJson(component: Component, dependencies: Dependencies, filterFunc?: DependenciesFilterFunction) {
+  private async toPackageJson(
+    component: Component,
+    dependencies: Dependencies,
+    filterFunc?: DependenciesFilterFunction,
+    depVersionModifierFunc: DepVersionModifierFunc = defaultVersionModifier
+  ): Promise<Record<string, string>> {
     let dependenciesToUse = dependencies;
     if (filterFunc && typeof filterFunc === 'function') {
       dependenciesToUse = dependencies.filter(filterFunc);
     }
-    const newVersion = '0.0.1-new';
-    return dependenciesToUse.getAllIds().reduce((acc, depId: BitId) => {
-      const dependencyVersion = depId.hasVersion() ? depId.version : newVersion;
+
+    const result = {};
+
+    const buildResultP = dependenciesToUse.getAllIds().map(async (depId: BitId) => {
       const packageName = componentIdToPackageName({
         ...component.state._consumer,
         id: depId,
         isDependency: true,
       });
-      acc[packageName] = dependencyVersion;
-      return acc;
+      const dependencyVersion = await depVersionModifierFunc(depId, packageName, depId.version || '0.0.1-new');
+      result[packageName] = dependencyVersion;
+      return Promise.resolve();
     }, {});
+    if (buildResultP.length) {
+      await Promise.all(buildResultP);
+    }
+
+    return result;
   }
+}
+
+async function defaultVersionModifier(depId: BitId): Promise<SemverVersion> {
+  const newVersion = '0.0.1-new';
+  const version = depId.hasVersion() ? (depId.version as SemverVersion) : newVersion;
+  return Promise.resolve(version);
 }
