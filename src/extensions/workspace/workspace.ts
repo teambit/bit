@@ -545,6 +545,8 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async install() {
+    const components = await this.list();
+    const stringIds = components.map((component) => component.id.toString());
     const installer = this.dependencyResolver.getInstaller();
     const installationMap = await this.getComponentsDirectory([]);
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
@@ -557,7 +559,6 @@ export class Workspace implements ComponentFactory {
       },
     };
     await installer.install(this.path, rootDepsObject, installationMap);
-    const stringIds = ids.map((id) => id.toString());
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(stringIds, false);

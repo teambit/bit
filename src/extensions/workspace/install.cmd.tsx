@@ -29,7 +29,7 @@ export default class InstallCmd implements Command {
     // const idsP = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
     // const ids = await Promise.all(idsP);
     this.logger.consoleSuccess('dependencies has been resolved');
-    const components = await this.workspace.install(ids);
+    const components = await this.workspace.install();
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);
     return `Successfully resolved dependencies for ${chalk.cyan(
