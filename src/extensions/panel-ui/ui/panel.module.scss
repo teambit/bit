@@ -10,7 +10,8 @@ $panelBg: #fafafa;
 
 .panel {
   background: $panelBg;
-  width: 400px;
-  max-width: 61%;
   height: 100%;
+  width: 100%;
+  min-width: 300px;
+  border-left: 1px solid var(--border-color);
 }
