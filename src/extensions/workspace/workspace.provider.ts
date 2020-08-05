@@ -24,6 +24,7 @@ import { OnComponentChange } from './on-component-change';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
 import { EXT_NAME } from './constants';
+import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -81,6 +82,10 @@ export default async function provideWorkspace(
     onComponentLoadSlot,
     onComponentChangeSlot
   );
+
+  ManyComponentsWriter.registerExternalInstaller({
+    install: workspace.install.bind(workspace),
+  });
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
