@@ -28,10 +28,13 @@ export class StartCmd implements Command {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  async render([type, userPattern]: [string, string]): Promise<React.ReactElement> {
+  async render([uiRootName, userPattern]: [string, string]): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
-    const uiRuntime = await this.ui.createRuntime(type, pattern);
+    const uiRuntime = await this.ui.createRuntime({
+      uiRootName,
+      pattern,
+    });
     // this.clearConsole();
     // @ts-ignore
     // uiRuntime.dev();

@@ -3,12 +3,10 @@ import { promisify } from 'util';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import getPort from 'get-port';
 import fs from 'fs-extra';
-import WebpackDevServer from 'webpack-dev-server';
 import webpack from 'webpack';
 import { CLIExtension } from '../cli';
 import { StartCmd } from './start.cmd';
 import { GraphQLExtension } from '../graphql';
-import { devConfig } from './webpack/webpack.dev.config';
 import createWebpackConfig from './webpack/webpack.config';
 import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
@@ -17,6 +15,7 @@ import { sha1 } from '../../utils';
 import { ExpressExtension } from '../express';
 import { ComponentExtension } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
+import { UIServer } from './ui-server';
 
 export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
 
@@ -25,6 +24,23 @@ export type UIRootRegistry = SlotRegistry<UIRoot>;
 export type OnStart = () => void;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
+
+export type RuntimeOptions = {
+  /**
+   * name of the UI root to load.
+   */
+  uiRootName?: string;
+
+  /**
+   * component selector pattern to load.
+   */
+  pattern?: string;
+
+  /**
+   * determine whether to start a dev server (defaults to false).
+   */
+  dev?: boolean;
+};
 
 export class UIExtension {
   constructor(
@@ -54,15 +70,6 @@ export class UIExtension {
     private componentExtension: ComponentExtension
   ) {}
 
-  static runtimes = {
-    ui: '',
-    cli: '',
-  };
-
-  private async selectPort() {
-    return getPort({ port: getPort.makeRange(3000, 3200) });
-  }
-
   /**
    * create a build of the given UI root.
    */
@@ -80,21 +87,30 @@ export class UIExtension {
     return compilerRun();
   }
 
-  async createRuntime(uiRootName?: string, pattern?: string) {
+  /**
+   * create a Bit UI runtime.
+   */
+  async createRuntime({ uiRootName, pattern, dev }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
-    const server = this.graphql.listen();
-    this.express.listen();
-    // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = devConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, name)], uiRootName);
-    const compiler = webpack(config);
-    const devServer = new WebpackDevServer(compiler, config.devServer);
-    devServer.listen(await this.selectPort());
+    const uiServer = UIServer.create({
+      express: this.express,
+      graphql: this.graphql,
+      uiRoot,
+      uiRootExtension: name,
+      ui: this,
+    });
+
+    uiServer.listen();
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
     await this.invokeOnStart();
-    return server;
+
+    return uiServer;
   }
 
+  /**
+   * bind to ui server start event.
+   */
   registerOnStart(onStartFn: OnStart) {
     this.onStartSlot.register(onStartFn);
     return this;
@@ -105,14 +121,6 @@ export class UIExtension {
     await Promise.all(promises);
   }
 
-  private async generateRoot(extensionPaths: string[], rootExtensionName: string) {
-    const contents = await createRoot(extensionPaths, rootExtensionName);
-    const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
-    if (fs.existsSync(filepath)) return filepath;
-    fs.outputFileSync(filepath, contents);
-    return filepath;
-  }
-
   /**
    * register a UI slot.
    */
@@ -120,6 +128,9 @@ export class UIExtension {
     return this.uiRootSlot.register(uiRoot);
   }
 
+  /**
+   * get a UI runtime instance.
+   */
   getUi(uiRootName?: string): [string, UIRoot] {
     if (uiRootName) {
       const root = this.getUiRootOrThrow(uiRootName);
@@ -136,6 +147,18 @@ export class UIExtension {
     const uiSlot = this.uiRootSlot.get(uiRootName);
     if (!uiSlot) throw new UnknownUI(uiRootName);
     return uiSlot;
+  }
+
+  async generateRoot(extensionPaths: string[], rootExtensionName: string) {
+    const contents = await createRoot(extensionPaths, rootExtensionName);
+    const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
+    if (fs.existsSync(filepath)) return filepath;
+    fs.outputFileSync(filepath, contents);
+    return filepath;
+  }
+
+  private async selectPort() {
+    return getPort({ port: getPort.makeRange(3000, 3200) });
   }
 
   static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
