@@ -5,7 +5,7 @@ import { isDirEmpty } from '../../../utils';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 
-export default (async function init(
+export default async function init(
   absPath: string = process.cwd(),
   noGit = false,
   reset = false,
@@ -21,7 +21,7 @@ export default (async function init(
     await throwForOutOfSyncScope(consumer);
   }
   return consumer.write();
-});
+}
 
 /**
  * throw an error when .bitmap is empty but a scope has objects.

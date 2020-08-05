@@ -1,0 +1,32 @@
+{
+  "$schema": "",
+  "@teambit/workspace": {
+    "defaultScope": "teambit2.core",
+    "defaultDirectory": "components",
+    "vendorDirectory": "vendor",
+    "extensions": {
+      "@teambit/envs": {
+        "env": "@teambit/react",
+        "config": {}
+      },
+      "@teambit/pkg": {
+        "packageJson": {
+          "name": "@teambit/{name}"
+        }
+      },
+      "@teambit/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@types/mocha": "^7.0.2"
+          }
+        }
+      }
+    }
+  },
+  "@teambit/dependency-resolver": {
+    "packageManager": "npm",
+    "strictPeerDependencies": true,
+    "extraArgs": []
+  },
+  "@teambit/variants": {}
+}

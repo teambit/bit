@@ -10,13 +10,11 @@ import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
-import { Corner } from '../../../stage-components/corner';
-import { SideBar } from '../../../stage-components/side-bar';
-import { TopBar } from '../../../stage-components/top-bar';
 import { WorkspaceOverview } from './workspace-overview';
+import { TopBar } from '../../../../components/stage-components/top-bar';
+import { SideBar } from '../../../../components/stage-components/side-bar';
+import { Corner } from '../../../../components/stage-components/corner';
 import styles from './workspace.module.scss';
-// import { CollapsibleSplitter } from '../../../stage-components/side-bar/splitter';
-// import { TopBar } from '../../../component/ui/top-bar';
 
 const WORKSPACE = gql`
   {

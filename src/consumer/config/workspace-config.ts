@@ -184,17 +184,17 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async _ensure(
-    dirPath: PathOsBasedAbsolute,
+    workspacePath: PathOsBasedAbsolute,
     standAlone: boolean,
     workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
-      const workspaceConfig = await this.load(dirPath);
+      const workspaceConfig = await this.load(workspacePath);
       return workspaceConfig;
     } catch (err) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
         const consumerBitJson = this.create(workspaceConfigProps);
-        const packageJsonExists = await AbstractConfig.pathHasPackageJson(dirPath);
+        const packageJsonExists = await AbstractConfig.pathHasPackageJson(workspacePath);
         if (packageJsonExists && !standAlone) {
           consumerBitJson.writeToPackageJson = true;
         } else {

@@ -3,13 +3,13 @@ import classnames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 
 // placeholder until we publish the component from react new project
-import { VersionTag } from '../../../stage-components/workspace-components/version-tag';
 import styles from './menu.module.scss';
 import { NavigationSlot } from '../../../react-router/slot-router';
 import { TopBarNav } from '../top-bar-nav';
 import { TopBarWidgetLink } from '../top-bar-widget-link';
 import { useComponent } from '../use-component';
 import { FullLoader } from '../../../../to-eject/full-loader';
+import { VersionTag } from '../../../../components/stage-components/workspace-components/version-tag';
 
 export type MenuProps = {
   className?: string;
