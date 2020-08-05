@@ -8,7 +8,7 @@ import { DependenciesObjectDefinition, SemverVersion } from './types';
 export type DepVersionModifierFunc = (
   depId: BitId,
   depPackageName: string,
-  currentVersion: SemverVersion
+  currentVersion?: SemverVersion
 ) => Promise<SemverVersion>;
 // TODO: consider raname this class, it's not really a graph since it has only the first level
 export class DependencyGraph {
@@ -66,7 +66,7 @@ export class DependencyGraph {
         id: depId,
         isDependency: true,
       });
-      const dependencyVersion = await depVersionModifierFunc(depId, packageName, depId.version || '0.0.1-new');
+      const dependencyVersion = await depVersionModifierFunc(depId, packageName, depId.version);
       result[packageName] = dependencyVersion;
       return Promise.resolve();
     }, {});

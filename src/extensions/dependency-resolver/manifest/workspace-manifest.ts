@@ -161,11 +161,12 @@ function generateVersionModifier(
   rootDependencies: DependenciesObjectDefinition,
   mergeDependenciesFunc: MergeDependenciesFunc
 ): DepVersionModifierFunc {
-  return async (depId: BitId, depPackageName: string, currentVersion: SemverVersion): Promise<SemverVersion> => {
+  return async (_depId: BitId, depPackageName: string, currentVersion?: SemverVersion): Promise<SemverVersion> => {
     const mergedPolicies = await mergeDependenciesFunc(component.config.extensions);
     return (
       getPackageVersionFromDepsObject(mergedPolicies, depPackageName) ||
       getPackageVersionFromDepsObject(rootDependencies, depPackageName) ||
+      currentVersion ||
       '0.0.1-new'
     );
   };
