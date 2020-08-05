@@ -6,7 +6,7 @@ import { Logger } from '../logger';
 import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export class BuilderCmd implements Command {
-  name = 'run [pattern]';
+  name = 'build [pattern]';
   description = 'run set of tasks for build';
   alias = '';
   group = '';

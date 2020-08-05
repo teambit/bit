@@ -3,7 +3,7 @@
 The compiler is configured inside an environment and not directly on the component level.
 
 ## As a task
-A task is running with `bit run` or during the tag process on the capsules or the workspace (depends on the specific compiler implementation).
+A task is running with `bit build` or during the tag process on the capsules or the workspace (depends on the specific compiler implementation).
 The env extension should have this compiler extension as a dependency first, then add to the `build()` array the following: `this.compiler.task`.
 
 ## As a command

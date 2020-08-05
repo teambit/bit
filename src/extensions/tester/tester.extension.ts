@@ -61,7 +61,10 @@ export class TesterExtension {
       new TesterService(workspace, config.testRegex),
       new TesterTask(TesterExtension.id)
     );
-    cli.register(new TestCmd(tester, workspace));
+    if (workspace && !workspace.consumer.isLegacy) {
+      cli.unregister('test');
+      cli.register(new TestCmd(tester, workspace));
+    }
 
     return tester;
   }
