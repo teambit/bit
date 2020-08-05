@@ -68,7 +68,8 @@ class Analytics {
     return newId;
   }
 
-  static promptAnalyticsIfNeeded(cmd: string): Promise<void> {
+  static promptAnalyticsIfNeeded(): Promise<void> {
+    const cmd = process.argv.slice(2);
     function shouldPromptForAnalytics() {
       // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
       if (cmd.length && cmd[0] !== 'config') {
