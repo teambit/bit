@@ -5,6 +5,7 @@ import { Tag } from '../../tag';
 import { DeprecationInfo } from '../../../deprecation/deprecation.extension';
 import { Descriptor } from '../../../environments/environments.extension';
 import { TagProps } from '../../tag/tag';
+import { ComponentStatus } from '../../../workspace/workspace-component/component-status';
 // import { Snap } from '../../snap';
 
 export type ComponentModelProps = {
@@ -15,6 +16,7 @@ export type ComponentModelProps = {
   packageName: string;
   compositions: CompositionProps[];
   tags: TagProps[];
+  status: ComponentStatus;
   deprecation: DeprecationInfo;
   env: Descriptor;
 };
@@ -57,6 +59,11 @@ export class ComponentModel {
     readonly tags: TagMap,
 
     /**
+     * status of component.
+     */
+    readonly status?: ComponentStatus,
+
+    /**
      * deprecation info of the component.
      */
     readonly deprecation?: DeprecationInfo,
@@ -76,7 +83,17 @@ export class ComponentModel {
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, server, displayName, compositions, packageName, tags, deprecation, env }: ComponentModelProps) {
+  static from({
+    id,
+    server,
+    displayName,
+    compositions,
+    packageName,
+    tags,
+    deprecation,
+    env,
+    status,
+  }: ComponentModelProps) {
     const tagsArray = tags || [];
 
     return new ComponentModel(
@@ -86,6 +103,7 @@ export class ComponentModel {
       server,
       Composition.fromArray(compositions || []),
       TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag))),
+      status,
       deprecation,
       env
     );
