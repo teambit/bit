@@ -31,11 +31,11 @@ export function NamespaceView({ node, depth, status }: TreeNodeProps<PayloadType
           className={classNames(indentClass, hoverable, clickable, styles.namespace)}
           onClick={() => collapse(!collapsed)}
         >
-          <div>
+          <div className={styles.left}>
             <Icon className={styles.arrow} of="fat-arrow-down" />
-            <span>{getName(node.id)}</span>
+            <span className={styles.name}>{getName(node.id)}</span>
           </div>
-          <div>{status && <StatusDot status="new" />}</div>
+          <div className={styles.right}>{status && <StatusDot status="new" />}</div>
         </div>
       )}
 
