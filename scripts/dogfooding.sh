@@ -22,3 +22,13 @@ find components/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\
 find components/*/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\/..\//'bit-bin\//g" {} \;
 rm -rf node_modules/bit-bin
 ln -s `pwd`/dist node_modules/bit-bin
+STATUS=`bit status`
+echo $STATUS
+
+if [[ "$STATUS" =~ "issues found" ]]; then
+   echo "bit status found errors"
+   exit 1
+else
+   echo "bit status is fine!"
+   exit 0
+fi

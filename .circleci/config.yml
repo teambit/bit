@@ -509,6 +509,20 @@ jobs:
         run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
+  dogfooding:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'dogfooding'
+          command: 'cd bit && ./scripts/dogfooding.sh'
+      -
+        run:
+          name: 'dogfooding-kill'
+          command: 'cd bit && ./scripts/dogfooding-kill.sh'
   e2e_test:
     <<: *defaults
     environment:
@@ -932,6 +946,10 @@ workflows:
             - install_npm_deps
       -
         check_types:
+          requires:
+            - install_npm_deps
+      -
+        dogfooding:
           requires:
             - install_npm_deps
       -
