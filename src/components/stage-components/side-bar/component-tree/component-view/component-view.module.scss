@@ -15,17 +15,22 @@
 	box-sizing: border-box;
 	border-left: 0px solid transparent;
 
+	&:hover {
+		.envIcon {
+			filter: grayscale(0);
+		}
+	}
+
 	&.active {
-		color: $w10;
-		background: $p50;
-		.right {
-			.componentIcon {
-				color: $w10;
-			}
+		background: var(--muted-color);
+		.envIcon {
+			filter: grayscale(0);
 		}
-		&:hover {
-			background: $p50;
-		}
+		// .right {
+		// 	.componentIcon {
+		// 		color: $w10;
+		// 	}
+		// }
 	}
 
 	.icon {
@@ -38,13 +43,18 @@
 		display: flex;
 		align-items: center;
 		flex: 1;
-    	min-width: 0;
+		min-width: 0;
+		
 		> span {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			padding: 0 8px;
 		}
+	}
+	.envIcon {
+		transition: filter 300ms ease-in-out;
+		filter: grayscale(1);
 	}
 
 
