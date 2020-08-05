@@ -19,6 +19,8 @@ export class WorkspaceUIRoot implements UIRoot {
     private bundler: BundlerExtension
   ) {}
 
+  priority = true;
+
   name = 'workspace';
 
   get path() {

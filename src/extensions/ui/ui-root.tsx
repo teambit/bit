@@ -28,6 +28,11 @@ export interface UIRoot extends ComponentDir {
    * listener for when the dev server starts. can be used for running the watcher.
    */
   postStart?(options: PostStartOptions, uiRoot: UIRoot): Promise<void>;
+
+  /**
+   * determine whether UI should get a priority.
+   */
+  priority?: boolean;
 }
 
 export type PostStartOptions = {

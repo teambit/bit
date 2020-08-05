@@ -1,4 +1,5 @@
 import { join, resolve } from 'path';
+import { promisify } from 'util';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import getPort from 'get-port';
 import fs from 'fs-extra';
@@ -7,13 +8,15 @@ import webpack from 'webpack';
 import { CLIExtension } from '../cli';
 import { StartCmd } from './start.cmd';
 import { GraphQLExtension } from '../graphql';
-import { createWebpackConfig } from './webpack/webpack.config';
+import { devConfig } from './webpack/webpack.dev.config';
+import createWebpackConfig from './webpack/webpack.config';
 import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
 import { createRoot } from './create-root';
 import { sha1 } from '../../utils';
 import { ExpressExtension } from '../express';
 import { ComponentExtension } from '../component';
+import { UIBuildCmd } from './ui-build.cmd';
 
 export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension];
 
@@ -60,16 +63,30 @@ export class UIExtension {
     return getPort({ port: getPort.makeRange(3000, 3200) });
   }
 
-  async createRuntime(uiRootName: string, pattern?: string) {
-    this.componentExtension.setHostPriority(uiRootName);
-    const server = this.graphql.listen();
-    this.express.listen();
-    const uiRoot = this.getUiRootOrThrow(uiRootName);
+  /**
+   * create a build of the given UI root.
+   */
+  async build(uiRootName?: string) {
+    const [name, uiRoot] = this.getUi(uiRootName);
+    // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const config = createWebpackConfig(
       uiRoot.path,
-      [await this.generateRoot(uiRoot.extensionsPaths, uiRootName)],
+      [await this.generateRoot(uiRoot.extensionsPaths, name)],
       uiRootName
     );
+
+    const compiler = webpack(config);
+    const compilerRun = promisify(compiler.run.bind(compiler));
+    return compilerRun();
+  }
+
+  async createRuntime(uiRootName?: string, pattern?: string) {
+    const [name, uiRoot] = this.getUi(uiRootName);
+    this.componentExtension.setHostPriority(name);
+    const server = this.graphql.listen();
+    this.express.listen();
+    // TODO: @uri refactor all dev server related code to use the bundler extension instead.
+    const config = devConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, name)], uiRootName);
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler, config.devServer);
     devServer.listen(await this.selectPort());
@@ -103,6 +120,18 @@ export class UIExtension {
     return this.uiRootSlot.register(uiRoot);
   }
 
+  getUi(uiRootName?: string): [string, UIRoot] {
+    if (uiRootName) {
+      const root = this.getUiRootOrThrow(uiRootName);
+      return [uiRootName, root];
+    }
+    const uis = this.uiRootSlot.toArray();
+    if (uis.length === 1) return uis[0];
+    const uiRoot = uis.find(([, root]) => root.priority);
+    if (!uiRoot) throw new UnknownUI('default');
+    return uiRoot;
+  }
+
   getUiRootOrThrow(uiRootName: string): UIRoot {
     const uiSlot = this.uiRootSlot.get(uiRootName);
     if (!uiSlot) throw new UnknownUI(uiRootName);
@@ -120,6 +149,7 @@ export class UIExtension {
   ) {
     const ui = new UIExtension(graphql, uiRootSlot, express, onStartSlot, componentExtension);
     cli.register(new StartCmd(ui));
+    cli.register(new UIBuildCmd(ui));
     return ui;
   }
 }
