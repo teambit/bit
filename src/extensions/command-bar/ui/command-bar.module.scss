@@ -1,5 +1,6 @@
 .commandBar {
   display: none;
+  flex-direction: column;
 
   position: fixed;
   top: 16px;
@@ -10,10 +11,6 @@
   max-width: 90%;
 
   &.visible {
-    display: block;
-  }
-
-  > form {
     display: flex;
   }
 }
@@ -34,17 +31,7 @@
 }
 
 .input {
-  :not(:last-child) {
+  &:not(:last-child) {
     margin-bottom: 8px;
   }
-  width: 100%;
-}
-
-.commandKeys {
-  float: right;
-  font-size: 0.764em;
-}
-
-.commandDescription {
-  font-size: 0.85em;
 }

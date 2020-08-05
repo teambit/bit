@@ -27,6 +27,8 @@ export class ScopeUIRoot implements UIRoot {
       require.resolve('../commands/commands.ui'),
       require.resolve('../keyboard-shortcuts/keyboard-shortcuts.ui'),
       require.resolve('../cheat-sheet/cheat-sheet.ui'),
+      require.resolve('../command-bar/command-bar.ui'),
+      require.resolve('../command-bar/command-search-provider.ui'),
     ];
   }
 

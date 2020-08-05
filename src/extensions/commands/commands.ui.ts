@@ -11,8 +11,7 @@ export default class CommandRegistryUi extends Map<CommandId, CommandEntry> {
   static dependencies = [];
   static slots = [];
   static async provider(/* deps: []] config, slots: [] */) {
-    const CommandRegistry = new CommandRegistryUi();
-    return CommandRegistry;
+    return new CommandRegistryUi();
   }
 
   run<R = any>(id: CommandId, ...rest: any[]) {
