@@ -11,14 +11,12 @@ import { Component, ComponentID, ComponentExtension, State, ComponentFactory, Co
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
 import { IsolatorExtension, Network } from '../isolator';
-import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
@@ -38,6 +36,8 @@ import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { ResolvedComponent } from '../../components/utils/resolved-component';
+import { loadResolvedExtensions } from '../../components/utils/load-extensions';
 
 export type EjectConfResult = {
   configPath: string;
