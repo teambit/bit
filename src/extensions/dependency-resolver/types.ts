@@ -1,9 +1,12 @@
 import { ComponentFS, ComponentConfig } from '../component';
 import { PathLinux } from '../../utils/path';
+import { ComponentManifest } from './manifest/component-manifest';
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
 export type SemverVersion = string;
+export type PackageName = string;
+
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
@@ -30,14 +33,21 @@ export interface DependenciesPolicy {
   peerDependencies?: DependenciesPolicyObject;
 }
 
+export interface WorkspaceDependenciesPolicy {
+  // There is no dev dependencies here since to decide if a dependency is a dev dependency or runtime dependency
+  // we calculate it based on the dev files pattern
+  dependencies?: DependenciesPolicyObject;
+  peerDependencies?: DependenciesPolicyObject;
+}
+
 export interface DependencyResolverWorkspaceConfig {
-  policy: DependenciesPolicy;
+  policy: WorkspaceDependenciesPolicy;
   /**
    * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
    * and totally removes the need of a 'node_modules' directory in your project.
    */
-  packageManager: 'npm' | 'yarn' | 'pnpm';
+  packageManager: string;
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
@@ -66,6 +76,7 @@ export interface RawComponentState {
   config: ComponentConfig;
 }
 
+export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 export type DependencyType = 'package' | 'component';
 
 /**
@@ -106,7 +117,7 @@ export type RelativePath = {
   importSource?: string; // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.
 };
 
-interface DependencyDefinition {
+interface LegacyDependencyDefinition {
   dependencyId: string;
   dependencyVersion: SemverVersion;
   type: DependencyType;
@@ -130,12 +141,19 @@ interface FileDependencyDefinition {
 
 export type FileDependenciesDefinition = FileDependencyDefinition[];
 
-export interface DependenciesDefinition {
-  dependencies?: DependencyDefinition[];
-  devDependencies?: DependencyDefinition[];
-  peerDependencies?: DependencyDefinition[];
+export interface LegacyDependenciesDefinition {
+  dependencies?: LegacyDependencyDefinition[];
+  devDependencies?: LegacyDependencyDefinition[];
+  peerDependencies?: LegacyDependencyDefinition[];
 }
 
-export type installOpts = {
-  packageManager?: string;
-};
+export interface DependenciesObjectDefinition {
+  dependencies?: DepObjectValue;
+  devDependencies?: DepObjectValue;
+  peerDependencies?: DepObjectValue;
+}
+
+export type DepObjectValue = Record<PackageName, SemverVersion>;
+export type DepObjectKeyName = 'dependencies' | 'devDependencies' | 'peerDependencies';
+
+export type ComponentsManifestsMap = Map<PackageName, ComponentManifest>;

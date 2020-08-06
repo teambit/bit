@@ -29,7 +29,7 @@ describe('set default owner and scope', function () {
     let componentId;
     let componentPackageName;
     before(() => {
-      helper.scopeHelper.initWorkspaceAndRemoteScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       const remoteScopeParts = helper.scopes.remote.split('.');
       defaultOwner = remoteScopeParts[0];
       scopeWithoutOwner = remoteScopeParts[1];
@@ -80,7 +80,7 @@ describe('set default owner and scope', function () {
       });
       describe('post import', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('utils/is-type');
         });

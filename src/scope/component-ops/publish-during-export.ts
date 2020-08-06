@@ -32,8 +32,10 @@ export async function publishComponentsToRegistry({
   try {
     postExportResults = await Promise.all(consumer.scope.onPostExport.map((func) => func(newIdsOnRemote)));
   } catch (err) {
+    let errMessage = err.report && typeof err.report === 'function' ? err.report() : undefined;
+    errMessage = errMessage || err.message || err.msg || err;
     const publishErr = `The components ${updatedIds.map((c) => c.toString()).join(', ')} were exported successfully.
-    However, the publish operation has failed due to an error: ${err.msg || err}`;
+    However, the publish operation has failed due to an error: ${errMessage}`;
     logger.error(publishErr, err);
     throw new Error(publishErr);
   }

@@ -27,9 +27,6 @@ Here is a full example of workspace config:
         // This is a component, not a package
         "@teambit/my-awesome-component": "1.1.1"
       },
-      "devDependencies": {
-        "chai": "1.2.3"
-      },
       "peerDependencies": {
         "react": ">15.0.1"
       },

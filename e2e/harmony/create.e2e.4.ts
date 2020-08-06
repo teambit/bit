@@ -23,7 +23,7 @@ describe('create extension', function () {
     let testContents;
     const COMPONENT_NAME = 'foo';
     before(() => {
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.initHarmonyWorkspace();
       helper.fixtures.copyFixtureExtensions('react-create-template');
       helper.command.addComponent('react-create-template');
       helper.extensions.addExtensionToWorkspace('my-scope/react-create-template', {});

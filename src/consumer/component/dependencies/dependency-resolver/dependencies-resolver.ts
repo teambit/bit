@@ -75,6 +75,11 @@ export type Issues = {
   missingBits: {};
 };
 
+type WorkspacePolicyGetter = () => {
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+};
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -94,6 +99,12 @@ export default class DependencyResolver {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   testerFiles: PathLinux[];
   overridesDependencies: OverridesDependencies;
+
+  static getWorkspacePolicy: WorkspacePolicyGetter;
+  static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
+    this.getWorkspacePolicy = func;
+  }
+
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -232,6 +243,9 @@ export default class DependencyResolver {
     this.combineIssues();
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
+    if (!this.consumer.isLegacy) {
+      this.applyWorkspacePolicy();
+    }
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
   }
@@ -816,6 +830,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     missingComponents.forEach((missingBit) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
         missingBit,
+        // this is a bit dangerous because it send the dependent prefix and assume it's the same for the dependency
+        // sometime you might just not find it (which is totally fine) but sometime it can make a bug
+        // for example
+        // I installed a package names my-comp
+        // I have a component called @my-org/my-comp
+        // The dependent called @my-org/my-dependent
+        // Now I might resolve the package as the component
         this.component.bindingPrefix
       );
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
@@ -1044,6 +1065,29 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
     });
     this.allPackagesDependencies.peerPackageDependencies = peerPackages;
+  }
+
+  applyWorkspacePolicy(): void {
+    const wsPolicy = DependencyResolver.getWorkspacePolicy();
+    if (!wsPolicy) return;
+    const wsPeer = wsPolicy.peerDependencies || {};
+    const wsRegular = wsPolicy.dependencies || {};
+    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    // we are not iterate component deps since they are resolved from what actually installed
+    // the policy used for installation only in that case
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+      R.forEachObjIndexed((_pkgVal, pkgName) => {
+        const peerVersionFromWsPolicy = wsPeer[pkgName];
+        const regularVersionFromWsPolicy = wsRegular[pkgName];
+        if (peerVersionFromWsPolicy) {
+          delete this.allPackagesDependencies[field][pkgName];
+          peerDeps[pkgName] = peerVersionFromWsPolicy;
+        } else if (regularVersionFromWsPolicy) {
+          this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
+        }
+      }, this.allPackagesDependencies[field]);
+    });
+    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
   }
 
   /**

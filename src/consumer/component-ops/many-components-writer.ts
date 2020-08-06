@@ -22,6 +22,10 @@ import BitMap from '../bit-map';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
 import { BitId } from '../../bit-id';
 
+interface ExternalPackageInstaller {
+  install: Function;
+}
+
 export interface ManyComponentsWriterParams {
   packageManager?: string;
   consumer?: Consumer;
@@ -112,6 +116,12 @@ export default class ManyComponentsWriter {
     this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
+
+  static externalInstaller: ExternalPackageInstaller;
+  static registerExternalInstaller(installer: ExternalPackageInstaller) {
+    this.externalInstaller = installer;
+  }
+
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
   }
@@ -130,7 +140,7 @@ export default class ManyComponentsWriter {
   }
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
-    if (this.consumer) {
+    if (this.consumer && this.consumer.isLegacy) {
       await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
       if (this.addToRootPackageJson && this.consumer) {
         await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
@@ -341,18 +351,22 @@ to move all component files to a different directory, run bit remove and then bi
   }
   async _installPackagesIfNeeded() {
     if (!this.installNpmPackages) return;
-    await installNpmPackagesForComponents({
-      // $FlowFixMe consumer is set here
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      consumer: this.consumer,
-      basePath: this.basePath,
-      componentsWithDependencies: this.componentsWithDependencies,
-      verbose: this.verbose, // $FlowFixMe
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      silentPackageManagerResult: this.silentPackageManagerResult,
-      installPeerDependencies: this.installPeerDependencies,
-      installProdPackagesOnly: this.installProdPackagesOnly,
-    });
+    if (this.consumer?.isLegacy) {
+      await installNpmPackagesForComponents({
+        // $FlowFixMe consumer is set here
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        consumer: this.consumer,
+        basePath: this.basePath,
+        componentsWithDependencies: this.componentsWithDependencies,
+        verbose: this.verbose, // $FlowFixMe
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        silentPackageManagerResult: this.silentPackageManagerResult,
+        installPeerDependencies: this.installPeerDependencies,
+        installProdPackagesOnly: this.installProdPackagesOnly,
+      });
+    } else {
+      ManyComponentsWriter.externalInstaller?.install();
+    }
   }
   async _getAllLinks(): Promise<DataToPersist> {
     return getAllComponentsLinks({
