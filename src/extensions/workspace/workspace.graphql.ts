@@ -9,6 +9,9 @@ export default (workspace: Workspace) => {
         # is the component modified.
         isModified: Boolean
 
+        # component is pending to be tagged automatically.
+        isAutoTag: Boolean
+
         # is the new component new.
         isNew: Boolean
 

@@ -3,6 +3,12 @@ import { ComponentStatus as LegacyComponentStatus } from '../../../consumer/comp
 export class ComponentStatus {
   constructor(
     /**
+     * will auto Tag component .
+     */
+
+    readonly isAutoTag: boolean,
+
+    /**
      * is the component modified.
      */
     readonly isModified: boolean,
@@ -38,12 +44,9 @@ export class ComponentStatus {
     readonly nested?: boolean
   ) {}
 
-  status(): string {
-    return 'new';
-  }
-
-  static fromLegacy(status: LegacyComponentStatus) {
+  static fromLegacy(status: LegacyComponentStatus, isAutoTag: boolean) {
     return new ComponentStatus(
+      !!isAutoTag,
       !!status.modified,
       !!status.newlyCreated,
       !!status.deleted,
