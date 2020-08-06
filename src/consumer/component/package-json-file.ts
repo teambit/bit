@@ -100,15 +100,15 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir });
   }
 
-  static loadFromCapsuleSync(capsule: Capsule) {
-    const filePath = composePath(capsule.wrkDir);
+  static loadFromCapsuleSync(capsuleRootDir: string) {
+    const filePath = composePath(capsuleRootDir);
     const filePathAbsolute = filePath;
     const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
     if (!packageJsonStr) {
-      throw new Error(`capsule ${capsule.wrkDir} is missing package.json`);
+      throw new Error(`capsule ${capsuleRootDir} is missing package.json`);
     }
     const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, filePath);
-    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir: capsule.wrkDir });
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir: capsuleRootDir });
   }
 
   static createFromComponent(

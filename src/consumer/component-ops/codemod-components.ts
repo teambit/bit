@@ -30,7 +30,22 @@ export async function changeCodeFromRelativeToModulePaths(
     return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
   });
   await dataToPersist.persistAllToFS();
+  await reloadComponents(
+    consumer,
+    componentsWithRelativeIssues.map((c) => c.id)
+  );
+
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
+}
+
+async function reloadComponents(consumer: Consumer, bitIds) {
+  consumer.componentLoader.clearComponentsCache();
+  const components = await loadComponents(consumer, bitIds);
+  const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
+  if (componentsWithRelativeIssues.length) {
+    const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
+    throw new Error(`failed rewiring the following components: ${failedComps}`);
+  }
 }
 
 async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
@@ -69,6 +84,8 @@ function codemodComponent(consumer: Consumer, component: Component): { files: So
       const isCss = cssFamily.includes(file.extname);
       const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
       const stringToReplace = getNameWithoutInternalPath(consumer, relativeEntry);
+      // @todo: the "dist" should be replaced by the compiler dist-dir.
+      // newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss, 'dist');
       newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss);
     });
     if (fileBefore !== newFileString) {
@@ -112,6 +129,11 @@ function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeC
   if (importSource.endsWith(internalPathNoExt)) {
     return removeLastOccurrence(importSource, internalPathNoExt);
   }
+  const internalPathNoIndex = removeLastOccurrence(internalPathNoExt, 'index');
+  if (importSource.endsWith(internalPathNoIndex)) {
+    return removeLastOccurrence(importSource, internalPathNoIndex);
+  }
+
   // unable to find anything useful. just return the importSource.
   return importSource;
 }

@@ -17,7 +17,9 @@
       "@teambit/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@types/mocha": "^7.0.2"
+            "@types/mocha": "^7.0.2",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.25"
           }
         }
       }
