@@ -1,6 +1,5 @@
 import { Component } from '../component';
 import { ComponentDir } from '../bundler/get-entry';
-import { DevServer } from '@stencil/core/internal';
 import { ComponentServer } from '../bundler/component-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope

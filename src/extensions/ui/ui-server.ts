@@ -1,5 +1,7 @@
+import { Server } from 'http';
+import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
-import webpack, { Configuration } from 'webpack';
+import webpack from 'webpack';
 import getPort from 'get-port';
 import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
@@ -8,8 +10,6 @@ import { ExpressExtension } from '../express';
 import { UIExtension } from './ui.extension';
 import { UIRoot } from './ui-root';
 import { Logger } from '../logger';
-import { Server } from 'http';
-import { join } from 'path';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -57,7 +57,7 @@ export class UIServer {
   async start({ port }: StartOptions = {}) {
     const app = this.express.createApp();
     // TODO: better handle ports.
-    const selectedPort = await this.selectPort(4000);
+    const selectedPort = await this.selectPort(port || 4000);
     app.use(express.static(join(this.uiRoot.path, '/public')));
     const server = await this.graphql.createServer({ app });
 
@@ -126,25 +126,6 @@ export class UIServer {
 
     return devServerConf;
   }
-
-  // private async configureWebpackMiddleware(app: Express) {
-  //   const config = await this.getDevConfig();
-  //   const compiler = webpack(config);
-  //   const devServer = new WebpackDevServer(compiler, config.devServer);
-  //   return devServer;
-  //   // app.use(
-  //   //   webpackDevMiddleware(compiler, {
-  //   //     publicPath: '/public',
-  //   //     serverSideRender: true
-  //   //   })
-  //   // );
-
-  //   // app.use(
-  //   //   webpackHotMiddleware(compiler, {
-  //   //     log: this.logger.info.bind(this.logger),
-  //   //   })
-  //   // );
-  // }
 
   static create(props: UIServerProps) {
     return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension, props.logger);

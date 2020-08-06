@@ -5,13 +5,13 @@ export async function createRoot(extensionsPaths: string[], rootExtensionName?: 
 
   return `
 import harmony from '@teambit/harmony';
-import { UIRuntimeExtension } from './ui.ui';
+import UIRuntimeExtension from './ui.ui';
 ${getImportStatements(extensionsPaths)}
 
 harmony
   .run([UIRuntimeExtension, ${getIdentifiers(extensionsPaths)}])
   .then(() => {
-    const uiExtension = harmony.get('UIRuntimeExtension');
+    const uiExtension = harmony.get('@teambit/ui');
     uiExtension.render(${rootId});
   })
   .catch((err) => {

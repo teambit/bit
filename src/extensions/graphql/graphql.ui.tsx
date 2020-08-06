@@ -9,6 +9,8 @@ import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
 
 export class GraphQlUI {
+  static id = '@teambit/graphql';
+
   constructor(
     /**
      * apollo client.

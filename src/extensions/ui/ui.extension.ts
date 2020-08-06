@@ -113,7 +113,7 @@ export class UIExtension {
     if (dev) {
       await uiServer.dev();
     } else {
-      await uiServer.start();
+      await uiServer.start({ port: 3000 });
     }
 
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
