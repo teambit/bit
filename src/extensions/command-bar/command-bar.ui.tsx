@@ -1,8 +1,6 @@
-// eslint-disable-next-line max-classes-per-file
 import React, { useState, useMemo, ReactElement } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-import KeyboardShortcuts from '../keyboard-shortcuts/keyboard-shortcuts.ui';
 import CommandRegistryUi from '../commands/commands.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import { CommandBar, ChildProps } from './ui/command-bar';
@@ -54,33 +52,6 @@ export default class CommandBarUI {
     this.searcherSlot.register(commandSearcher);
     return this;
   }
-
-  // private fuseCommands = new Fuse<CommandObj>([], {
-  //   includeMatches: true,
-  //   // weight can be included here.
-  //   // fields loses weight the longer it gets, so it seems ok for now.
-  //   keys: ['key', 'name', 'description'],
-  // });
-
-  // private execute = (action: string) => {
-  //   this.commandRegistryUi.run(action);
-  //   this.close();
-  // };
-
-  // private searchCommands = (pattern: string, limit = 5) => {
-  //   this.refreshCommands();
-
-  //   return this.fuseCommands.search(pattern, { limit });
-  // };
-
-  // private _prevList?: CommandObj[] = undefined;
-  // private refreshCommands() {
-  //   const commands = this.commandRegistryUi.list();
-  //   if (commands === this._prevList) return;
-
-  //   this.fuseCommands.setCollection(commands);
-  //   this._prevList = commands;
-  // }
 
   private setVisibility?: (visible: boolean) => void;
 

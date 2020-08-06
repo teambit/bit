@@ -28,12 +28,11 @@ const MIN_ACTIVE_IDX = 0;
 
 export function CommandBar({ visible = false, term, onClose, onChange, children }: CommandBarProps) {
   const inputRef = createRef<HTMLInputElement>();
-  // const [value, setValue] = useState('');
   const [activeIdx, setActive] = useState(MIN_ACTIVE_IDX);
 
-  // reset input changing visible
+  // reset input when changing visible
   useEffect(() => onChange(''), [onChange, visible]);
-  // focus when changing to visible
+  // focus when becoming visible
   useEffect(() => {
     if (visible) inputRef.current?.focus();
   }, [inputRef, visible]);
@@ -65,14 +64,14 @@ export function CommandBar({ visible = false, term, onClose, onChange, children 
   );
 
   // inserts 'active' prop to each
-  // element props are immutable, therefor cloned
+  // element props are immutable, therefor they are cloned
   const childrenPlusActive = useMemo(
     () => children.map((item, idx) => React.cloneElement(item, { active: idx === activeIdx })),
     [activeIdx, children]
   );
 
   return (
-    <Card className={classNames(styles.commandBar, visible && styles.visible)}>
+    <Card elevation="high" className={classNames(styles.commandBar, visible && styles.visible)}>
       <input
         value={term}
         onBlur={onClose}

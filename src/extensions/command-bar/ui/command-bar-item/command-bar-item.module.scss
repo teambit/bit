@@ -3,7 +3,7 @@
   transition: all 180ms;
 
   &:hover {
-    background-color: #f6f6f6;
+    background-color: var(--bg-topping-highlight);
   }
 
   &.active,

@@ -48,12 +48,13 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
+  setWorkspace: (components: WorkspaceModel) => void;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot }: WorkspaceProps) {
+export function Workspace({ routeSlot, setWorkspace }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
 
   if (!data) {
@@ -65,6 +66,7 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
   }
 
   const workspace = WorkspaceModel.from(data.workspace);
+  setWorkspace(workspace);
 
   return (
     <WorkspaceProvider workspace={workspace}>

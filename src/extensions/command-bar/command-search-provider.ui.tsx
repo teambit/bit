@@ -2,7 +2,7 @@ import React from 'react';
 import Fuse from 'fuse.js';
 import KeyboardShortcuts from '../keyboard-shortcuts/keyboard-shortcuts.ui';
 import CommandRegistryUi, { CommandObj, CommandId } from '../commands/commands.ui';
-import { CommandItem } from './ui/command-item/command-item';
+import { CommandItem } from './ui/command-item';
 import CommandBarUI, { SearchProvider } from './command-bar.ui';
 
 export default class CommandSearchProvider implements SearchProvider {

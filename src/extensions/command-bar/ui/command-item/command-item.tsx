@@ -1,25 +1,23 @@
 import React from 'react';
-import classNames from 'classnames';
 import { Hotkeys } from '../../../stage-components/elements/key';
 import { Keybinding } from '../../../keyboard-shortcuts/keyboard-shortcuts.ui';
 import { CommandObj } from '../../../commands/commands.ui';
 import styles from './command-item.module.scss';
+import { CommandBarItem, CommandBarItemProps } from '../command-bar-item';
 
 export type CommandItemProps = {
   command: CommandObj;
   hotkey?: Keybinding;
-  execute: () => void;
-  active?: boolean;
-};
+} & CommandBarItemProps;
 
 // TODO highlight match from Fuse
 
-export function CommandItem({ command, hotkey, active }: CommandItemProps) {
+export function CommandItem({ command, hotkey, ...rest }: CommandItemProps) {
   return (
-    <div className={classNames(styles.commandBarOption, active && styles.active)}>
+    <CommandBarItem {...rest}>
       <Hotkeys className={styles.commandKeys}>{hotkey}</Hotkeys>
       <div>{command.name}</div>
       <div className={styles.commandDescription}>{command.description}</div>
-    </div>
+    </CommandBarItem>
   );
 }

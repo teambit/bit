@@ -6,6 +6,7 @@ import { RouteSlot } from '../react-router/slot-router';
 import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import ComponentUI from '../component/component.ui';
+import { Workspace as WorkspaceModel } from './ui/workspace/workspace-model';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -34,6 +35,12 @@ export class WorkspaceUI {
     return this;
   }
 
+  listComponents = () => {
+    return this.workspace?.components;
+  };
+
+  private workspace?: WorkspaceModel;
+
   private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
@@ -41,12 +48,16 @@ export class WorkspaceUI {
     });
   }
 
+  private setWorkspace = (workspace: WorkspaceModel) => {
+    this.workspace = workspace;
+  };
+
   get root(): UIRoot {
     return {
       routes: [
         {
           path: '/',
-          children: <Workspace routeSlot={this.routeSlot} />,
+          children: <Workspace routeSlot={this.routeSlot} setWorkspace={this.setWorkspace} />,
         },
       ],
     };
