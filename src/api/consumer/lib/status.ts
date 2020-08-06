@@ -53,9 +53,6 @@ export default (async function status(): Promise<StatusResult> {
   const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    if (consumer.isLegacy && component.issues) {
-      delete component.issues.relativeComponentsAuthored;
-    }
     return Boolean(component.issues) && !R.isEmpty(component.issues);
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();

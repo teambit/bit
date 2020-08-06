@@ -19,7 +19,6 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
-import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 import { getDependencyTree } from '../files-dependency-builder';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 
@@ -198,7 +197,6 @@ export default class DependencyResolver {
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
-    this.throwForIncorrectRootDir();
     return this.component;
   }
 
@@ -297,14 +295,6 @@ export default class DependencyResolver {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
-    }
-  }
-
-  throwForIncorrectRootDir() {
-    const relatives = this.issues.relativeComponentsAuthored;
-    if (relatives && !R.isEmpty(relatives) && this.componentMap.doesAuthorHaveRootDir()) {
-      const firstRelativeKey = Object.keys(relatives)[0];
-      throw new IncorrectRootDir(this.componentId.toString(), relatives[firstRelativeKey][0].importSource);
     }
   }
 
@@ -1194,6 +1184,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
+    if (this.consumer.isLegacy) return; // valid on legacy
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }
