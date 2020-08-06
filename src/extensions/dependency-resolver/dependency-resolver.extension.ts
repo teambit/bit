@@ -24,6 +24,7 @@ import { WorkspaceManifest, CreateFromComponentsOptions } from './manifest/works
 import { ROOT_NAME } from './constants';
 import { CFG_PACKAGE_MANAGER_CACHE } from '../../constants';
 import * as globalConfig from '../../api/consumer/lib/global-config';
+import { DependencyResolver } from '../../consumer/component/dependencies/dependency-resolver';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
@@ -210,6 +211,7 @@ export class DependencyResolverExtension {
         return transformPoliciesToLegacyDepsOverrides(policies);
       }
     );
+    DependencyResolver.registerWorkspacePolicyGetter(dependencyResolver.getWorkspacePolicy.bind(dependencyResolver));
 
     return dependencyResolver;
   }
