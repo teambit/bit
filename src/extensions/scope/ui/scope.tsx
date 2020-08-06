@@ -2,7 +2,7 @@ import React, { useReducer } from 'react';
 import gql from 'graphql-tag';
 import { Route } from 'react-router-dom';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
-import { Layout } from '@bit/bit.rendering.constants.layouts';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
 import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';

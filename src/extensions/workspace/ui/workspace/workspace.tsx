@@ -3,7 +3,7 @@ import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
-import { Layout } from '@bit/bit.rendering.constants.layouts';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';

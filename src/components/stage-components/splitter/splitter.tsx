@@ -1,7 +1,7 @@
 import React from 'react';
 import cn from 'classnames';
 
-import { Layout } from '@bit/bit.rendering.constants.layouts';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 // import { Icon } from '@teambit/evangelist-temp.elements.icon';
 // import { Button } from '@bit/bit.gui.atoms.text-button';
 import Splitter from '@teambit/base-ui-temp.surfaces.splitter';

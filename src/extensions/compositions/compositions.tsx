@@ -4,7 +4,7 @@ import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import R from 'ramda';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
-import { Layout } from '@bit/bit.rendering.constants.layouts';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { PropTable } from '@teambit/documenter-temp.ui.property-table';
 import { CollapsibleSplitter } from '../../components/stage-components/splitter';
 import { ComponentContext } from '../component/ui';
