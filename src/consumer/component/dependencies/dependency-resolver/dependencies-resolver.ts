@@ -1069,6 +1069,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   applyWorkspacePolicy(): void {
     const wsPolicy = DependencyResolver.getWorkspacePolicy();
+    if (!wsPolicy) return;
     const wsPeer = wsPolicy.peerDependencies || {};
     const wsRegular = wsPolicy.dependencies || {};
     const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
