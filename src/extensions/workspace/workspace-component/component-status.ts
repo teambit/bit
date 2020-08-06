@@ -44,7 +44,7 @@ export class ComponentStatus {
   ) {}
 
   static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean) {
-    const modify: Modify = {
+    const modify: ModifyInfo = {
       hasModifiedFiles: !!status.modified,
       hasModifiedDependencies: hasModifiedDependencies,
     };
