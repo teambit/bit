@@ -141,12 +141,23 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
+  async hasModifiedDependencies(component: Component) {
+    const componentsList = new ComponentsList(this.consumer);
+    const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
+    const isAutoTag = listAutoTagPendingComponents.find(
+      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    );
+    if (isAutoTag) return true;
+    return false;
+  }
+
   /**
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
-    return ComponentStatus.fromLegacy(status);
+    const hasModifiedDependencies = await this.hasModifiedDependencies(component);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
   }
 
   /**

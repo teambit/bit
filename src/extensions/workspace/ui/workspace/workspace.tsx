@@ -28,7 +28,10 @@ const WORKSPACE = gql`
           isNew
           isInScope
           isStaged
-          isModified
+          modifyInfo {
+            hasModifiedFiles
+            hasModifiedDependencies
+          }
           isDeleted
         }
         deprecation {
