@@ -159,6 +159,9 @@ export class UIExtension {
     return uiSlot;
   }
 
+  /**
+   * generate the root file of the UI runtime.
+   */
   async generateRoot(extensionPaths: string[], rootExtensionName: string) {
     const contents = await createRoot(extensionPaths, rootExtensionName);
     const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));

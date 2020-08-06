@@ -55,7 +55,6 @@ export class ComponentServer {
    * get the url of the component server.
    */
   get url() {
-    const protocol = this.port === 443 ? 'https://' : 'http://';
-    return `${protocol}localhost:3000/preview/${this.context.envRuntime.id}`;
+    return `/preview/${this.context.envRuntime.id}`;
   }
 }

@@ -28,6 +28,9 @@ import { GraphQLExtension } from '../graphql';
 import { scopeSchema } from './scope.graphql';
 import { CLIExtension } from '../cli';
 import { ExportCmd } from './export/export-cmd';
+import { IsolatorExtension } from '../isolator';
+import { CannotLoadExtension } from './exceptions';
+import { LoggerExtension, Logger } from '../logger';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -57,7 +60,11 @@ export class ScopeExtension implements ComponentFactory {
     /**
      * slot registry for subscribing to post-export
      */
-    private postExportRegistry: PostExportRegistry
+    private postExportRegistry: PostExportRegistry,
+
+    private isolator: IsolatorExtension,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -105,7 +112,19 @@ export class ScopeExtension implements ComponentFactory {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
-    // TODO: implement
+    const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
+    const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
+    const extensionModules = capsules.map(({ id, capsule }) => {
+      try {
+        // eslint-disable-next-line
+        return require(capsule.path);
+      } catch (err) {
+        throw new CannotLoadExtension(id.toString(), err);
+      }
+    });
+
+    // return extensionModules;
+    extensionModules;
   }
 
   /**
@@ -244,10 +263,24 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension];
+  static dependencies = [
+    ComponentExtension,
+    UIExtension,
+    GraphQLExtension,
+    CLIExtension,
+    IsolatorExtension,
+    LoggerExtension,
+  ];
 
   static async provider(
-    [componentExt, ui, graphql, cli]: [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension],
+    [componentExt, ui, graphql, cli, isolator, logger]: [
+      ComponentExtension,
+      UIExtension,
+      GraphQLExtension,
+      CLIExtension,
+      IsolatorExtension,
+      LoggerExtension
+    ],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
   ) {
@@ -257,7 +290,7 @@ export class ScopeExtension implements ComponentFactory {
       return undefined;
     }
 
-    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
+    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);

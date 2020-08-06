@@ -46,6 +46,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.byPattern(pattern);
   }
 
+  getConfig() {
+    return {};
+  }
+
   /**
    * proxy to `workspace.componentDir()`
    */
