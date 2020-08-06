@@ -1078,7 +1078,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       R.forEachObjIndexed((_pkgVal, pkgName) => {
         const peerVersionFromWsPolicy = wsPeer[pkgName];
         const regularVersionFromWsPolicy = wsRegular[pkgName];
-        console.log(field, pkgName, peerVersionFromWsPolicy);
         if (peerVersionFromWsPolicy) {
           delete this.allPackagesDependencies[field][pkgName];
           peerDeps[pkgName] = peerVersionFromWsPolicy;
