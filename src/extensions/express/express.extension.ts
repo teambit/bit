@@ -8,6 +8,7 @@ import { LoggerExtension, Logger } from '../logger';
 
 export type ExpressConfig = {
   port: number;
+  namespace: string;
 };
 
 export type RouteSlot = SlotRegistry<Route[]>;
@@ -69,7 +70,7 @@ export class ExpressExtension {
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
-      app[method](path, this.catchErrorsMiddlewares(middlewares));
+      app[method](`/${this.config.namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
     });
 
     //app.use(notFound);
@@ -80,7 +81,6 @@ export class ExpressExtension {
     const routesSlots = this.moduleSlot.toArray();
     const routeEntries = routesSlots.map(([extensionId, routes]) => {
       return routes.map((route) => ({
-        namespace: extensionId,
         method: lowerCase(route.method),
         path: route.route,
         middlewares: route.middlewares,
@@ -100,6 +100,7 @@ export class ExpressExtension {
 
   static defaultConfig = {
     port: 4001,
+    namespace: 'api',
   };
 
   static async provider([loggerFactory]: [LoggerExtension], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
