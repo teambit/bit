@@ -15,7 +15,7 @@ export class ChangeLogUI {
     const section = new ChangelogSection();
 
     component.registerRoute(section.route);
-    component.registerWidget(section.navigationLink);
+    component.registerNavigation(section.navigationLink);
 
     return ui;
   }
