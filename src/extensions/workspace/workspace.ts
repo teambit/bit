@@ -138,7 +138,7 @@ export class Workspace implements ComponentFactory {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const isAutoTag = listAutoTagPendingComponents.find(
-      (componentModal) => componentModal.id() == component.id._legacy.toStringWithoutVersion()
+      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
     );
     if (isAutoTag) return true;
     return false;
