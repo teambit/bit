@@ -1,6 +1,6 @@
 import { AddressInfo } from 'net';
 import { Component } from '../component';
-import { EnvRuntime, ExecutionContext } from '../environments';
+import { ExecutionContext } from '../environments';
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 

@@ -34,7 +34,7 @@ export type StartOptions = {
 export class UIServer {
   constructor(
     private graphql: GraphQLExtension,
-    private express: ExpressExtension,
+    private expressExtension: ExpressExtension,
     private ui: UIExtension,
     private uiRoot: UIRoot,
     private uiRootExtension: string,
@@ -56,7 +56,7 @@ export class UIServer {
    * start a UI server.
    */
   async start({ port }: StartOptions = {}) {
-    const app = this.express.createApp();
+    const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');

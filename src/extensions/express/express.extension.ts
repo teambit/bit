@@ -3,7 +3,7 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
-import { errorHandle, notFound, catchErrors } from './middlewares';
+import { catchErrors } from './middlewares';
 import { LoggerExtension, Logger } from '../logger';
 
 export type ExpressConfig = {
@@ -73,13 +73,12 @@ export class ExpressExtension {
       app[method](`/${this.config.namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
     });
 
-    //app.use(notFound);
     return app;
   }
 
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
-    const routeEntries = routesSlots.map(([extensionId, routes]) => {
+    const routeEntries = routesSlots.map(([, routes]) => {
       return routes.map((route) => ({
         method: lowerCase(route.method),
         path: route.route,
