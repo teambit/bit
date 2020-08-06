@@ -13,6 +13,7 @@ import { ComponentStatus } from '../component-status/component-status';
 import { PayloadType } from '../payload-type';
 import { componentToUrl } from '../../../../../extensions/component/component-path.ui';
 import { NavLink } from '../../../../../extensions/react-router/nav-link';
+import { ComponentIcon } from '../../../workspace-components/component-icon';
 
 export type ComponentViewProps<Payload = any> = {
   // env?: 'react' | 'angular' | 'vue' | 'stencil';
@@ -21,8 +22,6 @@ export type ComponentViewProps<Payload = any> = {
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const { node } = props;
   const { payload } = node;
-  const envId = _.get(payload, ['environment', 'envId']);
-  const icon = _.get(payload, ['environment', 'icon']);
   const isNew = _.get(payload, ['status', 'isNew']);
   const isDeprecated = _.get(payload, ['deprecation', 'isDeprecate']);
 
@@ -43,7 +42,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        {icon && <img src={icon} alt={envId} />}
+        {payload && <ComponentIcon component={payload} />}
         <span>{getName(node.id)}</span>
       </div>
 
