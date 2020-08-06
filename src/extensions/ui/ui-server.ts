@@ -1,6 +1,7 @@
 import { Server } from 'http';
 import { join } from 'path';
 import WebpackDevServer from 'webpack-dev-server';
+import fallback from 'express-history-api-fallback';
 import webpack from 'webpack';
 import getPort from 'get-port';
 import express, { Express } from 'express';
@@ -58,7 +59,9 @@ export class UIServer {
     const app = this.express.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
-    app.use(express.static(join(this.uiRoot.path, '/public')));
+    const root = join(this.uiRoot.path, '/public');
+    app.use(express.static(root));
+    app.use(fallback('index.html', { root }));
     const server = await this.graphql.createServer({ app });
 
     server.listen(selectedPort);
