@@ -26,7 +26,7 @@
     }
   },
   "@teambit/dependency-resolver": {
-    "packageManager": "npm",
+    "packageManager": "@teambit/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": []
   },
