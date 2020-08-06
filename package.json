@@ -118,7 +118,7 @@
     "@teambit/documenter-temp.ui.heading": "^0.0.2",
     "@teambit/documenter-temp.ui.sub-title": "^0.0.2",
     "@teambit/documenter-temp.ui.separator": "^0.0.2",
-    "@teambit/documenter-temp.ui.consumable-link": "^0.0.2",
+    "@teambit/documenter-temp.ui.consumable-link": "^0.0.4",
     "@teambit/documenter-temp.ui.label-list": "^0.0.2",
     "@teambit/documenter-temp.ui.property-table": "^0.0.2",
     "@teambit/documenter-temp.theme.theme-context": "^0.0.2",
