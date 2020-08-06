@@ -20,13 +20,16 @@ export class TaskProcess {
     const compsWithErrors = this.taskResult.components.filter((c) => c.errors.length);
     if (compsWithErrors.length) {
       const title = `Builder found the following errors while running "${this.task.extensionId}" task\n`;
+      let totalErrors = 0;
       const errorsStr = compsWithErrors
         .map((c) => {
           const errors = c.errors.map((e) => (typeof e === 'string' ? e : e.toString()));
+          totalErrors += errors.length;
           return `${c.id.toString()}\n${errors.join('\n')}`;
         })
         .join('\n\n');
-      throw new GeneralError(title + errorsStr);
+      const summery = `\n\nFound ${totalErrors} errors in ${compsWithErrors.length} components`;
+      throw new GeneralError(title + errorsStr + summery);
     }
   }
 
