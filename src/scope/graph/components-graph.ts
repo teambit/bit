@@ -4,9 +4,7 @@ import graphLib, { Graph as GraphLib } from 'graphlib';
 import Graph from './graph';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
-import loadFlattenedDependenciesForCapsule, {
-  FlattenedDependencyLoader,
-} from '../../consumer/component-ops/load-flattened-dependencies';
+import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
