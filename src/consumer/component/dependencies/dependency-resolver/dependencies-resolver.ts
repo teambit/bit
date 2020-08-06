@@ -1128,14 +1128,17 @@ either, use the ignore file syntax or change the require statement to have a mod
   _addTypesPackagesForTypeScript(packages: Record<string, any>, originFile: PathLinuxRelative): void {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
-    const packageJson = this._getPackageJson();
-    if (!packageJson) return;
+    let depsHost = this._getPackageJson();
+    if (!this.consumer.isLegacy) {
+      depsHost = DependencyResolver.getWorkspacePolicy();
+    }
+    if (!depsHost) return;
     const addIfNeeded = (depField: string, packageName: string) => {
-      if (!packageJson[depField]) return;
+      if (!depsHost || !depsHost[depField]) return;
       const typesPackage = `@types/${packageName}`;
-      if (!packageJson[depField][typesPackage]) return;
-      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], {
-        [typesPackage]: packageJson[depField][typesPackage],
+      if (!depsHost[depField][typesPackage]) return;
+      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
+        [typesPackage]: depsHost[depField][typesPackage],
       });
     };
     Object.keys(packages).forEach((packageName) => {
