@@ -1,4 +1,4 @@
-import { capitalize } from '../utils/capitalize';
+import { capitalize } from '../../components/utils/capitalize';
 
 export type CompositionProps = {
   identifier: string;

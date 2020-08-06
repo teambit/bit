@@ -6,13 +6,15 @@ import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeModel } from './scope-model';
 import { useDataQuery } from '../../ui/ui/data/use-data-query';
-import { Corner } from '../../stage-components/corner';
 import { ScopeProvider } from './scope-provider';
-import { SideBar } from '../../stage-components/side-bar';
 import styles from './scope.module.scss';
+import { Corner } from '../../../components/stage-components/corner';
+import { SideBar } from '../../../components/stage-components/side-bar';
+import { TopBar } from '../../../components/stage-components/top-bar';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
+  menuSlot: RouteSlot;
   onScope: (scope?: ScopeModel) => void;
 };
 
@@ -35,7 +37,7 @@ const SCOPE = gql`
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot, onScope }: ScopeProps) {
+export function Scope({ routeSlot, menuSlot, onScope }: ScopeProps) {
   const { data, loading } = useDataQuery(SCOPE);
 
   if (loading) {
@@ -49,7 +51,7 @@ export function Scope({ routeSlot, onScope }: ScopeProps) {
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
-        <Corner name={scope.name} />
+        <TopBar Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
         <SideBar components={ids} className={styles.sideBar} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />

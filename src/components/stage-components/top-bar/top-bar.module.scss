@@ -1,0 +1,14 @@
+
+$topbarHeight: 64px;
+
+.topbar {
+	display: flex;
+	flex: none;
+	align-items: center;
+	
+	// padding-left: 16px;
+	
+	height: $topbarHeight;
+	background: #ededed;
+	box-sizing: border-box;
+}

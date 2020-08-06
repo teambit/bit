@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
-import { H3 } from '@bit/bit.test-scope.ui.heading';
-import { PossibleSizes } from '@bit/bit.base-ui.theme.sizes';
+import { H3 } from '@teambit/documenter-temp.ui.heading';
+import { PossibleSizes } from '@teambit/base-ui-temp.theme.sizes';
 import { modalClass } from '../../stage-components/surfaces/modal';
 import { CloseableCardProps, ClosableCard } from '../../stage-components/surfaces/closeable-card';
 import { Hotkeys } from '../../stage-components/elements/key';

@@ -9,7 +9,7 @@ import { ComponentModelProps } from '../../../component/ui/component-model/compo
 export type Component = {
   id: ComponentID;
   status: ComponentStatus;
-  deprection: DeprecationInfo;
+  deprecation: DeprecationInfo;
   env: Descriptor;
 };
 

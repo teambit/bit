@@ -1,6 +1,6 @@
 import React, { useCallback, createRef, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
-import { Card } from '@bit/bit.base-ui.surfaces.card';
+import { Card } from '@teambit/base-ui-temp.surfaces.card';
 import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';
 import styles from './command-bar.module.scss';
 

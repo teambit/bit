@@ -8,9 +8,10 @@ import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
-import { Corner } from '../../../stage-components/corner';
-import { SideBar } from '../../../stage-components/side-bar';
 import { WorkspaceOverview } from './workspace-overview';
+import { TopBar } from '../../../../components/stage-components/top-bar';
+import { SideBar } from '../../../../components/stage-components/side-bar';
+import { Corner } from '../../../../components/stage-components/corner';
 
 const WORKSPACE = gql`
   {
@@ -48,13 +49,14 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
+  menuSlot: RouteSlot;
   onWorkspace: (components: WorkspaceModel) => void;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot, onWorkspace }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot, onWorkspace }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
 
   if (!data) {
@@ -71,7 +73,7 @@ export function Workspace({ routeSlot, onWorkspace }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspace}>
-        <Corner name={workspace.name} />
+        <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
         <SideBar className={styles.sideBar} components={workspace.components} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />
