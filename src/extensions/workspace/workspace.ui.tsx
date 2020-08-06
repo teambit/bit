@@ -57,7 +57,7 @@ export class WorkspaceUI {
       routes: [
         {
           path: '/',
-          children: <Workspace routeSlot={this.routeSlot} setWorkspace={this.setWorkspace} />,
+          children: <Workspace routeSlot={this.routeSlot} onWorkspace={this.setWorkspace} />,
         },
       ],
     };

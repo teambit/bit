@@ -49,7 +49,8 @@ export class UIRuntimeExtension {
     const GraphqlProvider = this.graphql.getProvider;
     const root = this.getRoot(rootExtension);
     if (!root) throw new Error(`root: ${root} was not found`);
-    const routes = <this.router.renderRoutes routes={root.routes} />;
+    const Routes = this.router.renderRoutes;
+    const routes = <Routes routes={root.routes} />;
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 

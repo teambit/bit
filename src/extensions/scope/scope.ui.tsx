@@ -6,6 +6,7 @@ import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import { Scope } from './ui/scope';
 import { ComponentUI } from '../component/component.ui';
+import { ScopeModel } from './ui/scope-model';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -32,6 +33,16 @@ export class ScopeUI {
     return this;
   }
 
+  listComponents = () => {
+    return this.scope?.components;
+  };
+
+  private scope?: ScopeModel;
+
+  private setScope = (scope?: ScopeModel) => {
+    this.scope = scope;
+  };
+
   get root(): UIRoot {
     this.routeSlot.register({
       path: this.componentUi.routePath,
@@ -42,7 +53,7 @@ export class ScopeUI {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} />,
+          children: <Scope routeSlot={this.routeSlot} onScope={this.setScope} />,
         },
       ],
     };

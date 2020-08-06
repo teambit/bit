@@ -1,23 +1,24 @@
 import React from 'react';
 import Fuse from 'fuse.js';
 import CommandBarUI, { SearchProvider } from './command-bar.ui';
-import WorkspaceUI from '../workspace/workspace.ui';
+import ScopeUI from '../scope/scope.ui';
 import { ComponentModel } from '../component/ui';
 import { ComponentID } from '../component';
 import { ComponentItem } from './ui/component-item';
 import { ReactRouterUI } from '../react-router/react-router.ui';
+import { componentToUrl } from '../component/component-path.ui';
 
-export default class ComponentSearchProvider implements SearchProvider {
-  static dependencies = [CommandBarUI, WorkspaceUI, ReactRouterUI];
+export default class ScopeComponentSearchProvider implements SearchProvider {
+  static dependencies = [CommandBarUI, ScopeUI, ReactRouterUI];
   static slots = [];
   static async provider(
-    [commandBarUI, workspaceUI, reactRouterUI]: [CommandBarUI, WorkspaceUI, ReactRouterUI] /* config, slots: [] */
+    [commandBarUI, scopeUi, reactRouterUI]: [CommandBarUI, ScopeUI, ReactRouterUI] /* config, slots: [] */
   ) {
-    const commandSearcher = new ComponentSearchProvider(workspaceUI, reactRouterUI);
+    const commandSearcher = new ScopeComponentSearchProvider(scopeUi, reactRouterUI);
     commandBarUI.addSearcher(commandSearcher);
     return commandSearcher;
   }
-  constructor(private workspaceUI: WorkspaceUI, private reactRouterUI: ReactRouterUI) {}
+  constructor(private scopeUi: ScopeUI, private reactRouterUI: ReactRouterUI) {}
 
   private fuseComponents = new Fuse<ComponentModel>([], {
     // weight can be included here.
@@ -40,13 +41,13 @@ export default class ComponentSearchProvider implements SearchProvider {
   };
 
   private execute = (componentId: ComponentID) => {
-    const nextUrl = `/${componentId.fullName}`;
+    const nextUrl = componentToUrl(componentId);
     this.reactRouterUI.push(nextUrl);
   };
 
   private _prevList?: ComponentModel[] = undefined;
   private refreshComponents() {
-    const components = this.workspaceUI.listComponents();
+    const components = this.scopeUi.listComponents();
     if (!components) {
       this._prevList = undefined;
       return;

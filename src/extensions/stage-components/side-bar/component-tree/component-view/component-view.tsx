@@ -13,6 +13,7 @@ import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import styles from './component-view.module.scss';
 import { ComponentStatus } from '../component-status/component-status';
 import { PayloadType } from '../payload-type';
+import { componentToUrl } from '../../../../component/component-path.ui';
 
 export type ComponentViewProps<Payload = any> = {
   // env?: 'react' | 'angular' | 'vue' | 'stencil';
@@ -37,7 +38,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
 
   return (
     <NavLink
-      href={`/${node.id}`}
+      href={componentToUrl(node.id)} // consider replacing this with node.payload
       className={classNames(indentClass, clickable, hoverable, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}

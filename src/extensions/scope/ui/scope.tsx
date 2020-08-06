@@ -13,6 +13,7 @@ import styles from './scope.module.scss';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
+  onScope: (scope?: ScopeModel) => void;
 };
 
 // TODO: add env to scope
@@ -34,7 +35,7 @@ const SCOPE = gql`
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot }: ScopeProps) {
+export function Scope({ routeSlot, onScope }: ScopeProps) {
   const { data, loading } = useDataQuery(SCOPE);
 
   if (loading) {
@@ -42,6 +43,7 @@ export function Scope({ routeSlot }: ScopeProps) {
   }
 
   const scope = ScopeModel.from(data);
+  onScope(scope);
   const ids = scope.components.map((component) => component);
 
   return (
