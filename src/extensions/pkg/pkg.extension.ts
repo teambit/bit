@@ -56,8 +56,8 @@ export class PkgExtension {
     const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher, logPublisher);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
 
-    const postExportFunc = publisher.postExportListener.bind(publisher);
-    if (scope) scope.onPostExport(postExportFunc);
+    // const postExportFunc = publisher.postExportListener.bind(publisher);
+    // if (scope) scope.onPostExport(postExportFunc);
 
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));

@@ -28,15 +28,32 @@ export interface UIRoot extends ComponentDir {
   /**
    * listener for when the dev server starts. can be used for running the watcher.
    */
-  postStart?(options: PostStartOptions, uiRoot: UIRoot): Promise<void>;
+  postStart?(options: PostStartOptions): Promise<void>;
 
   /**
    * determine whether UI should get a priority.
    */
   priority?: boolean;
 
-  getDevServers?: (uiRoot: UIRoot) => Promise<ComponentServer[]>;
+  getProxy?: () => Promise<ProxyEntry[]>;
 }
+
+export type ProxyEntry = {
+  /**
+   * paths to apply on.
+   */
+  context: string[];
+
+  /**
+   * target URL
+   */
+  target: string;
+
+  /**
+   * proxy to a web socket.
+   */
+  ws?: boolean;
+};
 
 export type PostStartOptions = {
   /**

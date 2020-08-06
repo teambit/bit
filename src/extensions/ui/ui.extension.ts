@@ -84,11 +84,7 @@ export class UIExtension {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = createWebpackConfig(
-      uiRoot.path,
-      [await this.generateRoot(uiRoot.extensionsPaths, name)],
-      uiRootName
-    );
+    const config = createWebpackConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, name)], name);
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -111,12 +107,12 @@ export class UIExtension {
     });
 
     if (dev) {
-      await uiServer.dev();
+      await uiServer.dev({ port: 3000 });
     } else {
       await uiServer.start({ port: 3000 });
     }
 
-    if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
+    if (uiRoot.postStart) uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
     return uiServer;

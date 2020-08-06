@@ -1,5 +1,6 @@
 import { Server } from 'http';
 import { join } from 'path';
+import httpProxy from 'http-proxy';
 import WebpackDevServer from 'webpack-dev-server';
 import fallback from 'express-history-api-fallback';
 import webpack from 'webpack';
@@ -60,12 +61,25 @@ export class UIServer {
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');
+    await this.configureProxy(app);
     app.use(express.static(root));
     app.use(fallback('index.html', { root }));
     const server = await this.graphql.createServer({ app });
 
     server.listen(selectedPort);
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
+  }
+
+  private async configureProxy(app: Express) {
+    const proxy = httpProxy.createProxyServer();
+    const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
+    proxyEntries.forEach((entry) => {
+      entry.context.forEach((route) =>
+        app.use(`${route}/*`, (req, res) => {
+          proxy.web(req, res, { target: `${entry.target}/${req.originalUrl}`, ws: entry.ws });
+        })
+      );
+    });
   }
 
   /**
@@ -77,7 +91,8 @@ export class UIServer {
     await this.start({ port: await getPort({ port: 4000 }) });
     const config = await this.getDevConfig();
     const compiler = webpack(config);
-    const devServer = new WebpackDevServer(compiler, await this.getDevServerConfig(config.devServer));
+    const devServerConfig = await this.getDevServerConfig(config.devServer);
+    const devServer = new WebpackDevServer(compiler, devServerConfig);
     devServer.listen(selectedPort);
     return devServer;
   }
@@ -98,34 +113,28 @@ export class UIServer {
     };
   }
 
-  async getDevServers() {
-    if (!this.uiRoot.getDevServers) return [];
-    const servers = await this.uiRoot.getDevServers(this.uiRoot);
+  private async getProxy() {
+    const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
 
-    return servers.map((server) => {
-      return {
-        context: [`/preview/${server.context.envRuntime.id}`],
-        target: `http://localhost:${server.port}`,
-      };
-    });
+    return [
+      {
+        context: ['/graphql', '/api'],
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+      {
+        context: ['/subscriptions'],
+        target: 'ws://localhost:4000',
+        ws: true,
+      },
+      // @ts-ignore
+    ].concat(proxyEntries);
   }
 
   private async getDevServerConfig(config: any) {
-    const devServers = await this.getDevServers();
+    const proxy = await this.getProxy();
     const devServerConf = Object.assign(config, {
-      proxy: [
-        {
-          context: ['/graphql', '/api'],
-          target: 'http://localhost:4000',
-          changeOrigin: true,
-        },
-        {
-          context: ['/subscriptions'],
-          target: 'ws://localhost:4000',
-          ws: true,
-        },
-        // @ts-ignore
-      ].concat(devServers),
+      proxy,
     });
 
     return devServerConf;

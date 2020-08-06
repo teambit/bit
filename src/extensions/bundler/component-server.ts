@@ -56,6 +56,6 @@ export class ComponentServer {
    */
   get url() {
     const protocol = this.port === 443 ? 'https://' : 'http://';
-    return `${protocol}${this.hostname}:3000/preview/${this.context.envRuntime.id}`;
+    return `${protocol}localhost:3000/preview/${this.context.envRuntime.id}`;
   }
 }

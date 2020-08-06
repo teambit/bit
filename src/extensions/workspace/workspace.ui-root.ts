@@ -4,7 +4,7 @@ import { Workspace } from '.';
 import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
-import { PostStartOptions } from '../ui/ui-root';
+import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
 import { ComponentServer } from '../bundler/component-server';
 
 export class WorkspaceUIRoot implements UIRoot {
@@ -57,18 +57,27 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.componentDir(componentId, bitMapOptions, options);
   }
 
-  async postStart(options: PostStartOptions, uiRoot: UIRoot) {
-    const devServers = await this.getDevServers(uiRoot);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async postStart(options?: PostStartOptions) {
+    const devServers = await this.componentServers;
     devServers.forEach((server) => server.listen());
     await this.workspace.watcher.watchAll();
   }
 
-  async getDevServers(uiRoot: UIRoot): Promise<ComponentServer[]> {
-    if (this.devServers.length) return this.devServers;
-    const devServers = await this.bundler.devServer(await this.workspace.byPattern(''), uiRoot);
-    this.devServers = devServers;
+  private async getServers(): Promise<ComponentServer[]> {
+    const devServers = await this.bundler.devServer(await this.workspace.byPattern(''), this);
     return devServers;
   }
 
-  private devServers: ComponentServer[] = [];
+  async getProxy(): Promise<ProxyEntry[]> {
+    const servers = await this.componentServers;
+    return servers.map((server) => {
+      return {
+        context: [`/preview/${server.context.envRuntime.id}`],
+        target: `http://localhost:${server.port}`,
+      };
+    });
+  }
+
+  public componentServers: Promise<ComponentServer[]> = this.getServers();
 }

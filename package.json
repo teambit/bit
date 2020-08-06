@@ -199,6 +199,7 @@
     "graphviz": "0.0.9",
     "group-array": "^1.0.0",
     "html-webpack-plugin": "^4.3.0",
+    "http-proxy": "^1.18.1",
     "identity-obj-proxy": "^3.0.0",
     "ignore": "^3.3.7",
     "ini-builder": "^1.1.1",
