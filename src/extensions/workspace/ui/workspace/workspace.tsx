@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useReducer } from 'react';
 import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
@@ -59,9 +59,10 @@ export type WorkspaceProps = {
  * main workspace component.
  */
 export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
-  // TODO - @oded find a way to reuse the sidebar collapse functionality between scope and workspace
-  const [isSidebarOpen, toggleOpenness] = useState(true);
   const { data } = useDataQuery(WORKSPACE);
+
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   if (!data) {
     return (
@@ -71,16 +72,12 @@ export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
     );
   }
 
-  const handleOpenness = () => {
-    toggleOpenness(!isSidebarOpen);
-  };
-
   const workspace = WorkspaceModel.from(data.workspace);
-  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
+
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
-        <TopBar Corner={() => <Corner name={workspace.name} onClick={handleOpenness} />} menu={menuSlot} />
+        <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <SideBar components={workspace.components} />
           <div className={styles.main}>

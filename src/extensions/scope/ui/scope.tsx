@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 import gql from 'graphql-tag';
 import { Route } from 'react-router-dom';
 import { TupleSplitPane } from '@bit/bit.gui.atoms.tuple-split-pane';
@@ -40,25 +40,21 @@ const SCOPE = gql`
  * root component of the scope
  */
 export function Scope({ routeSlot, menuSlot }: ScopeProps) {
-  // TODO - @oded find a way to reuse the sidebar collapse functionality between scope and workspace
-  const [isSidebarOpen, toggleOpenness] = useState(true);
   const { data, loading } = useDataQuery(SCOPE);
+
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   if (loading) {
     return <FullLoader />;
   }
 
-  const handleOpenness = () => {
-    toggleOpenness(!isSidebarOpen);
-  };
-
   const scope = ScopeModel.from(data);
   const ids = scope.components.map((component) => component);
-  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
-        <TopBar Corner={() => <Corner name={scope.name} onClick={handleOpenness} />} menu={menuSlot} />
+        <TopBar Corner={() => <Corner name={scope.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <SideBar components={ids} className={styles.sideBar} />
           <div className={styles.main}>
