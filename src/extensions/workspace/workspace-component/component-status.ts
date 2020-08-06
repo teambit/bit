@@ -6,7 +6,7 @@ export class ComponentStatus {
      * will auto Tag component .
      */
 
-    readonly isAutoTag: boolean,
+    readonly hasModifiedDependencies: boolean,
 
     /**
      * is the component modified.
@@ -44,9 +44,9 @@ export class ComponentStatus {
     readonly nested?: boolean
   ) {}
 
-  static fromLegacy(status: LegacyComponentStatus, isAutoTag: boolean) {
+  static fromLegacy(status: LegacyComponentStatus, willAutoTag: boolean) {
     return new ComponentStatus(
-      !!isAutoTag,
+      !!willAutoTag,
       !!status.modified,
       !!status.newlyCreated,
       !!status.deleted,
