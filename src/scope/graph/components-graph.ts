@@ -4,7 +4,7 @@ import graphLib, { Graph as GraphLib } from 'graphlib';
 import Graph from './graph';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
-import loadFlattenedDependenciesForCapsule from '../../consumer/component-ops/load-flattened-dependencies';
+import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
@@ -71,8 +71,9 @@ export async function buildOneGraphForComponents(
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
+  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer);
   const componentsWithDeps = await pMapSeries(components, (component: Component) =>
-    loadFlattenedDependenciesForCapsule(consumer, component)
+    flattenedDependencyLoader.load(component)
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));
 

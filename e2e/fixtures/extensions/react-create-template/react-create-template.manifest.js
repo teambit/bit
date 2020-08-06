@@ -1,4 +1,6 @@
-const { CreateExt } = require('bit-bin/extensions/create');
+// const { CreateExt } = require('bit-bin/extensions/create');
+const { getDeclarationCoreExtension } = require('bit-bin');
+const CreateExt = getDeclarationCoreExtension('@teambit/create');
 
 module.exports = {
   name: 'react-create-template',

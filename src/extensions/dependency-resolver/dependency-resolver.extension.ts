@@ -1,63 +1,44 @@
+import { SemVer } from 'semver';
 import R from 'ramda';
+import fs from 'fs-extra';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import {
   DependenciesPolicy,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
-  installOpts,
+  DependenciesObjectDefinition,
+  WorkspaceDependenciesPolicy,
 } from './types';
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { Environments } from '../environments';
-import { LoggerExtension } from '../logger';
-import PackageManager from './package-manager';
+import { LoggerExtension, Logger } from '../logger';
+import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
-import { Capsule } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
+import { DependencyInstaller } from './dependency-installer';
+import { PackageManagerNotFound } from './exceptions';
+import { Component } from '../component';
+import { DependencyGraph } from './dependency-graph';
+import { WorkspaceManifest, CreateFromComponentsOptions } from './manifest/workspace-manifest';
+import { ROOT_NAME } from './constants';
+import { CFG_PACKAGE_MANAGER_CACHE } from '../../constants';
+import * as globalConfig from '../../api/consumer/lib/global-config';
+import { DependencyResolver } from '../../consumer/component/dependencies/dependency-resolver';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
+export type PackageManagerSlot = SlotRegistry<PackageManager>;
+
+export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
-  static dependencies = [Environments, LoggerExtension];
-  static slots = [Slot.withType<DependenciesPolicy>()];
-  static defaultConfig: DependencyResolverWorkspaceConfig = {
-    /**
-     * default package manager.
-     */
-    packageManager: 'npm',
-    policy: {},
-    packageManagerArgs: [],
-    strictPeerDependencies: true,
-  };
-  static async provider(
-    [envs, logger]: [Environments, LoggerExtension],
-    config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry]: [PoliciesRegistry]
-  ) {
-    const packageManager = new PackageManager(config.packageManager, logger.createLogger('packageManager'));
-    const dependencyResolver = new DependencyResolverExtension(config, packageManager, policiesRegistry, envs);
-    ConsumerComponent.registerOnComponentOverridesLoading(
-      DependencyResolverExtension.id,
-      async (configuredExtensions: ExtensionDataList) => {
-        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
-        return transformPoliciesToLegacyDepsOverrides(policies);
-      }
-    );
-
-    return dependencyResolver;
-  }
 
   constructor(
     /**
      * Dependency resolver  extension configuration.
      */
     readonly config: DependencyResolverWorkspaceConfig,
-
-    /**
-     * package manager client.
-     */
-    private packageManager: PackageManager,
 
     /**
      * Registry for changes by other extensions.
@@ -67,8 +48,90 @@ export class DependencyResolverExtension {
     /**
      * envs extension.
      */
-    private envs: Environments
+    private envs: Environments,
+
+    private logger: Logger,
+
+    private packageManagerSlot: PackageManagerSlot
   ) {}
+
+  /**
+   * register a new package manager to the dependency resolver.
+   */
+  registerPackageManager(packageManager: PackageManager) {
+    this.packageManagerSlot.register(packageManager);
+  }
+
+  getDependencies(component: Component): DependencyGraph {
+    // we should support multiple components here as an entry
+    return new DependencyGraph(component);
+  }
+
+  getWorkspacePolicy(): WorkspaceDependenciesPolicy {
+    return this.config.policy;
+  }
+
+  /**
+   * Create a workspace manifest
+   * The term workspace here is not the same as "bit workspace" but a workspace that represent a shared root
+   * for installation of many components (sometime it might point to the workspace path)
+   * in other case it can be for example the capsules root dir
+   *
+   * @param {string} [name=ROOT_NAME]
+   * @param {SemVer} [version=new SemVer('1.0.0')]
+   * @param {DependenciesObjectDefinition} dependencies
+   * @param {string} rootDir
+   * @param {Component[]} components
+   * @param {CreateFromComponentsOptions} [options={
+   *       filterComponentsFromManifests: true,
+   *       createManifestForComponentsWithoutDependencies: true,
+   *     }]
+   * @returns {WorkspaceManifest}
+   * @memberof DependencyResolverExtension
+   */
+  async getWorkspaceManifest(
+    name: string = ROOT_NAME,
+    version: SemVer = new SemVer('1.0.0'),
+    rootDependencies: DependenciesObjectDefinition,
+    rootDir: string,
+    components: Component[],
+    options: CreateFromComponentsOptions = {
+      filterComponentsFromManifests: true,
+      createManifestForComponentsWithoutDependencies: true,
+    }
+  ): Promise<WorkspaceManifest> {
+    this.logger.setStatusLine('deduping dependencies for installation');
+    const res = await WorkspaceManifest.createFromComponents(
+      name,
+      version,
+      rootDependencies,
+      rootDir,
+      components,
+      options,
+      this.mergeDependencies.bind(this)
+    );
+    this.logger.consoleSuccess();
+    return res;
+  }
+
+  /**
+   * get a component dependency installer.
+   */
+  getInstaller() {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const cacheRootDir = globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+
+    if (!packageManager) {
+      throw new PackageManagerNotFound(this.config.packageManager);
+    }
+
+    if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
+      this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
+      fs.ensureDirSync(cacheRootDir);
+    }
+    // TODO: we should somehow pass the cache root dir to the package manager constructor
+    return new DependencyInstaller(packageManager, cacheRootDir);
+  }
 
   get packageManagerName(): string {
     return this.config.packageManager;
@@ -79,14 +142,6 @@ export class DependencyResolverExtension {
    */
   registerDependenciesPolicies(policy: DependenciesPolicy): void {
     return this.policiesRegistry.register(policy);
-  }
-
-  async capsulesInstall(capsules: Capsule[], opts: installOpts = { packageManager: this.packageManagerName }) {
-    return this.packageManager.capsulesInstall(capsules, opts);
-  }
-
-  async folderInstall(folder: string, opts: installOpts = { packageManager: this.packageManagerName }) {
-    return this.packageManager.runInstallInFolder(folder, opts);
   }
 
   /**
@@ -119,6 +174,54 @@ export class DependencyResolverExtension {
     }
     const result = mergePolices([policiesFromEnv, policiesFromHooks, policiesFromConfig]);
     return result;
+  }
+
+  static dependencies = [Environments, LoggerExtension];
+
+  static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
+
+  static defaultConfig: DependencyResolverWorkspaceConfig = {
+    /**
+     * default package manager.
+     */
+    packageManager: '@teambit/npm',
+    policy: {},
+    packageManagerArgs: [],
+    strictPeerDependencies: true,
+  };
+
+  static async provider(
+    [envs, loggerExt]: [Environments, LoggerExtension],
+    config: DependencyResolverWorkspaceConfig,
+    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
+  ) {
+    // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
+    const logger = loggerExt.createLogger(DependencyResolverExtension.id);
+    const dependencyResolver = new DependencyResolverExtension(
+      config,
+      policiesRegistry,
+      envs,
+      logger,
+      packageManagerSlot
+    );
+    ConsumerComponent.registerOnComponentOverridesLoading(
+      DependencyResolverExtension.id,
+      async (configuredExtensions: ExtensionDataList) => {
+        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
+        return transformPoliciesToLegacyDepsOverrides(policies);
+      }
+    );
+    DependencyResolver.registerWorkspacePolicyGetter(dependencyResolver.getWorkspacePolicy.bind(dependencyResolver));
+
+    return dependencyResolver;
+  }
+
+  getEmptyDepsObject(): DependenciesObjectDefinition {
+    return {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
   }
 }
 

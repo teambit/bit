@@ -1,6 +1,6 @@
 default_image: &default_image
   docker:
-    - image: circleci/node:10.6.0
+    - image: circleci/node:10.13.0
 
 default_resource_class: &default_resource_class
   resource_class: small
@@ -567,7 +567,7 @@ jobs:
           name: 'npm link bit to global'
           command: cd bit && npm link
       -
-        run: which bit
+        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         run:
           name: 'Run e2e tests'
@@ -585,7 +585,7 @@ jobs:
           path: bit/junit
       -
         store_artifacts:
-          path: ~/Library/Caches/Bit/logs/debug.log
+          path: ~/Library/Caches/Bit/logs
   performance_e2e_test:
     <<: *defaults
     resource_class: medium

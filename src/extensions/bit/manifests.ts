@@ -19,6 +19,7 @@ import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
 import { VariantsExt } from '../variants';
 import { GraphQLExtension } from '../graphql';
+import { PnpmExtension } from '../pnpm';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
 import { PreviewExtension } from '../preview/preview.extension';
@@ -40,6 +41,7 @@ export const manifestsMap = {
   [DocsExtension.name]: DocsExtension,
   [CompositionsExtension.name]: CompositionsExtension,
   [GraphQLExtension.name]: GraphQLExtension,
+  [PnpmExtension.id]: PnpmExtension,
   [UIExtension.name]: UIExtension,
   [CoreExt.name]: CoreExt,
   [CreateExt.name]: CreateExt,

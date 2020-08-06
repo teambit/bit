@@ -23,6 +23,8 @@ import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
+import { EXT_NAME } from './constants';
+import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
 
 export type WorkspaceDeps = [
   CLIExtension,
@@ -57,14 +59,15 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, logger, graphql, ui, bundler]: WorkspaceDeps,
+  [cli, scope, component, isolator, dependencyResolver, variants, loggerExt, graphql, ui, bundler]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
 ) {
   const consumer = await getConsumer();
   if (!consumer) return undefined;
-
+  // TODO: get the 'worksacpe' name in a better way
+  const logger = loggerExt.createLogger(EXT_NAME);
   const workspace = new Workspace(
     config,
     consumer,
@@ -73,14 +76,18 @@ export default async function provideWorkspace(
     isolator,
     dependencyResolver,
     variants,
-    logger.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
+    logger,
     undefined,
     harmony,
     onComponentLoadSlot,
     onComponentChangeSlot
   );
 
-  ConsumerComponent.registerOnComponentConfigLoading('workspace', async (id) => {
+  ManyComponentsWriter.registerExternalInstaller({
+    install: workspace.install.bind(workspace),
+  });
+
+  ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
     // We call here directly workspace.scope.get instead of workspace.get because part of the workspace get is loading consumer component
     // which in turn run this event, which will make and infinite loop
@@ -97,7 +104,7 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  cli.register(new InstallCmd(workspace));
+  cli.register(new InstallCmd(workspace, logger));
   cli.register(new EjectConfCmd(workspace));
 
   const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
