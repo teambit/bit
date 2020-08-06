@@ -70,7 +70,8 @@ export class UIServer {
    */
   async dev({ port }: StartOptions = {}) {
     const selectedPort = await this.selectPort(port);
-    await this.start({ port: selectedPort });
+    // improve port management.
+    await this.start({ port: await getPort({ port: 4000 }) });
     const config = await this.getDevConfig();
     const compiler = webpack(config);
     const devServer = new WebpackDevServer(compiler, await this.getDevServerConfig(config.devServer));
