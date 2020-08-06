@@ -30,16 +30,15 @@ export async function changeCodeFromRelativeToModulePaths(
     return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
   });
   await dataToPersist.persistAllToFS();
-  await reloadComponents(
-    consumer,
-    componentsWithRelativeIssues.map((c) => c.id)
-  );
+  const idsToReload = codemodResults.filter((c) => !c.warnings || c.warnings.length === 0).map((c) => c.id);
+  await reloadComponents(consumer, idsToReload);
 
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
 }
 
-async function reloadComponents(consumer: Consumer, bitIds) {
+async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   consumer.componentLoader.clearComponentsCache();
+  if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
   if (componentsWithRelativeIssues.length) {

@@ -11,7 +11,6 @@ import logger from '../../logger/logger';
 import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonVinyl from './package-json-vinyl';
-import { Capsule } from '../../extensions/isolator';
 import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 /**
