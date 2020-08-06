@@ -25,11 +25,11 @@ export class GraphQlUI {
 
   static async provider() {
     const httpLink = new HttpLink({
-      uri: 'http://localhost:4000/graphql',
+      uri: 'http://localhost:3000/graphql',
     });
 
     const wsLink = new WebSocketLink({
-      uri: 'ws://localhost:4000/subscriptions',
+      uri: 'ws://localhost:3000/subscriptions',
       options: {
         reconnect: true,
       },

@@ -110,7 +110,12 @@ export class UIExtension {
       logger: this.logger,
     });
 
-    uiServer.start(dev);
+    if (dev) {
+      await uiServer.dev();
+    } else {
+      await uiServer.start();
+    }
+
     if (uiRoot.postStart) uiRoot.postStart({ pattern }, uiRoot);
     await this.invokeOnStart();
 

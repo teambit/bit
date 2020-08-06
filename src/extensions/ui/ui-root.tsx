@@ -1,5 +1,7 @@
 import { Component } from '../component';
 import { ComponentDir } from '../bundler/get-entry';
+import { DevServer } from '@stencil/core/internal';
+import { ComponentServer } from '../bundler/component-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
 // would never have componentDir and as it has nothing to do with `UIRoot`.
@@ -33,6 +35,8 @@ export interface UIRoot extends ComponentDir {
    * determine whether UI should get a priority.
    */
   priority?: boolean;
+
+  getDevServers?: (uiRoot: UIRoot) => Promise<ComponentServer[]>;
 }
 
 export type PostStartOptions = {

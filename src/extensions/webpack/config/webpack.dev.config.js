@@ -39,9 +39,9 @@ module.exports = function (workspaceDir, entryFiles) {
 
       pathinfo: true,
 
-      path: resolveWorkspacePath('/'),
+      path: resolveWorkspacePath('/preview/@teambit/react/public'),
 
-      publicPath: publicUrlOrPath,
+      publicPath: `/preview/@teambit/react`,
 
       futureEmitAssets: true,
 
@@ -57,12 +57,12 @@ module.exports = function (workspaceDir, entryFiles) {
 
     devServer: {
       // Serve index.html as the base
-      contentBase: resolveWorkspacePath(publicUrlOrPath),
+      contentBase: resolveWorkspacePath('/preview/@teambit/react/public'),
 
       // By default files from `contentBase` will not trigger a page reload.
       watchContentBase: true,
 
-      contentBasePublicPath: publicUrlOrPath,
+      contentBasePublicPath: '/preview/@teambit/react/public',
 
       // Enable compression
       compress: true,
@@ -107,7 +107,7 @@ module.exports = function (workspaceDir, entryFiles) {
       },
 
       // Public path is root of content base
-      publicPath: publicUrlOrPath.slice(0, -1),
+      publicPath: '/preview/@teambit/react',
     },
 
     resolve: {

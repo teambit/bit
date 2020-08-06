@@ -5,6 +5,7 @@ import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
 import { PostStartOptions } from '../ui/ui-root';
+import { ComponentServer } from '../bundler/component-server';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
@@ -57,7 +58,17 @@ export class WorkspaceUIRoot implements UIRoot {
   }
 
   async postStart(options: PostStartOptions, uiRoot: UIRoot) {
-    await this.bundler.devServer(await this.workspace.byPattern(options.pattern || ''), uiRoot);
+    const devServers = await this.getDevServers(uiRoot);
+    devServers.forEach((server) => server.listen());
     await this.workspace.watcher.watchAll();
   }
+
+  async getDevServers(uiRoot: UIRoot): Promise<ComponentServer[]> {
+    if (this.devServers.length) return this.devServers;
+    const devServers = await this.bundler.devServer(await this.workspace.byPattern(''), uiRoot);
+    this.devServers = devServers;
+    return devServers;
+  }
+
+  private devServers: ComponentServer[] = [];
 }

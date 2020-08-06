@@ -48,7 +48,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title) {
 
       path: resolveWorkspacePath('/'),
 
-      publicPath: resolveWorkspacePath('public'),
+      publicPath: publicUrlOrPath,
 
       futureEmitAssets: true,
 
@@ -114,7 +114,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title) {
       },
 
       // Public path is root of content base
-      publicPath: resolveWorkspacePath('public'),
+      publicPath: publicUrlOrPath.slice(0, -1),
     },
 
     resolve: {
