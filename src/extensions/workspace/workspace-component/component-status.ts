@@ -1,17 +1,16 @@
 import { ComponentStatus as LegacyComponentStatus } from '../../../consumer/component-ops/component-status-loader';
 
+export type ModifyInfo = {
+  hasModifiedFiles: boolean;
+  hasModifiedDependencies: boolean;
+};
+
 export class ComponentStatus {
   constructor(
     /**
-     * will auto Tag component .
-     */
-
-    readonly hasModifiedDependencies: boolean,
-
-    /**
      * is the component modified.
      */
-    readonly isModified: boolean,
+    readonly modifyInfo: ModifyInfo,
 
     /**
      * is the new component new.
@@ -44,10 +43,13 @@ export class ComponentStatus {
     readonly nested?: boolean
   ) {}
 
-  static fromLegacy(status: LegacyComponentStatus, willAutoTag: boolean) {
+  static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean) {
+    const modify: Modify = {
+      hasModifiedFiles: !!status.modified,
+      hasModifiedDependencies: hasModifiedDependencies,
+    };
     return new ComponentStatus(
-      !!willAutoTag,
-      !!status.modified,
+      modify,
       !!status.newlyCreated,
       !!status.deleted,
       !!status.staged,

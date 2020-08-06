@@ -134,7 +134,7 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
-  async isAutoTag(component: Component) {
+  async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
     const isAutoTag = listAutoTagPendingComponents.find(
@@ -149,8 +149,8 @@ export class Workspace implements ComponentFactory {
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
-    const isAutoTag = await this.isAutoTag(component);
-    return ComponentStatus.fromLegacy(status, isAutoTag);
+    const hasModifiedDependencies = await this.hasModifiedDependencies(component);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
   }
 
   /**

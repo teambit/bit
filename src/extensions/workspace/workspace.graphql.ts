@@ -5,12 +5,17 @@ import { WorkspaceComponent } from './workspace-component';
 export default (workspace: Workspace) => {
   return {
     typeDefs: gql`
-      type ComponentStatus {
+      type ModifyInfo {
         # is the component modified.
-        isModified: Boolean
+        hasModifiedFiles: Boolean
 
-        # component is pending to be tagged automatically.
+        # the component has Modified Dependencies
         hasModifiedDependencies: Boolean
+      }
+
+      type ComponentStatus {
+        # component is pending to be tagged automatically.
+        modifyInfo: ModifyInfo
 
         # is the new component new.
         isNew: Boolean
