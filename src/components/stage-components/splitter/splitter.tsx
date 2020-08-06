@@ -4,7 +4,7 @@ import cn from 'classnames';
 import { Layout } from '@bit/bit.rendering.constants.layouts';
 // import { Icon } from '@teambit/evangelist-temp.elements.icon';
 // import { Button } from '@bit/bit.gui.atoms.text-button';
-import Splitter from '@bit/bit.gui.atoms.splitter';
+import Splitter from '@teambit/base-ui-temp.surfaces.splitter';
 // import { SplitterProps } from '../../splitter-props';
 import styles from './splitter.module.scss';
 

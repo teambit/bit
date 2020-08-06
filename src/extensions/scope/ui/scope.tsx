@@ -1,7 +1,7 @@
 import React, { useReducer } from 'react';
 import gql from 'graphql-tag';
 import { Route } from 'react-router-dom';
-import { TupleSplitPane } from '@bit/bit.gui.atoms.tuple-split-pane';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@bit/bit.rendering.constants.layouts';
 import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
 import { ScopeOverview } from './scope-overview';
@@ -55,7 +55,7 @@ export function Scope({ routeSlot, menuSlot }: ScopeProps) {
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
         <TopBar Corner={() => <Corner name={scope.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
-        <TupleSplitPane max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
+        <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <SideBar components={ids} className={styles.sideBar} />
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />

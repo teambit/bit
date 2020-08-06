@@ -2,7 +2,7 @@ import React, { ReactNode, useReducer } from 'react';
 import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
-import { TupleSplitPane } from '@bit/bit.gui.atoms.tuple-split-pane';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@bit/bit.rendering.constants.layouts';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
@@ -81,7 +81,7 @@ export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
         <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
-        <TupleSplitPane max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
+        <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <SideBar components={workspace.components} />
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />

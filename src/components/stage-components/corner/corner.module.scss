@@ -9,9 +9,8 @@ $topbarHeight: 64px;
 	padding: 16px;
 	user-select: none;
 	box-sizing: border-box;
-	// TODO - add color to pallete
-	// border-right: 1px solid #e4e6ea;
-	width: 320px;
+	width: 100%;
+    max-width: 264px;
 
 	.link {
 		text-decoration: none;
