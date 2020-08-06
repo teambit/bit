@@ -8,6 +8,7 @@ export type ComponentStatusResolverProps = {
 };
 
 export function ComponentStatusResolver({ status }: ComponentStatusResolverProps) {
+  const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
   if (status.isNew) {
     return (
@@ -19,7 +20,7 @@ export function ComponentStatusResolver({ status }: ComponentStatusResolverProps
   }
   return (
     <div>
-      {status.isModified && <ComponentStatus status="modified" />}
+      {isModified && <ComponentStatus status="modified" />}
       {status.isStaged && <ComponentStatus status="staged" />}
       {/* {status.isError && <ComponentStatus status="error" />} */}
     </div>
