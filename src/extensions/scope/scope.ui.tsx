@@ -21,8 +21,14 @@ export class ScopeUI {
     /**
      * component ui extension.
      */
-    private componentUi: ComponentUI
-  ) {}
+    private componentUi: ComponentUI,
+    /**
+     * menu slot
+     */
+    private menuSlot: RouteSlot
+  ) {
+    this.registerExplicitRoutes();
+  }
 
   /**
    * register a route to the scope.
@@ -32,17 +38,24 @@ export class ScopeUI {
     return this;
   }
 
-  get root(): UIRoot {
+  private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
       children: this.componentUi.getComponentUI(ScopeUI.id),
     });
 
+    this.menuSlot.register({
+      path: this.componentUi.routePath,
+      children: this.componentUi.getMenu(ScopeUI.id),
+    });
+  }
+
+  get root(): UIRoot {
     return {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} />,
+          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} />,
         },
       ],
     };
@@ -53,10 +66,14 @@ export class ScopeUI {
   // TODO: @gilad we must automate this.
   static id = '@teambit/scope';
 
-  static slots = [Slot.withType<RouteProps>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider([ui, componentUi]: [UIRuntimeExtension, ComponentUI], config, [routeSlot]: [RouteSlot]) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi);
+  static async provider(
+    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
+    config,
+    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+  ) {
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot);
     ui.registerRoot(scopeUi.root);
 
     return scopeUi;

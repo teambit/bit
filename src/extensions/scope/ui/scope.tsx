@@ -10,9 +10,11 @@ import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
 import { Corner } from '../../../components/stage-components/corner';
 import { SideBar } from '../../../components/stage-components/side-bar';
+import { TopBar } from '../../../components/stage-components/top-bar';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
+  menuSlot: RouteSlot;
 };
 
 // TODO: add env to scope
@@ -34,7 +36,7 @@ const SCOPE = gql`
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot }: ScopeProps) {
+export function Scope({ routeSlot, menuSlot }: ScopeProps) {
   const { data, loading } = useDataQuery(SCOPE);
 
   if (loading) {
@@ -47,7 +49,7 @@ export function Scope({ routeSlot }: ScopeProps) {
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
-        <Corner name={scope.name} />
+        <TopBar Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
         <SideBar components={ids} className={styles.sideBar} />
         <div className={styles.main}>
           <SlotRouter slot={routeSlot} />

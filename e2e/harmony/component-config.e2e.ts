@@ -22,7 +22,7 @@ describe('component config', function () {
   });
   describe('eject config', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
     });
@@ -130,7 +130,7 @@ describe('component config', function () {
   describe('propagation', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.populateExtensions(5);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
