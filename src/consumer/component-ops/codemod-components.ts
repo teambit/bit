@@ -8,7 +8,6 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { BitId, BitIds } from '../../bit-id';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
 import { Consumer } from '..';
-import IncorrectRootDir from '../component/exceptions/incorrect-root-dir';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 
 export type CodemodResult = {
@@ -35,11 +34,8 @@ export async function changeCodeFromRelativeToModulePaths(
 
 async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
-  const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
-  invalidComponents.forEach((invalidComp) => {
-    if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
-    else throw invalidComp.error;
-  });
+  const { components } = await consumer.loadComponents(componentsIds);
+
   return components;
 }
 
