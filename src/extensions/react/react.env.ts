@@ -99,7 +99,7 @@ export class ReactEnv implements Environment {
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
   }
 
-  async getPreviewBundler(context: BundlerContext): Promise<Bundler> {
+  async getBundler(context: BundlerContext): Promise<Bundler> {
     return this.webpack.createBundler(context, previewConfigFactory());
   }
 
