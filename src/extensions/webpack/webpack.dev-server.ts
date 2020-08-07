@@ -1,7 +1,7 @@
-import { DevServer } from '../bundler';
 import { Server } from 'http';
 import webpack, { Configuration } from 'webpack';
 import WsDevServer from 'webpack-dev-server';
+import { DevServer } from '../bundler';
 
 export class WebpackDevServer implements DevServer {
   constructor(private config: Configuration) {}

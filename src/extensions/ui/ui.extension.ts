@@ -26,6 +26,11 @@ export type OnStart = () => void;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 
+export type UIConfig = {
+  port?: number;
+  portRange: [number, number];
+};
+
 export type RuntimeOptions = {
   /**
    * name of the UI root to load.
@@ -41,12 +46,19 @@ export type RuntimeOptions = {
    * determine whether to start a dev server (defaults to false).
    */
   dev?: boolean;
+
+  /**
+   * port of the config.
+   */
+  port?: number;
 };
 
 export class UIExtension {
   static id = '@teambit/ui';
 
   constructor(
+    private config: UIConfig,
+
     /**
      * graphql extension.
      */
@@ -94,7 +106,7 @@ export class UIExtension {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
@@ -106,16 +118,23 @@ export class UIExtension {
       logger: this.logger,
     });
 
+    const targetPort = await this.getPort(port);
+
     if (dev) {
-      await uiServer.dev({ port: 3000 });
+      await uiServer.dev({ port: targetPort });
     } else {
-      await uiServer.start({ port: 3000 });
+      await uiServer.start({ port: targetPort });
     }
 
     if (uiRoot.postStart) uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
     return uiServer;
+  }
+
+  async getPort(port?: number): Promise<number> {
+    if (port) return port;
+    return this.config.port || this.selectPort();
   }
 
   /**
@@ -171,8 +190,13 @@ export class UIExtension {
   }
 
   private async selectPort() {
-    return getPort({ port: getPort.makeRange(3000, 3200) });
+    const [from, to] = this.config.portRange;
+    return getPort({ port: getPort.makeRange(from, to) });
   }
+
+  static defaultConfig = {
+    portRange: [3000, 3200],
+  };
 
   static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension, LoggerExtension];
 
@@ -184,7 +208,7 @@ export class UIExtension {
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
     const logger = loggerExtension.createLogger(UIExtension.id);
-    const ui = new UIExtension(graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
+    const ui = new UIExtension(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
     cli.register(new StartCmd(ui));
     cli.register(new UIBuildCmd(ui));
     return ui;

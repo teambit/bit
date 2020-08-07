@@ -13,7 +13,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles) {
+module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -21,6 +21,8 @@ module.exports = function (workspaceDir, entryFiles) {
 
   // Required for babel-preset-react-app
   process.env.NODE_ENV = 'development';
+
+  const publicDirectory = `${publicRoot}/${publicPath}`;
 
   return {
     // Environment mode
@@ -39,9 +41,9 @@ module.exports = function (workspaceDir, entryFiles) {
 
       pathinfo: true,
 
-      path: resolveWorkspacePath('/preview/@teambit/react/public'),
+      path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: `/preview/@teambit/react`,
+      publicPath: publicRoot,
 
       futureEmitAssets: true,
 
@@ -57,12 +59,12 @@ module.exports = function (workspaceDir, entryFiles) {
 
     devServer: {
       // Serve index.html as the base
-      contentBase: resolveWorkspacePath('/preview/@teambit/react/public'),
+      contentBase: resolveWorkspacePath(publicDirectory),
 
       // By default files from `contentBase` will not trigger a page reload.
       watchContentBase: true,
 
-      contentBasePublicPath: '/preview/@teambit/react/public',
+      contentBasePublicPath: publicDirectory,
 
       // Enable compression
       compress: true,
@@ -107,7 +109,7 @@ module.exports = function (workspaceDir, entryFiles) {
       },
 
       // Public path is root of content base
-      publicPath: '/preview/@teambit/react',
+      publicPath: publicRoot,
     },
 
     resolve: {

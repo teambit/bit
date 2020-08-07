@@ -41,6 +41,8 @@ export class DevServerService implements EnvService {
 
     return Object.assign(context, {
       entry: await getEntry(context, uiRoot, this.runtimeSlot),
+      rootPath: `/preview/${context.envRuntime.id}`,
+      publicPath: `/public`,
     });
   }
 }
