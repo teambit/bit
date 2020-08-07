@@ -1,6 +1,6 @@
 export abstract class PaperError extends Error {
-  constructor() {
-    super('');
+  constructor(msg?: string) {
+    super(msg || '');
   }
 
   get message() {

@@ -273,7 +273,7 @@ export class ScopeExtension implements ComponentFactory {
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, logger]: [
+    [componentExt, ui, graphql, cli, isolator, loggerExtension]: [
       ComponentExtension,
       UIExtension,
       GraphQLExtension,
@@ -290,6 +290,7 @@ export class ScopeExtension implements ComponentFactory {
       return undefined;
     }
 
+    const logger = loggerExtension.createLogger(ScopeExtension.id);
     const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
