@@ -525,7 +525,7 @@ export default class Consumer {
     const componentsWithRelativeAuthored = components.filter(
       (component) => component.issues && component.issues.relativeComponentsAuthored
     );
-    if (!R.isEmpty(componentsWithRelativeAuthored)) {
+    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
     if (!ignoreUnresolvedDependencies) {

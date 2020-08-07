@@ -1184,7 +1184,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
-    if (this.consumer.isLegacy) return; // valid on legacy
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }
