@@ -42,6 +42,12 @@ export class UIServer {
     private logger: Logger
   ) {}
 
+  private _port = 0;
+
+  get port() {
+    return this._port;
+  }
+
   /**
    * get the webpack configuration of the UI server.
    */
@@ -67,6 +73,7 @@ export class UIServer {
     const server = await this.graphql.createServer({ app });
 
     server.listen(selectedPort);
+    this._port = selectedPort;
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 

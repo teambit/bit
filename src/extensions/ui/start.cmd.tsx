@@ -1,12 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color, Text } from 'ink';
-// import { EnvConsole } from './components';
-// make sure to update eslint to read JSX.
+import React from 'react';
 import { Command, CommandOptions } from '../cli';
 import { UIExtension } from './ui.extension';
-import { EnvConsole } from './env-console';
+import { UIServerConsole } from './env-console';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
@@ -37,16 +32,16 @@ export class StartCmd implements Command {
   ): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
-    const uiRuntime = await this.ui.createRuntime({
+    const uiServer = await this.ui.createRuntime({
       uiRootName,
       pattern,
       dev,
       port: port ? parseInt(port) : undefined,
     });
-    // this.clearConsole();
-    // @ts-ignore
-    // uiRuntime.dev();
-    // this.clearConsole();
-    return <EnvConsole runtime={uiRuntime} />;
+
+    // clear the user console before moving interactive.
+    this.clearConsole();
+
+    return <UIServerConsole uiServer={uiServer} />;
   }
 }
