@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import React from 'react';
 import { Box, Color } from 'ink';
 import { Command, CommandOptions, Flags } from '../cli';
 import { TesterExtension } from './tester.extension';
