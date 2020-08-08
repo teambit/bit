@@ -4,6 +4,7 @@ import { Tester, TestResults } from './tester';
 import { detectTestFiles } from './utils';
 import { Workspace } from '../workspace';
 import { NoTestFilesFound } from './exceptions';
+import { TesterOptions } from './tester.extension';
 
 export class TesterService implements EnvService {
   constructor(
@@ -14,7 +15,7 @@ export class TesterService implements EnvService {
     readonly testsRegex: string
   ) {}
 
-  async run(context: ExecutionContext): Promise<TestResults> {
+  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
     const tester: Tester = context.env.getTester();
     const components = detectTestFiles(context.components);
 
@@ -36,6 +37,7 @@ export class TesterService implements EnvService {
       specFiles: testMatch,
       rootPath: this.workspace.path,
       workspace: this.workspace,
+      watch: options.watch,
     });
 
     return tester.test(testerContext);

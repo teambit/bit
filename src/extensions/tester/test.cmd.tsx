@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Box, Color } from 'ink';
-import { Command } from '../cli';
+import { Command, CommandOptions, Flags } from '../cli';
 import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
+import { Timer } from '../../toolbox/timer';
 
 const chalk = require('chalk');
 
@@ -16,11 +17,16 @@ export class TestCmd implements Command {
   private = true;
   group = 'development';
   shortDescription = '';
-  options = [];
+  options = [
+    ['w', 'watch', 'start the tester in watch mode.'],
+    // TODO: we need to reduce this redundant casting every time.
+  ] as CommandOptions;
 
   constructor(private tester: TesterExtension, private workspace: Workspace) {}
 
-  async render([userPattern]: [string]) {
+  async render([userPattern]: [string], { watch }: Flags) {
+    const timer = Timer.create();
+    timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
     const pattern = userPattern && userPattern.toString();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
@@ -28,18 +34,15 @@ export class TestCmd implements Command {
     // TODO: @david please add logger here instead.
     // eslint-disable-next-line no-console
     console.log(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
-    const envs = await this.tester.test(components);
+    await this.tester.test(components, {
+      watch: Boolean(watch),
+    });
+    const { seconds } = timer.stop();
 
     return (
       <Box>
-        {envs.map((env, key) => {
-          return <Env key={key} env={env.env} results={env.res} />;
-        })}
+        tested <Color cyan>{components.length}</Color> components in <Color cyan>{seconds}</Color> seconds.
       </Box>
     );
   }
-}
-
-function Env({ env }: any) {
-  return <Color cyan>{env}</Color>;
 }

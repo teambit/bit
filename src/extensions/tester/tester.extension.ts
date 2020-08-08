@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import { TestCmd } from './test.cmd';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
@@ -11,6 +12,13 @@ export type TesterExtensionConfig = {
    * regex of the text environment.
    */
   testRegex: string;
+};
+
+export type TesterOptions = {
+  /**
+   * start the tester in watch mode.
+   */
+  watch: boolean;
 };
 
 export class TesterExtension {
@@ -39,10 +47,19 @@ export class TesterExtension {
     readonly task: TesterTask
   ) {}
 
-  async test(components: Component[]) {
-    const envs = await this.envs.createEnvironment(components);
-    const results = await envs.run(this.service);
+  async test(components: Component[], opts?: TesterOptions) {
+    const options = this.getOptions(opts);
+    const envRuntime = await this.envs.createEnvironment(components);
+    const results = await envRuntime.run(this.service, options);
     return results;
+  }
+
+  private getOptions(options?: TesterOptions): TesterOptions {
+    const defaults = {
+      watch: false,
+    };
+
+    return merge(defaults, options);
   }
 
   static defaultConfig = {
