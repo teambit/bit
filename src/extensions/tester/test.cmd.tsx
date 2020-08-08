@@ -17,12 +17,13 @@ export class TestCmd implements Command {
   shortDescription = '';
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
+    ['d', 'debug', 'start the tester in debug mode.'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
   constructor(private tester: TesterExtension, private workspace: Workspace) {}
 
-  async render([userPattern]: [string], { watch }: Flags) {
+  async render([userPattern]: [string], { watch, debug }: Flags) {
     const timer = Timer.create();
     timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
@@ -34,6 +35,7 @@ export class TestCmd implements Command {
     console.log(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
     await this.tester.test(components, {
       watch: Boolean(watch),
+      debug: Boolean(debug),
     });
     const { seconds } = timer.stop();
 

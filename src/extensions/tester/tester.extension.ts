@@ -19,6 +19,11 @@ export type TesterOptions = {
    * start the tester in watch mode.
    */
   watch: boolean;
+
+  /**
+   * start the tester in debug mode.
+   */
+  debug: boolean;
 };
 
 export class TesterExtension {
@@ -57,6 +62,7 @@ export class TesterExtension {
   private getOptions(options?: TesterOptions): TesterOptions {
     const defaults = {
       watch: false,
+      debug: false,
     };
 
     return merge(defaults, options);

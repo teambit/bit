@@ -34,9 +34,14 @@ export interface TesterContext extends ExecutionContext {
   rootPath: string;
 
   /**
-   * determines whether tester in expected to run in watch mode.
+   * determines whether tester is expected to run in watch mode.
    */
   watch?: boolean;
+
+  /**
+   * determines whether tester is expected to run in debug mode.
+   */
+  debug?: boolean;
 }
 
 /**

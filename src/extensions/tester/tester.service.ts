@@ -38,6 +38,7 @@ export class TesterService implements EnvService {
       rootPath: this.workspace.path,
       workspace: this.workspace,
       watch: options.watch,
+      debug: options.debug,
     });
 
     return tester.test(testerContext);
