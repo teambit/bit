@@ -1,3 +1,9 @@
+.sidebar {
+	overflow-y: scroll;
+	width: 100%;
+		border-right: 1px solid #ededed;
+		flex: 1;
+}
 .inputWrapper {
 	margin: 8px;
 	position: relative;

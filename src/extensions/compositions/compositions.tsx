@@ -3,7 +3,10 @@ import head from 'lodash.head';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import R from 'ramda';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { PropTable } from '@teambit/documenter-temp.ui.property-table';
+import { CollapsibleSplitter } from '../../components/stage-components/splitter';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
@@ -49,34 +52,36 @@ export function Compositions() {
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
   return (
     <PanelContainer className={styles.compositionsPage}>
-      <ComponentComposition component={component} composition={selected}></ComponentComposition>
-      <Panel>
-        <TabContainer>
-          <TabList>
-            <Tab>compositions</Tab>
-            <Tab>properties</Tab>
-            <Tab>dependencies</Tab>
-          </TabList>
-          <TabPanel>
-            <CompositionsPanel
-              onSelect={selectComposition}
-              url={compositionUrl}
-              compositions={component.compositions}
-              active={selected}
-            />
-          </TabPanel>
-          <TabPanel>
-            {properties && properties.length > 0 ? (
-              // TODO - make table look good in panel
-              <PropTable rows={properties} />
-            ) : (
-              // TODO - make this look good
-              <div>no props</div>
-            )}
-          </TabPanel>
-          <TabPanel></TabPanel>
-        </TabContainer>
-      </Panel>
+      <TupleSplitPane max={100} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
+        <ComponentComposition component={component} composition={selected}></ComponentComposition>
+        <Panel>
+          <TabContainer>
+            <TabList>
+              <Tab>compositions</Tab>
+              <Tab>properties</Tab>
+              <Tab>dependencies</Tab>
+            </TabList>
+            <TabPanel>
+              <CompositionsPanel
+                onSelect={selectComposition}
+                url={compositionUrl}
+                compositions={component.compositions}
+                active={selected}
+              />
+            </TabPanel>
+            <TabPanel>
+              {properties && properties.length > 0 ? (
+                // TODO - make table look good in panel
+                <PropTable rows={properties} />
+              ) : (
+                // TODO - make this look good
+                <div>no props</div>
+              )}
+            </TabPanel>
+            <TabPanel></TabPanel>
+          </TabContainer>
+        </Panel>
+      </TupleSplitPane>
     </PanelContainer>
   );
 }

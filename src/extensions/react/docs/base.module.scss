@@ -7,6 +7,11 @@
 	.heading {
 		margin-bottom: unset;
 	}
+	@media screen and (max-width: 920px) {
+		padding-left: 20px;
+		padding-right: 20px;
+		max-width: 100%;
+	}
 }
 
 .maxWidth {

@@ -204,7 +204,7 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
   // the reason is that `writeComponentsToCapsules` clones the component before writing them
   // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
   // such as postInstall scripts for custom-module-resolution.
-  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule);
+  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
 
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
     packageJsonFile.addDependencies(bitDependencies);
