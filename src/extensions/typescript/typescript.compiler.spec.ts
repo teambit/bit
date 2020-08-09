@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import { TypescriptCompiler } from './typescript.compiler';
+import { Logger } from '../logger';
 
 describe('TypescriptCompiler', () => {
   describe('getDistPathBySrcPath', () => {
@@ -36,5 +37,8 @@ describe('TypescriptCompiler', () => {
 });
 
 function getTsCompiler() {
-  return new TypescriptCompiler({}, []);
+  return new TypescriptCompiler(new Logger('test'), {
+    tsconfig: {},
+    types: [],
+  });
 }

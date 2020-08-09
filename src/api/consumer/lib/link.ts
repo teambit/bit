@@ -8,7 +8,6 @@ export default async function linkAction(ids: string[], changeRelativeToModulePa
   let codemodResults;
   if (changeRelativeToModulePaths) {
     codemodResults = await changeCodeFromRelativeToModulePaths(consumer, bitIds);
-    consumer.componentLoader.clearComponentsCache();
   }
   const linksResults = await linkAllToNodeModules(consumer, bitIds);
   await consumer.onDestroy();

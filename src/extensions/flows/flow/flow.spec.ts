@@ -125,7 +125,7 @@ describe('flows', function () {
       })
     );
   });
-  this.afterAll(function () {
+  after(function () {
     return remove('/tmp/@bit-test2');
   });
 });

@@ -12,7 +12,7 @@ import { Analytics } from './analytics/analytics';
 import { GLOBAL_CONFIG, GLOBAL_LOGS, BIT_VERSION } from './constants';
 import { printWarning } from './logger/logger';
 
-const MINIMUM_NODE_VERSION = '10.0.0';
+const MINIMUM_NODE_VERSION = '10.13.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 

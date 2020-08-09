@@ -25,7 +25,7 @@ describe('pkg extension', function () {
     let isTypeCapsuleDir;
 
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
@@ -52,7 +52,7 @@ describe('pkg extension', function () {
       before(() => {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
@@ -70,7 +70,7 @@ describe('pkg extension', function () {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();

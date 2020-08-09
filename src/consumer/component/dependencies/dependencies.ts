@@ -17,6 +17,8 @@ export const DEPENDENCIES_TYPES_UI_MAP = {
   devDependencies: 'dev',
 };
 
+export type DependenciesFilterFunction = (dependency: Dependency) => boolean;
+
 export default class Dependencies {
   constructor(readonly dependencies: Dependency[] = []) {}
 
@@ -26,6 +28,11 @@ export default class Dependencies {
 
   get(): Dependency[] {
     return this.dependencies;
+  }
+
+  filter(fn: DependenciesFilterFunction): Dependencies {
+    const filtered = this.dependencies.filter(fn);
+    return new Dependencies(filtered);
   }
 
   sort() {

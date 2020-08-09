@@ -64,7 +64,6 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
-import IncorrectRootDir from './exceptions/incorrect-root-dir';
 import { ExtensionDataList } from '../config/extension-data';
 import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA, SchemaName } from './component-schema';
 import { NoComponentDir } from './exceptions/no-component-dir';
@@ -873,7 +872,6 @@ export default class Component {
       ComponentNotFoundInPath,
       ComponentOutOfSync,
       ComponentsPendingImport,
-      IncorrectRootDir,
       ExtensionFileNotFound,
       NoComponentDir,
     ];

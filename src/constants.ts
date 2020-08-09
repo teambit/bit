@@ -74,6 +74,8 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
+export const DEFAULT_HARMONY_PACKAGE_MANAGER = '@teambit/pnpm';
+
 export const DEFAULT_EXTENSIONS = {};
 
 export const DEFAULT_DIST_DIRNAME = 'dist';
@@ -233,6 +235,8 @@ export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { c
 export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
 export const CFG_FEATURE_TOGGLE = 'features';
+
+export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 /**
  * git hooks
