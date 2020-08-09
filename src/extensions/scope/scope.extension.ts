@@ -29,7 +29,6 @@ import { scopeSchema } from './scope.graphql';
 import { CLIExtension } from '../cli';
 import { ExportCmd } from './export/export-cmd';
 import { IsolatorExtension } from '../isolator';
-import { CannotLoadExtension } from './exceptions';
 import { LoggerExtension, Logger } from '../logger';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';

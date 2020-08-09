@@ -1,4 +1,4 @@
-import { PaperError } from '../../cli';
+import { PaperError } from '../../../../extensions/cli';
 
 export class CannotLoadExtension extends PaperError {
   constructor(private extensionName: string, private error: Error) {

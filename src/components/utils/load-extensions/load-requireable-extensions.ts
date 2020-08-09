@@ -52,19 +52,16 @@ export async function loadRequireableExtensions(
     } catch (e) {
       const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
       logger.consoleFailure(errorMsg);
+      logger.error(errorMsg, e);
       if (throwOnError) {
-        logger.error(errorMsg);
         throw new CannotLoadExtension(id, e);
-      } else {
-        // eslint-disable-next-line no-console
-        logger.console(e);
-        logger.error(errorMsg, e);
       }
+      logger.console(e);
     }
   });
   const manifests = await Promise.all(manifestsP);
 
   // Remove empty manifests as a result of loading issue
   const filteredManifests = manifests.filter((manifest) => manifest);
-  return loadExtensionsByManifests(harmony, filteredManifests, logger);
+  return loadExtensionsByManifests(harmony, filteredManifests, logger, throwOnError);
 }

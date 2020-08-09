@@ -42,7 +42,6 @@ import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver/types';
-import { UNABLE_TO_LOAD_EXTENSION } from '../../components/utils/load-extensions/constants';
 
 export type EjectConfResult = {
   configPath: string;
