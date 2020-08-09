@@ -59,7 +59,7 @@ export async function get(key: string): Promise<string | undefined> {
   }
 }
 
-export function getSync(key: string): string | null | undefined {
+export function getSync(key: string): string | undefined {
   const getConfigObject = () => {
     const configFromCache = cache().get();
     if (configFromCache) return configFromCache;

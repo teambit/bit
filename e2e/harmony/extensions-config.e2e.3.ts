@@ -25,7 +25,7 @@ describe('harmony extension config', function () {
       let extensionData;
       let devDeps;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.extensions.addExtensionToVariant('*', '@teambit/scope', config);
@@ -51,7 +51,7 @@ describe('harmony extension config', function () {
       let localBeforeTag;
 
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.bitJsonc.addDefaultScope();
@@ -165,7 +165,7 @@ describe('harmony extension config', function () {
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });

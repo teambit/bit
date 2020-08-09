@@ -3,7 +3,7 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component } from '../component';
+import { Component, ComponentMap } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
@@ -16,6 +16,7 @@ import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsule
 import { DEPENDENCIES_FIELDS } from '../../constants';
 import { LoggerExtension, Logger } from '../logger';
 import { PathOsBasedAbsolute } from '../../utils/path';
+import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -85,9 +86,16 @@ export class IsolatorExtension {
           return packageJsonHasChanged;
         })
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
-      await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
+      // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
+      const installer = this.dependencyResolver.getInstaller();
+      // When using isolator we don't want to use the policy defined in the workspace directly, we only want to instal deps from components
+      await installer.install(capsulesDir, this.dependencyResolver.getEmptyDepsObject(), this.toComponentMap(capsules));
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
+      // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
+      // TODO: remove this after exporting core extensions as components
+      await symlinkBitBinToCapsules(capsulesToInstall, this.logger);
     }
+
     // rewrite the package-json with the component dependencies in it. the original package.json
     // that was written before, didn't have these dependencies in order for the package-manager to
     // be able to install them without crushing when the versions don't exist yet
@@ -99,6 +107,15 @@ export class IsolatorExtension {
     });
 
     return capsuleList;
+  }
+
+  private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
+    const tuples = capsules.map((capsule) => {
+      return [capsule.component.id, [capsule.component, capsule.path]];
+    });
+
+    // @ts-ignore
+    return new ComponentMap(tuples);
   }
 
   async list(workspacePath: string): Promise<ListResults> {
@@ -187,7 +204,7 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
   // the reason is that `writeComponentsToCapsules` clones the component before writing them
   // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
   // such as postInstall scripts for custom-module-resolution.
-  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule);
+  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
 
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
     packageJsonFile.addDependencies(bitDependencies);

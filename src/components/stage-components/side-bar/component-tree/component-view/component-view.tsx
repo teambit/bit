@@ -8,12 +8,12 @@ import { indentClass } from '../indent';
 import { getName } from '../utils/get-name';
 import { clickable } from '../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../to-eject/css-components/hoverable';
-import styles from './component-view.module.scss';
-import { ComponentStatus } from '../component-status/component-status';
 import { PayloadType } from '../payload-type';
 import { componentToUrl } from '../../../../../extensions/component/component-path.ui';
 import { NavLink } from '../../../../../extensions/react-router/nav-link';
 import { ComponentIcon } from '../../../workspace-components/component-icon';
+import { ComponentStatusResolver } from '../component-status-resolver';
+import styles from './component-view.module.scss';
 
 export type ComponentViewProps<Payload = any> = {
   // env?: 'react' | 'angular' | 'vue' | 'stencil';
@@ -22,8 +22,8 @@ export type ComponentViewProps<Payload = any> = {
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const { node } = props;
   const { payload } = node;
-  const isNew = _.get(payload, ['status', 'isNew']);
   const isDeprecated = _.get(payload, ['deprecation', 'isDeprecate']);
+  const status = _.get(payload, ['status']);
 
   const { onSelect } = useContext(ComponentTreeContext);
 
@@ -42,14 +42,14 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        {payload && <ComponentIcon component={payload} />}
+        {payload && <ComponentIcon component={payload} className={styles.envIcon} />}
         <span>{getName(node.id)}</span>
       </div>
 
       <div className={styles.right}>
         {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
-        {isNew && <ComponentStatus status="new" />}
+        <ComponentStatusResolver status={status} />
       </div>
     </NavLink>
   );

@@ -12,7 +12,9 @@ import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
 import { LoggerExtension } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
+import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -66,6 +68,13 @@ export class PkgExtension {
     cli.register(new PublishCmd(publisher));
 
     return pkg;
+  }
+
+  /**
+   * get the package name of a component.
+   */
+  getPackageName(component: Component) {
+    return componentIdToPackageName(component.state._consumer);
   }
 
   /**

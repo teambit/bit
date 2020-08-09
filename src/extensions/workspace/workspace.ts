@@ -6,6 +6,7 @@ import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
+import { link } from '../../api/consumer';
 import { ScopeExtension } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
@@ -20,7 +21,6 @@ import { Logger } from '../logger';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
-import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
@@ -31,12 +31,14 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentMap } from '../component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
 import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadResolvedExtensions } from '../../components/utils/load-extensions';
+import { DependencyLifecycleType } from '../dependency-resolver/types';
 
 export type EjectConfResult = {
   configPath: string;
@@ -46,6 +48,11 @@ export interface EjectConfOptions {
   propagate?: boolean;
   override?: boolean;
 }
+
+export type WorkspaceInstallOptions = {
+  variants: string;
+  lifecycleType: DependencyLifecycleType;
+};
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -134,12 +141,23 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
+  async hasModifiedDependencies(component: Component) {
+    const componentsList = new ComponentsList(this.consumer);
+    const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
+    const isAutoTag = listAutoTagPendingComponents.find(
+      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    );
+    if (isAutoTag) return true;
+    return false;
+  }
+
   /**
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
-    return ComponentStatus.fromLegacy(status);
+    const hasModifiedDependencies = await this.hasModifiedDependencies(component);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
   }
 
   /**
@@ -532,24 +550,41 @@ export class Workspace implements ComponentFactory {
     await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
   }
 
+  private async getComponentsDirectory(ids: ComponentID[]) {
+    const components = ids.length ? await this.getMany(ids) : await this.list();
+    return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
+  }
+
   /**
    * Install dependencies for all components in the workspace
    *
    * @returns
    * @memberof Workspace
    */
-  async install() {
-    //      this.reporter.info('Installing component dependencies');
-    //      this.reporter.setStatusText('Installing');
+  async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (packages && packages.length) {
+      this.logger.debug(`installing the folloing packages: ${packages.join()}`);
+    }
+    this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();
-    // this.reporter.info('Isolating Components');
-    const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
-    // this.reporter.info('Installing workspace dependencies');
-    await removeExistingLinksInNodeModules(isolatedEnvs);
-    await this.dependencyResolver.folderInstall(process.cwd());
-    await symlinkCapsulesInNodeModules(isolatedEnvs);
-    // this.reporter.end();
-    return isolatedEnvs;
+    const stringIds = components.map((component) => component.id.toString());
+    const installer = this.dependencyResolver.getInstaller();
+    const installationMap = await this.getComponentsDirectory([]);
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+    const rootDepsObject = {
+      dependencies: {
+        ...workspacePolicy.dependencies,
+      },
+      peerDependencies: {
+        ...workspacePolicy.peerDependencies,
+      },
+    };
+    await installer.install(this.path, rootDepsObject, installationMap);
+    // TODO: add the links results to the output
+    this.logger.setStatusLine('linking components');
+    await link(stringIds, false);
+    this.logger.consoleSuccess();
+    return installationMap;
   }
 
   /**

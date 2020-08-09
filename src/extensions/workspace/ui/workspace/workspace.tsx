@@ -1,8 +1,9 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useReducer } from 'react';
 import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
-import styles from './workspace.module.scss';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
@@ -12,6 +13,8 @@ import { WorkspaceOverview } from './workspace-overview';
 import { TopBar } from '../../../../components/stage-components/top-bar';
 import { SideBar } from '../../../../components/stage-components/side-bar';
 import { Corner } from '../../../../components/stage-components/corner';
+import { CollapsibleSplitter } from '../../../../components/stage-components/splitter';
+import styles from './workspace.module.scss';
 
 const WORKSPACE = gql`
   {
@@ -28,7 +31,10 @@ const WORKSPACE = gql`
           isNew
           isInScope
           isStaged
-          isModified
+          modifyInfo {
+            hasModifiedFiles
+            hasModifiedDependencies
+          }
           isDeleted
         }
         deprecation {
@@ -59,6 +65,9 @@ export type WorkspaceProps = {
 export function Workspace({ routeSlot, menuSlot, onWorkspace }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
 
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
+
   if (!data) {
     return (
       <div className={styles.emptyContainer}>
@@ -72,16 +81,17 @@ export function Workspace({ routeSlot, menuSlot, onWorkspace }: WorkspaceProps) 
 
   return (
     <WorkspaceProvider workspace={workspace}>
-      <div className={styles.workspace}>
-        <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
-        <SideBar className={styles.sideBar} components={workspace.components} />
-        <div className={styles.main}>
-          <SlotRouter slot={routeSlot} />
-          {/* TODO - @oded move to route slot once we can register more than one slot at a time */}
-          <Route exact path="/">
-            <WorkspaceOverview />
-          </Route>
-        </div>
+      <div className={styles.workspaceWrapper}>
+        <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
+        <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
+          <SideBar components={workspace.components} />
+          <div className={styles.main}>
+            <SlotRouter slot={routeSlot} />
+            <Route exact path="/">
+              <WorkspaceOverview />
+            </Route>
+          </div>
+        </TupleSplitPane>
       </div>
     </WorkspaceProvider>
   );

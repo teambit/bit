@@ -19,7 +19,6 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
-import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 import { getDependencyTree } from '../files-dependency-builder';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
 
@@ -75,6 +74,11 @@ export type Issues = {
   missingBits: {};
 };
 
+type WorkspacePolicyGetter = () => {
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+};
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -94,6 +98,12 @@ export default class DependencyResolver {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   testerFiles: PathLinux[];
   overridesDependencies: OverridesDependencies;
+
+  static getWorkspacePolicy: WorkspacePolicyGetter;
+  static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
+    this.getWorkspacePolicy = func;
+  }
+
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -187,7 +197,6 @@ export default class DependencyResolver {
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
-    this.throwForIncorrectRootDir();
     return this.component;
   }
 
@@ -232,6 +241,9 @@ export default class DependencyResolver {
     this.combineIssues();
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
+    if (!this.consumer.isLegacy) {
+      this.applyWorkspacePolicy();
+    }
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
   }
@@ -283,14 +295,6 @@ export default class DependencyResolver {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
-    }
-  }
-
-  throwForIncorrectRootDir() {
-    const relatives = this.issues.relativeComponentsAuthored;
-    if (relatives && !R.isEmpty(relatives) && this.componentMap.doesAuthorHaveRootDir()) {
-      const firstRelativeKey = Object.keys(relatives)[0];
-      throw new IncorrectRootDir(this.componentId.toString(), relatives[firstRelativeKey][0].importSource);
     }
   }
 
@@ -816,6 +820,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     missingComponents.forEach((missingBit) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
         missingBit,
+        // this is a bit dangerous because it send the dependent prefix and assume it's the same for the dependency
+        // sometime you might just not find it (which is totally fine) but sometime it can make a bug
+        // for example
+        // I installed a package names my-comp
+        // I have a component called @my-org/my-comp
+        // The dependent called @my-org/my-dependent
+        // Now I might resolve the package as the component
         this.component.bindingPrefix
       );
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
@@ -1046,6 +1057,29 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerPackages;
   }
 
+  applyWorkspacePolicy(): void {
+    const wsPolicy = DependencyResolver.getWorkspacePolicy();
+    if (!wsPolicy) return;
+    const wsPeer = wsPolicy.peerDependencies || {};
+    const wsRegular = wsPolicy.dependencies || {};
+    const peerDeps = this.allPackagesDependencies.peerPackageDependencies || {};
+    // we are not iterate component deps since they are resolved from what actually installed
+    // the policy used for installation only in that case
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+      R.forEachObjIndexed((_pkgVal, pkgName) => {
+        const peerVersionFromWsPolicy = wsPeer[pkgName];
+        const regularVersionFromWsPolicy = wsRegular[pkgName];
+        if (peerVersionFromWsPolicy) {
+          delete this.allPackagesDependencies[field][pkgName];
+          peerDeps[pkgName] = peerVersionFromWsPolicy;
+        } else if (regularVersionFromWsPolicy) {
+          this.allPackagesDependencies[field][pkgName] = regularVersionFromWsPolicy;
+        }
+      }, this.allPackagesDependencies[field]);
+    });
+    this.allPackagesDependencies.peerPackageDependencies = peerDeps;
+  }
+
   /**
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
@@ -1084,14 +1118,17 @@ either, use the ignore file syntax or change the require statement to have a mod
   _addTypesPackagesForTypeScript(packages: Record<string, any>, originFile: PathLinuxRelative): void {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
-    const packageJson = this._getPackageJson();
-    if (!packageJson) return;
+    let depsHost = this._getPackageJson();
+    if (!this.consumer.isLegacy) {
+      depsHost = DependencyResolver.getWorkspacePolicy();
+    }
+    if (!depsHost) return;
     const addIfNeeded = (depField: string, packageName: string) => {
-      if (!packageJson[depField]) return;
+      if (!depsHost || !depsHost[depField]) return;
       const typesPackage = `@types/${packageName}`;
-      if (!packageJson[depField][typesPackage]) return;
-      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], {
-        [typesPackage]: packageJson[depField][typesPackage],
+      if (!depsHost[depField][typesPackage]) return;
+      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
+        [typesPackage]: depsHost[depField][typesPackage],
       });
     };
     Object.keys(packages).forEach((packageName) => {
