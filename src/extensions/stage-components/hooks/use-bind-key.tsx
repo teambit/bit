@@ -8,7 +8,7 @@ export function useKeyBind(
   /** key handler */
   handler: (e: ExtendedKeyboardEvent, combo: string) => any,
   /** enable/disable binding */
-  when: boolean = true
+  when = true
 ) {
   const { current: mousetrap } = useRef(new Mousetrap());
 

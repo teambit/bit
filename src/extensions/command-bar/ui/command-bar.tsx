@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card } from '@teambit/base-ui-temp.surfaces.card';
 import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';

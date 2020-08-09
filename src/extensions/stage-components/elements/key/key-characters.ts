@@ -10,7 +10,7 @@ const macKeySymbols = {
   // special keys:
   backspace: '⌫',
   tab: '⇥',
-  enter: '↩', //'⌤'
+  enter: '↩', // '⌤'
   return: '↩',
   capslock: '⇪',
   esc: '⎋',
@@ -19,7 +19,7 @@ const macKeySymbols = {
   pageup: '⇞',
   pagedown: '⇟',
   end: 'end', // '⤓',
-  home: 'home', //'⤒',
+  home: 'home', // '⤒',
   left: '←',
   up: '↑',
   right: '→',
