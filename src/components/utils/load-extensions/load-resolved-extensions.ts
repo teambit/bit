@@ -45,7 +45,7 @@ export async function loadResolvedExtensions(
       // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
       const aspect = resolvedExtension.require();
       const manifest = aspect.default;
-      manifest.id = compId;
+      // manifest.id = compId;
       return manifest;
     } catch (e) {
       const errorMsg = UNABLE_TO_LOAD_EXTENSION(compId);
