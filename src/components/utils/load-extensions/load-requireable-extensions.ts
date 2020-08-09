@@ -5,6 +5,7 @@ import { loadExtensionsByManifests } from './load-extensions-by-manifests';
 // TODO: change to module path once utils are tracked as components
 import { RequireableComponent } from '../requireable-component';
 import { Logger } from '../../../extensions/logger';
+import { CannotLoadExtension } from './exceptions';
 
 // TODO: take for some other place like config
 // TODO: consider pass it from outside into the function
@@ -53,7 +54,7 @@ export async function loadRequireableExtensions(
       logger.consoleFailure(errorMsg);
       if (throwOnError) {
         logger.error(errorMsg);
-        throw e;
+        throw new CannotLoadExtension(id, e);
       } else {
         // eslint-disable-next-line no-console
         logger.console(e);

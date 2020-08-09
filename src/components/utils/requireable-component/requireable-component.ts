@@ -11,9 +11,9 @@ export class RequireableComponent {
     return this.requireFunc();
   }
 
-  static fromComponentCapsule(component: Component, capsule: Capsule) {
+  static fromCapsule(capsule: Capsule) {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const requireFunc = () => require(capsule.wrkDir);
-    return new RequireableComponent(component, requireFunc);
+    return new RequireableComponent(capsule.component, requireFunc);
   }
 }
