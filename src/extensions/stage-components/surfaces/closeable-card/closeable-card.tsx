@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import classNames from 'classnames';
 
 import { Card, CardProps } from '@teambit/base-ui-temp.surfaces.card';
-import { bindKey } from '../../hooks/bind-key';
+import { useKeyBind } from '../../hooks/use-bind-key';
 import styles from './closeable-card.module.scss';
 
 export const CLOSE_KEY = 'escape';
@@ -23,7 +23,7 @@ export function ClosableCard({
     onVisibilityChange(false);
   }, []);
 
-  bindKey(CLOSE_KEY, close, visible);
+  useKeyBind(CLOSE_KEY, close, visible);
 
   return (
     <Card {...rest} className={classNames(styles.closable, visible && styles.visible, className)}>

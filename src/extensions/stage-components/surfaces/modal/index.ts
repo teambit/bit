@@ -1,4 +1,5 @@
 import styles from './modal.module.scss';
 const { modal } = styles;
 
-export { modal as modalClass };
+/** identifies element as a modal (z-index, etc) */
+export const modalClass = modal;

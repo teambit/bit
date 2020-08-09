@@ -1,11 +1,6 @@
-$modalZIndex: 8000; //TODO
+$modalZIndex: 8000;
 
 .modal {
 	position: fixed;
-	top: 16px;
-	left: 16px;
-	bottom: 16px;
-	right: 16px;
-
 	z-index: $modalZIndex;
 }

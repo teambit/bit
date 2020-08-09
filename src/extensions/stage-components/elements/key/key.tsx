@@ -6,6 +6,8 @@ import { keySymbols } from './key-characters';
 export type KbdProps = { children: string } & React.HTMLAttributes<HTMLElement>;
 
 type HotkeysProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
+
+/** renders a key combination */
 export function Hotkeys({ children, className, ...rest }: HotkeysProps) {
   if (!children) return null;
 
@@ -21,6 +23,7 @@ export function Hotkeys({ children, className, ...rest }: HotkeysProps) {
   );
 }
 
+/** renders children as a physical key */
 export function Key({ className, children, ...rest }: KbdProps) {
   const prettyKey = children in keySymbols ? keySymbols[children] : children;
 
