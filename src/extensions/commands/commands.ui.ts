@@ -7,14 +7,31 @@ export type CommandEntry = {
 export type CommandId = string;
 export type CommandObj = CommandEntry & { id: CommandId };
 
-export default class CommandRegistryUi extends Map<CommandId, CommandEntry> {
+/** Meditator for commands.
+ * @example
+ * commandRegistryUI.set('screenshots.takeScreenshot', {
+ *   name: 'Take screenshot',
+ *   description: 'generate a screenshot of a composition',
+ *   handler: screenshotUI.takeScreenshot,
+ * });
+ * // it can be then used like:
+ * const optionalParams = 'ui/list';
+ * commandRegistryUI.run('screenshots.takeScreenshot', optionalParameters);
+ */
+export default class CommandRegistryUI extends Map<CommandId, CommandEntry> {
   static dependencies = [];
   static slots = [];
   static async provider(/* deps: []] config, slots: [] */) {
-    return new CommandRegistryUi();
+    return new CommandRegistryUI();
   }
 
-  run<R = any>(id: CommandId, ...rest: any[]) {
+  /** executes command. Returns undefined if command is missing */
+  run<R = any>(
+    /** name of the command to run */
+    id: CommandId,
+    /** parameters to pass to command */
+    ...rest: any[]
+  ) {
     const command = this.get(id);
     if (!command) return undefined;
 
@@ -22,23 +39,35 @@ export default class CommandRegistryUi extends Map<CommandId, CommandEntry> {
     return result as R;
   }
 
+  /** unregister all commands from the registry */
   clear() {
     this._asList = undefined;
     return super.clear();
   }
-  delete(key: CommandId) {
+
+  /** unregister a specific command */
+  delete(commandId: CommandId) {
     this._asList = undefined;
-    return super.delete(key);
-  }
-  set(key: CommandId, value: CommandEntry) {
-    this._asList = undefined;
-    return super.set(key, value);
+    return super.delete(commandId);
   }
 
-  // cached, to avoid re-creating array each time
-  private _asList?: CommandObj[] = undefined;
+  /** adds a new command */
+  set(
+    /** name of the command, prefixed with the name of the extension */
+    commandId: CommandId,
+    /** command details and handler */
+    value: CommandEntry
+  ) {
+    this._asList = undefined;
+    return super.set(commandId, value);
+  }
+
+  /** get an array of available commands */
   list = () => {
     this._asList = this._asList || Array.from(this.entries()).map(([id, entry]) => ({ id, ...entry }));
     return this._asList;
   };
+
+  // cached, to avoid re-creating array each time
+  private _asList?: CommandObj[] = undefined;
 }

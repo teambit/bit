@@ -1,16 +1,17 @@
 import React from 'react';
 import Fuse from 'fuse.js';
 import KeyboardShortcuts from '../keyboard-shortcuts/keyboard-shortcuts.ui';
-import CommandRegistryUi, { CommandObj, CommandId } from '../commands/commands.ui';
+import CommandRegistryUI, { CommandObj, CommandId } from '../commands/commands.ui';
 import { CommandItem } from './ui/command-item';
 import CommandBarUI, { SearchProvider } from './command-bar.ui';
 
+/** Command autocomplete provider for Command bar */
 export default class CommandSearchProvider implements SearchProvider {
-  static dependencies = [CommandRegistryUi, CommandBarUI, KeyboardShortcuts];
+  static dependencies = [CommandRegistryUI, CommandBarUI, KeyboardShortcuts];
   static slots = [];
   static async provider(
     [commandRegistryUi, commandBarUI, keyboardShortcuts]: [
-      CommandRegistryUi,
+      CommandRegistryUI,
       CommandBarUI,
       KeyboardShortcuts
     ] /* config, slots: [] */
@@ -20,7 +21,7 @@ export default class CommandSearchProvider implements SearchProvider {
     return commandSearcher;
   }
 
-  constructor(private commandRegistryUi: CommandRegistryUi, private keyboardShortcuts: KeyboardShortcuts) {}
+  constructor(private commandRegistryUi: CommandRegistryUI, private keyboardShortcuts: KeyboardShortcuts) {}
 
   private fuseCommands = new Fuse<CommandObj>([], {
     // weight can be included here.
@@ -28,10 +29,12 @@ export default class CommandSearchProvider implements SearchProvider {
     keys: ['key', 'name', 'description'],
   });
 
+  /** indicates this searcher supports terms beginning with '>' */
   test(term: string): boolean {
     return term.startsWith('>');
   }
 
+  /** finds commands similar to patterns */
   search = (pattern: string, limit: number) => {
     const { keyboardShortcuts } = this;
     this.refreshCommands();

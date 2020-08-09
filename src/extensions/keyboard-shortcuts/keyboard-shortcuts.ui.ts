@@ -1,5 +1,5 @@
 import Mousetrap from 'mousetrap';
-import CommandRegistryUi, { CommandId } from '../commands/commands.ui';
+import CommandRegistryUI, { CommandId } from '../commands/commands.ui';
 import { hotkeys } from './hotkeys';
 
 // consider expanding this to be `string | string[]`
@@ -10,27 +10,35 @@ export type SerializedKeybinding = {
   command: CommandId;
 };
 
+/** Keybindings based command triggers. Uses [Mousetrap](https://www.npmjs.com/package/mousetrap) style keybindings ('mod' = 'ctrl'/'cmd').
+ * In addition to directly adding keys from other extensions, *hotkeys.ts* holds a preset for curated bindings.
+ *
+ * @example
+ * keyboardShortcuts.set('mod+k', 'commandBar.open')
+ */
 export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
-  static dependencies = [CommandRegistryUi];
+  static dependencies = [CommandRegistryUI];
   static slots = [];
-  static async provider([commandRegistryUi]: [CommandRegistryUi] /* config, slots: [] */) {
+  static async provider([commandRegistryUi]: [CommandRegistryUI] /* config, slots: [] */) {
     const keyboardShortcuts = new KeyboardShortcuts(commandRegistryUi);
     keyboardShortcuts.load(hotkeys);
     return keyboardShortcuts;
   }
 
-  constructor(private commandRegistryUi: CommandRegistryUi) {
+  constructor(private commandRegistryUi: CommandRegistryUI) {
     super();
   }
 
   private mousetrap = new Mousetrap();
 
+  /** bulk register keybindings from json */
   load(keybindings: SerializedKeybinding[]) {
     keybindings.forEach(({ key, command }) => {
       if (key.startsWith('-')) this.delete(key.slice(1));
       else this.set(key, command);
     });
   }
+  /** serialize keybindings to json */
   toObj(): SerializedKeybinding[] {
     return Array.from(super.entries()).map(([key, command]) => {
       return {
@@ -52,15 +60,20 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
   }
 
   private _getReverse = (command: CommandId) => {
-    if (!this.reverseMap.has(command)) {
-      this.reverseMap.set(command, new Set());
+    let bindings = this.reverseMap.get(command);
+    if (!bindings) {
+      bindings = new Set();
+      this.reverseMap.set(command, bindings);
     }
 
-    return this.reverseMap.get(command)!;
+    return bindings;
   };
 
+  /** registers a new keybinding to the system. (Currently does not support multiple actions per key)
+   * @example
+   * keyboardShortcuts.set('mod+k', 'commandBar.open')
+   */
   set = (key: Keybinding, command: CommandId) => {
-    // TODO - consider supporting multiple commands per key
     if (super.has(key)) throw new Error(`duplicate keyboard keybinding "${key}"`);
 
     this.mousetrap.bind(key, this.exec.bind(this, key));
@@ -69,6 +82,10 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
     return super.set(key, command);
   };
 
+  /** removes a keybinding
+   * @example
+   * keyboardShortcuts.set('mod+k')
+   */
   delete = (key: Keybinding) => {
     this.mousetrap.unbind(key);
 
@@ -78,16 +95,26 @@ export default class KeyboardShortcuts extends Map<Keybinding, CommandId> {
     return super.delete(key);
   };
 
+  /** removes all keybinding */
   clear = () => {
     this.mousetrap.reset();
     this.reverseMap.clear();
     return super.clear();
   };
 
+  /** simulate a key event
+   * @example
+   * keyboardShortcuts.trigger('mod+k')
+   */
   trigger = (key: Keybinding) => {
     this.mousetrap.trigger(key);
   };
 
+  /** list all hotkeys registered with this command
+   * @example
+   * keyboardShortcuts.findKeybinding('commandBar.open');
+   * //returns new Set(['mod+k']);
+   */
   findKeybindings = (command: string) => {
     const keySet = this.reverseMap.get(command);
 

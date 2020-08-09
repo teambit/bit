@@ -8,6 +8,7 @@ import { ComponentItem } from './ui/component-item';
 import { ReactRouterUI } from '../react-router/react-router.ui';
 import { componentToUrl } from '../component/component-path.ui';
 
+/** Go-to-component autocomplete provider for Command bar, in scope environment */
 export default class ScopeComponentSearchProvider implements SearchProvider {
   static dependencies = [CommandBarUI, ScopeUI, ReactRouterUI];
   static slots = [];
@@ -26,10 +27,12 @@ export default class ScopeComponentSearchProvider implements SearchProvider {
     keys: ['id.fullName'],
   });
 
+  /** indicates this searcher supports terms in similar to component id */
   test(term: string): boolean {
     return !term.startsWith('>') && term.length > 0;
   }
 
+  /** finds components similar to patterns */
   search = (pattern: string, limit: number) => {
     this.refreshComponents();
 
