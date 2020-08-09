@@ -8,7 +8,6 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { BitId, BitIds } from '../../bit-id';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
 import { Consumer } from '..';
-import IncorrectRootDir from '../component/exceptions/incorrect-root-dir';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 
 export type CodemodResult = {
@@ -30,16 +29,27 @@ export async function changeCodeFromRelativeToModulePaths(
     return { id: component.id, changedFiles: files.map((f) => f.relative), warnings };
   });
   await dataToPersist.persistAllToFS();
+  const idsToReload = codemodResults.filter((c) => !c.warnings || c.warnings.length === 0).map((c) => c.id);
+  await reloadComponents(consumer, idsToReload);
+
   return codemodResults.filter((c) => c.changedFiles.length || c.warnings);
+}
+
+async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
+  consumer.componentLoader.clearComponentsCache();
+  if (!bitIds.length) return;
+  const components = await loadComponents(consumer, bitIds);
+  const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
+  if (componentsWithRelativeIssues.length) {
+    const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
+    throw new Error(`failed rewiring the following components: ${failedComps}`);
+  }
 }
 
 async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
-  const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
-  invalidComponents.forEach((invalidComp) => {
-    if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
-    else throw invalidComp.error;
-  });
+  const { components } = await consumer.loadComponents(componentsIds);
+
   return components;
 }
 
@@ -69,6 +79,8 @@ function codemodComponent(consumer: Consumer, component: Component): { files: So
       const isCss = cssFamily.includes(file.extname);
       const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
       const stringToReplace = getNameWithoutInternalPath(consumer, relativeEntry);
+      // @todo: the "dist" should be replaced by the compiler dist-dir.
+      // newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss, 'dist');
       newFileString = replacePackageName(newFileString, stringToReplace, packageNameSupportCss);
     });
     if (fileBefore !== newFileString) {
@@ -112,6 +124,11 @@ function getNameWithoutInternalPath(consumer: Consumer, relativeEntry: RelativeC
   if (importSource.endsWith(internalPathNoExt)) {
     return removeLastOccurrence(importSource, internalPathNoExt);
   }
+  const internalPathNoIndex = removeLastOccurrence(internalPathNoExt, 'index');
+  if (importSource.endsWith(internalPathNoIndex)) {
+    return removeLastOccurrence(importSource, internalPathNoIndex);
+  }
+
   // unable to find anything useful. just return the importSource.
   return importSource;
 }

@@ -14,14 +14,14 @@ bit add components/stage-components/workspace-components/* -n staged-components/
 bit add components/stage-components/workspace-sections/* -n staged-components/workspace-sections
 bit add components/stage-components/* -n staged-components
 bit link --rewire
-find extensions/*/*.* -type f -exec sed -i '' "s/'..\/..\//'bit-bin\//g" {} \;
-find extensions/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\//'bit-bin\//g" {} \;
-find extensions/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\//g" {} \;
-find components/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\//'bit-bin\//g" {} \;
-find components/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\//g" {} \;
-find components/*/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\/..\//'bit-bin\//g" {} \;
+find extensions/*/*.* -type f -exec sed -i '' "s/'..\/..\//'bit-bin\/dist\//g" {} \;
+find extensions/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\//'bit-bin\/dist\//g" {} \;
+find extensions/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\/dist\//g" {} \;
+find components/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\//'bit-bin\/dist\//g" {} \;
+find components/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\/dist\//g" {} \;
+find components/*/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\/..\//'bit-bin\/dist\//g" {} \;
 rm -rf node_modules/bit-bin
-ln -s `pwd`/dist node_modules/bit-bin
+ln -s `pwd` node_modules/bit-bin
 STATUS=`bit status`
 echo $STATUS
 

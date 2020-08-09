@@ -1,7 +1,7 @@
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import BluebirdPromise from 'bluebird';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
 import { BitIds as ComponentsIds, BitId } from '../../bit-id';
@@ -29,8 +29,9 @@ import { scopeSchema } from './scope.graphql';
 import { CLIExtension } from '../cli';
 import { ExportCmd } from './export/export-cmd';
 import { IsolatorExtension } from '../isolator';
-import { CannotLoadExtension } from './exceptions';
 import { LoggerExtension, Logger } from '../logger';
+import { RequireableComponent } from '../../components/utils/requireable-component';
+import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -42,6 +43,10 @@ export class ScopeExtension implements ComponentFactory {
   static id = '@teambit/scope';
 
   constructor(
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony,
     /**
      * legacy scope
      */
@@ -110,21 +115,15 @@ export class ScopeExtension implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
     const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
-    const extensionModules = capsules.map(({ id, capsule }) => {
-      try {
-        // eslint-disable-next-line
-        return require(capsule.path);
-      } catch (err) {
-        throw new CannotLoadExtension(id.toString(), err);
-      }
-    });
 
-    // return extensionModules;
-    extensionModules;
+    let requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
+      return RequireableComponent.fromCapsule(capsule);
+    });
+    // Always throw an error when can't load scope extension
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, true);
   }
 
   /**
@@ -282,7 +281,8 @@ export class ScopeExtension implements ComponentFactory {
       LoggerExtension
     ],
     config,
-    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
+    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
+    harmony: Harmony
   ) {
     cli.register(new ExportCmd());
     const legacyScope = await loadScopeIfExist();
@@ -291,7 +291,7 @@ export class ScopeExtension implements ComponentFactory {
     }
 
     const logger = loggerExtension.createLogger(ScopeExtension.id);
-    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
+    const scope = new ScopeExtension(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);

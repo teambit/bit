@@ -29,6 +29,19 @@
 	}
 }
 
+.left {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	.name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		margin-right: 8px;
+	}
+}
+
 
 .componentTree {
 	max-height: 0;

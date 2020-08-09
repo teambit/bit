@@ -1,10 +1,10 @@
-import chalk from 'chalk';
 import { Harmony } from '@teambit/harmony';
 import { UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { loadExtensionsByManifests } from './load-extensions-by-manifests';
 // TODO: change to module path once utils are tracked as components
-import { ResolvedComponent } from '../resolved-component';
+import { RequireableComponent } from '../requireable-component';
 import { Logger } from '../../../extensions/logger';
+import { CannotLoadExtension } from './exceptions';
 
 // TODO: take for some other place like config
 // TODO: consider pass it from outside into the function
@@ -33,37 +33,34 @@ const ignoreLoadingExtensionsErrors = false;
  * @todo: this is not the final word however about throwing/non throwing errors here.
  * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
  */
-export async function loadResolvedExtensions(
+export async function loadRequireableExtensions(
   harmony: Harmony,
-  resolvedExtensions: ResolvedComponent[],
+  requireableExtensions: RequireableComponent[],
   logger: Logger,
   throwOnError = true
 ): Promise<void> {
-  const manifests = resolvedExtensions.map((resolvedExtension) => {
-    const compId = resolvedExtension.component.id.toString();
+  const manifestsP = requireableExtensions.map(async (requireableExtension) => {
+    if (!requireableExtensions) return;
+    const id = requireableExtension.component.id.toString();
     try {
       // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
-      const aspect = resolvedExtension.require();
-      const manifest = aspect.default;
-      // manifest.id = compId;
+      const aspect = requireableExtension.require();
+      const manifest = aspect.default || aspect;
+      // manifest.id = id;
       return manifest;
     } catch (e) {
-      const errorMsg = UNABLE_TO_LOAD_EXTENSION(compId);
-      // eslint-disable-next-line no-console
-      console.error(chalk.red(`${errorMsg}\n\n`));
+      const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
+      logger.consoleFailure(errorMsg);
+      logger.error(errorMsg, e);
       if (throwOnError) {
-        logger.error(errorMsg);
-        throw e;
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(e);
-        logger.error(errorMsg, e);
+        throw new CannotLoadExtension(id, e);
       }
+      logger.console(e);
     }
-    return undefined;
   });
+  const manifests = await Promise.all(manifestsP);
 
   // Remove empty manifests as a result of loading issue
   const filteredManifests = manifests.filter((manifest) => manifest);
-  return loadExtensionsByManifests(harmony, filteredManifests, logger);
+  return loadExtensionsByManifests(harmony, filteredManifests, logger, throwOnError);
 }
