@@ -10,6 +10,6 @@ export class ChangelogSection implements Section {
   };
   navigationLink = {
     href: '~changelog',
-    children: 'Changelog',
+    children: 'History',
   };
 }

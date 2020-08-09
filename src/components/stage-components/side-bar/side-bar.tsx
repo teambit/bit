@@ -36,7 +36,7 @@ export function SideBar({ components, selected, ...rest }: SideBarProps) {
     [history]
   );
   return (
-    <div {...rest}>
+    <div {...rest} className={styles.sidebar}>
       <OverviewLink />
       <div className={styles.inputWrapper}>
         <Input placeholder="Search" error={false} className={styles.input} />

@@ -42,6 +42,16 @@ export class ComponentUI {
   getMenu(host: string) {
     return <Menu navigationSlot={this.navSlot} widgetSlot={this.widgetSlot} host={host} />;
   }
+  // getTopBarUI() {
+  //   return (
+  //     <TopBar
+  //       // className={styles.topbar}
+  //       navigationSlot={this.navSlot}
+  //       version={'new'} // TODO - get component data here
+  //       widgetSlot={this.widgetSlot}
+  //     />
+  //   );
+  // }
 
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
