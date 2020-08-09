@@ -922,6 +922,8 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   pushToDependencyResolverExtension(id: BitId, fileType: FileType, packageName?: string) {
     if (!packageName) return;
+    // aims to handle legacy workspaces when there is no default scope so the package name is wrong
+    if (!id.hasScope() && !this.consumer.config.defaultScope) return;
     let extExistOnComponent = true;
     let ext = this.component.extensions.findCoreExtension(Extensions.dependencyResolver);
     if (!ext) {
