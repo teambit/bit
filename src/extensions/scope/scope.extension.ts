@@ -110,7 +110,6 @@ export class ScopeExtension implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
     const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});

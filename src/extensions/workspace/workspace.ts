@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
@@ -38,8 +39,10 @@ import { NoComponentDir } from '../../consumer/component/exceptions/no-component
 import { Watcher } from './watch/watcher';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { ResolvedComponent } from '../../components/utils/resolved-component';
-import { loadResolvedExtensions } from '../../components/utils/load-extensions';
+import { loadRequireableExtensions } from '../../components/utils/load-extensions';
+import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver/types';
+import { UNABLE_TO_LOAD_EXTENSION } from '../../components/utils/load-extensions/constants';
 
 export type EjectConfResult = {
   configPath: string;
@@ -529,7 +532,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -541,35 +544,35 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    const resolvedExtensions: any = await this.requireComponents(
+    let resolvedExtensions: any = await this.requireComponents(
       extensionsToLoad.map((id) => this.resolveComponentId(id))
     );
-    // let resolvedExtensions: ResolvedComponent[] = [];
-    // resolvedExtensions = await this.load(extensionsToLoad);
-    // TODO: change to use the new reporter API, in order to implement this
-    // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-    //
-    // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-    // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
-    // level passed to it).
-    await loadResolvedExtensions(this.harmony, resolvedExtensions, this.logger, false);
+    await loadRequireableExtensions(this.harmony, resolvedExtensions, this.logger, throwOnError);
+    return resolvedExtensions;
   }
 
-  async requireComponents(ids: ComponentID[]) {
+  async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {
     const components = await this.getMany(ids);
-    const promises = components.map(async (component) => {
+    let missingPaths = false;
+    const stringIds: string[] = [];
+    const resolveP = components.map(async (component) => {
+      stringIds.push(component.id.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
-
-      return {
-        component,
-        require: () => {
-          // eslint-disable-next-line
-          return require(path.join(this.path, 'node_modules', packageName));
-        },
-      };
+      const localPath = path.join(this.path, 'node_modules', packageName);
+      const isExist = await fs.pathExists(localPath);
+      if (!isExist) {
+        missingPaths = true;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const requireFunc = () => require(localPath);
+      return new RequireableComponent(component, requireFunc);
     });
-
-    return Promise.all(promises);
+    const resolved = await Promise.all(resolveP);
+    // Make sure to link missing components
+    if (missingPaths) {
+      await link(stringIds, false);
+    }
+    return resolved;
   }
 
   private async getComponentsDirectory(ids: ComponentID[]) {
