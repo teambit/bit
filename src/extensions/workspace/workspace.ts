@@ -366,8 +366,10 @@ export class Workspace implements ComponentFactory {
     });
     let components = await componentsP;
     errors.forEach((err) => {
-      this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
-      this.logger.error(`failed loading component ${err.id.toString()}`, err.err);
+      if (!this.consumer.isLegacy) {
+        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
+      }
+      this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
     components = compact(components);
