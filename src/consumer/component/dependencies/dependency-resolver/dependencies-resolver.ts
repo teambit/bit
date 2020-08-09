@@ -924,8 +924,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!packageName) return;
     let extExistOnComponent = true;
     let ext = this.component.extensions.findCoreExtension(Extensions.dependencyResolver);
-    // @todo: uncomment once fixed.
-    // if (!ext) throw new Error(`extension is not defined on a component ${this.componentId.toString()}`);
     if (!ext) {
       extExistOnComponent = false;
       // Create new deps resolver extension entry to add to the component with data only
