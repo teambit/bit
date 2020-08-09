@@ -20,16 +20,6 @@
   z-index: 8000;
 }
 
-// TODO - use evangelist input
-.input {
-  padding: 11px 18px;
-  font-size: inherit;
-  font-family: inherit;
-  border-radius: 7px;
-  border: solid 1px var(--border-color, #ededed);
-  background-color: var(--bg-dent, #f6f6f6);
-}
-
 .input {
   &:not(:last-child) {
     margin-bottom: 8px;

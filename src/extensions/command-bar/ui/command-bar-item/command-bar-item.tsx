@@ -11,6 +11,8 @@ export function CommandBarItem({ className, active, execute, ...rest }: CommandB
   return (
     <div
       {...rest}
+      // command bar closes on blur, mousedown happens before that (click happens after that)
+      onMouseDown={execute}
       className={classNames(
         className,
         clickable,

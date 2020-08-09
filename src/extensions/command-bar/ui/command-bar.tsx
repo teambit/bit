@@ -1,7 +1,8 @@
-import React, { useCallback, createRef, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import classNames from 'classnames';
 import { Card } from '@teambit/base-ui-temp.surfaces.card';
 import { Keybinding } from '../../keyboard-shortcuts/keyboard-shortcuts.ui';
+import { AutoCompleteInput } from './autocomplete-input';
 import styles from './command-bar.module.scss';
 
 export type CommandObj = {
@@ -24,44 +25,22 @@ export type CommandBarProps = {
   children: React.ReactElement<ChildProps>[];
 };
 
-const MIN_ACTIVE_IDX = 0;
+const MIN_IDX = 0;
 
 export function CommandBar({ visible = false, term, onClose, onChange, children }: CommandBarProps) {
-  const inputRef = createRef<HTMLInputElement>();
-  const [activeIdx, setActive] = useState(MIN_ACTIVE_IDX);
+  const [activeIdx, setActive] = useState(MIN_IDX);
+  const increment = useCallback(() => setActive((x) => Math.min(x + 1, children.length - 1)), [children.length]);
+  const decrement = useCallback(() => setActive((x) => Math.max(x - 1, MIN_IDX)), []);
 
-  // reset input when changing visible
+  const handleEnter = useCallback(() => {
+    // calls 'execute' prop of the react child.
+    // this prop is guaranteed by CommandBarProps
+    children[activeIdx]?.props.execute();
+    onClose();
+  }, [children, activeIdx, onClose]);
+
   useEffect(() => onChange(''), [onChange, visible]);
-  // focus when becoming visible
-  useEffect(() => {
-    if (visible) inputRef.current?.focus();
-  }, [inputRef, visible]);
-  // reset when items change
-  useEffect(() => setActive(MIN_ACTIVE_IDX), [children]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const handlers = {
-        Escape: onClose,
-        ArrowDown: () => {
-          e.preventDefault();
-          setActive((v) => Math.min(v + 1, children.length - 1));
-        },
-        ArrowUp: () => {
-          e.preventDefault();
-          return setActive((v) => Math.max(v - 1, MIN_ACTIVE_IDX));
-        },
-        Enter: () => {
-          // calls 'execute' prop of the react child. yes, this syntnax works
-          children[activeIdx]?.props.execute();
-          onClose();
-        },
-      };
-
-      return e.key in handlers ? handlers[e.key]() : undefined;
-    },
-    [activeIdx, children, onClose]
-  );
+  useEffect(() => setActive(MIN_IDX), [children]);
 
   // inserts 'active' prop to each
   // element props are immutable, therefor they are cloned
@@ -72,13 +51,16 @@ export function CommandBar({ visible = false, term, onClose, onChange, children 
 
   return (
     <Card elevation="high" className={classNames(styles.commandBar, visible && styles.visible)}>
-      <input
+      <AutoCompleteInput
         value={term}
-        onBlur={onClose}
-        onChange={(e) => onChange(e.target.value)}
+        focus={visible}
         className={styles.input}
-        ref={inputRef}
-        onKeyDown={handleKeyDown}
+        onChange={(e) => onChange(e.target.value)}
+        onDown={increment}
+        onUp={decrement}
+        onEnter={handleEnter}
+        onEscape={onClose}
+        onBlur={onClose}
       />
       {childrenPlusActive}
     </Card>
