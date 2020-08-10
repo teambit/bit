@@ -103,8 +103,11 @@ export class ReactExtension {
     TesterExtension,
   ];
 
-  static provider([envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester);
+  static provider(
+    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
+    config: ReactConfig
+  ) {
+    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
     const react = new ReactExtension(reactEnv);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

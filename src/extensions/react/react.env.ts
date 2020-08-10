@@ -13,7 +13,7 @@ import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler/bundler';
 import { pathNormalizeToLinux } from '../../utils';
-import { ReactExtension } from './react.extension';
+import { ReactConfig } from './react.extension';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -53,7 +53,9 @@ export class ReactEnv implements Environment {
     /**
      * tester extension
      */
-    private tester: TesterExtension
+    private tester: TesterExtension,
+
+    private config: ReactConfig
   ) {}
 
   private _tsconfig: any;
@@ -139,7 +141,7 @@ export class ReactEnv implements Environment {
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.12.0',
+        react: '^16.12.0' || this.config.reactVersion,
       },
     };
   }
