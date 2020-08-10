@@ -100,6 +100,8 @@ describe('dependency-resolver extension', function () {
           helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
           helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/extension-add-dependencies', config);
+          helper.scopeHelper.linkBitBin();
+          helper.command.link();
           barFooOutput = helper.command.showComponentParsed('bar/foo');
           isTypeOutput = helper.command.showComponentParsed('utils/is-type');
         });
