@@ -119,7 +119,7 @@ export class ScopeExtension implements ComponentFactory {
     const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
 
-    let requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
+    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
       return RequireableComponent.fromCapsule(capsule);
     });
     // Always throw an error when can't load scope extension

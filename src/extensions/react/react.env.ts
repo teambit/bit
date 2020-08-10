@@ -13,7 +13,6 @@ import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler/bundler';
 import { pathNormalizeToLinux } from '../../utils';
-import { ReactExtension } from './react.extension';
 
 /**
  * a component environment built for [React](https://reactjs.org) .

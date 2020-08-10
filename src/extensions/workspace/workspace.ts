@@ -361,7 +361,7 @@ export class Workspace implements ComponentFactory {
           id,
           err,
         });
-        return;
+        return undefined;
       });
     });
     let components = await componentsP;
@@ -372,9 +372,9 @@ export class Workspace implements ComponentFactory {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
-    components = compact(components);
+    const filteredComponents = compact(components);
     longProcessLogger.end();
-    return components;
+    return filteredComponents;
   }
 
   /**
@@ -558,11 +558,11 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    let resolvedExtensions: any = await this.requireComponents(
+    const requireableExtensions: any = await this.requireComponents(
       extensionsToLoad.map((id) => this.resolveComponentId(id))
     );
-    await loadRequireableExtensions(this.harmony, resolvedExtensions, this.logger, throwOnError);
-    return resolvedExtensions;
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+    return;
   }
 
   async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {

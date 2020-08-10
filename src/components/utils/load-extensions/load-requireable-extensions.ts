@@ -40,7 +40,7 @@ export async function loadRequireableExtensions(
   throwOnError = true
 ): Promise<void> {
   const manifestsP = requireableExtensions.map(async (requireableExtension) => {
-    if (!requireableExtensions) return;
+    if (!requireableExtensions) return undefined;
     const id = requireableExtension.component.id.toString();
     try {
       // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
