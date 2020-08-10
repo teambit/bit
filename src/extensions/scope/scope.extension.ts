@@ -132,9 +132,13 @@ export class ScopeExtension implements ComponentFactory {
    */
   async get(id: ComponentID): Promise<Component | undefined> {
     if (!id.scope) {
-      id = id.changeScope(this.name);
     }
-    const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    // Search with scope name for bare scopes
+    if (!modelComponent && !id.scope) {
+      id = id.changeScope(this.name);
+      modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    }
     if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
