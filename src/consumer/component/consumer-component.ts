@@ -62,11 +62,11 @@ import Isolator, { IsolateOptions } from '../../environment/isolator';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
-import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import { ExtensionDataList } from '../config/extension-data';
 import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA, SchemaName } from './component-schema';
 import { NoComponentDir } from './exceptions/no-component-dir';
+import Capsule from '../../../legacy-capsule/core/capsule';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
