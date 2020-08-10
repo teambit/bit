@@ -136,7 +136,7 @@
     
     "@teambit/documenter-temp.ui.linked-heading": "^0.0.2",
     "@teambit/explorer-temp.ui.component-grid": "^0.0.1",
-    "@teambit/explorer-temp.ui.component-card": "^0.0.3",
+    "@teambit/explorer-temp.ui.component-card": "^0.0.4",
     "@teambit/capsule": "0.0.12",
     "@teambit/gitconfig": "^2.0.6",
     "@teambit/harmony": "0.0.21",
