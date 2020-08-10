@@ -135,6 +135,7 @@ export class ReactEnv implements Environment {
       // TODO: add this only if using ts
       devDependencies: {
         '@types/react': '^16.9.17',
+        '@types/jest': '~26.0.9',
       },
       // TODO: take version from config
       peerDependencies: {
