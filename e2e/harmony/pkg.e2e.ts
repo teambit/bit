@@ -87,6 +87,8 @@ describe('pkg extension', function () {
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
         helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/simple-config', config);
+        helper.scopeHelper.linkBitBin();
+        helper.command.link();
         barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
         isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
       });

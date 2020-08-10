@@ -1,13 +1,14 @@
 import { flatten, lowerCase, concat } from 'lodash';
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
-import { errorHandle, notFound, catchErrors } from './middlewares';
+import { catchErrors } from './middlewares';
 import { LoggerExtension, Logger } from '../logger';
 
 export type ExpressConfig = {
   port: number;
+  namespace: string;
 };
 
 export type RouteSlot = SlotRegistry<Route[]>;
@@ -34,21 +35,8 @@ export class ExpressExtension {
    * start a express server.
    */
   async listen(port?: number) {
-    const internalRoutes = this.createRootRoutes();
-    const routes = this.createRoutes();
-    const allRoutes = concat(routes, internalRoutes);
     const serverPort = port || this.config.port;
-    const app = express();
-    app.use(cors());
-
-    allRoutes.forEach((routeInfo) => {
-      const { method, path, middlewares } = routeInfo;
-      // TODO: @guy make sure to support single middleware here.
-      app[method](path, this.catchErrorsMiddlewares(middlewares));
-    });
-
-    app.use(notFound);
-    app.use(errorHandle);
+    const app = this.createApp();
     app.listen(serverPort);
   }
 
@@ -60,11 +48,8 @@ export class ExpressExtension {
     return this;
   }
 
-  private catchErrorsMiddlewares(middlewares: Middleware[]) {
-    return middlewares.map((middleware) => catchErrors(middleware));
-  }
-
   private createRootRoutes() {
+    // TODO: @guy refactor health to service aspect.
     return [
       {
         namespace: ExpressExtension.id,
@@ -74,11 +59,27 @@ export class ExpressExtension {
       },
     ];
   }
+
+  createApp(expressApp?: Express): Express {
+    const internalRoutes = this.createRootRoutes();
+    const routes = this.createRoutes();
+    const allRoutes = concat(routes, internalRoutes);
+    const app = expressApp || express();
+    app.use(cors());
+
+    allRoutes.forEach((routeInfo) => {
+      const { method, path, middlewares } = routeInfo;
+      // TODO: @guy make sure to support single middleware here.
+      app[method](`/${this.config.namespace}${path}`, this.catchErrorsMiddlewares(middlewares));
+    });
+
+    return app;
+  }
+
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
-    const routeEntries = routesSlots.map(([extensionId, routes]) => {
+    const routeEntries = routesSlots.map(([, routes]) => {
       return routes.map((route) => ({
-        namespace: extensionId,
         method: lowerCase(route.method),
         path: route.route,
         middlewares: route.middlewares,
@@ -88,12 +89,17 @@ export class ExpressExtension {
     return flatten(routeEntries);
   }
 
+  private catchErrorsMiddlewares(middlewares: Middleware[]) {
+    return middlewares.map((middleware) => catchErrors(middleware));
+  }
+
   static id = '@teambit/express';
   static slots = [Slot.withType<Route[]>()];
   static dependencies = [LoggerExtension];
 
   static defaultConfig = {
     port: 4001,
+    namespace: 'api',
   };
 
   static async provider([loggerFactory]: [LoggerExtension], config: ExpressConfig, [routeSlot]: [RouteSlot]) {

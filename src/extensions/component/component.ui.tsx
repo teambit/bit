@@ -22,6 +22,8 @@ export type MenuItem = {
 export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
+  static id = '@teambit/component';
+
   constructor(
     private routeSlot: RouteSlot,
 

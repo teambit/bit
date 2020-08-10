@@ -96,6 +96,26 @@ export class Environments {
     return this.envSlot.register(env);
   }
 
+  /**
+   * compose two environments into one.
+   */
+  compose(targetEnv: Environment, sourceEnv: Environment): Environment {
+    const allNames = new Set<string>();
+    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+      for (const name of Object.getOwnPropertyNames(o)) {
+        allNames.add(name);
+      }
+    }
+
+    allNames.forEach((key: string) => {
+      const fn = sourceEnv[key];
+      if (!fn || !fn.bind || targetEnv[key]) return;
+      targetEnv[key] = fn.bind(sourceEnv);
+    });
+
+    return targetEnv;
+  }
+
   // refactor here
   private createRuntime(components: Component[]): Runtime {
     return new Runtime(this.aggregateByDefs(components));
