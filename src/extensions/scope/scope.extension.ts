@@ -131,8 +131,6 @@ export class ScopeExtension implements ComponentFactory {
    * @param id component id
    */
   async get(id: ComponentID): Promise<Component | undefined> {
-    if (!id.scope) {
-    }
     let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     // Search with scope name for bare scopes
     if (!modelComponent && !id.scope) {
