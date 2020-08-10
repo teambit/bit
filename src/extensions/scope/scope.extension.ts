@@ -117,6 +117,7 @@ export class ScopeExtension implements ComponentFactory {
 
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
     const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
+    if (!ids || !ids.length) return;
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
 
     const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
