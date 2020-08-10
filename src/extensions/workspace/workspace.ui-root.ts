@@ -63,18 +63,21 @@ export class WorkspaceUIRoot implements UIRoot {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async postStart(options?: PostStartOptions) {
-    const devServers = await this.componentServers();
+    const devServers = await this.getServers();
     devServers.forEach((server) => server.listen());
     await this.workspace.watcher.watchAll();
   }
 
+  private _serversPromise: Promise<ComponentServer[]>;
+
   private async getServers(): Promise<ComponentServer[]> {
-    const devServers = await this.bundler.devServer(await this.workspace.byPattern(''), this);
-    return devServers;
+    if (this._serversPromise) return this._serversPromise;
+    this._serversPromise = this.bundler.devServer(await this.workspace.byPattern(''), this);
+    return this._serversPromise;
   }
 
   async getProxy(): Promise<ProxyEntry[]> {
-    const servers = await this.componentServers();
+    const servers = await this.getServers();
     return servers.map((server) => {
       return {
         context: [`/preview/${server.context.envRuntime.id}`],
@@ -82,6 +85,4 @@ export class WorkspaceUIRoot implements UIRoot {
       };
     });
   }
-
-  public componentServers: () => Promise<ComponentServer[]> = this.getServers;
 }
