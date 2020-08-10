@@ -6,6 +6,7 @@ import {
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
 } from '../../src/components/utils/load-extensions/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { CannotLoadExtension } from '../../src/components/utils/load-extensions/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -47,7 +48,9 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-        const error = new Error('error by purpose');
+
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
@@ -73,7 +76,8 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-        const error = new Error('error in provider');
+        const origError = new Error('error in provider');
+        const error = new CannotLoadExtension('extension-provider-error', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
