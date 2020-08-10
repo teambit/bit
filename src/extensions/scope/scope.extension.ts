@@ -119,7 +119,7 @@ export class ScopeExtension implements ComponentFactory {
     const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
 
-    let requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
+    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
       return RequireableComponent.fromCapsule(capsule);
     });
     // Always throw an error when can't load scope extension
@@ -131,10 +131,12 @@ export class ScopeExtension implements ComponentFactory {
    * @param id component id
    */
   async get(id: ComponentID): Promise<Component | undefined> {
-    if (!id.scope) {
+    let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    // Search with scope name for bare scopes
+    if (!modelComponent && !id.scope) {
       id = id.changeScope(this.name);
+      modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     }
-    const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
