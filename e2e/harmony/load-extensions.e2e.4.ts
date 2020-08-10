@@ -48,7 +48,6 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-
         const origError = new Error('error by purpose');
         const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
@@ -76,8 +75,7 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-        const origError = new Error('error in provider');
-        const error = new CannotLoadExtension('extension-provider-error', origError);
+        const error = new Error('error in provider');
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
@@ -134,7 +132,8 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
-        const error = new Error('error by purpose');
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
