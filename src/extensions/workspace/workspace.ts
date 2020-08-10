@@ -352,12 +352,27 @@ export class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
+    const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id);
+      return this.get(id).catch((err) => {
+        errors.push({
+          id,
+          err,
+        });
+        return;
+      });
     });
-    const components = await componentsP;
+    let components = await componentsP;
+    errors.forEach((err) => {
+      if (!this.consumer.isLegacy) {
+        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
+      }
+      this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
+    });
+    // remove errored components
+    components = compact(components);
     longProcessLogger.end();
     return components;
   }
