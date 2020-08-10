@@ -163,7 +163,9 @@ export class ScopeExtension implements ComponentFactory {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
     }
 
-    const componentsIds = modelComponents.map((component) => ComponentID.fromLegacy(component.toBitId()));
+    const componentsIds = modelComponents.map((component) =>
+      ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
+    );
 
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds

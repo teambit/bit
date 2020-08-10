@@ -12,6 +12,13 @@ const SCOPE = gql`
           version
           scope
         }
+        env {
+          id
+          icon
+        }
+        deprecation {
+          isDeprecate
+        }
       }
     }
   }
