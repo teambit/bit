@@ -364,7 +364,7 @@ export class Workspace implements ComponentFactory {
         return undefined;
       });
     });
-    let components = await componentsP;
+    const components = await componentsP;
     errors.forEach((err) => {
       if (!this.consumer.isLegacy) {
         this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
@@ -562,7 +562,6 @@ export class Workspace implements ComponentFactory {
       extensionsToLoad.map((id) => this.resolveComponentId(id))
     );
     await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
-    return;
   }
 
   async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {

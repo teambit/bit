@@ -57,6 +57,7 @@ export async function loadRequireableExtensions(
       }
       logger.console(e);
     }
+    return undefined;
   });
   const manifests = await Promise.all(manifestsP);
 
