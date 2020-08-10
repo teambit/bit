@@ -11,7 +11,7 @@ export type VariantsComponentConfig = WorkspaceComponentConfig & {
   propagate: boolean;
 };
 
-const INTERNAL_FIELDS = ['propagate', 'exclude'];
+const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
 export class Variants {
   componentsCache: Map<string, VariantsComponentConfig>;
