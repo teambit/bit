@@ -42,6 +42,7 @@ import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver/types';
+import { Issues } from './workspace-component/issues';
 
 export type EjectConfResult = {
   configPath: string;
@@ -153,6 +154,15 @@ export class Workspace implements ComponentFactory {
     );
     if (isAutoTag) return true;
     return false;
+  }
+
+  /**
+   * get Component issues
+   */
+  async getComponentIssues(component: Component): Promise<Issues | null> {
+    const issues = component.state._consumer.issues;
+    if (!issues) return null;
+    return Issues.fromLegacy(issues);
   }
 
   /**
