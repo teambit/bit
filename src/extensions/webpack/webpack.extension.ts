@@ -1,6 +1,6 @@
-import webpack from 'webpack';
-import WebpackDevServer, { Configuration } from 'webpack-dev-server';
+import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
+import { WebpackDevServer } from './webpack.dev-server';
 import { DevServer, BundlerContext, BundlerExtension, DevServerContext } from '../bundler';
 import { WorkspaceExt, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
@@ -32,20 +32,19 @@ export class WebpackExtension {
    */
   createDevServer(context: DevServerContext, config: any): DevServer {
     const mergedConfig = this.getWebpackConfig(context, config);
-    const compiler = webpack(mergedConfig);
-    return new WebpackDevServer(compiler, mergedConfig.devServer);
+    return new WebpackDevServer(mergedConfig);
   }
 
   getWebpackConfig(context: DevServerContext, config: Configuration) {
-    return merge(this.createConfig(context.entry, this.workspace.path), config);
+    return merge(this.createConfig(context.entry, this.workspace.path, context.rootPath, context.publicPath), config);
   }
 
   createBundler(context: BundlerContext, envConfig: Configuration) {
     return new WebpackBundler(context.targets, envConfig, this.logger);
   }
 
-  private createConfig(entry: string[], rootPath: string) {
-    return configFactory(rootPath, entry);
+  private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
+    return configFactory(rootPath, entry, publicRoot, publicPath);
   }
 
   static id = '@teambit/webpack';

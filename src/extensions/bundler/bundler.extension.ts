@@ -48,6 +48,8 @@ export class BundlerExtension {
     return this._componentServers;
   }
 
+  getPublicPath() {}
+
   /**
    * get a dev server instance containing a component.
    * @param component

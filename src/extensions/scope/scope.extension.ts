@@ -1,7 +1,7 @@
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import BluebirdPromise from 'bluebird';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
 import { BitIds as ComponentsIds, BitId } from '../../bit-id';
@@ -28,6 +28,10 @@ import { GraphQLExtension } from '../graphql';
 import { scopeSchema } from './scope.graphql';
 import { CLIExtension } from '../cli';
 import { ExportCmd } from './export/export-cmd';
+import { IsolatorExtension } from '../isolator';
+import { LoggerExtension, Logger } from '../logger';
+import { RequireableComponent } from '../../components/utils/requireable-component';
+import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -39,6 +43,10 @@ export class ScopeExtension implements ComponentFactory {
   static id = '@teambit/scope';
 
   constructor(
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony,
     /**
      * legacy scope
      */
@@ -57,7 +65,11 @@ export class ScopeExtension implements ComponentFactory {
     /**
      * slot registry for subscribing to post-export
      */
-    private postExportRegistry: PostExportRegistry
+    private postExportRegistry: PostExportRegistry,
+
+    private isolator: IsolatorExtension,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -103,9 +115,16 @@ export class ScopeExtension implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadExtensions(extensions: ExtensionDataList): Promise<void> {
-    // TODO: implement
+    const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
+    if (!ids || !ids.length) return;
+    const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
+
+    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
+      return RequireableComponent.fromCapsule(capsule);
+    });
+    // Always throw an error when can't load scope extension
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, true);
   }
 
   /**
@@ -113,7 +132,12 @@ export class ScopeExtension implements ComponentFactory {
    * @param id component id
    */
   async get(id: ComponentID): Promise<Component | undefined> {
-    const modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    // Search with scope name for bare scopes
+    if (!modelComponent && !id.scope) {
+      id = id.changeScope(this.name);
+      modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
+    }
     if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
@@ -133,14 +157,26 @@ export class ScopeExtension implements ComponentFactory {
   /**
    * list all components in the scope.
    */
-  async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
-    const modelComponents = await this.legacyScope.list();
-    const componentsIds = await Promise.all(
-      modelComponents.map((component) => ComponentID.fromLegacy(component.toBitId()))
+  async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
+    let modelComponents = await this.legacyScope.list();
+    if (!includeCache) {
+      modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
+    }
+
+    const componentsIds = modelComponents.map((component) =>
+      ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+
     return this.getMany(
       filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
     );
+  }
+
+  /**
+   * determine whether a component exists in the scope.
+   */
+  exists(modelComponent: ModelComponent) {
+    return modelComponent.scope === this.name;
   }
 
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
@@ -231,12 +267,27 @@ export class ScopeExtension implements ComponentFactory {
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
 
-  static dependencies = [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension];
+  static dependencies = [
+    ComponentExtension,
+    UIExtension,
+    GraphQLExtension,
+    CLIExtension,
+    IsolatorExtension,
+    LoggerExtension,
+  ];
 
   static async provider(
-    [componentExt, ui, graphql, cli]: [ComponentExtension, UIExtension, GraphQLExtension, CLIExtension],
+    [componentExt, ui, graphql, cli, isolator, loggerExtension]: [
+      ComponentExtension,
+      UIExtension,
+      GraphQLExtension,
+      CLIExtension,
+      IsolatorExtension,
+      LoggerExtension
+    ],
     config,
-    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry]
+    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
+    harmony: Harmony
   ) {
     cli.register(new ExportCmd());
     const legacyScope = await loadScopeIfExist();
@@ -244,7 +295,8 @@ export class ScopeExtension implements ComponentFactory {
       return undefined;
     }
 
-    const scope = new ScopeExtension(legacyScope, componentExt, tagSlot, postExportSlot);
+    const logger = loggerExtension.createLogger(ScopeExtension.id);
+    const scope = new ScopeExtension(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);

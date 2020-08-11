@@ -53,6 +53,21 @@ export class ComponentID {
     return arr[arr.length - 1];
   }
 
+  /**
+   * return the scope if included in the ID.
+   */
+  get scope() {
+    return this._legacy.scope;
+  }
+
+  /**
+   * get a new component ID instance with given scope.
+   */
+  changeScope(scopeName: string): ComponentID {
+    const legacyId = this._legacy.changeScope(scopeName);
+    return ComponentID.fromLegacy(legacyId);
+  }
+
   isEqual(id: ComponentID): boolean {
     return this._legacy.isEqual(id._legacy);
   }
