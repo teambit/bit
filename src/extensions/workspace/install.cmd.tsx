@@ -2,8 +2,13 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import { Logger } from '../logger';
+import { DependencyLifecycleType } from '../dependency-resolver/types';
 
-type InstallCmdOptions = WorkspaceInstallOptions;
+type InstallCmdOptions = {
+  variants: string;
+  lifecycleType: DependencyLifecycleType;
+  skipDedupe: boolean;
+};
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
@@ -14,6 +19,7 @@ export default class InstallCmd implements Command {
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', 'runtime (default), dev or peer dependency'],
+    ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
   ] as CommandOptions;
 
   constructor(
@@ -34,7 +40,12 @@ export default class InstallCmd implements Command {
     // const idsP = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
     // const ids = await Promise.all(idsP);
     this.logger.consoleSuccess('dependencies has been resolved');
-    const components = await this.workspace.install(packages, options);
+    const installOpts: WorkspaceInstallOptions = {
+      variants: options.variants,
+      lifecycleType: options.lifecycleType,
+      dedupe: !options.skipDedupe,
+    };
+    const components = await this.workspace.install(packages, installOpts);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);
     return `Successfully resolved dependencies for ${chalk.cyan(
