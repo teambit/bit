@@ -5,6 +5,8 @@ import { NavLinkProps } from '../react-router/nav-link';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router/slot-router';
 import { Menu } from './ui/menu';
+import { SidebarUI } from '../sidebar/sidebar.ui';
+import { ComponentTreeDrawer } from './component-tree';
 
 export type Server = {
   env: string;
@@ -73,6 +75,7 @@ export class ComponentUI {
   static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
 
   static async provider(deps, config, [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]) {
+    // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);
     return componentUI;
   }

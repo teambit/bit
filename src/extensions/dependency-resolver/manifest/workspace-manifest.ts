@@ -27,6 +27,7 @@ export type CreateFromComponentsOptions = {
 };
 export class WorkspaceManifest extends Manifest {
   constructor(
+    // TODO: please prefer readonly on public
     public name: string,
     public version: SemVer,
     public dependencies: DependenciesObjectDefinition,
@@ -59,6 +60,7 @@ export class WorkspaceManifest extends Manifest {
       mergeDependenciesFunc
     );
     const dedupedDependencies = dedupeDependencies(rootDependencies, componentDependenciesMap);
+
     const componentsManifestsMap = getComponentsManifests(
       dedupedDependencies,
       components,
@@ -73,6 +75,8 @@ export class WorkspaceManifest extends Manifest {
     );
     return workspaceManifest;
   }
+
+  getComponentMap() {}
 
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson(options);

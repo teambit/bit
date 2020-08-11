@@ -11,7 +11,7 @@ import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { WorkspaceOverview } from './workspace-overview';
 import { TopBar } from '../../../../components/stage-components/top-bar';
-import { SideBar } from '../../../../components/stage-components/side-bar';
+// import { SideBar } from '../../../../components/stage-components/side-bar';
 import { Corner } from '../../../../components/stage-components/corner';
 import { CollapsibleSplitter } from '../../../../components/stage-components/splitter';
 import styles from './workspace.module.scss';
@@ -56,12 +56,13 @@ const WORKSPACE = gql`
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
+  sidebar: JSX.Element;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
@@ -82,7 +83,7 @@ export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
       <div className={styles.workspaceWrapper}>
         <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          <SideBar components={workspace.components} />
+          {sidebar}
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">

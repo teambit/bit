@@ -5,6 +5,11 @@ import { ExtensionDataList } from '../../consumer/config';
 import { BitId } from '../../bit-id';
 
 export interface ComponentFactory {
+  /**
+   * name of the component host.
+   */
+  name: string;
+
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**

@@ -1,4 +1,4 @@
-import React, { useMemo, ComponentType } from 'react';
+import React, { useMemo, ComponentType, useContext } from 'react';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNode } from './recursive-tree';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
@@ -9,16 +9,16 @@ import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 import { Component } from './../side-bar';
 import { PayloadType } from './payload-type';
+import { ComponentTreeSlot } from '../../../../extensions/component-tree/component-tree.ui';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   components: Component[];
+  treeNodeSlot: ComponentTreeSlot;
 };
 
-export function ComponentTree(props: ComponentTreeProps) {
-  const { components, onSelect, selected } = props;
-
+export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: ComponentTreeProps) {
   const rootNode = useMemo(
     () =>
       inflateToTree(
@@ -28,6 +28,17 @@ export function ComponentTree(props: ComponentTreeProps) {
       ),
     [components]
   );
+
+  function getTreeNodeComponent(node: TreeNode<PayloadType>): ComponentType<ComponentViewProps<PayloadType>> {
+    const { children } = node;
+
+    const View = (prop: ComponentViewProps<PayloadType>) => <ComponentView {...prop} treeNodeSlot={treeNodeSlot} />;
+
+    if (!children) return View;
+    // TODO - how to tell scopes from namespaces?
+    // if (!id.includes('/')) return ScopeView;
+    return NamespaceView;
+  }
 
   return (
     <div className={styles.componentTree} style={indentStyle(0)}>
@@ -41,6 +52,7 @@ export function ComponentTree(props: ComponentTreeProps) {
 }
 
 function RootNode({ node }: { node: TreeNode<PayloadType> }) {
+  const getTreeNodeComponent = useContext(TreeNodeContext);
   if (!node.id) {
     if (!node.children) return null;
 
@@ -56,13 +68,4 @@ function RootNode({ node }: { node: TreeNode<PayloadType> }) {
   const Node = getTreeNodeComponent(node);
 
   return <Node node={node} depth={0} />;
-}
-
-function getTreeNodeComponent(node: TreeNode<PayloadType>): ComponentType<ComponentViewProps<PayloadType>> {
-  const { children } = node;
-
-  if (!children) return ComponentView;
-  // TODO - how to tell scopes from namespaces?
-  // if (!id.includes('/')) return ScopeView;
-  return NamespaceView;
 }

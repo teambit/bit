@@ -8,6 +8,7 @@ import { OverviewLink } from './overview-link/overview-link';
 import { ComponentID } from '../../../extensions/component';
 import { DeprecationInfo } from '../../../extensions/deprecation/deprecation.extension';
 import { Descriptor } from '../../../extensions/environments/environments.extension';
+import { ComponentModel } from '../../../extensions/component/ui';
 
 export type Component = {
   id: ComponentID;
@@ -17,7 +18,7 @@ export type Component = {
 };
 
 type SideBarProps = {
-  components: Component[];
+  components: ComponentModel[];
   selected?: string;
   onSelectComponent?: (component: ComponentID) => void;
 } & React.HTMLAttributes<HTMLDivElement>;

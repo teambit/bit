@@ -6,6 +6,9 @@ import { RouteSlot } from '../react-router/slot-router';
 import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import ComponentUI from '../component/component.ui';
+import { SidebarUI } from '../sidebar/sidebar.ui';
+import { ComponentTreeUI } from '../component-tree/component-tree.ui';
+import { ComponentTreeWidget } from './workspace-component/component-tree.widget';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -26,7 +29,9 @@ export class WorkspaceUI {
     /**
      * menu slot
      */
-    private menuSlot: RouteSlot
+    private menuSlot: RouteSlot,
+
+    private sidebar: SidebarUI
   ) {
     this.registerExplicitRoutes();
   }
@@ -56,13 +61,13 @@ export class WorkspaceUI {
       routes: [
         {
           path: '/',
-          children: <Workspace menuSlot={this.menuSlot} routeSlot={this.routeSlot} />,
+          children: <Workspace menuSlot={this.menuSlot} routeSlot={this.routeSlot} sidebar={<this.sidebar.render />} />,
         },
       ],
     };
   }
 
-  static dependencies = [UIRuntimeExtension, ComponentUI];
+  static dependencies = [UIRuntimeExtension, ComponentUI, SidebarUI, ComponentTreeUI];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/workspace';
@@ -70,11 +75,12 @@ export class WorkspaceUI {
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
   static async provider(
-    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
+    [ui, componentUi, sidebar, componentTree]: [UIRuntimeExtension, ComponentUI, SidebarUI, ComponentTreeUI],
     config,
     [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
   ) {
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot);
+    componentTree.registerTreeNode(new ComponentTreeWidget());
+    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar);
     ui.registerRoot(workspaceUI.root);
 
     return workspaceUI;
