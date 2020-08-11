@@ -97,7 +97,7 @@ describe('component config', function () {
           helper.componentJson.deleteIfExist('bar');
           helper.fixtures.copyFixtureExtensions('dummy-extension');
           helper.command.addComponent('dummy-extension');
-          helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+          helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
           helper.command.ejectConf('bar/foo');
           componentJson = helper.componentJson.read('bar');
         });
@@ -113,7 +113,7 @@ describe('component config', function () {
         helper.componentJson.deleteIfExist('bar');
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
         helper.command.tagAllComponents();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');

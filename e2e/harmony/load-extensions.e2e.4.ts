@@ -112,8 +112,7 @@ describe('load extensions', function () {
     });
     describe('loading simple extension', () => {
       before(() => {
-        // helper.extensions.addExtensionToVariant('affected/*', 'dummy-extension', config);
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/dummy-extension', config);
+        helper.extensions.setExtensionToVariant('affected', 'my-scope/dummy-extension', config);
       });
 
       it('should load the extension when loading an affected component', () => {
