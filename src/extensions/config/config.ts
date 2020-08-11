@@ -75,15 +75,4 @@ export class Config {
   extension(extensionId: string, ignoreVersion: boolean): ExtensionDataEntry | undefined {
     return this.config?.extension(extensionId, ignoreVersion);
   }
-
-  registerGetVariantsConfig(fn: ComponentsConfigFn) {
-    if (this.workspaceConfig) {
-      this.workspaceConfig.registerGetVariantsConfig(fn);
-    }
-  }
-  registerGetVariantConfig(fn: ComponentConfigFn) {
-    if (this.workspaceConfig) {
-      this.workspaceConfig.registerGetVariantConfig(fn);
-    }
-  }
 }

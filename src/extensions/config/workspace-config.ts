@@ -83,8 +83,6 @@ export class WorkspaceConfig implements HostConfig {
   _path?: string;
   _extensions: ExtensionsDefs;
   _legacyProps?: WorkspaceLegacyProps;
-  _getVariantsConfig?: ComponentsConfigFn;
-  _getVariantConfig?: ComponentConfigFn;
   isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
@@ -128,28 +126,6 @@ export class WorkspaceConfig implements HostConfig {
     const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
   }
-
-  registerGetVariantsConfig(fn: ComponentsConfigFn): void {
-    this._getVariantsConfig = fn;
-  }
-
-  registerGetVariantConfig(fn: ComponentConfigFn): void {
-    this._getVariantConfig = fn;
-  }
-
-  getVariantsConfig(): ConsumerOverrides | undefined {
-    if (this._getVariantsConfig && typeof this._getVariantsConfig === 'function') {
-      return this._getVariantsConfig();
-    }
-    return undefined;
-  }
-
-  // getVariantConfig(componentId: BitId): ConsumerOverridesOfComponent | undefined {
-  //   if (this._getVariantConfig && typeof this._getVariantConfig === 'function') {
-  //     return this._getVariantConfig(componentId);
-  //   }
-  //   return undefined;
-  // }
 
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config
