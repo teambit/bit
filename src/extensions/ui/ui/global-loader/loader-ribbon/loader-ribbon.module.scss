@@ -7,7 +7,7 @@ $fill-duration: 3300ms;
   position: fixed;
   width: 100%;
   transition: opacity $transition-time ease-out;
-  
+
   opacity: 0;
   &.loading {
     opacity: 1;
@@ -15,13 +15,13 @@ $fill-duration: 3300ms;
 
   .progress {
     animation: completed $transition-time forwards;
-    
+
     .loading > & {
-      animation: progress $fill-duration forwards ease-out infinite; 
+      animation: progress $fill-duration forwards ease-out infinite;
     }
   }
 }
-  
+
 .progress {
   background: var(--base-color);
 
@@ -30,10 +30,10 @@ $fill-duration: 3300ms;
   max-width: 100%;
   border-radius: 4px;
   mix-blend-mode: overlay;
-  
+
   box-shadow: 0 0 $loader-height rgba(var(--base-color), 0.381);
 }
-  
+
 @keyframes progress {
   to {
     width: 100%;

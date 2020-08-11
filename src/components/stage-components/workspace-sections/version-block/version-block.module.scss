@@ -1,50 +1,48 @@
-
 .versionWrapper {
-	display: flex;
+  display: flex;
 
-	.left {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		border-right: 1px solid var(--border-color);
-		padding-right: 22px;
-		padding-left: 10px;
-		padding-top: 35px;
-		text-align: right;
-	}
+  .left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    border-right: 1px solid var(--border-color);
+    padding-right: 22px;
+    padding-left: 10px;
+    padding-top: 35px;
+    text-align: right;
+  }
 }
 .emptyLabel {
-	height: 25px;
-	margin-bottom: 21px;
+  height: 25px;
+  margin-bottom: 21px;
 }
 .link {
-	text-decoration: none;
-	color: var(--text-highlighted);
-	font-size: 14px;
-	margin-bottom: 8px;
-	&:hover {
-		text-decoration: underline;
-	}
+  text-decoration: none;
+  color: var(--text-highlighted);
+  font-size: 14px;
+  margin-bottom: 8px;
+  &:hover {
+    text-decoration: underline;
+  }
 }
 .right {
-	padding-top: 20px;
-	padding-left: 50px;
-	margin-bottom: 45px;
-	max-width: 700px;
-	.versionTitle {
-		color: var(--base-color);
-		font-size: var(--h-sm);
-		font-weight: unset;
-		margin-bottom: 10px;
-		
-	}
+  padding-top: 20px;
+  padding-left: 50px;
+  margin-bottom: 45px;
+  max-width: 700px;
+  .versionTitle {
+    color: var(--base-color);
+    font-size: var(--h-sm);
+    font-weight: unset;
+    margin-bottom: 10px;
+  }
 }
 
 .commitMessage {
-	font-size: 15px;
+  font-size: 15px;
 }
 .emptyMessage {
-	font-size: 15px;
-	font-style: italic;
-	color: var(--text-muted);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--text-muted);
 }
