@@ -16,11 +16,13 @@ export class DependencyInstaller {
   async install(
     rootDir: string,
     rootDepsObject: DependenciesObjectDefinition,
-    componentDirectoryMap: ComponentMap<string>
+    componentDirectoryMap: ComponentMap<string>,
+    dedup = true
   ) {
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(rootDir, rootDepsObject, componentDirectoryMap, {
       cacheRootDir: this.cacheRootDir,
+      dedup,
     });
     return componentDirectoryMap;
   }

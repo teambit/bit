@@ -3,6 +3,10 @@ import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
+  /**
+   * decide whether to dedup dependencies.
+   */
+  dedup?: boolean;
 };
 
 export interface PackageManager {
