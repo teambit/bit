@@ -35,13 +35,3 @@ export interface WorkspaceExtConfig {
    */
   name: string;
 }
-
-export type ComponentWorkspaceMetaData = {
-  defaultScope?: string;
-  defaultOwner?: string;
-};
-
-export type WorkspaceComponentConfig = {
-  componentExtensions: ExtensionDataList;
-  componentWorkspaceMetaData: ComponentWorkspaceMetaData;
-};
