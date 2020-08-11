@@ -6,7 +6,7 @@ export type PackageManagerInstallOptions = {
   /**
    * decide whether to dedup dependencies.
    */
-  dedup?: boolean;
+  dedupe?: boolean;
 };
 
 export interface PackageManager {

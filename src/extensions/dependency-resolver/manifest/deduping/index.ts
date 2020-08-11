@@ -1,1 +1,1 @@
-export { dedupeDependencies, DedupedDependencies } from './dedupe-dependencies';
+export { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './dedupe-dependencies';

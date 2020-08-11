@@ -34,7 +34,7 @@ export class PnpmPackageManager implements PackageManager {
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      installOptions.dedup ? rootDepsObject : {},
+      rootDepsObject,
       rootDir,
       components,
       options
