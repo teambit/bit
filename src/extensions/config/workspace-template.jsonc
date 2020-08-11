@@ -76,7 +76,7 @@
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.
     **/
-    "base/*": {
+    "base": {
       /**
       * apply the react environment on all ui components.
         **/
@@ -97,31 +97,25 @@
         * with this SemVer.
         **/
         "version": ">=16.0.0"
-      },
+      }
+    },
 
-      "base/fragments/*": {
-        /**
-        * main configuration file for handling the build process of components.
-        */
-        "@teambit/flows": {
-          /**
-          * configure build tasks. configuration of build tasks is basically a map of `task name`
-          * pointed to an array of tasks. each task can be either a bash command or an extension
-          * which exposes a task. reserved task names: build, test, runs on pre-tag.
-          */
-          "tasks": {
-            "build": ["@teambit/react:build", "mv dist dist-copy"],
-            "test": ["mocha ."],
-            "deploy": ["firebase deploy"]
-          }
-        }
-      },
-
+    "base/fragments": {
       /**
-       * configure storybook extension on all ui components. :TODO: @gilad please define config for
-       * storybook extension
+      * main configuration file for handling the build process of components.
       */
-      "@teambit/storybook": {}
+      "@teambit/flows": {
+        /**
+        * configure build tasks. configuration of build tasks is basically a map of `task name`
+        * pointed to an array of tasks. each task can be either a bash command or an extension
+        * which exposes a task. reserved task names: build, test, runs on pre-tag.
+        */
+        "tasks": {
+          "build": ["@teambit/react:build", "mv dist dist-copy"],
+          "test": ["mocha ."],
+          "deploy": ["firebase deploy"]
+        }
+      }
     },
 
     /**
@@ -129,7 +123,7 @@
      * the configuration below sets all components under `base` to be compatible with all versions of
      * react 15 as well.
     **/
-    "ui/base/*": {
+    "ui/base": {
       "@teambit/component": {
         "peerDependencies": {
           "react": ">15.0.1"
@@ -137,7 +131,7 @@
       }
     },
 
-    "extensions/*": {
+    "extensions": {
       // "@teambit/extension": {
         // need to decide configuration for extension environment.
       // },
