@@ -37,6 +37,13 @@ export class Workspace {
     readonly components: ComponentModel[]
   ) {}
 
+  /**
+   * return a component from the workspace.
+   */
+  getComponent(id: ComponentID) {
+    return this.components.find((component) => component.id.fullName === id.fullName);
+  }
+
   static from({ name, path, components }: WorkspaceProps) {
     return new Workspace(
       name,
