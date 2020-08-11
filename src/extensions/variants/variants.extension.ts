@@ -46,11 +46,9 @@ export class VariantsExtension {
   static id = EXT_NAME;
   static dependencies = [];
 
-  componentsCache: Map<PathLinuxRelative, VariantsComponentConfig>;
   _loadedLegacy: ConsumerOverrides;
 
   constructor(private patterns: Patterns) {
-    this.componentsCache = new Map<PathLinuxRelative, VariantsComponentConfig>();
     this._loadedLegacy = ConsumerOverrides.load(this.patterns);
   }
 
@@ -71,10 +69,6 @@ export class VariantsExtension {
    * @param rootDir
    */
   byRootDir(rootDir: PathLinuxRelative): VariantsComponentConfig | undefined {
-    if (this.componentsCache.has(rootDir)) {
-      return this.componentsCache.get(rootDir);
-    }
-
     const matches: MatchedPatternWithConfig[] = [];
     R.forEachObjIndexed((patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, pattern);
@@ -109,8 +103,6 @@ export class VariantsExtension {
       extensions: mergedExtensions,
       propagate,
     };
-    // We cache this results since this is something with state (it has - hasChanged prop which should be consistent)
-    this.componentsCache.set(rootDir, result);
     return result;
   }
 
