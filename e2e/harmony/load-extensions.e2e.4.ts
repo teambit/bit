@@ -112,7 +112,7 @@ describe('load extensions', function () {
     });
     describe('loading simple extension', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected', 'my-scope/dummy-extension', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/dummy-extension', config);
       });
 
       it('should load the extension when loading an affected component', () => {
@@ -127,7 +127,7 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/non-requireable-extension', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/non-requireable-extension', config);
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
@@ -153,7 +153,7 @@ describe('load extensions', function () {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/extension-provider-error', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/extension-provider-error', config);
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
