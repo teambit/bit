@@ -161,7 +161,7 @@ describe('component config', function () {
     describe('stop on variant - component.json propagate true and variant propagate false', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', false);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should not contain extension from workspace defaults', () => {
@@ -179,7 +179,7 @@ describe('component config', function () {
     describe('propagate all the way - component.json propagate true and variant propagate true', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', true);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should contain extension from all sources', () => {
