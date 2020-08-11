@@ -46,7 +46,7 @@ export default class ConsumerOverrides {
       if (stopPropagation) {
         return acc;
       }
-      if (!current.propagate) {
+      if (current.propagate === false) {
         acc.propagate = false;
         stopPropagation = true;
       }

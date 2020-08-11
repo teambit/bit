@@ -14,7 +14,7 @@ describe('extensions config diff', function () {
   before(() => {
     helper = new Helper();
     helper.command.setFeatures(HARMONY_FEATURE);
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScopeHarmony();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFooAsDir();

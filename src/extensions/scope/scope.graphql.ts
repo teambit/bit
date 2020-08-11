@@ -13,7 +13,7 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
         path: String
 
         # list of components contained in the scope.
-        components(offset: Int, limit: Int): [Component]
+        components(offset: Int, limit: Int, includeCache: Boolean): [Component]
 
         # get a specific component.
         get(id: String!): Component
@@ -25,8 +25,13 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
     `,
     resolvers: {
       Scope: {
-        name: (scope: ScopeExtension) => scope.name,
-        components: (scope: ScopeExtension, filter?: { offset: number; limit: number }) => scope.list(filter),
+        name: (scope: ScopeExtension) => {
+          return scope.name;
+        },
+        components: (scope: ScopeExtension, props?: { offset: number; limit: number; includeCache?: boolean }) => {
+          if (!props) return scope.list();
+          return scope.list({ offset: props.offset, limit: props.limit }, props.includeCache);
+        },
         get: async (scope: ScopeExtension, { id }: { id: string }) => {
           return scope.get(ComponentID.fromString(id));
         },

@@ -4,6 +4,7 @@ import { ComponentUI } from '../component/component.ui';
 import { ChangelogSection } from './changelog.section';
 
 export class ChangeLogUI {
+  static id = '@teambit/changelog';
   static dependencies = [ComponentUI];
 
   ChangeLog = () => {
@@ -15,7 +16,7 @@ export class ChangeLogUI {
     const section = new ChangelogSection();
 
     component.registerRoute(section.route);
-    component.registerWidget(section.navigationLink);
+    component.registerNavigation(section.navigationLink);
 
     return ui;
   }

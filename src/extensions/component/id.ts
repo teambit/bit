@@ -20,6 +20,13 @@ export class ComponentID {
   }
 
   /**
+   * determine whether ID has a version.
+   */
+  hasVersion() {
+    return this._legacy.hasVersion();
+  }
+
+  /**
    * resolves the version of the component ID.
    */
   get version() {
@@ -44,6 +51,21 @@ export class ComponentID {
   get name() {
     const arr = this.legacyComponentId.name.split('/');
     return arr[arr.length - 1];
+  }
+
+  /**
+   * return the scope if included in the ID.
+   */
+  get scope() {
+    return this._legacy.scope;
+  }
+
+  /**
+   * get a new component ID instance with given scope.
+   */
+  changeScope(scopeName: string): ComponentID {
+    const legacyId = this._legacy.changeScope(scopeName);
+    return ComponentID.fromLegacy(legacyId);
   }
 
   isEqual(id: ComponentID): boolean {

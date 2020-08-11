@@ -26,7 +26,7 @@ describe('dependency-resolver extension', function () {
       let isTypeOutput;
 
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
@@ -65,7 +65,7 @@ describe('dependency-resolver extension', function () {
     describe('policies added by an env', function () {
       let barFooOutput;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         // TODO: use custom env with versions provided from outside in the config by the user
@@ -84,7 +84,7 @@ describe('dependency-resolver extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
@@ -100,6 +100,8 @@ describe('dependency-resolver extension', function () {
           helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
           helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/extension-add-dependencies', config);
+          helper.scopeHelper.linkBitBin();
+          helper.command.link();
           barFooOutput = helper.command.showComponentParsed('bar/foo');
           isTypeOutput = helper.command.showComponentParsed('utils/is-type');
         });
