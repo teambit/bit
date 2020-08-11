@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
-import BluebirdPromise, { config } from 'bluebird';
+import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
@@ -42,7 +42,6 @@ import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver/types';
-import { passTest } from '../../fixtures/fixtures';
 
 export type EjectConfResult = {
   configPath: string;

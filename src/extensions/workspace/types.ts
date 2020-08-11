@@ -1,5 +1,3 @@
-import { ExtensionDataList } from '../../consumer/config/extension-data';
-
 interface VendorConfig {
   directory: string;
 }

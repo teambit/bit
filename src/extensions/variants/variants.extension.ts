@@ -1,7 +1,6 @@
 import R from 'ramda';
 import _ from 'lodash';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
-import { Config } from '../config';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { PathLinuxRelative } from '../../utils/path';
 import { pathIsInside, stripTrailingChar } from '../../utils';
@@ -76,7 +75,7 @@ export class VariantsExtension {
       return this.componentsCache.get(rootDir);
     }
 
-    let matches: MatchedPatternWithConfig[] = [];
+    const matches: MatchedPatternWithConfig[] = [];
     R.forEachObjIndexed((patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, pattern);
 
@@ -88,11 +87,11 @@ export class VariantsExtension {
       }
     }, this.patterns);
 
-    let sortedMatches: MatchedPatternWithConfig[] = sortMatchesBySpecificity(matches);
+    const sortedMatches: MatchedPatternWithConfig[] = sortMatchesBySpecificity(matches);
 
     let defaultScope;
     let propagate = true;
-    let extensionsToMerge: ExtensionDataList[] = [];
+    const extensionsToMerge: ExtensionDataList[] = [];
     sortedMatches.forEach((match) => {
       defaultScope = defaultScope || match.config.defaultScope;
       if (propagate) {
@@ -127,7 +126,7 @@ function getExtensionFromPatternRawConfig(config: Record<string, any>) {
 }
 
 export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
-  let sortedMatches: MatchedPatternWithConfig[] = R.sortBy(R.prop('specificity'), matches).reverse();
+  const sortedMatches: MatchedPatternWithConfig[] = R.sortBy(R.prop('specificity'), matches).reverse();
   return sortedMatches;
 }
 
