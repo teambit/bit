@@ -24,7 +24,7 @@ export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
 export type CreateFromComponentsOptions = {
   filterComponentsFromManifests: boolean;
   createManifestForComponentsWithoutDependencies: boolean;
-  dedupe: boolean;
+  dedupe?: boolean;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
