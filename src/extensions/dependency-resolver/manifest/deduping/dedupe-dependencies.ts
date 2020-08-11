@@ -3,6 +3,7 @@ import { hoistDependencies } from './hoist-dependencies';
 import { mergeWithRootDeps } from './merge-with-root';
 import { PackageName, DependenciesObjectDefinition, SemverVersion } from '../../types';
 import { ComponentDependenciesMap } from '../workspace-manifest';
+
 export { getEmptyDedupedDependencies } from './hoist-dependencies';
 
 export type conflictedComponent = {
