@@ -1,4 +1,5 @@
 import R from 'ramda';
+import _ from 'lodash';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
 import { Config } from '../config';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
@@ -6,7 +7,7 @@ import { PathLinuxRelative } from '../../utils/path';
 import { pathIsInside, stripTrailingChar } from '../../utils';
 import { EXT_NAME } from './constants';
 
-const MATCH_ALL_ITEM = '*';
+export const MATCH_ALL_ITEM = '*';
 const PATTERNS_DELIMITER = ',';
 
 export type Patterns = { [pattern: string]: Record<string, any> };
@@ -78,6 +79,7 @@ export class VariantsExtension {
     let matches: MatchedPatternWithConfig[] = [];
     R.forEachObjIndexed((patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, pattern);
+
       if (match.match) {
         matches.push({
           config: patternConfig,
@@ -85,7 +87,8 @@ export class VariantsExtension {
         });
       }
     }, this.patterns);
-    let sortedMatches: MatchedPatternWithConfig[] = R.sortBy(R.prop('specificity'), matches).reverse();
+
+    let sortedMatches: MatchedPatternWithConfig[] = sortMatchesBySpecificity(matches);
 
     let defaultScope;
     let propagate = true;
@@ -123,21 +126,27 @@ function getExtensionFromPatternRawConfig(config: Record<string, any>) {
   return extensions;
 }
 
-function isMatchPattern(rootDir: PathLinuxRelative, pattern: string): MatchedPattern {
+export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
+  let sortedMatches: MatchedPatternWithConfig[] = R.sortBy(R.prop('specificity'), matches).reverse();
+  return sortedMatches;
+}
+
+export function isMatchPattern(rootDir: PathLinuxRelative, pattern: string): MatchedPattern {
   const patternItems = pattern.split(PATTERNS_DELIMITER);
   const matches = patternItems.map((item) => isMatchPatternItem(rootDir, item));
   const defaultVal: MatchedPatternItem = {
     match: false,
     specificity: -1,
   };
-  const maxMatch: MatchedPatternItem = R.maxBy((match) => match.specificity, defaultVal, matches);
+
+  const maxMatch: MatchedPatternItem = _.maxBy(matches, (match) => match.specificity) || defaultVal;
   return {
     match: maxMatch.match,
     maxSpecificity: maxMatch.specificity,
   };
 }
 
-function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
+export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
   const patternItemTrimmed = patternItem.trim();
   // Special case for * (match all)
   // We want to mark it with match true but the smallest specificity
