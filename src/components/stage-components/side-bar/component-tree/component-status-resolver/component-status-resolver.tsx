@@ -19,7 +19,7 @@ export function ComponentStatusResolver({ status }: ComponentStatusResolverProps
     );
   }
   return (
-    <div>
+    <div className={styles.statusLine}>
       {isModified && <ComponentStatus status="modified" />}
       {status.isStaged && <ComponentStatus status="staged" />}
       {/* {status.isError && <ComponentStatus status="error" />} */}
