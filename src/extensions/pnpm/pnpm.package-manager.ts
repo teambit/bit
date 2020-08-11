@@ -57,9 +57,9 @@ export class PnpmPackageManager implements PackageManager {
   ) {
     return componentDirectoryMap.toArray().reduce((acc, [component, dir]) => {
       const packageName = this.pkg.getPackageName(component);
-      // if (componentsManifestsFromWorkspace.has(packageName)) {
-      acc[dir] = componentsManifestsFromWorkspace.get(packageName)?.toJson();
-      // }
+      if (componentsManifestsFromWorkspace.has(packageName)) {
+        acc[dir] = componentsManifestsFromWorkspace.get(packageName)?.toJson();
+      }
       return acc;
     }, {});
   }
