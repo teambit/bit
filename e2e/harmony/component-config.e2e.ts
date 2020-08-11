@@ -140,9 +140,9 @@ describe('component config', function () {
         'my-scope/ext5': { key: 'val-ws-defaults' },
       };
       helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext3', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext4', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext4', { key: 'val-variant' });
       helper.command.ejectConf('bar/foo');
       helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
       helper.componentJson.setExtension('my-scope/ext5', { key: 'val-component-json' });
