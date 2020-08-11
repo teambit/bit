@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import classNames from 'classnames';
-import { Icon } from '@bit/bit.evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 
@@ -22,11 +22,12 @@ export function CompositionsPanel({ url, compositions, onSelect, active }: Compo
   return (
     <ul className={styles.composition}>
       {compositions.map((composition, key) => {
+        // TODO - move to composition panel node
         return (
           <li key={key} className={classNames(styles.linkWrapper, composition === active && styles.active)}>
             <div className={styles.left}>
-              <span className={styles.box}>&#9632;</span>
               <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
+                <span className={styles.box}>&#9632;</span>
                 {composition.displayName}
               </a>
             </div>

@@ -20,6 +20,13 @@ export class ComponentID {
   }
 
   /**
+   * determine whether ID has a version.
+   */
+  hasVersion() {
+    return this._legacy.hasVersion();
+  }
+
+  /**
    * resolves the version of the component ID.
    */
   get version() {
@@ -46,6 +53,21 @@ export class ComponentID {
     return arr[arr.length - 1];
   }
 
+  /**
+   * return the scope if included in the ID.
+   */
+  get scope() {
+    return this._legacy.scope;
+  }
+
+  /**
+   * get a new component ID instance with given scope.
+   */
+  changeScope(scopeName: string): ComponentID {
+    const legacyId = this._legacy.changeScope(scopeName);
+    return ComponentID.fromLegacy(legacyId);
+  }
+
   isEqual(id: ComponentID): boolean {
     return this._legacy.isEqual(id._legacy);
   }
@@ -64,8 +86,8 @@ export class ComponentID {
   /**
    * generate a component ID from a string.
    */
-  static fromString(idStr: string) {
-    return new ComponentID(BitId.parse(idStr));
+  static fromString(idStr: string, hasScope?: boolean) {
+    return new ComponentID(BitId.parse(idStr, hasScope));
   }
 
   static fromObject(object: any) {

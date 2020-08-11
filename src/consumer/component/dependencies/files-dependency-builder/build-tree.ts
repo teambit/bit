@@ -74,7 +74,9 @@ function groupDependencyList(list, componentDir: string, bindingPrefix: string):
       // If the package is actually a component add it to the components (bits) list
       if (resolvedPackage) {
         const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
-        if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
+        // @todo: currently, for author, the package.json doesn't have any version.
+        // we might change this decision later. see https://github.com/teambit/bit/pull/2924
+        // if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
         if (resolvedPackage.componentId) {
           resultGroups.bits.push(resolvedPackage);
         } else {

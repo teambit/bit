@@ -30,7 +30,7 @@ describe('publish functionality', function () {
     let scopeBeforeTag: string;
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
@@ -83,7 +83,7 @@ describe('publish functionality', function () {
           helper.command.exportAllComponents();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
@@ -104,7 +104,7 @@ describe('publish functionality', function () {
         });
         // this also makes sure that the main of package.json points to the dist file correctly
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '2.0.0');
           helper.fs.outputFile(
@@ -123,7 +123,7 @@ describe('publish functionality', function () {
     let pkgName: string;
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 
@@ -144,7 +144,7 @@ describe('publish functionality', function () {
     });
     describe('installing the component as a package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.npm.initNpm();
         npmCiRegistry.installPackage(pkgName);
       });
@@ -169,7 +169,7 @@ describe('publish functionality', function () {
   });
   describe('with invalid package name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
       const environments = {
@@ -181,7 +181,7 @@ describe('publish functionality', function () {
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });
     it('builder should show the npm error about invalid name', () => {
-      const output = helper.general.runWithTryCatch('bit run-new');
+      const output = helper.general.runWithTryCatch('bit build');
       expect(output).to.have.string('npm ERR! Invalid name: "invalid/name/comp1"');
     });
   });

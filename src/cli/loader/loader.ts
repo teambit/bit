@@ -1,93 +1,82 @@
-import ora from 'ora';
+import ora, { Ora, PersistOptions } from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 
-let _loader;
+export class Loader {
+  private spinner: Ora | null;
 
-type Loader = {
-  on: () => Loader;
-  off: () => Loader | null | undefined;
-  start: (text: string | null | undefined) => Loader | null | undefined;
-  stop: () => Loader | null | undefined;
-  setText: (text: string | null | undefined) => Loader | null | undefined;
-  get: () => Loader | null | undefined;
-  succeed: (text?: string | null | undefined) => Loader | null | undefined;
-  fail: (text?: string | null | undefined) => Loader | null | undefined;
-  warn: (text?: string | null | undefined) => Loader | null | undefined;
-  info: (text?: string | null | undefined) => Loader | null | undefined;
-  stopAndPersist: (options?: object | null | undefined) => Loader | null | undefined;
-};
-
-const loader: Loader = {
-  on,
-  off,
-  stop,
-  start,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  setText,
-  get,
-  succeed,
-  fail,
-  warn,
-  info,
-  stopAndPersist,
-};
-
-function start(text: string | null | undefined): Loader {
-  if (_loader) {
-    if (text) _loader.text = text;
-    _loader.start();
+  on(): Loader {
+    if (!this.spinner) {
+      this.spinner = this.createNewSpinner();
+    }
+    return this;
   }
-  return loader;
+
+  off(): Loader {
+    this.stop();
+    this.spinner = null;
+    return this;
+  }
+
+  start(text?: string): Loader {
+    if (this.spinner) {
+      this.spinner.start(text);
+    }
+    return this;
+  }
+
+  setText(text: string): Loader {
+    if (this.spinner) this.spinner.text = text;
+    return this;
+  }
+
+  setTextAndRestart(text: string): Loader {
+    if (this.spinner) {
+      this.spinner.stop();
+      this.spinner.text = text;
+      this.spinner.start();
+    }
+    return this;
+  }
+
+  get(): Ora | null {
+    return this.spinner;
+  }
+
+  stop(): Loader {
+    if (this.spinner) this.spinner.stop();
+    return this;
+  }
+
+  succeed(text?: string): Loader {
+    if (this.spinner) this.spinner.succeed(text);
+    return this;
+  }
+
+  fail(text?: string): Loader {
+    if (this.spinner) this.spinner.fail(text);
+    return this;
+  }
+
+  warn(text?: string): Loader {
+    if (this.spinner) this.spinner.warn(text);
+    return this;
+  }
+
+  info(text?: string): Loader {
+    if (this.spinner) this.spinner.info(text);
+    return this;
+  }
+
+  stopAndPersist(options?: PersistOptions): Loader {
+    if (this.spinner) this.spinner.stopAndPersist(options);
+    return this;
+  }
+
+  private createNewSpinner(): Ora {
+    return ora({ spinner: SPINNER_TYPE, text: '' });
+  }
 }
 
-function setText(text: string): Loader {
-  if (_loader) _loader.text = text;
-  return loader;
-}
-
-function get(): Loader | null | undefined {
-  return _loader;
-}
-
-function stop(): Loader {
-  if (_loader) _loader.stop();
-  return loader;
-}
-
-function on(): Loader {
-  if (!_loader) _loader = ora({ spinner: SPINNER_TYPE, text: '' });
-  return loader;
-}
-
-function off(): Loader {
-  stop();
-  _loader = null;
-  return loader;
-}
-
-function succeed(text: string | null | undefined): Loader {
-  if (_loader) _loader.succeed(text);
-  return loader;
-}
-
-function fail(text: string | null | undefined): Loader {
-  if (_loader) _loader.fail(text);
-  return loader;
-}
-
-function warn(text: string | null | undefined): Loader {
-  if (_loader) _loader.warn(text);
-  return loader;
-}
-
-function info(text: string | null | undefined): Loader {
-  if (_loader) _loader.info(text);
-  return loader;
-}
-
-function stopAndPersist(options: object | null | undefined): Loader {
-  if (_loader) _loader.stopAndPersist(options);
-  return loader;
-}
+const loader = new Loader();
 
 export default loader;

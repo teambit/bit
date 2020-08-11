@@ -4,13 +4,13 @@ import ConsumerOverrides from './consumer-overrides';
 
 describe('ConsumerOverrides', () => {
   describe('getOverrideComponentData()', () => {
-    describe('when propagation is not set', () => {
+    describe('when propagation set to false', () => {
       it('should use only the most specific match', () => {
         const overridesFixture = {
           'src/*': { dependencies: { foo: '0.0.1', bar: '0.0.1' } },
           'src/utils/javascript/*': { dependencies: { baz: '0.0.1' } },
           'src/utils/*': { dependencies: { foo: '0.0.1' } },
-          'src/utils/javascript/is-string': { dependencies: { foo: '0.0.5' } },
+          'src/utils/javascript/is-string': { propagate: false, dependencies: { foo: '0.0.5' } },
         };
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = new BitId({ name: 'src/utils/javascript/is-string' });

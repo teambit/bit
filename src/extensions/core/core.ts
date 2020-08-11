@@ -2,7 +2,7 @@ import { Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
 import { ScopeExtension } from '../scope';
 import { Config } from '../config';
-import { LogPublisher } from '../logger';
+import { Logger } from '../logger';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentHost } from '../types';
 import { ExtensionDescriptor } from './extension-descriptor';
@@ -15,7 +15,7 @@ export default class Core {
 
     readonly config: Config | undefined,
 
-    private logger: LogPublisher,
+    private logger: Logger,
 
     /**
      * Scope
@@ -65,6 +65,7 @@ export default class Core {
   async init(): Promise<void> {
     if (this.config && this.config.extensions) {
       const extensions = this.config.extensions._filterLegacy();
+      // TODO: refactor workspace and scope to register to a slot.
       if (this.workspace) {
         await this.workspace.resolveExtensionsList(extensions);
       }

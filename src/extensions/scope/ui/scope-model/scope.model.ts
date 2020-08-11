@@ -1,4 +1,4 @@
-import { ComponentMeta } from '../../../component/component-meta';
+import { ComponentModel } from '../../../component/ui';
 
 export class ScopeModel {
   constructor(
@@ -7,14 +7,21 @@ export class ScopeModel {
      */
     readonly name: string,
 
-    readonly components: ComponentMeta[]
+    /**
+     * components contained in the scope.
+     */
+    readonly components: ComponentModel[]
   ) {}
 
   static from(object: any) {
     const components = object.scope.components || [];
     return new ScopeModel(
       object.scope.name,
-      components.map((component) => ComponentMeta.from(component))
+      components.map((component) => ComponentModel.from(component))
     );
+  }
+
+  static empty() {
+    return new ScopeModel('', []);
   }
 }

@@ -8,7 +8,6 @@ import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJsonUtils from '../consumer/component/package-json-utils';
 import { LinksResult } from './node-modules-linker';
-import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { BitIds, BitId } from '../bit-id';
@@ -19,7 +18,7 @@ import { throwForNonLegacy } from '../consumer/component/component-schema';
 
 export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitMap.getAllIdsAvailableOnLane();
-  if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
+  if (R.isEmpty(componentsIds)) return [];
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   return nodeModuleLinker.link();

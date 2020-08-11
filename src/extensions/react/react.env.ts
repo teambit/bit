@@ -1,4 +1,4 @@
-import { resolve, join } from 'path';
+import { resolve } from 'path';
 import { Environment } from '../environments';
 import { Tester, TesterExtension } from '../tester';
 import { JestExtension } from '../jest';
@@ -6,10 +6,14 @@ import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
 import { Compiler, CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
-import { DevServer, DevServerContext } from '../bundler';
+import { DevServer, BundlerContext, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
+import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
+import { Bundler } from '../bundler/bundler';
+import { pathNormalizeToLinux } from '../../utils';
+import { ReactConfig } from './react.extension';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -49,8 +53,17 @@ export class ReactEnv implements Environment {
     /**
      * tester extension
      */
-    private tester: TesterExtension
+    private tester: TesterExtension,
+
+    private config: ReactConfig
   ) {}
+
+  private _tsconfig: any;
+
+  setTsConfig(tsconfig: any) {
+    this._tsconfig = tsconfig;
+    return this;
+  }
 
   /**
    * returns a component tester.
@@ -62,12 +75,13 @@ export class ReactEnv implements Environment {
   /**
    * returns a component compiler.
    */
-  getCompiler(): Compiler {
+  getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = require('./typescript/tsconfig.json');
+    const tsconfig = targetConfig || this._tsconfig || require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
-      types: [resolve(join('', __dirname.replace('/dist/', '/src/')), './typescript/style.d.ts')],
+      // TODO: @david please remove this line and refactor to be something that makes sense.
+      types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
     });
   }
 
@@ -85,6 +99,10 @@ export class ReactEnv implements Environment {
     });
 
     return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+  }
+
+  async getBundler(context: BundlerContext): Promise<Bundler> {
+    return this.webpack.createBundler(context, previewConfigFactory());
   }
 
   /**
@@ -119,10 +137,11 @@ export class ReactEnv implements Environment {
       // TODO: add this only if using ts
       devDependencies: {
         '@types/react': '^16.9.17',
+        '@types/jest': '~26.0.9',
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.12.0',
+        react: '^16.12.0' || this.config.reactVersion,
       },
     };
   }

@@ -11,7 +11,7 @@ import { GraphQlUI } from '../graphql/graphql.ui';
 harmony
   .run([Preview, DocsPreview, CompositionsPreview, GraphQlUI])
   .then(() => {
-    const uiExtension = harmony.get<Preview>('Preview');
+    const uiExtension = harmony.get<Preview>('@teambit/preview');
     uiExtension.render();
   })
   .catch((err) => {

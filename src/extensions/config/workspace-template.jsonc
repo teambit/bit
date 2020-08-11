@@ -35,7 +35,7 @@
     /**
      * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
     */
-    "packageManager": "npm",
+    "packageManager": "@teambit/pnpm",
 
     /**
     * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.

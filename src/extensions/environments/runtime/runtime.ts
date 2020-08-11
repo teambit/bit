@@ -1,3 +1,4 @@
+import BluebirdPromise from 'bluebird';
 import { EnvRuntime } from './env-runtime';
 import { EnvService } from '../services';
 import { ExecutionContext } from '../context';
@@ -10,16 +11,14 @@ export class Runtime {
     readonly runtimeEnvs: EnvRuntime[]
   ) {}
 
-  async run(service: EnvService) {
-    const contexts = await Promise.all(
-      this.runtimeEnvs.map(async (env) => {
-        const res = await service.run(new ExecutionContext(this, env));
-        return {
-          env: env.id,
-          res,
-        };
-      })
-    );
+  async run(service: EnvService, options?: { [key: string]: any }) {
+    const contexts = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
+      const res = await service.run(new ExecutionContext(this, env), options);
+      return {
+        env: env.id,
+        res,
+      };
+    });
 
     return contexts;
   }

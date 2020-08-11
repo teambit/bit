@@ -75,6 +75,8 @@ export class Preview {
     };
   }
 
+  static id = '@teambit/preview';
+
   static slots = [Slot.withType<PreviewType>()];
 
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {

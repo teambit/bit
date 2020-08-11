@@ -14,3 +14,4 @@ export { Tag } from './tag/tag';
 export { State } from './state';
 export { Hash } from './hash';
 export { TagMap } from './tag-map';
+export { ComponentMap } from './component-map';

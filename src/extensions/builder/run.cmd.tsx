@@ -1,49 +1,30 @@
+import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
 import { BuilderExtension } from './builder.extension';
-import { Reporter } from '../reporter';
-import { onCapsuleInstalled, beforeInstallingCapsules } from '../dependency-resolver/package-manager';
+import { Logger } from '../logger';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export class BuilderCmd implements Command {
-  name = 'run-new [pattern]';
+  name = 'build [pattern]';
   description = 'run set of tasks for build';
   alias = '';
   group = '';
   private = true;
   shortDescription = '';
-  options = [['v', 'verbose', 'print log stdout to the screen']] as CommandOptions;
+  options = [] as CommandOptions;
 
-  constructor(private builder: BuilderExtension, private workspace: Workspace, private reporter: Reporter) {}
+  constructor(private builder: BuilderExtension, private workspace: Workspace, private logger: Logger) {}
 
-  async report([userPattern]: [string], { verbose }: { verbose: boolean }): Promise<string> {
-    this.reporter.title('Starting "build"');
-    let capsulesInstalled = 0;
-    let totalCapsules = 0;
-    onCapsuleInstalled((componentName) => {
-      capsulesInstalled += 1;
-      this.reporter.setStatusText(
-        `⏳ Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
-      );
-    });
-    beforeInstallingCapsules((numCapsules) => {
-      totalCapsules += numCapsules;
-    });
-
+  async report([userPattern]: [string]): Promise<string> {
+    const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
-    this.reporter.title('Loading components');
+    if (!this.workspace) throw new ConsumerNotFound();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
-    this.reporter.title('🎬  Executing build');
-    this.reporter.setStatusText('⏳ Executing build');
-    if (verbose) {
-      this.reporter.subscribeAll();
-    }
     const results = await this.builder.build(components);
-    // @todo: decide about the output
-    results.forEach((
-      result // eslint-disable-next-line no-console
-    ) => console.log('result', `Env: ${result.env}\nResult: success`));
-    this.reporter.end();
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
 
-    return `compiled ${results.length} components successfully`;
+    return chalk.green(`the build has been completed. total: ${results.length} environments`);
   }
 }

@@ -2,6 +2,10 @@ import { Composition, CompositionProps } from '../../../compositions/composition
 import { ComponentID } from '../../id';
 import { TagMap } from '../../tag-map';
 import { Tag } from '../../tag';
+import { DeprecationInfo } from '../../../deprecation/deprecation.extension';
+import { Descriptor } from '../../../environments/environments.extension';
+import { TagProps } from '../../tag/tag';
+import { ComponentStatus } from '../../../workspace/workspace-component/component-status';
 // import { Snap } from '../../snap';
 
 export type ComponentModelProps = {
@@ -11,7 +15,10 @@ export type ComponentModelProps = {
   displayName: string;
   packageName: string;
   compositions: CompositionProps[];
-  tags: any[];
+  tags: TagProps[];
+  status: ComponentStatus;
+  deprecation: DeprecationInfo;
+  env: Descriptor;
 };
 
 export type ComponentServer = {
@@ -49,7 +56,23 @@ export class ComponentModel {
     /**
      * tags of the component.
      */
-    readonly tags: TagMap
+    readonly tags: TagMap,
+
+    /**
+     * status of component.
+     */
+    readonly status?: ComponentStatus,
+
+    /**
+     * deprecation info of the component.
+     */
+    readonly deprecation?: DeprecationInfo,
+
+    /**
+     * env descriptor.
+     */
+
+    readonly environment?: Descriptor
   ) {}
 
   get version() {
@@ -60,7 +83,17 @@ export class ComponentModel {
   /**
    * create an instance of a component from a plain object.
    */
-  static from({ id, server, displayName, compositions, packageName, tags }: ComponentModelProps) {
+  static from({
+    id,
+    server,
+    displayName,
+    compositions,
+    packageName,
+    tags,
+    deprecation,
+    env,
+    status,
+  }: ComponentModelProps) {
     const tagsArray = tags || [];
 
     return new ComponentModel(
@@ -68,8 +101,11 @@ export class ComponentModel {
       displayName,
       packageName,
       server,
-      Composition.fromArray(compositions),
-      TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag)))
+      Composition.fromArray(compositions || []),
+      TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag))),
+      status,
+      deprecation,
+      env
     );
   }
 

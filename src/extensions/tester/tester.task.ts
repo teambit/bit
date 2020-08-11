@@ -12,6 +12,7 @@ const CAPSULES_BASE_DIR = join(CACHE_ROOT, 'capsules');
  * tester build task. Allows to test components during component build.
  */
 export class TesterTask implements BuildTask {
+  readonly description = 'test components';
   constructor(readonly extensionId: string) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {

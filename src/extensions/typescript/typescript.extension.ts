@@ -2,13 +2,16 @@ import { TypescriptCompiler } from './typescript.compiler';
 import { SchemaExtension } from '../schema';
 import { TypeScriptParser } from './typescript.parser';
 import { TypeScriptCompilerOptions } from './compiler-options';
+import { Compiler } from '../compiler';
+import { Logger, LoggerExtension } from '../logger';
 
 export class TypescriptExtension {
+  constructor(private logger: Logger) {}
   /**
    * create a new compiler.
    */
-  createCompiler(options: TypeScriptCompilerOptions) {
-    return new TypescriptCompiler(options.tsconfig, options.types);
+  createCompiler(options: TypeScriptCompilerOptions): Compiler {
+    return new TypescriptCompiler(this.logger, options);
   }
 
   resolveTypeFile() {}
@@ -22,10 +25,11 @@ export class TypescriptExtension {
   }
 
   static id = '@teambit/typescript';
-  static dependencies = [SchemaExtension];
+  static dependencies = [SchemaExtension, LoggerExtension];
 
-  static provider([schema]: [SchemaExtension]) {
+  static provider([schema, loggerExt]: [SchemaExtension, LoggerExtension]) {
     schema.registerParser(new TypeScriptParser());
-    return new TypescriptExtension();
+    const logger = loggerExt.createLogger(TypescriptExtension.id);
+    return new TypescriptExtension(logger);
   }
 }

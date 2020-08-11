@@ -89,7 +89,7 @@ describe('Network', () => {
         'bit/c': ['bit/a', 'bit/l', 'bit/h'],
       },
       []
-    ).bind(this)();
+    )();
   });
 
   // currently fails on circular

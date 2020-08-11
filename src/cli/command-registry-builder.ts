@@ -9,9 +9,7 @@ import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
 import ScopeLog from './commands/private-cmds/_log-cmd';
-import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
-import Tag from './commands/public-cmds/tag-cmd';
 import Snap from './commands/public-cmds/snap-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
@@ -71,13 +69,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Isolate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Tag(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Snap(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Import(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Export(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Status(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

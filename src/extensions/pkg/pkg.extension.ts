@@ -10,9 +10,11 @@ import { Environments } from '../environments';
 import { CLIExtension } from '../cli';
 import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
-import { LoggerExt, Logger } from '../logger';
+import { LoggerExtension } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
+import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -34,7 +36,7 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
-  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExt, WorkspaceExt];
+  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExtension, WorkspaceExt];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
@@ -44,16 +46,16 @@ export class PkgExtension {
       ScopeExtension,
       Environments,
       IsolatorExtension,
-      Logger,
+      LoggerExtension,
       Workspace
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
-    const logPublisher = logger.createLogPublisher(PkgExtension.id);
+    const logPublisher = logger.createLogger(PkgExtension.id);
     const packer = new Packer(isolator, scope?.legacyScope, workspace);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher);
+    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher, logPublisher);
     const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
@@ -66,6 +68,13 @@ export class PkgExtension {
     cli.register(new PublishCmd(publisher));
 
     return pkg;
+  }
+
+  /**
+   * get the package name of a component.
+   */
+  getPackageName(component: Component) {
+    return componentIdToPackageName(component.state._consumer);
   }
 
   /**

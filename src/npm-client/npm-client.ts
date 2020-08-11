@@ -106,12 +106,9 @@ const _installInOneDirectory = ({
   // taking care of object case
   const processedModules = is(Object, modules) && !Array.isArray(modules) ? objectToArray(modules) : modules;
 
+  const defaultArgs = defaultPackageManagerArgs[packageManager] ? defaultPackageManagerArgs[packageManager] : [];
   // Handle process args
-  const concretePackageManagerDefaultArgs = [
-    'install',
-    ...processedModules,
-    ...defaultPackageManagerArgs[packageManager],
-  ];
+  const concretePackageManagerDefaultArgs = ['install', ...processedModules, ...defaultArgs];
   const concretePackageManagerArgs = rejectNils(R.concat(concretePackageManagerDefaultArgs, packageManagerArgs));
 
   // Add npm verbose flag

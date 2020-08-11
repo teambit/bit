@@ -10,10 +10,6 @@ export function devServerSchema(bundler: BundlerExtension): Schema {
         server: ComponentServer
       }
 
-      extend type ComponentMeta {
-        server: ComponentServer
-      }
-
       type ComponentServer {
         env: String
         url: String
@@ -26,7 +22,7 @@ export function devServerSchema(bundler: BundlerExtension): Schema {
           if (!componentServer) return {};
 
           return {
-            env: componentServer.env.id,
+            env: componentServer.context.envRuntime.id,
             url: componentServer.url,
           };
         },

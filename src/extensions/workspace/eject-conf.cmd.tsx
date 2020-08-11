@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import React from 'react';
 import { Color } from 'ink';
 import { Command, CommandOptions } from '../cli';
-import Workspace, { EjectConfOptions, EjectConfResult } from './workspace';
+import { Workspace, EjectConfOptions, EjectConfResult } from './workspace';
 
 type EjectConfArgs = [string];
 // From the cli we might get those as string in case we run it like --propagate true (return string) as opposed to only --propagate

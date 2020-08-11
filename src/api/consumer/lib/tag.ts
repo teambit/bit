@@ -20,6 +20,9 @@ export type TagResults = {
   newComponents: BitIds;
 };
 
+export const NOTHING_TO_TAG_MSG = 'nothing to tag';
+export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
+
 export async function tagAction(args: {
   id: string;
   message: string;

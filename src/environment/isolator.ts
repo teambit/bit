@@ -3,14 +3,13 @@ import execa from 'execa';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import { Capsule } from '../extensions/isolator/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
-import loadFlattenedDependenciesForCapsule from '../consumer/component-ops/load-flattened-dependencies';
+import { FlattenedDependencyLoader } from '../consumer/component-ops/load-flattened-dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
@@ -26,6 +25,7 @@ import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
 import { PackageManagerResults } from '../npm-client/npm-client';
 import { throwForNonLegacy } from '../consumer/component/component-schema';
+import Capsule from '../../legacy-capsule/core/capsule';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -196,7 +196,8 @@ export default class Isolator {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponentForCapsule(id);
-    return loadFlattenedDependenciesForCapsule(consumer, component);
+    const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer);
+    return flattenedDependencyLoader.load(component);
   }
 
   async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
@@ -267,7 +268,9 @@ export default class Isolator {
   }
 
   async capsuleExecUsingExeca(pkgManager: string, args: string[], dir = ''): Promise<PackageManagerResults> {
-    const cwd = path.join(this.capsule.wrkDir, dir);
+    // @ts-ignore fs-container has path.
+    const capsuleDir = this.capsule.container.path;
+    const cwd = path.join(capsuleDir, dir);
     return execa(pkgManager, args, { cwd });
   }
 

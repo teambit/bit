@@ -5,19 +5,12 @@ import { Compiler } from '../compiler';
 import { Network } from '../isolator';
 import { BuildResults } from '../builder';
 import { TranspileOpts, TranspileOutput } from '../compiler/types';
+import { Logger } from '../logger';
+import { TypeScriptCompilerOptions } from './compiler-options';
+import { ComponentID } from '../component';
 
 export class TypescriptCompiler implements Compiler {
-  constructor(
-    /**
-     * typescript config.
-     */
-    readonly tsConfig: Record<string, any>,
-
-    /**
-     * path for .d.ts files to include during build.
-     */
-    private types: string[]
-  ) {}
+  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
     const supportedExtensions = ['.ts', '.tsx'];
@@ -25,7 +18,7 @@ export class TypescriptCompiler implements Compiler {
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
-    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
+    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
       throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
@@ -66,42 +59,54 @@ export class TypescriptCompiler implements Compiler {
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
 
-    capsuleDirs.forEach((capsuleDir) => {
-      fs.writeFileSync(path.join(capsuleDir, 'tsconfig.json'), JSON.stringify(this.tsConfig, undefined, 2));
+    await this.writeTsConfig(capsuleDirs);
+    await this.writeTypes(capsuleDirs);
 
-      this.writeTypes(capsuleDir);
-    });
-
-    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.tsConfig.compilerOptions, '.');
+    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
-    }
-    const diagnostics: ts.Diagnostic[] = [];
-    const diagAccumulator = (diag) => diagnostics.push(diag);
-    const host = ts.createSolutionBuilderHost(undefined, undefined, diagAccumulator);
-    const solutionBuilder = ts.createSolutionBuilder(host, capsuleDirs, { dry: false, verbose: false });
-    solutionBuilder.clean();
-    const result = solutionBuilder.build();
-    if (result > 0 && !diagnostics.length) {
-      throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
     }
     const formatHost = {
       getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
       getNewLine: () => ts.sys.newLine,
     };
-    const componentsErrors = diagnostics.map((diagnostic) => {
+    const componentsErrors: Array<{ componentId: ComponentID; error: string }> = [];
+    const reportDiagnostic = (diagnostic: ts.Diagnostic) => {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
+      this.logger.error(errorStr);
       if (!diagnostic.file) {
         // this happens for example if one of the components and is not TS
         throw new Error(errorStr);
       }
       const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName);
       if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
-      return { componentId, error: errorStr };
-    });
+      componentsErrors.push({ componentId, error: errorStr });
+    };
+    // this only works when `verbose` is `true` in the below `ts.createSolutionBuilder` function
+    // is prints every time it starts compiling a new capsule
+    const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
+      if (diag.code === 6358) {
+        // shows the current capsule
+        this.logger.info(diag.messageText as string);
+      }
+    };
+    const errorCounter = (errorCount: number) => this.logger.info(`total error found: ${errorCount}`);
+    const host = ts.createSolutionBuilderHost(
+      undefined,
+      undefined,
+      reportDiagnostic,
+      reportSolutionBuilderStatus,
+      errorCounter
+    );
+    const solutionBuilder = ts.createSolutionBuilder(host, capsuleDirs, { verbose: true });
+    solutionBuilder.clean();
+    const result = solutionBuilder.build();
+    if (result > 0 && !componentsErrors.length) {
+      throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
+    }
     const components = capsules.map((capsule) => {
       const id = capsule.id;
       const errors = componentsErrors.filter((c) => c.componentId.isEqual(id)).map((c) => c.error);
@@ -130,13 +135,20 @@ export class TypescriptCompiler implements Compiler {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
-  private writeTypes(rootDir: string) {
-    this.types.forEach((typePath) => {
-      const contents = fs.readFileSync(typePath, 'utf8');
-      const filename = path.basename(typePath);
+  private async writeTypes(dirs: string[]) {
+    await Promise.all(
+      this.options.types.map(async (typePath) => {
+        const contents = await fs.readFile(typePath, 'utf8');
+        const filename = path.basename(typePath);
 
-      fs.outputFileSync(path.join(rootDir, 'types', filename), contents);
-    });
+        await Promise.all(dirs.map((dir) => fs.outputFile(path.join(dir, 'types', filename), contents)));
+      })
+    );
+  }
+
+  private async writeTsConfig(dirs: string[]) {
+    const tsconfigStr = JSON.stringify(this.options.tsconfig, undefined, 2);
+    await Promise.all(dirs.map((capsuleDir) => fs.writeFile(path.join(capsuleDir, 'tsconfig.json'), tsconfigStr)));
   }
 
   private replaceFileExtToJs(filePath: string): string {
