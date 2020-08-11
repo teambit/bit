@@ -4,7 +4,7 @@ import { createFakeCapsule } from '../util/create-capsule';
 import { executeTask } from './task';
 
 describe('task', function () {
-  this.afterAll(async function () {
+  after(async () => {
     return remove('/tmp/@bit-test');
   });
   describe('should run bash commands', function () {

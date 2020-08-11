@@ -22,7 +22,7 @@ describe('compile extension', function () {
     let scopeBeforeTag: string;
     let appOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       const environments = {
         env: '@teambit/react',
@@ -78,7 +78,7 @@ describe('compile extension', function () {
       describe('export and import to another scope', () => {
         before(() => {
           helper.command.exportAllComponents();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp1');
         });
@@ -142,7 +142,7 @@ describe('compile extension', function () {
   });
   describe('component with unsupported compiler files', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       const environments = {
         env: '@teambit/react',

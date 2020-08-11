@@ -339,8 +339,8 @@ export default class ScopeComponentsImporter {
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return Promise.resolve([]);
     logger.debugAndAddBreadCrumb(
-      'getExternalOnes',
-      `getExternalOnes, ids: {ids}, localFetch: ${localFetch.toString()}`,
+      '_getExternalManyWithoutDependencies',
+      `ids: {ids}, localFetch: ${localFetch.toString()}`,
       { ids: ids.join(', ') }
     );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map((id) => id.toString()) }));
@@ -353,7 +353,7 @@ export default class ScopeComponentsImporter {
 
       if (left.length === 0) {
         logger.debugAndAddBreadCrumb(
-          'scope.getExternalOnes',
+          '_getExternalManyWithoutDependencies',
           'no more ids left, all found locally, exiting the method'
         );
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -362,8 +362,8 @@ export default class ScopeComponentsImporter {
       }
 
       logger.debugAndAddBreadCrumb(
-        'getExternalOnes',
-        `getExternalOnes: ${left.length} left. Fetching them from a remote`
+        '_getExternalManyWithoutDependencies',
+        `${left.length} left. Fetching them from a remote`
       );
       return remotes
         .fetch(

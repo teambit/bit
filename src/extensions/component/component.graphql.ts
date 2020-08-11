@@ -14,7 +14,10 @@ export function componentSchema(componentExtension: ComponentExtension) {
       }
 
       type Tag {
+        # semver assigned to the tag.
         version: String!
+        # tag snapshot.
+
         snap: Snap!
       }
 
@@ -42,15 +45,6 @@ export function componentSchema(componentExtension: ComponentExtension) {
         # author of the snapper.
         email: String!
       }
-
-      type Tag {
-        # semver assigned to the tag.
-        version: String!
-
-        # tag snapshot.
-        snap: Snap!
-      }
-
       type Component {
         # id of the component.
         id: ComponentID!
@@ -61,14 +55,11 @@ export function componentSchema(componentExtension: ComponentExtension) {
         # head tag of the component.
         headTag: Tag
 
+        # latest version of the component.
+        latest: String
+
         # display name of the component
         displayName: String!
-
-        # determines whether the component is new.
-        isNew: Boolean!
-
-        # determines whether the component is modified since its last version.
-        isModified: Boolean!
 
         # package name of the component.
         packageName: String
@@ -93,13 +84,12 @@ export function componentSchema(componentExtension: ComponentExtension) {
       Component: {
         id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
-        headTag: (component: Component) => component.headTag,
+        headTag: (component: Component) => component.headTag?.toObject(),
+        latest: (component: Component) => component.latest,
         tags: (component) => {
           // graphql doesn't support map types
           return component.tags.toArray().map((tag) => tag.toObject());
         },
-        isNew: (component: Component) => component.isNew(),
-        isModified: (component: Component) => component.isModified(),
         /**
          * :TODO use legacy until @david will move it to the pkg extension.
          */

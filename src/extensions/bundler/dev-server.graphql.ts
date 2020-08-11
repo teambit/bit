@@ -22,7 +22,7 @@ export function devServerSchema(bundler: BundlerExtension): Schema {
           if (!componentServer) return {};
 
           return {
-            env: componentServer.env.id,
+            env: componentServer.context.envRuntime.id,
             url: componentServer.url,
           };
         },

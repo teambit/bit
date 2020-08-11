@@ -39,8 +39,9 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
     oneComponentToTag.extensions.forEach((extension) => {
       if (extension.name === Extensions.dependencyResolver && extension.data && extension.data.dependencies) {
         extension.data.dependencies.forEach((dep) => {
-          const newDepId = getNewDependencyVersion(dep.componentId);
-          if (newDepId) dep.componentId = newDepId;
+          const depId = dep.componentId instanceof BitId ? dep.componentId : new BitId(dep.componentId);
+          const newDepId = getNewDependencyVersion(depId);
+          dep.componentId = newDepId || depId;
         });
       }
       // For core extensions there won't be an extensionId but name

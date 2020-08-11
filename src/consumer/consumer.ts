@@ -722,20 +722,38 @@ export default class Consumer {
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
+    const { packageName } = this.splitPackagePathToNameAndFile(requirePath);
+    return packageNameToComponentId(this, packageName, bindingPrefix);
+  }
+
+  /**
+   * e.g.
+   * input: @bit/my-scope.my-name/internal-path.js
+   * output: { packageName: '@bit/my-scope', internalPath: 'internal-path.js' }
+   */
+  splitPackagePathToNameAndFile(packagePath: string): { packageName: string; internalPath: string } {
+    const packagePathWithoutNM = this.stripNodeModulesFromPackagePath(packagePath);
+    const packageSplitBySlash = packagePathWithoutNM.split('/');
+    const isScopedPackage = packagePathWithoutNM.startsWith('@');
+    const packageName = isScopedPackage
+      ? `${packageSplitBySlash.shift()}/${packageSplitBySlash.shift()}`
+      : (packageSplitBySlash.shift() as string);
+
+    const internalPath = packageSplitBySlash.join('/');
+
+    return { packageName, internalPath };
+  }
+
+  private stripNodeModulesFromPackagePath(requirePath: string): string {
     requirePath = pathNormalizeToLinux(requirePath);
     const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
     const withoutPrefix = prefix ? requirePath.substr(requirePath.indexOf(prefix) + prefix.length) : requirePath;
-
-    if (!withoutPrefix.includes('/')) {
+    if (!withoutPrefix.includes('/') && withoutPrefix.startsWith('@')) {
       throw new GeneralError(
         'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'
       );
     }
-    const packageSplitBySlash = withoutPrefix.split('/');
-    // the part after the second slash is the path inside the package, just ignore it.
-    // (e.g. @bit/my-scope.my-name/internal-path.js).
-    const packageName = `${packageSplitBySlash[0]}/${packageSplitBySlash[1]}`;
-    return packageNameToComponentId(this, packageName, bindingPrefix);
+    return withoutPrefix;
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
@@ -842,7 +860,8 @@ export default class Consumer {
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    let consumer;
+    let consumer: Consumer | undefined;
+
     if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);

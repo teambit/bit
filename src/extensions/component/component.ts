@@ -10,8 +10,8 @@ import { TagMap } from './tag-map';
 import { State } from './state';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
+import { capitalize } from '../../components/utils/capitalize';
 // import { Author } from './types';
-import { capitalize } from '../utils/capitalize';
 
 /**
  * in-memory representation of a component.
@@ -69,6 +69,11 @@ export class Component {
   get headTag() {
     if (!this.head) return undefined;
     return this.tags.byHash(this.head.hash);
+  }
+
+  get latest(): string | undefined {
+    if (!this.head) return undefined;
+    return this.tags.getLatest();
   }
 
   stringify(): string {

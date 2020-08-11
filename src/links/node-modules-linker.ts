@@ -378,7 +378,14 @@ export default class NodeModuleLinker {
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    if (packageJson.packageJsonObject.version === 'latest') {
+      packageJson.packageJsonObject.version = '0.0.1-new';
+    }
+
     packageJson.mergePropsFromExtensions(component);
+    // delete the version, otherwise, we have to maintains it. such as, when tagging, it should be
+    // changed to the new tagged version.
+    delete packageJson.packageJsonObject.version;
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 

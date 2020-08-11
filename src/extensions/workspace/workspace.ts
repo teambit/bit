@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
@@ -6,23 +7,21 @@ import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
+import { link } from '../../api/consumer';
 import { ScopeExtension } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
 import { IsolatorExtension, Network } from '../isolator';
-import { ResolvedComponent } from '../utils/resolved-component/resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { loadResolvedExtensions } from '../utils/load-extensions';
 import { Variants } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
-import { removeExistingLinksInNodeModules, symlinkCapsulesInNodeModules } from './utils';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
@@ -33,10 +32,16 @@ import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { ComponentMap } from '../component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { ResolvedComponent } from '../../components/utils/resolved-component';
+import { loadRequireableExtensions } from '../../components/utils/load-extensions';
+import { RequireableComponent } from '../../components/utils/requireable-component';
+import { DependencyLifecycleType } from '../dependency-resolver/types';
 
 export type EjectConfResult = {
   configPath: string;
@@ -47,12 +52,18 @@ export interface EjectConfOptions {
   override?: boolean;
 }
 
+export type WorkspaceInstallOptions = {
+  variants: string;
+  lifecycleType: DependencyLifecycleType;
+};
+
 const DEFAULT_VENDOR_DIR = 'vendor';
 
 /**
  * API of the Bit Workspace
  */
 export class Workspace implements ComponentFactory {
+  priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -134,12 +145,23 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
+  async hasModifiedDependencies(component: Component) {
+    const componentsList = new ComponentsList(this.consumer);
+    const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
+    const isAutoTag = listAutoTagPendingComponents.find(
+      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    );
+    if (isAutoTag) return true;
+    return false;
+  }
+
   /**
    * provides status of all components in the workspace.
    */
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
-    return ComponentStatus.fromLegacy(status);
+    const hasModifiedDependencies = await this.hasModifiedDependencies(component);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
   }
 
   /**
@@ -197,7 +219,8 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s))
+      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
 
@@ -329,14 +352,29 @@ export class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
+    const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id);
+      return this.get(id).catch((err) => {
+        errors.push({
+          id,
+          err,
+        });
+        return undefined;
+      });
     });
     const components = await componentsP;
+    errors.forEach((err) => {
+      if (!this.consumer.isLegacy) {
+        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
+      }
+      this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
+    });
+    // remove errored components
+    const filteredComponents = compact(components);
     longProcessLogger.end();
-    return components;
+    return filteredComponents;
   }
 
   /**
@@ -508,7 +546,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -520,15 +558,39 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    let resolvedExtensions: ResolvedComponent[] = [];
-    resolvedExtensions = await this.load(extensionsToLoad);
-    // TODO: change to use the new reporter API, in order to implement this
-    // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-    //
-    // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-    // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
-    // level passed to it).
-    await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+    const requireableExtensions: any = await this.requireComponents(
+      extensionsToLoad.map((id) => this.resolveComponentId(id))
+    );
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+  }
+
+  async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {
+    const components = await this.getMany(ids);
+    let missingPaths = false;
+    const stringIds: string[] = [];
+    const resolveP = components.map(async (component) => {
+      stringIds.push(component.id.toString());
+      const packageName = componentIdToPackageName(component.state._consumer);
+      const localPath = path.join(this.path, 'node_modules', packageName);
+      const isExist = await fs.pathExists(localPath);
+      if (!isExist) {
+        missingPaths = true;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const requireFunc = () => require(localPath);
+      return new RequireableComponent(component, requireFunc);
+    });
+    const resolved = await Promise.all(resolveP);
+    // Make sure to link missing components
+    if (missingPaths) {
+      await link(stringIds, false);
+    }
+    return resolved;
+  }
+
+  private async getComponentsDirectory(ids: ComponentID[]) {
+    const components = ids.length ? await this.getMany(ids) : await this.list();
+    return ComponentMap.as<string>(components, (component) => this.componentDir(component.id));
   }
 
   /**
@@ -537,18 +599,30 @@ export class Workspace implements ComponentFactory {
    * @returns
    * @memberof Workspace
    */
-  async install() {
-    //      this.reporter.info('Installing component dependencies');
-    //      this.reporter.setStatusText('Installing');
+  async install(packages?: string[], options?: WorkspaceInstallOptions) {
+    if (packages && packages.length) {
+      this.logger.debug(`installing the folloing packages: ${packages.join()}`);
+    }
+    this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();
-    // this.reporter.info('Isolating Components');
-    const isolatedEnvs = await this.load(components.map((c) => c.id.toString()));
-    // this.reporter.info('Installing workspace dependencies');
-    await removeExistingLinksInNodeModules(isolatedEnvs);
-    await this.dependencyResolver.folderInstall(process.cwd());
-    await symlinkCapsulesInNodeModules(isolatedEnvs);
-    // this.reporter.end();
-    return isolatedEnvs;
+    const stringIds = components.map((component) => component.id.toString());
+    const installer = this.dependencyResolver.getInstaller();
+    const installationMap = await this.getComponentsDirectory([]);
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+    const rootDepsObject = {
+      dependencies: {
+        ...workspacePolicy.dependencies,
+      },
+      peerDependencies: {
+        ...workspacePolicy.peerDependencies,
+      },
+    };
+    await installer.install(this.path, rootDepsObject, installationMap);
+    // TODO: add the links results to the output
+    this.logger.setStatusLine('linking components');
+    await link(stringIds, false);
+    this.logger.consoleSuccess();
+    return installationMap;
   }
 
   /**

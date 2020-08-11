@@ -1,13 +1,13 @@
 import * as path from 'path';
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
-import { Capsule } from '../../../extensions/isolator/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
 import RemovePath from './remove-path';
 import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
 import { CONCURRENT_IO_LIMIT as concurrency } from '../../../constants';
+import Capsule from '../../../../legacy-capsule/core/capsule';
 
 export default class DataToPersist {
   files: AbstractVinyl[];

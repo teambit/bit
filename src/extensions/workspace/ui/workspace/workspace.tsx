@@ -1,15 +1,20 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useReducer } from 'react';
 import { gql } from 'apollo-boost';
+import { Route } from 'react-router-dom';
 import 'reset-css';
-import styles from './workspace.module.scss';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
 import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
 import { useDataQuery } from '../../../ui/ui/data/use-data-query';
 import { FullLoader } from '../../../../to-eject/full-loader';
-import { Corner } from '../../../stage-components/corner';
-import { SideBar } from '../../../stage-components/side-bar';
-import { WorkspaceComponentGrid } from './workspace-grid/workspace-grid';
+import { WorkspaceOverview } from './workspace-overview';
+import { TopBar } from '../../../../components/stage-components/top-bar';
+import { SideBar } from '../../../../components/stage-components/side-bar';
+import { Corner } from '../../../../components/stage-components/corner';
+import { CollapsibleSplitter } from '../../../../components/stage-components/splitter';
+import styles from './workspace.module.scss';
 
 const WORKSPACE = gql`
   {
@@ -26,7 +31,10 @@ const WORKSPACE = gql`
           isNew
           isInScope
           isStaged
-          isModified
+          modifyInfo {
+            hasModifiedFiles
+            hasModifiedDependencies
+          }
           isDeleted
         }
         deprecation {
@@ -47,13 +55,17 @@ const WORKSPACE = gql`
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
+  menuSlot: RouteSlot;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot }: WorkspaceProps) {
   const { data } = useDataQuery(WORKSPACE);
+
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   if (!data) {
     return (
@@ -67,13 +79,17 @@ export function Workspace({ routeSlot }: WorkspaceProps) {
 
   return (
     <WorkspaceProvider workspace={workspace}>
-      <div className={styles.workspace}>
-        <Corner name={workspace.name} />
-        <SideBar className={styles.sideBar} components={workspace.components} />
-        <div className={styles.main}>
-          <SlotRouter slot={routeSlot} />
-          <WorkspaceComponentGrid components={workspace.components} />
-        </div>
+      <div className={styles.workspaceWrapper}>
+        <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
+        <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
+          <SideBar components={workspace.components} />
+          <div className={styles.main}>
+            <SlotRouter slot={routeSlot} />
+            <Route exact path="/">
+              <WorkspaceOverview />
+            </Route>
+          </div>
+        </TupleSplitPane>
       </div>
     </WorkspaceProvider>
   );

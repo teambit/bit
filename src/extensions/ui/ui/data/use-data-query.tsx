@@ -4,10 +4,12 @@ import { useQuery, QueryHookOptions } from '@apollo/react-hooks';
 import { OperationVariables, QueryResult } from '@apollo/react-common';
 import { DocumentNode } from 'graphql';
 import { useLoader } from '../global-loader';
-import { NotificationContext } from '../../../notifications/ui';
+import { NotificationContext } from '../../../notifications';
 
 // @TODO derive props from useQuery
 // (couldn't figure out how to use Parameters<typeof useQuery<..>>)
+
+export type DataQueryResult<TData = any, TVariables = OperationVariables> = QueryResult<TData, TVariables>;
 
 export function useDataQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,

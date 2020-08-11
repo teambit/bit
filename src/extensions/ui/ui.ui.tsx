@@ -25,6 +25,8 @@ type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
  * extension
  */
 export class UIRuntimeExtension {
+  static id = '@teambit/ui';
+
   constructor(
     /**
      * GraphQL extension.
@@ -96,3 +98,5 @@ export class UIRuntimeExtension {
     return new UIRuntimeExtension(graphql, router, uiRootSlot, hudSlot, contextSlot);
   }
 }
+
+export default UIRuntimeExtension;

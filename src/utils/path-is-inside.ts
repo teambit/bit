@@ -2,7 +2,7 @@ import * as path from 'path';
 import stripTrailingChar from './string/strip-trailing-char';
 import { DEFAULT_SEPARATOR } from '../constants';
 
-module.exports = function (thePath, potentialParent) {
+export function pathIsInside(thePath: string, potentialParent: string): boolean {
   // For inside-directory checking, we want to allow trailing slashes, so normalize.
   thePath = stripTrailingChar(thePath, path.sep);
   potentialParent = stripTrailingChar(potentialParent, path.sep);
@@ -17,4 +17,4 @@ module.exports = function (thePath, potentialParent) {
     thePath.lastIndexOf(potentialParent, 0) === 0 &&
     (thePath[potentialParent.length] === DEFAULT_SEPARATOR || thePath[potentialParent.length] === undefined)
   );
-};
+}

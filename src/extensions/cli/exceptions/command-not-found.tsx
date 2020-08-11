@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { PaperError } from './paper-error';
+import { BitError } from '../../../error/bit-error';
 
-export class CommandNotFound extends PaperError {
+export class CommandNotFound extends BitError {
   commandName: string;
   suggestion?: string;
   constructor(commandName: string, suggestion?: string) {

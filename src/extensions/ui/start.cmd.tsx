@@ -1,12 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color, Text } from 'ink';
-// import { EnvConsole } from './components';
-// make sure to update eslint to read JSX.
-import { Command } from '../cli';
+import React from 'react';
+import { Command, CommandOptions } from '../cli';
 import { UIExtension } from './ui.extension';
-import { EnvConsole } from './env-console';
+import { UIServerConsole } from './env-console';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
@@ -15,7 +10,10 @@ export class StartCmd implements Command {
   private = true;
   group = 'development';
   shortDescription = '';
-  options = [];
+  options = [
+    ['d', 'dev', 'start UI server in dev mode.'],
+    ['p', 'port', 'port of the UI server.'],
+  ] as CommandOptions;
 
   constructor(
     /**
@@ -28,16 +26,22 @@ export class StartCmd implements Command {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  async render([type, userPattern]: [string, string]): Promise<React.ReactElement> {
-    const DEFAULT_UI = '@teambit/workspace';
-    if (type === 'scope') type = '@teambit/scope';
+  async render(
+    [uiRootName, userPattern]: [string, string],
+    { dev, port }: { dev: boolean; port: string }
+  ): Promise<React.ReactElement> {
     // @teambit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
-    const uiRuntime = await this.ui.createRuntime(type || DEFAULT_UI, pattern);
-    // this.clearConsole();
-    // @ts-ignore
-    // uiRuntime.dev();
-    // this.clearConsole();
-    return <EnvConsole runtime={uiRuntime} />;
+    const uiServer = await this.ui.createRuntime({
+      uiRootName,
+      pattern,
+      dev,
+      port: port ? parseInt(port) : undefined,
+    });
+
+    // clear the user console before moving interactive.
+    this.clearConsole();
+
+    return <UIServerConsole uiServer={uiServer} />;
   }
 }

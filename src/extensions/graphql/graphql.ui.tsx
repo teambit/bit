@@ -9,6 +9,8 @@ import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
 
 export class GraphQlUI {
+  static id = '@teambit/graphql';
+
   constructor(
     /**
      * apollo client.
@@ -25,11 +27,11 @@ export class GraphQlUI {
 
   static async provider() {
     const httpLink = new HttpLink({
-      uri: 'http://localhost:4000/graphql',
+      uri: `${(window.location.protocol === 'https:' ? 'https://' : 'http://') + window.location.host}/graphql`,
     });
 
     const wsLink = new WebSocketLink({
-      uri: 'ws://localhost:4000/subscriptions',
+      uri: `${(window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host}/subscriptions`,
       options: {
         reconnect: true,
       },
@@ -49,7 +51,7 @@ export class GraphQlUI {
         createLink(httpLink, wsLink),
       ]),
       cache: new InMemoryCache({
-        // @ts-ignore @todo uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
+        // @ts-ignore TODO: @uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
         dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
       }),
     });

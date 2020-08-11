@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
-import { ThemeContext } from '@bit/bit.test-scope.theme.theme-context';
+import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
 import { ComponentModel } from '../../component/ui';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
@@ -19,6 +19,7 @@ export type DocsSectionProps = {
     labels?: string[];
     abstract?: string;
     compositions?: React.ComponentType[];
+    displayName?: string;
   };
   compositions: React.ComponentType[];
   componentId: string;
@@ -26,8 +27,8 @@ export type DocsSectionProps = {
 
 const GET_COMPONENT = gql`
   query($id: String!) {
-    workspace {
-      getComponent(id: $id) {
+    getHost {
+      get(id: $id) {
         id {
           name
           version
@@ -67,14 +68,15 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   if (loading) return <div></div>;
   if (error) throw error;
 
-  const component = ComponentModel.from(data.workspace.getComponent);
-  const docsModel = data.workspace.getDocs;
+  const component = ComponentModel.from(data.getHost.get);
+  const docsModel = data.getHost.getDocs;
 
   const {
     examples = [],
     labels = [],
     abstract = docsModel.abstract,
     compositions: overviewCompositions = compositions,
+    displayName = component.displayName,
   } = docs;
 
   const Content = isFunction(docs.default) ? docs.default : () => null;
@@ -83,7 +85,7 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
     <ThemeContext>
       <div className={classNames(styles.docsMainBlock)} {...rest}>
         <ComponentOverview
-          displayName={component.displayName}
+          displayName={displayName}
           version={component.version}
           abstract={abstract}
           labels={labels}

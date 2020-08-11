@@ -4,8 +4,9 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import {
   UNABLE_TO_LOAD_EXTENSION,
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
-} from '../../src/extensions/utils/load-extensions/constants';
+} from '../../src/components/utils/load-extensions/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { CannotLoadExtension } from '../../src/components/utils/load-extensions/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -28,7 +29,7 @@ describe('load extensions', function () {
     let output;
     describe('loading simple extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
@@ -40,14 +41,15 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('non-requireable-extension');
         helper.command.addComponent('non-requireable-extension');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-        const error = new Error('error by purpose');
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
@@ -66,7 +68,7 @@ describe('load extensions', function () {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.copyFixtureExtensions('extension-provider-error');
         helper.command.addComponent('extension-provider-error');
         helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
@@ -96,7 +98,7 @@ describe('load extensions', function () {
     const config = { key: 'val' };
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.copyFixtureExtensions('dummy-extension');
       helper.command.addComponent('dummy-extension');
       helper.fixtures.copyFixtureExtensions('non-requireable-extension');
@@ -130,7 +132,8 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
-        const error = new Error('error by purpose');
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement

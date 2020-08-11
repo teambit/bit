@@ -43,7 +43,7 @@ export default async function migrate(
 export async function migrateToHarmony() {
   const consumer = await loadConsumer();
   const harmonyMigrator = new HarmonyMigrator(consumer);
-  const results = harmonyMigrator.migrate();
+  const results = await harmonyMigrator.migrate();
   await consumer.onDestroy();
   return results;
 }

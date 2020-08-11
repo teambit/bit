@@ -1,0 +1,34 @@
+{
+  "$schema": "",
+  "@teambit/workspace": {
+    "defaultScope": "teambit2.core",
+    "defaultDirectory": "components",
+    "vendorDirectory": "vendor",
+    "extensions": {
+      "@teambit/envs": {
+        "env": "@teambit/react",
+        "config": {}
+      },
+      "@teambit/pkg": {
+        "packageJson": {
+          "name": "@teambit/{name}"
+        }
+      },
+      "@teambit/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@types/mocha": "^7.0.2",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.25"
+          }
+        }
+      }
+    }
+  },
+  "@teambit/dependency-resolver": {
+    "packageManager": "@teambit/pnpm",
+    "strictPeerDependencies": true,
+    "extraArgs": []
+  },
+  "@teambit/variants": {}
+}

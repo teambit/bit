@@ -104,12 +104,11 @@ import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-anothe
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
-import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
-import { PaperError } from '../extensions/cli';
 import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
+import { BitError } from '../error/bit-error';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -308,11 +307,6 @@ To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`,
   ],
   [ScopeNotFound, (err) => `error: scope not found at ${chalk.bold(err.scopePath)}`],
-  [
-    IncorrectRootDir,
-    (err) => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
-please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.`,
-  ],
   [
     ScopeJsonNotFound,
     (err) =>
@@ -683,7 +677,7 @@ function handleNonBitCustomErrors(err: Error): string {
 export default (err: Error): { message: string; error: Error } => {
   const errorDefinition = findErrorDefinition(err);
   const getErrMsg = (): string => {
-    if (err instanceof PaperError) {
+    if (err instanceof BitError) {
       return err.report();
     }
     if (!errorDefinition) {
