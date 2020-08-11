@@ -16,7 +16,7 @@ import { IsolatorExtension, Network } from '../isolator';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { DependencyResolverExtension } from '../dependency-resolver';
+import { DependencyResolverExtension, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
 import { VariantsExtension } from '../variants';
@@ -55,6 +55,7 @@ export interface EjectConfOptions {
 export type WorkspaceInstallOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
+  dedupe: boolean;
 };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -619,7 +620,10 @@ export class Workspace implements ComponentFactory {
         ...workspacePolicy.peerDependencies,
       },
     };
-    await installer.install(this.path, rootDepsObject, installationMap);
+    const installOptions: PackageManagerInstallOptions = {
+      dedupe: options?.dedupe,
+    };
+    await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(stringIds, false);

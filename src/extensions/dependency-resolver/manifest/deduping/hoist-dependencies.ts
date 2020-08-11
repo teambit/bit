@@ -47,17 +47,7 @@ type VersionWithTotal = {
  * @returns {DedupedDependencies}
  */
 export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependencies {
-  const result: DedupedDependencies = {
-    rootDependencies: {
-      dependencies: {},
-      devDependencies: {},
-      peerDependencies: {},
-    },
-    componentDependenciesMap: new Map<PackageName, DependenciesObjectDefinition>(),
-    issus: {
-      peerConflicts: [],
-    },
-  };
+  const result: DedupedDependencies = getEmptyDedupedDependencies();
 
   // TODO: handle git urls
 
@@ -445,4 +435,19 @@ function arrayCombinations<T>(array: Array<T>): Array<T[]> {
   }
   all.push(array);
   return all;
+}
+
+export function getEmptyDedupedDependencies(): DedupedDependencies {
+  const result: DedupedDependencies = {
+    rootDependencies: {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    },
+    componentDependenciesMap: new Map<PackageName, DependenciesObjectDefinition>(),
+    issus: {
+      peerConflicts: [],
+    },
+  };
+  return result;
 }
