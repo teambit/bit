@@ -28,6 +28,8 @@ import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
 import { DeprecationExtension } from '../deprecation';
 import { DefaultEnvExtension } from '../default-env/default-env.extension';
+import { ExpressExtension } from '../express';
+import { AspectExtension } from '../aspect';
 
 export const manifestsMap = {
   [CLIExtension.name]: CLIExtension,
@@ -65,4 +67,6 @@ export const manifestsMap = {
   [WorkspaceExt.name]: WorkspaceExt,
   [DeprecationExtension.name]: DeprecationExtension,
   [DefaultEnvExtension.id]: DefaultEnvExtension,
+  [ExpressExtension.id]: ExpressExtension,
+  [AspectExtension.id]: AspectExtension,
 };

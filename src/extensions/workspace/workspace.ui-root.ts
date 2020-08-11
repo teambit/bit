@@ -4,7 +4,8 @@ import { Workspace } from '.';
 import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
-import { PostStartOptions } from '../ui/ui-root';
+import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
+import { ComponentServer } from '../bundler/component-server';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
@@ -18,6 +19,8 @@ export class WorkspaceUIRoot implements UIRoot {
      */
     private bundler: BundlerExtension
   ) {}
+
+  priority = true;
 
   name = 'workspace';
 
@@ -43,6 +46,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.byPattern(pattern);
   }
 
+  getConfig() {
+    return {};
+  }
+
   /**
    * proxy to `workspace.componentDir()`
    */
@@ -54,8 +61,28 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.componentDir(componentId, bitMapOptions, options);
   }
 
-  async postStart(options: PostStartOptions, uiRoot: UIRoot) {
-    await this.bundler.devServer(await this.workspace.byPattern(options.pattern || ''), uiRoot);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async postStart(options?: PostStartOptions) {
+    const devServers = await this.getServers();
+    devServers.forEach((server) => server.listen());
     await this.workspace.watcher.watchAll();
+  }
+
+  private _serversPromise: Promise<ComponentServer[]>;
+
+  private async getServers(): Promise<ComponentServer[]> {
+    if (this._serversPromise) return this._serversPromise;
+    this._serversPromise = this.bundler.devServer(await this.workspace.byPattern(''), this);
+    return this._serversPromise;
+  }
+
+  async getProxy(): Promise<ProxyEntry[]> {
+    const servers = await this.getServers();
+    return servers.map((server) => {
+      return {
+        context: [`/preview/${server.context.envRuntime.id}`],
+        target: `http://localhost:${server.port}`,
+      };
+    });
   }
 }

@@ -9,6 +9,8 @@ import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
 
 export class GraphQlUI {
+  static id = '@teambit/graphql';
+
   constructor(
     /**
      * apollo client.
@@ -25,11 +27,11 @@ export class GraphQlUI {
 
   static async provider() {
     const httpLink = new HttpLink({
-      uri: 'http://localhost:4000/graphql',
+      uri: `${(window.location.protocol === 'https:' ? 'https://' : 'http://') + window.location.host}/graphql`,
     });
 
     const wsLink = new WebSocketLink({
-      uri: 'ws://localhost:4000/subscriptions',
+      uri: `${(window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host}/subscriptions`,
       options: {
         reconnect: true,
       },

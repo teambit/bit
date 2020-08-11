@@ -27,6 +27,7 @@ export class PreviewTask implements BuildTask {
   async execute(context: BuildContext): Promise<BuildResults> {
     const defs = this.preview.getDefs();
     const capsules = context.capsuleGraph.capsules;
+    const url = `/preview/${context.envRuntime.id}`;
 
     const targets: Target[] = await Promise.all(
       capsules.map(async ({ capsule }) => {
@@ -40,6 +41,8 @@ export class PreviewTask implements BuildTask {
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
       entry: [],
+      publicPath: this.getPreviewDirectory(),
+      rootPath: url,
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
@@ -48,7 +51,7 @@ export class PreviewTask implements BuildTask {
     return {
       components: componentResults,
       // TODO: @guy rename to `preview` instead of `public`.
-      artifacts: [{ dirName: 'public' }],
+      artifacts: [{ dirName: this.getPreviewDirectory() }],
     };
   }
 
