@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export default class InvalidConfigFile extends PaperError {
+export default class InvalidConfigFile extends BitError {
   showDoctorMessage: boolean;
   constructor(readonly path: string) {
     super(generateMessage(path));

@@ -1,6 +1,6 @@
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export class NoTestFilesFound extends PaperError {
+export class NoTestFilesFound extends BitError {
   constructor(private testRegex: string) {
     super();
   }

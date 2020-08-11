@@ -1,6 +1,6 @@
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export class PackageManagerNotFound extends PaperError {
+export class PackageManagerNotFound extends BitError {
   constructor(private packageManagerName: string) {
     super(`package manager: ${packageManagerName} was not found`);
   }
