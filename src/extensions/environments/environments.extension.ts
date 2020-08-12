@@ -2,7 +2,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
-import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { GraphQLExtension } from '../graphql';
 
