@@ -1,5 +1,3 @@
-import { ExtensionDataList } from '../../consumer/config/extension-data';
-
 interface VendorConfig {
   directory: string;
 }
@@ -35,13 +33,3 @@ export interface WorkspaceExtConfig {
    */
   name: string;
 }
-
-export type ComponentWorkspaceMetaData = {
-  defaultScope?: string;
-  defaultOwner?: string;
-};
-
-export type WorkspaceComponentConfig = {
-  componentExtensions: ExtensionDataList;
-  componentWorkspaceMetaData: ComponentWorkspaceMetaData;
-};
