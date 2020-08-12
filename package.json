@@ -322,7 +322,7 @@
     "synchronous-promise": "^2.0.10",
     "table": "^5.2.3",
     "tar-stream": "^2.0.1",
-    "terser-webpack-plugin": "^3.0.8",
+    "terser-webpack-plugin": "^4.1.0",
     "tsyringe": "^4.0.1",
     "tty-table": "^2.8.12",
     "uid-number": "0.0.6",
