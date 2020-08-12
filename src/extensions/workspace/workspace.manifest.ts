@@ -5,7 +5,7 @@ import { ComponentExtension } from '../component';
 import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
 import { DependencyResolverExtension } from '../dependency-resolver';
-import { VariantsExt } from '../variants';
+import { VariantsExtension } from '../variants';
 import { EXT_NAME } from './constants';
 import { GraphQLExtension } from '../graphql';
 import { CLIExtension } from '../cli';
@@ -22,7 +22,7 @@ export default {
     ComponentExtension,
     IsolatorExtension,
     DependencyResolverExtension,
-    VariantsExt,
+    VariantsExtension,
     LoggerExtension,
     GraphQLExtension,
     UIExtension,

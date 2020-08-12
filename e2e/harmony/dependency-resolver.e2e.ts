@@ -45,7 +45,7 @@ describe('dependency-resolver extension', function () {
             },
           },
         };
-        helper.extensions.addExtensionToVariant('bar/foo', '@teambit/dependency-resolver', depResolverConfig);
+        helper.extensions.addExtensionToVariant('bar', '@teambit/dependency-resolver', depResolverConfig);
         barFooOutput = helper.command.showComponentParsed('bar/foo');
         isTypeOutput = helper.command.showComponentParsed('utils/is-type');
       });
@@ -69,7 +69,7 @@ describe('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar/foo', '@teambit/envs', {
+        helper.extensions.addExtensionToVariant('bar', '@teambit/envs', {
           env: '@teambit/react',
           config: {},
         });
@@ -99,7 +99,7 @@ describe('dependency-resolver extension', function () {
         before(() => {
           helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-          helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/extension-add-dependencies', config);
+          helper.extensions.addExtensionToVariant('bar', 'my-scope/extension-add-dependencies', config);
           helper.scopeHelper.linkBitBin();
           helper.command.link();
           barFooOutput = helper.command.showComponentParsed('bar/foo');
