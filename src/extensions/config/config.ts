@@ -1,12 +1,6 @@
 import { ConfigType, HostConfig } from './types';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import {
-  WorkspaceConfig,
-  WorkspaceConfigFileProps,
-  LegacyInitProps,
-  ComponentsConfigFn,
-  ComponentConfigFn,
-} from './workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config';
 
 // export type ConfigProps = {
@@ -74,16 +68,5 @@ export class Config {
 
   extension(extensionId: string, ignoreVersion: boolean): ExtensionDataEntry | undefined {
     return this.config?.extension(extensionId, ignoreVersion);
-  }
-
-  registerGetVariantsConfig(fn: ComponentsConfigFn) {
-    if (this.workspaceConfig) {
-      this.workspaceConfig.registerGetVariantsConfig(fn);
-    }
-  }
-  registerGetVariantConfig(fn: ComponentConfigFn) {
-    if (this.workspaceConfig) {
-      this.workspaceConfig.registerGetVariantConfig(fn);
-    }
   }
 }

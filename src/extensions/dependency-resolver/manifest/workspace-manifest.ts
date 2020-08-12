@@ -11,7 +11,7 @@ import { ComponentManifest } from './component-manifest';
 import { Component, ComponentID } from '../../component';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
 import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
-import { dedupeDependencies, DedupedDependencies } from './deduping';
+import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
 import { Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
 import { MergeDependenciesFunc } from '../dependency-resolver.extension';
 import { BitId } from '../../../bit-id';
@@ -24,6 +24,13 @@ export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
 export type CreateFromComponentsOptions = {
   filterComponentsFromManifests: boolean;
   createManifestForComponentsWithoutDependencies: boolean;
+  dedupe?: boolean;
+};
+
+const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
+  filterComponentsFromManifests: true,
+  createManifestForComponentsWithoutDependencies: true,
+  dedupe: true,
 };
 export class WorkspaceManifest extends Manifest {
   constructor(
@@ -46,23 +53,28 @@ export class WorkspaceManifest extends Manifest {
     rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = {
-      filterComponentsFromManifests: true,
-      createManifestForComponentsWithoutDependencies: true,
-    },
+    options: CreateFromComponentsOptions = DEFAULT_CREATE_OPTIONS,
     mergeDependenciesFunc: MergeDependenciesFunc
   ): Promise<WorkspaceManifest> {
+    // Make sure to take other default if passed options with only one option
+    const optsWithDefaults = Object.assign({}, DEFAULT_CREATE_OPTIONS, options);
     const componentDependenciesMap: ComponentDependenciesMap = await buildComponentDependenciesMap(
       components,
-      options.filterComponentsFromManifests,
+      optsWithDefaults.filterComponentsFromManifests,
       rootDependencies,
       mergeDependenciesFunc
     );
-    const dedupedDependencies = dedupeDependencies(rootDependencies, componentDependenciesMap);
+    let dedupedDependencies = getEmptyDedupedDependencies();
+    if (options.dedupe) {
+      dedupedDependencies = dedupeDependencies(rootDependencies, componentDependenciesMap);
+    } else {
+      dedupedDependencies.rootDependencies = rootDependencies;
+      dedupedDependencies.componentDependenciesMap = componentDependenciesMap;
+    }
     const componentsManifestsMap = getComponentsManifests(
       dedupedDependencies,
       components,
-      options.createManifestForComponentsWithoutDependencies
+      optsWithDefaults.createManifestForComponentsWithoutDependencies
     );
     const workspaceManifest = new WorkspaceManifest(
       name,
