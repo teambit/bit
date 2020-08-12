@@ -1,8 +1,7 @@
 import React from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentModel } from '../component/ui';
-import { SideBar } from './side-bar';
-import { Drawer } from './ui/drawer';
+import { SideBar, Drawer } from './ui';
 
 export type ComponentTypeProps = {
   component: ComponentModel;

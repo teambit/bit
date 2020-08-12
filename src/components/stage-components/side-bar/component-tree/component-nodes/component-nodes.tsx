@@ -21,7 +21,7 @@ export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
     </>
   );
 }
-export function NamespaceView({ node, depth, status }: TreeNodeProps<PayloadType>) {
+export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
   const [collapsed, collapse] = useState(false);
 
   return (
