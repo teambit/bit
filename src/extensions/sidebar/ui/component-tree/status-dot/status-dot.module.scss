@@ -1,0 +1,21 @@
+.statusDot {
+    margin: 0 2px;
+    width: 8px;
+    height: 8px;
+    background-color: red;
+    display: inline-block;
+    border-radius: 50%;
+    
+    &.modified {
+        background-color: #ff8b00;
+    }  
+    &.error {
+        background-color: #df083e;
+    }  
+    &.new {
+        background-color: #37b26c;
+    }  
+    &.staged {
+        background-color: #0d2de3;
+    }
+}

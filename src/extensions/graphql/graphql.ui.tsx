@@ -1,5 +1,5 @@
 import React from 'react';
-import ApolloClient from 'apollo-client';
+import ApolloClient, { QueryOptions, ApolloQueryResult } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { ApolloLink } from 'apollo-link';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -17,6 +17,10 @@ export class GraphQlUI {
      */
     private client: ApolloClient<any>
   ) {}
+
+  async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
+    return this.client.query(options);
+  }
 
   /**
    * get the graphQL provider

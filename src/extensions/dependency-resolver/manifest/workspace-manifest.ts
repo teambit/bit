@@ -34,6 +34,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
 };
 export class WorkspaceManifest extends Manifest {
   constructor(
+    // TODO: please prefer readonly on public
     public name: string,
     public version: SemVer,
     public dependencies: DependenciesObjectDefinition,
@@ -85,6 +86,8 @@ export class WorkspaceManifest extends Manifest {
     );
     return workspaceManifest;
   }
+
+  getComponentMap() {}
 
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson(options);

@@ -1,0 +1,18 @@
+.status {
+    font-size: 15px;
+    width: 13px;
+    display: flex;
+    justify-content: center;
+    &.modified {
+        color: #ff8b00;
+    }  
+    &.error {
+        color: #df083e;
+    }  
+    &.new {
+        color: #37b26c;
+    }  
+    &.staged {
+        color: #0d2de3;
+    }
+}

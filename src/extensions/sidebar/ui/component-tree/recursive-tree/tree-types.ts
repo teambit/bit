@@ -10,6 +10,7 @@ export type TreeLayerProps<Payload = any> = {
 export type TreeNodeProps<Payload = any> = {
   node: TreeNode<Payload>;
   depth: number;
+  status?: StatusTypes;
 };
 
 export type TreeNode<Payload = any> = {
