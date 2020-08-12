@@ -56,7 +56,7 @@ export const manifestsMap = {
   [LoggerExtension.id]: LoggerExtension,
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [ReactExtension.name]: ReactExtension,
+  [ReactExtension.id]: ReactExtension,
   [StencilExtension.name]: StencilExtension,
   [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
