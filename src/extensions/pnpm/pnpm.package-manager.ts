@@ -43,6 +43,8 @@ export class PnpmPackageManager implements PackageManager {
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap
     );
+    delete rootManifest.manifest.dependencies['bit-bin'];
+    delete rootManifest.manifest.peerDependencies['bit-bin'];
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');

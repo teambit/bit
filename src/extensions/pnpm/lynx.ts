@@ -101,5 +101,5 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
     },
     streamParser,
   });
-  return mutateModules(packagesToBuild, opts);
+  await mutateModules(packagesToBuild, opts);
 }
