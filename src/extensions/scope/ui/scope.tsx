@@ -7,7 +7,7 @@ import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeProvider } from './scope-provider';
 import { Corner } from '../../../components/stage-components/corner';
-import { SideBar } from '../../../components/stage-components/side-bar';
+// import { SideBar } from '../../../components/stage-components/side-bar';
 import { useScope } from './use-scope';
 import { TopBar } from '../../../components/stage-components/top-bar';
 import { CollapsibleSplitter } from '../../../components/stage-components/splitter';
@@ -36,7 +36,7 @@ export function Scope({ routeSlot, menuSlot }: ScopeProps) {
       <div className={styles.scope}>
         <TopBar Corner={() => <Corner name={scope.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
         <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          <SideBar components={ids} className={styles.sideBar} />
+          {/* <SideBar components={ids} className={styles.sideBar} /> */}
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">
