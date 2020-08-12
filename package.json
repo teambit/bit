@@ -133,7 +133,6 @@
     "@teambit/documenter-temp.ui.sub-title": "^0.0.2",
     "@teambit/documenter-temp.ui.separator": "^0.0.2",
     "@teambit/documenter-temp.ui.consumable-link": "^0.0.4",
-    
     "@teambit/documenter-temp.ui.linked-heading": "^0.0.2",
     "@teambit/explorer-temp.ui.component-grid": "^0.0.1",
     "@teambit/explorer-temp.ui.component-card": "^0.0.4",

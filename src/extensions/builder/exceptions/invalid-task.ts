@@ -1,6 +1,6 @@
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export class InvalidTask extends PaperError {
+export class InvalidTask extends BitError {
   constructor(readonly task: any) {
     super(`task is invalid`);
   }

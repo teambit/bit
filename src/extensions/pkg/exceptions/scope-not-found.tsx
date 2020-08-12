@@ -1,6 +1,6 @@
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export class ScopeNotFound extends PaperError {
+export class ScopeNotFound extends BitError {
   constructor(readonly scopePath?: string) {
     super(generateMessage(scopePath));
   }
