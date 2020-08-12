@@ -76,8 +76,8 @@ describe('dependency-resolver extension', function () {
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.12.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.9.17');
+        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.13.0');
+        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '16.9.43');
       });
     });
     describe('policies added by extension', function () {

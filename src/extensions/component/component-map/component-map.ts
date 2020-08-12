@@ -19,12 +19,11 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
    * map entries and return a new component map.
    */
   map<NewType>(predicate: (value: T) => NewType): ComponentMap<NewType> {
-    const tuples = this.toArray().map(([component, value]) => {
+    const tuples: [string, [Component, NewType]][] = this.toArray().map(([component, value]) => {
       const newValue = predicate(value);
       return [component.id.fullName, [component, newValue]];
     });
 
-    // @ts-ignore :TODO understand why this type error is occurring.
     return new ComponentMap(tuples);
   }
 
@@ -46,11 +45,10 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
       return predicate(value);
     });
 
-    const asMap = tuples.map(([component, value]) => {
+    const asMap: [string, [Component, T]][] = tuples.map(([component, value]) => {
       return [component.id.fullName, [component, value]];
     });
 
-    // @ts-ignore
     return new ComponentMap(asMap);
   }
 
@@ -60,11 +58,10 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
    * @param predicate predicate for returning desired value.
    */
   static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
-    const tuples = components.map((component) => {
+    const tuples: [string, [Component, T]][] = components.map((component) => {
       return [component.id.fullName, [component, predicate(component)]];
     });
 
-    // @ts-ignore
     return new ComponentMap(tuples);
   }
 }
