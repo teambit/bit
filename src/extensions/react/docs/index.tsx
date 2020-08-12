@@ -1,25 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Base } from './base';
+import { DocsApp } from './docs-app';
 
-export default (Provider: React.ComponentType, componentId: string, docs: any, compositions: any) => {
+export default function DocsRoot(Provider: React.ComponentType, componentId: string, docs: any, compositions: any) {
   ReactDOM.render(
-    <Main compositions={compositions} Provider={Provider} docs={docs} componentId={componentId} />,
+    <DocsApp Provider={Provider} compositions={compositions} docs={docs} componentId={componentId} />,
     document.getElementById('root')
   );
-};
-
-type MainProps = {
-  Provider: React.ComponentType;
-  docs: any; // TODO: @uri create a type for docs asap
-  componentId: string;
-  compositions: [React.ComponentType];
-};
-
-function Main({ Provider, docs, componentId, compositions }: MainProps) {
-  return (
-    <Provider>
-      <Base docs={docs} componentId={componentId} compositions={compositions} />
-    </Provider>
-  );
 }
+
+// hot reloading works when components are in a different file.
+// do not declare react components here.
