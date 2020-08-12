@@ -1,12 +1,6 @@
 import { ConfigType, HostConfig } from './types';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
-import {
-  WorkspaceConfig,
-  WorkspaceConfigFileProps,
-  LegacyInitProps,
-  ComponentsConfigFn,
-  ComponentConfigFn,
-} from './workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config';
 
 // export type ConfigProps = {

@@ -23,9 +23,6 @@ import { HostConfig } from './types';
 import { BitId } from '../../bit-id';
 import { Analytics } from '../../analytics/analytics';
 
-export type ComponentsConfigFn = () => ConsumerOverrides;
-export type ComponentConfigFn = (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
-
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 
 export type LegacyInitProps = {
