@@ -37,7 +37,7 @@ export async function loadRequireableExtensions(
   harmony: Harmony,
   requireableExtensions: RequireableComponent[],
   logger: Logger,
-  throwOnError = true
+  throwOnError = false
 ): Promise<void> {
   const manifestsP = requireableExtensions.map(async (requireableExtension) => {
     if (!requireableExtensions) return undefined;
@@ -53,6 +53,7 @@ export async function loadRequireableExtensions(
       logger.consoleFailure(errorMsg);
       logger.error(errorMsg, e);
       if (throwOnError) {
+        console.log(e);
         throw new CannotLoadExtension(id, e);
       }
       logger.console(e);

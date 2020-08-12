@@ -31,6 +31,10 @@ export type PackageManagerSlot = SlotRegistry<PackageManager>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
+export type GetInstallerOptions = {
+  cacheRootDirectory?: string;
+};
+
 export class DependencyResolverExtension {
   static id = '@teambit/dependency-resolver';
 
@@ -117,9 +121,9 @@ export class DependencyResolverExtension {
   /**
    * get a component dependency installer.
    */
-  getInstaller() {
+  getInstaller(options: GetInstallerOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    const cacheRootDir = globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
