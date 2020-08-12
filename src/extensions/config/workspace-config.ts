@@ -5,7 +5,6 @@ import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from '../../consumer/config/workspace-config';
-import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -20,7 +19,6 @@ import { InvalidBitJson } from '../../consumer/config/exceptions';
 import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
-import { BitId } from '../../bit-id';
 import { Analytics } from '../../analytics/analytics';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
