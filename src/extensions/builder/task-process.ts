@@ -77,19 +77,8 @@ export class TaskProcess {
 
   private async getFilesByArtifacts(capsule: Capsule): Promise<string[]> {
     const filesP = this.taskResult.artifacts.map(async (artifact) => {
-      return getFilesFromCapsule(capsule, artifact.dirName);
+      return capsule.getAllFilesPaths(artifact.dirName);
     });
     return flatten(await Promise.all(filesP));
   }
-}
-
-// @todo: fix.
-// it skips the capsule fs because for some reason `capsule.fs.promises.readdir` doesn't work
-// the same as `capsule.fs.readdir` and it doesn't have the capsule dir as pwd.
-/**
- * returns the paths inside the capsule
- */
-async function getFilesFromCapsule(capsule: Capsule, dir: string): Promise<string[]> {
-  const files = glob.sync('**', { cwd: path.join(capsule.wrkDir, dir), nodir: true });
-  return files.map((file) => path.join(dir, file));
 }
