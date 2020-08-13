@@ -93,7 +93,7 @@ export class IsolatorExtension {
         capsulesDir,
         this.dependencyResolver.getEmptyDepsObject(),
         this.toComponentMap(capsules),
-        { dedupe: false }
+        { dedupe: true }
       );
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension

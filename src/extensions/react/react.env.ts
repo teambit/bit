@@ -141,7 +141,7 @@ export class ReactEnv implements Environment {
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.13.0' || this.config.reactVersion,
+        react: '^16.13.1' || this.config.reactVersion,
       },
     };
   }
@@ -152,6 +152,6 @@ export class ReactEnv implements Environment {
   getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
-    return [this.compiler.task, this.pkg.dryRunTask];
+    return [this.compiler.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
   }
 }
