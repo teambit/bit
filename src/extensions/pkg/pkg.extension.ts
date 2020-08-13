@@ -140,7 +140,7 @@ export class PkgExtension {
    */
   async mergePackageJsonProps(configuredExtensions: ExtensionDataList): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnvFromExtensions(configuredExtensions);
+    const env = this.envs.getEnvFromExtensions(configuredExtensions)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);

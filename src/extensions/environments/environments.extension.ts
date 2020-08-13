@@ -2,7 +2,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
-import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { GraphQLExtension } from '../graphql';
 
@@ -14,6 +14,11 @@ export type EnvsConfig = {
 };
 
 export type EnvOptions = {};
+
+export type EnvDefinition = {
+  id: string;
+  env: Environment;
+};
 
 export type Descriptor = {
   id: string;
@@ -57,15 +62,25 @@ export class Environments {
   }
 
   // @todo remove duplications from `aggregateByDefs`, it was copied and pasted
-  getEnvFromExtensions(extensions: ExtensionDataList): Environment | null {
-    const extension = extensions.findExtension(Environments.id);
-    if (!extension) return null;
-    const envId = this.getEnvId(extension);
-    if (!envId) return null;
-    // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
-    const env = this.envSlot.get(envId);
-    if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
-    return env;
+  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition | null {
+    let id;
+    let env;
+    extensions.forEach((ext) => {
+      if (env) {
+        return;
+      }
+      id = ext.stringId;
+      env = this.envSlot.get(id);
+    });
+
+    if (!env) {
+      return null;
+    }
+
+    return {
+      id,
+      env,
+    };
   }
 
   /**
@@ -74,16 +89,14 @@ export class Environments {
   getDescriptor(component: Component): Descriptor | null {
     const defaultIcon = `https://static.bit.dev/extensions-icons/default.svg`;
     // TODO: @guy after fix core extension then take it from core extension
-    const extension = component.config.extensions.findExtension(Environments.id);
-    if (!extension) return null;
-    const envId = this.getEnvId(extension);
-    if (!envId) return null;
-    const instance = this.context.get<any>(envId);
+    const envDef = this.getEnvFromExtensions(component.config.extensions);
+    if (!envDef) return null;
+    const instance = this.context.get<any>(envDef.id);
     const iconFn = instance.icon;
 
     const icon = iconFn ? iconFn() : defaultIcon;
     return {
-      id: envId,
+      id: envDef.id,
       icon,
     };
   }
@@ -120,33 +133,25 @@ export class Environments {
   private createRuntime(components: Component[]): Runtime {
     return new Runtime(this.aggregateByDefs(components));
   }
-  private getEnvId(extension: ExtensionDataEntry): string | null {
-    return extension.config.env;
-  }
 
   // :TODO can be refactorerd to few utilities who will make repeating this very easy.
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
     const map = {};
     components.forEach((current: Component) => {
       // :TODO fix this api. replace with `this.id` and improve naming.
-      // const extension = current.config.extensions.findExtension(this.id);
-      const extension = current.config.extensions.findExtension(Environments.id);
-      // this can also be handled better
-      if (!extension) return;
-      const envId = this.getEnvId(extension);
-      if (envId) {
-        // here wen can do some better error handling from the harmony API with abit wrapper (next two lines)
-        const env = this.envSlot.get(envId);
-        if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
+      const envDef = this.getEnvFromExtensions(current.config.extensions);
+      if (!envDef) return;
+      const envId = envDef.id;
+      const env = envDef.env;
+      if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
 
-        // handle config as well when aggregating envs.
-        if (map[envId]) map[envId].components.push(current);
-        else
-          map[envId] = {
-            components: [current],
-            env,
-          };
-      }
+      // handle config as well when aggregating envs.
+      if (map[envId]) map[envId].components.push(current);
+      else
+        map[envId] = {
+          components: [current],
+          env,
+        };
     }, {});
 
     return Object.keys(map).map((key) => {
