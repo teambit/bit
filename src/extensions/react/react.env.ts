@@ -55,7 +55,7 @@ export class ReactEnv implements Environment {
      */
     private tester: TesterExtension,
 
-    private config: ReactConfig
+    private config?: ReactConfig
   ) {}
 
   private _tsconfig: any;
@@ -134,14 +134,15 @@ export class ReactEnv implements Environment {
       dependencies: {
         react: '-',
       },
-      // TODO: add this only if using ts
       devDependencies: {
-        '@types/react': '16.9.43',
-        '@types/react-router-dom': '^5.1.5',
+        react: '-',
+        '@types/react': '-',
       },
-      // TODO: take version from config
       peerDependencies: {
-        react: '^16.13.0' || this.config.reactVersion,
+        react: this.config?.reactVersion || '^16.13.0',
+        '@types/react': this.config?.typesReactVersion || '^16.9.46',
+        // TODO - only add if component includes any spec files.
+        '@types/jest': this.config?.typesJestVersion || '^26.0.0',
       },
     };
   }

@@ -28,18 +28,24 @@ export type ReactConfig = {
    * configure the react env compiler.
    * can be configured to either TypeScript ('ts') or Babel ('babel').
    */
-  compiler: 'babel' | 'ts';
+  compiler?: 'babel' | 'ts';
 
   /**
    * configure the component tester.
    * can be either Jest ('jest') or Mocha ('mocha')
    */
-  tester: 'jest' | 'mocha';
+  tester?: 'jest' | 'mocha';
 
   /**
    * version of React to configure.
    */
-  reactVersion: string;
+  reactVersion?: string;
+
+  /** version of @types/react */
+  typesReactVersion?: string;
+
+  /** version of @types/react */
+  typesJestVersion?: string;
 };
 
 export class ReactExtension {
