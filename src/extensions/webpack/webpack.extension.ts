@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
 import { WebpackDevServer } from './webpack.dev-server';
@@ -51,7 +52,7 @@ export class WebpackExtension {
 
   static slots = [];
 
-  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExtension];
+  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExtension] as ExtensionManifest[];
 
   static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, LoggerExtension]) {
     const logPublisher = logger.createLogger(WebpackExtension.id);

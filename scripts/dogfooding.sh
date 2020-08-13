@@ -20,6 +20,8 @@ find extensions/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\
 find components/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\//'bit-bin\/dist\//g" {} \;
 find components/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\//'bit-bin\/dist\//g" {} \;
 find components/*/*/*/*/*.* -type f -exec sed -i '' "s/'..\/..\/..\/..\/..\//'bit-bin\/dist\//g" {} \;
+mkdir extensions/cli/bin
+echo "#!/usr/bin/env node\nrequire('bit-bin/dist/app.js');" > extensions/cli/bin/bit.js
 rm -rf node_modules/bit-bin
 ln -s `pwd` node_modules/bit-bin
 STATUS=`bit status`

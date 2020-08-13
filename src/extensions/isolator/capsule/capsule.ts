@@ -1,4 +1,5 @@
 import v4 from 'uuid';
+import glob from 'glob';
 import path from 'path';
 import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
@@ -98,6 +99,18 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
         stderr += data;
       });
     });
+  }
+
+  /**
+   * @todo: fix.
+   * it skips the capsule fs because for some reason `capsule.fs.promises.readdir` doesn't work
+   * the same as `capsule.fs.readdir` and it doesn't have the capsule dir as pwd.
+   *
+   * returns the paths inside the capsule
+   */
+  getAllFilesPaths(dir = '.', options: { ignore?: string[] } = {}) {
+    const files = glob.sync('**', { cwd: path.join(this.path, dir), nodir: true, ...options });
+    return files.map((file) => path.join(dir, file));
   }
 
   static async createFromComponent(
