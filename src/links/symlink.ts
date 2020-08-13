@@ -18,6 +18,12 @@ export default class Symlink {
     this._throwForMissingDistOutsideComponent();
     return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
+
+  writeWithNativeFS() {
+    this._throwForMissingDistOutsideComponent();
+    return fs.symlink(this.src, this.dest);
+  }
+
   static makeInstance(src: string, dest: string, componentId?: BitId) {
     return new Symlink(src, dest, componentId);
   }
