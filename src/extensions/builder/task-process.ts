@@ -1,6 +1,4 @@
-import glob from 'glob';
 import { flatten } from 'ramda';
-import path from 'path';
 import { BuildTask, BuildResults, BuildContext } from './types';
 import GeneralError from '../../error/general-error';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
