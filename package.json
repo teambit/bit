@@ -14,8 +14,8 @@
     "lint:table": "eslint \"{src,e2e}/**/*.{ts,tsx}\" --format table",
     "lint:html": "eslint \"{src,e2e}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
-    "format": "prettier \"{src,e2e}/**/*.{ts,js,css,tsx}\" --write",
-    "prettier:check": "prettier --list-different \"{ts,js,css,tsx}/**/*.{ts,js,css,tsx}\"",
+    "format": "prettier \"{src,e2e}/**/*.{ts,js,css,scss,tsx}\" --write",
+    "prettier:check": "prettier --list-different \"{ts,js,css,tsx}/**/*.{ts,js,css,scss,tsx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
@@ -441,7 +441,7 @@
     "node": ">=10.13.0"
   },
   "lint-staged": {
-    "*.{ts,js,css,tsx}": [
+    "*.{ts,js,css,scss,tsx}": [
       "prettier --write",
       "git add"
     ]
