@@ -47,6 +47,12 @@ export class PnpmPackageManager implements PackageManager {
       // In case of not deduping we want to install peers inside the components
       !options.dedupe
     );
+    delete rootManifest.manifest.dependencies['bit-bin'];
+    delete rootManifest.manifest.peerDependencies['bit-bin'];
+    Object.keys(componentsManifests).forEach((componentName) => {
+      if (!componentsManifests[componentName].dependencies) return;
+      delete componentsManifests[componentName].dependencies['bit-bin'];
+    });
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');

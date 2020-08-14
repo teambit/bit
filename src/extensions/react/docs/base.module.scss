@@ -1,57 +1,55 @@
-
 .docsMainBlock {
-	padding-left: 130px;
-	padding-top: 80px;
-	max-width: 80%;
-	margin-bottom: 150px;
-	.heading {
-		margin-bottom: unset;
-	}
-	@media screen and (max-width: 920px) {
-		padding-left: 20px;
-		padding-right: 20px;
-		max-width: 100%;
-	}
+  padding-left: 130px;
+  padding-top: 80px;
+  max-width: 80%;
+  margin-bottom: 150px;
+  .heading {
+    margin-bottom: unset;
+  }
+  @media screen and (max-width: 920px) {
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 100%;
+  }
 }
 
 .maxWidth {
-	max-width: 700px;
+  max-width: 700px;
 }
 
 .marginBottom {
-	margin-bottom: 30px;
+  margin-bottom: 30px;
 }
 
-
 .topRow {
-	display: flex;
-	align-items: baseline;
+  display: flex;
+  align-items: baseline;
 }
 
 .copyMethod {
-	display: flex;
-	align-self: center;
-	width: 100%;
-	margin-bottom: 20px;
+  display: flex;
+  align-self: center;
+  width: 100%;
+  margin-bottom: 20px;
 }
 .copyTitle {
-	margin-right: 10px;
-	margin-bottom: unset;
+  margin-right: 10px;
+  margin-bottom: unset;
 }
 .copyBox {
-	flex-grow: 1;
+  flex-grow: 1;
 }
 
 .marginRight {
-	margin-right: 10px;
+  margin-right: 10px;
 }
 
 .enhancedText {
-	code {
-		background-color: var(--muted-color);
-		padding: 4px;
-		border-radius: 4px;
-		font-family: monospace;
-		font-size: 14px
-	}
+  code {
+    background-color: var(--muted-color);
+    padding: 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 14px;
+  }
 }

@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "lib": [
+      "es2019", "DOM", "ES6" ,"DOM.Iterable", "ScriptHost"
+    ],
     "target": "es2015",
     "module": "commonjs",
     "jsx": "react",

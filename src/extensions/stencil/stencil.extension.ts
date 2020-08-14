@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { TranspileOptions } from '@stencil/core/compiler';
 import { StencilCompiler } from './stencil.compiler';
 import { Environments } from '../environments';
@@ -30,7 +31,7 @@ export class StencilExtension {
     // return new StencilDevServer({}, this.workspace);
   }
 
-  static dependencies = [Environments, CompilerExtension, WorkspaceExt, WebpackExtension];
+  static dependencies = [Environments, CompilerExtension, WorkspaceExt, WebpackExtension] as ExtensionManifest[];
 
   static async provider([envs, compiler, workspace, webpack]: [
     Environments,

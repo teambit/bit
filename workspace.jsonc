@@ -17,9 +17,9 @@
       "@teambit/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@types/mocha": "^7.0.2",
+            "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
-            "@types/node": "^12.12.25"
+            "@types/node": "^12.12.27"
           }
         }
       }
@@ -30,5 +30,27 @@
     "strictPeerDependencies": true,
     "extraArgs": []
   },
-  "@teambit/variants": {}
+  "@teambit/variants": {
+    "extensions/cli": {
+      "@teambit/envs": {
+        "env": "@teambit/react",
+        "config": {}
+      },
+      "@teambit/pkg": {
+        "packageJson": {
+          "name": "@teambit/{name}",
+          "bin": "bin/bit.js"
+        }
+      },
+      "@teambit/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@types/mocha": "^5.2.7",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.27"
+          }
+        }
+      }
+    }
+  }
 }
