@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-import { UIRoot } from './ui-root.ui';
+import { UIRootUI as UIRoot } from '../ui';
 import { GraphQlUI } from '../graphql';
 import { ReactRouterUI } from '../react-router/react-router.ui';
 import { ClientContext } from './ui/client-context';

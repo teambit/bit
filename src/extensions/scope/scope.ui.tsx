@@ -2,7 +2,7 @@ import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
 import { RouteSlot } from '../react-router';
-import { UIRoot } from '../ui';
+import { UIRootUI as UIRoot } from '../ui';
 import { UIRuntimeExtension } from '../ui';
 import { Scope } from './ui/scope';
 import { ComponentUI } from '../component';

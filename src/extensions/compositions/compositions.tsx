@@ -10,7 +10,7 @@ import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
 import { CollapsibleSplitter } from '../../components/stage-components/splitter';
 import { Composition } from './composition';
 import { ComponentModel } from '../component';
-import { ComponentContext } from '../component/ui';
+import { ComponentContext } from '../component';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui';
