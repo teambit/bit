@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { AccountObj } from '../version-block/change-log.data';
+import { AccountObj } from '../version-block';
 import { TimeAgo } from '../../workspace-components/time-ago';
 import { UserAvatar } from '../../workspace-components/Avatar';
 import styles from './contributors.module.scss';

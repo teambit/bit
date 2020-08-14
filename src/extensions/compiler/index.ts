@@ -1,2 +1,2 @@
-export { Compiler } from './types';
+export { Compiler, TranspileOutput, TranspileOpts } from './types';
 export { CompilerExtension } from './compiler.extension';

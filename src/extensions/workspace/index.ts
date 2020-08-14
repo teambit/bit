@@ -7,3 +7,5 @@ export { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from './c
 export { OnComponentChangeResult } from './on-component-change';
 export { ExtensionData } from './on-component-load';
 export { ComponentStatus } from './workspace-component';
+export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
+export { WorkspaceUI } from './workspace.ui';

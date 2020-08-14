@@ -20,7 +20,7 @@ import { DependencyResolverExtension, PackageManagerInstallOptions } from '../de
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
 import { VariantsExtension } from '../variants';
-import { ComponentScopeDirMap } from '../config/workspace-config';
+import { ComponentScopeDirMap } from '../config';
 import legacyLogger from '../../logger/logger';
 import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
@@ -31,7 +31,7 @@ import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
-import { IsolateComponentsOptions } from '../isolator/isolator.extension';
+import { IsolateComponentsOptions } from '../isolator';
 import { ComponentMap } from '../component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
@@ -41,7 +41,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { RequireableComponent } from '../../components/utils/requireable-component';
-import { DependencyLifecycleType } from '../dependency-resolver/types';
+import { DependencyLifecycleType } from '../dependency-resolver';
 
 export type EjectConfResult = {
   configPath: string;

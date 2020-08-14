@@ -1,12 +1,12 @@
 // import { ComponentMeta } from '../../../component';
-import { ComponentID } from '../../../component/id';
+import { ComponentID } from '../../../component';
 import { ComponentStatus } from '../../workspace-component/component-status';
 import { DeprecationInfo } from '../../../deprecation';
 import { Descriptor } from '../../../environments';
 import { ComponentModel } from '../../../component';
 import { ComponentModelProps } from '../../../component';
 
-export type Component = {
+export type WorkspaceModelComponent = {
   id: ComponentID;
   status: ComponentStatus;
   deprecation: DeprecationInfo;

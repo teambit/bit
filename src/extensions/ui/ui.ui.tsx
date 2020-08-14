@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { UIRootUI as UIRoot } from '../ui';
 import { GraphQlUI } from '../graphql';
-import { ReactRouterUI } from '../react-router/react-router.ui';
+import { ReactRouterUI } from '../react-router';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
 

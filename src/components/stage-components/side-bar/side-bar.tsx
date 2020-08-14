@@ -6,8 +6,8 @@ import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
 import { OverviewLink } from './overview-link/overview-link';
 import { ComponentID } from '../../../extensions/component';
-import { DeprecationInfo } from '../../../extensions/deprecation/deprecation.extension';
-import { Descriptor } from '../../../extensions/environments/environments.extension';
+import { DeprecationInfo } from '../../../extensions/deprecation';
+import { Descriptor } from '../../../extensions/environments';
 
 export type Component = {
   id: ComponentID;

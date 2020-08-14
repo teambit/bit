@@ -12,3 +12,4 @@ export {
 } from './types';
 export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
 export { PackageManager, PackageManagerInstallOptions } from './package-manager';
+export { DependencyLifecycleType } from './types';

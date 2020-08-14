@@ -1,3 +1,3 @@
-import { Component } from '../../../../extensions/workspace/ui/workspace/workspace-model';
+import { WorkspaceModelComponent } from '../../../../extensions/workspace';
 
-export type PayloadType = Component | undefined;
+export type PayloadType = WorkspaceModelComponent | undefined;

@@ -3,11 +3,11 @@ import fs from 'fs-extra';
 import ts from 'typescript';
 import { Compiler } from '../compiler';
 import { BuildResults, BuildContext } from '../builder';
-import { TranspileOpts, TranspileOutput } from '../compiler/types';
+import { TranspileOpts, TranspileOutput } from '../compiler';
 import { Logger } from '../logger';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { ComponentID } from '../component';
-import CapsuleList from '../isolator/capsule-list';
+import { CapsuleList } from '../isolator';
 import { Network } from '../isolator';
 
 type ComponentError = { componentId: ComponentID; error: string };

@@ -5,7 +5,7 @@ import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
 import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
-import { ComponentServer } from '../bundler/component-server';
+import { ComponentServer } from '../bundler';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
