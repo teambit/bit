@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { ComponentContext } from '../../component/ui';
-import { ComponentPreview } from '../../preview/ui';
+import { ComponentContext } from '../../component';
+import { ComponentPreview } from '../../preview';
 
 export function Overview() {
   const component = useContext(ComponentContext);

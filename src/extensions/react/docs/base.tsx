@@ -5,7 +5,7 @@ import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
 import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
-import { ComponentModel } from '../../component/ui';
+import { ComponentModel } from '../../component';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
 import { ComponentOverview } from './component-overview';

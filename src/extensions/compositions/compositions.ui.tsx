@@ -1,4 +1,4 @@
-import { ComponentUI } from '../component/component.ui';
+import { ComponentUI } from '../component';
 import { CompositionsSection } from './composition.section';
 
 export class CompositionsUI {

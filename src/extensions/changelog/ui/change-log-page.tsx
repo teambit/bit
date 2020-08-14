@@ -3,7 +3,7 @@ import classNames from 'classnames';
 
 import { Separator } from '@teambit/documenter-temp.ui.separator';
 import { H1 } from '@teambit/documenter-temp.ui.heading';
-import { ComponentContext } from '../../component/ui';
+import { ComponentContext } from '../../component';
 import styles from './change-log-page.module.scss';
 import { VersionBlock } from '../../../components/stage-components/workspace-sections/version-block';
 

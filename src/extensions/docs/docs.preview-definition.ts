@@ -1,4 +1,4 @@
-import { PreviewDefinition } from '../preview/preview-definition';
+import { PreviewDefinition } from '../preview';
 import { ComponentMap, Component } from '../component';
 import { ExecutionContext } from '../environments';
 import { DocsExtension } from './docs.extension';

@@ -2,8 +2,8 @@ import React from 'react';
 import classnames from 'classnames';
 
 import { useRouteMatch } from 'react-router-dom';
-import { NavLink, NavLinkProps } from '../../../react-router/nav-link';
-import { extendPath } from '../../../react-router/extend-path';
+import { NavLink, NavLinkProps } from '../../../react-router';
+import { extendPath } from '../../../react-router';
 import styles from './top-bar-widget-link.module.scss';
 
 export function TopBarWidgetLink(props: NavLinkProps) {

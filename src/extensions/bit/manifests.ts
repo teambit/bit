@@ -22,12 +22,12 @@ import { GraphQLExtension } from '../graphql';
 import { PnpmExtension } from '../pnpm';
 import { WorkspaceExt } from '../workspace';
 import { UIExtension } from '../ui';
-import { PreviewExtension } from '../preview/preview.extension';
-import { DocsExtension } from '../docs/docs.extension';
+import { PreviewExtension } from '../preview';
+import { DocsExtension } from '../docs';
 import { StencilExtension } from '../stencil';
 import { CompositionsExtension } from '../compositions';
 import { DeprecationExtension } from '../deprecation';
-import { DefaultEnvExtension } from '../default-env/default-env.extension';
+import { DefaultEnvExtension } from '../default-env';
 import { ExpressExtension } from '../express';
 import { AspectExtension } from '../aspect';
 

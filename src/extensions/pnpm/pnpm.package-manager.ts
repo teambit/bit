@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { install } from './lynx';
 import { PackageManager, PackageManagerInstallOptions } from '../dependency-resolver';
-import { ComponentMap } from '../component/component-map';
+import { ComponentMap } from '../component';
 import {
   DependencyResolverExtension,
   ComponentsManifestsMap,

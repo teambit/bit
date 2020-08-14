@@ -1,7 +1,7 @@
 import { Route, Request, Response } from '../express';
 import { ComponentExtension } from './component.extension';
 import { ComponentID } from './id';
-import { NextFunction } from '../express/types';
+import { NextFunction } from '../express';
 
 export class ComponentRoute implements Route {
   constructor(private registerRoute: Route, private componentExtension: ComponentExtension) {}

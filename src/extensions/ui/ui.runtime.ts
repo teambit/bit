@@ -3,7 +3,7 @@
 // import { DocsUI } from '../docs/docs.ui';
 // import { TesterUI } from '../tester/tester.ui';
 // import { ChangeLogUI } from '../changelog/changelog.ui';
-// import { ComponentUI } from '../component/component.ui';
+// import { ComponentUI } from '../component';
 // import { CompositionsUI } from '../compositions/compositions.ui';
 
 // /**

@@ -1,7 +1,7 @@
 import { Component } from '../component';
 import { ExecutionContext } from '../environments';
-import { ComponentMap } from '../component/component-map';
-import { PreviewExtension } from '../preview/preview.extension';
+import { ComponentMap } from '../component';
+import { PreviewExtension } from '../preview';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { AbstractVinyl } from '../../consumer/component/sources';
 

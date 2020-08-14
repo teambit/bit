@@ -18,7 +18,7 @@ import {
 } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
-import Config from '../component/config';
+import { Config } from '../component';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';

@@ -11,7 +11,7 @@ import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
-import { Bundler } from '../bundler/bundler';
+import { Bundler } from '../bundler';
 import { pathNormalizeToLinux } from '../../utils';
 import { ReactConfig } from './react.extension';
 

@@ -15,3 +15,8 @@ export { State } from './state';
 export { Hash } from './hash';
 export { TagMap } from './tag-map';
 export { ComponentMap } from './component-map';
+export { Section } from './section';
+export { ComponentUI } from './component.ui';
+export { ComponentContext } from './ui/context/component-context';
+export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export { default as Config } from './config';

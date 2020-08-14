@@ -1,11 +1,11 @@
-import { Composition, CompositionProps } from '../../../compositions/composition';
+import { Composition, CompositionProps } from '../../../compositions';
 import { ComponentID } from '../../id';
 import { TagMap } from '../../tag-map';
 import { Tag } from '../../tag';
-import { DeprecationInfo } from '../../../deprecation/deprecation.extension';
-import { Descriptor } from '../../../environments/environments.extension';
+import { DeprecationInfo } from '../../../deprecation';
+import { Descriptor } from '../../../environments';
 import { TagProps } from '../../tag/tag';
-import { ComponentStatus } from '../../../workspace/workspace-component/component-status';
+import { ComponentStatus } from '../../../workspace';
 // import { Snap } from '../../snap';
 
 export type ComponentModelProps = {

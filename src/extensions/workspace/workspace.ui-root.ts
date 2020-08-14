@@ -34,7 +34,7 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('./workspace.ui'),
       require.resolve('../tester/tester.ui'),
       require.resolve('../changelog/changelog.ui'),
-      require.resolve('../component/component.ui'),
+      require.resolve('../component'),
       require.resolve('../compositions/compositions.ui'),
       require.resolve('../docs/docs.ui'),
       require.resolve('../notifications/notification.ui'),

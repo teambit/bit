@@ -1,8 +1,8 @@
 import harmony from '@teambit/harmony';
-import { DocsPreview } from '../docs/docs.preview';
+import { DocsPreview } from '../docs';
 import { Preview } from './preview.preview';
-import { CompositionsPreview } from '../compositions/compositions.preview';
-import { GraphQlUI } from '../graphql/graphql.ui';
+import { CompositionsPreview } from '../compositions';
+import { GraphQlUI } from '../graphql';
 
 /**
  * configure all core extensions

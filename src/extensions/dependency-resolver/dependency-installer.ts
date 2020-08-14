@@ -1,5 +1,5 @@
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
-import { ComponentMap } from '../component/component-map';
+import { ComponentMap } from '../component';
 import { DependenciesObjectDefinition } from './types';
 import { PathAbsolute } from '../../utils/path';
 

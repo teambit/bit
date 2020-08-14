@@ -1,5 +1,5 @@
 import { Environment } from '../environments';
-import { ReactEnv } from '../react/react.env';
+import { ReactEnv } from '../react';
 
 /**
  * a component environment built for [Aspects](https://reactjs.org) .

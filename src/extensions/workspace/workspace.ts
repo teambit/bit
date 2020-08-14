@@ -26,7 +26,7 @@ import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { pathIsInside } from '../../utils';
-import Config from '../component/config';
+import { Config } from '../component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
 import { OnComponentLoad } from './on-component-load';

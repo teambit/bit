@@ -9,12 +9,12 @@ import { PropTable } from '@teambit/documenter-temp.ui.property-table';
 import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
 import { CollapsibleSplitter } from '../../components/stage-components/splitter';
 import { Composition } from './composition';
-import { ComponentModel } from '../component/ui/component-model/component-model';
+import { ComponentModel } from '../component';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
-import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui/ui/tabs';
-import { PanelContainer, Panel } from '../panel-ui/ui/panel-container';
+import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui';
+import { PanelContainer, Panel } from '../panel-ui';
 import styles from './compositions.module.scss';
 
 const GET_COMPONENT = gql`

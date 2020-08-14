@@ -1,6 +1,6 @@
 import React from 'react';
-import { ComponentPreview } from '../../preview/ui';
-import { ComponentModel } from '../../component/ui';
+import { ComponentPreview } from '../../preview';
+import { ComponentModel } from '../../component';
 import { Composition } from '../composition';
 
 export type ComponentCompositionProps = {
