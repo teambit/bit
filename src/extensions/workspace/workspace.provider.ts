@@ -7,7 +7,7 @@ import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverExtension } from '../dependency-resolver';
-import { Variants } from '../variants';
+import { VariantsExtension } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import { GraphQLExtension } from '../graphql';
 import getWorkspaceSchema from './workspace.graphql';
@@ -32,7 +32,7 @@ export type WorkspaceDeps = [
   ComponentExtension,
   IsolatorExtension,
   DependencyResolverExtension,
-  Variants,
+  VariantsExtension,
   LoggerExtension,
   GraphQLExtension,
   UIExtension,

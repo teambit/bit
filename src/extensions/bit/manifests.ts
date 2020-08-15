@@ -17,7 +17,7 @@ import { ReactExtension } from '../react';
 import { ScopeExtension } from '../scope';
 import { TesterExtension } from '../tester';
 import { BuilderExtension } from '../builder';
-import { VariantsExt } from '../variants';
+import { VariantsExtension } from '../variants';
 import { GraphQLExtension } from '../graphql';
 import { PnpmExtension } from '../pnpm';
 import { WorkspaceExt } from '../workspace';
@@ -56,14 +56,14 @@ export const manifestsMap = {
   [LoggerExtension.id]: LoggerExtension,
   [PkgExtension.id]: PkgExtension,
   // TODO: take from the extension itself & change name to follow convention
-  [ReactExtension.name]: ReactExtension,
+  [ReactExtension.id]: ReactExtension,
   [StencilExtension.name]: StencilExtension,
   [ScopeExtension.id]: ScopeExtension,
   // TODO: take from the extension itself & change name to follow convention
   [TesterExtension.id]: TesterExtension,
   // TODO: take from the extension itself & change name to follow convention
   [BuilderExtension.id]: BuilderExtension,
-  [VariantsExt.name]: VariantsExt,
+  [VariantsExtension.id]: VariantsExtension,
   [WorkspaceExt.name]: WorkspaceExt,
   [DeprecationExtension.name]: DeprecationExtension,
   [DefaultEnvExtension.id]: DefaultEnvExtension,

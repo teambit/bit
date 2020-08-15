@@ -1,8 +1,8 @@
 .hoverable {
-	transition: all 300ms;
-	border-radius: 4px;
-	
-	&:hover {
-		background: var(--bg-topping-highlight);
-	}
+  transition: all 300ms;
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
 }

@@ -137,6 +137,11 @@ async function buildComponentDependenciesMap(
     const depGraph = new DependencyGraph(component);
     const versionModifierFunc = generateVersionModifier(component, rootDependencies, mergeDependenciesFunc);
     const depObject = await depGraph.toJson(filterFn(components), versionModifierFunc);
+
+    if (depObject.dependencies) delete depObject.dependencies['bit-bin'];
+    if (depObject.devDependencies) delete depObject.devDependencies['bit-bin'];
+    if (depObject.peerDependencies) delete depObject.peerDependencies['bit-bin'];
+
     result.set(packageName, depObject);
     return Promise.resolve();
   });

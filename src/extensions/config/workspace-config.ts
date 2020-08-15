@@ -5,7 +5,6 @@ import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from '../../consumer/config/workspace-config';
-import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -20,11 +19,7 @@ import { InvalidBitJson } from '../../consumer/config/exceptions';
 import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
-import { BitId } from '../../bit-id';
 import { Analytics } from '../../analytics/analytics';
-
-export type ComponentsConfigFn = () => ConsumerOverrides;
-export type ComponentConfigFn = (componentId: BitId) => ConsumerOverridesOfComponent | undefined;
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 
@@ -83,8 +78,6 @@ export class WorkspaceConfig implements HostConfig {
   _path?: string;
   _extensions: ExtensionsDefs;
   _legacyProps?: WorkspaceLegacyProps;
-  _getVariantsConfig?: ComponentsConfigFn;
-  _getVariantConfig?: ComponentConfigFn;
   isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
@@ -128,28 +121,6 @@ export class WorkspaceConfig implements HostConfig {
     const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
   }
-
-  registerGetVariantsConfig(fn: ComponentsConfigFn): void {
-    this._getVariantsConfig = fn;
-  }
-
-  registerGetVariantConfig(fn: ComponentConfigFn): void {
-    this._getVariantConfig = fn;
-  }
-
-  getVariantsConfig(): ConsumerOverrides | undefined {
-    if (this._getVariantsConfig && typeof this._getVariantsConfig === 'function') {
-      return this._getVariantsConfig();
-    }
-    return undefined;
-  }
-
-  // getVariantConfig(componentId: BitId): ConsumerOverridesOfComponent | undefined {
-  //   if (this._getVariantConfig && typeof this._getVariantConfig === 'function') {
-  //     return this._getVariantConfig(componentId);
-  //   }
-  //   return undefined;
-  // }
 
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config

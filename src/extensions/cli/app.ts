@@ -1,9 +1,9 @@
 import harmony from '@teambit/harmony';
-import { handleErrorAndExit } from './cli/command-runner';
-import { ConfigExt } from './extensions/config';
-import { BitExt, registerCoreExtensions } from './extensions/bit';
-import { CLIExtension } from './extensions/cli';
-import { bootstrap } from './bootstrap';
+import { handleErrorAndExit } from '../../cli/command-runner';
+import { ConfigExt } from '../config';
+import { BitExt, registerCoreExtensions } from '../bit';
+import { CLIExtension } from './cli.extension';
+import { bootstrap } from '../../bootstrap';
 
 initApp();
 

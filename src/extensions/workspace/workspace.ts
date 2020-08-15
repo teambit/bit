@@ -19,7 +19,7 @@ import { AddActionResults } from '../../consumer/component-ops/add-components/ad
 import { DependencyResolverExtension, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { Variants } from '../variants';
+import { VariantsExtension } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { ComponentConfigFile } from './component-config-file';
@@ -89,7 +89,7 @@ export class Workspace implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverExtension,
 
-    private variants: Variants,
+    private variants: VariantsExtension,
 
     private logger: Logger,
 
@@ -373,7 +373,7 @@ export class Workspace implements ComponentFactory {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
-    const filteredComponents = compact(components);
+    const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
     return filteredComponents;
   }
@@ -427,9 +427,10 @@ export class Workspace implements ComponentFactory {
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const variantConfig = this.variants.byId(componentId);
-    if (variantConfig && variantConfig.componentWorkspaceMetaData.defaultScope) {
-      return variantConfig.componentWorkspaceMetaData.defaultScope;
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
+    if (variantConfig && variantConfig.defaultScope) {
+      return variantConfig.defaultScope;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -462,9 +463,10 @@ export class Workspace implements ComponentFactory {
     } else {
       scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
-    const variantConfig = this.variants.byId(componentId);
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
     if (variantConfig) {
-      variantsExtensions = variantConfig.componentExtensions;
+      variantsExtensions = variantConfig.extensions;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
