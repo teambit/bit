@@ -1,5 +1,4 @@
 import path from 'path';
-import fs from 'fs';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import ConsumerComponent from '../../consumer/component';

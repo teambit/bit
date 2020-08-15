@@ -1,3 +1,4 @@
+import * as path from 'path';
 import fs from 'fs-extra';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import BitId from '../bit-id/bit-id';
@@ -19,8 +20,10 @@ export default class Symlink {
     return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
 
-  writeWithNativeFS() {
+  async writeWithNativeFS() {
     this._throwForMissingDistOutsideComponent();
+    await fs.remove(this.dest);
+    await fs.ensureDir(path.dirname(this.dest));
     return fs.symlink(this.src, this.dest);
   }
 
