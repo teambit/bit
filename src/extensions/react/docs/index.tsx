@@ -11,7 +11,7 @@ export default (Provider: React.ComponentType, componentId: string, docs: any, c
 
 type MainProps = {
   Provider: React.ComponentType;
-  docs: any;
+  docs: any; // TODO: @uri create a type for docs asap
   componentId: string;
   compositions: [React.ComponentType];
 };

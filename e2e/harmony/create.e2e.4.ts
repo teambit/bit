@@ -28,6 +28,8 @@ describe('create extension', function () {
       helper.command.addComponent('react-create-template');
       helper.extensions.addExtensionToWorkspace('my-scope/react-create-template', {});
       helper.extensions.addExtensionToWorkspace('@teambit/create', { template: 'react-create-template' });
+      helper.scopeHelper.linkBitBin();
+      helper.command.link();
       helper.command.create(COMPONENT_NAME);
       const compDir = path.join(helper.scopes.localPath, `components/${COMPONENT_NAME}`);
       implFilePath = path.join(compDir, `${COMPONENT_NAME}.js`);

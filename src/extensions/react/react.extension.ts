@@ -1,4 +1,4 @@
-import { Environments } from '../environments';
+import { Environments, Environment } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
 import { TypescriptExtension } from '../typescript';
@@ -49,7 +49,7 @@ export class ReactExtension {
     /**
      * an instance of the React env.
      */
-    private reactEnv: ReactEnv
+    readonly reactEnv: ReactEnv
   ) {}
 
   /**
@@ -63,7 +63,10 @@ export class ReactExtension {
   /**
    * override the TS config of the extension.
    */
-  overrideTsConfig() {}
+  overrideTsConfig(tsconfig: any, env: Environment = {}) {
+    env.getCompiler = () => this.reactEnv.getCompiler(tsconfig);
+    return env;
+  }
 
   /**
    * override the jest configuration.
@@ -100,8 +103,11 @@ export class ReactExtension {
     TesterExtension,
   ];
 
-  static provider([envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester);
+  static provider(
+    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
+    config: ReactConfig
+  ) {
+    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
     const react = new ReactExtension(reactEnv);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

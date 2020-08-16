@@ -1,5 +1,4 @@
 import { flatten } from 'lodash';
-/* eslint-disable max-classes-per-file */
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
@@ -43,13 +42,43 @@ export class ComponentExtension {
   }
 
   /**
+   * set the prior host.
+   */
+  setHostPriority(id: string) {
+    const host = this.hostSlot.get(id);
+    if (!host) {
+      throw new HostNotFound(id);
+    }
+
+    this._priorHost = host;
+    return this;
+  }
+
+  /**
    * get component host by extension ID.
    */
-  getHost(id: string): ComponentFactory {
-    const host = this.hostSlot.get(id);
-    if (!host) throw new HostNotFound();
-    return host;
+  getHost(id?: string): ComponentFactory {
+    if (id) {
+      const host = this.hostSlot.get(id);
+      if (!host) throw new HostNotFound(id);
+      return host;
+    }
+
+    return this.getPriorHost();
   }
+
+  /**
+   * get the prior host.
+   */
+  private getPriorHost() {
+    if (this._priorHost) return this._priorHost;
+
+    const hosts = this.hostSlot.values();
+    const priorityHost = hosts.find((host) => host.priority);
+    return priorityHost || hosts[0];
+  }
+
+  private _priorHost: ComponentFactory | undefined;
 
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];
 

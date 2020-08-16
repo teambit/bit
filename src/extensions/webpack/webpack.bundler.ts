@@ -1,3 +1,4 @@
+import { flatten } from 'lodash';
 import webpack, { Configuration, Compiler } from 'webpack';
 import pMapSeries from 'p-map-series';
 import merge from 'webpack-merge';
@@ -22,7 +23,7 @@ export class WebpackBundler implements Bundler {
 
   async run(): Promise<BundlerComponentResult[]> {
     const compilers = this.getConfig().map((config) => webpack(config));
-    const longProcessLogger = this.logger.createLongProcessLogger('bundling components', compilers.length);
+    const longProcessLogger = this.logger.createLongProcessLogger('bundling component preview', compilers.length);
     const componentOutput = await pMapSeries(compilers, (compiler: Compiler) => {
       const componentId = this.getIdByPath(compiler.outputPath);
       longProcessLogger.logProgress(componentId.toString());
@@ -59,12 +60,31 @@ export class WebpackBundler implements Bundler {
     return target?.capsule.component.id;
   }
 
+  private getSingleConfig() {
+    const entries = flatten(this.targets.map((target) => target.entries));
+    // TODO: fix when a proper API to capsule root is introduced.
+    const pathArray = this.targets[0].capsule.path.split('/');
+    pathArray.pop();
+    const rootPath = pathArray.join('/');
+
+    return [merge(configFactory(this.unique(entries), rootPath), this.envConfig)];
+  }
+
+  private unique(items: string[]): string[] {
+    const unique = {};
+
+    items.forEach(function (i) {
+      if (!unique[i]) {
+        unique[i] = true;
+      }
+    });
+
+    return Object.keys(unique);
+  }
+
   private getConfig() {
     return this.targets.map((target) => {
-      return merge(
-        configFactory(target.entries, target.capsule.path, target.capsule.component.id.fullName),
-        this.envConfig
-      );
+      return merge(configFactory(target.entries, target.capsule.path), this.envConfig);
     });
   }
 

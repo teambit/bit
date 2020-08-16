@@ -1,4 +1,5 @@
 import v4 from 'uuid';
+import glob from 'glob';
 import path from 'path';
 import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
@@ -72,6 +73,44 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
 
   symlink(src: string, dest: string): Promise<any> {
     return this.container.symlink(src, dest);
+  }
+
+  // TODO: refactor this crap and simplify capsule API
+  async execute(cmd: string, options?: Record<string, any> | null | undefined) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const execResults = await this.exec({ command: cmd.split(' '), options });
+    let stdout = '';
+    let stderr = '';
+    return new Promise((resolve, reject) => {
+      execResults.stdout.on('data', (data: string) => {
+        stdout += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        return reject(error);
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        return resolve({ stdout, stderr });
+      });
+      execResults.stderr.on('error', (error: string) => {
+        return reject(error);
+      });
+      execResults.stderr.on('data', (data: string) => {
+        stderr += data;
+      });
+    });
+  }
+
+  /**
+   * @todo: fix.
+   * it skips the capsule fs because for some reason `capsule.fs.promises.readdir` doesn't work
+   * the same as `capsule.fs.readdir` and it doesn't have the capsule dir as pwd.
+   *
+   * returns the paths inside the capsule
+   */
+  getAllFilesPaths(dir = '.', options: { ignore?: string[] } = {}) {
+    const files = glob.sync('**', { cwd: path.join(this.path, dir), nodir: true, ...options });
+    return files.map((file) => path.join(dir, file));
   }
 
   static async createFromComponent(

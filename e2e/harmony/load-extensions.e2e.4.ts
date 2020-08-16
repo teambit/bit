@@ -6,6 +6,7 @@ import {
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
 } from '../../src/components/utils/load-extensions/constants';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { CannotLoadExtension } from '../../src/components/utils/load-extensions/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -47,7 +48,8 @@ describe('load extensions', function () {
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
-        const error = new Error('error by purpose');
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
@@ -110,8 +112,7 @@ describe('load extensions', function () {
     });
     describe('loading simple extension', () => {
       before(() => {
-        // helper.extensions.addExtensionToVariant('affected/*', 'dummy-extension', config);
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/dummy-extension', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/dummy-extension', config);
       });
 
       it('should load the extension when loading an affected component', () => {
@@ -126,11 +127,12 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/non-requireable-extension', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/non-requireable-extension', config);
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
-        const error = new Error('error by purpose');
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-extension', origError);
         helper.general.expectToThrow(func, error);
       });
       // TODO: implement
@@ -151,7 +153,7 @@ describe('load extensions', function () {
     });
     describe('extension with provider error', () => {
       before(() => {
-        helper.extensions.setExtensionToVariant('affected/*', 'my-scope/extension-provider-error', config);
+        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/extension-provider-error', config);
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');

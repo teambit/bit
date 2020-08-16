@@ -17,7 +17,7 @@ import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
 import Isolator from '../../environment/isolator';
-import { Capsule } from '../../extensions/isolator/capsule';
+import Capsule from '../../../legacy-capsule/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { CompilerResults } from '../../legacy-extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';

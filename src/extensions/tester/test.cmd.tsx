@@ -1,11 +1,12 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import React from 'react';
 import { Box, Color } from 'ink';
-import { Command } from '../cli';
+import { Command, CommandOptions, Flags } from '../cli';
 import { TesterExtension } from './tester.extension';
 import { Workspace } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
+import { Timer } from '../../toolbox/timer';
+
+const chalk = require('chalk');
 
 export class TestCmd implements Command {
   name = 'test [pattern]';
@@ -14,33 +15,34 @@ export class TestCmd implements Command {
   private = true;
   group = 'development';
   shortDescription = '';
-  options = [];
+  options = [
+    ['w', 'watch', 'start the tester in watch mode.'],
+    ['d', 'debug', 'start the tester in debug mode.'],
+    // TODO: we need to reduce this redundant casting every time.
+  ] as CommandOptions;
 
   constructor(private tester: TesterExtension, private workspace: Workspace) {}
 
-  async render([userPattern]: [string]) {
+  async render([userPattern]: [string], { watch, debug }: Flags) {
+    const timer = Timer.create();
+    timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
     const pattern = userPattern && userPattern.toString();
-    const results = await this.tester.test(
-      pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list()
-    );
+    const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
 
-    return <Envs envs={results} />;
+    // TODO: @david please add logger here instead.
+    // eslint-disable-next-line no-console
+    console.log(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
+    await this.tester.test(components, {
+      watch: Boolean(watch),
+      debug: Boolean(debug),
+    });
+    const { seconds } = timer.stop();
+
+    return (
+      <Box>
+        tested <Color cyan>{components.length}</Color> components in <Color cyan>{seconds}</Color> seconds.
+      </Box>
+    );
   }
 }
-
-function Envs({ envs }: any) {
-  return (
-    <Box>
-      {envs.map((env, key) => {
-        return <Env key={key} env={env.env} results={env.res} />;
-      })}
-    </Box>
-  );
-}
-
-function Env({ env }: any) {
-  return <Color cyan>{env}</Color>;
-}
-
-// function TestResults() {}

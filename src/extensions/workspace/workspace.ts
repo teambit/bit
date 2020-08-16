@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
@@ -15,10 +16,10 @@ import { IsolatorExtension, Network } from '../isolator';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { DependencyResolverExtension } from '../dependency-resolver';
+import { DependencyResolverExtension, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { Variants } from '../variants';
+import { VariantsExtension } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { ComponentConfigFile } from './component-config-file';
@@ -36,8 +37,10 @@ import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from '../../consumer/component/exceptions/no-component-dir';
 import { Watcher } from './watch/watcher';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { ResolvedComponent } from '../../components/utils/resolved-component';
-import { loadResolvedExtensions } from '../../components/utils/load-extensions';
+import { loadRequireableExtensions } from '../../components/utils/load-extensions';
+import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver/types';
 
 export type EjectConfResult = {
@@ -52,6 +55,7 @@ export interface EjectConfOptions {
 export type WorkspaceInstallOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
+  dedupe: boolean;
 };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -60,6 +64,7 @@ const DEFAULT_VENDOR_DIR = 'vendor';
  * API of the Bit Workspace
  */
 export class Workspace implements ComponentFactory {
+  priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -84,7 +89,7 @@ export class Workspace implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverExtension,
 
-    private variants: Variants,
+    private variants: VariantsExtension,
 
     private logger: Logger,
 
@@ -348,14 +353,29 @@ export class Workspace implements ComponentFactory {
    */
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
+    const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id);
+      return this.get(id).catch((err) => {
+        errors.push({
+          id,
+          err,
+        });
+        return undefined;
+      });
     });
     const components = await componentsP;
+    errors.forEach((err) => {
+      if (!this.consumer.isLegacy) {
+        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
+      }
+      this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
+    });
+    // remove errored components
+    const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
-    return components;
+    return filteredComponents;
   }
 
   /**
@@ -407,9 +427,10 @@ export class Workspace implements ComponentFactory {
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const variantConfig = this.variants.byId(componentId);
-    if (variantConfig && variantConfig.componentWorkspaceMetaData.defaultScope) {
-      return variantConfig.componentWorkspaceMetaData.defaultScope;
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
+    if (variantConfig && variantConfig.defaultScope) {
+      return variantConfig.defaultScope;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -442,9 +463,10 @@ export class Workspace implements ComponentFactory {
     } else {
       scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
-    const variantConfig = this.variants.byId(componentId);
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
     if (variantConfig) {
-      variantsExtensions = variantConfig.componentExtensions;
+      variantsExtensions = variantConfig.extensions;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -527,7 +549,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -539,15 +561,34 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    let resolvedExtensions: ResolvedComponent[] = [];
-    resolvedExtensions = await this.load(extensionsToLoad);
-    // TODO: change to use the new reporter API, in order to implement this
-    // we would have to have more than 1 instance of the Reporter extension (one for the workspace and one for the CLI command)
-    //
-    // We need to think of a facility to show "system messages that do not stop execution" like this. We might want to (for example)
-    // have each command query the logger for such messages and decide whether to display them or not (according to the verbosity
-    // level passed to it).
-    await loadResolvedExtensions(this.harmony, resolvedExtensions, legacyLogger);
+    const requireableExtensions: any = await this.requireComponents(
+      extensionsToLoad.map((id) => this.resolveComponentId(id))
+    );
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+  }
+
+  async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {
+    const components = await this.getMany(ids);
+    let missingPaths = false;
+    const stringIds: string[] = [];
+    const resolveP = components.map(async (component) => {
+      stringIds.push(component.id.toString());
+      const packageName = componentIdToPackageName(component.state._consumer);
+      const localPath = path.join(this.path, 'node_modules', packageName);
+      const isExist = await fs.pathExists(localPath);
+      if (!isExist) {
+        missingPaths = true;
+      }
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const requireFunc = () => require(localPath);
+      return new RequireableComponent(component, requireFunc);
+    });
+    const resolved = await Promise.all(resolveP);
+    // Make sure to link missing components
+    if (missingPaths) {
+      await link(stringIds, false);
+    }
+    return resolved;
   }
 
   private async getComponentsDirectory(ids: ComponentID[]) {
@@ -579,7 +620,10 @@ export class Workspace implements ComponentFactory {
         ...workspacePolicy.peerDependencies,
       },
     };
-    await installer.install(this.path, rootDepsObject, installationMap);
+    const installOptions: PackageManagerInstallOptions = {
+      dedupe: options?.dedupe,
+    };
+    await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(stringIds, false);

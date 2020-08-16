@@ -1,0 +1,18 @@
+.scopeTitle {
+  max-width: 700px;
+  .titleRow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .avatar {
+    margin-right: -5px;
+  }
+  .contributors {
+    margin-bottom: 32px;
+  }
+  .copyLink {
+    grid-template-columns: 1fr 3fr;
+  }
+}

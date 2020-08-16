@@ -3,7 +3,7 @@
   // align-items: center;
   margin-bottom: 17px;
 }
-  
+
 .tab {
   position: relative;
   padding: 8px;
@@ -20,18 +20,18 @@
 
   &.active {
     color: var(--text-highlight);
-    
+
     &:before {
-      content:'';
+      content: '';
       position: absolute;
       top: 0;
-      left:0;
-      right:0;
-    
+      left: 0;
+      right: 0;
+
       background-color: var(--base-color);
       height: 3px;
       border-radius: 10px;
-    
+
       transition: background-color 300ms, height 300ms;
     }
   }

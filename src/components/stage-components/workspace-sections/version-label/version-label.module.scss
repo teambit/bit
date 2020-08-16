@@ -1,21 +1,16 @@
-
 .label {
-	border-radius: 12px;
-	border-style: solid;
-	border-width: 1px;
-	width: fit-content;
-	padding: 2px 8px;
-	margin-bottom: 16px;
-	text-transform: capitalize;
-	&.latest {
-		color: #37b26c;
-	}
-	&.checked-out {
-		color: #0984e3;
-	}
+  margin-bottom: 16px;
+  &.latest {
+    border-color: #37b26c;
+    color: #37b26c;
+  }
+  &.checked-out {
+    border-color: #0984e3;
+    color: #0984e3;
+  }
 }
 
 .emptyLabel {
-	height: 25px;
-	margin-bottom: 16px;
+  height: 25px;
+  margin-bottom: 16px;
 }

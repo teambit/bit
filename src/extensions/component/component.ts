@@ -167,5 +167,3 @@ export class Component {
     return component.id.toString() === this.id.toString();
   }
 }
-
-export default Component;

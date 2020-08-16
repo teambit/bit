@@ -11,9 +11,9 @@ export class Runtime {
     readonly runtimeEnvs: EnvRuntime[]
   ) {}
 
-  async run(service: EnvService) {
+  async run(service: EnvService, options?: { [key: string]: any }): Promise<any[]> {
     const contexts = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
-      const res = await service.run(new ExecutionContext(this, env));
+      const res = await service.run(new ExecutionContext(this, env), options);
       return {
         env: env.id,
         res,

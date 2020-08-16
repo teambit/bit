@@ -13,6 +13,7 @@ import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler/bundler';
 import { pathNormalizeToLinux } from '../../utils';
+import { ReactConfig } from './react.extension';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -52,8 +53,17 @@ export class ReactEnv implements Environment {
     /**
      * tester extension
      */
-    private tester: TesterExtension
+    private tester: TesterExtension,
+
+    private config: ReactConfig
   ) {}
+
+  private _tsconfig: any;
+
+  setTsConfig(tsconfig: any) {
+    this._tsconfig = tsconfig;
+    return this;
+  }
 
   /**
    * returns a component tester.
@@ -65,11 +75,12 @@ export class ReactEnv implements Environment {
   /**
    * returns a component compiler.
    */
-  getCompiler(): Compiler {
+  getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = require('./typescript/tsconfig.json');
+    const tsconfig = targetConfig || this._tsconfig || require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
+      // TODO: @david please remove this line and refactor to be something that makes sense.
       types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
     });
   }
@@ -125,11 +136,12 @@ export class ReactEnv implements Environment {
       },
       // TODO: add this only if using ts
       devDependencies: {
-        '@types/react': '^16.9.17',
+        '@types/react': '16.9.43',
+        '@types/react-router-dom': '^5.1.5',
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.12.0',
+        react: '^16.13.1' || this.config.reactVersion,
       },
     };
   }
@@ -140,6 +152,7 @@ export class ReactEnv implements Environment {
   getPipe(): BuildTask[] {
     // return BuildPipe.from([this.compiler.task, this.tester.task]);
     // return BuildPipe.from([this.tester.task]);
+    // return [this.compiler.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
     return [this.compiler.task, this.pkg.dryRunTask];
   }
 }

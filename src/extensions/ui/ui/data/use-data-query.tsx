@@ -9,6 +9,8 @@ import { NotificationContext } from '../../../notifications';
 // @TODO derive props from useQuery
 // (couldn't figure out how to use Parameters<typeof useQuery<..>>)
 
+export type DataQueryResult<TData = any, TVariables = OperationVariables> = QueryResult<TData, TVariables>;
+
 export function useDataQuery<TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: QueryHookOptions<TData, TVariables>

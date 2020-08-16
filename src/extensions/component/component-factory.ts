@@ -26,4 +26,9 @@ export interface ComponentFactory {
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  /**
+   * determine whether host should be the prior one in case multiple hosts persist.
+   */
+  priority?: boolean;
 }

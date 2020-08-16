@@ -21,6 +21,7 @@ import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
 import { getDependencyTree } from '../files-dependency-builder';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
+import { ExtensionDataEntry } from '../../../../consumer/config';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -921,10 +922,15 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   pushToDependencyResolverExtension(id: BitId, fileType: FileType, packageName?: string) {
     if (!packageName) return;
-    const ext = this.component.extensions.findCoreExtension(Extensions.dependencyResolver);
-    // @todo: uncomment once fixed.
-    // if (!ext) throw new Error(`extension is not defined on a component ${this.componentId.toString()}`);
-    if (!ext) return;
+    // aims to handle legacy workspaces when there is no default scope so the package name is wrong
+    if (!id.hasScope() && !this.consumer.config.defaultScope) return;
+    let extExistOnComponent = true;
+    let ext = this.component.extensions.findCoreExtension(Extensions.dependencyResolver);
+    if (!ext) {
+      extExistOnComponent = false;
+      // Create new deps resolver extension entry to add to the component with data only
+      ext = new ExtensionDataEntry(undefined, undefined, Extensions.dependencyResolver, undefined, {});
+    }
     const depData = {
       componentId: id,
       packageName,
@@ -932,6 +938,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     };
     if (!ext.data.dependencies) ext.data.dependencies = [];
     ext.data.dependencies.push(depData);
+    if (!extExistOnComponent) {
+      this.component.extensions.push(ext);
+    }
   }
 
   /**

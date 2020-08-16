@@ -8,6 +8,7 @@ import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 import { generateRandomStr } from '../utils';
 import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -231,5 +232,12 @@ export default class ScopeHelper {
   switchFromLegacyToHarmony() {
     fs.removeSync(path.join(this.scopes.localPath, 'bit.json'));
     this.initHarmonyWorkspace();
+  }
+
+  linkBitBin() {
+    const bitBinPath = path.join(this.scopes.localPath, './node_modules/bit-bin');
+    const localBitBinPath = path.join(__dirname, '../..');
+    fs.removeSync(bitBinPath);
+    createSymlinkOrCopy(localBitBinPath, bitBinPath);
   }
 }

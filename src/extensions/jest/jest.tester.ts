@@ -7,6 +7,8 @@ export class JestTester implements Tester {
   async test(context: TesterContext): Promise<TestResults> {
     const config: any = {
       rootDir: context.rootPath,
+      watch: context.watch,
+      runInBand: context.debug,
     };
 
     // eslint-disable-next-line

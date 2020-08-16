@@ -4,9 +4,9 @@ export type EnvContext = {
   components: Component[];
 };
 
-export interface Service {
+export interface Service<TOpts = {}> {
   /**
    * executes a service on a subset of components.
    */
-  run(context: EnvContext): any;
+  run(context: EnvContext, options?: TOpts): any;
 }

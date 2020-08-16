@@ -18,7 +18,7 @@ export class Manifest {
     const devDependencies = this.dependencies.devDependencies || {};
     const peerDependencies = this.dependencies.peerDependencies || {};
     if (options.copyPeerToRuntime) {
-      dependencies = Object.assign(peerDependencies, dependencies);
+      dependencies = { ...peerDependencies, ...dependencies };
     }
     const manifest = {
       name: this.name,

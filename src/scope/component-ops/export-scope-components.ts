@@ -504,10 +504,14 @@ async function convertToCorrectScope(
       if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
         ext.data.dependencies.forEach((dep) => {
           const id = new BitId(dep.componentId);
+          const oldScope = id.scope;
           const updatedScope = getIdWithUpdatedScope(id);
           if (!updatedScope.isEqual(id)) {
             hasChanged = true;
             dep.componentId = updatedScope;
+          }
+          if (oldScope && dep.packageName.includes(oldScope)) {
+            dep.packageName = dep.packageName.replace(oldScope, updatedScope.scope);
           }
         });
       }

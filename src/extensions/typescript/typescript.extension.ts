@@ -21,7 +21,10 @@ export class TypescriptExtension {
    * :TODO @gilad why do we need this DSL? can't I just get the args here.
    */
   getPackageJsonProps() {
-    return { main: 'dist/{main}.js' };
+    return {
+      main: 'dist/{main}.js',
+      types: '{main}.ts',
+    };
   }
 
   static id = '@teambit/typescript';

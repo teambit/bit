@@ -1,5 +1,5 @@
-import { createServer } from 'http';
-import express from 'express';
+import { createServer, Server } from 'http';
+import express, { Express } from 'express';
 import cors from 'cors';
 import { PubSub } from 'graphql-subscriptions';
 import graphqlHTTP from 'express-graphql';
@@ -12,10 +12,16 @@ import { LoggerExtension, Logger } from '../logger';
 
 export type GraphQLConfig = {
   port: number;
-  subscriptionsPort: number;
+  subscriptionsPath: string;
 };
 
-export type SchemaRegistry = SlotRegistry<Schema>;
+export type SchemaSlot = SlotRegistry<Schema>;
+
+export type GraphQLServerOptions = {
+  schemaSlot?: SchemaSlot;
+  app?: Express;
+  graphiql?: boolean;
+};
 
 export class GraphQLExtension {
   constructor(
@@ -27,7 +33,7 @@ export class GraphQLExtension {
     /**
      * slot for registering graphql modules
      */
-    private moduleSlot: SchemaRegistry,
+    private moduleSlot: SchemaSlot,
 
     /**
      * harmony context.
@@ -47,21 +53,18 @@ export class GraphQLExtension {
 
   private modules = new Map<string, GraphQLModule>();
 
-  /**
-   * start a graphql server.
-   */
-  async listen(port?: number) {
-    const schema = this.createRootModule();
-    const serverPort = port || this.config.port;
-    const subscriptionsPath = '/subscriptions';
+  async createServer(options: GraphQLServerOptions) {
+    const { graphiql = true } = options;
+    const schema = this.createRootModule(options.schemaSlot);
 
-    const app = express();
+    // TODO: @guy please consider to refactor to express extension.
+    const app = options.app || express();
     app.use(cors());
     app.use(
       '/graphql',
       graphqlHTTP({
         schema: schema.schema,
-        graphiql: true,
+        graphiql,
       })
     );
 
@@ -76,23 +79,26 @@ export class GraphQLExtension {
       },
       {
         server: subscriptionServer,
-        path: subscriptionsPath,
+        path: this.config.subscriptionsPath,
       }
     );
 
-    subscriptionServer.listen(serverPort, () => {
-      this.logger.info(`API Server over HTTP is now running on http://localhost:${serverPort}`);
-      this.logger.info(
-        `API Server over web socket with subscriptions is now running on ws://localhost:${serverPort}/${subscriptionsPath}`
-      );
-    });
+    return subscriptionServer;
   }
 
   /**
-   * get the root schema.
+   * start a graphql server.
    */
-  getSchema() {
-    return this.createRootModule();
+  async listen(port?: number, server?: Server, app?: Express) {
+    const serverPort = port || this.config.port;
+    const subServer = server || (await this.createServer({ app }));
+
+    subServer.listen(serverPort, () => {
+      this.logger.info(`API Server over HTTP is now running on http://localhost:${serverPort}`);
+      this.logger.info(
+        `API Server over web socket with subscriptions is now running on ws://localhost:${serverPort}/${this.config.subscriptionsPath}`
+      );
+    });
   }
 
   /**
@@ -104,16 +110,16 @@ export class GraphQLExtension {
     return this;
   }
 
-  private createRootModule() {
-    const modules = this.buildModules();
+  private createRootModule(schemaSlot?: SchemaSlot) {
+    const modules = this.buildModules(schemaSlot);
 
     return new GraphQLModule({
       imports: modules,
     });
   }
 
-  private buildModules() {
-    const schemaSlots = this.moduleSlot.toArray();
+  private buildModules(schemaSlot?: SchemaSlot) {
+    const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
       const moduleDeps = this.getModuleDependencies(extensionId);
 
@@ -150,6 +156,7 @@ export class GraphQLExtension {
 
   static defaultConfig = {
     port: 4000,
+    subscriptionsPath: '/subscriptions',
   };
 
   static dependencies = [LoggerExtension];
@@ -157,7 +164,7 @@ export class GraphQLExtension {
   static async provider(
     [loggerFactory]: [LoggerExtension],
     config: GraphQLConfig,
-    [moduleSlot]: [SchemaRegistry],
+    [moduleSlot]: [SchemaSlot],
     context: Harmony
   ) {
     const logger = loggerFactory.createLogger(GraphQLExtension.id);

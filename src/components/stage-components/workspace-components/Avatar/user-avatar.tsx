@@ -63,7 +63,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
               {getInitials(displayName || name)}
             </span>
           ))}
-        {!displayName && !name && (
+        {!displayName && !name && !profileImageWithParams && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
         {/* {tooltipId && (

@@ -97,7 +97,7 @@ describe('component config', function () {
           helper.componentJson.deleteIfExist('bar');
           helper.fixtures.copyFixtureExtensions('dummy-extension');
           helper.command.addComponent('dummy-extension');
-          helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+          helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
           helper.command.ejectConf('bar/foo');
           componentJson = helper.componentJson.read('bar');
         });
@@ -113,7 +113,7 @@ describe('component config', function () {
         helper.componentJson.deleteIfExist('bar');
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
         helper.command.tagAllComponents();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');
@@ -140,9 +140,9 @@ describe('component config', function () {
         'my-scope/ext5': { key: 'val-ws-defaults' },
       };
       helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext3', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext4', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext4', { key: 'val-variant' });
       helper.command.ejectConf('bar/foo');
       helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
       helper.componentJson.setExtension('my-scope/ext5', { key: 'val-component-json' });
@@ -161,7 +161,7 @@ describe('component config', function () {
     describe('stop on variant - component.json propagate true and variant propagate false', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', false);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should not contain extension from workspace defaults', () => {
@@ -179,7 +179,7 @@ describe('component config', function () {
     describe('propagate all the way - component.json propagate true and variant propagate true', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', true);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should contain extension from all sources', () => {

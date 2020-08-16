@@ -16,8 +16,12 @@ export type Target = {
 
 export interface BundlerContext extends BuildContext {
   targets: Target[];
+  publicPath?: string;
+  rootPath?: string;
 }
 
 export interface DevServerContext extends ExecutionContext {
   entry: string[];
+  publicPath?: string;
+  rootPath?: string;
 }

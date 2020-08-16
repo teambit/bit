@@ -1,4 +1,4 @@
-module.exports = function html(title) {
+module.exports = function html(title, withDevTools) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">
@@ -7,7 +7,7 @@ module.exports = function html(title) {
       <title>${title}</title>
       <script>
       // Allow to use react dev-tools inside the examples
-      window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      ${withDevTools ? '' : 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;'}
       </script>
     </head>
     <body>

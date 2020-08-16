@@ -8,7 +8,7 @@ interface ResponseError {
 export const catchErrors = (action: any) => (req: express.Request, res: express.Response, next: express.NextFunction) =>
   // TODO: @guy please take care of it
   // eslint-disable-next-line promise/no-callback-in-promise
-  action(req, res, next).catch(next);
+  action(req, res, next).catch((error: ResponseError) => errorHandle(error, req, res, next));
 
 export function notFound(req: express.Request, res: express.Response, next: express.NextFunction) {
   const err: ResponseError = new Error(`${req.method} ${req.url} Not Found`);
@@ -24,7 +24,8 @@ export function errorHandle(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
-  res.status(err.status || 500);
+  err.status = err.status || 500;
+  res.status(err.status);
   return res.jsonp({
     message: err.message,
     error: err,

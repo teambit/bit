@@ -36,7 +36,7 @@ describe('pkg extension', function () {
           'some-key': 'some-val',
         },
       };
-      helper.extensions.addExtensionToVariant('bar/foo', '@teambit/pkg', pkgConfig);
+      helper.extensions.addExtensionToVariant('bar', '@teambit/pkg', pkgConfig);
       barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
       isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
     });
@@ -86,7 +86,9 @@ describe('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/simple-config', config);
+        helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
+        helper.scopeHelper.linkBitBin();
+        helper.command.link();
         barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
         isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
       });

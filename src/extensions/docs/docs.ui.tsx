@@ -2,6 +2,8 @@ import { ComponentUI } from '../component/component.ui';
 import { OverviewSection } from './overview.section';
 
 export class DocsUI {
+  static id = '@teambit/docs';
+
   static dependencies = [ComponentUI];
 
   static async provider([component]: [ComponentUI]) {

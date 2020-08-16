@@ -1,9 +1,10 @@
 import React from 'react';
 import classNames from 'classnames';
 import styles from './version-label.module.scss';
+import { PillLabel } from '../../pill-label';
 
 export function VersionLabel({ status }: { status: 'latest' | 'checked-out' }) {
-  return <div className={classNames(styles.label, styles[status])}>{status.replace(/-/g, ' ')}</div>;
+  return <PillLabel className={classNames(styles.label, styles[status])}>{status.replace(/-/g, ' ')}</PillLabel>;
 }
 
 export type LabelsProps = {

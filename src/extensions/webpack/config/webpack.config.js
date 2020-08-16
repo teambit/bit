@@ -1,7 +1,7 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const html = require('./html');
 
-module.exports = (entries, rootPath, id) => {
+module.exports = (entries, rootPath) => {
   return {
     mode: 'production',
     // Stop compilation early in production

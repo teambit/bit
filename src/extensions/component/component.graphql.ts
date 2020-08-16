@@ -61,12 +61,6 @@ export function componentSchema(componentExtension: ComponentExtension) {
         # display name of the component
         displayName: String!
 
-        # determines whether the component is new.
-        isNew: Boolean!
-
-        # determines whether the component is modified since its last version.
-        isModified: Boolean!
-
         # package name of the component.
         packageName: String
 
@@ -96,8 +90,6 @@ export function componentSchema(componentExtension: ComponentExtension) {
           // graphql doesn't support map types
           return component.tags.toArray().map((tag) => tag.toObject());
         },
-        isNew: (component: Component) => component.isNew(),
-        isModified: (component: Component) => component.isModified(),
         /**
          * :TODO use legacy until @david will move it to the pkg extension.
          */

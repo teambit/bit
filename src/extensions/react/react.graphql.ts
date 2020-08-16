@@ -1,10 +1,10 @@
-import { Workspace } from '../workspace';
 import { ReactExtension } from './react.extension';
+import { ComponentFactory } from '../component';
 
 export function reactSchema(react: ReactExtension) {
   return {
     typeDefs: `
-      extend type Workspace {
+      extend type ComponentHost {
         getDocs(id: String!): ReactDocs
       }
 
@@ -28,10 +28,10 @@ export function reactSchema(react: ReactExtension) {
       }
     `,
     resolvers: {
-      Workspace: {
-        getDocs: async (ws: Workspace, { id }: { id: string }) => {
-          const componentId = await ws.resolveComponentId(id);
-          const component = await ws.get(componentId);
+      ComponentHost: {
+        getDocs: async (host: ComponentFactory, { id }: { id: string }) => {
+          const componentId = await host.resolveComponentId(id);
+          const component = await host.get(componentId);
           const empty = {
             abstract: '',
             filePath: '',

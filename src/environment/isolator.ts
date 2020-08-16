@@ -3,7 +3,6 @@ import execa from 'execa';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import { Capsule } from '../extensions/isolator/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
@@ -26,6 +25,7 @@ import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
 import { PackageManagerResults } from '../npm-client/npm-client';
 import { throwForNonLegacy } from '../consumer/component/component-schema';
+import Capsule from '../../legacy-capsule/core/capsule';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -268,7 +268,9 @@ export default class Isolator {
   }
 
   async capsuleExecUsingExeca(pkgManager: string, args: string[], dir = ''): Promise<PackageManagerResults> {
-    const cwd = path.join(this.capsule.wrkDir, dir);
+    // @ts-ignore fs-container has path.
+    const capsuleDir = this.capsule.container.path;
+    const cwd = path.join(capsuleDir, dir);
     return execa(pkgManager, args, { cwd });
   }
 

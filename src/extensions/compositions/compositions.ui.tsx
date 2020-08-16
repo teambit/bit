@@ -2,6 +2,7 @@ import { ComponentUI } from '../component/component.ui';
 import { CompositionsSection } from './composition.section';
 
 export class CompositionsUI {
+  static id = '@teambit/compositions';
   static dependencies = [ComponentUI];
 
   static async provider([component]: [ComponentUI]) {

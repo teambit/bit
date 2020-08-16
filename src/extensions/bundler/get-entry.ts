@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { BrowserRuntimeSlot } from './bundler.extension';
 import { ExecutionContext } from '../environments';
 import { PathOsBased } from '../../utils/path';
@@ -21,18 +20,7 @@ export async function getEntry(
   uiRoot: ComponentDir,
   runtimeSlot: BrowserRuntimeSlot
 ): Promise<string[]> {
-  const mainFiles = context.components.map((component) => {
-    const path = join(
-      // :TODO check how it works with david. Feels like a side-effect.
-      // this.workspace.componentDir(component.id, {}, { relative: true }),
-      // @ts-ignore
-      uiRoot.componentDir(component.id, {}, { relative: true }),
-      component.config.main
-    );
-
-    return path;
-  });
-
+  // TODO: refactor this away from here and use computePaths instead
   const slotEntries = await Promise.all(
     runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
   );
@@ -42,7 +30,5 @@ export async function getEntry(
     return acc;
   });
 
-  const paths = mainFiles.concat(slotPaths);
-
-  return paths;
+  return slotPaths;
 }

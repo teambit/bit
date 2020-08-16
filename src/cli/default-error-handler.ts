@@ -106,9 +106,9 @@ import ComponentsPendingMerge from '../consumer/component-ops/exceptions/compone
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
-import { PaperError } from '../extensions/cli';
 import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
+import { BitError } from '../error/bit-error';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -677,7 +677,7 @@ function handleNonBitCustomErrors(err: Error): string {
 export default (err: Error): { message: string; error: Error } => {
   const errorDefinition = findErrorDefinition(err);
   const getErrMsg = (): string => {
-    if (err instanceof PaperError) {
+    if (err instanceof BitError) {
       return err.report();
     }
     if (!errorDefinition) {
