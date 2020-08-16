@@ -16,12 +16,13 @@ import styles from './scope.module.scss';
 export type ScopeProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
+  sidebar: JSX.Element;
 };
 
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot, menuSlot }: ScopeProps) {
+export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
   const { scope } = useScope();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
@@ -30,13 +31,12 @@ export function Scope({ routeSlot, menuSlot }: ScopeProps) {
     return <FullLoader />;
   }
 
-  const ids = scope.components.map((component) => component);
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
         <TopBar Corner={() => <Corner name={scope.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
         <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          {/* <SideBar components={ids} className={styles.sideBar} /> */}
+          {sidebar}
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">

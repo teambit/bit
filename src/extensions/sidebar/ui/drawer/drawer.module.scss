@@ -1,0 +1,46 @@
+.drawer {
+  max-height: 100%;
+  overflow: hidden;
+}
+.drawerName {
+  font-size: var(--p-xxs);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  padding: 0 8px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--bg-color);
+  &:hover {
+    border-color: var(--bg-topping-highlight);
+  }
+  &.open {
+    border-color: var(--base-color);
+  }
+  .arrow {
+    display: inline-block;
+    font-size: var(--p-xs);
+    line-height: inherit;
+    transition: all 300ms;
+    margin-right: 10px;
+    color: var(--text-muted);
+    &.collapsed {
+      transform: rotate(-0.25turn);
+    }
+  }
+}
+
+.drawerContent {
+  height: 100%;
+  max-height: 0;
+  transition: max-height 300ms ease-in-out;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  &.open {
+    max-height: 100vh;
+  }
+}

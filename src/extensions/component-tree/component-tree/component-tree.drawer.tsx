@@ -7,7 +7,7 @@ import { ComponentTreeSlot } from '../component-tree.ui';
 
 export class ComponentTreeDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
-
+  // TODO - check if this is still used @oded/@uri
   name = 'COMPONENTS';
 
   component = () => {

@@ -11,8 +11,9 @@ export class ComponentTreeDrawer implements Drawer {
 
   component = () => {
     const { host } = useComponentHost();
-
     if (!host) return <FullLoader />;
-    return <ComponentTree components={host.components} treeNodeSlot={this.treeNodeSlot} />;
+    // TODO - remove hard coded filter
+    const components = host.components.filter((x) => x.id.legacyComponentId.scope === 'teambit2.documenter-temp');
+    return <ComponentTree components={components} treeNodeSlot={this.treeNodeSlot} />;
   };
 }

@@ -5,7 +5,9 @@ import { RouteSlot } from '../react-router/slot-router';
 import { UIRoot } from '../ui/ui-root.ui';
 import { UIRuntimeExtension } from '../ui/ui.ui';
 import { Scope } from './ui/scope';
+import { SidebarUI } from '../sidebar/sidebar.ui';
 import { ComponentUI } from '../component/component.ui';
+import { ExternalComponentTreeDrawer } from '../component/external-component-tree';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -25,7 +27,9 @@ export class ScopeUI {
     /**
      * menu slot
      */
-    private menuSlot: RouteSlot
+    private menuSlot: RouteSlot,
+
+    private sidebar: SidebarUI
   ) {
     this.registerExplicitRoutes();
   }
@@ -55,13 +59,13 @@ export class ScopeUI {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} />,
+          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} sidebar={<this.sidebar.render />} />,
         },
       ],
     };
   }
 
-  static dependencies = [UIRuntimeExtension, ComponentUI];
+  static dependencies = [UIRuntimeExtension, ComponentUI, SidebarUI, ExternalComponentTreeDrawer];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/scope';
@@ -69,11 +73,11 @@ export class ScopeUI {
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
   static async provider(
-    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
+    [ui, componentUi, sidebar]: [UIRuntimeExtension, ComponentUI, SidebarUI, ExternalComponentTreeDrawer],
     config,
     [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
   ) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot);
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
     ui.registerRoot(scopeUi.root);
 
     return scopeUi;

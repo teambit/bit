@@ -38,7 +38,7 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: 
       if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
       // // TODO - handle scopes view
       // if (!id.includes('/')) return ScopeView;
-      else return <NamespaceView {...props} />;
+      return <NamespaceView {...props} />;
     },
     [treeNodeSlot]
   );

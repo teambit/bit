@@ -53,7 +53,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
         {/* <ComponentStatusResolver status={status} />
         <StatusTooltip status={status} name={componentName} /> */}
-        {/* <ComponentStatusResolver status={status} /> */}
         {props.treeNodeSlot.toArray().map(([id, treeNode]) => {
           if (!payload) return null;
           return <treeNode.widget key={id} component={payload} />;
