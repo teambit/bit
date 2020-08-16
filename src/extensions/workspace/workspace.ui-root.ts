@@ -6,6 +6,7 @@ import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
 import { BundlerExtension } from '../bundler';
 import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
 import { ComponentServer } from '../bundler/component-server';
+import { flatten } from '../../utils';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
@@ -78,11 +79,21 @@ export class WorkspaceUIRoot implements UIRoot {
 
   async getProxy(): Promise<ProxyEntry[]> {
     const servers = await this.getServers();
-    return servers.map((server) => {
-      return {
-        context: [`/preview/${server.context.envRuntime.id}`],
-        target: `http://localhost:${server.port}`,
-      };
+
+    const proxyConfigs = servers.map((server) => {
+      return [
+        {
+          context: [`/preview/${server.context.envRuntime.id}`],
+          target: `http://localhost:${server.port}`,
+        },
+        {
+          context: [`/_hmr/${server.context.envRuntime.id}`],
+          target: `ws://localhost:${server.port}`,
+          ws: true,
+        },
+      ];
     });
+
+    return flatten(proxyConfigs);
   }
 }
