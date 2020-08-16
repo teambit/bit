@@ -1,5 +1,5 @@
-import { inflateToTree } from './inflate-paths';
 import { expect } from 'chai';
+import { inflateToTree } from './inflate-paths';
 
 it('build tree from paths', () => {
   const result = inflateToTree(['path'], (x) => x);

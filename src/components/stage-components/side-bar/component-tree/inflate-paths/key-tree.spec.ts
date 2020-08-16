@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { buildKeyTree } from './key-tree';
 
 it('should return an empty node for 0 paths', () => {

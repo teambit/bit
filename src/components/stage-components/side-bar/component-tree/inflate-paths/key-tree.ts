@@ -25,7 +25,7 @@ export function buildKeyTree(paths: string[]): KeyTree {
     let currentFolder = treeRoot;
 
     segments.forEach((dirname) => {
-      const folderId = dirname + '/';
+      const folderId = `${dirname}/`;
       const nextFolder = currentFolder[folderId] || makeNode();
       currentFolder[folderId] = nextFolder;
       currentFolder = nextFolder;

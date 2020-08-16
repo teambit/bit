@@ -1,5 +1,5 @@
-import { keyTreeToNodeTree } from './key-tree-to-node-tree';
 import { expect } from 'chai';
+import { keyTreeToNodeTree } from './key-tree-to-node-tree';
 
 it('should handle empty tree', () => {
   const result = keyTreeToNodeTree('/', {});
