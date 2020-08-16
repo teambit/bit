@@ -1,4 +1,5 @@
 import { Runtime, EnvRuntime } from '../runtime';
+import type { Component } from '../../component';
 
 export type ServiceMap<T> = {
   [env: string]: T;
@@ -27,7 +28,7 @@ export class ExecutionContext {
   /**
    * components applied in the execution context.
    */
-  get components() {
+  get components(): Component[] {
     return this.envRuntime.components;
   }
 

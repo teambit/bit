@@ -1,24 +1,23 @@
 $topbarHeight: 64px;
 
 .emptyContainer {
-	height: 100vh
+  height: 100vh;
 }
 
 .main {
-	width: 100%;
-    height: 100vh;
-    overflow-y: scroll;
+  width: 100%;
+  height: 100vh;
+  overflow-y: scroll;
 }
 
 .workspaceWrapper {
-	height: 100vh;
-	overflow: hidden;
+  height: 100vh;
+  overflow: hidden;
 }
 
-
 .sideBar {
-	border-right: 1px solid #ededed;
-	flex: 1;
-	
-	overflow: auto;
+  border-right: 1px solid #ededed;
+  flex: 1;
+
+  overflow: auto;
 }

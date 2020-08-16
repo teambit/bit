@@ -373,7 +373,7 @@ export class Workspace implements ComponentFactory {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
-    const filteredComponents = compact(components);
+    const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
     return filteredComponents;
   }

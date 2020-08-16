@@ -100,8 +100,8 @@ export default class PackageJsonFile {
   }
 
   static loadFromCapsuleSync(capsuleRootDir: string) {
-    const filePath = composePath(capsuleRootDir);
-    const filePathAbsolute = filePath;
+    const filePath = composePath('.');
+    const filePathAbsolute = path.join(capsuleRootDir, filePath);
     const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
     if (!packageJsonStr) {
       throw new Error(`capsule ${capsuleRootDir} is missing package.json`);

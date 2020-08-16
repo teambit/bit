@@ -38,7 +38,7 @@ export class BundlerExtension {
    * load all given components in corresponding dev servers.
    * @param components defaults to all components in the workspace.
    */
-  async devServer(components: Component[], root: UIRoot) {
+  async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     this.devService.uiRoot = root;
     const executionResponse = await envRuntime.run(this.devService);

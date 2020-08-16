@@ -35,11 +35,7 @@ describe('publish functionality', function () {
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
-      const environments = {
-        env: '@teambit/react',
-        config: {},
-      };
-      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.reInitRemoteScope();
       npmCiRegistry.setCiScopeInBitJson();
@@ -172,11 +168,7 @@ describe('publish functionality', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
-      const environments = {
-        env: '@teambit/react',
-        config: {},
-      };
-      helper.extensions.addExtensionToVariant('*', '@teambit/envs', environments);
+      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
 
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });
