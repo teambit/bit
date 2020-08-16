@@ -1,7 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { Separator } from '@teambit/base-ui-temp.elements.separator';
 import { Drawer } from '../drawer';
 import { hoverable } from '../../../../to-eject/css-components/hoverable';
 import styles from './drawer.module.scss';
@@ -12,7 +11,7 @@ export type DrawerProps = {
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function DrawerUI({ drawer, className, isOpen, onToggle, maxHeight, ...rest }: DrawerProps) {
+export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: DrawerProps) {
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
       <div className={classNames(hoverable, styles.drawerName, { [styles.open]: isOpen })} onClick={onToggle}>
@@ -26,7 +25,6 @@ export function DrawerUI({ drawer, className, isOpen, onToggle, maxHeight, ...re
       <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>
         <drawer.component />
       </div>
-      <Separator />
     </div>
   );
 }

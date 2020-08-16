@@ -3,4 +3,7 @@
   height: calc(100vh - 70px);
   overflow: hidden;
   border-right: 1px solid #ededed;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 100%;
 }
