@@ -53,7 +53,6 @@ export async function loadRequireableExtensions(
       logger.consoleFailure(errorMsg);
       logger.error(errorMsg, e);
       if (throwOnError) {
-        console.log(e);
         throw new CannotLoadExtension(id, e);
       }
       logger.console(e);
