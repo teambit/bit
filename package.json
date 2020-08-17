@@ -142,6 +142,7 @@
     "@teambit/evangelist-temp.elements.icon": "^0.0.1",
     "@teambit/evangelist-temp.elements.image": "^0.0.1",
     "@teambit/evangelist-temp.input.input": "^0.0.1",
+    "@teambit/evangelist-temp.surfaces.dropdown": "0.0.1",
     "@teambit/explorer-temp.ui.component-card": "^0.0.4",
     "@teambit/explorer-temp.ui.component-grid": "^0.0.1",
     "@teambit/gitconfig": "^2.0.6",

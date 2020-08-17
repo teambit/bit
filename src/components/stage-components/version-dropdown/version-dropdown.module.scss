@@ -1,0 +1,68 @@
+.versionDropdown {
+  z-index: 1;
+  height: 100%;
+  > div {
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .menu {
+    width: 300px;
+    padding: 16px;
+    top: 60px;
+    font-size: var(--p-xs);
+    border-radius: 6px;
+    > div {
+      margin-bottom: 8px;
+    }
+  }
+}
+.title {
+  margin-bottom: 12px;
+}
+.separator {
+  margin-bottom: 8px;
+}
+
+.versionContainer {
+  max-height: 240px;
+  overflow-y: scroll;
+}
+.versionLine {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 24px;
+  .version {
+    margin-right: 16px;
+  }
+}
+
+.placeholder {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  user-select: none;
+  [data-open='true'] & {
+    transition: color 300ms, background-color 300ms ease-in-out;
+    background-color: var(--bg-color);
+    color: var(--base-color);
+  }
+  > div {
+    margin-right: 5px;
+  }
+  .label {
+    margin-right: 8px;
+  }
+}
+
+.noVersions {
+  padding-left: 8px;
+  .label {
+    border: 1px solid var(--base-color);
+    color: var(--base-color);
+  }
+}
