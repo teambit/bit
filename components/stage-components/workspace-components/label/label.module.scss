@@ -1,0 +1,21 @@
+.label {
+  display: inline-block;
+  color: var(--base-highlight);
+  background: var(--muted-color);
+
+  padding: 8px 16px;
+  border-radius: 7px;
+
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.labelList {
+  > * {
+    margin-bottom: 1em;
+    &:not(:last-child) {
+      margin-right: 1em;
+    }
+  }
+}

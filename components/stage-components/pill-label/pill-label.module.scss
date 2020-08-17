@@ -1,0 +1,13 @@
+.pillLabel {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  border-style: solid;
+  border-width: 1px;
+  width: fit-content;
+  padding: 2px 8px;
+  text-transform: capitalize;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+  font-size: var(--p-xs);
+}
