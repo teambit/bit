@@ -2,7 +2,6 @@ import React from 'react';
 import classNames from 'classnames';
 import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { Separator } from '@teambit/base-ui-temp.elements.separator';
 import { VersionLabel } from '../workspace-sections/version-label';
 import { hoverable } from '../../../to-eject/css-components/hoverable';
 import { PillLabel } from '../pill-label';
@@ -33,7 +32,6 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
       >
         <div>
           <div className={styles.title}>Select version to view</div>
-          <Separator className={styles.separator} />
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
               return (

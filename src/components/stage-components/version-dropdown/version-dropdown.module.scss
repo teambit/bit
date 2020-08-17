@@ -8,25 +8,23 @@
   }
   .menu {
     width: 300px;
-    padding: 16px;
+    padding: 0;
     top: 60px;
     font-size: var(--p-xs);
     border-radius: 6px;
-    > div {
-      margin-bottom: 8px;
-    }
   }
 }
 .title {
-  margin-bottom: 12px;
-}
-.separator {
+  padding: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 8px;
 }
 
 .versionContainer {
   max-height: 240px;
   overflow-y: scroll;
+  padding: 0 8px;
 }
 .versionLine {
   cursor: pointer;
