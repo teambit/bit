@@ -2,9 +2,16 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { PreviewType } from './preview-type';
 import { PreviewNotFound } from './exceptions';
 
-export type PreviewSlot = SlotRegistry<PreviewType>;
+import * as modulesIndex from './link';
 
-const PREVIEW_MODULES = {};
+let IMPORT_INDEX: Record<string, previewModule> = modulesIndex;
+
+type previewModule = {
+  componentMap: Record<string, any[]>;
+  mainModule: { default: () => void };
+};
+
+export type PreviewSlot = SlotRegistry<PreviewType>;
 
 export class Preview {
   constructor(
@@ -29,13 +36,19 @@ export class Preview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
-            return PREVIEW_MODULES[prevName].componentMap[componentId][0];
+            const moduleMap = IMPORT_INDEX[prevName];
+            if (!moduleMap) return undefined;
+
+            const componentModule = moduleMap?.componentMap[componentId];
+            if (!componentModule) return undefined;
+
+            return componentModule[0];
           })
           .filter((module) => !!module)
       : [];
 
-    return preview.render(componentId, PREVIEW_MODULES[name], includes);
+    const previewModule = IMPORT_INDEX[name];
+    return preview.render(componentId, previewModule, includes);
   }
 
   /**
@@ -86,13 +99,15 @@ export class Preview {
       preview.render();
     });
 
+    // @ts-ignore
+    const hotReloader = module?.hot;
+    if (hotReloader) {
+      hotReloader.accept('./link', async () => {
+        IMPORT_INDEX = await import('./link');
+        preview.render();
+      });
+    }
+
     return preview;
   }
-}
-
-export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
-  PREVIEW_MODULES[previewName] = {
-    mainModule: defaultModule,
-    componentMap,
-  };
 }

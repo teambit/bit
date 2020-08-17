@@ -1,17 +1,39 @@
-// :TODO refactor to building an AST and generate source code based on it.
-export function generateLink(prefix: string, componentMap: any, defaultModule?: string): string {
-  return `
-import { linkModules } from '${require.resolve('./preview.preview')}';
-import harmony from '${require.resolve('@teambit/harmony')}';
-${defaultModule ? `const defaultModule = require('${defaultModule}'` : ''});
+import { ComponentMap } from '../component/component-map';
 
-linkModules('${prefix}', defaultModule, {
-  ${componentMap
-    .toArray()
-    .map(([component, modulePaths]: any) => {
-      return `'${component.id.fullName}': [${modulePaths.map((path) => `require('${path}')`).join(', ')}]`;
-    })
-    .join(',\n')}
-});  
+// :TODO refactor to building an AST and generate source code based on it.
+export function generateLink(componentMap: ComponentMap<string[]>, defaultModule?: string): string {
+  return `
+var componentMap = ${stringifyComponentMap(componentMap)};
+
+${makeExports([
+  ['componentMap', 'componentMap'],
+  ['mainModule', defaultModule ? `require('${defaultModule}')` : '{}'],
+])}
 `;
+}
+
+export function makeExports(entries: [string, string][]) {
+  return `
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+${entries.map(([name, value]) => `exports.${name} = ${value};`).join('\n')}
+`;
+}
+
+export function makeReExport(entries: [string, string][]) {
+  const reexport = entries.map(([name, path]) => [name, `require('${path}')`] as [string, string]);
+  return makeExports(reexport);
+}
+
+function stringifyComponentMap(componentMap: ComponentMap<string[]>) {
+  const items = componentMap
+    .toArray()
+    .map(
+      ([component, paths]) => `'${component.id.fullName}': [${paths.map((path) => `require('${path}')`).join(', ')}]`
+    )
+    .join(',\n');
+
+  return ['{', items, '}'].join('\n');
 }

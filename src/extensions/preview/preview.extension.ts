@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
-import { generateLink } from './generate-link';
+import { generateLink, makeReExport } from './generate-link';
 import { ComponentMap } from '../component/component-map';
 import { BundlerExtension } from '../bundler';
 import { BuilderExtension } from '../builder';
@@ -12,6 +12,7 @@ import { PreviewRoute } from './preview.route';
 import { Component, ComponentExtension } from '../component';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
+import { makeTempDir } from './mk-temp-dir';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -40,10 +41,9 @@ export class PreviewExtension {
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
    */
-  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule?: string, dirName?: string) {
-    const contents = generateLink(prefix, moduleMap, defaultModule);
-    // :TODO @uri please generate a random file in a temporary directory
-    const targetPath = resolve(join(dirName || __dirname, `/__${prefix}-${Date.now()}.js`));
+  writeLink(filepath: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined) {
+    const contents = generateLink(moduleMap, defaultModule);
+    const targetPath = resolve(filepath);
     writeFileSync(targetPath, contents);
 
     return targetPath;
@@ -54,8 +54,9 @@ export class PreviewExtension {
   }
 
   async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
-    const previewMain = require.resolve('./preview.runtime');
     const previews = this.previewSlot.values();
+
+    const tmpDir = makeTempDir();
 
     const paths = previews.map(async (previewDef) => {
       const map = await previewDef.getModuleMap(context.components);
@@ -64,24 +65,23 @@ export class PreviewExtension {
         return files.map((file) => file.path);
       });
 
-      const link = this.writeLink(
-        previewDef.prefix,
+      const targetPath = this.writeLink(
+        join(tmpDir, `${previewDef.prefix}.js`),
         withPaths,
         previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
       );
 
-      const outputFiles = map
-        .toArray()
-        .flatMap(([, files]) => {
-          return files.map((file) => file.path);
-        })
-        .concat([link]);
-
-      return outputFiles;
+      return [previewDef.prefix, targetPath] as [string, string];
     });
 
-    const resolved = await Promise.all(paths);
-    return resolved.flatMap((array) => array).concat([previewMain]);
+    const linkFiles = await Promise.all(paths);
+    const indexContent = makeReExport(linkFiles);
+
+    const linkPath = resolve(join(__dirname, `/link/index.js`));
+    writeFileSync(linkPath, indexContent);
+
+    const previewMain = require.resolve('./preview.runtime');
+    return [previewMain];
   }
 
   /**

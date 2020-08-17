@@ -67,11 +67,11 @@ export class PreviewTask implements BuildTask {
       const paths = this.getPathsFromMap(capsule, moduleMap, context);
       const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
 
+      // TODO - make master link file
       const link = this.preview.writeLink(
-        previewDef.prefix,
+        join(capsule.path, `__${previewDef.prefix}.js`),
         paths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined,
-        capsule.path
+        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
       );
 
       const files = paths
