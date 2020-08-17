@@ -3,8 +3,8 @@ import classNames from 'classnames';
 import { H3 } from '@teambit/documenter-temp.ui.heading';
 import { Author, Snap } from '@teambit/component/snap';
 import { NavLink } from '@teambit/react-router/nav-link';
-import { StatusDot } from '@teambit/staged-components.side-bar/component-tree/status-dot/status-dot';
-import { Contributors } from '@teambit/staged-components.workspace-sections.contributors/contributors';
+import { StatusDot } from '@teambit/staged-components.side-bar';
+import { Contributors } from '@teambit/staged-components.workspace-sections.contributors';
 import { Labels } from '@teambit/staged-components.workspace-sections.version-label';
 import styles from './version-block.module.scss';
 

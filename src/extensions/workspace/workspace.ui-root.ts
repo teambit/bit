@@ -32,12 +32,12 @@ export class WorkspaceUIRoot implements UIRoot {
     // TODO: @gilad please make sure to automate this for all extensions configured in the workspace.
     return [
       require.resolve('./workspace.ui'),
-      require.resolve('../tester/tester.ui'),
-      require.resolve('../changelog/changelog.ui'),
-      require.resolve('../component/component.ui'),
-      require.resolve('../compositions/compositions.ui'),
-      require.resolve('../docs/docs.ui'),
-      require.resolve('../notifications/notification.ui'),
+      require.resolve('@teambit/tester/tester.ui'),
+      require.resolve('@teambit/changelog/changelog.ui'),
+      require.resolve('@teambit/component/component.ui'),
+      require.resolve('@teambit/compositions/compositions.ui'),
+      require.resolve('@teambit/docs/docs.ui'),
+      require.resolve('@teambit/notifications/notification.ui'),
     ];
   }
 
