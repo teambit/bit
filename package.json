@@ -239,7 +239,7 @@
     "join-path": "^1.1.1",
     "level-mem": "^5.0.1",
     "level-party": "^4.0.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.20",
     "lodash.assignwith": "^4.2.0",
     "lodash.groupby": "^4.6.0",
     "lodash.head": "^4.0.1",
