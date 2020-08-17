@@ -2,12 +2,6 @@
   max-height: 100%;
   overflow: hidden;
   min-height: 32px;
-  // display: flex;
-  // flex-direction: column;
-  // flex: 0 1;
-  // &.open {
-  //   flex: 1 1 100%;
-  // }
 }
 .drawerName {
   font-size: var(--p-xxs);
@@ -24,13 +18,10 @@
   border-color: var(--bg-color);
   border-top-color: #ededed;
   border-bottom-color: #ededed;
-  border-radius: 0;
-  border-collapse: collapse;
+  transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
     border-color: var(--bg-topping-highlight);
-  }
-  &.open {
-    border-color: var(--base-color);
+    background: var(--bg-topping-highlight);
   }
   .arrow {
     display: inline-block;

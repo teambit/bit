@@ -14,7 +14,7 @@ export type DrawerProps = {
 export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: DrawerProps) {
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
-      <div className={classNames(hoverable, styles.drawerName, { [styles.open]: isOpen })} onClick={onToggle}>
+      <div className={classNames(styles.drawerName, { [styles.open]: isOpen })} onClick={onToggle}>
         <div>
           <Icon className={classNames(styles.arrow, { [styles.collapsed]: !isOpen })} of="fat-arrow-down" />
           {drawer.name}
