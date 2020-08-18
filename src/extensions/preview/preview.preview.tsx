@@ -2,9 +2,8 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { PreviewType } from './preview-type';
 import { PreviewNotFound } from './exceptions';
 
-import * as modulesIndex from './link';
-
-let IMPORT_INDEX: Record<string, previewModule> = modulesIndex;
+let PREVIEW_MODULES: Record<string, previewModule> = {};
+let RERENDER = () => {};
 
 type previewModule = {
   componentMap: Record<string, any[]>;
@@ -24,7 +23,7 @@ export class Preview {
   /**
    * render the preview.
    */
-  render() {
+  render = () => {
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
 
@@ -36,7 +35,7 @@ export class Preview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            const moduleMap = IMPORT_INDEX[prevName];
+            const moduleMap = PREVIEW_MODULES[prevName];
             if (!moduleMap) return undefined;
 
             const componentModule = moduleMap?.componentMap[componentId];
@@ -47,9 +46,9 @@ export class Preview {
           .filter((module) => !!module)
       : [];
 
-    const previewModule = IMPORT_INDEX[name];
+    const previewModule = PREVIEW_MODULES[name];
     return preview.render(componentId, previewModule, includes);
-  }
+  };
 
   /**
    * register a new preview.
@@ -95,19 +94,17 @@ export class Preview {
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
     const preview = new Preview(previewSlot);
 
-    window.addEventListener('hashchange', () => {
-      preview.render();
-    });
+    RERENDER = preview.render;
 
-    // @ts-ignore
-    const hotReloader = module?.hot;
-    if (hotReloader) {
-      hotReloader.accept('./link', async () => {
-        IMPORT_INDEX = await import('./link');
-        preview.render();
-      });
-    }
+    window.addEventListener('hashchange', () => {
+      RERENDER();
+    });
 
     return preview;
   }
+}
+
+export function updateModules(modules: Record<string, previewModule>) {
+  PREVIEW_MODULES = modules;
+  RERENDER();
 }

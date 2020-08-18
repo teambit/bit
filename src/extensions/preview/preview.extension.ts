@@ -1,7 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
-import { generateLink, makeReExport } from './generate-link';
+import { generateLink, makeReExport, makeLinkUpdater } from './generate-link';
 import { ComponentMap } from '../component/component-map';
 import { BundlerExtension } from '../bundler';
 import { BuilderExtension } from '../builder';
@@ -35,19 +35,19 @@ export class PreviewExtension {
     return new PreviewArtifact(artifacts);
   }
 
-  /**
-   * write a link for a loading custom modules dynamically.
-   * @param prefix write
-   * @param moduleMap map of components to module paths to require.
-   * @param defaultModule
-   */
-  writeLink(filepath: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined) {
-    const contents = generateLink(moduleMap, defaultModule);
-    const targetPath = resolve(filepath);
-    writeFileSync(targetPath, contents);
+  // /**
+  //  * write a link for a loading custom modules dynamically.
+  //  * @param prefix write
+  //  * @param moduleMap map of components to module paths to require.
+  //  * @param defaultModule
+  //  */
+  // writeLink(filepath: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined) {
+  //   const contents = generateLink(moduleMap, defaultModule);
+  //   const targetPath = resolve(filepath);
+  //   writeFileSync(targetPath, contents);
 
-    return targetPath;
-  }
+  //   return targetPath;
+  // }
 
   getDefs() {
     return this.previewSlot.values();
@@ -56,32 +56,71 @@ export class PreviewExtension {
   async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
     const previews = this.previewSlot.values();
 
-    const tmpDir = makeTempDir();
+    const previewLinks = await Promise.all(
+      previews.map(async (p) => {
+        const moduleMap = await p.getModuleMap(context.components);
 
-    const paths = previews.map(async (previewDef) => {
-      const map = await previewDef.getModuleMap(context.components);
+        return {
+          name: p.prefix,
+          modulePaths: moduleMap.map((files) => files.map((file) => file.path)),
+          templatePath: await p.renderTemplatePath?.(context),
+        };
+      })
+    );
 
-      const withPaths = map.map<string[]>((files) => {
-        return files.map((file) => file.path);
-      });
+    const indexPath = this.writeLinks(previewLinks);
 
-      const targetPath = this.writeLink(
-        join(tmpDir, `${previewDef.prefix}.js`),
-        withPaths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
-      );
+    return [require.resolve('./preview.runtime'), indexPath];
+  }
 
-      return [previewDef.prefix, targetPath] as [string, string];
-    });
+  /** writes a series of link files that will load the component preview. */
+  writeLinks(
+    /** previews data structure to serialize and write down */
+    previews: { name: string; modulePaths: ComponentMap<string[]>; templatePath?: string }[],
+    /** folder to write links at. (Default - os.temp) */
+    dir: string = makeTempDir()
+  ) {
+    const linkFiles = previews.map(({ name, modulePaths, templatePath }) =>
+      this.writePreviewLink(dir, name, modulePaths, templatePath)
+    );
 
-    const linkFiles = await Promise.all(paths);
-    const indexContent = makeReExport(linkFiles);
+    const indexFilePath = this.writeIndexFile(linkFiles, dir);
+    const updaterPath = this.writeUpdater(dir, indexFilePath);
 
-    const linkPath = resolve(join(__dirname, `/link/index.js`));
-    writeFileSync(linkPath, indexContent);
+    return updaterPath;
+  }
 
-    const previewMain = require.resolve('./preview.runtime');
-    return [previewMain];
+  /** generates a index file that links to all of the preview files  */
+  private writeIndexFile(linkFiles: [string, string][], dir: string) {
+    const indexFile = makeReExport(linkFiles);
+    const indexFilePath = resolve(join(dir, `index.js`));
+
+    writeFileSync(indexFilePath, indexFile);
+
+    return indexFilePath;
+  }
+
+  /** generates an index file that links to all of the files related to a specific preview */
+  private writePreviewLink(
+    dir: string,
+    name: string,
+    modulePaths: ComponentMap<string[]>,
+    templatePath?: string
+  ): [string, string] {
+    const path = resolve(join(dir, `${name}.js`));
+    const contents = generateLink(modulePaths, templatePath);
+    writeFileSync(path, contents);
+
+    return [name, path];
+  }
+
+  /** generates an 'updater' file that injects previews into preview.preview.tsx */
+  private writeUpdater(dir: string, targetPath: string) {
+    const content = makeLinkUpdater(targetPath);
+    const path = resolve(join(dir, `__updater.js`));
+    writeFileSync(path, content);
+
+    return path;
   }
 
   /**

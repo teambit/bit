@@ -32,7 +32,8 @@ export class PreviewTask implements BuildTask {
     const targets: Target[] = await Promise.all(
       capsules.map(async ({ capsule }) => {
         return {
-          entries: await this.computePaths(capsule, defs, context),
+          entries: await this.makeEntries(capsule, defs, context),
+          // await this.computePaths(capsule, defs, context),
           capsule,
         };
       })
@@ -60,33 +61,54 @@ export class PreviewTask implements BuildTask {
     return 'public';
   }
 
-  private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-    const previewMain = require.resolve('./preview.runtime');
-    const moduleMapsPromise = defs.map(async (previewDef) => {
-      const moduleMap = await previewDef.getModuleMap([capsule.component]);
-      const paths = this.getPathsFromMap(capsule, moduleMap, context);
-      const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
+  private async makeEntries(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext) {
+    const previewLinks = await Promise.all(
+      defs.map(async (previewDef) => {
+        const moduleMap = await previewDef.getModuleMap([capsule.component]);
+        const modulePaths = this.getPathsFromMap(capsule, moduleMap, context);
 
-      // TODO - make master link file
-      const link = this.preview.writeLink(
-        join(capsule.path, `__${previewDef.prefix}.js`),
-        paths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
-      );
+        return {
+          name: previewDef.prefix,
+          modulePaths,
+          templatePath: await previewDef.renderTemplatePath?.(context),
+        };
+      })
+    );
 
-      const files = paths
-        .toArray()
-        .flatMap(([, file]) => file)
-        .concat([link]);
+    // if needed, could write to the capsule's /dist dir
+    // i.e. join(capsule.path, 'dist', `__${random()}`);
+    const indexPath = this.preview.writeLinks(previewLinks);
 
-      if (template) return files.concat([template]);
-      return files;
-    });
-
-    const moduleMaps = await Promise.all(moduleMapsPromise);
-
-    return flatten(moduleMaps.concat([previewMain]));
+    return [require.resolve('./preview.runtime'), indexPath];
   }
+
+  // private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
+  //   const linkFiles = defs.map(async (previewDef) => {
+  //     const moduleMap = await previewDef.getModuleMap([capsule.component]);
+  //     const paths = this.getPathsFromMap(capsule, moduleMap, context);
+  //     const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
+
+  //     // TODO - make master link file
+  //     const link = this.preview.writeLink(
+  //       join(capsule.path, `__${previewDef.prefix}.js`),
+  //       paths,
+  //       previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
+  //     );
+
+  //     const files = paths
+  //       .toArray()
+  //       .flatMap(([, file]) => file)
+  //       .concat([link]);
+
+  //     if (template) return files.concat([template]);
+  //     return files;
+  //   });
+
+  //   const moduleMaps = await Promise.all(linkFiles);
+
+  //   const previewMain = require.resolve('./preview.runtime');
+  //   return flatten(moduleMaps).concat(previewMain);
+  // }
 
   private getPathsFromMap(
     capsule: Capsule,

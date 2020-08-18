@@ -27,6 +27,23 @@ export function makeReExport(entries: [string, string][]) {
   return makeExports(reexport);
 }
 
+export function makeLinkUpdater(targetPath: string) {
+  return `
+var preview = require('${require.resolve('./preview.preview')}');
+var modulesIndex = require('${targetPath}');
+var updateModules = preview.updateModules;
+
+updateModules(modulesIndex);
+
+if(module.hot){
+  module.hot.accept('${targetPath}', function() {
+    var modules = require('${targetPath}');
+    updateModules(modules);
+  });
+}
+`;
+}
+
 function stringifyComponentMap(componentMap: ComponentMap<string[]>) {
   const items = componentMap
     .toArray()
