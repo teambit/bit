@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { Schema } from '../graphql';
-import { Environments } from './environments.extension';
+import { Environments } from './environments.main.runtime';
 import { Component } from '../component';
 
 export function environmentsSchema(environments: Environments): Schema {

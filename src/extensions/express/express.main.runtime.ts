@@ -5,6 +5,8 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
 import { catchErrors } from './middlewares';
 import { LoggerExtension, Logger } from '../logger';
+import { MainRuntime } from '../cli/cli.aspect';
+import { ExpressAspect } from './express.aspect';
 
 export type ExpressConfig = {
   port: number;
@@ -14,6 +16,8 @@ export type ExpressConfig = {
 export type RouteSlot = SlotRegistry<Route[]>;
 
 export class ExpressExtension {
+  static runtime = MainRuntime;
+
   constructor(
     /**
      * extension config
@@ -107,3 +111,5 @@ export class ExpressExtension {
     return new ExpressExtension(config, routeSlot, logger);
   }
 }
+
+ExpressAspect.addRuntime(ExpressExtension);

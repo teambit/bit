@@ -1,6 +1,6 @@
 import { Aspect } from '@teambit/harmony';
 
-export const EnvironmentsAspect = Aspect.create({
+export const EnvsAspect = Aspect.create({
   id: '@teambit/environments',
   dependencies: [],
   defaultConfig: {},

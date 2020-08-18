@@ -5,6 +5,8 @@ import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { GraphQLExtension } from '../graphql';
+import { EnvsAspect } from './environments.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -27,6 +29,8 @@ export type Descriptor = {
 
 export class Environments {
   static id = '@teambit/envs';
+
+  static runtime = MainRuntime;
 
   /**
    * icon of the extension.
@@ -175,3 +179,5 @@ export class Environments {
     return envs;
   }
 }
+
+EnvsAspect.addRuntime(Environments);
