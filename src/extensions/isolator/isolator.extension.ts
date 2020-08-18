@@ -67,12 +67,7 @@ export class IsolatorExtension {
     );
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
-    const capsuleList = new CapsuleList(
-      ...capsules.map((c) => {
-        const id = c.component.id;
-        return { id, capsule: c };
-      })
-    );
+    const capsuleList = CapsuleList.fromArray(capsules);
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
     const consumerComponents = components.map((c) => c.state._consumer);

@@ -42,23 +42,10 @@
   },
   "@teambit/variants": {
     "extensions/cli": {
-      "@teambit/react": {
-        "env": "@teambit/envs",
-        "config": {}
-      },
       "@teambit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
           "bin": "bin/bit.js"
-        }
-      },
-      "@teambit/dependency-resolver": {
-        "policy": {
-          "devDependencies": {
-            "@types/mocha": "^5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "^12.12.27"
-          }
         }
       }
     }
