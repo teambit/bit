@@ -1,4 +1,4 @@
-import { WorkspaceUI } from '../workspace/workspace.ui';
+import { WorkspaceUI } from '../workspace/workspace.ui.runtime';
 
 export class TesterUI {
   static id = '@teambit/tester';

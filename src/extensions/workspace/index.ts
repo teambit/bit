@@ -4,3 +4,6 @@ export { default as WorkspaceExt } from './workspace.manifest';
 // TODO: change to module path once track the utils folder
 export { ResolvedComponent } from '../../components/utils/resolved-component';
 export { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from './component-config-file';
+export type { WorkspaceMain } from './workspace.main.runtime';
+export { WorkspaceAspect } from './workspace.aspect';
+export type { WorkspaceUI } from './workspace.ui.runtime';

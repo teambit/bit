@@ -2,7 +2,7 @@ import harmony from '@teambit/harmony';
 import { DocsPreview } from '../docs/docs.preview';
 import { Preview } from './preview.preview';
 import { CompositionsPreview } from '../compositions/compositions.preview';
-import { GraphQlUI } from '../graphql/graphql.ui';
+import { GraphQlUI } from '../graphql/graphql.ui.runtime';
 
 /**
  * configure all core extensions

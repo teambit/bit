@@ -1,4 +1,4 @@
-// import { ComponentMeta } from '../../../component/component.ui';
+// import { ComponentMeta } from '../../../component/component.ui.runtime';
 import { ComponentID } from '../../../component/id';
 import { ComponentStatus } from '../../workspace-component/component-status';
 import { DeprecationInfo } from '../../../deprecation/deprecation.extension';

@@ -4,7 +4,7 @@ import { v1 } from 'uuid';
 import { NotificationApi, MessageLevel } from './notification-api';
 import { NotificationCenter, NotificationCenterProps } from './ui/notification-center';
 import { NotificationContext } from './ui/notification-context';
-import { UIRuntimeExtension } from '../ui/ui.ui';
+import { UIRuntimeExtension } from '../ui/ui.ui.runtime';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 
 /**

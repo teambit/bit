@@ -15,3 +15,6 @@ export { State } from './state';
 export { Hash } from './hash';
 export { TagMap } from './tag-map';
 export { ComponentMap } from './component-map';
+export type { ComponentMain } from './component.main.runtime';
+export { ComponentAspect } from './component.aspect';
+export type { ComponentUI } from './component.ui.runtime';

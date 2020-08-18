@@ -1,9 +1,7 @@
-import { Aspect } from './aspect';
-import type { RuntimesCLI } from './runtimes.cli';
+import { Aspect } from '@teambit/harmony';
 
-const RuntimesAspect = Aspect.create({
+export const RuntimesAspect = Aspect.create({
   id: '@teambit/runtimes',
+  dependencies: [],
+  defaultConfig: {},
 });
-
-export { RuntimesCLI };
-export default RuntimesAspect;
