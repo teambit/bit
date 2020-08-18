@@ -31,8 +31,8 @@ async function getConfig() {
 
 async function runCLI() {
   // const config = await getConfig();
-  const harmony = await Harmony.loadRuntime([CLIAspect, BitAspect], {});
-  await harmony.runRuntime('cli');
+  const harmony = await Harmony.load([CLIAspect, BitAspect], {});
+  await harmony.run('cli');
   const cli = harmony.get<CLIExtension>('@teambit/cli');
   cli.run();
 }
