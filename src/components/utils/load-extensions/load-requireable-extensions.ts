@@ -37,7 +37,7 @@ export async function loadRequireableExtensions(
   harmony: Harmony,
   requireableExtensions: RequireableComponent[],
   logger: Logger,
-  throwOnError = true
+  throwOnError = false
 ): Promise<void> {
   const manifestsP = requireableExtensions.map(async (requireableExtension) => {
     if (!requireableExtensions) return undefined;

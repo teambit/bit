@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { Environments } from '../environments';
 import { Workspace } from '../workspace';
@@ -10,7 +11,7 @@ import { BitId } from '../../bit-id';
 
 export class CompilerExtension {
   static id = Extensions.compiler;
-  static dependencies = [CLIExtension, WorkspaceExt, Environments];
+  static dependencies = [CLIExtension, WorkspaceExt, Environments] as ExtensionManifest[];
   constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all

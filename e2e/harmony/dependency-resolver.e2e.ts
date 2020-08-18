@@ -69,14 +69,11 @@ describe('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar', '@teambit/envs', {
-          env: '@teambit/react',
-          config: {},
-        });
+        helper.extensions.addExtensionToVariant('bar', '@teambit/react', {});
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.13.0');
+        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.13.1');
         expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '16.9.43');
       });
     });
