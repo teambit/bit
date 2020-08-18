@@ -104,6 +104,13 @@ export class Preview {
   }
 }
 
+// I don't like this implementation, it seems too loose and unpredictable.
+// I'd rather have a dynamic import using `process.env.previewPath` or something of this sort.
+
+/** allows other extensions to inject preview definitions.
+ * as target components reside in another project all together,
+ * we cannot reference them from here, and they have to reference us.
+ */
 export function updateModules(modules: Record<string, previewModule>) {
   PREVIEW_MODULES = modules;
   RERENDER();

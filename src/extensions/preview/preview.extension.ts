@@ -35,20 +35,6 @@ export class PreviewExtension {
     return new PreviewArtifact(artifacts);
   }
 
-  // /**
-  //  * write a link for a loading custom modules dynamically.
-  //  * @param prefix write
-  //  * @param moduleMap map of components to module paths to require.
-  //  * @param defaultModule
-  //  */
-  // writeLink(filepath: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined) {
-  //   const contents = generateLink(moduleMap, defaultModule);
-  //   const targetPath = resolve(filepath);
-  //   writeFileSync(targetPath, contents);
-
-  //   return targetPath;
-  // }
-
   getDefs() {
     return this.previewSlot.values();
   }
@@ -68,12 +54,12 @@ export class PreviewExtension {
       })
     );
 
-    const indexPath = this.writeLinks(previewLinks);
+    const entryPath = this.writeLinks(previewLinks);
 
-    return [require.resolve('./preview.runtime'), indexPath];
+    return [require.resolve('./preview.runtime'), entryPath];
   }
 
-  /** writes a series of link files that will load the component preview. */
+  /** writes a series of link files that will load the component previews */
   writeLinks(
     /** previews data structure to serialize and write down */
     previews: { name: string; modulePaths: ComponentMap<string[]>; templatePath?: string }[],

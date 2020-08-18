@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { flatten } from 'lodash';
 import { BuildTask, BuildContext, BuildResults } from '../builder';
 import { BundlerExtension, Bundler, BundlerContext, Target } from '../bundler';
 import { ComponentMap } from '../component';
@@ -33,7 +32,6 @@ export class PreviewTask implements BuildTask {
       capsules.map(async ({ capsule }) => {
         return {
           entries: await this.makeEntries(capsule, defs, context),
-          // await this.computePaths(capsule, defs, context),
           capsule,
         };
       })
@@ -77,38 +75,10 @@ export class PreviewTask implements BuildTask {
 
     // if needed, could write to the capsule's /dist dir
     // i.e. join(capsule.path, 'dist', `__${random()}`);
-    const indexPath = this.preview.writeLinks(previewLinks);
+    const entryPath = this.preview.writeLinks(previewLinks);
 
-    return [require.resolve('./preview.runtime'), indexPath];
+    return [require.resolve('./preview.runtime'), entryPath];
   }
-
-  // private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-  //   const linkFiles = defs.map(async (previewDef) => {
-  //     const moduleMap = await previewDef.getModuleMap([capsule.component]);
-  //     const paths = this.getPathsFromMap(capsule, moduleMap, context);
-  //     const template = previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : 'undefined';
-
-  //     // TODO - make master link file
-  //     const link = this.preview.writeLink(
-  //       join(capsule.path, `__${previewDef.prefix}.js`),
-  //       paths,
-  //       previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
-  //     );
-
-  //     const files = paths
-  //       .toArray()
-  //       .flatMap(([, file]) => file)
-  //       .concat([link]);
-
-  //     if (template) return files.concat([template]);
-  //     return files;
-  //   });
-
-  //   const moduleMaps = await Promise.all(linkFiles);
-
-  //   const previewMain = require.resolve('./preview.runtime');
-  //   return flatten(moduleMaps).concat(previewMain);
-  // }
 
   private getPathsFromMap(
     capsule: Capsule,
