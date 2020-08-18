@@ -17,8 +17,16 @@ import { ComponentExtension } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
 import { LoggerExtension, Logger } from '../logger';
+import { AspectExtension, RuntimeDefinition } from '../aspect';
 
-export type UIDeps = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension, LoggerExtension];
+export type UIDeps = [
+  CLIExtension,
+  GraphQLExtension,
+  ExpressExtension,
+  ComponentExtension,
+  LoggerExtension,
+  AspectExtension
+];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -198,15 +206,23 @@ export class UIExtension {
     portRange: [3000, 3200],
   };
 
-  static dependencies = [CLIExtension, GraphQLExtension, ExpressExtension, ComponentExtension, LoggerExtension];
+  static dependencies = [
+    CLIExtension,
+    GraphQLExtension,
+    ExpressExtension,
+    ComponentExtension,
+    LoggerExtension,
+    AspectExtension,
+  ];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, graphql, express, componentExtension, loggerExtension]: UIDeps,
+    [cli, graphql, express, componentExtension, loggerExtension, aspectExtension]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
+    // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerExtension.createLogger(UIExtension.id);
     const ui = new UIExtension(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
     cli.register(new StartCmd(ui));

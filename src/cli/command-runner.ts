@@ -116,6 +116,7 @@ function serializeErrAndExit(err, commandName: string) {
 
 export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
   loader.off();
+  console.log(err);
   logger.error(`got an error from command ${commandName}: ${err}`);
   logger.error(err.stack || '<no error stack was found>');
   const { message, error } = defaultHandleError(err);

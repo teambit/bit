@@ -10,8 +10,10 @@ import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
+import { CLIAspect, CLIRuntime } from './cli.aspect';
 
 export class CLIExtension {
+  static id = '@teambit/cli';
   readonly groups: { [k: string]: string } = {};
   static dependencies = [];
 
@@ -19,6 +21,8 @@ export class CLIExtension {
     const cli = new CLIExtension(new CommandRegistry({}));
     return CLIProvider([cli]);
   }
+
+  static runtime = CLIRuntime;
 
   constructor(
     /**
@@ -136,3 +140,5 @@ export async function CLIProvider([cliExtension]: [CLIExtension]) {
   });
   return cliExtension;
 }
+
+CLIAspect.addRuntime(CLIExtension);

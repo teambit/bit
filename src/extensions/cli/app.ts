@@ -1,9 +1,11 @@
-import harmony from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 import { handleErrorAndExit } from '../../cli/command-runner';
-import { ConfigExt } from '../config';
+import { ConfigExt, Config } from '../config';
 import { BitExt, registerCoreExtensions } from '../bit';
 import { CLIExtension } from './cli.extension';
 import { bootstrap } from '../../bootstrap';
+import { AspectExtension } from '../aspect';
+import { CLIAspect } from './cli.aspect';
 
 initApp();
 
@@ -11,7 +13,7 @@ async function initApp() {
   try {
     await bootstrap();
     registerCoreExtensions();
-    await harmony.run(ConfigExt);
+    const harmony = await Harmony.load([ConfigExt], {});
     await harmony.set([BitExt]);
     await runCLI();
   } catch (err) {
@@ -20,8 +22,18 @@ async function initApp() {
   }
 }
 
+async function getConfig() {
+  const harmony = Harmony.load([ConfigExt], {});
+  await harmony.run(ConfigExt);
+  return harmony.config;
+}
+
 async function runCLI() {
-  const cli: CLIExtension = harmony.get('CLIExtension');
-  if (!cli) throw new Error(`failed to get CLIExtension from Harmony`);
-  await cli.run();
+  // const config = await getConfig();
+  const harmony = Harmony.load([AspectExtension, CLIExtension], {});
+  harmony.run(AspectExtension);
+  const aspectExtension = harmony.get<AspectExtension>('@teambit/aspect');
+  aspectExtension.applyRuntime('cli');
+  // if (!aspectExtension) throw new Error(`failed to get CLIExtension from Harmony`);
+  // await aspectExtension.run();
 }
