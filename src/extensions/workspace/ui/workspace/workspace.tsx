@@ -14,6 +14,7 @@ import { TopBar } from '../../../../components/stage-components/top-bar';
 // import { SideBar } from '../../../../components/stage-components/side-bar';
 import { Corner } from '../../../../components/stage-components/corner';
 import { CollapsibleSplitter } from '../../../../components/stage-components/splitter';
+import { Collapser } from '../../../../components/stage-components/sidebar-collapser';
 import styles from './workspace.module.scss';
 
 const WORKSPACE = gql`
@@ -81,9 +82,12 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
-        <TopBar Corner={() => <Corner name={workspace.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
+        <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          {sidebar}
+          <div className={styles.sidebarContainer}>
+            <Collapser isOpen={isSidebarOpen} onClick={handleSidebarToggle} />
+            <div className={styles.sidebar}>{sidebar}</div>
+          </div>
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">

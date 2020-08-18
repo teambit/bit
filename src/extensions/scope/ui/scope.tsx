@@ -11,6 +11,7 @@ import { Corner } from '../../../components/stage-components/corner';
 import { useScope } from './use-scope';
 import { TopBar } from '../../../components/stage-components/top-bar';
 import { CollapsibleSplitter } from '../../../components/stage-components/splitter';
+import { Collapser } from '../../../components/stage-components/sidebar-collapser';
 import styles from './scope.module.scss';
 
 export type ScopeProps = {
@@ -34,9 +35,12 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
-        <TopBar Corner={() => <Corner name={scope.name} onClick={handleSidebarToggle} />} menu={menuSlot} />
+        <TopBar Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
         <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          {sidebar}
+          <div className={styles.sidebarContainer}>
+            <Collapser isOpen={isSidebarOpen} onClick={handleSidebarToggle} />
+            <div className={styles.sidebar}>{sidebar}</div>
+          </div>
           <div className={styles.main}>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">
