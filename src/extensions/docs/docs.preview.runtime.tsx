@@ -1,5 +1,5 @@
 import { Preview } from '../preview/preview.preview';
-import { GraphQlUI } from '../graphql/graphql.ui';
+import { GraphQlUI } from '../graphql/graphql.ui.runtime';
 
 export class DocsPreview {
   static id = '@teambit/docs';

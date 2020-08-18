@@ -1,4 +1,4 @@
-import { ComponentUI } from '../component/component.ui';
+import { ComponentUI } from '../component/component.ui.runtime';
 import { OverviewSection } from './overview.section';
 
 export class DocsUI {

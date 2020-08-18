@@ -32,6 +32,7 @@ import { IsolatorExtension } from '../isolator';
 import { LoggerExtension, Logger } from '../logger';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
+import { ScopeAspect } from './scope.aspect';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -39,7 +40,7 @@ type PostExportRegistry = SlotRegistry<OnPostExport>;
 export type OnTag = (ids: BitId[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
-export class ScopeExtension implements ComponentFactory {
+export class ScopeMain implements ComponentFactory {
   static id = '@teambit/scope';
 
   constructor(
@@ -295,8 +296,8 @@ export class ScopeExtension implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerExtension.createLogger(ScopeExtension.id);
-    const scope = new ScopeExtension(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
+    const logger = loggerExtension.createLogger(ScopeMain.id);
+    const scope = new ScopeMain(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);
@@ -304,3 +305,5 @@ export class ScopeExtension implements ComponentFactory {
     return scope;
   }
 }
+
+ScopeAspect.addRuntime(ScopeMain);
