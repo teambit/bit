@@ -16,6 +16,7 @@ extensions.forEach((extName) => {
   console.log('working on extension ', extName);
   writeAspectFile(extName);
   moveExtensionToMainRuntime(extName);
+  moveManifestToMainRuntime(extName);
   moveUiTsxToUIRuntime(extName);
   movePreviewToPreviewRuntime(extName);
   addExportsToIndexTs(extName);
@@ -76,6 +77,12 @@ function getIndexFilePath(extName) {
 
 function moveExtensionToMainRuntime(extName) {
   const from = path.join(extDir, extName, `${extName}.extension.ts`);
+  const to = path.join(extDir, extName, `${extName}.main.runtime.ts`);
+  runGitMove(from, to);
+}
+
+function moveManifestToMainRuntime(extName) {
+  const from = path.join(extDir, extName, `${extName}.manifest.ts`);
   const to = path.join(extDir, extName, `${extName}.main.runtime.ts`);
   runGitMove(from, to);
 }
