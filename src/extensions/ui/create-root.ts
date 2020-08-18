@@ -5,7 +5,7 @@ export async function createRoot(extensionsPaths: string[], rootExtensionName?: 
 
   return `
 import harmony from '@teambit/harmony';
-import UIExtension from './ui.ui';
+import UIExtension from './ui.ui.runtime';
 ${getImportStatements(extensionsPaths)}
 
 harmony

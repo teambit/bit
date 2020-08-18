@@ -1,10 +1,10 @@
 // import harmony from '@teambit/harmony';
-// import { UIRuntimeExtension } from './ui.ui';
-// import { DocsUI } from '../docs/docs.ui';
-// import { TesterUI } from '../tester/tester.ui';
-// import { ChangeLogUI } from '../changelog/changelog.ui';
-// import { ComponentUI } from '../component/component.ui';
-// import { CompositionsUI } from '../compositions/compositions.ui';
+// import { UIRuntimeExtension } from './ui.ui.runtime';
+// import { DocsUI } from '../docs/docs.ui.runtime';
+// import { TesterUI } from '../tester/tester.ui.runtime';
+// import { ChangeLogUI } from '../changelog/changelog.ui.runtime';
+// import { ComponentUI } from '../component/component.ui.runtime';
+// import { CompositionsUI } from '../compositions/compositions.ui.runtime';
 
 // /**
 //  * configure all core extensions

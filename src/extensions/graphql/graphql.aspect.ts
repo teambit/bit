@@ -1,9 +1,7 @@
-import { Aspect } from '../aspect';
+import { Aspect } from '@teambit/harmony';
 
-export const GraphQLAspect = Aspect.create({
+export const GraphqlAspect = Aspect.create({
   id: '@teambit/graphql',
+  dependencies: [],
   defaultConfig: {},
-  files: [require.resolve('./graphql.extension'), require.resolve('./graphql.ui')],
 });
-
-export default GraphQLAspect;
