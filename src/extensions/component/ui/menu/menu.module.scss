@@ -6,6 +6,12 @@
   height: 100%;
 }
 
+.leftSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
 .navigation {
   display: flex;
   list-style: none;
@@ -24,19 +30,11 @@
   align-items: center;
   > * {
     margin-right: 12px;
+    &:last-child {
+      margin-right: 16px;
+    }
   }
   .widget {
     margin: 0 20px;
   }
-}
-
-.icon {
-  vertical-align: middle;
-  font-size: 20px;
-}
-
-.latest {
-  margin-right: 21px;
-  border-radius: 3px;
-  padding: 3px 9px;
 }

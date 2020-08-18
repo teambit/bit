@@ -3,8 +3,16 @@ import classNames from 'classnames';
 import styles from './version-label.module.scss';
 import { PillLabel } from '../../pill-label';
 
-export function VersionLabel({ status }: { status: 'latest' | 'checked-out' }) {
-  return <PillLabel className={classNames(styles.label, styles[status])}>{status.replace(/-/g, ' ')}</PillLabel>;
+type VersionLabelProps = {
+  status: 'latest' | 'checked-out';
+} & React.HTMLAttributes<HTMLDivElement>;
+
+export function VersionLabel({ status, className, ...rest }: VersionLabelProps) {
+  return (
+    <PillLabel {...rest} className={classNames(styles.label, styles[status], className)}>
+      {status.replace(/-/g, ' ')}
+    </PillLabel>
+  );
 }
 
 export type LabelsProps = {
@@ -15,7 +23,7 @@ export type LabelsProps = {
 export function Labels({ isCurrent, isLatest }: LabelsProps) {
   return (
     <div>
-      {isLatest && <VersionLabel status="latest" />}
+      {isLatest && <VersionLabel className={styles.versionLabel} status="latest" />}
       {isCurrent && <VersionLabel status="checked-out" />}
       {!isLatest && !isCurrent && <div className={styles.emptyLabel} />}
     </div>
