@@ -62,10 +62,11 @@ export class GraphQLExtension {
     app.use(cors());
     app.use(
       '/graphql',
-      graphqlHTTP({
+      graphqlHTTP((request) => ({
         schema: schema.schema,
+        rootValue: request,
         graphiql,
-      })
+      }))
     );
 
     const subscriptionServer = createServer(app);
