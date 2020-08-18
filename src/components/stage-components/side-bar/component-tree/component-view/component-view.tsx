@@ -35,7 +35,6 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     },
     [onSelect, node.id]
   );
-  const componentName = getName(node.id);
   return (
     <NavLink
       href={`/${node.id}`}
@@ -45,10 +44,10 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     >
       <div className={styles.left}>
         {icon && <img src={icon} alt={envId} className={styles.envIcon} />}
-        <span>{componentName}</span>
+        <span>{getName(node.id)}</span>
       </div>
 
-      <div className={styles.right} data-tip="" data-for={componentName}>
+      <div className={styles.right} data-tip="" data-for={node.id}>
         {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
         {/* <ComponentStatusResolver status={status} />
