@@ -9,6 +9,6 @@ export class ComponentTreeWidget implements ComponentTreeNode {
 
     const workspaceComponent = workspace.getComponent(component.id);
     if (!workspaceComponent) return null;
-    return <ComponentStatusResolver status={workspaceComponent.status} />;
+    return <ComponentStatusResolver id={component.id} status={workspaceComponent.status} />;
   };
 }
