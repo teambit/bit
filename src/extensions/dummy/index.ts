@@ -1,4 +1,2 @@
-import type { DummyCLI } from './dummy.cli';
-
 export { DummyAspect } from './dummy.aspect';
-export type { DummyCLI };
+export type { DummyMain } from './dummy.main.runtime';

@@ -10,7 +10,7 @@ import { buildRegistry } from '../../cli';
 import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
-import { CLIAspect, CLIRuntime } from './cli.aspect';
+import { CLIAspect, MainRuntime } from './cli.aspect';
 
 export class CLIExtension {
   static id = '@teambit/cli';
@@ -22,7 +22,7 @@ export class CLIExtension {
     return CLIProvider([cli]);
   }
 
-  static runtime = CLIRuntime;
+  static runtime = MainRuntime;
 
   constructor(
     /**

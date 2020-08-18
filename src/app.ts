@@ -1,13 +1,14 @@
-import { Harmony } from '@teambit/harmony';
+import { resolve } from 'path';
+import { readdir } from 'fs-extra';
+import { Harmony, AspectGraph, RuntimeDefinition } from '@teambit/harmony';
 import { handleErrorAndExit } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
-import BitAspect, { BitExt, registerCoreExtensions } from './extensions/bit';
-import { CLIAspect } from './extensions/cli/cli.aspect';
+import { BitAspect } from './extensions/bit';
+import { CLIAspect, MainRuntime } from './extensions/cli/cli.aspect';
 import { bootstrap } from './bootstrap';
-import { AspectExtension } from './extensions/aspect';
-import { RuntimesCLI } from './extensions/runtimes/runtimes.cli';
-import RuntimesAspect from './extensions/runtimes/runtimes.aspect';
 import { CLIExtension } from './extensions/cli';
+import M from 'minimatch';
+import { Extension } from '@teambit/harmony/dist/extension';
 
 initApp();
 
@@ -29,10 +30,23 @@ async function getConfig() {
   return harmony.config;
 }
 
+async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
+  const id = aspect.name;
+  const aspectName = id.split('/')[1];
+  if (!aspectName) throw new Error('could not retrieve aspect name');
+  const dirPath = resolve(`${__dirname}/extensions/${aspectName}`);
+  const files = await readdir(dirPath);
+  const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.`));
+  if (!runtimeFile) return;
+  // eslint-disable-next-line
+  require(resolve(`${dirPath}/${runtimeFile}`));
+}
+
 async function runCLI() {
   // const config = await getConfig();
-  const harmony = await Harmony.load([CLIAspect, BitAspect], {});
-  await harmony.run('cli');
+  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, {});
+  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+
   const cli = harmony.get<CLIExtension>('@teambit/cli');
   cli.run();
 }

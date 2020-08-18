@@ -2,7 +2,7 @@ import { Harmony } from '@teambit/harmony';
 import { handleErrorAndExit } from '../../cli/command-runner';
 import { ConfigExt, Config } from '../config';
 import { BitExt, registerCoreExtensions } from '../bit';
-import { CLIExtension } from './cli.cli';
+import { CLIExtension } from './cli.main.runtime';
 import { bootstrap } from '../../bootstrap';
 import { AspectExtension } from '../aspect';
 import { CLIAspect } from './cli.aspect';
