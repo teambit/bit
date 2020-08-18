@@ -1,6 +1,6 @@
-import { PaperError } from '../../cli';
+import { BitError } from '../../../error/bit-error';
 
-export default class InsightNotFound extends PaperError {
+export default class InsightNotFound extends BitError {
   constructor(readonly insightName: string) {
     super(generateMessage(insightName));
   }

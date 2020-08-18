@@ -1,5 +1,4 @@
 // import { BitId as ComponentId } from '../bit-id';
-// import { ComponentID } from '../extensions/component';
 // import { Component } from '../component';
 
 import { ExtensionDataList } from '../../consumer/config';

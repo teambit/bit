@@ -16,10 +16,10 @@ import { IsolatorExtension, Network } from '../isolator';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { DependencyResolverExtension } from '../dependency-resolver';
+import { DependencyResolverExtension, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { Variants } from '../variants';
+import { VariantsExtension } from '../variants';
 import { ComponentScopeDirMap } from '../config/workspace-config';
 import legacyLogger from '../../logger/logger';
 import { ComponentConfigFile } from './component-config-file';
@@ -55,6 +55,7 @@ export interface EjectConfOptions {
 export type WorkspaceInstallOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
+  dedupe: boolean;
 };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -88,7 +89,7 @@ export class Workspace implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverExtension,
 
-    private variants: Variants,
+    private variants: VariantsExtension,
 
     private logger: Logger,
 
@@ -372,7 +373,7 @@ export class Workspace implements ComponentFactory {
       this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
     });
     // remove errored components
-    const filteredComponents = compact(components);
+    const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
     return filteredComponents;
   }
@@ -426,9 +427,10 @@ export class Workspace implements ComponentFactory {
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const variantConfig = this.variants.byId(componentId);
-    if (variantConfig && variantConfig.componentWorkspaceMetaData.defaultScope) {
-      return variantConfig.componentWorkspaceMetaData.defaultScope;
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
+    if (variantConfig && variantConfig.defaultScope) {
+      return variantConfig.defaultScope;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -461,9 +463,10 @@ export class Workspace implements ComponentFactory {
     } else {
       scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
-    const variantConfig = this.variants.byId(componentId);
+    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(componentDir);
     if (variantConfig) {
-      variantsExtensions = variantConfig.componentExtensions;
+      variantsExtensions = variantConfig.extensions;
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -617,7 +620,10 @@ export class Workspace implements ComponentFactory {
         ...workspacePolicy.peerDependencies,
       },
     };
-    await installer.install(this.path, rootDepsObject, installationMap);
+    const installOptions: PackageManagerInstallOptions = {
+      dedupe: options?.dedupe,
+    };
+    await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(stringIds, false);

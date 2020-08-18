@@ -102,13 +102,6 @@ export class GraphQLExtension {
   }
 
   /**
-   * get the root schema.
-   */
-  getSchema() {
-    return this.createRootModule();
-  }
-
-  /**
    * register a new graphql module.
    */
   register(schema: Schema) {

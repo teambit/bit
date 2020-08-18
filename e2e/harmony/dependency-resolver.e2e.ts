@@ -45,7 +45,7 @@ describe('dependency-resolver extension', function () {
             },
           },
         };
-        helper.extensions.addExtensionToVariant('bar/foo', '@teambit/dependency-resolver', depResolverConfig);
+        helper.extensions.addExtensionToVariant('bar', '@teambit/dependency-resolver', depResolverConfig);
         barFooOutput = helper.command.showComponentParsed('bar/foo');
         isTypeOutput = helper.command.showComponentParsed('utils/is-type');
       });
@@ -69,15 +69,12 @@ describe('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar/foo', '@teambit/envs', {
-          env: '@teambit/react',
-          config: {},
-        });
+        helper.extensions.addExtensionToVariant('bar', '@teambit/react', {});
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.12.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.9.17');
+        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.13.1');
+        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '16.9.43');
       });
     });
     describe('policies added by extension', function () {
@@ -99,7 +96,7 @@ describe('dependency-resolver extension', function () {
         before(() => {
           helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-          helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/extension-add-dependencies', config);
+          helper.extensions.addExtensionToVariant('bar', 'my-scope/extension-add-dependencies', config);
           helper.scopeHelper.linkBitBin();
           helper.command.link();
           barFooOutput = helper.command.showComponentParsed('bar/foo');

@@ -4,6 +4,8 @@ import { mergeWithRootDeps } from './merge-with-root';
 import { PackageName, DependenciesObjectDefinition, SemverVersion } from '../../types';
 import { ComponentDependenciesMap } from '../workspace-manifest';
 
+export { getEmptyDedupedDependencies } from './hoist-dependencies';
+
 export type conflictedComponent = {
   componentPackageName: PackageName;
   range: SemverVersion;
@@ -41,6 +43,7 @@ export function dedupeDependencies(
   componentDependenciesMap: ComponentDependenciesMap
 ): DedupedDependencies {
   const indexedByDepId = indexByDepId(componentDependenciesMap);
+  indexedByDepId.delete('bit-bin');
   const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
   const result = mergeWithRootDeps(rootDependencies, dedupedDependenciesWithoutRootOriginal);
   return result;

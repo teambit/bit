@@ -16,6 +16,7 @@ import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsule
 import { DEPENDENCIES_FIELDS } from '../../constants';
 import { LoggerExtension, Logger } from '../logger';
 import { PathOsBasedAbsolute } from '../../utils/path';
+// import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
@@ -88,12 +89,22 @@ export class IsolatorExtension {
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       const installer = this.dependencyResolver.getInstaller();
-      // When using isolator we don't want to use the policy defined in the workspace directly, we only want to instal deps from components
-      await installer.install(capsulesDir, this.dependencyResolver.getEmptyDepsObject(), this.toComponentMap(capsules));
+      // When using isolator we don't want to use the policy defined in the workspace directly,
+      // we only want to instal deps from components and the peer from the workspace
+
+      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+      const rootDepsObject = {
+        peerDependencies: {
+          ...workspacePolicy.peerDependencies,
+        },
+      };
+
+      await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), { dedupe: true });
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components
       await symlinkBitBinToCapsules(capsulesToInstall, this.logger);
+      // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json

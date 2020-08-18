@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
 import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
 import { Separator } from '@teambit/documenter-temp.ui.separator';
-import { ComponentComposition } from '../../../../extensions/compositions/ui';
+import { ComponentComposition } from '../../../compositions/ui';
 import { ScopeContext } from '../scope-context';
 import { ScopeDetails } from '../../../../components/stage-components/scope-details';
 import styles from './scope-overview.module.scss';

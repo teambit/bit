@@ -15,6 +15,7 @@ import { PublishDryRunTask } from './publish-dry-run.task';
 import { Component } from '../component';
 import { WorkspaceExt, Workspace } from '../workspace';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { PreparePackagesTask } from './prepare-packages.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -56,7 +57,8 @@ export class PkgExtension {
     const packer = new Packer(isolator, scope?.legacyScope, workspace);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher, logPublisher);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask);
+    const preparePackagesTask = new PreparePackagesTask(PkgExtension.id, logPublisher);
+    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
     if (scope) scope.onPostExport(postExportFunc);
@@ -105,7 +107,9 @@ export class PkgExtension {
      */
     private envs: Environments,
 
-    readonly dryRunTask: PublishDryRunTask
+    readonly dryRunTask: PublishDryRunTask,
+
+    readonly preparePackagesTask: PreparePackagesTask
   ) {}
 
   /**
@@ -140,7 +144,7 @@ export class PkgExtension {
    */
   async mergePackageJsonProps(configuredExtensions: ExtensionDataList): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnvFromExtensions(configuredExtensions);
+    const env = this.envs.getEnvFromExtensions(configuredExtensions)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);

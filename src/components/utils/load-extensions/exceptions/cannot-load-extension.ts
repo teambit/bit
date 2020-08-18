@@ -1,6 +1,6 @@
-import { PaperError } from '../../../../extensions/cli';
+import { BitError } from '../../../../error/bit-error';
 
-export class CannotLoadExtension extends PaperError {
+export class CannotLoadExtension extends BitError {
   constructor(private extensionName: string, private error: Error) {
     super();
   }

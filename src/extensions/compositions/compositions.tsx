@@ -6,14 +6,15 @@ import R from 'ramda';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { PropTable } from '@teambit/documenter-temp.ui.property-table';
+import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
 import { CollapsibleSplitter } from '../../components/stage-components/splitter';
+import { Composition } from './composition';
+import { ComponentModel } from '../component/ui/component-model/component-model';
 import { ComponentContext } from '../component/ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui/ui/tabs';
 import { PanelContainer, Panel } from '../panel-ui/ui/panel-container';
-// import { useCompositions } from './ui/use-compositions';
-
 import styles from './compositions.module.scss';
 
 const GET_COMPONENT = gql`
@@ -53,7 +54,7 @@ export function Compositions() {
   return (
     <PanelContainer className={styles.compositionsPage}>
       <TupleSplitPane max={100} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
-        <ComponentComposition component={component} composition={selected}></ComponentComposition>
+        <CompositionContent component={component} selected={selected} />
         <Panel>
           <TabContainer>
             <TabList>
@@ -84,4 +85,14 @@ export function Compositions() {
       </TupleSplitPane>
     </PanelContainer>
   );
+}
+
+type CompositionContentProps = {
+  component: ComponentModel;
+  selected?: Composition;
+};
+
+function CompositionContent({ component, selected }: CompositionContentProps) {
+  if (component.compositions.length === 0) return <EmptyCompositions />;
+  return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
 }

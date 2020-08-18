@@ -5,8 +5,8 @@
     "defaultDirectory": "components",
     "vendorDirectory": "vendor",
     "extensions": {
-      "@teambit/envs": {
-        "env": "@teambit/react",
+      "@teambit/react": {
+        "env": "@teambit/envs",
         "config": {}
       },
       "@teambit/pkg": {
@@ -17,9 +17,12 @@
       "@teambit/dependency-resolver": {
         "policy": {
           "devDependencies": {
-            "@types/mocha": "^7.0.2",
+            "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
-            "@types/node": "^12.12.25"
+            "@types/node": "^12.12.27"
+          },
+          "peerDependencies": {
+            "react": "^16.13.1"
           }
         }
       }
@@ -28,7 +31,36 @@
   "@teambit/dependency-resolver": {
     "packageManager": "@teambit/pnpm",
     "strictPeerDependencies": true,
-    "extraArgs": []
+    "extraArgs": [],
+    "policy": {
+      "peerDependencies": {
+        "react": "^16.13.1",
+        "browserslist": "^4",
+        "mz": "^2.7.0"
+      }
+    }
   },
-  "@teambit/variants": {}
+  "@teambit/variants": {
+    "extensions/cli": {
+      "@teambit/react": {
+        "env": "@teambit/envs",
+        "config": {}
+      },
+      "@teambit/pkg": {
+        "packageJson": {
+          "name": "@teambit/{name}",
+          "bin": "bin/bit.js"
+        }
+      },
+      "@teambit/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            "@types/mocha": "^5.2.7",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.27"
+          }
+        }
+      }
+    }
+  }
 }
