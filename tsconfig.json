@@ -22,8 +22,6 @@
     "e2e"
   ],
   "exclude": [
-    "components",
-    "node_modules",
     "e2e/fixtures"
   ]
 }
