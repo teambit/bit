@@ -2,7 +2,7 @@ import { Command, CommandOptions, GenericObject } from '.';
 import { LegacyCommand } from '../../cli/legacy-command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
-import { CLIExtension } from './cli.extension';
+import { CLIExtension } from './cli.cli';
 
 export class LegacyCommandAdapter implements Command {
   alias: string;

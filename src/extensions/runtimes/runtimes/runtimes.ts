@@ -21,7 +21,8 @@ export class Runtimes {
   static async load(graph: ExtensionGraph) {
     const runtimes: { [key: string]: RuntimeDefinition } = {};
 
-    graph.extensions.forEach((manifest) => {
+    graph.extensions.forEach((extension) => {
+      const manifest = extension.manifest;
       if (!manifest.declareRuntime) return;
       runtimes[manifest.declareRuntime.name] = manifest.declareRuntime;
     });

@@ -1,10 +1,10 @@
-import { Aspect, RuntimeDefinition } from '../aspect';
-import { DummyAspect } from '../dummy/dummy.aspect';
+import { Aspect, RuntimeDefinition } from '@teambit/harmony';
 
-export const CLIRuntime = new RuntimeDefinition('cli', [DummyAspect]);
+export const CLIRuntime = new RuntimeDefinition('cli');
 
 export const CLIAspect = Aspect.create({
   id: '@teambit/cli',
   dependencies: [],
   declareRuntime: CLIRuntime,
+  files: [require.resolve('./cli.cli')],
 });

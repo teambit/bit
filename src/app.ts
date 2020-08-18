@@ -1,10 +1,13 @@
 import { Harmony } from '@teambit/harmony';
 import { handleErrorAndExit } from './cli/command-runner';
 import { ConfigExt } from './extensions/config';
-import { BitExt, registerCoreExtensions } from './extensions/bit';
-import { CLIExtension } from './extensions/cli';
+import BitAspect, { BitExt, registerCoreExtensions } from './extensions/bit';
+import { CLIAspect } from './extensions/cli/cli.aspect';
 import { bootstrap } from './bootstrap';
 import { AspectExtension } from './extensions/aspect';
+import { RuntimesCLI } from './extensions/runtimes/runtimes.cli';
+import RuntimesAspect from './extensions/runtimes/runtimes.aspect';
+import { CLIExtension } from './extensions/cli';
 
 initApp();
 
@@ -28,10 +31,8 @@ async function getConfig() {
 
 async function runCLI() {
   // const config = await getConfig();
-  const harmony = Harmony.load([AspectExtension, CLIExtension], {});
-  await harmony.run(AspectExtension);
-  const aspectExtension = harmony.get<AspectExtension>('@teambit/aspect');
-  aspectExtension.applyRuntime('cli');
-  // if (!aspectExtension) throw new Error(`failed to get CLIExtension from Harmony`);
-  // await aspectExtension.run();
+  const harmony = await Harmony.loadRuntime([CLIAspect, BitAspect], {});
+  await harmony.runRuntime('cli');
+  const cli = harmony.get<CLIExtension>('@teambit/cli');
+  cli.run();
 }
