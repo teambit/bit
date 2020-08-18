@@ -75,7 +75,7 @@ export class TypescriptCompiler implements Compiler {
     await this.deleteTsBuildInfoFiles(capsuleDirs);
 
     const components = capsules.map((capsule) => {
-      const id = capsule.id;
+      const id = capsule.component.id;
       const errors = componentsErrors.filter((c) => c.componentId.isEqual(id)).map((c) => c.error);
       return { id, errors };
     });

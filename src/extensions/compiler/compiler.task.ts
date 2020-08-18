@@ -16,7 +16,7 @@ export class CompilerTask implements BuildTask {
     const buildResults = await compilerInstance.build(context);
 
     await Promise.all(
-      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, compilerInstance))
+      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule, compilerInstance))
     );
 
     return buildResults;

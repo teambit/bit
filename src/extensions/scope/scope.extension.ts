@@ -120,7 +120,7 @@ export class ScopeExtension implements ComponentFactory {
     if (!ids || !ids.length) return;
     const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
 
-    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
+    const requireableExtensions: RequireableComponent[] = capsules.map((capsule) => {
       return RequireableComponent.fromCapsule(capsule);
     });
     // Always throw an error when can't load scope extension

@@ -29,9 +29,9 @@ export class PreparePackagesTask implements BuildTask {
 
     await Promise.all(
       context.capsuleGraph.capsules.map(async (capsule) => {
-        await this.removeSourceFiles(capsule.capsule, distDir);
-        await this.moveDistToRoot(capsule.capsule, distDir);
-        await this.updatePackageJson(capsule.capsule, compilerInstance, distDir);
+        await this.removeSourceFiles(capsule, distDir);
+        await this.moveDistToRoot(capsule, distDir);
+        await this.updatePackageJson(capsule, compilerInstance, distDir);
       })
     );
 

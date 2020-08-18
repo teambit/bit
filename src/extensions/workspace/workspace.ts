@@ -245,12 +245,12 @@ export class Workspace implements ComponentFactory {
         packageManager: 'npm',
       }
     );
-    const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
-      accum[curr.id.toString()] = curr.capsule;
-      return accum;
-    }, {});
-    const ret = components.map((component) => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
-    return ret;
+    const resolvedComponents = components.map((component) => {
+      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
+      return new ResolvedComponent(component, capsule);
+    });
+    return resolvedComponents;
   }
 
   /**

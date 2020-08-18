@@ -30,7 +30,7 @@ export class PreviewTask implements BuildTask {
     const url = `/preview/${context.envRuntime.id}`;
 
     const targets: Target[] = await Promise.all(
-      capsules.map(async ({ capsule }) => {
+      capsules.map(async (capsule) => {
         return {
           entries: await this.computePaths(capsule, defs, context),
           capsule,
