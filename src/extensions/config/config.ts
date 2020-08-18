@@ -1,3 +1,4 @@
+import { GlobalConfig } from '@teambit/harmony';
 import { ConfigType, HostConfig } from './types';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
@@ -68,5 +69,14 @@ export class Config {
 
   extension(extensionId: string, ignoreVersion: boolean): ExtensionDataEntry | undefined {
     return this.config?.extension(extensionId, ignoreVersion);
+  }
+
+  getHarmonyConfigObject(): GlobalConfig {
+    const config = {};
+    if (!this.extensions) return config;
+    this?.extensions.forEach((extension) => {
+      config[extension.stringId] = extension.config;
+    });
+    return config;
   }
 }
