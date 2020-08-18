@@ -1,9 +1,10 @@
 import React from 'react';
+import { docsFile } from '@teambit/documenter-temp.types.docs-file';
 import { Base } from './base';
 
 export type DocsAppProps = {
   Provider: React.ComponentType;
-  docs: any; // TODO: @uri create a type for docs asap
+  docs: docsFile;
   componentId: string;
   compositions: [React.ComponentType];
 };

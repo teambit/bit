@@ -5,22 +5,16 @@ import { isFunction } from 'ramda-adjunct';
 import 'reset-css';
 import { gql } from 'apollo-boost';
 import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
+import { docsFile } from '@teambit/documenter-temp.types.docs-file';
 import { ComponentModel } from '../../component/ui';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { Properties } from './properties/properties';
 import { ComponentOverview } from './component-overview';
-import { ExamplesOverview, ExampleProps } from './examples-overview';
+import { ExamplesOverview } from './examples-overview';
 import styles from './base.module.scss';
 
 export type DocsSectionProps = {
-  docs: {
-    examples?: ExampleProps[];
-    default?: FC<any>;
-    labels?: string[];
-    abstract?: string;
-    compositions?: React.ComponentType[];
-    displayName?: string;
-  };
+  docs: docsFile;
   compositions: React.ComponentType[];
   componentId: string;
 } & HTMLAttributes<HTMLDivElement>;
@@ -57,10 +51,17 @@ const GET_COMPONENT = gql`
   }
 `;
 
+// TODO - update docs type to have these as optional
+const defaultDocs = {
+  examples: [],
+  labels: [],
+  abstract: '',
+};
+
 /**
  * base template for react component documentation.
  */
-export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSectionProps) {
+export function Base({ docs = defaultDocs, componentId, compositions, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useQuery(GET_COMPONENT, {
     variables: { id: componentId },
   });
@@ -71,13 +72,8 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
   const component = ComponentModel.from(data.getHost.get);
   const docsModel = data.getHost.getDocs;
 
-  const {
-    examples = [],
-    labels = [],
-    abstract = docsModel.abstract,
-    compositions: overviewCompositions = compositions,
-    displayName = component.displayName,
-  } = docs;
+  const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
+  const { displayName, version, packageName } = component;
 
   const Content = isFunction(docs.default) ? docs.default : () => null;
 
@@ -86,15 +82,15 @@ export function Base({ docs = {}, componentId, compositions, ...rest }: DocsSect
       <div className={classNames(styles.docsMainBlock)} {...rest}>
         <ComponentOverview
           displayName={displayName}
-          version={component.version}
+          version={version}
           abstract={abstract}
           labels={labels}
-          packageName={component.packageName}
+          packageName={packageName}
         />
 
         <Content />
 
-        <CompositionsSummary compositions={overviewCompositions} />
+        <CompositionsSummary compositions={compositions} />
 
         <ExamplesOverview examples={examples} />
 

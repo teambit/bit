@@ -1,22 +1,16 @@
 import React from 'react';
 import classNames from 'classnames';
+import { Example } from '@teambit/documenter-temp.types.docs-file';
 import { Section, SectionProps } from '@teambit/documenter-temp.ui.section';
 import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
 import { Paragraph } from '@teambit/base-ui-temp.text.paragraph';
-import { Playground, CodeScope } from '../playground';
+import { Playground } from '../playground';
 
 import styles from './examples-overview.module.scss';
 
 export type ExamplesOverviewProps = {
-  examples: ExampleProps[];
+  examples: Example[];
 };
-
-export type ExampleProps = {
-  code: string;
-  scope: CodeScope;
-  title?: string;
-  description?: string;
-} & React.HTMLAttributes<HTMLDivElement>;
 
 export function ExamplesOverview({ examples, ...rest }: ExamplesOverviewProps) {
   if (examples.length <= 0) return null;
@@ -31,7 +25,7 @@ export function ExamplesOverview({ examples, ...rest }: ExamplesOverviewProps) {
 }
 
 export type ExampleSectionProps = {
-  example: ExampleProps;
+  example: Example;
 } & SectionProps;
 
 function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {

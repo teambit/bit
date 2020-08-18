@@ -2,6 +2,8 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { PreviewType } from './preview-type';
 import { PreviewNotFound } from './exceptions';
 
+export type PreviewSlot = SlotRegistry<PreviewType>;
+
 let PREVIEW_MODULES: Record<string, previewModule> = {};
 let RERENDER = () => {};
 
@@ -9,8 +11,6 @@ type previewModule = {
   componentMap: Record<string, any[]>;
   mainModule: { default: () => void };
 };
-
-export type PreviewSlot = SlotRegistry<PreviewType>;
 
 export class Preview {
   constructor(
@@ -35,13 +35,8 @@ export class Preview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            const moduleMap = PREVIEW_MODULES[prevName];
-            if (!moduleMap) return undefined;
-
-            const componentModule = moduleMap?.componentMap[componentId];
-            if (!componentModule) return undefined;
-
-            return componentModule[0];
+            if (!PREVIEW_MODULES[prevName]?.componentMap[componentId]) return undefined;
+            return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
           .filter((module) => !!module)
       : [];
