@@ -1,3 +1,4 @@
+import { difference } from 'ramda';
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
@@ -44,6 +45,13 @@ export class AspectLoaderMain {
   static async provider([loggerExt]: [LoggerMain], config, slots, harmony: Harmony) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
     return new AspectLoaderMain(logger, harmony);
+  }
+
+  getNotLoadedConfiguredExtensions() {
+    const configuredAspects = Array.from(this.harmony.config.raw.keys());
+    const loadedExtensions = this.harmony.extensionsIds;
+    const extensionsToLoad = difference(configuredAspects, loadedExtensions);
+    return extensionsToLoad;
   }
 
   /**

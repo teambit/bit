@@ -20,7 +20,7 @@ export interface ComponentFactory {
   /**
    * load extension.
    */
-  loadExtensions: (extensions: ExtensionDataList) => Promise<void>;
+  loadAspects: (ids: string[], throwOnError: boolean) => Promise<void>;
 
   /**
    * list all components in the host.
