@@ -1,4 +1,3 @@
-import { difference } from 'ramda';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
 import type { ScopeMain } from '../scope';
 import { Workspace } from './workspace';
@@ -61,14 +60,6 @@ export type WorkspaceCoreConfig = {
   defaultOwner: string;
 };
 
-function getUserAspects(harmony: Harmony) {
-  const configuredAspects = Array.from(harmony.config.raw.keys());
-  const loadedExtensions = harmony.extensionsIds;
-  const extensionsToLoad = difference(configuredAspects, loadedExtensions);
-
-  return extensionsToLoad;
-}
-
 export default async function provideWorkspace(
   [
     cli,
@@ -125,7 +116,7 @@ export default async function provideWorkspace(
     };
   });
 
-  await workspace.loadAspects(getUserAspects(harmony));
+  await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
 
   const workspaceSchema = getWorkspaceSchema(workspace);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));

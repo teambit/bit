@@ -121,10 +121,10 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  async loadExtensions(extensions: ExtensionDataList): Promise<void> {
-    const ids = extensions.extensionsBitIds.map((id) => ComponentID.fromLegacy(id));
-    if (!ids || !ids.length) return;
-    const capsules = await this.isolator.isolateComponents(await this.getMany(ids), {});
+  async loadAspects(ids: string[], throwOnError = true): Promise<void> {
+    const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    if (!componentIds || !componentIds.length) return;
+    const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), {});
 
     const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
       return RequireableComponent.fromCapsule(capsule);
@@ -315,6 +315,10 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       logger
     );
+    if (scope.legacyScope.isBare) {
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    }
+
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);
