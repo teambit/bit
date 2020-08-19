@@ -13,7 +13,6 @@ import { Core, CoreAspect } from '../core';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
-import { TagCmd } from './tag.cmd';
 import { ScopeMain, ScopeAspect } from '../scope';
 import { LoggerAspect, LoggerMain } from '../logger';
 
@@ -140,7 +139,6 @@ export class BuilderMain {
       cli.unregister('build');
       cli.register(new BuilderCmd(builder, workspace, logger));
     }
-    cli.register(new TagCmd(logger));
     return builder;
   }
 }
