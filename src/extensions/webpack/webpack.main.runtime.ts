@@ -1,11 +1,11 @@
-import { WebpackAspect } from './webpack.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
+import { WebpackAspect } from './webpack.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { WebpackDevServer } from './webpack.dev-server';
 import { DevServer, BundlerContext, BundlerExtension, DevServerContext } from '../bundler';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { WorkspaceAspect, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
 import { LoggerExtension, Logger } from '../logger';
@@ -55,7 +55,7 @@ export class WebpackExtension {
   static slots = [];
 
   static runtime = MainRuntime;
-  static dependencies = [WorkspaceExt, BundlerExtension, LoggerExtension] as ExtensionManifest[];
+  static dependencies = [WorkspaceAspect, BundlerExtension, LoggerExtension] as ExtensionManifest[];
 
   static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, LoggerExtension]) {
     const logPublisher = logger.createLogger(WebpackExtension.id);

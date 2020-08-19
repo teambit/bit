@@ -7,7 +7,7 @@ import { TypescriptExtension } from '../typescript';
 import { CompilerExtension } from '../compiler';
 import { WebpackExtension } from '../webpack';
 import { Component } from '../component';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { WorkspaceAspect, Workspace } from '../workspace';
 import { GraphQLExtension } from '../graphql';
 import { reactSchema } from './react.graphql';
 import { PkgExtension } from '../pkg';
@@ -100,7 +100,7 @@ export class ReactExtension {
     TypescriptExtension,
     CompilerExtension,
     WebpackExtension,
-    WorkspaceExt,
+    WorkspaceAspect,
     GraphQLExtension,
     PkgExtension,
     TesterExtension,

@@ -1,7 +1,7 @@
-import { ComponentAspect } from './component.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { ComponentAspect } from './component.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
 import { ComponentFactory } from './component-factory';
@@ -11,7 +11,7 @@ import { ComponentRoute } from './component.route';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
-export class ComponentExtension {
+export class ComponentMain {
   static id = '@teambit/component';
 
   constructor(
@@ -92,13 +92,13 @@ export class ComponentExtension {
     config,
     [hostSlot]: [ComponentHostSlot]
   ) {
-    const componentExtension = new ComponentExtension(hostSlot, express);
+    const componentExtension = new ComponentMain(hostSlot, express);
     graphql.register(componentSchema(componentExtension));
 
     return componentExtension;
   }
 }
 
-export default ComponentExtension;
+export default ComponentMain;
 
 ComponentAspect.addRuntime(ComponentMain);

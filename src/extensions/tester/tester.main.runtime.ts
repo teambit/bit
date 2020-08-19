@@ -1,9 +1,9 @@
+import { merge } from 'lodash';
 import { TesterAspect } from './tester.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { merge } from 'lodash';
 import { TestCmd } from './test.cmd';
 import { Environments } from '../environments';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { WorkspaceAspect, Workspace } from '../workspace';
 import { TesterService } from './tester.service';
 import { Component } from '../component';
 import { TesterTask } from './tester.task';
@@ -31,7 +31,7 @@ export type TesterOptions = {
 export class TesterExtension {
   static id = '@teambit/tester';
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, Environments, WorkspaceExt];
+  static dependencies = [CLIExtension, Environments, WorkspaceAspect];
 
   constructor(
     /**

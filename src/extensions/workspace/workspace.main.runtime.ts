@@ -1,6 +1,6 @@
+import { Slot } from '@teambit/harmony';
 import { WorkspaceAspect } from './workspace.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Slot } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeAspect } from '../scope';
 import { ComponentAspect } from '../component';
@@ -11,13 +11,14 @@ import { VariantsAspect } from '../variants';
 import { EXT_NAME } from './constants';
 import { GraphqlAspect } from '../graphql';
 import { CLIAspect } from '../cli';
-import { UiAspect } from '../ui';
+import { UIAspect } from '../ui';
 import { BundlerAspect } from '../bundler';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
 
-export default {
+export const WorkspaceMain = {
   name: EXT_NAME,
+  runtime: MainRuntime,
   dependencies: [
     CLIAspect,
     ScopeAspect,
@@ -27,7 +28,7 @@ export default {
     VariantsAspect,
     LoggerAspect,
     GraphqlAspect,
-    UiAspect,
+    UIAspect,
     BundlerAspect,
   ],
   slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>()],

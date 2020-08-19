@@ -1,6 +1,6 @@
 import { Aspect } from '@teambit/harmony';
 
-export const UiAspect = Aspect.create({
+export const UIAspect = Aspect.create({
   id: '@teambit/ui',
   dependencies: [],
   defaultConfig: {},

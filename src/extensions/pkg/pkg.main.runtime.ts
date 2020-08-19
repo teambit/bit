@@ -1,6 +1,6 @@
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { PkgAspect } from './pkg.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { SlotRegistry, Slot } from '@teambit/harmony';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
@@ -15,7 +15,7 @@ import { Publisher } from './publisher';
 import { LoggerExtension } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
 import { Component } from '../component';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { WorkspaceAspect, Workspace } from '../workspace';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { PreparePackagesTask } from './prepare-packages.task';
 
@@ -40,7 +40,14 @@ export type ComponentPkgExtensionConfig = {
 export class PkgExtension {
   static id = '@teambit/pkg';
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExtension, WorkspaceExt];
+  static dependencies = [
+    CLIExtension,
+    ScopeExtension,
+    Environments,
+    IsolatorExtension,
+    LoggerExtension,
+    WorkspaceAspect,
+  ];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 

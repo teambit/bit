@@ -25,7 +25,7 @@ export type GraphQLServerOptions = {
   graphiql?: boolean;
 };
 
-export class GraphQLExtension {
+export class GraphqlMain {
   constructor(
     /**
      * extension config
@@ -170,8 +170,8 @@ export class GraphQLExtension {
     [moduleSlot]: [SchemaSlot],
     context: Harmony
   ) {
-    const logger = loggerFactory.createLogger(GraphQLExtension.id);
-    return new GraphQLExtension(config, moduleSlot, context, new PubSub(), logger);
+    const logger = loggerFactory.createLogger(GraphqlMain.id);
+    return new GraphqlMain(config, moduleSlot, context, new PubSub(), logger);
   }
 }
 

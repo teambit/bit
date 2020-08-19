@@ -1,4 +1,4 @@
-export { GraphQLExtension, SchemaSlot } from './graphql.extension';
+export { SchemaSlot } from './graphql.main.runtime';
 export { Schema } from './schema';
 export type { GraphqlMain } from './graphql.main.runtime';
 export { GraphqlAspect } from './graphql.aspect';

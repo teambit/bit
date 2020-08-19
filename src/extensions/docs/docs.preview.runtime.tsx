@@ -1,5 +1,5 @@
 import { Preview } from '../preview/preview.preview';
-import { GraphQlUI } from '../graphql/graphql.ui.runtime';
+import { GraphqlUI } from '../graphql/graphql.ui.runtime';
 
 export class DocsPreview {
   static id = '@teambit/docs';
@@ -13,7 +13,7 @@ export class DocsPreview {
     /**
      * graphql extension.
      */
-    private graphql: GraphQlUI
+    private graphql: GraphqlUI
   ) {}
 
   render = (componentId: string, modules: any, [compositions]: [any]) => {
@@ -31,9 +31,9 @@ export class DocsPreview {
     );
   };
 
-  static dependencies = [Preview, GraphQlUI];
+  static dependencies = [Preview, GraphqlUI];
 
-  static async provider([preview, graphql]: [Preview, GraphQlUI]) {
+  static async provider([preview, graphql]: [Preview, GraphqlUI]) {
     const docsPreview = new DocsPreview(preview, graphql);
     preview.registerPreview({
       name: 'overview',

@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 import { Schema } from '../graphql';
-import { Environments } from './environments.main.runtime';
+import { EnvsMain } from './environments.main.runtime';
 import { Component } from '../component';
 
-export function environmentsSchema(environments: Environments): Schema {
+export function environmentsSchema(environments: EnvsMain): Schema {
   return {
     typeDefs: gql`
       extend type Component {

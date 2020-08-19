@@ -8,7 +8,7 @@ import { onError } from 'apollo-link-error';
 import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
 
-export class GraphQlUI {
+export class GraphqlUI {
   static id = '@teambit/graphql';
 
   constructor(
@@ -56,6 +56,6 @@ export class GraphQlUI {
       }),
     });
 
-    return new GraphQlUI(client);
+    return new GraphqlUI(client);
   }
 }

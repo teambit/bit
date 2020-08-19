@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { UIRoot } from './ui-root.ui.runtime';
-import { GraphQlUI } from '../graphql/graphql.ui.runtime';
+import { GraphqlUI } from '../graphql/graphql.ui.runtime';
 import { ReactRouterUI } from '../react-router/react-router.ui.runtime';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
@@ -31,7 +31,7 @@ export class UIRuntimeExtension {
     /**
      * GraphQL extension.
      */
-    private graphql: GraphQlUI,
+    private graphql: GraphqlUI,
 
     /**
      * react-router extension.
@@ -88,10 +88,10 @@ export class UIRuntimeExtension {
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
 
-  static dependencies = [GraphQlUI, ReactRouterUI];
+  static dependencies = [GraphqlUI, ReactRouterUI];
 
   static async provider(
-    [graphql, router]: [GraphQlUI, ReactRouterUI],
+    [graphql, router]: [GraphqlUI, ReactRouterUI],
     config,
     [uiRootSlot, hudSlot, contextSlot]: [UIRootRegistry, HudSlot, ContextSlot]
   ) {

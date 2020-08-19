@@ -1,13 +1,14 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { CreateAspect } from './create.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { ExtensionManifest } from '@teambit/harmony';
-import { WorkspaceExt } from '../workspace';
+import { WorkspaceAspect } from '../workspace';
 import { provideCreate } from './create.provider';
 import { CLIExtension } from '../cli';
 
 export default {
   name: '@teambit/create',
-  dependencies: [CLIExtension, WorkspaceExt],
+  runtime: MainRuntime,
+  dependencies: [CLIExtension, WorkspaceAspect],
   provider: provideCreate,
 } as ExtensionManifest;
 

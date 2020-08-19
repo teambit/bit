@@ -8,7 +8,7 @@ import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
 import { GraphQLExtension } from '../graphql';
 import { AbstractVinyl } from '../../consumer/component/sources';
-import { Workspace, WorkspaceExt } from '../workspace';
+import { Workspace, WorkspaceAspect } from '../workspace';
 import { SchemaExtension } from '../schema';
 import { ExtensionData } from '../workspace/on-component-load';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
@@ -103,7 +103,7 @@ export class CompositionsExtension {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewExtension, GraphQLExtension, WorkspaceExt, SchemaExtension, ComponentFactoryExt];
+  static dependencies = [PreviewExtension, GraphQLExtension, WorkspaceAspect, SchemaExtension, ComponentFactoryExt];
 
   static async provider([preview, graphql, workspace, schema]: [
     PreviewExtension,

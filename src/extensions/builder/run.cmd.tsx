@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace } from '../workspace';
-import { BuilderExtension } from './builder.extension';
 import { Logger } from '../logger';
 import { ConsumerNotFound } from '../../consumer/exceptions';
+import { BuilderMain } from './builder.main.runtime';
 
 export class BuilderCmd implements Command {
   name = 'build [pattern]';
@@ -14,7 +14,7 @@ export class BuilderCmd implements Command {
   shortDescription = '';
   options = [] as CommandOptions;
 
-  constructor(private builder: BuilderExtension, private workspace: Workspace, private logger: Logger) {}
+  constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
 
   async report([userPattern]: [string]): Promise<string> {
     const longProcessLogger = this.logger.createLongProcessLogger('build');

@@ -1,7 +1,7 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { CompilerAspect } from './compiler.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { ExtensionManifest } from '@teambit/harmony';
-import { WorkspaceExt } from '../workspace';
+import { WorkspaceAspect } from '../workspace';
 import { Environments } from '../environments';
 import { Workspace } from '../workspace';
 import { CLIExtension } from '../cli';
@@ -14,7 +14,7 @@ import { BitId } from '../../bit-id';
 export class CompilerExtension {
   static id = Extensions.compiler;
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, WorkspaceExt, Environments] as ExtensionManifest[];
+  static dependencies = [CLIExtension, WorkspaceAspect, Environments] as ExtensionManifest[];
   constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all

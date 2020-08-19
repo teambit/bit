@@ -1,4 +1,4 @@
-import { UiAspect } from './ui.aspect';
+import { UIAspect } from './ui.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
@@ -234,4 +234,4 @@ export class UIExtension {
   }
 }
 
-UiAspect.addRuntime(UiMain);
+UIAspect.addRuntime(UiMain);

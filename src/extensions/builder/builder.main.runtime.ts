@@ -1,8 +1,8 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect } from './builder.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Environments } from '../environments';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { EnvsAspect, EnvsMain } from '../environments';
+import { Workspace, WorkspaceAspect } from '../workspace';
 import { BuilderCmd } from './run.cmd';
 import { Component, ComponentID, ComponentExtension } from '../component';
 import { BuilderService } from './builder.service';
@@ -12,7 +12,7 @@ import { CLIExtension } from '../cli';
 import { LoggerExtension } from '../logger';
 import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
 import { TagCmd } from './tag.cmd';
@@ -29,14 +29,14 @@ export type BuilderConfig = {
   parallel: 10;
 };
 
-export class BuilderExtension {
+export class BuilderMain {
   static id = '@teambit/builder';
 
   constructor(
     /**
      * environments extension.
      */
-    private envs: Environments,
+    private envs: EnvsMain,
 
     /**
      * workspace extension.
@@ -110,31 +110,31 @@ export class BuilderExtension {
   static runtime = MainRuntime;
   static dependencies = [
     CLIExtension,
-    Environments,
-    WorkspaceExt,
+    EnvsAspect,
+    WorkspaceAspect,
     ScopeExtension,
     LoggerExtension,
     CoreExt,
-    GraphQLExtension,
+    GraphqlAspect,
     ComponentExtension,
   ];
 
   static async provider(
     [cli, envs, workspace, scope, loggerExt, core, graphql]: [
       CLIExtension,
-      Environments,
+      EnvsMain,
       Workspace,
       ScopeExtension,
       LoggerExtension,
       Core,
-      GraphQLExtension
+      GraphqlMain
     ],
     config,
     [taskSlot]: [TaskSlot]
   ) {
-    const logger = loggerExt.createLogger(BuilderExtension.id);
+    const logger = loggerExt.createLogger(BuilderAspect.id);
     const builderService = new BuilderService(workspace, logger, taskSlot);
-    const builder = new BuilderExtension(envs, workspace, builderService, scope, core, taskSlot);
+    const builder = new BuilderMain(envs, workspace, builderService, scope, core, taskSlot);
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);

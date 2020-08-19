@@ -1,6 +1,6 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BundlerAspect } from './bundler.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { DevServerService } from './dev-server.service';
 import { Environments } from '../environments';

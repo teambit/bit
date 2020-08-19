@@ -27,7 +27,7 @@ export type Descriptor = {
   icon: string;
 };
 
-export class Environments {
+export class EnvsMain {
   static id = '@teambit/envs';
 
   static runtime = MainRuntime;
@@ -174,10 +174,10 @@ export class Environments {
     [envSlot]: [EnvsRegistry],
     context: Harmony
   ) {
-    const envs = new Environments(config, context, envSlot);
+    const envs = new EnvsMain(config, context, envSlot);
     graphql.register(environmentsSchema(envs));
     return envs;
   }
 }
 
-EnvsAspect.addRuntime(Environments);
+EnvsAspect.addRuntime(EnvsMain);
