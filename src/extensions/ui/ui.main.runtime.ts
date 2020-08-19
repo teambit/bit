@@ -16,14 +16,15 @@ import { UnknownUI } from './exceptions';
 import { createRoot } from './create-root';
 import { sha1 } from '../../utils';
 import { ExpressExtension } from '../express';
-import { ComponentExtension } from '../component';
+import type { ComponentMain } from '../component';
+import { ComponentAspect } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
 import { LoggerExtension, Logger } from '../logger';
 import { AspectAspect } from '../aspect';
 import type { AspectMain } from '../aspect';
 
-export type UIDeps = [CLIExtension, GraphqlMain, ExpressExtension, ComponentExtension, LoggerExtension, AspectMain];
+export type UIDeps = [CLIExtension, GraphqlMain, ExpressExtension, ComponentMain, LoggerExtension, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -87,7 +88,7 @@ export class UiMain {
     /**
      * component extension.
      */
-    private componentExtension: ComponentExtension,
+    private componentExtension: ComponentMain,
 
     /**
      * ui logger instance.
@@ -204,14 +205,7 @@ export class UiMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [
-    CLIExtension,
-    GraphqlAspect,
-    ExpressExtension,
-    ComponentExtension,
-    LoggerExtension,
-    AspectAspect,
-  ];
+  static dependencies = [CLIExtension, GraphqlAspect, ExpressExtension, ComponentAspect, LoggerExtension, AspectAspect];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 

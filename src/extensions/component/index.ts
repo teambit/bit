@@ -1,5 +1,4 @@
 export { Component } from './component';
-export { default as ComponentFactoryExt, ComponentExtension } from './component.extension';
 export { ComponentID } from './id';
 export { default as ComponentFS } from './component-fs';
 export { default as ComponentConfig } from './config';

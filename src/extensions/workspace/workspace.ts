@@ -9,7 +9,8 @@ import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { link } from '../../api/consumer';
 import type { ScopeMain } from '../scope';
-import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
+import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '../component';
+import type { ComponentMain } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
 import { IsolatorExtension, Network } from '../isolator';
@@ -83,7 +84,7 @@ export class Workspace implements ComponentFactory {
     /**
      * access to the `ComponentProvider` instance
      */
-    private componentFactory: ComponentExtension,
+    private componentFactory: ComponentMain,
 
     readonly isolateEnv: IsolatorExtension,
 

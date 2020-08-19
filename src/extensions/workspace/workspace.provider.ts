@@ -1,7 +1,7 @@
 import { Harmony, SlotRegistry } from '@teambit/harmony';
 import type { ScopeMain } from '../scope';
 import { Workspace } from './workspace';
-import { ComponentExtension } from '../component';
+import type { ComponentMain } from '../component';
 import { loadConsumerIfExist, Consumer } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
@@ -29,7 +29,7 @@ import ManyComponentsWriter from '../../consumer/component-ops/many-components-w
 export type WorkspaceDeps = [
   CLIExtension,
   ScopeMain,
-  ComponentExtension,
+  ComponentMain,
   IsolatorExtension,
   DependencyResolverMain,
   VariantsMain,

@@ -8,14 +8,15 @@ import { BitIds as ComponentsIds, BitId } from '../../bit-id';
 import {
   Component,
   ComponentID,
-  ComponentExtension,
   ComponentFactory,
   State,
   Snap,
   ComponentFS,
   Tag,
   TagMap,
+  ComponentAspect,
 } from '../component';
+import type { ComponentMain } from '../component';
 import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
 import { Config } from '../component';
@@ -60,7 +61,7 @@ export class ScopeMain implements ComponentFactory {
     /**
      * component extension.
      */
-    readonly componentExtension: ComponentExtension,
+    readonly componentExtension: ComponentMain,
 
     /**
      * slot registry for subscribing to build
@@ -273,11 +274,11 @@ export class ScopeMain implements ComponentFactory {
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
   static runtime = MainRuntime;
 
-  static dependencies = [ComponentExtension, UIAspect, GraphqlAspect, CLIExtension, IsolatorExtension, LoggerExtension];
+  static dependencies = [ComponentAspect, UIAspect, GraphqlAspect, CLIExtension, IsolatorExtension, LoggerExtension];
 
   static async provider(
     [componentExt, ui, graphql, cli, isolator, loggerExtension]: [
-      ComponentExtension,
+      ComponentMain,
       UiMain,
       GraphqlMain,
       CLIExtension,

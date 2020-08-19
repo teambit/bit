@@ -6,7 +6,8 @@ import { UIRootUI as UIRoot } from '../ui';
 import { UIAspect } from '../ui';
 import type { UiUI } from '../ui';
 import { Scope } from './ui/scope';
-import { ComponentUI } from '../component';
+import { ComponentAspect } from '../component';
+import type { ComponentUI } from '../component';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -62,7 +63,7 @@ export class ScopeUI {
     };
   }
 
-  static dependencies = [UIAspect, ComponentUI];
+  static dependencies = [UIAspect, ComponentAspect];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/scope';
