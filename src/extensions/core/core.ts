@@ -4,8 +4,18 @@ import { ScopeExtension } from '../scope';
 import { Config } from '../config';
 import { Logger } from '../logger';
 import { ExtensionDataList } from '../../consumer/config';
-import { ComponentHost } from '../types';
 import { ExtensionDescriptor } from './extension-descriptor';
+
+/**
+ * An interface for components hosts
+ * This is used by the core to make sure he can get the components the same way from all hosts
+ *
+ * @interface ComponentHost
+ */
+export interface ComponentHost {
+  // get: (id: string) => Promise<Component | undefined>;
+  loadExtensions: (extensions: ExtensionDataList) => Promise<void>;
+}
 
 export default class Core {
   host: ComponentHost;

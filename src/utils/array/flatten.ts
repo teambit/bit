@@ -8,7 +8,7 @@
  *  flatten([[1], [2], [3]]) // => [1, 2, 3]
  * ```
  */
-export default function flatten(arrays: Array<any>): Array<any> {
-  const concat = [].concat;
+export default function flatten<T>(arrays: T[][]): T[] {
+  const concat = ([] as T[]).concat;
   return concat.apply([], arrays);
 }
