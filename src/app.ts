@@ -39,13 +39,14 @@ async function getConfig() {
     global: {
       name: '.bitrc.jsonc',
     },
+    shouldThrow: false,
   };
 
   if (consumerInfo) {
     return HarmonyConfig.load('workspace.jsonc', configOpts);
   }
 
-  if (scopePath) {
+  if (scopePath && !consumerInfo) {
     return HarmonyConfig.load('scope.jsonc', configOpts);
   }
 

@@ -7,6 +7,7 @@ const userHome = require('user-home');
 export type ConfigOptions = {
   cwd?: string;
   global?: GlobalConfigOpts;
+  shouldThrow?: boolean;
 };
 
 export type GlobalConfigOpts = {
@@ -16,6 +17,7 @@ export type GlobalConfigOpts = {
 
 const defaultConfig = {
   cwd: process.cwd(),
+  shouldThrow: true,
 };
 
 export class HarmonyConfig {
@@ -31,7 +33,7 @@ export class HarmonyConfig {
 
   static load(fileName: string, opts?: ConfigOptions) {
     const mergedOpts = Object.assign(defaultConfig, opts);
-    const config = readConfigFile(join(mergedOpts.cwd, fileName));
+    const config = readConfigFile(join(mergedOpts.cwd, fileName), mergedOpts.shouldThrow);
 
     if (mergedOpts.global) {
       return HarmonyConfig.loadGlobal(mergedOpts.global, config);
