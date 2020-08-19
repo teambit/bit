@@ -6,8 +6,15 @@ import { Logger } from '../logger';
 
 export async function symlinkBitBinToCapsules(capsules: Capsule[], logger: Logger) {
   logger.debug(`symlink bit bin to capsules, ${capsules.length} capsules`);
-  const linksP = capsules.map(linkBitBinInCapsule);
+  const linksP = capsules.map(async (capsule) => linkBitBinInCapsule(capsule));
   return Promise.all(linksP);
+}
+
+export async function copyBitBinToCapsuleRoot(root: string, logger: Logger) {
+  logger.debug(`symlink bit-bin package to capsule root`);
+  const localBitBinPath = path.join(__dirname, '../../..');
+  const targetPath = path.join(root, './node_modules/bit-bin');
+  await fs.copy(localBitBinPath, targetPath);
 }
 
 async function linkBitBinInCapsule(capsule: Capsule) {
@@ -32,6 +39,7 @@ async function linkBitBinInCapsule(capsule: Capsule) {
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
+
   // we use fs directly here rather than the capsule.fs because there are some edge cases
   // that the capsule fs does not deal with well (eg. identifying and deleting
   // a symlink rather than the what the symlink links to)
