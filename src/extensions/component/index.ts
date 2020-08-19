@@ -18,3 +18,7 @@ export { ComponentMap } from './component-map';
 export type { ComponentMain } from './component.main.runtime';
 export { ComponentAspect } from './component.aspect';
 export type { ComponentUI } from './component.ui.runtime';
+export { Section } from './section';
+export { ComponentContext } from './ui/context/component-context';
+export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export { default as Config } from './config';

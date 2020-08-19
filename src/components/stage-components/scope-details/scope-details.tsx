@@ -2,8 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { Subtitle } from '@teambit/documenter-temp.ui.sub-title';
 import { ConsumableLink } from '@teambit/documenter-temp.ui.consumable-link';
-import { UserAvatar } from '../workspace-components/Avatar';
-import { AccountObj } from '../workspace-components/Avatar/avatar';
+import { UserAvatar, AccountObj } from '../workspace-components/Avatar';
 
 import { ScopeTitle } from '../scope-title';
 import { ScopeLabels } from '../scope-labels';

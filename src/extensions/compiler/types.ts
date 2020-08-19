@@ -1,4 +1,4 @@
-import { ConcreteService } from '../environments/services/concrete-service';
+import { ConcreteService } from '../environments';
 import { BuildResults, BuildContext } from '../builder';
 
 export type TranspileOpts = {

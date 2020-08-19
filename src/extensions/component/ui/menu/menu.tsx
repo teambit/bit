@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { NavigationSlot } from '../../../react-router/slot-router';
+import { NavigationSlot } from '../../../react-router';
 import { TopBarNav } from '../top-bar-nav';
 import { TopBarWidgetLink } from '../top-bar-widget-link';
 import { useComponent } from '../use-component';

@@ -1,4 +1,4 @@
-import { ComponentUI } from '../component/component.ui.runtime';
+import { ComponentUI } from '../component';
 import { CompositionsSection } from './composition.section';
 
 export class CompositionsUI {

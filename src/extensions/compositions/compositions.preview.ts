@@ -1,4 +1,4 @@
-import { Preview } from '../preview/preview.preview';
+import { Preview } from '../preview';
 
 export class CompositionsPreview {
   static id = '@teambit/compositions';

@@ -6,7 +6,7 @@ import { hoverable } from '../../../../to-eject/css-components/hoverable';
 import { clickable } from '../../../../to-eject/css-components/clickable';
 
 import styles from './overview-link.module.scss';
-import { NavLink } from '../../../../extensions/react-router/nav-link';
+import { NavLink } from '../../../../extensions/react-router';
 
 export function OverviewLink() {
   return (

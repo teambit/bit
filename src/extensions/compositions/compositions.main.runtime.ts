@@ -2,15 +2,15 @@ import { CompositionsAspect } from './compositions.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { Component, ComponentFactoryExt } from '../component';
 import { ExecutionContext } from '../environments';
-import { ComponentMap } from '../component/component-map';
-import { PreviewExtension } from '../preview/preview.extension';
+import { ComponentMap } from '../component';
+import { PreviewExtension } from '../preview';
 import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
 import { GraphQLExtension } from '../graphql';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceAspect } from '../workspace';
 import { SchemaExtension } from '../schema';
-import { ExtensionData } from '../workspace/on-component-load';
+import { ExtensionData } from '../workspace';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
 
 export type CompositionsConfig = {

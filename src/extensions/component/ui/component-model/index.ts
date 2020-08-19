@@ -1,1 +1,1 @@
-export { ComponentModel } from './component-model';
+export { ComponentModel, ComponentModelProps } from './component-model';

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension } from '../isolator/isolator.extension';
+import { IsolatorExtension } from '../isolator';
 import { Workspace } from './workspace';
 
 export class CapsuleListCmd implements Command {

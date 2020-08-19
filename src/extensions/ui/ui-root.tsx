@@ -1,5 +1,5 @@
 import { Component } from '../component';
-import { ComponentDir } from '../bundler/get-entry';
+import { ComponentDir } from '../bundler';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
 // would never have componentDir and as it has nothing to do with `UIRoot`.

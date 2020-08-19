@@ -6,3 +6,7 @@ export { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from './c
 export type { WorkspaceMain } from './workspace.main.runtime';
 export { WorkspaceAspect } from './workspace.aspect';
 export type { WorkspaceUI } from './workspace.ui.runtime';
+export { OnComponentChangeResult } from './on-component-change';
+export { ExtensionData } from './on-component-load';
+export { ComponentStatus } from './workspace-component';
+export { WorkspaceModelComponent } from './ui/workspace/workspace-model';

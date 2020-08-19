@@ -6,8 +6,8 @@ import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane'
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
-import { RouteSlot, SlotRouter } from '../../../react-router/slot-router';
-import { useDataQuery } from '../../../ui/ui/data/use-data-query';
+import { RouteSlot, SlotRouter } from '../../../react-router';
+import { useDataQuery } from '../../../ui';
 import { FullLoader } from '../../../../to-eject/full-loader';
 import { WorkspaceOverview } from './workspace-overview';
 import { TopBar } from '../../../../components/stage-components/top-bar';

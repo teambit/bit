@@ -1,4 +1,4 @@
-import { ComponentModel } from '../../../component/ui';
+import { ComponentModel } from '../../../component';
 
 export class ScopeModel {
   constructor(

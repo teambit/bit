@@ -1,10 +1,10 @@
 import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
 import { H3 } from '@teambit/documenter-temp.ui.heading';
-import { Author, Snap } from '../../../../extensions/component/snap';
-import { NavLink } from '../../../../extensions/react-router/nav-link';
-import { StatusDot } from '../../side-bar/component-tree/status-dot/status-dot';
-import { Contributors } from '../contributors/contributors';
+import { Author, Snap } from '../../../../extensions/component';
+import { NavLink } from '../../../../extensions/react-router';
+import { StatusDot } from '../../side-bar/component-tree/status-dot';
+import { Contributors } from '../contributors';
 import { Labels } from '../version-label';
 import styles from './version-block.module.scss';
 

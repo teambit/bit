@@ -1,7 +1,7 @@
 // import gql from 'graphql-tag';
-// import { ComponentModel } from '../../component/ui';
+// import { ComponentModel } from '../../component';
 // import { Composition } from '../composition';
-// import { useDataQuery } from '../../ui/ui/data/use-data-query';
+// import { useDataQuery } from '../../ui';
 
 // const GET_COMPOSITIONS = gql`
 //   compositions: {

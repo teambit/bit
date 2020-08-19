@@ -1,7 +1,7 @@
 import { Component } from '../component';
 import { Workspace } from '../workspace';
 import { ExecutionContext } from '../environments';
-import { ConcreteService } from '../environments/services/concrete-service';
+import { ConcreteService } from '../environments';
 
 export type TestResults = {
   total: number;

@@ -1,4 +1,4 @@
-import { ComponentMap } from '../component/component-map';
+import { ComponentMap } from '../component';
 import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {

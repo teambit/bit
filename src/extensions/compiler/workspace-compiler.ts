@@ -15,7 +15,7 @@ import { Compiler } from './types';
 import { ComponentID } from '../component';
 import { Component } from '../component';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import { OnComponentChangeResult } from '../workspace/on-component-change';
+import { OnComponentChangeResult } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };

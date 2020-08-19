@@ -2,9 +2,9 @@ import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-import { UIRoot } from './ui-root.ui.runtime';
-import { GraphqlUI } from '../graphql/graphql.ui.runtime';
-import { ReactRouterUI } from '../react-router/react-router.ui.runtime';
+import { UIRootUI as UIRoot } from '../ui';
+import { GraphQlUI } from '../graphql';
+import { ReactRouterUI } from '../react-router';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
 

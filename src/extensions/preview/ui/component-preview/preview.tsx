@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react';
-import { ComponentModel } from '../../../component/ui';
+import { ComponentModel } from '../../../component';
 
 export type ComponentPreviewProps = {
   /**

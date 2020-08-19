@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import { Logger } from '../logger';
-import { DependencyLifecycleType } from '../dependency-resolver/types';
+import { DependencyLifecycleType } from '../dependency-resolver';
 
 type InstallCmdOptions = {
   variants: string;

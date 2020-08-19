@@ -2,7 +2,7 @@ import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
-import { RouteSlot, SlotRouter } from '../../react-router/slot-router';
+import { RouteSlot, SlotRouter } from '../../react-router';
 import { ScopeOverview } from './scope-overview';
 import { FullLoader } from '../../../to-eject/full-loader';
 import { ScopeProvider } from './scope-provider';

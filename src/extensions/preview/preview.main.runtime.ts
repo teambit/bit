@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { generateLink } from './generate-link';
-import { ComponentMap } from '../component/component-map';
+import { ComponentMap } from '../component';
 import { BundlerExtension } from '../bundler';
 import { BuilderExtension } from '../builder';
 import { PreviewTask } from './preview.task';

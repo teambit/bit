@@ -1,11 +1,11 @@
 import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
-import { RouteSlot } from '../react-router/slot-router';
-import { UIRoot } from '../ui/ui-root.ui.runtime';
-import { UIRuntimeExtension } from '../ui/ui.ui.runtime';
+import { RouteSlot } from '../react-router';
+import { UIRootUI as UIRoot } from '../ui';
+import { UIRuntimeExtension } from '../ui';
 import { Scope } from './ui/scope';
-import { ComponentUI } from '../component/component.ui.runtime';
+import { ComponentUI } from '../component';
 
 export type MenuItem = {
   label: JSX.Element | string | null;

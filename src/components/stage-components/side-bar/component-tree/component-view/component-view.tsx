@@ -9,7 +9,7 @@ import { getName } from '../utils/get-name';
 import { clickable } from '../../../../../to-eject/css-components/clickable';
 import { hoverable } from '../../../../../to-eject/css-components/hoverable';
 import { PayloadType } from '../payload-type';
-import { NavLink } from '../../../../../extensions/react-router/nav-link';
+import { NavLink } from '../../../../../extensions/react-router';
 import { ComponentStatusResolver } from '../component-status-resolver';
 import styles from './component-view.module.scss';
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Section } from '../component/section';
-import { DocsUI } from './docs.ui.runtime';
+import { Section } from '../component';
+import { DocsUI } from './docs.ui';
 import { Overview } from './overview';
 
 export class OverviewSection implements Section {
