@@ -36,7 +36,7 @@ describe('pkg extension', function () {
           'some-key': 'some-val',
         },
       };
-      helper.extensions.addExtensionToVariant('bar', '@teambit/pkg', pkgConfig);
+      helper.extensions.addExtensionToVariant('bar', 'teambit.bit/pkg', pkgConfig);
       barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
       isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
     });

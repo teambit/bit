@@ -1,4 +1,4 @@
-# `@teambit/dependency-resolver`
+# `teambit.bit/dependency-resolver`
 
 This extension is responsible for:
 1. detecting dependencies of components by static code analysis
@@ -20,12 +20,12 @@ Here is a full example of workspace config:
 /**
   * main configuration for component dependency resolution.
   */
-  "@teambit/dependency-resolver": {
+  "teambit.bit/dependency-resolver": {
     "policy" : {
       "dependencies": {
         "lodash": "1.2.3",
         // This is a component, not a package
-        "@teambit/my-awesome-component": "1.1.1"
+        "teambit.bit/my-awesome-component": "1.1.1"
       },
       "peerDependencies": {
         "react": ">15.0.1"
@@ -71,29 +71,29 @@ for example:
    // Remove all dependencies calculated from the workspace
    "*": "-",
    // Add custom dependency
-   "@teambit/my-awesome-component": "5.5.5"
+   "teambit.bit/my-awesome-component": "5.5.5"
    },
 }
 ```
 
 for example, consider the following config (co-exist in the same workspace with the workspace configuration described above):
 ```js
-"@teambit/variants": {
+"teambit.bit/variants": {
     /**
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.
     **/
     "new-ui/*": {
-      "@teambit/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "dependencies": {
           "lodash": "-",
-          // will change "@teambit/my-awesome-component" version to 5.5.5 for any component that require it
-          "@teambit/my-awesome-component": {
+          // will change "teambit.bit/my-awesome-component" version to 5.5.5 for any component that require it
+          "teambit.bit/my-awesome-component": {
             "version": "5.5.5",
             "force": false,
           },
-          // will add "@teambit/some-other-package" to all component matching this variant
-          "@teambit/some-other-package": {
+          // will add "teambit.bit/some-other-package" to all component matching this variant
+          "teambit.bit/some-other-package": {
             "version": "5.5.5",
             "force": true,
           }
@@ -107,8 +107,8 @@ for example, consider the following config (co-exist in the same workspace with 
 ```
 This tells the dependency-resolver that for all components under `new-ui/*`
 * remove the loadash dependency.
-* use version 5.5.5 of @teambit/my-awesome-component instead of 1.1.1 (for any component that require it)
-* add "@teambit/some-other-package" to all component matching `new-ui/*` variant
+* use version 5.5.5 of teambit.bit/my-awesome-component instead of 1.1.1 (for any component that require it)
+* add "teambit.bit/some-other-package" to all component matching `new-ui/*` variant
 * use version 16.0.1 as peer instead of 15.0.1
 
 ### commands
@@ -144,8 +144,8 @@ The dependency resolver will provide a hook called @dependncies (name is open - 
 here is an example:
 ```js
 // my 3rd party extension
-import { Extension } from '@teambit/bit';
-import { DependencyResolver, Dependencies } from '@teambit/dependency-resolver';
+import { Extension } from 'teambit.bit/bit';
+import { DependencyResolver, Dependencies } from 'teambit.bit/dependency-resolver';
 @Extension()
 export class MyExtension {
   constructor() {}
@@ -175,8 +175,8 @@ import default from 'my-component';
 console.log('do something');
 
 // my 3rd party extension
-import { Extension } from '@teambit/bit';
-import { DependencyResolver, FileDependencies } from '@teambit/dependency-resolver';
+import { Extension } from 'teambit.bit/bit';
+import { DependencyResolver, FileDependencies } from 'teambit.bit/dependency-resolver';
 
 @Extension()
 export class MyExtension {

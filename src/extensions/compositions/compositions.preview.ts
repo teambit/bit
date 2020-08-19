@@ -1,8 +1,6 @@
 import { PreviewAspect, PreviewPreview } from '../preview';
 
 export class CompositionsPreview {
-  static id = '@teambit/compositions';
-
   constructor(
     /**
      * preview extension.

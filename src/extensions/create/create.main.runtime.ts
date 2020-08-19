@@ -4,7 +4,6 @@ import { WorkspaceAspect } from '../workspace';
 import { provideCreate } from './create.provider';
 
 export const CreateMain = {
-  name: '@teambit/create',
   runtime: MainRuntime,
   dependencies: [CLIAspect, WorkspaceAspect],
   provider: provideCreate,

@@ -8,7 +8,7 @@
   /**
    * main configuration of the Bit workspace.
   **/
-  "@teambit/workspace": {
+  "teambit.bit/workspace": {
 
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
@@ -31,11 +31,11 @@
   /**
    * main configuration for component dependency resolution.
   **/
-  "@teambit/dependency-resolver": {
+  "teambit.bit/dependency-resolver": {
     /**
      * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
     */
-    "packageManager": "@teambit/pnpm",
+    "packageManager": "teambit.bit/pnpm",
 
     /**
     * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
@@ -59,7 +59,7 @@
   /**
    * automate Bit workflow with Git.
   */
-  // "@teambit/git": {
+  // "teambit.bit/git": {
     /**
      * fetch dependency and component updates on `git pull`.
     **/
@@ -71,7 +71,7 @@
    * this is extremely useful for upgrading, aligning and building components with a
    * new set of dependencies.
   **/
-  "@teambit/variants": {
+  "teambit.bit/variants": {
     /**
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.
@@ -80,7 +80,7 @@
       /**
       * apply the react environment on all ui components.
         **/
-      "@teambit/react": {
+      "teambit.bit/react": {
         /**
         * turn on typescript compiler.
         **/
@@ -104,14 +104,14 @@
       /**
       * main configuration file for handling the build process of components.
       */
-      "@teambit/flows": {
+      "teambit.bit/flows": {
         /**
         * configure build tasks. configuration of build tasks is basically a map of `task name`
         * pointed to an array of tasks. each task can be either a bash command or an extension
         * which exposes a task. reserved task names: build, test, runs on pre-tag.
         */
         "tasks": {
-          "build": ["@teambit/react:build", "mv dist dist-copy"],
+          "build": ["teambit.bit/react:build", "mv dist dist-copy"],
           "test": ["mocha ."],
           "deploy": ["firebase deploy"]
         }
@@ -124,7 +124,7 @@
      * react 15 as well.
     **/
     "ui/base": {
-      "@teambit/component": {
+      "teambit.bit/component": {
         "peerDependencies": {
           "react": ">15.0.1"
         }
@@ -132,7 +132,7 @@
     },
 
     "extensions": {
-      // "@teambit/extension": {
+      // "teambit.bit/extension": {
         // need to decide configuration for extension environment.
       // },
 
@@ -140,12 +140,12 @@
       * configure the creation of new components in your workspace through the `bit create` command.
       * this is helpful for setting component structure standards.
       **/
-      "@teambit/create": {
+      "teambit.bit/create": {
         /**
         * default component template for Bit to use for creation of components upon `bit create`.
         * default template is:
         */
-        "defaultTemplate": "@teambit/extension-template"
+        "defaultTemplate": "teambit.bit/extension-template"
       }
     }
   }

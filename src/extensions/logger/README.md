@@ -68,16 +68,16 @@ once done, call `end()`, which logs the duration of the process in ms.
 
 Here is an example of the messages produced by this longProcessLogger. The status-line always shows the last message.
 ```
-@teambit/workspace, loading components (total: 20)
-@teambit/workspace, loading components (1/20). ui/button
-@teambit/workspace, loading components (2/20). ui/form
+teambit.bit/workspace, loading components (total: 20)
+teambit.bit/workspace, loading components (1/20). ui/button
+teambit.bit/workspace, loading components (2/20). ui/form
 ...
-@teambit/workspace, loading components (20/20). ui/page
-@teambit/workspace, loading components (completed in 200ms)
+teambit.bit/workspace, loading components (20/20). ui/page
+teambit.bit/workspace, loading components (completed in 200ms)
 ```
 
 An example when there is no `totalItems`.
 ```
-@teambit/workspace, loading components
-@teambit/workspace, loading components (completed in 200ms)
+teambit.bit/workspace, loading components
+teambit.bit/workspace, loading components (completed in 200ms)
 ```

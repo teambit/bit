@@ -110,7 +110,7 @@ export class Publisher {
   }
 
   public shouldPublish(extensions: ExtensionDataList): boolean {
-    const pkgExt = extensions.findExtension('@teambit/pkg');
+    const pkgExt = extensions.findExtension('teambit.bit/pkg');
     if (!pkgExt) return false;
     return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
   }

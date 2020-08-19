@@ -1,20 +1,20 @@
 {
   "$schema": "",
-  "@teambit/workspace": {
+  "teambit.bit/workspace": {
     "defaultScope": "teambit2.core",
     "defaultDirectory": "components",
     "vendorDirectory": "vendor",
     "extensions": {
-      "@teambit/react": {
-        "env": "@teambit/envs",
+      "teambit.bit/react": {
+        "env": "teambit.bit/envs",
         "config": {}
       },
-      "@teambit/pkg": {
+      "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}"
         }
       },
-      "@teambit/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "devDependencies": {
             "@types/mocha": "^5.2.7",
@@ -28,8 +28,8 @@
       }
     }
   },
-  "@teambit/dependency-resolver": {
-    "packageManager": "@teambit/pnpm",
+  "teambit.bit/dependency-resolver": {
+    "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -40,19 +40,19 @@
       }
     }
   },
-  "@teambit/variants": {
+  "teambit.bit/variants": {
     "extensions/cli": {
-      "@teambit/react": {
-        "env": "@teambit/envs",
+      "teambit.bit/react": {
+        "env": "teambit.bit/envs",
         "config": {}
       },
-      "@teambit/pkg": {
+      "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
           "bin": "bin/bit.js"
         }
       },
-      "@teambit/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "devDependencies": {
             "@types/mocha": "^5.2.7",

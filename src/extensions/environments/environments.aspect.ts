@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const EnvsAspect = Aspect.create({
-  id: '@teambit/environments',
+  id: 'teambit.bit/environments',
   dependencies: [],
   defaultConfig: {},
 });

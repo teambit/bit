@@ -44,7 +44,7 @@ configureExtension: (config: ExtensionsConfigEntry)
 schemaVersion: string
 
 // Legacy stuff (see - src/consumer/config/legacy-workspace-config-interface.ts) - the names / structure requires modifications
-// The core knows to go directly into specific extension config like @teambit/workspace.defaultScope
+// The core knows to go directly into specific extension config like teambit.bit/workspace.defaultScope
 
 // Register to the legacy hooks:
 // - load workspace config
