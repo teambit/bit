@@ -1,10 +1,10 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { ComponentExtension } from './component.extension';
 import { ComponentFactory } from './component-factory';
+import { ComponentMain } from './component.main.runtime';
 
-export function componentSchema(componentExtension: ComponentExtension) {
+export function componentSchema(componentExtension: ComponentMain) {
   return {
     typeDefs: gql`
       type ComponentID {
@@ -118,7 +118,7 @@ export function componentSchema(componentExtension: ComponentExtension) {
         // },
       },
       Query: {
-        getHost: (componentExt: ComponentExtension, { id }: { id: string }) => {
+        getHost: (componentExt: ComponentMain, { id }: { id: string }) => {
           return componentExtension.getHost(id);
         },
       },

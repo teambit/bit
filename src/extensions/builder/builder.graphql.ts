@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 import { Component } from '../component';
-import { BuilderExtension } from './builder.extension';
+import { BuilderMain } from './builder.main.runtime';
 
-export function builderSchema(builder: BuilderExtension) {
+export function builderSchema(builder: BuilderMain) {
   return {
     typeDefs: gql`
       type ExtensionDescriptor {

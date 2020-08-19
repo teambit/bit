@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 import { Schema } from '../graphql';
-import { BundlerExtension } from './bundler.extension';
+import { BundlerMain } from './bundler.main.runtime';
 import { Component } from '../component';
 
-export function devServerSchema(bundler: BundlerExtension): Schema {
+export function devServerSchema(bundler: BundlerMain): Schema {
   return {
     typeDefs: gql`
       extend type Component {

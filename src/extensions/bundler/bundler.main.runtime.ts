@@ -16,7 +16,7 @@ export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 /**
  * bundler extension.
  */
-export class BundlerExtension {
+export class BundlerMain {
   static id = '@teambit/bundler';
 
   constructor(
@@ -108,7 +108,7 @@ export class BundlerExtension {
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const bundler = new BundlerExtension(envs, new DevServerService(runtimeSlot), runtimeSlot);
+    const bundler = new BundlerMain(envs, new DevServerService(runtimeSlot), runtimeSlot);
 
     graphql.register(devServerSchema(bundler));
 
