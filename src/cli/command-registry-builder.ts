@@ -57,6 +57,7 @@ import Graph from './commands/public-cmds/graph-cmd';
 import Lane from './commands/public-cmds/lane-cmd';
 import Switch from './commands/public-cmds/switch-cmd';
 import Fetch from './commands/public-cmds/fetch-cmd';
+import Tag from './commands/public-cmds/tag-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -121,6 +122,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Untrack(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Untag(),
+      new Tag(),
       new Move(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Remove(),
