@@ -880,7 +880,10 @@ export default class Scope {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
       isBare = false;
     }
-    if (scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR))) {
+    if (
+      scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)) ||
+      scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR))
+    ) {
       isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
