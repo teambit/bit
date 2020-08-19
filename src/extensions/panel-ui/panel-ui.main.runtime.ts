@@ -1,5 +1,6 @@
 import { PanelUiAspect } from './panel-ui.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
+
 export class PanelUIMain {
   static runtime = MainRuntime;
   static dependencies = [];
@@ -9,4 +10,4 @@ export class PanelUIMain {
   }
 }
 
-PanelUiAspect.addRuntime(PanelUiMain);
+PanelUiAspect.addRuntime(PanelUIMain);

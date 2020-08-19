@@ -1,17 +1,16 @@
 import { InsightsAspect } from './insights.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
-import { ExtensionManifest } from '@teambit/harmony';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
 import { provide } from './insight.provider';
-import { ComponentGraphExt } from '../graph';
-import { CLIMain } from '../cli';
+import { GraphAspect } from '../graph';
 
-export default {
+export const InsightsMain = {
+  runtime: MainRuntime,
   name: 'insights',
-  dependencies: [ComponentGraphExt, CLIMain],
+  dependencies: [GraphAspect, CLIAspect],
   config: {
     silence: false,
   },
   provider: provide,
-} as ExtensionManifest;
+};
 
 InsightsAspect.addRuntime(InsightsMain);

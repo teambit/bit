@@ -3,7 +3,7 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { Component } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component';
-import { PreviewMain } from '../preview';
+import { PreviewMain, PreviewAspect } from '../preview';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
@@ -69,9 +69,9 @@ export class DocsMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewExtension];
+  static dependencies = [PreviewAspect];
 
-  static async provider([preview]: [PreviewExtension]) {
+  static async provider([preview]: [PreviewMain]) {
     const docs = new DocsMain(preview);
 
     preview.registerDefinition(new DocsPreviewDefinition(docs));

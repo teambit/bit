@@ -11,7 +11,7 @@ export class JestMain {
     return new JestTester(jestConfig);
   }
 
-  static provider() {
+  static async provider() {
     return new JestMain();
   }
 }

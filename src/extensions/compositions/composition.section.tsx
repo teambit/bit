@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section } from '../component';
-import { CompositionsUI } from './compositions.ui';
 import { Compositions } from './compositions';
+import { CompositionsUI } from './compositions.ui.runtime';
 
 export class CompositionsSection implements Section {
   constructor(

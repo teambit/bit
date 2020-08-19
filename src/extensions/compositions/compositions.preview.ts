@@ -1,4 +1,4 @@
-import { Preview } from '../preview';
+import { PreviewAspect, PreviewPreview } from '../preview';
 
 export class CompositionsPreview {
   static id = '@teambit/compositions';
@@ -7,7 +7,7 @@ export class CompositionsPreview {
     /**
      * preview extension.
      */
-    private preview: Preview
+    private preview: PreviewPreview
   ) {}
 
   render(componentId: string, modules: any) {
@@ -27,9 +27,9 @@ export class CompositionsPreview {
     return module[chosen];
   }
 
-  static dependencies = [Preview];
+  static dependencies = [PreviewAspect];
 
-  static async provider([preview]: [Preview]) {
+  static async provider([preview]: [PreviewPreview]) {
     const compPreview = new CompositionsPreview(preview);
     preview.registerPreview({
       name: 'compositions',

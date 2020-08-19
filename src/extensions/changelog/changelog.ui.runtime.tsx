@@ -1,11 +1,11 @@
 import React from 'react';
 import { ChangeLogPage } from './ui/change-log-page';
-import { ComponentUI } from '../component';
+import { ComponentUI, ComponentAspect } from '../component';
 import { ChangelogSection } from './changelog.section';
 
 export class ChangeLogUI {
   static id = '@teambit/changelog';
-  static dependencies = [ComponentUI];
+  static dependencies = [ComponentAspect];
 
   ChangeLog = () => {
     return <ChangeLogPage />;

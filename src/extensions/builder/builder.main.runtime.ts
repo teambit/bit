@@ -1,6 +1,6 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect } from './builder.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
 import { EnvsAspect, EnvsMain } from '../environments';
 import { Workspace, WorkspaceAspect } from '../workspace';
 import { BuilderCmd } from './run.cmd';
@@ -9,7 +9,7 @@ import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { CLIMain } from '../cli';
 import { ExtensionArtifact } from './artifact';
-import { CoreExt, Core } from '../core';
+import { Core, CoreAspect } from '../core';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
@@ -109,12 +109,12 @@ export class BuilderMain {
 
   static runtime = MainRuntime;
   static dependencies = [
-    CLIMain,
+    CLIAspect,
     EnvsAspect,
     WorkspaceAspect,
     ScopeAspect,
     LoggerAspect,
-    CoreExt,
+    CoreAspect,
     GraphqlAspect,
     ComponentAspect,
   ];

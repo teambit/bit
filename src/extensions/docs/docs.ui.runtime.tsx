@@ -1,10 +1,10 @@
-import { ComponentUI } from '../component';
+import { ComponentUI, ComponentAspect } from '../component';
 import { OverviewSection } from './overview.section';
 
 export class DocsUI {
   static id = '@teambit/docs';
 
-  static dependencies = [ComponentUI];
+  static dependencies = [ComponentAspect];
 
   static async provider([component]: [ComponentUI]) {
     const docs = new DocsUI();

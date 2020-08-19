@@ -4,8 +4,8 @@ import { getScopeComponent, addMany as addManyInternal, build, buildAll as build
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
-import { ConfigExt } from './extensions/config';
-import { BitExt, registerCoreExtensions } from './extensions/bit';
+import { ConfigAspect } from './extensions/config';
+import { BitAspect, registerCoreExtensions } from './extensions/bit';
 import { manifestsMap as coreExtensions } from './extensions/bit';
 
 export * from '@teambit/harmony';
@@ -89,8 +89,8 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
     process.chdir(options.cwd);
   }
   registerCoreExtensions();
-  await harmony.run(ConfigExt);
-  await harmony.set([BitExt]);
+  await harmony.run(ConfigAspect);
+  await harmony.set([BitAspect]);
   process.chdir(originalCwd);
   harmonyLoaded = true;
   harmonyCurrentlyLoading = false;

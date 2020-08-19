@@ -1,9 +1,9 @@
-import { ComponentUI } from '../component';
+import { ComponentUI, ComponentAspect } from '../component';
 import { CompositionsSection } from './composition.section';
 
 export class CompositionsUI {
   static id = '@teambit/compositions';
-  static dependencies = [ComponentUI];
+  static dependencies = [ComponentAspect];
 
   static async provider([component]: [ComponentUI]) {
     const compositions = new CompositionsUI();
