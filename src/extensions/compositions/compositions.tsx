@@ -43,8 +43,7 @@ export function Compositions() {
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id.legacyComponentId.name },
   });
-  const properties = R.path(['workspace', 'getDocs', 'properties'], data);
-
+  const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
   useEffect(() => {
@@ -53,14 +52,13 @@ export function Compositions() {
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
   return (
     <PanelContainer className={styles.compositionsPage}>
-      <TupleSplitPane max={100} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
+      <TupleSplitPane max={100} ratio={61} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
         <CompositionContent component={component} selected={selected} />
         <Panel>
           <TabContainer>
             <TabList>
               <Tab>compositions</Tab>
               <Tab>properties</Tab>
-              <Tab>dependencies</Tab>
             </TabList>
             <TabPanel>
               <CompositionsPanel
@@ -76,7 +74,7 @@ export function Compositions() {
                 <PropTable rows={properties} />
               ) : (
                 // TODO - make this look good
-                <div>no props</div>
+                <div />
               )}
             </TabPanel>
             <TabPanel></TabPanel>
