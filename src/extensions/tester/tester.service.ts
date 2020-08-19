@@ -4,7 +4,7 @@ import { Tester, TestResults } from './tester';
 import { detectTestFiles } from './utils';
 import { Workspace } from '../workspace';
 import { NoTestFilesFound } from './exceptions';
-import { TesterOptions } from './tester.extension';
+import { TesterOptions } from './tester.main.runtime';
 
 export class TesterService implements EnvService {
   constructor(

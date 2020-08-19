@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { isMatchPattern, isMatchPatternItem, MATCH_ALL_ITEM, sortMatchesBySpecificity } from './variants.extension';
+import { isMatchPattern, isMatchPatternItem, MATCH_ALL_ITEM, sortMatchesBySpecificity } from './variants.main.runtime';
 
 describe('isMatchPatternItem', () => {
   describe('match all', () => {

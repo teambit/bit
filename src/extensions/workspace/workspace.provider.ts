@@ -1,5 +1,5 @@
 import { Harmony, SlotRegistry } from '@teambit/harmony';
-import { ScopeExtension } from '../scope';
+import type { ScopeMain } from '../scope';
 import { Workspace } from './workspace';
 import { ComponentExtension } from '../component';
 import { loadConsumerIfExist, Consumer } from '../../consumer';
@@ -7,7 +7,7 @@ import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverMain } from '../dependency-resolver';
-import { VariantsExtension } from '../variants';
+import type { VariantsMain } from '../variants';
 import { WorkspaceExtConfig } from './types';
 import { GraphqlMain } from '../graphql';
 import getWorkspaceSchema from './workspace.graphql';
@@ -28,11 +28,11 @@ import ManyComponentsWriter from '../../consumer/component-ops/many-components-w
 
 export type WorkspaceDeps = [
   CLIExtension,
-  ScopeExtension,
+  ScopeMain,
   ComponentExtension,
   IsolatorExtension,
   DependencyResolverMain,
-  VariantsExtension,
+  VariantsMain,
   LoggerExtension,
   GraphqlMain,
   UiMain,

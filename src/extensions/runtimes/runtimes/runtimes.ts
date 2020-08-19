@@ -1,4 +1,4 @@
-import { ExtensionGraph } from '@teambit/harmony';
+import { AspectGraph } from '@teambit/harmony';
 import { RuntimeDefinition } from './runtime-definition';
 import { RuntimeNotDefined } from './exceptions';
 
@@ -18,7 +18,7 @@ export class Runtimes {
 
   dispose() {}
 
-  static async load(graph: ExtensionGraph) {
+  static async load(graph: AspectGraph) {
     const runtimes: { [key: string]: RuntimeDefinition } = {};
 
     graph.extensions.forEach((extension) => {

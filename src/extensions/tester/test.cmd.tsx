@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Color } from 'ink';
 import { Command, CommandOptions, Flags } from '../cli';
-import { TesterExtension } from './tester.extension';
+import type { TesterMain } from './tester.main.runtime';
 import { Workspace } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
 import { Timer } from '../../toolbox/timer';
@@ -21,7 +21,7 @@ export class TestCmd implements Command {
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
-  constructor(private tester: TesterExtension, private workspace: Workspace) {}
+  constructor(private tester: TesterMain, private workspace: Workspace) {}
 
   async render([userPattern]: [string], { watch, debug }: Flags) {
     const timer = Timer.create();

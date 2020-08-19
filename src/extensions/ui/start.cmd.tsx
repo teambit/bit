@@ -1,6 +1,6 @@
 import React from 'react';
 import { Command, CommandOptions } from '../cli';
-import { UIExtension } from './ui.extension';
+import type { UiMain } from './ui.main.runtime';
 import { UIServerConsole } from './env-console';
 
 export class StartCmd implements Command {
@@ -19,7 +19,7 @@ export class StartCmd implements Command {
     /**
      * access to the extension instance.
      */
-    private ui: UIExtension
+    private ui: UiMain
   ) {}
 
   private clearConsole() {

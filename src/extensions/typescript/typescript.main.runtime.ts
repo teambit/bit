@@ -1,13 +1,14 @@
 import { TypescriptAspect } from './typescript.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
-import { SchemaExtension } from '../schema';
+import { SchemaAspect } from '../schema';
+import type { SchemaMain } from '../schema';
 import { TypeScriptParser } from './typescript.parser';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { Compiler } from '../compiler';
 import { Logger, LoggerExtension } from '../logger';
 
-export class TypescriptExtension {
+export class TypescriptMain {
   constructor(private logger: Logger) {}
   /**
    * create a new compiler.
@@ -31,12 +32,12 @@ export class TypescriptExtension {
 
   static id = '@teambit/typescript';
   static runtime = MainRuntime;
-  static dependencies = [SchemaExtension, LoggerExtension];
+  static dependencies = [SchemaAspect, LoggerExtension];
 
-  static provider([schema, loggerExt]: [SchemaExtension, LoggerExtension]) {
+  static async provider([schema, loggerExt]: [SchemaMain, LoggerExtension]) {
     schema.registerParser(new TypeScriptParser());
-    const logger = loggerExt.createLogger(TypescriptExtension.id);
-    return new TypescriptExtension(logger);
+    const logger = loggerExt.createLogger(TypescriptMain.id);
+    return new TypescriptMain(logger);
   }
 }
 

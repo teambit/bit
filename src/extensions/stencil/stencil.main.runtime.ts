@@ -5,13 +5,15 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { StencilCompiler } from './stencil.compiler';
 import { Environments } from '../environments';
 import { StencilEnv } from './stencil.env';
-import { CompilerExtension } from '../compiler';
+import { CompilerAspect } from '../compiler';
+import type { CompilerMain } from '../compiler';
 import { StencilTester } from './stencil.tester';
 import { WorkspaceAspect, Workspace } from '../workspace';
 // import { StencilDevServer } from './stencil.dev-server';
-import { WebpackExtension } from '../webpack';
+import { WebpackAspect } from '../webpack';
+import type { WebpackMain } from '../webpack';
 
-export class StencilExtension {
+export class StencilMain {
   static id = '@teambit/stencil';
 
   constructor(
@@ -34,15 +36,10 @@ export class StencilExtension {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [Environments, CompilerExtension, WorkspaceAspect, WebpackExtension] as ExtensionManifest[];
+  static dependencies = [Environments, CompilerAspect, WorkspaceAspect, WebpackAspect] as ExtensionManifest[];
 
-  static async provider([envs, compiler, workspace, webpack]: [
-    Environments,
-    CompilerExtension,
-    Workspace,
-    WebpackExtension
-  ]) {
-    const stencil = new StencilExtension(workspace);
+  static async provider([envs, compiler, workspace, webpack]: [Environments, CompilerMain, Workspace, WebpackMain]) {
+    const stencil = new StencilMain(workspace);
     envs.registerEnv(new StencilEnv(stencil, compiler, webpack));
 
     return stencil;

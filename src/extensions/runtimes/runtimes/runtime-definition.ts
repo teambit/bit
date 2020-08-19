@@ -1,5 +1,5 @@
 import { GlobalConfig } from '@teambit/harmony';
-import { ExtensionGraph } from '@teambit/harmony';
+import { AspectGraph } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { RuntimeModuleError } from './exceptions';
 import { Aspect } from '../aspect';
@@ -17,8 +17,8 @@ export class RuntimeDefinition {
     readonly filePredicate: (filePath: string, name: string) => boolean = DEFAULT_PREDICATE
   ) {}
 
-  getFiles(graph: ExtensionGraph) {
-    const allFiles = flatten(graph.extensions.map((vertex) => vertex.files));
+  getFiles(graph: AspectGraph): string[] {
+    const allFiles: string[] = flatten(graph.extensions.map((vertex) => vertex.files));
     return allFiles.filter((file) => this.filePredicate(file, this.name));
   }
 
@@ -26,7 +26,7 @@ export class RuntimeDefinition {
     return this.aspects.filter((aspect) => aspect.files);
   }
 
-  requireAll(graph: ExtensionGraph) {
+  requireAll(graph: AspectGraph) {
     const files = this.getFiles(graph);
     files.forEach((file) => {
       try {

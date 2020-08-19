@@ -7,9 +7,9 @@ import webpack from 'webpack';
 import getPort from 'get-port';
 import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlMain } from '../graphql';
 import { ExpressExtension } from '../express';
-import { UIExtension } from './ui.extension';
+import { UiMain } from './ui.main.runtime';
 import { UIRoot } from './ui-root';
 import { Logger } from '../logger';
 
@@ -17,9 +17,9 @@ const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware')
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 
 export type UIServerProps = {
-  graphql: GraphQLExtension;
+  graphql: GraphqlMain;
   express: ExpressExtension;
-  ui: UIExtension;
+  ui: UiMain;
   uiRoot: UIRoot;
   uiRootExtension: string;
   logger: Logger;
@@ -34,9 +34,9 @@ export type StartOptions = {
 
 export class UIServer {
   constructor(
-    private graphql: GraphQLExtension,
+    private graphql: GraphqlMain,
     private expressExtension: ExpressExtension,
-    private ui: UIExtension,
+    private ui: UiMain,
     private uiRoot: UIRoot,
     private uiRootExtension: string,
     private logger: Logger

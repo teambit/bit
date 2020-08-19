@@ -3,7 +3,8 @@ import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
 import { RouteSlot } from '../react-router';
 import { UIRootUI as UIRoot } from '../ui';
-import { UIRuntimeExtension } from '../ui';
+import { UIAspect } from '../ui';
+import type { UiUI } from '../ui';
 import { Scope } from './ui/scope';
 import { ComponentUI } from '../component';
 
@@ -61,18 +62,14 @@ export class ScopeUI {
     };
   }
 
-  static dependencies = [UIRuntimeExtension, ComponentUI];
+  static dependencies = [UIAspect, ComponentUI];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/scope';
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider(
-    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
-    config,
-    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
-  ) {
+  static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
     const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot);
     ui.registerRoot(scopeUi.root);
 

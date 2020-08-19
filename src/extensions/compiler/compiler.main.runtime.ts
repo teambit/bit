@@ -11,7 +11,7 @@ import { CompilerTask } from './compiler.task';
 import { Extensions } from '../../constants';
 import { BitId } from '../../bit-id';
 
-export class CompilerExtension {
+export class CompilerMain {
   static id = Extensions.compiler;
   static runtime = MainRuntime;
   static dependencies = [CLIExtension, WorkspaceAspect, Environments] as ExtensionManifest[];
@@ -26,9 +26,9 @@ export class CompilerExtension {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
   static async provider([cli, workspace, envs]: [CLIExtension, Workspace, Environments]) {
-    const compilerTask = new CompilerTask(CompilerExtension.id);
+    const compilerTask = new CompilerTask(CompilerMain.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
-    const compilerExtension = new CompilerExtension(workspaceCompiler, compilerTask);
+    const compilerExtension = new CompilerMain(workspaceCompiler, compilerTask);
     cli.register(new CompileCmd(workspaceCompiler));
     return compilerExtension;
   }

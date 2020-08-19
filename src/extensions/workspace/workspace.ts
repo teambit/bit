@@ -8,7 +8,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from '../../consumer';
 import { link } from '../../api/consumer';
-import { ScopeExtension } from '../scope';
+import type { ScopeMain } from '../scope';
 import { Component, ComponentID, ComponentExtension, State, ComponentFactory, ComponentFS, TagMap } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
@@ -19,7 +19,7 @@ import { AddActionResults } from '../../consumer/component-ops/add-components/ad
 import { DependencyResolverMain, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
-import { VariantsExtension } from '../variants';
+import type { VariantsMain } from '../variants';
 import { ComponentScopeDirMap } from '../config';
 import legacyLogger from '../../logger/logger';
 import { ComponentConfigFile } from './component-config-file';
@@ -78,7 +78,7 @@ export class Workspace implements ComponentFactory {
     /**
      * access to the workspace `Scope` instance
      */
-    readonly scope: ScopeExtension,
+    readonly scope: ScopeMain,
 
     /**
      * access to the `ComponentProvider` instance
@@ -89,7 +89,7 @@ export class Workspace implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private variants: VariantsExtension,
+    private variants: VariantsMain,
 
     private logger: Logger,
 
@@ -455,13 +455,13 @@ export class Workspace implements ComponentFactory {
     let configFileExtensions;
     let variantsExtensions;
     let wsDefaultExtensions;
-    let scopeExtensions;
+    let ScopeMains;
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.extensions;
     } else {
-      scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+      ScopeMains = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
     const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDir(componentDir);
@@ -495,7 +495,7 @@ export class Workspace implements ComponentFactory {
 
     // In case there are no config file for the component use extension from the scope
     if (!componentConfigFile) {
-      extensionsToMerge.push(scopeExtensions);
+      extensionsToMerge.push(ScopeMains);
     }
 
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);

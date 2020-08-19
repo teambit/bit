@@ -1,5 +1,5 @@
 import { Command } from '../cli';
-import { UIExtension } from './ui.extension';
+import { UiMain } from './ui.main.runtime';
 
 export class UIBuildCmd implements Command {
   name = 'ui-build [type]';
@@ -14,7 +14,7 @@ export class UIBuildCmd implements Command {
     /**
      * access to the extension instance.
      */
-    private ui: UIExtension
+    private ui: UiMain
   ) {}
 
   async report([type]: [string]): Promise<string> {

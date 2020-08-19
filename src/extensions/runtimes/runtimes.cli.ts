@@ -1,12 +1,12 @@
 import { Harmony } from '@teambit/harmony';
 import { RuntimeNotDefined } from './runtimes/exceptions';
 import { Runtimes } from './runtimes';
-import { CLIRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 
 export class RuntimesCLI {
   constructor(private context: Harmony) {}
 
-  static runtime = CLIRuntime;
+  static runtime = MainRuntime;
 
   async getRuntime(runtimeName: string) {
     const runtimes = await Runtimes.load(this.context.graph);

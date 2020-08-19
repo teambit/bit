@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
-import { ScopeExtension } from './scope.extension';
+import { ScopeMain } from './scope.main.runtime';
 import { ComponentID } from '../component';
 
-export function scopeSchema(scopeExtension: ScopeExtension) {
+export function scopeSchema(scopeExtension: ScopeMain) {
   return {
     typeDefs: gql`
       type Scope {
@@ -25,19 +25,19 @@ export function scopeSchema(scopeExtension: ScopeExtension) {
     `,
     resolvers: {
       Scope: {
-        name: (scope: ScopeExtension) => {
+        name: (scope: ScopeMain) => {
           return scope.name;
         },
-        components: (scope: ScopeExtension, props?: { offset: number; limit: number; includeCache?: boolean }) => {
+        components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
           if (!props) return scope.list();
           return scope.list({ offset: props.offset, limit: props.limit }, props.includeCache);
         },
-        get: async (scope: ScopeExtension, { id }: { id: string }) => {
+        get: async (scope: ScopeMain, { id }: { id: string }) => {
           return scope.get(ComponentID.fromString(id));
         },
       },
       Query: {
-        scope: () => scopeExtension,
+        scope: () => ScopeMain,
       },
     },
   };

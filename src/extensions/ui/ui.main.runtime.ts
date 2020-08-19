@@ -8,7 +8,8 @@ import fs from 'fs-extra';
 import webpack from 'webpack';
 import { CLIExtension } from '../cli';
 import { StartCmd } from './start.cmd';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlAspect } from '../graphql';
+import type { GraphqlMain } from '../graphql';
 import createWebpackConfig from './webpack/webpack.config';
 import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
@@ -19,16 +20,10 @@ import { ComponentExtension } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
 import { LoggerExtension, Logger } from '../logger';
-import { AspectExtension, RuntimeDefinition } from '../aspect';
+import { AspectAspect } from '../aspect';
+import type { AspectMain } from '../aspect';
 
-export type UIDeps = [
-  CLIExtension,
-  GraphQLExtension,
-  ExpressExtension,
-  ComponentExtension,
-  LoggerExtension,
-  AspectExtension
-];
+export type UIDeps = [CLIExtension, GraphqlMain, ExpressExtension, ComponentExtension, LoggerExtension, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -72,7 +67,7 @@ export class UiMain {
     /**
      * graphql extension.
      */
-    private graphql: GraphQLExtension,
+    private graphql: GraphqlMain,
 
     /**
      * slot registry of ui roots.
@@ -211,11 +206,11 @@ export class UiMain {
   static runtime = MainRuntime;
   static dependencies = [
     CLIExtension,
-    GraphQLExtension,
+    GraphqlAspect,
     ExpressExtension,
     ComponentExtension,
     LoggerExtension,
-    AspectExtension,
+    AspectAspect,
   ];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];

@@ -22,9 +22,11 @@ import { Config } from '../component';
 import { Ref } from '../../scope/objects';
 import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';
-import { UIExtension } from '../ui';
+import { UIAspect } from '../ui';
+import type { UiMain } from '../ui';
 import { ScopeUIRoot } from './scope.ui-root';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlAspect } from '../graphql';
+import type { GraphqlMain } from '../graphql';
 import { scopeSchema } from './scope.graphql';
 import { CLIExtension } from '../cli';
 import { ExportCmd } from './export/export-cmd';
@@ -33,6 +35,8 @@ import { LoggerExtension, Logger } from '../logger';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { ScopeAspect } from './scope.aspect';
+import { GraphAspect } from '../graph';
+import { MainRuntime } from '../cli/cli.aspect';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -267,21 +271,15 @@ export class ScopeMain implements ComponentFactory {
    * declare the slots of scope extension.
    */
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
+  static runtime = MainRuntime;
 
-  static dependencies = [
-    ComponentExtension,
-    UIExtension,
-    GraphQLExtension,
-    CLIExtension,
-    IsolatorExtension,
-    LoggerExtension,
-  ];
+  static dependencies = [ComponentExtension, UIAspect, GraphqlAspect, CLIExtension, IsolatorExtension, LoggerExtension];
 
   static async provider(
     [componentExt, ui, graphql, cli, isolator, loggerExtension]: [
       ComponentExtension,
-      UIExtension,
-      GraphQLExtension,
+      UiMain,
+      GraphqlMain,
       CLIExtension,
       IsolatorExtension,
       LoggerExtension

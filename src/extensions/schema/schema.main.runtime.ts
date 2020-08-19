@@ -10,7 +10,7 @@ export type ParserSlot = SlotRegistry<Parser>;
 /**
  * extension for extracting component schemas.
  */
-export class SchemaExtension {
+export class SchemaMain {
   constructor(
     /**
      * parsers slot.
@@ -36,15 +36,17 @@ export class SchemaExtension {
   /**
    * register a new parser.
    */
-  registerParser(parser: Parser): SchemaExtension {
+  registerParser(parser: Parser): SchemaMain {
     this.parserSlot.register(parser);
     return this;
   }
 
+  static runtime = MainRuntime;
+
   static slots = [Slot.withType<Parser>()];
 
   static async provider(deps, config, [parserSlot]: [ParserSlot]) {
-    return new SchemaExtension(parserSlot);
+    return new SchemaMain(parserSlot);
   }
 }
 

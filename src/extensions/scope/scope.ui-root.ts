@@ -1,12 +1,12 @@
 import { UIRoot } from '../ui';
-import { ScopeExtension } from './scope.extension';
+import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeUIRoot implements UIRoot {
   constructor(
     /**
      * scope extension.
      */
-    private scope: ScopeExtension
+    private scope: ScopeMain
   ) {}
 
   readonly name = 'scope';

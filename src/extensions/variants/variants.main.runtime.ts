@@ -44,7 +44,7 @@ type MatchedPatternItem = {
 
 const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
-export class VariantsExtension {
+export class VariantsMain {
   static id = EXT_NAME;
   static runtime = MainRuntime;
   static dependencies = [];
@@ -110,7 +110,7 @@ export class VariantsExtension {
   }
 
   static async provider(_deps, config) {
-    return new VariantsExtension(config);
+    return new VariantsMain(config);
   }
 }
 
@@ -164,4 +164,4 @@ export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: stri
   };
 }
 
-VariantsAspect.addRuntime(VariantsExtension);
+VariantsAspect.addRuntime(VariantsMain);

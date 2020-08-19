@@ -1,10 +1,11 @@
 import { Environment } from '../environments';
 import { Tester } from '../tester';
 import { BuildTask } from '../builder';
-import { Compiler, CompilerExtension } from '../compiler';
+import { Compiler } from '../compiler';
+import type { CompilerMain } from '../compiler';
 import { DevServer, DevServerContext } from '../bundler';
-import { StencilExtension } from './stencil.extension';
-import { WebpackExtension } from '../webpack';
+import type { StencilMain } from './stencil.main.runtime';
+import type { WebpackMain } from '../webpack';
 import webpackConfig from './webpack/webpack.config';
 
 /**
@@ -15,17 +16,17 @@ export class StencilEnv implements Environment {
     /**
      * stencil extension.
      */
-    private stencil: StencilExtension,
+    private stencil: StencilMain,
 
     /**
      * compiler extension.
      */
-    private compiler: CompilerExtension,
+    private compiler: CompilerMain,
 
     /**
      * webpack extension.
      */
-    private webpack: WebpackExtension
+    private webpack: WebpackMain
   ) {}
 
   /**

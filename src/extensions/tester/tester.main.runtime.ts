@@ -28,7 +28,7 @@ export type TesterOptions = {
   debug: boolean;
 };
 
-export class TesterExtension {
+export class TesterMain {
   static id = '@teambit/tester';
   static runtime = MainRuntime;
   static dependencies = [CLIExtension, Environments, WorkspaceAspect];
@@ -78,14 +78,17 @@ export class TesterExtension {
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
   };
 
-  static provider([cli, envs, workspace]: [CLIExtension, Environments, Workspace], config: TesterExtensionConfig) {
+  static async provider(
+    [cli, envs, workspace]: [CLIExtension, Environments, Workspace],
+    config: TesterExtensionConfig
+  ) {
     // @todo: Ran to fix.
     // @ts-ignore
-    const tester = new TesterExtension(
+    const tester = new TesterMain(
       envs,
       workspace,
       new TesterService(workspace, config.testRegex),
-      new TesterTask(TesterExtension.id)
+      new TesterTask(TesterMain.id)
     );
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');

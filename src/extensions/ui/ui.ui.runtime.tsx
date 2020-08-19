@@ -3,8 +3,10 @@ import ReactDOM from 'react-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { UIRootUI as UIRoot } from '../ui';
-import { GraphQlUI } from '../graphql';
-import { ReactRouterUI } from '../react-router';
+import type { GraphqlUI } from '../graphql';
+import { GraphqlAspect } from '../graphql';
+import type { ReactRouterUI } from '../react-router';
+import { ReactRouterAspect } from '../react-router';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
 
@@ -88,7 +90,7 @@ export class UiUI {
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
 
-  static dependencies = [GraphqlUI, ReactRouterUI];
+  static dependencies = [GraphqlAspect, ReactRouterAspect];
 
   static async provider(
     [graphql, router]: [GraphqlUI, ReactRouterUI],
