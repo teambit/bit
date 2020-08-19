@@ -18,6 +18,8 @@ import {
   CURRENT_UPSTREAM,
   DEFAULT_LANE,
   LATEST,
+  BIT_GIT_DIR,
+  DOT_GIT_DIR,
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -69,6 +71,7 @@ export type ScopeProps = {
   tmp?: Tmp;
   sources?: SourcesRepository;
   objects: Repository;
+  isBare?: boolean;
 };
 
 export type IsolateOptions = {
@@ -92,6 +95,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
+  isBare = false;
   scopeImporter: ScopeComponentsImporter;
   sources: SourcesRepository;
   objects: Repository;
@@ -107,6 +111,7 @@ export default class Scope {
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects;
     this.lanes = new Lanes(this.objects, this.scopeJson);
+    this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
@@ -869,9 +874,14 @@ export default class Scope {
 
   static async load(absPath: string, useCache = true): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
+    let isBare = true;
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
+      isBare = false;
+    }
+    if (scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR))) {
+      isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
@@ -886,7 +896,7 @@ export default class Scope {
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
     const objects = await Repository.load({ scopePath, scopeJson });
-    const scope = new Scope({ path: scopePath, scopeJson, objects });
+    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;
   }

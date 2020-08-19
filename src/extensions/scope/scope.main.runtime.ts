@@ -315,7 +315,9 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       logger
     );
-    await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    if (scope.legacyScope.isBare) {
+      await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+    }
 
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
