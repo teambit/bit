@@ -546,6 +546,12 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
+  async loadAspects(ids: string[], throwOnError = true): Promise<void> {
+    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id)));
+    const requireableExtensions: any = await this.requireComponents(componentIds);
+    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+  }
+
   /**
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
@@ -562,10 +568,8 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-    const requireableExtensions: any = await this.requireComponents(
-      extensionsToLoad.map((id) => this.resolveComponentId(id))
-    );
-    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+
+    await this.loadAspects(extensionsToLoad, throwOnError);
   }
 
   async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {
