@@ -24,7 +24,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
@@ -140,7 +140,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       helper.fixtures.populateComponentsTS(1, undefined, true);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');

@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const PanelUiAspect = Aspect.create({
-  id: '@teambit/panel-ui',
+  id: 'teambit.bit/panel-ui',
   dependencies: [],
   defaultConfig: {},
 });

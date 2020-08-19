@@ -27,8 +27,6 @@ type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
  * extension
  */
 export class UiUI {
-  static id = '@teambit/ui';
-
   constructor(
     /**
      * GraphQL extension.

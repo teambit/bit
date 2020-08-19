@@ -112,7 +112,7 @@ describe('bit watch command', function () {
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;

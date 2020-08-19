@@ -4,7 +4,7 @@ import { ComponentUI, ComponentAspect } from '../component';
 import { ChangelogSection } from './changelog.section';
 
 export class ChangeLogUI {
-  static id = '@teambit/changelog';
+  static id = 'teambit.bit/changelog';
   static dependencies = [ComponentAspect];
 
   ChangeLog = () => {

@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const GraphqlAspect = Aspect.create({
-  id: '@teambit/graphql',
+  id: 'teambit.bit/graphql',
   dependencies: [],
   defaultConfig: {},
 });

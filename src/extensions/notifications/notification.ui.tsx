@@ -11,7 +11,6 @@ import { NotificationAction, notificationReducer } from './notification-reducer'
  * extension
  */
 export default class NotificationUI implements NotificationApi {
-  static id = '@teambit/notification';
   static dependencies = [UIAspect];
   static async provider([uiRuntimeExtension]: [UiUI]) {
     return new NotificationUI(uiRuntimeExtension);

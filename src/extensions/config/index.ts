@@ -1,4 +1,4 @@
 export { Config } from './config';
 export { default as ConfigExtension } from './config.main.runtime';
-export { ConfigAspect } from './config.aspect';
+export { ConfigAspect, ConfigRuntime } from './config.aspect';
 export { ComponentScopeDirMap } from './workspace-config';

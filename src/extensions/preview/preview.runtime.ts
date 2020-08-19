@@ -14,7 +14,7 @@ Harmony.load([PreviewAspect, DocsAspect, CompositionsAspect, GraphqlAspect], Pre
     harmony
       .run()
       .then(() => {
-        const uiExtension = harmony.get<PreviewPreview>('@teambit/preview');
+        const uiExtension = harmony.get<PreviewPreview>('teambit.bit/preview');
         uiExtension.render();
       })
       .catch((err) => {

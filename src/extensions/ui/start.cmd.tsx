@@ -30,7 +30,7 @@ export class StartCmd implements Command {
     [uiRootName, userPattern]: [string, string],
     { dev, port }: { dev: boolean; port: string }
   ): Promise<React.ReactElement> {
-    // @teambit/variants should be the one to take care of component patterns.
+    // teambit.bit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     const uiServer = await this.ui.createRuntime({
       uiRootName,

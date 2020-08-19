@@ -8,6 +8,7 @@ import type { UiUI } from '../ui';
 import { Scope } from './ui/scope';
 import { ComponentAspect } from '../component';
 import type { ComponentUI } from '../component';
+import { ScopeAspect } from './scope.aspect';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -43,12 +44,12 @@ export class ScopeUI {
   private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
-      children: this.componentUi.getComponentUI(ScopeUI.id),
+      children: this.componentUi.getComponentUI(ScopeAspect.id),
     });
 
     this.menuSlot.register({
       path: this.componentUi.routePath,
-      children: this.componentUi.getMenu(ScopeUI.id),
+      children: this.componentUi.getMenu(ScopeAspect.id),
     });
   }
 
@@ -64,9 +65,6 @@ export class ScopeUI {
   }
 
   static dependencies = [UIAspect, ComponentAspect];
-
-  // TODO: @gilad we must automate this.
-  static id = '@teambit/scope';
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 

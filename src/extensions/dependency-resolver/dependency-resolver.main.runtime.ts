@@ -189,7 +189,7 @@ export class DependencyResolverMain {
     /**
      * default package manager.
      */
-    packageManager: '@teambit/npm',
+    packageManager: 'teambit.bit/npm',
     policy: {},
     packageManagerArgs: [],
     strictPeerDependencies: true,

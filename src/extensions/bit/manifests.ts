@@ -32,12 +32,10 @@ import { AspectAspect } from '../aspect';
 
 export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
-  [ConfigAspect.id]: ConfigAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [CompilerAspect.id]: CompilerAspect,
   [ComponentAspect.id]: ComponentAspect,
   [PreviewAspect.id]: PreviewAspect,
-  [ConfigAspect.id]: ConfigAspect,
   [DocsAspect.id]: DocsAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GraphqlAspect.id]: GraphqlAspect,

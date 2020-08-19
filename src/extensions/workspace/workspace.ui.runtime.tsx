@@ -6,6 +6,7 @@ import { RouteSlot } from '../react-router';
 import { UIRootUI as UIRoot } from '../ui';
 import { UiUI, UIAspect } from '../ui';
 import { ComponentUI, ComponentAspect } from '../component';
+import { WorkspaceAspect } from './workspace.aspect';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -42,12 +43,12 @@ export class WorkspaceUI {
   private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,
-      children: this.componentUi.getComponentUI(WorkspaceUI.id),
+      children: this.componentUi.getComponentUI(WorkspaceAspect.id),
     });
 
     this.menuSlot.register({
       path: this.componentUi.routePath,
-      children: this.componentUi.getMenu(WorkspaceUI.id),
+      children: this.componentUi.getMenu(WorkspaceAspect.id),
     });
   }
 
@@ -63,9 +64,6 @@ export class WorkspaceUI {
   }
 
   static dependencies = [UIAspect, ComponentAspect];
-
-  // TODO: @gilad we must automate this.
-  static id = '@teambit/workspace';
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 

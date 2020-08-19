@@ -4,8 +4,6 @@ import { BrowserRouter, RouteProps } from 'react-router-dom';
 import { SlotRouter, RouteSlot } from './slot-router';
 
 export class ReactRouterUI {
-  static id = '@teambit/react-router';
-
   constructor(
     /**
      * route slot.

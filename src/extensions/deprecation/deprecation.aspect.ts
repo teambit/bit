@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const DeprecationAspect = Aspect.create({
-  id: '@teambit/deprecation',
+  id: 'teambit.bit/deprecation',
   dependencies: [],
   defaultConfig: {},
 });

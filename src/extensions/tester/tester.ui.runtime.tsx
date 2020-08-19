@@ -2,8 +2,6 @@ import { WorkspaceAspect } from '../workspace';
 import type { WorkspaceUI } from '../workspace';
 
 export class TesterUI {
-  static id = '@teambit/tester';
-
   static dependencies = [WorkspaceAspect];
 
   stageKey?: string;

@@ -11,12 +11,12 @@ ${getImportStatements(extensionsPaths)}
 harmony
   .run([UIExtension, ${getIdentifiers(extensionsPaths)}])
   .then(() => {
-    const uiExtension = harmony.get('@teambit/ui');
+    const uiExtension = harmony.get('teambit.bit/ui');
     uiExtension.render(${rootId});
   })
   .catch((err) => {
     throw err;
-  });    
+  });
   `;
 }
 

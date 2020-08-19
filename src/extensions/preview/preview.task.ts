@@ -22,7 +22,7 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain
   ) {}
 
-  extensionId = '@teambit/preview';
+  extensionId = 'teambit.bit/preview';
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const defs = this.preview.getDefs();

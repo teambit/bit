@@ -298,7 +298,7 @@ export class Workspace implements ComponentFactory {
     id: ComponentID
   ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
     const component = await this.get(id);
-    const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ '@teambit/compiler', [Function: bound onComponentChange] ] ]
+    const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);

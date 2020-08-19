@@ -152,7 +152,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.bit/pkg', pkg);
   }
 
   configureCustomNameInPackageJsonHarmony(name: string) {
@@ -164,7 +164,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.bit/pkg', pkg);
   }
 
   installPackage(pkgName: string) {

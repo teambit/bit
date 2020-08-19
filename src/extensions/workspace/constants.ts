@@ -1,1 +1,1 @@
-export const EXT_NAME = '@teambit/workspace';
+export const EXT_NAME = 'teambit.bit/workspace';
