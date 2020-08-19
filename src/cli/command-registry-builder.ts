@@ -58,6 +58,7 @@ import Lane from './commands/public-cmds/lane-cmd';
 import Switch from './commands/public-cmds/switch-cmd';
 import Fetch from './commands/public-cmds/fetch-cmd';
 import Tag from './commands/public-cmds/tag-cmd';
+import Watch from './commands/public-cmds/watch-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -96,6 +97,8 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Test(),
       new Put(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Watch(),
       new ScopeList(),
       new ScopeSearch(),
       new ScopeShow(),
