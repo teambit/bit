@@ -1,37 +1,21 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import { tagAction, tagAllAction } from '../../api/consumer';
-import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../api/consumer/lib/tag';
-import { isString } from '../../utils';
-import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../constants';
-import GeneralError from '../../error/general-error';
-import hasWildcard from '../../utils/string/has-wildcard';
-import { Command, CommandOptions } from '../cli';
-import { Logger } from '../logger';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import { tagAction, tagAllAction } from '../../../api/consumer';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../../api/consumer/lib/tag';
+import { isString } from '../../../utils';
+import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
-type TagOptions = {
-  message?: string;
-  all?: boolean;
-  patch?: boolean;
-  minor?: boolean;
-  major?: boolean;
-  force?: boolean;
-  verbose?: boolean;
-  ignoreMissingDependencies?: boolean;
-  ignoreUnresolvedDependencies?: boolean;
-  ignoreNewestVersion?: boolean;
-  skipTests?: boolean;
-  skipAutoTag?: boolean;
-  scope?: string;
-};
-
-export class TagCmd implements Command {
+export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
-  options = [
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
     ['s', 'scope <version>', 'tag all components of the current scope'],
@@ -43,17 +27,13 @@ export class TagCmd implements Command {
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
-    ['', 'allow-relative-paths', 'allow require statements between components to use relative paths (not recommended)'],
-    ['', 'allow-files', 'allow component to have files spread over multiple directories (not recommended)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(private logger: Logger) {}
-
-  async action(
+  action(
     [id, version]: string[],
     {
       message = '',
@@ -69,7 +49,21 @@ export class TagCmd implements Command {
       skipTests = false,
       skipAutoTag = false,
       scope,
-    }: TagOptions
+    }: {
+      message?: string;
+      all?: boolean;
+      patch?: boolean;
+      minor?: boolean;
+      major?: boolean;
+      force?: boolean;
+      verbose?: boolean;
+      ignoreMissingDependencies?: boolean;
+      ignoreUnresolvedDependencies?: boolean;
+      ignoreNewestVersion?: boolean;
+      skipTests?: boolean;
+      skipAutoTag?: boolean;
+      scope?: string;
+    }
   ): Promise<any> {
     function getVersion(): string | undefined {
       if (scope) return scope;
@@ -78,7 +72,7 @@ export class TagCmd implements Command {
     }
 
     if (!id && !all && !scope) {
-      throw new GeneralError('missing id. to tag all components, please use --all flag');
+      throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
       throw new GeneralError(
@@ -129,9 +123,7 @@ export class TagCmd implements Command {
     });
   }
 
-  async report([id, version]: string[], options: TagOptions): Promise<string> {
-    const longProcessLogger = this.logger.createLongProcessLogger('tag');
-    const results: TagResults = await this.action([id, version], options);
+  report(results: TagResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
@@ -163,8 +155,7 @@ export class TagCmd implements Command {
       if (!components.length) return '';
       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
+
     return (
       warningsOutput +
       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
