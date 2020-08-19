@@ -3,6 +3,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 40px;
+  font-size: var(--p-xs);
   &:hover {
     background-color: var(--border-color, #ededed);
     border-radius: 8px;
@@ -26,21 +28,23 @@
     background-color: var(--base-color);
     color: var(--bg-base);
     border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    &:hover {
+      background-color: #5d4aec;
+    }
+    .box {
+      background-color: var(--bg-color);
+    }
     .right {
       visibility: unset;
       opacity: 1;
-      color: inherit;
+      color: var(--muted-color);
       .icon {
         &:hover {
-          color: inherit;
-          font-weight: bold;
+          color: var(--bg-color);
         }
       }
     }
-  }
-  .left {
-    display: flex;
-    flex-grow: 1;
   }
   .right {
     opacity: 0;
@@ -51,14 +55,30 @@
 }
 
 .box {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  background-color: var(--text-highlight);
   margin-right: 11px;
+  border-radius: 1px;
+}
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
 }
 .panelLink {
+  display: flex;
+  align-items: center;
   cursor: pointer;
+  user-select: none;
   width: 100%;
+  height: 100%;
   text-decoration: none;
   color: inherit;
-  padding: 12px 0;
+  min-width: 0;
+
   &:active {
     color: inherit;
   }
