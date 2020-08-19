@@ -1,5 +1,3 @@
-import { GraphqlAspect } from './graphql.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { createServer, Server } from 'http';
 import express, { Express } from 'express';
 import cors from 'cors';
@@ -9,8 +7,10 @@ import { execute, subscribe } from 'graphql';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { GraphQLModule } from '@graphql-modules/core';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { GraphqlAspect } from './graphql.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Schema } from './schema';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 
 export type GraphQLConfig = {
   port: number;
@@ -162,10 +162,10 @@ export class GraphqlMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [LoggerExtension];
+  static dependencies = [LoggerAspect];
 
   static async provider(
-    [loggerFactory]: [LoggerExtension],
+    [loggerFactory]: [LoggerMain],
     config: GraphQLConfig,
     [moduleSlot]: [SchemaSlot],
     context: Harmony

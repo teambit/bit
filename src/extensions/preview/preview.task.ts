@@ -1,25 +1,25 @@
 import { join } from 'path';
 import { flatten } from 'lodash';
 import { BuildTask, BuildContext, BuildResults } from '../builder';
-import { BundlerExtension, Bundler, BundlerContext, Target } from '../bundler';
+import { Bundler, BundlerContext, Target, BundlerMain } from '../bundler';
 import { ComponentMap } from '../component';
-import { PreviewExtension } from './preview.extension';
 import { PreviewDefinition } from './preview-definition';
 import { Capsule } from '../isolator';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Compiler } from '../compiler';
+import { PreviewMain } from './preview.main.runtime';
 
 export class PreviewTask implements BuildTask {
   constructor(
     /**
      * bundler extension.
      */
-    private bundler: BundlerExtension,
+    private bundler: BundlerMain,
 
     /**
      * preview extension.
      */
-    private preview: PreviewExtension
+    private preview: PreviewMain
   ) {}
 
   extensionId = '@teambit/preview';

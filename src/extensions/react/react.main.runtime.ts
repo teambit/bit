@@ -3,26 +3,26 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { Environments, Environment } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
-import { TypescriptExtension } from '../typescript';
-import { CompilerExtension } from '../compiler';
-import { WebpackExtension } from '../webpack';
 import { Component } from '../component';
 import { WorkspaceAspect, Workspace } from '../workspace';
-import { GraphQLExtension } from '../graphql';
 import { reactSchema } from './react.graphql';
 import { PkgExtension } from '../pkg';
-import { TesterExtension } from '../tester';
+import { CompilerAspect, CompilerMain } from '../compiler';
+import { TypescriptMain, TypescriptAspect } from '../typescript';
+import { WebpackMain, WebpackAspect } from '../webpack';
+import { GraphqlMain, GraphqlAspect } from '../graphql';
+import { TesterMain, TesterAspect } from '../tester';
 
 type ReactDeps = [
   Environments,
   JestExtension,
-  TypescriptExtension,
-  CompilerExtension,
-  WebpackExtension,
+  TypescriptMain,
+  CompilerMain,
+  WebpackMain,
   Workspace,
-  GraphQLExtension,
+  GraphqlMain,
   PkgExtension,
-  TesterExtension
+  TesterMain
 ];
 
 export type ReactConfig = {
@@ -44,7 +44,7 @@ export type ReactConfig = {
   reactVersion: string;
 };
 
-export class ReactExtension {
+export class ReactMain {
   static id = '@teambit/react';
 
   constructor(
@@ -97,13 +97,13 @@ export class ReactExtension {
   static dependencies = [
     Environments,
     JestExtension,
-    TypescriptExtension,
-    CompilerExtension,
-    WebpackExtension,
+    TypescriptAspect,
+    CompilerAspect,
+    WebpackAspect,
     WorkspaceAspect,
-    GraphQLExtension,
+    GraphqlAspect,
     PkgExtension,
-    TesterExtension,
+    TesterAspect,
   ];
 
   static provider(
@@ -111,7 +111,7 @@ export class ReactExtension {
     config: ReactConfig
   ) {
     const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
-    const react = new ReactExtension(reactEnv);
+    const react = new ReactMain(reactEnv);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     return react;

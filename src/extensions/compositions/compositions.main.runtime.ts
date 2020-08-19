@@ -23,7 +23,7 @@ export type CompositionsConfig = {
 /**
  * the component documentation extension.
  */
-export class CompositionsExtension {
+export class CompositionsMain {
   static id = '@teambit/compositions';
   constructor(
     /**
@@ -55,7 +55,7 @@ export class CompositionsExtension {
    * get component compositions.
    */
   getCompositions(component: Component): Composition[] {
-    const entry = component.state.config.extensions.findExtension(CompositionsExtension.id);
+    const entry = component.state.config.extensions.findExtension(CompositionsMain.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
@@ -111,7 +111,7 @@ export class CompositionsExtension {
     Workspace,
     SchemaExtension
   ]) {
-    const compositions = new CompositionsExtension(preview, workspace, schema);
+    const compositions = new CompositionsMain(preview, workspace, schema);
 
     graphql.register(compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));

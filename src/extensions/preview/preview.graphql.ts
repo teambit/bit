@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 import { Component } from '../component';
-import { PreviewExtension } from './preview.extension';
+import { PreviewMain } from './preview.main.runtime';
 
-export function previewSchema(previewExtension: PreviewExtension) {
+export function previewSchema(previewExtension: PreviewMain) {
   return {
     typeDefs: gql`
       type Preview {

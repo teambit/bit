@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 import { Schema } from '../graphql';
-import { CompositionsExtension } from './compositions.extension';
+import { CompositionsMain } from './compositions.main.runtime';
 import { Component } from '../component';
 
-export function compositionsSchema(compositions: CompositionsExtension): Schema {
+export function compositionsSchema(compositions: CompositionsMain): Schema {
   return {
     typeDefs: gql`
       extend type Component {

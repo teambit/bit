@@ -1,20 +1,20 @@
 import { PnpmAspect } from './pnpm.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { DependencyResolverExtension } from '../dependency-resolver';
+import { DependencyResolverExtension, DependencyResolverAspect, DependencyResolverMain } from '../dependency-resolver';
 import { PnpmPackageManager } from './pnpm.package-manager';
-import { PkgExtension } from '../pkg';
-import { LoggerExtension } from '../logger';
+import { PkgExtension, PkgAspect } from '../pkg';
+import { LoggerExtension, LoggerAspect } from '../logger';
 
-export class PnpmExtension {
+export class PnpmMain {
   static id = '@teambit/pnpm';
 
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverExtension, PkgExtension, LoggerExtension];
+  static dependencies = [DependencyResolverAspect, PkgAspect, LoggerAspect];
 
-  static async provider([depResolver, pkg, loggerExt]: [DependencyResolverExtension, PkgExtension, LoggerExtension]) {
-    const logger = loggerExt.createLogger(PnpmExtension.id);
+  static async provider([depResolver, pkg, loggerExt]: [DependencyResolverMain, PkgExtension, LoggerExtension]) {
+    const logger = loggerExt.createLogger(PnpmMain.id);
     depResolver.registerPackageManager(new PnpmPackageManager(depResolver, pkg, logger));
-    return new PnpmExtension();
+    return new PnpmMain();
   }
 }
 

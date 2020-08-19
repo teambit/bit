@@ -1,9 +1,9 @@
 import gql from 'graphql-tag';
 import { Schema } from '../graphql';
-import { DeprecationExtension } from './deprecation.extension';
 import { Component } from '../component';
+import { DeprecationMain } from './deprecation.main.runtime';
 
-export function deprecationSchema(deprecation: DeprecationExtension): Schema {
+export function deprecationSchema(deprecation: DeprecationMain): Schema {
   return {
     typeDefs: gql`
       extend type Component {

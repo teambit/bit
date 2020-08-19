@@ -1,13 +1,13 @@
 import { PreviewDefinition } from '../preview';
 import { ComponentMap, Component } from '../component';
 import { ExecutionContext } from '../environments';
-import { CompositionsExtension } from './compositions.extension';
 import { AbstractVinyl } from '../../consumer/component/sources';
+import { CompositionsMain } from './compositions.main.runtime';
 
 export class CompositionPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'compositions';
 
-  constructor(private compositions: CompositionsExtension) {}
+  constructor(private compositions: CompositionsMain) {}
 
   async renderTemplatePath(context: ExecutionContext): Promise<string> {
     return context.env.getMounter();

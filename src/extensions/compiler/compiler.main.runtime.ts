@@ -28,9 +28,9 @@ export class CompilerMain {
   static async provider([cli, workspace, envs]: [CLIExtension, Workspace, Environments]) {
     const compilerTask = new CompilerTask(CompilerMain.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
-    const compilerExtension = new CompilerMain(workspaceCompiler, compilerTask);
+    const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
     cli.register(new CompileCmd(workspaceCompiler));
-    return compilerExtension;
+    return compilerMain;
   }
 }
 

@@ -13,7 +13,7 @@ import componentIdToPackageName from '../../../utils/bit/component-id-to-package
 import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
 import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
 import { Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
-import { MergeDependenciesFunc } from '../dependency-resolver.extension';
+import { MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
 import { BitId } from '../../../bit-id';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;

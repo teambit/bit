@@ -1,13 +1,12 @@
-import { IsolatorAspect } from './isolator.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
+import { IsolatorAspect } from './isolator.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
 import { Component, ComponentMap } from '../component';
 import ConsumerComponent from '../../consumer/component';
-import { DependencyResolverExtension } from '../dependency-resolver';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import CapsuleList from './capsule-list';
@@ -16,11 +15,11 @@ import PackageJsonFile from '../../consumer/component/package-json-file';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { DEPENDENCIES_FIELDS } from '../../constants';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 import { PathOsBasedAbsolute } from '../../utils/path';
-import { symlinkCapsuleRootToBitBin } from './symlink-bit-bin-to-capsules';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
+import { DependencyResolverAspect, DependencyResolverMain } from '../dependency-resolver';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -50,17 +49,17 @@ async function createCapsulesFromComponents(
   return capsules;
 }
 
-export class IsolatorExtension {
+export class IsolatorMain {
   static id = '@teambit/isolator';
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverExtension, LoggerExtension];
+  static dependencies = [DependencyResolverAspect, LoggerAspect];
   static defaultConfig = {};
-  static async provide([dependencyResolver, loggerExtension]: [DependencyResolverExtension, LoggerExtension]) {
-    const logger = loggerExtension.createLogger(IsolatorExtension.id);
-    const isolator = new IsolatorExtension(dependencyResolver, logger);
+  static async provide([dependencyResolver, loggerExtension]: [DependencyResolverMain, LoggerMain]) {
+    const logger = loggerExtension.createLogger(IsolatorMain.id);
+    const isolator = new IsolatorMain(dependencyResolver, logger);
     return isolator;
   }
-  constructor(private dependencyResolver: DependencyResolverExtension, private logger: Logger) {}
+  constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger) {}
 
   public async isolateComponents(components: Component[], opts: IsolateComponentsOptions): Promise<CapsuleList> {
     const config = Object.assign(

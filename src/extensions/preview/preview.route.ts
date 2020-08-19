@@ -1,13 +1,13 @@
 import mime from 'mime';
 import { Route, Request, Response } from '../express';
-import { PreviewExtension } from './preview.extension';
+import { PreviewMain } from './preview.main.runtime';
 
 export class PreviewRoute implements Route {
   constructor(
     /**
      * preview extension.
      */
-    private preview: PreviewExtension
+    private preview: PreviewMain
   ) {}
 
   route = `/preview/:previewPath(*)`;

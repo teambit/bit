@@ -1,10 +1,10 @@
 import { NodeAspect } from './node.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { ReactExtension } from '../react';
-import { Environments } from '../environments';
+import { ReactAspect, ReactMain } from '../react';
+import { EnvsMain, EnvsAspect } from '../environments';
 import { NodeEnv } from './node.env';
 
-export class NodeExtension {
+export class NodeMain {
   static id = '@teambit/node';
 
   // please replace to the nodeJS icon.
@@ -13,12 +13,12 @@ export class NodeExtension {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [Environments, ReactExtension];
+  static dependencies = [EnvsAspect, ReactAspect];
 
-  static async provider([envs, react]: [Environments, ReactExtension]) {
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
     const nodeEnv = envs.compose(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
-    return new NodeExtension();
+    return new NodeMain();
   }
 }
 

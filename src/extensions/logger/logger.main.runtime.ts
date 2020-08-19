@@ -2,7 +2,7 @@ import { LoggerAspect } from './logger.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { Logger } from './logger';
 
-export class LoggerExtension {
+export class LoggerMain {
   static id = '@teambit/logger';
   static runtime = MainRuntime;
   static dependencies = [];
@@ -10,7 +10,7 @@ export class LoggerExtension {
     return new Logger(extensionName);
   }
   static async provider() {
-    return new LoggerExtension();
+    return new LoggerMain();
   }
 }
 

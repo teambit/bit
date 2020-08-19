@@ -99,6 +99,4 @@ export class ComponentMain {
   }
 }
 
-export default ComponentMain;
-
 ComponentAspect.addRuntime(ComponentMain);

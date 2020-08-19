@@ -4,7 +4,7 @@ import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
 import { catchErrors } from './middlewares';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 import { MainRuntime } from '../cli/cli.aspect';
 import { ExpressAspect } from './express.aspect';
 
@@ -15,7 +15,7 @@ export type ExpressConfig = {
 
 export type RouteSlot = SlotRegistry<Route[]>;
 
-export class ExpressExtension {
+export class ExpressMain {
   static runtime = MainRuntime;
 
   constructor(
@@ -56,7 +56,7 @@ export class ExpressExtension {
     // TODO: @guy refactor health to service aspect.
     return [
       {
-        namespace: ExpressExtension.id,
+        namespace: ExpressMain.id,
         method: 'get',
         path: '/_health',
         middlewares: [async (req: Request, res: Response) => res.send('ok')],
@@ -99,17 +99,17 @@ export class ExpressExtension {
 
   static id = '@teambit/express';
   static slots = [Slot.withType<Route[]>()];
-  static dependencies = [LoggerExtension];
+  static dependencies = [LoggerAspect];
 
   static defaultConfig = {
     port: 4001,
     namespace: 'api',
   };
 
-  static async provider([loggerFactory]: [LoggerExtension], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
-    const logger = loggerFactory.createLogger(ExpressExtension.id);
-    return new ExpressExtension(config, routeSlot, logger);
+  static async provider([loggerFactory]: [LoggerMain], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
+    const logger = loggerFactory.createLogger(ExpressMain.id);
+    return new ExpressMain(config, routeSlot, logger);
   }
 }
 
-ExpressAspect.addRuntime(ExpressExtension);
+ExpressAspect.addRuntime(ExpressMain);

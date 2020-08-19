@@ -4,18 +4,18 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { EnvsAspect, EnvsMain } from '../environments';
 import { Workspace, WorkspaceAspect } from '../workspace';
 import { BuilderCmd } from './run.cmd';
-import { Component, ComponentID, ComponentExtension } from '../component';
+import { Component, ComponentID, ComponentAspect } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
-import { ScopeExtension } from '../scope';
 import { CLIExtension } from '../cli';
-import { LoggerExtension } from '../logger';
 import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
 import { TagCmd } from './tag.cmd';
+import { ScopeMain, ScopeAspect } from '../scope';
+import { LoggerAspect, LoggerMain } from '../logger';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -51,7 +51,7 @@ export class BuilderMain {
     /**
      * scope extension
      */
-    private scope: ScopeExtension,
+    private scope: ScopeMain,
 
     /**
      * core extension.
@@ -112,11 +112,11 @@ export class BuilderMain {
     CLIExtension,
     EnvsAspect,
     WorkspaceAspect,
-    ScopeExtension,
-    LoggerExtension,
+    ScopeAspect,
+    LoggerAspect,
     CoreExt,
     GraphqlAspect,
-    ComponentExtension,
+    ComponentAspect,
   ];
 
   static async provider(
@@ -124,8 +124,8 @@ export class BuilderMain {
       CLIExtension,
       EnvsMain,
       Workspace,
-      ScopeExtension,
-      LoggerExtension,
+      ScopeMain,
+      LoggerMain,
       Core,
       GraphqlMain
     ],

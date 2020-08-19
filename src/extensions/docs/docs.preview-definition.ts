@@ -1,7 +1,7 @@
 import { PreviewDefinition } from '../preview';
 import { ComponentMap, Component } from '../component';
 import { ExecutionContext } from '../environments';
-import { DocsExtension } from './docs.extension';
+import { DocsMain } from './docs.main.runtime';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class DocsPreviewDefinition implements PreviewDefinition {
@@ -11,7 +11,7 @@ export class DocsPreviewDefinition implements PreviewDefinition {
     /**
      * docs extension.
      */
-    private docs: DocsExtension
+    private docs: DocsMain
   ) {}
 
   async renderTemplatePath(context: ExecutionContext): Promise<string> {

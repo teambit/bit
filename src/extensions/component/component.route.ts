@@ -1,10 +1,10 @@
 import { Route, Request, Response } from '../express';
-import { ComponentExtension } from './component.extension';
 import { ComponentID } from './id';
 import { NextFunction } from '../express';
+import { ComponentMain } from './component.main.runtime';
 
 export class ComponentRoute implements Route {
-  constructor(private registerRoute: Route, private componentExtension: ComponentExtension) {}
+  constructor(private registerRoute: Route, private componentExtension: ComponentMain) {}
   dynamicRouteRegex = '/?[^./@]+/[^.@]*';
   readonly route = `/:componentId(${this.dynamicRouteRegex})/@${this.registerRoute.route}`;
 

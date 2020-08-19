@@ -1,7 +1,7 @@
 import { SlotRegistry, Harmony } from '@teambit/harmony';
 import { AspectAspect } from './aspect.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { ReactExtension } from '../react';
+import { ReactAspect, ReactMain } from '../react';
 import { EnvsMain, EnvsAspect } from '../environments';
 import { AspectEnv } from './aspect.env';
 
@@ -13,14 +13,9 @@ export class AspectMain {
   constructor(private runtimeSlot: RuntimeSlot, private harmony: Harmony, private runtimes: Runtimes) {}
 
   static runtime = MainRuntime;
-  static dependencies = [ReactExtension, EnvsAspect];
+  static dependencies = [ReactAspect, EnvsAspect];
 
-  static async provider(
-    [react, envs]: [ReactExtension, EnvsMain],
-    config,
-    [runtimeSlot]: [RuntimeSlot],
-    context: Harmony
-  ) {
+  static async provider([react, envs]: [ReactMain, EnvsMain], config, [runtimeSlot]: [RuntimeSlot], context: Harmony) {
     const env = envs.compose(new AspectEnv(react.reactEnv), react.reactEnv);
     envs.registerEnv(env);
     return new AspectMain(runtimeSlot, context);

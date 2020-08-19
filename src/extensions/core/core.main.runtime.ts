@@ -2,16 +2,16 @@ import { ExtensionManifest } from '@teambit/harmony';
 import { CoreAspect } from './core.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { WorkspaceAspect } from '../workspace';
-import { ScopeExtension } from '../scope';
 import provideCore from './core.provider';
-import { LoggerExtension } from '../logger';
-import { ConfigExt } from '../config';
+import { ConfigAspect } from '../config';
+import { LoggerAspect } from '../logger';
+import { ScopeAspect } from '../scope';
 
-export default {
+export const CoreMain = {
   name: 'core',
   runtime: MainRuntime,
-  dependencies: [ConfigExt, LoggerExtension, WorkspaceAspect, ScopeExtension],
+  dependencies: [ConfigAspect, LoggerAspect, WorkspaceAspect, ScopeAspect],
   provider: provideCore,
-} as ExtensionManifest;
+};
 
 CoreAspect.addRuntime(CoreMain);

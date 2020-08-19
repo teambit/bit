@@ -2,7 +2,7 @@ import { JestAspect } from './jest.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { JestTester } from './jest.tester';
 
-export class JestExtension {
+export class JestMain {
   static id = '@teambit/jest';
   static runtime = MainRuntime;
   static dependencies = [];
@@ -12,7 +12,7 @@ export class JestExtension {
   }
 
   static provider() {
-    return new JestExtension();
+    return new JestMain();
   }
 }
 

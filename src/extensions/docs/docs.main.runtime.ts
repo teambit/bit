@@ -3,7 +3,7 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { Component } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component';
-import { PreviewExtension } from '../preview';
+import { PreviewMain } from '../preview';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
@@ -22,12 +22,12 @@ export type DocsConfig = {
 /**
  * the component documentation extension.
  */
-export class DocsExtension {
+export class DocsMain {
   constructor(
     /**
      * envs extension.
      */
-    private preview: PreviewExtension
+    private preview: PreviewMain
   ) {}
 
   /**
@@ -72,7 +72,7 @@ export class DocsExtension {
   static dependencies = [PreviewExtension];
 
   static async provider([preview]: [PreviewExtension]) {
-    const docs = new DocsExtension(preview);
+    const docs = new DocsMain(preview);
 
     preview.registerDefinition(new DocsPreviewDefinition(docs));
     // bundler.registerTarget({

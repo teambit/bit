@@ -1,16 +1,16 @@
 import { DeprecationAspect } from './deprecation.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { deprecationSchema } from './deprecation.graphql';
-import { Component, ComponentExtension } from '../component';
+import { Component, ComponentAspect } from '../component';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
 };
 
-export class DeprecationExtension {
+export class DeprecationMain {
   static runtime = MainRuntime;
-  static dependencies = [GraphQLExtension, ComponentExtension];
+  static dependencies = [GraphqlAspect, ComponentAspect];
   static id = '@teambit/deprecation';
 
   getDeprecationInfo(component: Component): DeprecationInfo {
@@ -21,8 +21,8 @@ export class DeprecationExtension {
     };
   }
 
-  static async provider([graphql]: [GraphQLExtension]) {
-    const deprecation = new DeprecationExtension();
+  static async provider([graphql]: [GraphqlMain]) {
+    const deprecation = new DeprecationMain();
     graphql.register(deprecationSchema(deprecation));
   }
 }

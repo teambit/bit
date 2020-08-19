@@ -2,22 +2,22 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import { PkgAspect } from './pkg.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
-import { ScopeExtension } from '../scope';
 import { PackCmd } from './pack.cmd';
 import { PublishCmd } from './publish.cmd';
 import { Packer, PackResult, PackOptions } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
-import { Environments } from '../environments';
 import { CLIExtension } from '../cli';
 import { IsolatorExtension } from '../isolator';
 import { Publisher } from './publisher';
-import { LoggerExtension } from '../logger';
 import { PublishDryRunTask } from './publish-dry-run.task';
 import { Component } from '../component';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { PreparePackagesTask } from './prepare-packages.task';
+import { ScopeAspect, ScopeMain } from '../scope';
+import { LoggerAspect, LoggerMain } from '../logger';
+import { EnvsAspect, EnvsMain } from '../environments';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -37,44 +37,37 @@ export type ComponentPkgExtensionConfig = {
   packageJson: Record<string, any>;
 };
 
-export class PkgExtension {
+export class PkgMain {
   static id = '@teambit/pkg';
   static runtime = MainRuntime;
-  static dependencies = [
-    CLIExtension,
-    ScopeExtension,
-    Environments,
-    IsolatorExtension,
-    LoggerExtension,
-    WorkspaceAspect,
-  ];
+  static dependencies = [CLIExtension, ScopeAspect, EnvsAspect, IsolatorExtension, LoggerAspect, WorkspaceAspect];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static provider(
     [cli, scope, envs, isolator, logger, workspace]: [
       CLIExtension,
-      ScopeExtension,
-      Environments,
+      ScopeMain,
+      EnvsMain,
       IsolatorExtension,
-      LoggerExtension,
+      LoggerMain,
       Workspace
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
-    const logPublisher = logger.createLogger(PkgExtension.id);
+    const logPublisher = logger.createLogger(PkgMain.id);
     const packer = new Packer(isolator, scope?.legacyScope, workspace);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgExtension.id, publisher, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgExtension.id, logPublisher);
-    const pkg = new PkgExtension(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
+    const dryRunTask = new PublishDryRunTask(PkgMain.id, publisher, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgMain.id, logPublisher);
+    const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
     if (scope) scope.onPostExport(postExportFunc);
 
     // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction(PkgExtension.id, pkg.mergePackageJsonProps.bind(pkg));
+    ConsumerComponent.registerAddConfigAction(PkgMain.id, pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
     cli.register(new PublishCmd(publisher));
@@ -167,7 +160,7 @@ export class PkgExtension {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(PkgExtension.id);
+    const currentExtension = configuredExtensions.findExtension(PkgMain.id);
     const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);

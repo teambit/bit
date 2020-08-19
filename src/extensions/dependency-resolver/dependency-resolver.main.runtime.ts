@@ -1,9 +1,9 @@
-import { DependencyResolverAspect } from './dependency-resolver.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { SemVer } from 'semver';
 import R from 'ramda';
 import fs from 'fs-extra';
 import { SlotRegistry, Slot } from '@teambit/harmony';
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import {
   DependenciesPolicy,
   DependencyResolverVariantConfig,
@@ -13,8 +13,7 @@ import {
 } from './types';
 import { DependenciesOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
-import { Environments } from '../environments';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 import { PackageManager } from './package-manager';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import ConsumerComponent from '../../consumer/component';
@@ -27,6 +26,7 @@ import { ROOT_NAME } from './constants';
 import { CFG_PACKAGE_MANAGER_CACHE } from '../../constants';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { DependencyResolver } from '../../consumer/component/dependencies/dependency-resolver';
+import { EnvsMain, EnvsAspect } from '../environments';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
@@ -54,7 +54,7 @@ export class DependencyResolverMain {
     /**
      * envs extension.
      */
-    private envs: Environments,
+    private envs: EnvsMain,
 
     private logger: Logger,
 
@@ -183,7 +183,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [Environments, LoggerExtension];
+  static dependencies = [EnvsAspect, LoggerAspect];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -198,7 +198,7 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt]: [Environments, LoggerExtension],
+    [envs, loggerExt]: [EnvsMain, LoggerMain],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {

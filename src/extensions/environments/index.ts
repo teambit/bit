@@ -1,4 +1,4 @@
-export { Environments, Descriptor } from './environments.extension';
+export { Descriptor } from './environments.main.runtime';
 export { Environment } from './environment';
 export { ExecutionContext } from './context';
 export { EnvService, ConcreteService } from './services';

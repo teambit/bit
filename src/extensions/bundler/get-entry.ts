@@ -1,4 +1,4 @@
-import { BrowserRuntimeSlot } from './bundler.extension';
+import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { ExecutionContext } from '../environments';
 import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';

@@ -1,8 +1,8 @@
-import { PreviewAspect } from './preview.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
+import { PreviewAspect } from './preview.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { generateLink } from './generate-link';
 import { ComponentMap } from '../component';
 import { BundlerExtension } from '../bundler';
@@ -17,7 +17,7 @@ import { PreviewArtifact } from './preview-artifact';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
-export class PreviewExtension {
+export class PreviewMain {
   static id = '@teambit/preview';
   constructor(
     /**
@@ -27,7 +27,7 @@ export class PreviewExtension {
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
-    const entry = component.config.extensions.findCoreExtension(PreviewExtension.id);
+    const entry = component.config.extensions.findCoreExtension(PreviewMain.id);
     if (!entry) throw new PreviewArtifactNotFound(component.id);
     const artifacts = entry.artifacts;
     if (!artifacts) throw new PreviewArtifactNotFound(component.id);
@@ -103,7 +103,7 @@ export class PreviewExtension {
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
   ) {
-    const preview = new PreviewExtension(previewSlot);
+    const preview = new PreviewMain(previewSlot);
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
       {

@@ -1,11 +1,9 @@
 import { resolve } from 'path';
 import { Environment } from '../environments';
-import { Tester, TesterExtension } from '../tester';
+import { Tester, TesterMain } from '../tester';
 import { JestExtension } from '../jest';
-import { TypescriptExtension } from '../typescript';
 import { BuildTask } from '../builder';
-import { Compiler, CompilerExtension } from '../compiler';
-import { WebpackExtension } from '../webpack';
+import { Compiler, CompilerMain } from '../compiler';
 import { DevServer, BundlerContext, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
@@ -13,7 +11,9 @@ import { Workspace } from '../workspace';
 import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler';
 import { pathNormalizeToLinux } from '../../utils';
-import { ReactConfig } from './react.extension';
+import { ReactConfig } from './react.main.runtime';
+import { TypescriptMain } from '../typescript';
+import { WebpackMain } from '../webpack';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -28,17 +28,17 @@ export class ReactEnv implements Environment {
     /**
      * typescript extension.
      */
-    private ts: TypescriptExtension,
+    private ts: TypescriptMain,
 
     /**
      * compiler extension.
      */
-    private compiler: CompilerExtension,
+    private compiler: CompilerMain,
 
     /**
      * webpack extension.
      */
-    private webpack: WebpackExtension,
+    private webpack: WebpackMain,
 
     /**
      * workspace extension.
@@ -53,7 +53,7 @@ export class ReactEnv implements Environment {
     /**
      * tester extension
      */
-    private tester: TesterExtension,
+    private tester: TesterMain,
 
     private config: ReactConfig
   ) {}

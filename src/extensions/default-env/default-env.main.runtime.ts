@@ -4,7 +4,7 @@ import { Environments } from '../environments';
 import { PkgExtension } from '../pkg';
 import { DefaultEnv } from './default-env.env';
 
-export class DefaultEnvExtension {
+export class DefaultEnvMain {
   static id = '@teambit/default-env';
 
   constructor(
@@ -19,7 +19,7 @@ export class DefaultEnvExtension {
 
   static provider([envs, pkg]: [Environments, PkgExtension]) {
     const defaultEnv = new DefaultEnv(pkg);
-    const defaultEnvExtension = new DefaultEnvExtension(defaultEnv);
+    const defaultEnvExtension = new DefaultEnvMain(defaultEnv);
     envs.registerEnv(defaultEnv);
     return defaultEnvExtension;
   }

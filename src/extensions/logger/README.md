@@ -1,7 +1,7 @@
 # Create a logger
-In your extension, add `LoggerExtension` as a dependency and create a new logger by running
+In your extension, add `LoggerMain` as a dependency and create a new logger by running
 ```
-LoggerExtension.createLogger('your-extension-id');
+LoggerMain.createLogger('your-extension-id');
 ```
 
 # Log to a file

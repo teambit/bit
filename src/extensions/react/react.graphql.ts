@@ -1,7 +1,7 @@
-import { ReactExtension } from './react.extension';
 import { ComponentFactory } from '../component';
+import { ReactMain } from './react.main.runtime';
 
-export function reactSchema(react: ReactExtension) {
+export function reactSchema(react: ReactMain) {
   return {
     typeDefs: `
       extend type ComponentHost {

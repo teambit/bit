@@ -2,7 +2,7 @@ import { EnvService, ExecutionContext } from '../environments';
 import { DevServer } from './dev-server';
 import { selectPort } from './select-port';
 import { ComponentServer } from './component-server';
-import { BrowserRuntimeSlot } from './bundler.extension';
+import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { DevServerContext } from './dev-server-context';
 import { UIRoot } from '../ui';
 import { getEntry } from './get-entry';
