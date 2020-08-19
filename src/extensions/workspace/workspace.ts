@@ -40,9 +40,9 @@ import { NoComponentDir } from '../../consumer/component/exceptions/no-component
 import { Watcher } from './watch/watcher';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { ResolvedComponent } from '../../components/utils/resolved-component';
-import { loadRequireableExtensions } from '../../components/utils/load-extensions';
-import { RequireableComponent } from '../../components/utils/requireable-component';
 import { DependencyLifecycleType } from '../dependency-resolver';
+import type { AspectLoaderMain } from '../aspect-loader';
+import { RequireableComponent } from '../../components/utils/requireable-component';
 
 export type EjectConfResult = {
   configPath: string;
@@ -91,6 +91,8 @@ export class Workspace implements ComponentFactory {
     private dependencyResolver: DependencyResolverMain,
 
     private variants: VariantsMain,
+
+    private aspectLoader: AspectLoaderMain,
 
     private logger: Logger,
 
@@ -549,7 +551,7 @@ export class Workspace implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = true): Promise<void> {
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id)));
     const requireableExtensions: any = await this.requireComponents(componentIds);
-    await loadRequireableExtensions(this.harmony, requireableExtensions, this.logger, throwOnError);
+    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
   /**
