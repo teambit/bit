@@ -1,4 +1,5 @@
 import * as path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
@@ -160,7 +161,7 @@ export default class NodeModuleLinker {
    */
   async _populateImportedNonLegacyComponentsLinks(component: Component) {
     const componentId = component.id;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
+    const componentNodeModulesPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix: component.bindingPrefix,
       id: componentId,
       allowNonScope: true,
@@ -171,11 +172,31 @@ export default class NodeModuleLinker {
     const filesToBind = componentMap.getAllFilesPaths();
     filesToBind.forEach((file) => {
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
-      const dest = path.join(linkPath, file);
+      const dest = path.join(componentNodeModulesPath, file);
 
       this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
     });
+    this.addSymlinkFromComponentDirNMToWorkspaceDirNM(component, componentNodeModulesPath);
     await this._populateDependenciesAndMissingLinks(component);
+  }
+
+  /**
+   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * of the component. e.g.
+   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   */
+  private addSymlinkFromComponentDirNMToWorkspaceDirNM(
+    component: Component,
+    componentNodeModulesPath: PathOsBasedRelative
+  ) {
+    const componentMap = component.componentMap as ComponentMap;
+    if (!componentMap.rootDir || !this.consumer) return;
+    const nodeModulesInCompRoot = path.join(componentMap.rootDir, 'node_modules');
+    if (!fs.existsSync(this.consumer.toAbsolutePath(nodeModulesInCompRoot))) return;
+    const nodeModulesInWorkspaceRoot = path.join(componentNodeModulesPath, 'node_modules');
+    this.dataToPersist.addSymlink(
+      Symlink.makeInstance(nodeModulesInCompRoot, nodeModulesInWorkspaceRoot, component.id)
+    );
   }
 
   /**

@@ -88,7 +88,7 @@ export default class Remote {
   latestVersions(
     bitIds: BitId[],
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ComponentObjects[]> {
+  ): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect(strategiesNames).then((network) => network.latestVersions(bitIds));
   }

@@ -16,7 +16,8 @@ import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsule
 import { DEPENDENCIES_FIELDS } from '../../constants';
 import { LoggerExtension, Logger } from '../logger';
 import { PathOsBasedAbsolute } from '../../utils/path';
-import { symlinkCapsuleRootToBitBin } from './symlink-bit-bin-to-capsules';
+// import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
+import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -102,8 +103,8 @@ export class IsolatorExtension {
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components
-      // await symlinkBitBinToCapsules(capsulesToInstall, this.logger);
-      await symlinkCapsuleRootToBitBin(capsulesDir, this.logger);
+      await symlinkBitBinToCapsules(capsulesToInstall, this.logger);
+      // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json

@@ -10,7 +10,7 @@ export async function symlinkBitBinToCapsules(capsules: Capsule[], logger: Logge
   return Promise.all(linksP);
 }
 
-export async function symlinkCapsuleRootToBitBin(root: string, logger: Logger) {
+export async function copyBitBinToCapsuleRoot(root: string, logger: Logger) {
   logger.debug(`symlink bit-bin package to capsule root`);
   const localBitBinPath = path.join(__dirname, '../../..');
   const targetPath = path.join(root, './node_modules/bit-bin');
