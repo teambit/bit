@@ -1,19 +1,28 @@
-import harmony from '@teambit/harmony';
-import { DocsPreview } from '../docs';
-import { Preview } from './preview.preview';
-import { CompositionsPreview } from '../compositions';
-import { GraphQlUI } from '../graphql';
+import { Harmony } from '@teambit/harmony';
+import { DocsAspect } from '../docs';
+import { PreviewPreview } from './preview.preview.runtime';
+import { CompositionsAspect } from '../compositions';
+import { GraphqlAspect } from '../graphql';
+import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 /**
  * configure all core extensions
  * :TODO pass all other extensions from above.
  */
-harmony
-  .run([Preview, DocsPreview, CompositionsPreview, GraphqlUI])
-  .then(() => {
-    const uiExtension = harmony.get<Preview>('@teambit/preview');
-    uiExtension.render();
+Harmony.load([PreviewAspect, DocsAspect, CompositionsAspect, GraphqlAspect], PreviewRuntime.name, {})
+  .then((harmony) => {
+    harmony
+      .run()
+      .then(() => {
+        const uiExtension = harmony.get<PreviewPreview>('@teambit/preview');
+        uiExtension.render();
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      });
   })
   .catch((err) => {
-    throw err;
+    // eslint-disable-next-line no-console
+    console.error(err);
   });

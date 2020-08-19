@@ -26,7 +26,7 @@ export class PreviewMain {
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
-    const entry = component.config.extensions.findCoreExtension(PreviewMain.id);
+    const entry = component.config.extensions.findCoreExtension(PreviewAspect.id);
     if (!entry) throw new PreviewArtifactNotFound(component.id);
     const artifacts = entry.artifacts;
     if (!artifacts) throw new PreviewArtifactNotFound(component.id);
@@ -110,7 +110,7 @@ export class PreviewMain {
       },
     ]);
 
-    // builder.registerTask(new PreviewTask(bundler, preview));
+    builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }

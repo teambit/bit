@@ -89,27 +89,12 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
     process.chdir(options.cwd);
   }
   registerCoreExtensions();
-  await harmony.run(ConfigAspect);
-  await harmony.set([BitAspect]);
+  // await harmony.run(ConfigAspect);
+  // await harmony.set([BitAspect]);
   process.chdir(originalCwd);
   harmonyLoaded = true;
   harmonyCurrentlyLoading = false;
   return harmony;
-}
-
-/**
- * Make sure harmony is loaded in specific cwd (to simulate like you run the cli in a workspace/scope)
- * Then return the loaded extension.
- * this return the actual initialized extension
- *
- * @export
- * @param {string} extensionId
- * @param {string} [cwd]
- * @returns
- */
-export async function getLoadedCoreExtension(extensionId: string, options: LoadCoreExtensionsOptions = {}) {
-  await loadCoreExtensions(options);
-  return harmony.get(extensionId);
 }
 
 /**

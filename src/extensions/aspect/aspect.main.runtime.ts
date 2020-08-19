@@ -5,18 +5,14 @@ import { ReactAspect, ReactMain } from '../react';
 import { EnvsMain, EnvsAspect } from '../environments';
 import { AspectEnv } from './aspect.env';
 
-export type RuntimeSlot = SlotRegistry<RuntimeDefinition>;
-
 export class AspectMain {
-  constructor(private runtimeSlot: RuntimeSlot, private harmony: Harmony, private runtimes: Runtimes) {}
-
   static runtime = MainRuntime;
   static dependencies = [ReactAspect, EnvsAspect];
 
-  static async provider([react, envs]: [ReactMain, EnvsMain], config, [runtimeSlot]: [RuntimeSlot], context: Harmony) {
+  static async provider([react, envs]: [ReactMain, EnvsMain]) {
     const env = envs.compose(new AspectEnv(react.reactEnv), react.reactEnv);
     envs.registerEnv(env);
-    return new AspectMain(runtimeSlot, context);
+    return new AspectMain();
   }
 }
 

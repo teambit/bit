@@ -74,7 +74,7 @@ export class Config {
   getHarmonyConfigObject(): GlobalConfig {
     const config = {};
     if (!this.extensions) return config;
-    this?.extensions.forEach((extension) => {
+    this.extensions.forEach((extension) => {
       config[extension.stringId] = extension.config;
     });
     return config;
