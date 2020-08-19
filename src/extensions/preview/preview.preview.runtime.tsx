@@ -6,7 +6,7 @@ export type PreviewSlot = SlotRegistry<PreviewType>;
 
 const PREVIEW_MODULES = {};
 
-export class Preview {
+export class PreviewPreview {
   constructor(
     /**
      * preview slot.
@@ -80,7 +80,7 @@ export class Preview {
   static slots = [Slot.withType<PreviewType>()];
 
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
-    const preview = new Preview(previewSlot);
+    const preview = new PreviewPreview(previewSlot);
 
     window.addEventListener('hashchange', () => {
       preview.render();
