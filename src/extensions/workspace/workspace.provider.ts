@@ -60,9 +60,9 @@ export type WorkspaceCoreConfig = {
 };
 
 function getUserAspects(harmony: Harmony) {
-  const configuredAspects = Array.from(harmony.config.raw.entries());
+  const configuredAspects = Array.from(harmony.config.raw.keys());
   const loadedExtensions = harmony.extensionsIds;
-  const extensionsToLoad = difference(Array.from(configuredAspects.keys()), loadedExtensions);
+  const extensionsToLoad = difference(configuredAspects, loadedExtensions);
 
   return extensionsToLoad;
 }

@@ -8,7 +8,9 @@ export function readConfigFile(path: string, mustExist = true) {
   }
 
   try {
-    return parse(readFileSync(path, 'utf8'));
+    const json = parse(readFileSync(path, 'utf8'));
+    delete json.$schema;
+    return json;
   } catch (err) {
     throw new ReadConfigError(path, err);
   }

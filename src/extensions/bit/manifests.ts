@@ -2,8 +2,6 @@ import { CLIAspect } from '../cli';
 import { CompilerAspect } from '../compiler';
 import { ComponentAspect } from '../component';
 import { GraphAspect } from '../graph';
-import { ConfigAspect } from '../config';
-import { CoreAspect } from '../core';
 import { CreateAspect } from '../create';
 import { DependencyResolverAspect } from '../dependency-resolver';
 import { EnvsAspect } from '../environments';
@@ -41,7 +39,6 @@ export const manifestsMap = {
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
   [UIAspect.id]: UIAspect,
-  [CoreAspect.id]: CoreAspect,
   [CreateAspect.id]: CreateAspect,
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
