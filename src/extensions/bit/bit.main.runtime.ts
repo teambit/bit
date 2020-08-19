@@ -1,6 +1,5 @@
 import { BitAspect } from './bit.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { ExtensionManifest } from '@teambit/harmony';
 import { manifestsMap } from './manifests';
 import { provideBit } from './bit.provider';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
@@ -12,10 +11,11 @@ export function registerCoreExtensions() {
   ExtensionDataList.registerManyCoreExtensionNames(allCoreExtensionsNames);
 }
 
-export default {
+export const BitMain = {
   name: 'bit',
+  runtime: MainRuntime,
   dependencies: manifests,
   provider: provideBit,
-} as ExtensionManifest;
+};
 
 BitAspect.addRuntime(BitMain);

@@ -1,14 +1,5 @@
 import { Aspect } from '@teambit/harmony';
-import { manifestsMap } from './manifests';
-// import { DummyAspect } from '../dummy';
-
-export { manifestsMap };
+export { manifestsMap } from './manifests';
 export { registerCoreExtensions } from './bit.main.runtime';
-
-export const BitAspect = Aspect.create({
-  id: '@teambit/bit',
-  dependencies: Object.values(manifestsMap),
-  // dependencies: [DummyAspect],
-});
-
-export default BitAspect;
+export { BitAspect } from './bit.aspect';
+export type { BitMain } from './bit.main.runtime';
