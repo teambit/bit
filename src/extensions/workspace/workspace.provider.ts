@@ -26,6 +26,7 @@ import { Watcher } from './watch/watcher';
 import { EXT_NAME } from './constants';
 import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
 import { LoggerMain } from '../logger';
+import type { AspectLoaderMain } from '../aspect-loader';
 
 export type WorkspaceDeps = [
   CLIMain,
@@ -37,7 +38,8 @@ export type WorkspaceDeps = [
   LoggerMain,
   GraphqlMain,
   UiMain,
-  BundlerMain
+  BundlerMain,
+  AspectLoaderMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -68,7 +70,19 @@ function getUserAspects(harmony: Harmony) {
 }
 
 export default async function provideWorkspace(
-  [cli, scope, component, isolator, dependencyResolver, variants, loggerExt, graphql, ui, bundler]: WorkspaceDeps,
+  [
+    cli,
+    scope,
+    component,
+    isolator,
+    dependencyResolver,
+    variants,
+    loggerExt,
+    graphql,
+    ui,
+    bundler,
+    aspectLoader,
+  ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
   harmony: Harmony
@@ -85,6 +99,7 @@ export default async function provideWorkspace(
     isolator,
     dependencyResolver,
     variants,
+    aspectLoader,
     logger,
     undefined,
     harmony,

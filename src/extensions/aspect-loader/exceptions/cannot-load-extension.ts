@@ -1,4 +1,6 @@
-import { BitError } from '../../../../error/bit-error';
+// import { BitError } from '../../../../error/bit-error';
+
+import { BitError } from '../../../error/bit-error';
 
 export class CannotLoadExtension extends BitError {
   constructor(private extensionName: string, private error: Error) {
