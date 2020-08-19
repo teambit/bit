@@ -9,12 +9,12 @@ import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
 import { CLIMain } from '../cli';
 import { ExtensionArtifact } from './artifact';
-import { Core, CoreAspect } from '../core';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
 import { ScopeMain, ScopeAspect } from '../scope';
 import { LoggerAspect, LoggerMain } from '../logger';
+import { AspectLoaderAspect, AspectLoaderMain } from '../aspect-loader';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -30,34 +30,11 @@ export type BuilderConfig = {
 
 export class BuilderMain {
   constructor(
-    /**
-     * environments extension.
-     */
     private envs: EnvsMain,
-
-    /**
-     * workspace extension.
-     */
     private workspace: Workspace,
-
-    /**
-     * builder service.
-     */
     private service: BuilderService,
-
-    /**
-     * scope extension
-     */
     private scope: ScopeMain,
-
-    /**
-     * core extension.
-     */
-    private core: Core,
-
-    /**
-     * slot for registering build tasks.
-     */
+    private aspectLoader: AspectLoaderMain,
     private taskSlot: TaskSlot
   ) {}
 
@@ -95,7 +72,7 @@ export class BuilderMain {
       return new ExtensionArtifact(
         // @ts-ignore TODO: remove when @david fixes `extensionData.artifacts` to be abstract vinyl only.
         extensionData.artifacts,
-        this.core.getDescriptor(extensionData.id.toString())
+        this.aspectLoader.getDescriptor(extensionData.id.toString())
       );
     });
 
@@ -111,19 +88,19 @@ export class BuilderMain {
     WorkspaceAspect,
     ScopeAspect,
     LoggerAspect,
-    CoreAspect,
+    AspectLoaderAspect,
     GraphqlAspect,
     ComponentAspect,
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, loggerExt, core, graphql]: [
+    [cli, envs, workspace, scope, loggerExt, aspectLoader, graphql]: [
       CLIMain,
       EnvsMain,
       Workspace,
       ScopeMain,
       LoggerMain,
-      Core,
+      AspectLoaderMain,
       GraphqlMain
     ],
     config,
@@ -131,7 +108,7 @@ export class BuilderMain {
   ) {
     const logger = loggerExt.createLogger(BuilderAspect.id);
     const builderService = new BuilderService(workspace, logger, taskSlot);
-    const builder = new BuilderMain(envs, workspace, builderService, scope, core, taskSlot);
+    const builder = new BuilderMain(envs, workspace, builderService, scope, aspectLoader, taskSlot);
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
