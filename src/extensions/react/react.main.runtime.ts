@@ -52,8 +52,6 @@ export type ReactMainConfig = {
 };
 
 export class ReactMain {
-  static id = '@teambit/react';
-
   constructor(
     /**
      * an instance of the React env.

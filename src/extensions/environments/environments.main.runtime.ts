@@ -28,8 +28,6 @@ export type Descriptor = {
 };
 
 export class EnvsMain {
-  static id = '@teambit/envs';
-
   static runtime = MainRuntime;
 
   /**

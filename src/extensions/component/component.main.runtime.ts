@@ -12,8 +12,6 @@ import { GraphqlAspect, GraphqlMain } from '../graphql';
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
 export class ComponentMain {
-  static id = '@teambit/component';
-
   constructor(
     /**
      * slot for component hosts to register.

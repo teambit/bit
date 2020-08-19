@@ -17,8 +17,6 @@ export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
  * bundler extension.
  */
 export class BundlerMain {
-  static id = '@teambit/bundler';
-
   constructor(
     /**
      * environments extension.

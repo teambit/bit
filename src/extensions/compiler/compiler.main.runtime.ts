@@ -6,12 +6,10 @@ import { CLIMain } from '../cli';
 import { CompileCmd } from './compiler.cmd';
 import { WorkspaceCompiler } from './workspace-compiler';
 import { CompilerTask } from './compiler.task';
-import { Extensions } from '../../constants';
 import { BitId } from '../../bit-id';
 import { EnvsAspect, EnvsMain } from '../environments';
 
 export class CompilerMain {
-  static id = Extensions.compiler;
   static runtime = MainRuntime;
   static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect];
   constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
@@ -25,7 +23,7 @@ export class CompilerMain {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
   static async provider([cli, workspace, envs]: [CLIMain, Workspace, EnvsMain]) {
-    const compilerTask = new CompilerTask(CompilerMain.id);
+    const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
     cli.register(new CompileCmd(workspaceCompiler));

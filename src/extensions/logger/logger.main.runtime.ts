@@ -3,7 +3,6 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { Logger } from './logger';
 
 export class LoggerMain {
-  static id = '@teambit/logger';
   static runtime = MainRuntime;
   static dependencies = [];
   createLogger(extensionName: string): Logger {

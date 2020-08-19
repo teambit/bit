@@ -56,7 +56,7 @@ export class ExpressMain {
     // TODO: @guy refactor health to service aspect.
     return [
       {
-        namespace: ExpressMain.id,
+        namespace: ExpressAspect.id,
         method: 'get',
         path: '/_health',
         middlewares: [async (req: Request, res: Response) => res.send('ok')],
@@ -97,7 +97,6 @@ export class ExpressMain {
     return middlewares.map((middleware) => catchErrors(middleware));
   }
 
-  static id = '@teambit/express';
   static slots = [Slot.withType<Route[]>()];
   static dependencies = [LoggerAspect];
 
@@ -107,7 +106,7 @@ export class ExpressMain {
   };
 
   static async provider([loggerFactory]: [LoggerMain], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
-    const logger = loggerFactory.createLogger(ExpressMain.id);
+    const logger = loggerFactory.createLogger(ExpressAspect.id);
     return new ExpressMain(config, routeSlot, logger);
   }
 }

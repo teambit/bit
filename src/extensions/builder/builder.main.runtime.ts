@@ -30,8 +30,6 @@ export type BuilderConfig = {
 };
 
 export class BuilderMain {
-  static id = '@teambit/builder';
-
   constructor(
     /**
      * environments extension.

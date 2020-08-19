@@ -11,7 +11,6 @@ export type DeprecationInfo = {
 export class DeprecationMain {
   static runtime = MainRuntime;
   static dependencies = [GraphqlAspect, ComponentAspect];
-  static id = '@teambit/deprecation';
 
   getDeprecationInfo(component: Component): DeprecationInfo {
     const deprecated = component.state._consumer.deprecated;

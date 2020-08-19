@@ -29,7 +29,6 @@ export type TesterOptions = {
 };
 
 export class TesterMain {
-  static id = '@teambit/tester';
   static runtime = MainRuntime;
   static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect];
 
@@ -85,7 +84,7 @@ export class TesterMain {
       envs,
       workspace,
       new TesterService(workspace, config.testRegex),
-      new TesterTask(TesterMain.id)
+      new TesterTask(TesterAspect.id)
     );
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');

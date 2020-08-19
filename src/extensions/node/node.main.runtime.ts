@@ -5,8 +5,6 @@ import { EnvsMain, EnvsAspect } from '../environments';
 import { NodeEnv } from './node.env';
 
 export class NodeMain {
-  static id = '@teambit/node';
-
   // please replace to the nodeJS icon.
   icon() {
     return 'https://static.bit.dev/extensions-icons/react.svg';

@@ -26,8 +26,8 @@ async function initApp() {
 async function getConfig() {
   const harmony = await Harmony.load([ConfigAspect], MainRuntime.name, {});
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
-  const config = harmony.get<Config>('@teambit/config');
-  return config.getHarmonyConfigObject();
+  // const config = harmony.get<Config>('@teambit/config');
+  // return config.getHarmonyConfigObject();
 }
 
 async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
@@ -44,7 +44,8 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
 
 async function runCLI() {
   const config = await getConfig();
-  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
+  // const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
+  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, {});
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
   const cli = harmony.get<CLIMain>('@teambit/cli');

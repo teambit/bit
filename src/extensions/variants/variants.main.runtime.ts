@@ -1,12 +1,11 @@
-import { VariantsAspect } from './variants.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import R from 'ramda';
 import _ from 'lodash';
+import { VariantsAspect } from './variants.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { PathLinuxRelative } from '../../utils/path';
 import { pathIsInside, stripTrailingChar } from '../../utils';
-import { EXT_NAME } from './constants';
 
 export const MATCH_ALL_ITEM = '*';
 const PATTERNS_DELIMITER = ',';
@@ -45,7 +44,6 @@ type MatchedPatternItem = {
 const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
 export class VariantsMain {
-  static id = EXT_NAME;
   static runtime = MainRuntime;
   static dependencies = [];
 

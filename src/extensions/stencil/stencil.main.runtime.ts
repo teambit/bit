@@ -14,8 +14,6 @@ import type { WebpackMain } from '../webpack';
 import { EnvsAspect, EnvsMain } from '../environments';
 
 export class StencilMain {
-  static id = '@teambit/stencil';
-
   constructor(
     /**
      * workspace extension.

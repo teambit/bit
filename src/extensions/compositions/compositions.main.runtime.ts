@@ -24,7 +24,6 @@ export type CompositionsConfig = {
  * the component documentation extension.
  */
 export class CompositionsMain {
-  static id = '@teambit/compositions';
   constructor(
     /**
      * envs extension.
@@ -55,7 +54,7 @@ export class CompositionsMain {
    * get component compositions.
    */
   getCompositions(component: Component): Composition[] {
-    const entry = component.state.config.extensions.findExtension(CompositionsMain.id);
+    const entry = component.state.config.extensions.findExtension(CompositionsAspect.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];

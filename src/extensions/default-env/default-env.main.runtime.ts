@@ -5,8 +5,6 @@ import { EnvsAspect, EnvsMain } from '../environments';
 import { PkgAspect, PkgMain } from '../pkg';
 
 export class DefaultEnvMain {
-  static id = '@teambit/default-env';
-
   constructor(
     /**
      * an instance of the default env.

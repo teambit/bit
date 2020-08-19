@@ -6,13 +6,11 @@ import { PkgAspect, PkgMain } from '../pkg';
 import { LoggerAspect, LoggerMain } from '../logger';
 
 export class PnpmMain {
-  static id = '@teambit/pnpm';
-
   static runtime = MainRuntime;
   static dependencies = [DependencyResolverAspect, PkgAspect, LoggerAspect];
 
   static async provider([depResolver, pkg, loggerExt]: [DependencyResolverMain, PkgMain, LoggerMain]) {
-    const logger = loggerExt.createLogger(PnpmMain.id);
+    const logger = loggerExt.createLogger(PnpmAspect.id);
     depResolver.registerPackageManager(new PnpmPackageManager(depResolver, pkg, logger));
     return new PnpmMain();
   }

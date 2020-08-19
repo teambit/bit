@@ -8,8 +8,6 @@ import { AspectEnv } from './aspect.env';
 export type RuntimeSlot = SlotRegistry<RuntimeDefinition>;
 
 export class AspectMain {
-  static id = '@teambit/aspect';
-
   constructor(private runtimeSlot: RuntimeSlot, private harmony: Harmony, private runtimes: Runtimes) {}
 
   static runtime = MainRuntime;

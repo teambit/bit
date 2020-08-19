@@ -152,8 +152,6 @@ export class GraphqlMain {
       .filter((module) => !!module);
   }
 
-  static id = '@teambit/graphql';
-
   static slots = [Slot.withType<Schema>()];
 
   static defaultConfig = {
@@ -170,7 +168,7 @@ export class GraphqlMain {
     [moduleSlot]: [SchemaSlot],
     context: Harmony
   ) {
-    const logger = loggerFactory.createLogger(GraphqlMain.id);
+    const logger = loggerFactory.createLogger(GraphqlAspect.id);
     return new GraphqlMain(config, moduleSlot, context, new PubSub(), logger);
   }
 }

@@ -3,7 +3,6 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { JestTester } from './jest.tester';
 
 export class JestMain {
-  static id = '@teambit/jest';
   static runtime = MainRuntime;
   static dependencies = [];
 

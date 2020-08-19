@@ -18,7 +18,6 @@ import { BuilderAspect, BuilderMain } from '../builder';
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export class PreviewMain {
-  static id = '@teambit/preview';
   constructor(
     /**
      * slot for preview definitions.

@@ -13,7 +13,6 @@ import { CommandNotFound } from './exceptions/command-not-found';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 
 export class CLIMain {
-  static id = '@teambit/cli';
   readonly groups: { [k: string]: string } = {};
   static dependencies = [];
 

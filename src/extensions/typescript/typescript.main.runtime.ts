@@ -30,13 +30,12 @@ export class TypescriptMain {
     };
   }
 
-  static id = '@teambit/typescript';
   static runtime = MainRuntime;
   static dependencies = [SchemaAspect, LoggerAspect];
 
   static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
     schema.registerParser(new TypeScriptParser());
-    const logger = loggerExt.createLogger(TypescriptMain.id);
+    const logger = loggerExt.createLogger(TypescriptAspect.id);
     return new TypescriptMain(logger);
   }
 }

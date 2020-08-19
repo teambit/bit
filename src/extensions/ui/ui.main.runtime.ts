@@ -60,8 +60,6 @@ export type RuntimeOptions = {
 };
 
 export class UiMain {
-  static id = '@teambit/ui';
-
   constructor(
     private config: UIConfig,
 
@@ -215,7 +213,7 @@ export class UiMain {
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
-    const logger = loggerMain.createLogger(UiMain.id);
+    const logger = loggerMain.createLogger(UIAspect.id);
     const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
     cli.register(new StartCmd(ui));
     cli.register(new UIBuildCmd(ui));

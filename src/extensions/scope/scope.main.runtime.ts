@@ -45,8 +45,6 @@ export type OnTag = (ids: BitId[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export class ScopeMain implements ComponentFactory {
-  static id = '@teambit/scope';
-
   constructor(
     /**
      * private reference to the instance of Harmony.
@@ -294,7 +292,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerMain.createLogger(ScopeMain.id);
+    const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

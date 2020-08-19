@@ -50,14 +50,13 @@ async function createCapsulesFromComponents(
 }
 
 export class IsolatorMain {
-  static id = '@teambit/isolator';
   static runtime = MainRuntime;
   static dependencies = [DependencyResolverAspect, LoggerAspect];
   static defaultConfig = {};
   static async provider([dependencyResolver, loggerExtension]: [DependencyResolverMain, LoggerMain]): Promise<
     IsolatorMain
   > {
-    const logger = loggerExtension.createLogger(IsolatorMain.id);
+    const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(dependencyResolver, logger);
     return isolator;
   }

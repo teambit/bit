@@ -38,7 +38,6 @@ export type ComponentPkgExtensionConfig = {
 };
 
 export class PkgMain {
-  static id = '@teambit/pkg';
   static runtime = MainRuntime;
   static dependencies = [CLIAspect, ScopeAspect, EnvsAspect, IsolatorAspect, LoggerAspect, WorkspaceAspect];
   static slots = [Slot.withType<PackageJsonProps>()];
@@ -56,18 +55,18 @@ export class PkgMain {
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
-    const logPublisher = logger.createLogger(PkgMain.id);
+    const logPublisher = logger.createLogger(PkgAspect.id);
     const packer = new Packer(isolator, scope?.legacyScope, workspace);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgMain.id, publisher, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgMain.id, logPublisher);
+    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
     const postExportFunc = publisher.postExportListener.bind(publisher);
     if (scope) scope.onPostExport(postExportFunc);
 
     // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction(PkgMain.id, pkg.mergePackageJsonProps.bind(pkg));
+    ConsumerComponent.registerAddConfigAction(PkgAspect.id, pkg.mergePackageJsonProps.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
     cli.register(new PublishCmd(publisher));
@@ -160,7 +159,7 @@ export class PkgMain {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(PkgMain.id);
+    const currentExtension = configuredExtensions.findExtension(PkgAspect.id);
     const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);

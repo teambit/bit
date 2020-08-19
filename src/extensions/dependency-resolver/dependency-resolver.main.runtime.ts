@@ -38,8 +38,6 @@ export type GetInstallerOptions = {
 };
 
 export class DependencyResolverMain {
-  static id = '@teambit/dependency-resolver';
-
   constructor(
     /**
      * Dependency resolver  extension configuration.
@@ -173,7 +171,7 @@ export class DependencyResolverMain {
         policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(DependencyResolverMain.id);
+    const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = currentConfig.policy;
@@ -203,10 +201,10 @@ export class DependencyResolverMain {
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
-    const logger = loggerExt.createLogger(DependencyResolverMain.id);
+    const logger = loggerExt.createLogger(DependencyResolverAspect.id);
     const dependencyResolver = new DependencyResolverMain(config, policiesRegistry, envs, logger, packageManagerSlot);
     ConsumerComponent.registerOnComponentOverridesLoading(
-      DependencyResolverMain.id,
+      DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {
         const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
         return transformPoliciesToLegacyDepsOverrides(policies);

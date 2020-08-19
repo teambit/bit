@@ -1,4 +1,3 @@
-import { ExtensionManifest } from '@teambit/harmony';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
 import { WebpackAspect } from './webpack.aspect';
@@ -50,15 +49,13 @@ export class WebpackMain {
     return configFactory(rootPath, entry, publicRoot, publicPath);
   }
 
-  static id = '@teambit/webpack';
-
   static slots = [];
 
   static runtime = MainRuntime;
   static dependencies = [WorkspaceAspect, BundlerAspect, LoggerAspect];
 
   static async provider([workspace, bundler, logger]: [Workspace, BundlerMain, LoggerMain]) {
-    const logPublisher = logger.createLogger(WebpackMain.id);
+    const logPublisher = logger.createLogger(WebpackAspect.id);
     return new WebpackMain(workspace, bundler, logPublisher);
   }
 }
