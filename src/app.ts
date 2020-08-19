@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { readdir } from 'fs-extra';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { handleErrorAndExit } from './cli/command-runner';
-import { BitAspect } from './extensions/bit';
+import { BitAspect, registerCoreExtensions } from './extensions/bit';
 import { CLIAspect, MainRuntime } from './extensions/cli/cli.aspect';
 import { bootstrap } from './bootstrap';
 import { CLIMain } from './extensions/cli';
@@ -66,6 +66,7 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
 
 async function runCLI() {
   const config = await getConfig();
+  registerCoreExtensions();
   loadLegacyConfig(config);
   // const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
   const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config.toObject());
