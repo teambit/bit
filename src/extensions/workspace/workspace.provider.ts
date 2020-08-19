@@ -123,7 +123,10 @@ export default async function provideWorkspace(
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
   const watcher = new Watcher(workspace);
-  cli.register(new WatchCommand(watcher));
+  if (workspace && !workspace.consumer.isLegacy) {
+    cli.unregister('watch');
+    cli.register(new WatchCommand(watcher));
+  }
   component.registerHost(workspace);
 
   return workspace;
