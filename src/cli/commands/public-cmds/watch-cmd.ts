@@ -1,4 +1,4 @@
-import { watchAll } from '../../../api/consumer';
+import watchAll from '../../../api/consumer/lib/watch';
 import { LegacyCommand } from '../../legacy-command';
 
 export default class Watch implements LegacyCommand {
