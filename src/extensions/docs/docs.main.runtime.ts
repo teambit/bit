@@ -1,3 +1,5 @@
+import { DocsAspect } from './docs.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Component } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component/component-map';
@@ -66,6 +68,7 @@ export class DocsExtension {
     return context.env.getDocsTemplate();
   }
 
+  static runtime = MainRuntime;
   static dependencies = [PreviewExtension];
 
   static async provider([preview]: [PreviewExtension]) {
@@ -79,3 +82,5 @@ export class DocsExtension {
     return docs;
   }
 }
+
+DocsAspect.addRuntime(DocsMain);

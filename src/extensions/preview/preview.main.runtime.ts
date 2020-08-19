@@ -1,3 +1,5 @@
+import { PreviewAspect } from './preview.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
@@ -93,6 +95,7 @@ export class PreviewExtension {
 
   static slots = [Slot.withType<PreviewDefinition>()];
 
+  static runtime = MainRuntime;
   static dependencies = [BundlerExtension, BuilderExtension, ComponentExtension];
 
   static async provider(
@@ -113,3 +116,5 @@ export class PreviewExtension {
     return preview;
   }
 }
+
+PreviewAspect.addRuntime(PreviewMain);

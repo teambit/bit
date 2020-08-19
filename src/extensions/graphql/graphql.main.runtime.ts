@@ -1,3 +1,5 @@
+import { GraphqlAspect } from './graphql.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { createServer, Server } from 'http';
 import express, { Express } from 'express';
 import cors from 'cors';
@@ -159,6 +161,7 @@ export class GraphQLExtension {
     subscriptionsPath: '/subscriptions',
   };
 
+  static runtime = MainRuntime;
   static dependencies = [LoggerExtension];
 
   static async provider(
@@ -171,3 +174,5 @@ export class GraphQLExtension {
     return new GraphQLExtension(config, moduleSlot, context, new PubSub(), logger);
   }
 }
+
+GraphqlAspect.addRuntime(GraphqlMain);

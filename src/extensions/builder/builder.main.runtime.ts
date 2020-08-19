@@ -1,3 +1,5 @@
+import { BuilderAspect } from './builder.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Environments } from '../environments';
 import { WorkspaceExt, Workspace } from '../workspace';
@@ -105,6 +107,7 @@ export class BuilderExtension {
 
   static slots = [Slot.withType<BuildTask>()];
 
+  static runtime = MainRuntime;
   static dependencies = [
     CLIExtension,
     Environments,
@@ -143,3 +146,5 @@ export class BuilderExtension {
     return builder;
   }
 }
+
+BuilderAspect.addRuntime(BuilderMain);

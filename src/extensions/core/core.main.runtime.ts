@@ -1,3 +1,5 @@
+import { CoreAspect } from './core.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { ScopeExtension } from '../scope';
@@ -10,3 +12,5 @@ export default {
   dependencies: [ConfigExt, LoggerExtension, WorkspaceExt, ScopeExtension],
   provider: provideCore,
 } as ExtensionManifest;
+
+CoreAspect.addRuntime(CoreMain);

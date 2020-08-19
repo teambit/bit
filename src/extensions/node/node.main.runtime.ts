@@ -1,3 +1,5 @@
+import { NodeAspect } from './node.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ReactExtension } from '../react';
 import { Environments } from '../environments';
 import { NodeEnv } from './node.env';
@@ -10,6 +12,7 @@ export class NodeExtension {
     return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
+  static runtime = MainRuntime;
   static dependencies = [Environments, ReactExtension];
 
   static async provider([envs, react]: [Environments, ReactExtension]) {
@@ -18,3 +21,5 @@ export class NodeExtension {
     return new NodeExtension();
   }
 }
+
+NodeAspect.addRuntime(NodeMain);

@@ -1,3 +1,5 @@
+import { AspectAspect } from './aspect.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { SlotRegistry, Harmony } from '@teambit/harmony';
 import { ReactExtension } from '../react';
 import { Environments } from '../environments';
@@ -10,6 +12,7 @@ export class AspectExtension {
 
   constructor(private runtimeSlot: RuntimeSlot, private harmony: Harmony, private runtimes: Runtimes) {}
 
+  static runtime = MainRuntime;
   static dependencies = [ReactExtension, Environments];
 
   static async provider(
@@ -23,3 +26,5 @@ export class AspectExtension {
     return new AspectExtension(runtimeSlot, context);
   }
 }
+
+AspectAspect.addRuntime(AspectMain);

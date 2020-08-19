@@ -1,3 +1,5 @@
+import { CompilerAspect } from './compiler.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { Environments } from '../environments';
@@ -11,6 +13,7 @@ import { BitId } from '../../bit-id';
 
 export class CompilerExtension {
   static id = Extensions.compiler;
+  static runtime = MainRuntime;
   static dependencies = [CLIExtension, WorkspaceExt, Environments] as ExtensionManifest[];
   constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
   compileOnWorkspace(
@@ -30,3 +33,5 @@ export class CompilerExtension {
     return compilerExtension;
   }
 }
+
+CompilerAspect.addRuntime(CompilerMain);

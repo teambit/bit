@@ -1,3 +1,5 @@
+import { IsolatorAspect } from './isolator.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
@@ -48,6 +50,7 @@ async function createCapsulesFromComponents(
 
 export class IsolatorExtension {
   static id = '@teambit/isolator';
+  static runtime = MainRuntime;
   static dependencies = [DependencyResolverExtension, LoggerExtension];
   static defaultConfig = {};
   static async provide([dependencyResolver, loggerExtension]: [DependencyResolverExtension, LoggerExtension]) {
@@ -228,3 +231,5 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
   packageJson.removeDependency('bit-bin');
   return packageJson;
 }
+
+IsolatorAspect.addRuntime(IsolatorMain);

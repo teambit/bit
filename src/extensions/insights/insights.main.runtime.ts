@@ -1,3 +1,5 @@
+import { InsightsAspect } from './insights.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
@@ -11,3 +13,5 @@ export default {
   },
   provider: provide,
 } as ExtensionManifest;
+
+InsightsAspect.addRuntime(InsightsMain);

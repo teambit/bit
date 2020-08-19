@@ -1,3 +1,5 @@
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { SemVer } from 'semver';
 import R from 'ramda';
 import fs from 'fs-extra';
@@ -180,6 +182,7 @@ export class DependencyResolverExtension {
     return result;
   }
 
+  static runtime = MainRuntime;
   static dependencies = [Environments, LoggerExtension];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
@@ -244,3 +247,5 @@ function transformPoliciesToLegacyDepsOverrides(policy: DependenciesPolicy): Dep
   // TODO: since we don't have enough info about handle force here
   return policy;
 }
+
+DependencyResolverAspect.addRuntime(DependencyResolverMain);

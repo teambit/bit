@@ -1,3 +1,5 @@
+import { StencilAspect } from './stencil.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { TranspileOptions } from '@stencil/core/compiler';
 import { StencilCompiler } from './stencil.compiler';
@@ -31,6 +33,7 @@ export class StencilExtension {
     // return new StencilDevServer({}, this.workspace);
   }
 
+  static runtime = MainRuntime;
   static dependencies = [Environments, CompilerExtension, WorkspaceExt, WebpackExtension] as ExtensionManifest[];
 
   static async provider([envs, compiler, workspace, webpack]: [
@@ -45,3 +48,5 @@ export class StencilExtension {
     return stencil;
   }
 }
+
+StencilAspect.addRuntime(StencilMain);

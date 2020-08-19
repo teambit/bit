@@ -1,3 +1,5 @@
+import { UiAspect } from './ui.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -206,6 +208,7 @@ export class UIExtension {
     portRange: [3000, 3200],
   };
 
+  static runtime = MainRuntime;
   static dependencies = [
     CLIExtension,
     GraphQLExtension,
@@ -230,3 +233,5 @@ export class UIExtension {
     return ui;
   }
 }
+
+UiAspect.addRuntime(UiMain);

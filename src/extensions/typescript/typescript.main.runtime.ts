@@ -1,3 +1,5 @@
+import { TypescriptAspect } from './typescript.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
 import { SchemaExtension } from '../schema';
 import { TypeScriptParser } from './typescript.parser';
@@ -28,6 +30,7 @@ export class TypescriptExtension {
   }
 
   static id = '@teambit/typescript';
+  static runtime = MainRuntime;
   static dependencies = [SchemaExtension, LoggerExtension];
 
   static provider([schema, loggerExt]: [SchemaExtension, LoggerExtension]) {
@@ -36,3 +39,5 @@ export class TypescriptExtension {
     return new TypescriptExtension(logger);
   }
 }
+
+TypescriptAspect.addRuntime(TypescriptMain);

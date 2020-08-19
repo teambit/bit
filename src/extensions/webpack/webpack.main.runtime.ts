@@ -1,3 +1,5 @@
+import { WebpackAspect } from './webpack.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
@@ -52,6 +54,7 @@ export class WebpackExtension {
 
   static slots = [];
 
+  static runtime = MainRuntime;
   static dependencies = [WorkspaceExt, BundlerExtension, LoggerExtension] as ExtensionManifest[];
 
   static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, LoggerExtension]) {
@@ -59,3 +62,5 @@ export class WebpackExtension {
     return new WebpackExtension(workspace, bundler, logPublisher);
   }
 }
+
+WebpackAspect.addRuntime(WebpackMain);

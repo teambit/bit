@@ -1,3 +1,5 @@
+import { DefaultEnvAspect } from './default-env.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Environments } from '../environments';
 import { PkgExtension } from '../pkg';
 import { DefaultEnv } from './default-env.env';
@@ -12,6 +14,7 @@ export class DefaultEnvExtension {
     private defaultEnv: DefaultEnv
   ) {}
 
+  static runtime = MainRuntime;
   static dependencies = [Environments, PkgExtension];
 
   static provider([envs, pkg]: [Environments, PkgExtension]) {
@@ -21,3 +24,5 @@ export class DefaultEnvExtension {
     return defaultEnvExtension;
   }
 }
+
+DefaultEnvAspect.addRuntime(DefaultEnvMain);

@@ -1,3 +1,5 @@
+import { WorkspaceAspect } from './workspace.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Slot } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeAspect } from '../scope';
@@ -32,3 +34,5 @@ export default {
   provider: workspaceProvider,
   defineRuntime: 'browser',
 };
+
+WorkspaceAspect.addRuntime(WorkspaceMain);

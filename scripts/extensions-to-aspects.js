@@ -14,15 +14,32 @@ const extensions = fs.readdirSync(extDir);
 
 extensions.forEach((extName) => {
   console.log('working on extension ', extName);
-  writeAspectFile(extName);
-  moveExtensionToMainRuntime(extName);
-  moveManifestToMainRuntime(extName);
-  moveUiTsxToUIRuntime(extName);
-  movePreviewToPreviewRuntime(extName);
-  addExportsToIndexTs(extName);
+  // writeAspectFile(extName);
+  // moveExtensionToMainRuntime(extName);
+  // moveManifestToMainRuntime(extName);
+  // moveUiTsxToUIRuntime(extName);
+  // movePreviewToPreviewRuntime(extName);
+  // addExportsToIndexTs(extName);
+  addRunTimeToMain(extName);
 });
 
 console.log('script ended successfully!');
+
+function addRunTimeToMain(extName) {
+  const extNameCamelCase = getExtNameCamelCase(extName);
+  const mainRuntimePath = path.join(extDir, extName, `${extName}.main.runtime.ts`);
+  if (!fs.existsSync(mainRuntimePath)) return;
+  const content = fs.readFileSync(mainRuntimePath).toString();
+  const contentChanged = `import { ${extNameCamelCase}Aspect } from './${extName}.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
+${content.replace(
+  '  static dependencies =',
+  `  static runtime = MainRuntime;
+  static dependencies =`
+)}
+${extNameCamelCase}Aspect.addRuntime(${extNameCamelCase}Main);`;
+  fs.writeFileSync(mainRuntimePath, contentChanged);
+}
 
 function addExportsToIndexTs(extName) {
   const indexFilePath = path.join(extDir, extName, 'index.ts');
@@ -49,7 +66,6 @@ function getExtNameCamelCase(extName) {
 function getExportMandatory(extName) {
   const extNameCamelCase = getExtNameCamelCase(extName);
   return `export type { ${extNameCamelCase}Main } from './${extName}.main.runtime';
-export { ${extNameCamelCase}Aspect } from './${extName}.aspect';
 `;
 }
 

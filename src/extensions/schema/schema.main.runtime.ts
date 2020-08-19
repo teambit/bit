@@ -1,3 +1,5 @@
+import { SchemaAspect } from './schema.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Module } from './schemas';
 import { Parser } from './parser';
@@ -45,3 +47,5 @@ export class SchemaExtension {
     return new SchemaExtension(parserSlot);
   }
 }
+
+SchemaAspect.addRuntime(SchemaMain);

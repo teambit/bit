@@ -1,3 +1,5 @@
+import { PnpmAspect } from './pnpm.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { DependencyResolverExtension } from '../dependency-resolver';
 import { PnpmPackageManager } from './pnpm.package-manager';
 import { PkgExtension } from '../pkg';
@@ -6,6 +8,7 @@ import { LoggerExtension } from '../logger';
 export class PnpmExtension {
   static id = '@teambit/pnpm';
 
+  static runtime = MainRuntime;
   static dependencies = [DependencyResolverExtension, PkgExtension, LoggerExtension];
 
   static async provider([depResolver, pkg, loggerExt]: [DependencyResolverExtension, PkgExtension, LoggerExtension]) {
@@ -14,3 +17,5 @@ export class PnpmExtension {
     return new PnpmExtension();
   }
 }
+
+PnpmAspect.addRuntime(PnpmMain);

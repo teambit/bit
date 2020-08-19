@@ -1,3 +1,5 @@
+import { DeprecationAspect } from './deprecation.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { GraphQLExtension } from '../graphql';
 import { deprecationSchema } from './deprecation.graphql';
 import { Component, ComponentExtension } from '../component';
@@ -7,6 +9,7 @@ export type DeprecationInfo = {
 };
 
 export class DeprecationExtension {
+  static runtime = MainRuntime;
   static dependencies = [GraphQLExtension, ComponentExtension];
   static id = '@teambit/deprecation';
 
@@ -23,3 +26,5 @@ export class DeprecationExtension {
     graphql.register(deprecationSchema(deprecation));
   }
 }
+
+DeprecationAspect.addRuntime(DeprecationMain);

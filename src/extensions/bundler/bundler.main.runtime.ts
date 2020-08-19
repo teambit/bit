@@ -1,3 +1,5 @@
+import { BundlerAspect } from './bundler.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Component, ComponentExtension } from '../component';
 import { DevServerService } from './dev-server.service';
@@ -98,6 +100,7 @@ export class BundlerExtension {
 
   static slots = [Slot.withType<BrowserRuntime>()];
 
+  static runtime = MainRuntime;
   static dependencies = [Environments, GraphQLExtension, ComponentExtension];
 
   static async provider(
@@ -112,3 +115,5 @@ export class BundlerExtension {
     return bundler;
   }
 }
+
+BundlerAspect.addRuntime(BundlerMain);

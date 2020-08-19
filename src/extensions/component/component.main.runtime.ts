@@ -1,3 +1,5 @@
+import { ComponentAspect } from './component.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { GraphQLExtension } from '../graphql';
@@ -82,6 +84,7 @@ export class ComponentExtension {
 
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];
 
+  static runtime = MainRuntime;
   static dependencies = [GraphQLExtension, ExpressExtension];
 
   static async provider(
@@ -97,3 +100,5 @@ export class ComponentExtension {
 }
 
 export default ComponentExtension;
+
+ComponentAspect.addRuntime(ComponentMain);

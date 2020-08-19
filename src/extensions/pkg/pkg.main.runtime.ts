@@ -1,3 +1,5 @@
+import { PkgAspect } from './pkg.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { ScopeExtension } from '../scope';
@@ -37,6 +39,7 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgExtension {
   static id = '@teambit/pkg';
+  static runtime = MainRuntime;
   static dependencies = [CLIExtension, ScopeExtension, Environments, IsolatorExtension, LoggerExtension, WorkspaceExt];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
@@ -165,3 +168,5 @@ export class PkgExtension {
     return newProps;
   }
 }
+
+PkgAspect.addRuntime(PkgMain);

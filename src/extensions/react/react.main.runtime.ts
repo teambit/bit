@@ -1,3 +1,5 @@
+import { ReactAspect } from './react.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Environments, Environment } from '../environments';
 import { ReactEnv } from './react.env';
 import { JestExtension } from '../jest';
@@ -91,6 +93,7 @@ export class ReactExtension {
     };
   }
 
+  static runtime = MainRuntime;
   static dependencies = [
     Environments,
     JestExtension,
@@ -114,3 +117,5 @@ export class ReactExtension {
     return react;
   }
 }
+
+ReactAspect.addRuntime(ReactMain);

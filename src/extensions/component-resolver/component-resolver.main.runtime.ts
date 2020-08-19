@@ -1,3 +1,5 @@
+import { ComponentResolverAspect } from './component-resolver.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import componentResolverProvider from './component-resolver.provider';
 import { WorkspaceExt } from '../workspace';
@@ -8,3 +10,5 @@ export const ComponentResolverExt: ExtensionManifest = {
   dependencies: [WorkspaceExt, ScopeExtension],
   provider: componentResolverProvider,
 };
+
+ComponentResolverAspect.addRuntime(ComponentResolverMain);

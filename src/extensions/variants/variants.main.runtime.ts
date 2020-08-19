@@ -1,3 +1,5 @@
+import { VariantsAspect } from './variants.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import R from 'ramda';
 import _ from 'lodash';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
@@ -44,6 +46,7 @@ const INTERNAL_FIELDS = ['propagate', 'exclude', 'defaultScope'];
 
 export class VariantsExtension {
   static id = EXT_NAME;
+  static runtime = MainRuntime;
   static dependencies = [];
 
   _loadedLegacy: ConsumerOverrides;
@@ -160,3 +163,5 @@ export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: stri
     specificity: -1,
   };
 }
+
+VariantsAspect.addRuntime(VariantsMain);

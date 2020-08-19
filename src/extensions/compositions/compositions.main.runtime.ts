@@ -1,3 +1,5 @@
+import { CompositionsAspect } from './compositions.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { Component, ComponentFactoryExt } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component/component-map';
@@ -100,6 +102,7 @@ export class CompositionsExtension {
     regex: '/compositions.ts/',
   };
 
+  static runtime = MainRuntime;
   static dependencies = [PreviewExtension, GraphQLExtension, WorkspaceExt, SchemaExtension, ComponentFactoryExt];
 
   static async provider([preview, graphql, workspace, schema]: [
@@ -120,3 +123,5 @@ export class CompositionsExtension {
     return compositions;
   }
 }
+
+CompositionsAspect.addRuntime(CompositionsMain);

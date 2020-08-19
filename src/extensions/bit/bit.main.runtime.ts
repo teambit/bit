@@ -1,3 +1,5 @@
+import { BitAspect } from './bit.aspect';
+import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { manifestsMap } from './manifests';
 import { provideBit } from './bit.provider';
@@ -15,3 +17,5 @@ export default {
   dependencies: manifests,
   provider: provideBit,
 } as ExtensionManifest;
+
+BitAspect.addRuntime(BitMain);
