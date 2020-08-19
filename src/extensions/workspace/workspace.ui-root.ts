@@ -3,7 +3,7 @@ import { Component, ComponentID } from '../component';
 import { Workspace } from '.';
 import { PathOsBased } from '../../utils/path';
 import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
-import { BundlerExtension } from '../bundler';
+import { BundlerMain } from '../bundler';
 import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
 import { ComponentServer } from '../bundler';
 
@@ -17,7 +17,7 @@ export class WorkspaceUIRoot implements UIRoot {
     /**
      * bundler extension
      */
-    private bundler: BundlerExtension
+    private bundler: BundlerMain
   ) {}
 
   priority = true;

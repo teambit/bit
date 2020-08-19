@@ -164,4 +164,4 @@ export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: stri
   };
 }
 
-VariantsAspect.addRuntime(VariantsMain);
+VariantsAspect.addRuntime(VariantsExtension);

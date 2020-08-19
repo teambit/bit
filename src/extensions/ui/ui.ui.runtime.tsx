@@ -24,7 +24,7 @@ type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
 /**
  * extension
  */
-export class UIRuntimeExtension {
+export class UiUI {
   static id = '@teambit/ui';
 
   constructor(
@@ -95,8 +95,8 @@ export class UIRuntimeExtension {
     config,
     [uiRootSlot, hudSlot, contextSlot]: [UIRootRegistry, HudSlot, ContextSlot]
   ) {
-    return new UIRuntimeExtension(graphql, router, uiRootSlot, hudSlot, contextSlot);
+    return new UiUI(graphql, router, uiRootSlot, hudSlot, contextSlot);
   }
 }
 
-export default UIRuntimeExtension;
+export default UiUI;

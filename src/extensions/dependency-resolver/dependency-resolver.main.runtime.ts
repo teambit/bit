@@ -37,7 +37,7 @@ export type GetInstallerOptions = {
   cacheRootDirectory?: string;
 };
 
-export class DependencyResolverExtension {
+export class DependencyResolverMain {
   static id = '@teambit/dependency-resolver';
 
   constructor(
@@ -93,7 +93,7 @@ export class DependencyResolverExtension {
    *       createManifestForComponentsWithoutDependencies: true,
    *     }]
    * @returns {WorkspaceManifest}
-   * @memberof DependencyResolverExtension
+   * @memberof DependencyResolverMain
    */
   async getWorkspaceManifest(
     name: string = ROOT_NAME,
@@ -173,7 +173,7 @@ export class DependencyResolverExtension {
         policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(DependencyResolverExtension.id);
+    const currentExtension = configuredExtensions.findExtension(DependencyResolverMain.id);
     const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = currentConfig.policy;
@@ -203,16 +203,10 @@ export class DependencyResolverExtension {
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
-    const logger = loggerExt.createLogger(DependencyResolverExtension.id);
-    const dependencyResolver = new DependencyResolverExtension(
-      config,
-      policiesRegistry,
-      envs,
-      logger,
-      packageManagerSlot
-    );
+    const logger = loggerExt.createLogger(DependencyResolverMain.id);
+    const dependencyResolver = new DependencyResolverMain(config, policiesRegistry, envs, logger, packageManagerSlot);
     ConsumerComponent.registerOnComponentOverridesLoading(
-      DependencyResolverExtension.id,
+      DependencyResolverMain.id,
       async (configuredExtensions: ExtensionDataList) => {
         const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
         return transformPoliciesToLegacyDepsOverrides(policies);

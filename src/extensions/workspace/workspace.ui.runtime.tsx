@@ -4,8 +4,8 @@ import { RouteProps } from 'react-router-dom';
 import { Workspace } from './ui';
 import { RouteSlot } from '../react-router';
 import { UIRootUI as UIRoot } from '../ui';
-import { UIRuntimeExtension } from '../ui';
-import { ComponentUI } from '../component';
+import { UiUI, UIAspect } from '../ui';
+import { ComponentUI, ComponentAspect } from '../component';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -62,18 +62,14 @@ export class WorkspaceUI {
     };
   }
 
-  static dependencies = [UIRuntimeExtension, ComponentUI];
+  static dependencies = [UIAspect, ComponentAspect];
 
   // TODO: @gilad we must automate this.
   static id = '@teambit/workspace';
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider(
-    [ui, componentUi]: [UIRuntimeExtension, ComponentUI],
-    config,
-    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
-  ) {
+  static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
     const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot);
     ui.registerRoot(workspaceUI.root);
 

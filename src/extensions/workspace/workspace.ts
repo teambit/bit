@@ -16,7 +16,7 @@ import { IsolatorExtension, Network } from '../isolator';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { DependencyResolverExtension, PackageManagerInstallOptions } from '../dependency-resolver';
+import { DependencyResolverMain, PackageManagerInstallOptions } from '../dependency-resolver';
 import { WorkspaceExtConfig } from './types';
 import { Logger } from '../logger';
 import { VariantsExtension } from '../variants';
@@ -87,7 +87,7 @@ export class Workspace implements ComponentFactory {
 
     readonly isolateEnv: IsolatorExtension,
 
-    private dependencyResolver: DependencyResolverExtension,
+    private dependencyResolver: DependencyResolverMain,
 
     private variants: VariantsExtension,
 

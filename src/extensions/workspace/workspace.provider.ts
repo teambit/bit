@@ -6,17 +6,17 @@ import { loadConsumerIfExist, Consumer } from '../../consumer';
 import { IsolatorExtension } from '../isolator';
 import { LoggerExtension } from '../logger';
 import ConsumerComponent from '../../consumer/component';
-import { DependencyResolverExtension } from '../dependency-resolver';
+import { DependencyResolverMain } from '../dependency-resolver';
 import { VariantsExtension } from '../variants';
 import { WorkspaceExtConfig } from './types';
-import { GraphQLExtension } from '../graphql';
+import { GraphqlMain } from '../graphql';
 import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
 import { CLIExtension } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
-import { UIExtension } from '../ui';
+import { UiMain } from '../ui';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { BundlerExtension } from '../bundler';
+import { BundlerMain } from '../bundler';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { OnComponentLoad } from './on-component-load';
@@ -31,12 +31,12 @@ export type WorkspaceDeps = [
   ScopeExtension,
   ComponentExtension,
   IsolatorExtension,
-  DependencyResolverExtension,
+  DependencyResolverMain,
   VariantsExtension,
   LoggerExtension,
-  GraphQLExtension,
-  UIExtension,
-  BundlerExtension
+  GraphqlMain,
+  UiMain,
+  BundlerMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;

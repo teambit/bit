@@ -4,13 +4,13 @@ import merge from 'webpack-merge';
 import { WebpackAspect } from './webpack.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { WebpackDevServer } from './webpack.dev-server';
-import { DevServer, BundlerContext, BundlerExtension, DevServerContext } from '../bundler';
+import { DevServer, BundlerContext, BundlerMain, BundlerAspect, DevServerContext } from '../bundler';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
 import { LoggerExtension, Logger } from '../logger';
 
-export class WebpackExtension {
+export class WebpackMain {
   constructor(
     /**
      * workspace extension.
@@ -20,7 +20,7 @@ export class WebpackExtension {
     /**
      * bundler extension.
      */
-    private bundler: BundlerExtension,
+    private bundler: BundlerMain,
 
     /**
      * Logger extension
@@ -55,11 +55,11 @@ export class WebpackExtension {
   static slots = [];
 
   static runtime = MainRuntime;
-  static dependencies = [WorkspaceAspect, BundlerExtension, LoggerExtension] as ExtensionManifest[];
+  static dependencies = [WorkspaceAspect, BundlerAspect, LoggerExtension] as ExtensionManifest[];
 
-  static async provide([workspace, bundler, logger]: [Workspace, BundlerExtension, LoggerExtension]) {
-    const logPublisher = logger.createLogger(WebpackExtension.id);
-    return new WebpackExtension(workspace, bundler, logPublisher);
+  static async provider([workspace, bundler, logger]: [Workspace, BundlerMain, LoggerExtension]) {
+    const logPublisher = logger.createLogger(WebpackMain.id);
+    return new WebpackMain(workspace, bundler, logPublisher);
   }
 }
 
