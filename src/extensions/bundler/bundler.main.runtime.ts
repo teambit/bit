@@ -1,15 +1,15 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BundlerAspect } from './bundler.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Component, ComponentExtension } from '../component';
+import { Component, ComponentAspect } from '../component';
 import { DevServerService } from './dev-server.service';
-import { Environments } from '../environments';
-import { GraphQLExtension } from '../graphql';
 import { devServerSchema } from './dev-server.graphql';
 import { ComponentServer } from './component-server';
 import { BrowserRuntime } from './browser-runtime';
 import { UIRoot } from '../ui';
 import { BundlerContext } from './dev-server-context';
+import { EnvsMain, EnvsAspect } from '../environments';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
@@ -23,7 +23,7 @@ export class BundlerMain {
     /**
      * environments extension.
      */
-    private envs: Environments,
+    private envs: EnvsMain,
 
     /**
      * dev server service.
@@ -101,13 +101,9 @@ export class BundlerMain {
   static slots = [Slot.withType<BrowserRuntime>()];
 
   static runtime = MainRuntime;
-  static dependencies = [Environments, GraphQLExtension, ComponentExtension];
+  static dependencies = [EnvsAspect, GraphqlAspect, ComponentAspect];
 
-  static async provider(
-    [envs, graphql]: [Environments, GraphQLExtension],
-    config,
-    [runtimeSlot]: [BrowserRuntimeSlot]
-  ) {
+  static async provider([envs, graphql]: [EnvsMain, GraphqlMain], config, [runtimeSlot]: [BrowserRuntimeSlot]) {
     const bundler = new BundlerMain(envs, new DevServerService(runtimeSlot), runtimeSlot);
 
     graphql.register(devServerSchema(bundler));

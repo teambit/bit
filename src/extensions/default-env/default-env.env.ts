@@ -1,6 +1,6 @@
 import { Environment } from '../environments';
 import { BuildTask } from '../builder';
-import { PkgExtension } from '../pkg';
+import { PkgMain } from '../pkg';
 
 /**
  * default environment for components that don't belong to any other environment
@@ -10,7 +10,7 @@ export class DefaultEnv implements Environment {
     /**
      * pkg extension.
      */
-    private pkg: PkgExtension
+    private pkg: PkgMain
   ) {}
   /**
    * returns the component build pipeline.

@@ -1,3 +1,4 @@
+import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve } from 'path';
 import { readdir } from 'fs-extra';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
@@ -6,8 +7,7 @@ import { Config, ConfigAspect } from './extensions/config';
 import { BitAspect } from './extensions/bit';
 import { CLIAspect, MainRuntime } from './extensions/cli/cli.aspect';
 import { bootstrap } from './bootstrap';
-import { CLIExtension } from './extensions/cli';
-import { Extension } from '@teambit/harmony/dist/extension';
+import { CLIMain } from './extensions/cli';
 
 initApp();
 
@@ -26,7 +26,7 @@ async function initApp() {
 async function getConfig() {
   const harmony = await Harmony.load([ConfigAspect], MainRuntime.name, {});
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
-  const config = await harmony.get<Config>('@teambit/config');
+  const config = harmony.get<Config>('@teambit/config');
   return config.getHarmonyConfigObject();
 }
 
@@ -47,6 +47,6 @@ async function runCLI() {
   const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
-  const cli = harmony.get<CLIExtension>('@teambit/cli');
+  const cli = harmony.get<CLIMain>('@teambit/cli');
   cli.run();
 }

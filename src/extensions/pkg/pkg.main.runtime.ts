@@ -1,14 +1,14 @@
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { PkgAspect } from './pkg.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { PackCmd } from './pack.cmd';
 import { PublishCmd } from './publish.cmd';
 import { Packer, PackResult, PackOptions } from './pack';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import ConsumerComponent from '../../consumer/component';
-import { CLIExtension } from '../cli';
-import { IsolatorExtension } from '../isolator';
+import { CLIMain } from '../cli';
+import { IsolatorMain, IsolatorAspect } from '../isolator';
 import { Publisher } from './publisher';
 import { PublishDryRunTask } from './publish-dry-run.task';
 import { Component } from '../component';
@@ -40,16 +40,16 @@ export type ComponentPkgExtensionConfig = {
 export class PkgMain {
   static id = '@teambit/pkg';
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, ScopeAspect, EnvsAspect, IsolatorExtension, LoggerAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, ScopeAspect, EnvsAspect, IsolatorAspect, LoggerAspect, WorkspaceAspect];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
-  static provider(
+  static async provider(
     [cli, scope, envs, isolator, logger, workspace]: [
-      CLIExtension,
+      CLIMain,
       ScopeMain,
       EnvsMain,
-      IsolatorExtension,
+      IsolatorMain,
       LoggerMain,
       Workspace
     ],
@@ -108,7 +108,7 @@ export class PkgMain {
     /**
      * envs extension.
      */
-    private envs: Environments,
+    private envs: EnvsMain,
 
     readonly dryRunTask: PublishDryRunTask,
 

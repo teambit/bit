@@ -1,17 +1,17 @@
 import { CompositionsAspect } from './compositions.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Component, ComponentFactoryExt } from '../component';
+import { Component, ComponentAspect } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component';
-import { PreviewExtension } from '../preview';
 import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
-import { GraphQLExtension } from '../graphql';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { Workspace, WorkspaceAspect } from '../workspace';
-import { SchemaExtension } from '../schema';
 import { ExtensionData } from '../workspace';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
+import { PreviewMain, PreviewAspect } from '../preview';
+import { SchemaMain, SchemaAspect } from '../schema';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 
 export type CompositionsConfig = {
   /**
@@ -29,7 +29,7 @@ export class CompositionsMain {
     /**
      * envs extension.
      */
-    private preview: PreviewExtension,
+    private preview: PreviewMain,
 
     /**
      * workspace extension.
@@ -39,7 +39,7 @@ export class CompositionsMain {
     /**
      * schema extension.
      */
-    private schema: SchemaExtension
+    private schema: SchemaMain
   ) {}
 
   /**
@@ -103,14 +103,9 @@ export class CompositionsMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewExtension, GraphQLExtension, WorkspaceAspect, SchemaExtension, ComponentFactoryExt];
+  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, ComponentAspect];
 
-  static async provider([preview, graphql, workspace, schema]: [
-    PreviewExtension,
-    GraphQLExtension,
-    Workspace,
-    SchemaExtension
-  ]) {
+  static async provider([preview, graphql, workspace, schema]: [PreviewMain, GraphqlMain, Workspace, SchemaMain]) {
     const compositions = new CompositionsMain(preview, workspace, schema);
 
     graphql.register(compositionsSchema(compositions));

@@ -8,7 +8,7 @@ import getPort from 'get-port';
 import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
 import { GraphqlMain } from '../graphql';
-import { ExpressExtension } from '../express';
+import { ExpressMain } from '../express';
 import { UiMain } from './ui.main.runtime';
 import { UIRoot } from './ui-root';
 import { Logger } from '../logger';
@@ -18,7 +18,7 @@ const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware
 
 export type UIServerProps = {
   graphql: GraphqlMain;
-  express: ExpressExtension;
+  express: ExpressMain;
   ui: UiMain;
   uiRoot: UIRoot;
   uiRootExtension: string;
@@ -35,7 +35,7 @@ export type StartOptions = {
 export class UIServer {
   constructor(
     private graphql: GraphqlMain,
-    private expressExtension: ExpressExtension,
+    private expressExtension: ExpressMain,
     private ui: UiMain,
     private uiRoot: UIRoot,
     private uiRootExtension: string,

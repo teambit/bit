@@ -1,20 +1,19 @@
 import { join } from 'path';
 import { install } from './lynx';
-import { PackageManager, PackageManagerInstallOptions } from '../dependency-resolver';
+import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '../dependency-resolver';
 import { ComponentMap } from '../component';
 import {
-  DependencyResolverExtension,
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
   DependenciesObjectDefinition,
 } from '../dependency-resolver';
-import { PkgExtension } from '../pkg';
 import { Logger } from '../logger';
+import { PkgMain } from '../pkg';
 
 const userHome = require('user-home');
 
 export class PnpmPackageManager implements PackageManager {
-  constructor(private depResolver: DependencyResolverExtension, private pkg: PkgExtension, private logger: Logger) {}
+  constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
   async install(
     rootDir: string,

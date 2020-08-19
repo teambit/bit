@@ -3,8 +3,7 @@ import type { ScopeMain } from '../scope';
 import { Workspace } from './workspace';
 import type { ComponentMain } from '../component';
 import { loadConsumerIfExist, Consumer } from '../../consumer';
-import { IsolatorExtension } from '../isolator';
-import { LoggerExtension } from '../logger';
+import { IsolatorMain } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { DependencyResolverMain } from '../dependency-resolver';
 import type { VariantsMain } from '../variants';
@@ -12,7 +11,7 @@ import { WorkspaceExtConfig } from './types';
 import { GraphqlMain } from '../graphql';
 import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 import EjectConfCmd from './eject-conf.cmd';
 import { UiMain } from '../ui';
 import { WorkspaceUIRoot } from './workspace.ui-root';
@@ -25,15 +24,16 @@ import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
 import { EXT_NAME } from './constants';
 import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
+import { LoggerMain } from '../logger';
 
 export type WorkspaceDeps = [
-  CLIExtension,
+  CLIMain,
   ScopeMain,
   ComponentMain,
-  IsolatorExtension,
+  IsolatorMain,
   DependencyResolverMain,
   VariantsMain,
-  LoggerExtension,
+  LoggerMain,
   GraphqlMain,
   UiMain,
   BundlerMain

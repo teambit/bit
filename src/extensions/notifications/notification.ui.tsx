@@ -4,7 +4,7 @@ import { v1 } from 'uuid';
 import { NotificationApi, MessageLevel } from './notification-api';
 import { NotificationCenter, NotificationCenterProps } from './ui/notification-center';
 import { NotificationContext } from './ui/notification-context';
-import { UIRuntimeExtension } from '../ui';
+import { UIAspect, UiUI } from '../ui';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 
 /**
@@ -12,12 +12,12 @@ import { NotificationAction, notificationReducer } from './notification-reducer'
  */
 export default class NotificationUI implements NotificationApi {
   static id = '@teambit/notification';
-  static dependencies = [UIRuntimeExtension];
-  static async provider([uiRuntimeExtension]: [UIRuntimeExtension]) {
+  static dependencies = [UIAspect];
+  static async provider([uiRuntimeExtension]: [UiUI]) {
     return new NotificationUI(uiRuntimeExtension);
   }
 
-  constructor(uiRuntimeExtension: UIRuntimeExtension) {
+  constructor(uiRuntimeExtension: UiUI) {
     uiRuntimeExtension.registerHudItem(<this.render key="NotificationUI" />);
     uiRuntimeExtension.registerContext(this.renderContext);
   }

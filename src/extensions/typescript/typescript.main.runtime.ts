@@ -6,7 +6,7 @@ import type { SchemaMain } from '../schema';
 import { TypeScriptParser } from './typescript.parser';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { Compiler } from '../compiler';
-import { Logger, LoggerExtension } from '../logger';
+import { Logger, LoggerMain, LoggerAspect } from '../logger';
 
 export class TypescriptMain {
   constructor(private logger: Logger) {}
@@ -32,9 +32,9 @@ export class TypescriptMain {
 
   static id = '@teambit/typescript';
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerExtension];
+  static dependencies = [SchemaAspect, LoggerAspect];
 
-  static async provider([schema, loggerExt]: [SchemaMain, LoggerExtension]) {
+  static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptMain.id);
     return new TypescriptMain(logger);

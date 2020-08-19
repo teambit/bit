@@ -2,7 +2,7 @@ import { Command, CommandOptions, GenericObject } from '.';
 import { LegacyCommand } from '../../cli/legacy-command';
 import allHelp from '../../cli/templates/all-help';
 import { getID } from '.';
-import { CLIExtension } from './cli.main.runtime';
+import { CLIMain } from './cli.main.runtime';
 
 export class LegacyCommandAdapter implements Command {
   alias: string;
@@ -17,7 +17,7 @@ export class LegacyCommandAdapter implements Command {
   migration?: boolean;
   internal?: boolean;
   _packageManagerArgs?: string[];
-  constructor(private cmd: LegacyCommand, cliExtension: CLIExtension) {
+  constructor(private cmd: LegacyCommand, cliExtension: CLIMain) {
     this.name = cmd.name;
     this.description = cmd.description;
     this.options = cmd.opts || [];
@@ -63,7 +63,7 @@ export class LegacyCommandAdapter implements Command {
 }
 
 // TODO: remove all help and move information to commands
-export function findLegacyDetails(name: string, p: CLIExtension) {
+export function findLegacyDetails(name: string, p: CLIMain) {
   let group = '';
   let summery = '';
   for (let i = 0; i < allHelp.length; i += 1) {

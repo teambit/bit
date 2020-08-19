@@ -3,11 +3,11 @@ import { MainRuntime } from '../cli/cli.aspect';
 import { ExtensionManifest } from '@teambit/harmony';
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 
 export default {
   name: 'insights',
-  dependencies: [ComponentGraphExt, CLIExtension],
+  dependencies: [ComponentGraphExt, CLIMain],
   config: {
     silence: false,
   },

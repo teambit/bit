@@ -8,7 +8,7 @@ import { DevServer, BundlerContext, BundlerMain, BundlerAspect, DevServerContext
 import { WorkspaceAspect, Workspace } from '../workspace';
 import configFactory from './config/webpack.dev.config';
 import { WebpackBundler } from './webpack.bundler';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 
 export class WebpackMain {
   constructor(
@@ -55,9 +55,9 @@ export class WebpackMain {
   static slots = [];
 
   static runtime = MainRuntime;
-  static dependencies = [WorkspaceAspect, BundlerAspect, LoggerExtension] as ExtensionManifest[];
+  static dependencies = [WorkspaceAspect, BundlerAspect, LoggerAspect];
 
-  static async provider([workspace, bundler, logger]: [Workspace, BundlerMain, LoggerExtension]) {
+  static async provider([workspace, bundler, logger]: [Workspace, BundlerMain, LoggerMain]) {
     const logPublisher = logger.createLogger(WebpackMain.id);
     return new WebpackMain(workspace, bundler, logPublisher);
   }

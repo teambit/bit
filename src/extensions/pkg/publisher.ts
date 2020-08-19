@@ -1,6 +1,6 @@
 import execa from 'execa';
 import Bluebird from 'bluebird';
-import { IsolatorExtension, Capsule } from '../isolator';
+import { IsolatorMain, Capsule } from '../isolator';
 import { Scope } from '../../scope';
 import { Logger } from '../logger';
 import { BitId, BitIds } from '../../bit-id';
@@ -20,7 +20,7 @@ export type PublishResult = { id: ComponentID; data?: string; errors: string[] }
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
   constructor(
-    private isolator: IsolatorExtension,
+    private isolator: IsolatorMain,
     private logger: Logger,
     private scope: Scope,
     private workspace: Workspace,

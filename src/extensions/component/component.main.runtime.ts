@@ -2,12 +2,12 @@ import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentAspect } from './component.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { GraphQLExtension } from '../graphql';
 import { componentSchema } from './component.graphql';
 import { ComponentFactory } from './component-factory';
 import { HostNotFound } from './exceptions';
-import { Route, ExpressExtension } from '../express';
+import { Route, ExpressMain, ExpressAspect } from '../express';
 import { ComponentRoute } from './component.route';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -23,7 +23,7 @@ export class ComponentMain {
     /**
      * Express Extension
      */
-    private express: ExpressExtension
+    private express: ExpressMain
   ) {}
 
   /**
@@ -85,13 +85,9 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [GraphQLExtension, ExpressExtension];
+  static dependencies = [GraphqlAspect, ExpressAspect];
 
-  static async provider(
-    [graphql, express]: [GraphQLExtension, ExpressExtension],
-    config,
-    [hostSlot]: [ComponentHostSlot]
-  ) {
+  static async provider([graphql, express]: [GraphqlMain, ExpressMain], config, [hostSlot]: [ComponentHostSlot]) {
     const componentExtension = new ComponentMain(hostSlot, express);
     graphql.register(componentSchema(componentExtension));
 

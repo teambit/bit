@@ -1,17 +1,13 @@
 import { Workspace } from '../workspace';
-import { ScopeExtension } from '../scope';
 import { ComponentGraph } from './component-graph';
 import { ComponentFactory } from '../component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { ScopeMain } from '../scope';
 
 export class GraphBuilder {
   _graph?: ComponentGraph;
   _initialized = false;
-  constructor(
-    private componentFactory: ComponentFactory,
-    private workspace?: Workspace,
-    private scope?: ScopeExtension
-  ) {}
+  constructor(private componentFactory: ComponentFactory, private workspace?: Workspace, private scope?: ScopeMain) {}
 
   async getGraph(): Promise<ComponentGraph | undefined> {
     if (this._graph || this._initialized) {

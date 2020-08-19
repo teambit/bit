@@ -3,11 +3,11 @@ import { Workspace } from '../workspace';
 import { CreateCmd } from './create.cmd';
 import { Create, Registry } from './create';
 import { CreateExtConfig } from './types';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 
 export type CreateConfig = {};
 
-export type CreateDeps = [CLIExtension, Workspace];
+export type CreateDeps = [CLIMain, Workspace];
 
 export async function provideCreate(
   [cli, workspace]: CreateDeps,

@@ -3,14 +3,14 @@ import { GraphAspect } from './graph.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { provide } from './graph.provider';
 import { WorkspaceAspect } from '../workspace';
-import { ScopeExtension } from '../scope';
-import { ComponentFactoryExt } from '../component';
+import { ScopeAspect } from '../scope';
+import { ComponentAspect } from '../component';
 
-export default {
+export const GraphMain = {
   name: 'graph',
   runtime: MainRuntime,
-  dependencies: [WorkspaceAspect, ScopeExtension, ComponentFactoryExt],
+  dependencies: [WorkspaceAspect, ScopeAspect, ComponentAspect],
   provider: provide,
-} as ExtensionManifest;
+};
 
 GraphAspect.addRuntime(GraphMain);

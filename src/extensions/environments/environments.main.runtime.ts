@@ -1,12 +1,12 @@
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { Component, ComponentExtension } from '../component';
+import { Component, ComponentAspect } from '../component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
-import { GraphQLExtension } from '../graphql';
 import { EnvsAspect } from './environments.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
+import { GraphqlAspect, GraphqlMain } from '../graphql';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -166,14 +166,9 @@ export class EnvsMain {
   static slots = [Slot.withType<Environment>()];
 
   static defaultConfig = {};
-  static dependencies = [GraphQLExtension, ComponentExtension];
+  static dependencies = [GraphqlAspect, ComponentAspect];
 
-  static async provider(
-    [graphql]: [GraphQLExtension],
-    config: EnvsConfig,
-    [envSlot]: [EnvsRegistry],
-    context: Harmony
-  ) {
+  static async provider([graphql]: [GraphqlMain], config: EnvsConfig, [envSlot]: [EnvsRegistry], context: Harmony) {
     const envs = new EnvsMain(config, context, envSlot);
     graphql.register(environmentsSchema(envs));
     return envs;

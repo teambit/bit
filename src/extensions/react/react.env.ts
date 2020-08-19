@@ -1,19 +1,19 @@
 import { resolve } from 'path';
 import { Environment } from '../environments';
 import { Tester, TesterMain } from '../tester';
-import { JestExtension } from '../jest';
 import { BuildTask } from '../builder';
 import { Compiler, CompilerMain } from '../compiler';
 import { DevServer, BundlerContext, DevServerContext } from '../bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '../workspace';
-import { PkgExtension } from '../pkg';
 import { Bundler } from '../bundler';
 import { pathNormalizeToLinux } from '../../utils';
-import { ReactConfig } from './react.main.runtime';
+import { ReactMainConfig } from './react.main.runtime';
 import { TypescriptMain } from '../typescript';
 import { WebpackMain } from '../webpack';
+import { JestMain } from '../jest';
+import { PkgMain } from '../pkg';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -23,7 +23,7 @@ export class ReactEnv implements Environment {
     /**
      * jest extension
      */
-    private jest: JestExtension,
+    private jest: JestMain,
 
     /**
      * typescript extension.
@@ -48,14 +48,14 @@ export class ReactEnv implements Environment {
     /**
      * pkg extension.
      */
-    private pkg: PkgExtension,
+    private pkg: PkgMain,
 
     /**
      * tester extension
      */
     private tester: TesterMain,
 
-    private config: ReactConfig
+    private config: ReactMainConfig
   ) {}
 
   private _tsconfig: any;

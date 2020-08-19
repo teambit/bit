@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import LegacyScope from '../../scope/scope';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
-import { IsolatorExtension } from '../isolator';
+import { IsolatorMain } from '../isolator';
 import GeneralError from '../../error/general-error';
 import IsolatedEnvironment from '../../environment';
 import { ComponentID } from '../component';
@@ -27,7 +27,7 @@ export type PackOptions = {
 
 export class Packer {
   options: PackOptions;
-  constructor(private isolator: IsolatorExtension, private scope?: LegacyScope, private workspace?: Workspace) {}
+  constructor(private isolator: IsolatorMain, private scope?: LegacyScope, private workspace?: Workspace) {}
 
   async packComponent(componentId: string, scopePath: string | undefined, options: PackOptions): Promise<PackResult> {
     this.options = options;

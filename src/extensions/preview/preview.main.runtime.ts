@@ -4,16 +4,16 @@ import { resolve, join } from 'path';
 import { PreviewAspect } from './preview.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { generateLink } from './generate-link';
-import { ComponentMap } from '../component';
-import { BundlerExtension } from '../bundler';
-import { BuilderExtension } from '../builder';
+import { ComponentMap, ComponentAspect, ComponentMain } from '../component';
 import { PreviewTask } from './preview.task';
 import { PreviewDefinition } from './preview-definition';
 import { ExecutionContext } from '../environments';
 import { PreviewRoute } from './preview.route';
-import { Component, ComponentExtension } from '../component';
+import { Component } from '../component';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
+import { BundlerAspect, BundlerMain } from '../bundler';
+import { BuilderAspect, BuilderMain } from '../builder';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -96,10 +96,10 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>()];
 
   static runtime = MainRuntime;
-  static dependencies = [BundlerExtension, BuilderExtension, ComponentExtension];
+  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect];
 
   static async provider(
-    [bundler, builder, componentExtension]: [BundlerExtension, BuilderExtension, ComponentExtension],
+    [bundler, builder, componentExtension]: [BundlerMain, BuilderMain, ComponentMain],
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
   ) {

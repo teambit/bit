@@ -1,6 +1,6 @@
 import { Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
-import { ScopeExtension } from '../scope';
+import { ScopeMain } from '../scope';
 import { Config } from '../config';
 import { Logger } from '../logger';
 import { ExtensionDataList } from '../../consumer/config';
@@ -30,7 +30,7 @@ export default class Core {
     /**
      * Scope
      */
-    readonly scope: ScopeExtension,
+    readonly scope: ScopeMain,
 
     /**
      * Workspace

@@ -1,14 +1,14 @@
 import { DummyAspect } from './dummy.aspect';
 import { DumCmd } from './dum.cmd';
 import { CLIAspect, MainRuntime } from '../cli/cli.aspect';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 
 export class DummyMain {
   static runtime = MainRuntime;
 
   static dependencies = [CLIAspect];
 
-  static async provider([cli]: [CLIExtension]) {
+  static async provider([cli]: [CLIMain]) {
     cli.register(new DumCmd());
     return new DummyMain();
   }

@@ -13,7 +13,7 @@ import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } 
 import type { ComponentMain } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { BitId } from '../../bit-id';
-import { IsolatorExtension, Network } from '../isolator';
+import { IsolatorMain, Network } from '../isolator';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
@@ -86,7 +86,7 @@ export class Workspace implements ComponentFactory {
      */
     private componentFactory: ComponentMain,
 
-    readonly isolateEnv: IsolatorExtension,
+    readonly isolateEnv: IsolatorMain,
 
     private dependencyResolver: DependencyResolverMain,
 

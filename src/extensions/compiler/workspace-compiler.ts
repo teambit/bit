@@ -10,13 +10,13 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import { Dist, SourceFile } from '../../consumer/component/sources';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { Environments } from '../environments';
 import { Compiler } from './types';
 import { ComponentID } from '../component';
 import { Component } from '../component';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import { OnComponentChangeResult } from '../workspace';
 import { ConsumerNotFound } from '../../consumer/exceptions';
+import { EnvsMain } from '../environments';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
@@ -107,7 +107,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: Environments) {
+  constructor(private workspace: Workspace, private envs: EnvsMain) {
     if (this.workspace) this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
   }
 

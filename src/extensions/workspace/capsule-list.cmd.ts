@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '../cli';
-import { IsolatorExtension } from '../isolator';
+import { IsolatorMain } from '../isolator';
 import { Workspace } from './workspace';
 
 export class CapsuleListCmd implements Command {
@@ -12,7 +12,7 @@ export class CapsuleListCmd implements Command {
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorExtension, private workspace: Workspace) {}
+  constructor(private isolator: IsolatorMain, private workspace: Workspace) {}
 
   async report() {
     const list = await this.isolator.list(this.workspace.path);

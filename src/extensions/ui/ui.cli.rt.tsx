@@ -1,6 +1,5 @@
 // import { CLIExtension } from '../cli';
 // import { StartCmd } from './start.cmd';
-// import { Environments } from '../environments';
 // import { Workspace } from '../workspace';
 // import { GraphQLExtension } from '../graphql';
 

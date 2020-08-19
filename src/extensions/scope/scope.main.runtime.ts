@@ -29,15 +29,14 @@ import { ScopeUIRoot } from './scope.ui-root';
 import { GraphqlAspect } from '../graphql';
 import type { GraphqlMain } from '../graphql';
 import { scopeSchema } from './scope.graphql';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 import { ExportCmd } from './export/export-cmd';
-import { IsolatorExtension } from '../isolator';
-import { LoggerExtension, Logger } from '../logger';
+import { IsolatorMain, IsolatorAspect } from '../isolator';
+import { Logger, LoggerAspect, LoggerMain } from '../logger';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { loadRequireableExtensions } from '../../components/utils/load-extensions';
 import { ScopeAspect } from './scope.aspect';
-import { GraphAspect } from '../graph';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -73,7 +72,7 @@ export class ScopeMain implements ComponentFactory {
      */
     private postExportRegistry: PostExportRegistry,
 
-    private isolator: IsolatorExtension,
+    private isolator: IsolatorMain,
 
     private logger: Logger
   ) {}
@@ -274,16 +273,16 @@ export class ScopeMain implements ComponentFactory {
   static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
   static runtime = MainRuntime;
 
-  static dependencies = [ComponentAspect, UIAspect, GraphqlAspect, CLIExtension, IsolatorExtension, LoggerExtension];
+  static dependencies = [ComponentAspect, UIAspect, GraphqlAspect, CLIAspect, IsolatorAspect, LoggerAspect];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, loggerExtension]: [
+    [componentExt, ui, graphql, cli, isolator, loggerMain]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
-      CLIExtension,
-      IsolatorExtension,
-      LoggerExtension
+      CLIMain,
+      IsolatorMain,
+      LoggerMain
     ],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
@@ -295,7 +294,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerExtension.createLogger(ScopeMain.id);
+    const logger = loggerMain.createLogger(ScopeMain.id);
     const scope = new ScopeMain(harmony, legacyScope, componentExt, tagSlot, postExportSlot, isolator, logger);
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

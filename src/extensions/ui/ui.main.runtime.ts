@@ -1,12 +1,12 @@
-import { UIAspect } from './ui.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import getPort from 'get-port';
 import fs from 'fs-extra';
 import webpack from 'webpack';
-import { CLIExtension } from '../cli';
+import { UIAspect } from './ui.aspect';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { CLIMain } from '../cli';
 import { StartCmd } from './start.cmd';
 import { GraphqlAspect } from '../graphql';
 import type { GraphqlMain } from '../graphql';
@@ -15,16 +15,16 @@ import { UIRoot } from './ui-root';
 import { UnknownUI } from './exceptions';
 import { createRoot } from './create-root';
 import { sha1 } from '../../utils';
-import { ExpressExtension } from '../express';
+import { ExpressMain, ExpressAspect } from '../express';
 import type { ComponentMain } from '../component';
 import { ComponentAspect } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
-import { LoggerExtension, Logger } from '../logger';
+import { Logger, LoggerMain, LoggerAspect } from '../logger';
 import { AspectAspect } from '../aspect';
 import type { AspectMain } from '../aspect';
 
-export type UIDeps = [CLIExtension, GraphqlMain, ExpressExtension, ComponentMain, LoggerExtension, AspectMain];
+export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -78,7 +78,7 @@ export class UiMain {
     /**
      * express extension.
      */
-    private express: ExpressExtension,
+    private express: ExpressMain,
 
     /**
      * on start slot
@@ -205,17 +205,17 @@ export class UiMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, GraphqlAspect, ExpressExtension, ComponentAspect, LoggerExtension, AspectAspect];
+  static dependencies = [CLIAspect, GraphqlAspect, ExpressAspect, ComponentAspect, LoggerAspect, AspectAspect];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, graphql, express, componentExtension, loggerExtension, aspectExtension]: UIDeps,
+    [cli, graphql, express, componentExtension, loggerMain, aspectExtension]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
-    const logger = loggerExtension.createLogger(UiMain.id);
+    const logger = loggerMain.createLogger(UiMain.id);
     const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
     cli.register(new StartCmd(ui));
     cli.register(new UIBuildCmd(ui));

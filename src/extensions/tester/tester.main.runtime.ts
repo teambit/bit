@@ -1,13 +1,13 @@
 import { merge } from 'lodash';
 import { TesterAspect } from './tester.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
 import { TestCmd } from './test.cmd';
-import { Environments } from '../environments';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import { TesterService } from './tester.service';
 import { Component } from '../component';
 import { TesterTask } from './tester.task';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
+import { EnvsAspect, EnvsMain } from '../environments';
 
 export type TesterExtensionConfig = {
   /**
@@ -31,13 +31,13 @@ export type TesterOptions = {
 export class TesterMain {
   static id = '@teambit/tester';
   static runtime = MainRuntime;
-  static dependencies = [CLIExtension, Environments, WorkspaceAspect];
+  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect];
 
   constructor(
     /**
      * envs extension.
      */
-    private envs: Environments,
+    private envs: EnvsMain,
 
     /**
      * workspace extension.
@@ -78,10 +78,7 @@ export class TesterMain {
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
   };
 
-  static async provider(
-    [cli, envs, workspace]: [CLIExtension, Environments, Workspace],
-    config: TesterExtensionConfig
-  ) {
+  static async provider([cli, envs, workspace]: [CLIMain, EnvsMain, Workspace], config: TesterExtensionConfig) {
     // @todo: Ran to fix.
     // @ts-ignore
     const tester = new TesterMain(

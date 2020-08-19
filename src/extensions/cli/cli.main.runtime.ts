@@ -12,13 +12,13 @@ import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 
-export class CLIExtension {
+export class CLIMain {
   static id = '@teambit/cli';
   readonly groups: { [k: string]: string } = {};
   static dependencies = [];
 
   static provider() {
-    const cli = new CLIExtension(new CommandRegistry({}));
+    const cli = new CLIMain(new CommandRegistry({}));
     return CLIProvider([cli]);
   }
 
@@ -117,7 +117,7 @@ export class CLIExtension {
   }
 }
 
-export async function CLIProvider([cliExtension]: [CLIExtension]) {
+export async function CLIProvider([cliExtension]: [CLIMain]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach((extension) => {
@@ -141,4 +141,4 @@ export async function CLIProvider([cliExtension]: [CLIExtension]) {
   return cliExtension;
 }
 
-CLIAspect.addRuntime(CLIExtension);
+CLIAspect.addRuntime(CLIMain);

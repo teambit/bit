@@ -1,8 +1,8 @@
 import { DefaultEnvAspect } from './default-env.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Environments } from '../environments';
-import { PkgExtension } from '../pkg';
 import { DefaultEnv } from './default-env.env';
+import { EnvsAspect, EnvsMain } from '../environments';
+import { PkgAspect, PkgMain } from '../pkg';
 
 export class DefaultEnvMain {
   static id = '@teambit/default-env';
@@ -15,9 +15,9 @@ export class DefaultEnvMain {
   ) {}
 
   static runtime = MainRuntime;
-  static dependencies = [Environments, PkgExtension];
+  static dependencies = [EnvsAspect, PkgAspect];
 
-  static provider([envs, pkg]: [Environments, PkgExtension]) {
+  static async provider([envs, pkg]: [EnvsMain, PkgMain]) {
     const defaultEnv = new DefaultEnv(pkg);
     const defaultEnvExtension = new DefaultEnvMain(defaultEnv);
     envs.registerEnv(defaultEnv);

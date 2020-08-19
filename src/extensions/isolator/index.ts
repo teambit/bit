@@ -1,4 +1,4 @@
-export { IsolatorMain as IsolatorExtension, IsolateComponentsOptions } from './isolator.main.runtime';
+export { IsolateComponentsOptions } from './isolator.main.runtime';
 export { Network } from './network';
 export { FsContainer, Capsule, ContainerExec } from './capsule';
 export type { IsolatorMain } from './isolator.main.runtime';

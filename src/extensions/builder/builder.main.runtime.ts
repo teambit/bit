@@ -7,7 +7,7 @@ import { BuilderCmd } from './run.cmd';
 import { Component, ComponentID, ComponentAspect } from '../component';
 import { BuilderService } from './builder.service';
 import { BitId } from '../../bit-id';
-import { CLIExtension } from '../cli';
+import { CLIMain } from '../cli';
 import { ExtensionArtifact } from './artifact';
 import { CoreExt, Core } from '../core';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
@@ -109,7 +109,7 @@ export class BuilderMain {
 
   static runtime = MainRuntime;
   static dependencies = [
-    CLIExtension,
+    CLIMain,
     EnvsAspect,
     WorkspaceAspect,
     ScopeAspect,
@@ -121,7 +121,7 @@ export class BuilderMain {
 
   static async provider(
     [cli, envs, workspace, scope, loggerExt, core, graphql]: [
-      CLIExtension,
+      CLIMain,
       EnvsMain,
       Workspace,
       ScopeMain,
