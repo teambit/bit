@@ -203,12 +203,12 @@ export class UiMain {
   };
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, GraphqlAspect, ExpressAspect, ComponentAspect, LoggerAspect, AspectAspect];
+  static dependencies = [CLIAspect, GraphqlAspect, ExpressAspect, ComponentAspect, LoggerAspect];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, graphql, express, componentExtension, loggerMain, aspectExtension]: UIDeps,
+    [cli, graphql, express, componentExtension, loggerMain]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {

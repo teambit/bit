@@ -1,4 +1,3 @@
-import { SlotRegistry, Harmony } from '@teambit/harmony';
 import { AspectAspect } from './aspect.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { ReactAspect, ReactMain } from '../react';

@@ -1,13 +1,15 @@
 import { Extension } from '@teambit/harmony/dist/extension';
-import { resolve } from 'path';
-import { readdir } from 'fs-extra';
+import { resolve, join } from 'path';
+import { readdir, readFileSync } from 'fs-extra';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { handleErrorAndExit } from './cli/command-runner';
-import { Config, ConfigAspect } from './extensions/config';
 import { BitAspect } from './extensions/bit';
 import { CLIAspect, MainRuntime } from './extensions/cli/cli.aspect';
 import { bootstrap } from './bootstrap';
 import { CLIMain } from './extensions/cli';
+import { HarmonyConfig } from './components/modules/harmony-config';
+import { getConsumerInfo } from './consumer';
+import { propogateUntil as propagateUntil } from './utils';
 
 initApp();
 
@@ -23,11 +25,29 @@ async function initApp() {
   }
 }
 
+function loadLegacyConfig() {
+  const harmony = Harmony.load();
+}
+
 async function getConfig() {
-  const harmony = await Harmony.load([ConfigAspect], MainRuntime.name, {});
-  await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
-  // const config = harmony.get<Config>('@teambit/config');
-  // return config.getHarmonyConfigObject();
+  const cwd = process.cwd();
+  const consumerInfo = await getConsumerInfo(cwd);
+  const scopePath = propagateUntil(cwd);
+  const configOpts = {
+    global: {
+      name: '.bitrc.jsonc',
+    },
+  };
+
+  if (consumerInfo) {
+    return HarmonyConfig.load('workspace.jsonc', configOpts);
+  }
+
+  if (scopePath) {
+    return HarmonyConfig.load('scope.jsonc', configOpts);
+  }
+
+  return HarmonyConfig.loadGlobal(configOpts.global);
 }
 
 async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
@@ -45,7 +65,7 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
 async function runCLI() {
   const config = await getConfig();
   // const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
-  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, {});
+  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
   const cli = harmony.get<CLIMain>('@teambit/cli');

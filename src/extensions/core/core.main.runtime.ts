@@ -1,4 +1,3 @@
-import { ExtensionManifest } from '@teambit/harmony';
 import { CoreAspect } from './core.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { WorkspaceAspect } from '../workspace';

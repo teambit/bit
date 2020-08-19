@@ -1,9 +1,10 @@
+import gql from 'graphql-tag';
 import { ComponentFactory } from '../component';
 import { ReactMain } from './react.main.runtime';
 
 export function reactSchema(react: ReactMain) {
   return {
-    typeDefs: `
+    typeDefs: gql`
       extend type ComponentHost {
         getDocs(id: String!): ReactDocs
       }
