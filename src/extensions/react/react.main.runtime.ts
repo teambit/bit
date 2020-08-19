@@ -1,31 +1,38 @@
 import { ReactAspect } from './react.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
-import { Environments, Environment } from '../environments';
+import { Environment, EnvsAspect, EnvsMain } from '../environments';
 import { ReactEnv } from './react.env';
-import { JestExtension } from '../jest';
+import { JestAspect } from '../jest';
+import { TypescriptAspect } from '../typescript';
+import { CompilerAspect } from '../compiler';
+import { WebpackAspect } from '../webpack';
+import type { JestMain } from '../jest';
+import type { TypescriptMain } from '../typescript';
+import type { CompilerMain } from '../compiler';
+import type { WebpackMain } from '../webpack';
 import { Component } from '../component';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import { reactSchema } from './react.graphql';
-import { PkgExtension } from '../pkg';
-import { CompilerAspect, CompilerMain } from '../compiler';
-import { TypescriptMain, TypescriptAspect } from '../typescript';
-import { WebpackMain, WebpackAspect } from '../webpack';
-import { GraphqlMain, GraphqlAspect } from '../graphql';
-import { TesterMain, TesterAspect } from '../tester';
+import { GraphqlAspect } from '../graphql';
+import { PkgAspect } from '../pkg';
+import { TesterAspect } from '../tester';
+import type { GraphqlMain } from '../graphql';
+import type { PkgMain } from '../pkg';
+import type { TesterMain } from '../tester';
 
 type ReactDeps = [
-  Environments,
-  JestExtension,
+  EnvsMain,
+  JestMain,
   TypescriptMain,
   CompilerMain,
   WebpackMain,
   Workspace,
   GraphqlMain,
-  PkgExtension,
+  PkgMain,
   TesterMain
 ];
 
-export type ReactConfig = {
+export type ReactMainConfig = {
   /**
    * configure the react env compiler.
    * can be configured to either TypeScript ('ts') or Babel ('babel').
@@ -95,20 +102,20 @@ export class ReactMain {
 
   static runtime = MainRuntime;
   static dependencies = [
-    Environments,
-    JestExtension,
+    EnvsAspect,
+    JestAspect,
     TypescriptAspect,
     CompilerAspect,
     WebpackAspect,
     WorkspaceAspect,
     GraphqlAspect,
-    PkgExtension,
+    PkgAspect,
     TesterAspect,
   ];
 
-  static provider(
+  static async provider(
     [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
-    config: ReactConfig
+    config: ReactMainConfig
   ) {
     const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
     const react = new ReactMain(reactEnv);
