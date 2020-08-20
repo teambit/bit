@@ -574,7 +574,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
