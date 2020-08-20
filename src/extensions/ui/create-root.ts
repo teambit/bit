@@ -6,11 +6,11 @@ export async function createRoot(extensionsPaths: string[], aspectPaths: string[
   return `
 import { Harmony } from '@teambit/harmony';
 import UIAspect from './ui.aspect';
-${getImportStatements(extensionsPaths, 'Runtime')}
 ${getImportStatements(aspectPaths, 'Aspect')}
+${getImportStatements(extensionsPaths, 'Runtime')}
 
 Harmony.load([UIAspect, ${getIdentifiers(aspectPaths, 'Aspect')}], 'ui', {})
-  .then(() => {
+  .then((harmony) => {
     harmony
       .run()
       .then(() => {

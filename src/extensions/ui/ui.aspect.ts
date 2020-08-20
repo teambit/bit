@@ -8,3 +8,5 @@ export const UIAspect = Aspect.create({
   defaultConfig: {},
   declareRuntime: UIRuntime,
 });
+
+export default UIAspect;
