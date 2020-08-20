@@ -8,3 +8,5 @@ export const PreviewAspect = Aspect.create({
   defaultConfig: {},
   declareRuntime: PreviewRuntime,
 });
+
+export default PreviewAspect;

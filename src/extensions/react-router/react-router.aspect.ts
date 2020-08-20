@@ -5,3 +5,5 @@ export const ReactRouterAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default ReactRouterAspect;

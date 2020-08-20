@@ -1,4 +1,5 @@
 import { parse } from 'path';
+import { camelCase } from 'lodash';
 
 export async function createRoot(extensionsPaths: string[], aspectPaths: string[], rootExtensionName?: string) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
@@ -6,6 +7,7 @@ export async function createRoot(extensionsPaths: string[], aspectPaths: string[
   return `
 import { Harmony } from '@teambit/harmony';
 import UIAspect from './ui.aspect';
+import UIRuntime from './ui.ui.runtime';
 ${getImportStatements(aspectPaths, 'Aspect')}
 ${getImportStatements(extensionsPaths, 'Runtime')}
 
@@ -33,5 +35,5 @@ function getIdentifiers(extensionsPaths: string[], suffix: string): string {
 }
 
 function getIdentifier(path: string, suffix: string): string {
-  return `${parse(path).name.split('.')[0]}${suffix}`;
+  return camelCase(`${parse(path).name.split('.')[0]}${suffix}`);
 }
