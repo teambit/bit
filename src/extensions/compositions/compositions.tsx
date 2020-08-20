@@ -13,8 +13,8 @@ import { ComponentModel } from '../component';
 import { ComponentContext } from '../component';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
-import { TabContainer, Tab, TabList, TabPanel } from '../panel-ui';
-import { PanelContainer, Panel } from '../panel-ui';
+import { TabContainer, Tab, TabList, TabPanel } from '../panels';
+import { PanelContainer, Panel } from '../panels';
 import styles from './compositions.module.scss';
 
 const GET_COMPONENT = gql`

@@ -11,6 +11,8 @@ export class ReactRouterUI {
     private routeSlot: RouteSlot
   ) {}
 
+  link() {}
+
   /**
    * render all slot routes.
    */

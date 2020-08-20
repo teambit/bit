@@ -5,6 +5,7 @@ import styles from './compositions-overview.module.scss';
 export type CompositionsOverviewProps = {
   compositions: {};
 };
+
 export function CompositionsOverview({ compositions }: CompositionsOverviewProps) {
   return (
     <div className={styles.background}>

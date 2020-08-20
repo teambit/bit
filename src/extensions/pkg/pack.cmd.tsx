@@ -35,6 +35,7 @@ export class PackCmd implements Command {
     if (scopePath) {
       scopePathStr = typeof scopePath !== 'string' ? scopePath[0] : scopePath;
     }
+
     const packResult = await this.packer.packComponent(compId, scopePathStr, options);
     return {
       data: packResult,

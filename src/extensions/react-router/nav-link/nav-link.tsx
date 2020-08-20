@@ -3,6 +3,7 @@ import { NavLink as BaseNavLink, LinkProps as BaseLinkProps, NavLinkProps as Bas
 import { LocationState } from 'history';
 
 /* props of NavLink except props of Link - activeClassName, exact, strict, etc */
+// TODO: move to base-ui
 type MatchProps<S = LocationState> = Pick<
   BaseNavLinkProps<S>,
   Exclude<keyof BaseNavLinkProps<S>, keyof BaseLinkProps<S>>
@@ -10,7 +11,9 @@ type MatchProps<S = LocationState> = Pick<
 
 export type NavLinkProps<S = LocationState> = {
   href: string;
-  /** When true, clicking the link will replace the current entry in the history stack instead of adding a new one */
+  /**
+   * when true, clicking the link will replace the current entry in the history stack instead of adding a new one
+   */
   replace?: boolean;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement> &
   MatchProps<S>;

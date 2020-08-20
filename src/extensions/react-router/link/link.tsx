@@ -3,6 +3,7 @@ import { Link as BaseLink } from 'react-router-dom';
 
 const EXTERNAL_PROPS = { rel: 'noopener', target: '_blank' };
 
+// TODO: move to base-ui
 type LinkProps = {
   /** When true, clicking the link will replace the current entry in the history stack instead of adding a new one */
   replace?: boolean;

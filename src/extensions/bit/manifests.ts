@@ -2,7 +2,7 @@ import { CLIAspect } from '../cli';
 import { CompilerAspect } from '../compiler';
 import { ComponentAspect } from '../component';
 import { GraphAspect } from '../graph';
-import { CreateAspect } from '../create';
+import { CreateAspect } from '../generator';
 import { DependencyResolverAspect } from '../dependency-resolver';
 import { EnvsAspect } from '../environments';
 import { FlowsAspect } from '../flows';
@@ -24,7 +24,6 @@ import { DocsAspect } from '../docs';
 import { StencilAspect } from '../stencil';
 import { CompositionsAspect } from '../compositions';
 import { DeprecationAspect } from '../deprecation';
-import { DefaultEnvAspect } from '../default-env';
 import { ExpressAspect } from '../express';
 import { AspectAspect } from '../aspect';
 
@@ -55,7 +54,6 @@ export const manifestsMap = {
   [BuilderAspect.id]: BuilderAspect,
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
-  [DefaultEnvAspect.id]: DefaultEnvAspect,
   [ExpressAspect.id]: ExpressAspect,
   [AspectAspect.id]: AspectAspect,
 };
