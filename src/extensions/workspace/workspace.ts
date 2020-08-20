@@ -44,6 +44,8 @@ import { DependencyLifecycleType } from '../dependency-resolver';
 import type { AspectLoaderMain } from '../aspect-loader';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { EnvsMain } from '../environments';
+import ConsumerComponent from '../../consumer/component';
+import { WorkspaceAspect } from './workspace.aspect';
 
 export type EjectConfResult = {
   configPath: string;
@@ -564,9 +566,29 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
+  async getGraph(components: Component[]) {
+    const ids = components.map((component) => component.id._legacy);
+    return buildOneGraphForComponents(ids, this.consumer);
+  }
+
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id)));
-    const requireableExtensions: any = await this.requireComponents(componentIds);
+    const components = await this.getMany(componentIds);
+    const graph = await this.getGraph(components);
+
+    const allComponents = graph.nodes().map((id) => {
+      const component = graph.node(id);
+      return component;
+    });
+
+    const targetAspects = allComponents.filter((component: ConsumerComponent) => {
+      const data = component.extensions.findExtension(WorkspaceAspect.id)?.data;
+
+      if (!data) return false;
+      return data.type === 'aspect';
+    });
+
+    const requireableExtensions: any = await this.requireComponents(targetAspects);
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
@@ -590,8 +612,7 @@ export class Workspace implements ComponentFactory {
     await this.loadAspects(extensionsToLoad, throwOnError);
   }
 
-  async requireComponents(ids: ComponentID[]): Promise<RequireableComponent[]> {
-    const components = await this.getMany(ids);
+  async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
     const resolveP = components.map(async (component) => {
