@@ -68,7 +68,7 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
 async function runCLI() {
   const config = await getConfig();
   registerCoreExtensions();
-  loadLegacyConfig(config);
+  await loadLegacyConfig(config);
   // const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
   const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
