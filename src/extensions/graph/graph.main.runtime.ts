@@ -1,5 +1,5 @@
 import { GraphAspect } from './graph.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { provide } from './graph.provider';
 import { WorkspaceAspect } from '../workspace';
 import { ScopeAspect } from '../scope';

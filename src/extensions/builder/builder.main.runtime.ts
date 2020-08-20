@@ -1,6 +1,6 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect } from './builder.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import { EnvsAspect, EnvsMain } from '../environments';
 import { Workspace, WorkspaceAspect } from '../workspace';
 import { BuilderCmd } from './run.cmd';

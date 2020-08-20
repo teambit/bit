@@ -1,5 +1,5 @@
 import { PnpmAspect } from './pnpm.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '../dependency-resolver';
 import { PnpmPackageManager } from './pnpm.package-manager';
 import { PkgAspect, PkgMain } from '../pkg';

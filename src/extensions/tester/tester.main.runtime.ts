@@ -1,6 +1,6 @@
 import { merge } from 'lodash';
 import { TesterAspect } from './tester.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import { TestCmd } from './test.cmd';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import { TesterService } from './tester.service';

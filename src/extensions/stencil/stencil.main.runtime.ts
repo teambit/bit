@@ -1,6 +1,6 @@
 import { TranspileOptions } from '@stencil/core/compiler';
 import { StencilAspect } from './stencil.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { StencilCompiler } from './stencil.compiler';
 import { StencilEnv } from './stencil.env';
 import { CompilerAspect } from '../compiler';

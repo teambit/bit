@@ -1,5 +1,5 @@
 import { NodeAspect } from './node.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { ReactAspect, ReactMain } from '../react';
 import { EnvsMain, EnvsAspect } from '../environments';
 import { NodeEnv } from './node.env';

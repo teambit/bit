@@ -1,6 +1,6 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { SchemaAspect } from './schema.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { Module } from './schemas';
 import { Parser } from './parser';
 import { ParserNotFound } from './exceptions';

@@ -1,5 +1,5 @@
 import { TypescriptAspect } from './typescript.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { TypescriptCompiler } from './typescript.compiler';
 import { SchemaAspect } from '../schema';
 import type { SchemaMain } from '../schema';

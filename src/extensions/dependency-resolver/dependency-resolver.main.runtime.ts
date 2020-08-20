@@ -3,7 +3,7 @@ import R from 'ramda';
 import fs from 'fs-extra';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import {
   DependenciesPolicy,
   DependencyResolverVariantConfig,

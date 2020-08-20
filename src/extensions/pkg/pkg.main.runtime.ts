@@ -1,6 +1,6 @@
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { PkgAspect } from './pkg.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
 import { PackCmd } from './pack.cmd';
 import { PublishCmd } from './publish.cmd';

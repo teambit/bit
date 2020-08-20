@@ -1,6 +1,6 @@
 import { Slot } from '@teambit/harmony';
 import { WorkspaceAspect } from './workspace.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import workspaceProvider from './workspace.provider';
 import { ScopeAspect } from '../scope';
 import { ComponentAspect } from '../component';

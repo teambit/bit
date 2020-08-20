@@ -34,7 +34,7 @@ import { IsolatorMain, IsolatorAspect } from '../isolator';
 import { Logger, LoggerAspect, LoggerMain } from '../logger';
 import { RequireableComponent } from '../../components/utils/requireable-component';
 import { ScopeAspect } from './scope.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import type { AspectLoaderMain } from '../aspect-loader';
 import { AspectLoaderAspect } from '../aspect-loader';
 

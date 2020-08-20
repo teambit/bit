@@ -1,5 +1,5 @@
 import { DeprecationAspect } from './deprecation.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 import { deprecationSchema } from './deprecation.graphql';
 import { Component, ComponentAspect } from '../component';
