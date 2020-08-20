@@ -1,4 +1,3 @@
-import { ExtensionManifest } from '@teambit/harmony';
 import { GraphAspect } from './graph.aspect';
 import { MainRuntime } from '../cli/cli.aspect';
 import { provide } from './graph.provider';

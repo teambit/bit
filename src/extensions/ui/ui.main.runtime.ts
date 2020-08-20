@@ -21,7 +21,6 @@ import { ComponentAspect } from '../component';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
 import { Logger, LoggerMain, LoggerAspect } from '../logger';
-import { AspectAspect } from '../aspect';
 import type { AspectMain } from '../aspect';
 
 export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, LoggerMain, AspectMain];

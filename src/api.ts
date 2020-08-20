@@ -4,8 +4,7 @@ import { getScopeComponent, addMany as addManyInternal, build, buildAll as build
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
-import { ConfigAspect } from './extensions/config';
-import { BitAspect, registerCoreExtensions } from './extensions/bit';
+import { registerCoreExtensions } from './extensions/bit';
 import { manifestsMap as coreExtensions } from './extensions/bit';
 
 export * from '@teambit/harmony';

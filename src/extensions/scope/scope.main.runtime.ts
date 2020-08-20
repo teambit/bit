@@ -21,7 +21,6 @@ import { loadScopeIfExist } from '../../scope/scope-loader';
 import { Version, ModelComponent } from '../../scope/models';
 import { Config } from '../component';
 import { Ref } from '../../scope/objects';
-import { ExtensionDataList } from '../../consumer/config';
 import { ComponentNotFound } from './exceptions';
 import { UIAspect } from '../ui';
 import type { UiMain } from '../ui';
@@ -121,7 +120,7 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  async loadAspects(ids: string[], throwOnError = true): Promise<void> {
+  async loadAspects(ids: string[]): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
     const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), {});
@@ -320,7 +319,7 @@ export class ScopeMain implements ComponentFactory {
     }
 
     ui.registerUiRoot(new ScopeUIRoot(scope));
-    graphql.register(scopeSchema(scope));
+    graphql.register(scopeSchema());
     componentExt.registerHost(scope);
 
     return scope;

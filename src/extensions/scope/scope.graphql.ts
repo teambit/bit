@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { ScopeMain } from './scope.main.runtime';
 import { ComponentID } from '../component';
 
-export function scopeSchema(scopeExtension: ScopeMain) {
+export function scopeSchema() {
   return {
     typeDefs: gql`
       type Scope {

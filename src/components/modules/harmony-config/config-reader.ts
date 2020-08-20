@@ -1,5 +1,5 @@
 import { parse } from 'comment-json';
-import { readFileSync, exists, existsSync } from 'fs-extra';
+import { readFileSync, existsSync } from 'fs-extra';
 import { ReadConfigError } from './exceptions/read-config-error';
 
 export function readConfigFile(path: string, mustExist = true) {

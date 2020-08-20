@@ -1,7 +1,6 @@
 import { Component } from './component';
 import { ComponentID } from './id';
 import { State } from './state';
-import { ExtensionDataList } from '../../consumer/config';
 import { BitId } from '../../bit-id';
 
 export interface ComponentFactory {

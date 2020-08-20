@@ -1,4 +1,3 @@
-import { ExtensionManifest } from '@teambit/harmony';
 import { TranspileOptions } from '@stencil/core/compiler';
 import { StencilAspect } from './stencil.aspect';
 import { MainRuntime } from '../cli/cli.aspect';

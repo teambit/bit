@@ -15,7 +15,7 @@ import { UIAspect } from '../ui';
 import { BundlerAspect } from '../bundler';
 import { OnComponentLoad } from './on-component-load';
 import { OnComponentChange } from './on-component-change';
-import AspectLoaderAspect from '../aspect-loader';
+import { AspectLoaderAspect } from '../aspect-loader';
 
 export const WorkspaceMain = {
   name: EXT_NAME,
