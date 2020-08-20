@@ -1,7 +1,10 @@
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
-module.exports = function (workspaceDir) {
+module.exports = function (workspaceDir) /* : webpack.Configuration */ {
   return {
+    devServer: {
+      sockPath: '_hmr/@teambit/react',
+    },
     module: {
       rules: [
         {

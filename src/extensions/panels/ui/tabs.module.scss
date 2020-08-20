@@ -12,7 +12,10 @@
   font-weight: bold;
 
   color: #878c9a; //TODO
-  // color: var(--text-color);
+  transition: color 300ms ease-in-out;
+  &:hover {
+    color: var(--text-highlight);
+  }
 
   &.disabled {
     color: var(--text-muted);
@@ -30,7 +33,7 @@
 
       background-color: var(--base-color);
       height: 3px;
-      border-radius: 10px;
+      border-radius: 2px;
 
       transition: background-color 300ms, height 300ms;
     }

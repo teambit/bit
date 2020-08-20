@@ -10,7 +10,7 @@ import { devConfig } from './webpack/webpack.dev.config';
 import { GraphqlMain } from '../graphql';
 import { ExpressMain } from '../express';
 import { UiMain } from './ui.main.runtime';
-import { UIRoot } from './ui-root';
+import { UIRoot, ProxyEntry } from './ui-root';
 import { Logger } from '../logger';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
@@ -51,7 +51,7 @@ export class UIServer {
   /**
    * get the webpack configuration of the UI server.
    */
-  async getDevConfig() {
+  async getDevConfig(): Promise<webpack.Configuration> {
     return devConfig(
       this.uiRoot.path,
       [await this.ui.generateRoot(this.uiRoot.extensionsPaths, this.uiRoot.aspectPaths, this.uiRootExtension)],
@@ -77,13 +77,14 @@ export class UIServer {
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 
+  // TODO - check if this is necessary
   private async configureProxy(app: Express) {
     const proxy = httpProxy.createProxyServer();
     const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) =>
         app.use(`${route}/*`, (req, res) => {
-          proxy.web(req, res, { target: `${entry.target}/${req.originalUrl}`, ws: entry.ws });
+          proxy.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
         })
       );
     });
@@ -121,9 +122,9 @@ export class UIServer {
   }
 
   private async getProxy() {
-    const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
+    const proxyEntries = (await this.uiRoot.getProxy?.()) || [];
 
-    return [
+    const gqlProxies: ProxyEntry[] = [
       {
         context: ['/graphql', '/api'],
         target: 'http://localhost:4000',
@@ -134,15 +135,14 @@ export class UIServer {
         target: 'ws://localhost:4000',
         ws: true,
       },
-      // @ts-ignore
-    ].concat(proxyEntries);
+    ];
+
+    return gqlProxies.concat(proxyEntries);
   }
 
-  private async getDevServerConfig(config: any) {
+  private async getDevServerConfig(config?: webpack.Configuration): Promise<webpack.Configuration> {
     const proxy = await this.getProxy();
-    const devServerConf = Object.assign(config, {
-      proxy,
-    });
+    const devServerConf = { ...config, proxy };
 
     return devServerConf;
   }

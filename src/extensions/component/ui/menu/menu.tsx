@@ -37,7 +37,6 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
   return (
     <div className={classnames(styles.topBar, className)}>
       <div className={styles.leftSide}>
-        <VersionDropdown versions={versionList} currentVersion={component.version} />
         <nav className={styles.navigation}>
           {navLinks.map((menuItem, key) => (
             <TopBarNav key={key} {...menuItem} />
@@ -45,6 +44,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         </nav>
       </div>
       <div className={styles.rightSide}>
+        <VersionDropdown versions={versionList} currentVersion={component.version} />
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
         </span> */}

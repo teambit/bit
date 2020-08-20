@@ -9,10 +9,9 @@ import { roundnessClass } from '@teambit/base-ui-temp.css-components.roundness';
 import styles from './playground.module.scss';
 
 export type CodeScope = { [key: string]: any };
-
 export type PlaygroundProps = {
   code: string;
-  scope: CodeScope;
+  scope?: CodeScope;
 };
 
 export function Playground({ code, scope }: PlaygroundProps) {

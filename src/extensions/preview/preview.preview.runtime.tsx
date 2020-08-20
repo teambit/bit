@@ -5,7 +5,13 @@ import { PreviewRuntime, PreviewAspect } from './preview.aspect';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
-const PREVIEW_MODULES = {};
+let PREVIEW_MODULES: Record<string, previewModule> = {};
+let RERENDER = () => {};
+
+type previewModule = {
+  componentMap: Record<string, any[]>;
+  mainModule: { default: () => void };
+};
 
 export class PreviewPreview {
   constructor(
@@ -18,7 +24,7 @@ export class PreviewPreview {
   /**
    * render the preview.
    */
-  render() {
+  render = () => {
     const { previewName, componentId } = this.getLocation();
     const name = previewName || this.getDefault();
 
@@ -30,14 +36,15 @@ export class PreviewPreview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
+            if (!PREVIEW_MODULES[prevName]?.componentMap[componentId]) return undefined;
             return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
           .filter((module) => !!module)
       : [];
 
-    return preview.render(componentId, PREVIEW_MODULES[name], includes);
-  }
+    const previewModule = PREVIEW_MODULES[name];
+    return preview.render(componentId, previewModule, includes);
+  };
 
   /**
    * register a new preview.
@@ -83,19 +90,26 @@ export class PreviewPreview {
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
     const preview = new PreviewPreview(previewSlot);
 
+    RERENDER = preview.render;
+
     window.addEventListener('hashchange', () => {
-      preview.render();
+      RERENDER();
     });
 
     return preview;
   }
 }
 
-export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
-  PREVIEW_MODULES[previewName] = {
-    mainModule: defaultModule,
-    componentMap,
-  };
+// I don't like this implementation, it seems too loose and unpredictable.
+// I'd rather have a dynamic import using `process.env.previewPath` or something of this sort.
+
+/** allows other extensions to inject preview definitions.
+ * as target components reside in another project all together,
+ * we cannot reference them from here, and they have to reference us.
+ */
+export function updateModules(modules: Record<string, previewModule>) {
+  PREVIEW_MODULES = modules;
+  RERENDER();
 }
 
 PreviewAspect.addRuntime(PreviewPreview);

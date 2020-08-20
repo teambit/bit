@@ -1,5 +1,7 @@
+import { ProxyConfigArrayItem } from 'webpack-dev-server';
 import { Component } from '../component';
-import { ComponentDir } from '../bundler';
+import { ComponentDir } from '../bundler/get-entry';
+// import { WebpackDevServer } from '../webpack/webpack.dev-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
 // would never have componentDir and as it has nothing to do with `UIRoot`.
@@ -42,21 +44,8 @@ export interface UIRoot extends ComponentDir {
   getProxy?: () => Promise<ProxyEntry[]>;
 }
 
-export type ProxyEntry = {
-  /**
-   * paths to apply on.
-   */
-  context: string[];
-
-  /**
-   * target URL
-   */
-  target: string;
-
-  /**
-   * proxy to a web socket.
-   */
-  ws?: boolean;
+export type ProxyEntry = ProxyConfigArrayItem & {
+  context: string[]; // limit type to simplify our code. (not required)
 };
 
 export type PostStartOptions = {
