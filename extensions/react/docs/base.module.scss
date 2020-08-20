@@ -1,0 +1,49 @@
+.docsMainBlock {
+  padding: 50px 40px 0 40px;
+  max-width: 1440px;
+  margin: 0 auto 150px auto;
+  .heading {
+    margin-bottom: unset;
+  }
+}
+
+.maxWidth {
+  max-width: 700px;
+}
+
+.marginBottom {
+  margin-bottom: 30px;
+}
+
+.topRow {
+  display: flex;
+  align-items: baseline;
+}
+
+.copyMethod {
+  display: flex;
+  align-self: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.copyTitle {
+  margin-right: 10px;
+  margin-bottom: unset;
+}
+.copyBox {
+  flex-grow: 1;
+}
+
+.marginRight {
+  margin-right: 10px;
+}
+
+.enhancedText {
+  code {
+    background-color: var(--muted-color);
+    padding: 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 14px;
+  }
+}

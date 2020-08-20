@@ -1,0 +1,21 @@
+$topbarHeight: 64px;
+
+.emptyContainer {
+  height: 100vh;
+}
+
+.main {
+  width: 100%;
+}
+
+.workspaceWrapper {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sideBar {
+  border-right: 1px solid #ededed;
+  flex: 1;
+
+  overflow: auto;
+}

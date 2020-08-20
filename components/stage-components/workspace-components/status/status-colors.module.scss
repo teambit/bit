@@ -1,0 +1,12 @@
+.pass {
+  background-color: var(--base-pass, #37b26c);
+}
+.fail {
+  background-color: var(--base-fail, #d63031);
+}
+.running {
+  background-color: var(--base-running, #0984e3);
+}
+.pending {
+  background-color: var(--base-pending, #ff963a);
+}

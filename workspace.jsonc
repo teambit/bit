@@ -5,10 +5,8 @@
     "defaultDirectory": "components",
     "vendorDirectory": "vendor",
     "extensions": {
-      "teambit.bit/react": {
-        "env": "teambit.bit/envs",
-        "config": {}
-      },
+      "teambit.bit/aspect": {},
+      "teambit.bit/workspace": {},
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}"
@@ -28,6 +26,9 @@
       }
     }
   },
+    "teambit.bit/dummy": {
+      
+    },
   "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,

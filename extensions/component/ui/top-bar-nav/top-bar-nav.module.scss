@@ -1,0 +1,51 @@
+.topBarLink {
+  position: relative;
+  padding: 0 8px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  color: inherit;
+  text-decoration: none;
+
+  transition: color 300ms;
+  margin: 0 5px;
+
+  &:hover:not(.active) {
+    > div {
+      background-color: var(--bg-dent);
+    }
+  }
+
+  &.active {
+    color: var(--base-color);
+
+    &:after {
+      background-color: var(--base-color);
+      height: 4px;
+    }
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: transparent;
+    height: 0;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+    transition: background-color 300ms, height 300ms;
+  }
+
+  > div {
+    border-radius: 6px;
+    padding: 7px;
+    display: flex;
+    align-items: center;
+    transition: background-color 300ms ease-in-out;
+  }
+}
