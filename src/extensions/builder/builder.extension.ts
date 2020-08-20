@@ -13,7 +13,6 @@ import { CoreExt, Core } from '../core';
 import { GraphQLExtension } from '../graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
-import { TagCmd } from './tag.cmd';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -139,7 +138,6 @@ export class BuilderExtension {
       cli.unregister('build');
       cli.register(new BuilderCmd(builder, workspace, logger));
     }
-    cli.register(new TagCmd(logger));
     return builder;
   }
 }

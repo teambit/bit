@@ -1,15 +1,9 @@
 .docsMainBlock {
-  padding-left: 130px;
-  padding-top: 80px;
-  max-width: 80%;
-  margin-bottom: 150px;
+  padding: 50px 40px 0 40px;
+  max-width: 1440px;
+  margin: 0 auto 150px auto;
   .heading {
     margin-bottom: unset;
-  }
-  @media screen and (max-width: 920px) {
-    padding-left: 20px;
-    padding-right: 20px;
-    max-width: 100%;
   }
 }
 
