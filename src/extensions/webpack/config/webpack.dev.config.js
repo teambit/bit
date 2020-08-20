@@ -35,6 +35,10 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
     },
 
+    node: {
+      fs: 'empty',
+    },
+
     output: {
       // Development filename output
       filename: 'static/js/[name].bundle.js',

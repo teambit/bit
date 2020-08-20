@@ -1,6 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { PreviewType } from './preview-type';
 import { PreviewNotFound } from './exceptions';
+import { PreviewRuntime, PreviewAspect } from './preview.aspect';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
@@ -75,6 +76,8 @@ export class PreviewPreview {
     };
   }
 
+  static runtime = PreviewRuntime;
+
   static slots = [Slot.withType<PreviewType>()];
 
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
@@ -94,3 +97,5 @@ export function linkModules(previewName: string, defaultModule: any, componentMa
     componentMap,
   };
 }
+
+PreviewAspect.addRuntime(PreviewPreview);

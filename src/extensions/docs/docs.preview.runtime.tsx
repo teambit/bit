@@ -1,5 +1,7 @@
 import { PreviewPreview, PreviewAspect } from '../preview';
 import { GraphqlAspect, GraphqlUI } from '../graphql';
+import { DocsAspect } from './docs.aspect';
+import { PreviewRuntime } from '../preview/preview.aspect';
 
 export class DocsPreview {
   constructor(
@@ -29,6 +31,7 @@ export class DocsPreview {
     );
   };
 
+  static runtime = PreviewRuntime;
   static dependencies = [PreviewAspect, GraphqlAspect];
 
   static async provider([preview, graphql]: [PreviewPreview, GraphqlUI]) {
@@ -42,3 +45,5 @@ export class DocsPreview {
     return docsPreview;
   }
 }
+
+DocsAspect.addRuntime(DocsPreview);

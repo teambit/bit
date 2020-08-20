@@ -27,6 +27,10 @@ export class ScopeUIRoot implements UIRoot {
     ];
   }
 
+  get aspectPaths() {
+    return [];
+  }
+
   async resolvePattern() {
     return [];
   }
