@@ -85,7 +85,12 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
         <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <div className={styles.sidebarContainer}>
-            <Collapser isOpen={isSidebarOpen} onClick={handleSidebarToggle} />
+            <Collapser
+              id="workspaceSidebarCollapser"
+              isOpen={isSidebarOpen}
+              onClick={handleSidebarToggle}
+              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
+            />
             <div className={styles.sidebar}>{sidebar}</div>
           </div>
           <div className={styles.main}>

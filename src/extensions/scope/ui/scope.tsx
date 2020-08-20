@@ -38,7 +38,12 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
         <TopBar Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
         <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <div className={styles.sidebarContainer}>
-            <Collapser isOpen={isSidebarOpen} onClick={handleSidebarToggle} />
+            <Collapser
+              id="scopeSidebarCollapser"
+              isOpen={isSidebarOpen}
+              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
+              onClick={handleSidebarToggle}
+            />
             <div className={styles.sidebar}>{sidebar}</div>
           </div>
           <div className={styles.main}>
