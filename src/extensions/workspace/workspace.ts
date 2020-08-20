@@ -283,7 +283,7 @@ export class Workspace implements ComponentFactory {
     return this.executeLoadSlot(workspaceComponent);
   }
 
-  async addEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
+  async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
     const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
     if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
       const systemDescriptor = await env.__getDescriptor();

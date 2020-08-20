@@ -9,7 +9,7 @@ export const AspectEnvType = 'aspect';
 export class AspectEnv implements Environment {
   constructor(private reactEnv: ReactEnv) {}
 
-  __getDescriptor() {
+  async __getDescriptor() {
     return {
       type: AspectEnvType,
     };

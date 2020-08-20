@@ -469,6 +469,11 @@ export default class CommandHelper {
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
 
+  compile(id = 'bar/foo', options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit compile ${id} ${parsedOpts}`);
+  }
+
   injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe

@@ -15,6 +15,8 @@ import { WebpackMain } from '../webpack';
 import { JestMain } from '../jest';
 import { PkgMain } from '../pkg';
 
+export const AspectEnvType = 'react';
+
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
@@ -155,5 +157,11 @@ export class ReactEnv implements Environment {
     // return BuildPipe.from([this.tester.task]);
     // return [this.compiler.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
     return [this.compiler.task, this.pkg.dryRunTask];
+  }
+
+  async __getDescriptor() {
+    return {
+      type: AspectEnvType,
+    };
   }
 }
