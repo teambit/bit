@@ -120,7 +120,7 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  async loadAspects(ids: string[]): Promise<void> {
+  async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
     const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), {});
@@ -129,7 +129,7 @@ export class ScopeMain implements ComponentFactory {
       return RequireableComponent.fromCapsule(capsule);
     });
     // Always throw an error when can't load scope extension
-    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, true);
+    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
   /**

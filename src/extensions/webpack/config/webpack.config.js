@@ -10,6 +10,10 @@ module.exports = (entries, rootPath) => {
     // This means they will be the "root" imports that are included in JS bundle.
     entry: entries.filter(Boolean),
 
+    node: {
+      fs: 'empty',
+    },
+
     output: {
       // The build folder.
       path: `${rootPath}/public`,

@@ -14,6 +14,7 @@ import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
 import { BundlerAspect, BundlerMain } from '../bundler';
 import { BuilderAspect, BuilderMain } from '../builder';
+import { UIAspect, UiMain } from '../ui';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -22,7 +23,9 @@ export class PreviewMain {
     /**
      * slot for preview definitions.
      */
-    private previewSlot: PreviewDefinitionRegistry
+    private previewSlot: PreviewDefinitionRegistry,
+
+    private ui: UiMain
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
@@ -42,6 +45,7 @@ export class PreviewMain {
    * @param defaultModule
    */
   writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule?: string, dirName?: string) {
+    // const uiRoot = this.ui.getUiRootOrThrow();
     const contents = generateLink(prefix, moduleMap, defaultModule);
     // :TODO @uri please generate a random file in a temporary directory
     const targetPath = resolve(join(dirName || __dirname, `/__${prefix}-${Date.now()}.js`));
@@ -95,14 +99,14 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>()];
 
   static runtime = MainRuntime;
-  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect];
+  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect];
 
   static async provider(
-    [bundler, builder, componentExtension]: [BundlerMain, BuilderMain, ComponentMain],
+    [bundler, builder, componentExtension, uiMain]: [BundlerMain, BuilderMain, ComponentMain, UiMain],
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
   ) {
-    const preview = new PreviewMain(previewSlot);
+    const preview = new PreviewMain(previewSlot, uiMain);
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
       {

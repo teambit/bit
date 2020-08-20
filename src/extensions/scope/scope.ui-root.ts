@@ -8,7 +8,6 @@ export class ScopeUIRoot implements UIRoot {
      */
     private scope: ScopeMain
   ) {}
-  aspectPaths: string[];
 
   readonly name = 'scope';
 
@@ -26,6 +25,10 @@ export class ScopeUIRoot implements UIRoot {
       require.resolve('../docs/docs.ui'),
       require.resolve('../notifications/notification.ui'),
     ];
+  }
+
+  get aspectPaths() {
+    return [];
   }
 
   async resolvePattern() {
