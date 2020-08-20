@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve } from 'path';
 import { readdir } from 'fs-extra';

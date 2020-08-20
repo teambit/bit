@@ -1,3 +1,4 @@
+import './hook-require';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve } from 'path';
 import { readdir } from 'fs-extra';

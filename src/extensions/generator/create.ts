@@ -15,6 +15,7 @@ import { ConsumerNotFound } from '../../consumer/exceptions';
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
 type TemplateFunc = (...args: string[]) => TemplateFuncResult;
+
 export class Create {
   constructor(private config: CreateExtConfig, private workspace: Workspace, private registry: Registry) {}
 
