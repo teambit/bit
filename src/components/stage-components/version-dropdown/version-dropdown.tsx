@@ -51,7 +51,6 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
 function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
   return (
     <div className={classNames(styles.placeholder)}>
-      <VersionLabel status="latest" className={styles.label} />
       <div>{currentVersion}</div>
       <Icon of="fat-arrow-down" />
     </div>

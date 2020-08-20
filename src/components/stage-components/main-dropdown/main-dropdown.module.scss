@@ -23,7 +23,14 @@
   cursor: pointer;
   transition: background-color 300ms ease-in-out;
   [data-open='true'] & {
-    background-color: white;
+    background-color: var(--bg-color);
+    color: var(--base-color);
+    &:hover {
+      background-color: var(--bg-color);
+    }
+  }
+  &:hover {
+    background-color: var(--bg-dent);
   }
 }
 

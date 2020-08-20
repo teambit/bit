@@ -73,7 +73,6 @@ export function Compositions() {
                 // TODO - make table look good in panel
                 <PropTable rows={properties} />
               ) : (
-                // TODO - make this look good
                 <div />
               )}
             </TabPanel>

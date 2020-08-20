@@ -1,4 +1,4 @@
-$topbarHeight: 64px;
+$topbarHeight: 56px;
 
 .topbar {
   display: flex;
@@ -10,4 +10,5 @@ $topbarHeight: 64px;
   height: $topbarHeight;
   background: #ededed;
   box-sizing: border-box;
+  font-size: var(--p-xs, 14px);
 }
