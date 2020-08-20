@@ -102,6 +102,4 @@ export class UiUI {
   }
 }
 
-export default UiUI;
-
 UIAspect.addRuntime(UiUI);

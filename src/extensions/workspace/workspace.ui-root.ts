@@ -37,6 +37,8 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('../component/component.ui.runtime'),
       require.resolve('../compositions/compositions.ui.runtime'),
       require.resolve('../docs/docs.ui.runtime'),
+      require.resolve('../graphql/graphql.ui.runtime'),
+      require.resolve('../react-router/react-router.ui.runtime'),
       require.resolve('../notifications/notification.ui.runtime'),
     ];
   }
@@ -49,6 +51,8 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('../component/component.aspect'),
       require.resolve('../compositions/compositions.aspect'),
       require.resolve('../docs/docs.aspect'),
+      require.resolve('../graphql/graphql.aspect'),
+      require.resolve('../react-router/react-router.aspect'),
       require.resolve('../notifications/notifications.aspect'),
     ];
   }
