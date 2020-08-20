@@ -2,6 +2,8 @@ import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { BrowserRouter, RouteProps } from 'react-router-dom';
 import { SlotRouter, RouteSlot } from './slot-router';
+import { ReactRouterAspect } from './react-router.aspect';
+import { UIRuntime } from '../ui';
 
 export class ReactRouterUI {
   constructor(
@@ -34,7 +36,11 @@ export class ReactRouterUI {
 
   static slots = [Slot.withType<RouteProps>()];
 
+  static runtime = UIRuntime;
+
   static async provider(deps, config, [routeSlot]: [RouteSlot]) {
     return new ReactRouterUI(routeSlot);
   }
 }
+
+ReactRouterAspect.addRuntime(ReactRouterUI);

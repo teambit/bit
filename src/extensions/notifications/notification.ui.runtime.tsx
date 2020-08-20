@@ -6,12 +6,17 @@ import { NotificationCenter, NotificationCenterProps } from './ui/notification-c
 import { NotificationContext } from './ui/notification-context';
 import { UIAspect, UiUI } from '../ui';
 import { NotificationAction, notificationReducer } from './notification-reducer';
+import { NotificationsAspect } from './notifications.aspect';
+import { UIRuntime } from '../ui';
 
 /**
  * extension
  */
 export default class NotificationUI implements NotificationApi {
   static dependencies = [UIAspect];
+
+  static runtime = UIRuntime;
+
   static async provider([uiRuntimeExtension]: [UiUI]) {
     return new NotificationUI(uiRuntimeExtension);
   }
@@ -69,3 +74,5 @@ export default class NotificationUI implements NotificationApi {
     return <NotificationContext.Provider value={this}>{children}</NotificationContext.Provider>;
   };
 }
+
+NotificationsAspect.addRuntime(NotificationUI);

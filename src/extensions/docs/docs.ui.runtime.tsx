@@ -1,8 +1,12 @@
 import { ComponentUI, ComponentAspect } from '../component';
 import { OverviewSection } from './overview.section';
+import { UIRuntime } from '../ui';
+import { DocsAspect } from './docs.aspect';
 
 export class DocsUI {
   static dependencies = [ComponentAspect];
+
+  static runtime = UIRuntime;
 
   static async provider([component]: [ComponentUI]) {
     const docs = new DocsUI();
@@ -16,3 +20,5 @@ export class DocsUI {
 }
 
 export default DocsUI;
+
+DocsAspect.addRuntime(DocsUI);

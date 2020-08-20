@@ -9,6 +9,7 @@ import { Scope } from './ui/scope';
 import { ComponentAspect } from '../component';
 import type { ComponentUI } from '../component';
 import { ScopeAspect } from './scope.aspect';
+import { UIRuntime } from '../ui';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -66,6 +67,8 @@ export class ScopeUI {
 
   static dependencies = [UIAspect, ComponentAspect];
 
+  static runtime = UIRuntime;
+
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
   static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
@@ -77,3 +80,5 @@ export class ScopeUI {
 }
 
 export default ScopeUI;
+
+ScopeAspect.addRuntime(ScopeUI);

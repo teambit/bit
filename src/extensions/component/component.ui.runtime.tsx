@@ -5,6 +5,8 @@ import { NavLinkProps } from '../react-router';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '../react-router';
 import { Menu } from './ui/menu';
+import { ComponentAspect } from '../component';
+import { UIRuntime } from '../ui';
 
 export type Server = {
   env: string;
@@ -68,6 +70,8 @@ export class ComponentUI {
 
   static dependencies = [];
 
+  static runtime = UIRuntime;
+
   static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
 
   static async provider(deps, config, [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]) {
@@ -77,3 +81,5 @@ export class ComponentUI {
 }
 
 export default ComponentUI;
+
+ComponentAspect.addRuntime(ComponentUI);
