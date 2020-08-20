@@ -59,7 +59,15 @@ export default class Helper {
     this.npm = new NpmHelper(this.scopes, this.fs, this.command);
     this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs);
     this.git = new GitHelper(this.scopes, this.command, this.scopeHelper);
-    this.fixtures = new FixtureHelper(this.fs, this.command, this.npm, this.scopes, this.debugMode, this.packageJson);
+    this.fixtures = new FixtureHelper(
+      this.fs,
+      this.command,
+      this.npm,
+      this.scopes,
+      this.debugMode,
+      this.packageJson,
+      this.scopeHelper
+    );
     this.extensions = new ExtensionsHelper(
       this.scopes,
       this.command,
