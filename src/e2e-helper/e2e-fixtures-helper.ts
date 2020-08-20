@@ -8,6 +8,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData from './e2e-scopes';
 import PackageJsonHelper from './e2e-package-json-helper';
+import ScopeHelper from './e2e-scope-helper';
 
 export default class FixtureHelper {
   fs: FsHelper;
@@ -16,13 +17,16 @@ export default class FixtureHelper {
   debugMode: boolean;
   npm: NpmHelper;
   packageJson: PackageJsonHelper;
+  scopeHelper: ScopeHelper;
+
   constructor(
     fsHelper: FsHelper,
     commandHelper: CommandHelper,
     npmHelper: NpmHelper,
     scopes: ScopesData,
     debugMode: boolean,
-    packageJson: PackageJsonHelper
+    packageJson: PackageJsonHelper,
+    scopeHelper: ScopeHelper
   ) {
     this.fs = fsHelper;
     this.command = commandHelper;
@@ -30,6 +34,7 @@ export default class FixtureHelper {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.packageJson = packageJson;
+    this.scopeHelper = scopeHelper;
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   createComponentBarFoo(impl?: string = fixtures.fooFixture) {
@@ -181,8 +186,22 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
    * @memberof FixtureHelper
    */
   populateExtensions(numOfExtensions = 3): void {
-    const getImp = (index) => {
+    const aspectImp = (index) => {
       return `
+      const { Aspect } = require('@teambit/harmony');
+
+      module.export.MyExtensionAspect = Aspect.create({
+        id: 'MyExtension${index}',
+        dependencies: [],
+        defaultConfig: {},
+      });
+      `;
+    };
+    const mainImp = (index) => {
+      return `
+      const { MainRuntime } = require('bit-bin/dist/extensions/cli/cli.aspect';
+      const { MyExtensionAspect } = require('./ext${index}.aspect');
+
       class MyExtension {
         constructor(config) {
           this.config = config;
@@ -192,18 +211,23 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
           console.log(MyExtension.id)
         }
       }
-      MyExtension.id = 'MyExtension${index}';
+      MyExtension.runtime = MainRuntime;
       MyExtension.dependencies = [];
       MyExtension.provider = (deps, config) => {
         return new MyExtension(config);
       };
+      MyExtensionAspect.addRuntime(MyExtension);
       module.exports = MyExtension;
       `;
     };
     for (let i = 1; i <= numOfExtensions; i += 1) {
-      this.fs.outputFile(path.join(`ext${i}`, `index.js`), getImp(i));
-      this.command.addComponent(`ext${i}`);
+      const aspectFileName = `ext${i}.aspect.js`;
+      this.fs.outputFile(path.join(`ext${i}`, aspectFileName), aspectImp(i));
+      this.fs.outputFile(path.join(`ext${i}`, `ext${i}.main.runtime.js`), mainImp(i));
+      this.command.addComponent(`ext${i}`, { m: aspectFileName });
     }
+    this.scopeHelper.linkBitBin();
+    this.npm.installNpmPackage('@teambit/harmony');
   }
 
   populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {

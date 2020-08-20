@@ -548,7 +548,7 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  async loadAspects(ids: string[], throwOnError = true): Promise<void> {
+  async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id)));
     const requireableExtensions: any = await this.requireComponents(componentIds);
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);

@@ -8,8 +8,8 @@ export class CannotLoadExtension extends BitError {
   }
 
   report(verbose?: boolean) {
-    if (verbose) return `could not find load extension: ${this.extensionName}. ${this.error} `;
-    return `could not find load extension: ${this.extensionName}. `;
+    if (verbose) return `could not load extension: ${this.extensionName}. ${this.error} `;
+    return `could not load extension: ${this.extensionName}. `;
   }
 
   toJson() {}
