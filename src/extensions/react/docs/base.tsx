@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, FC } from 'react';
+import React, { HTMLAttributes } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
