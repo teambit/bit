@@ -5,3 +5,5 @@ export const TesterAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default TesterAspect;
