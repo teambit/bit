@@ -185,6 +185,10 @@ export class UiMain {
     return uiSlot;
   }
 
+  createLink(extensionPaths: string[], aspectPaths: string[], rootExtensionName: string) {
+    return createRoot(extensionPaths, aspectPaths, rootExtensionName);
+  }
+
   /**
    * generate the root file of the UI runtime.
    */
