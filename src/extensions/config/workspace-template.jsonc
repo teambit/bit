@@ -129,24 +129,6 @@
           "react": ">15.0.1"
         }
       }
-    },
-
-    "extensions": {
-      // "teambit.bit/extension": {
-        // need to decide configuration for extension environment.
-      // },
-
-      /**
-      * configure the creation of new components in your workspace through the `bit create` command.
-      * this is helpful for setting component structure standards.
-      **/
-      "teambit.bit/create": {
-        /**
-        * default component template for Bit to use for creation of components upon `bit create`.
-        * default template is:
-        */
-        "defaultTemplate": "teambit.bit/extension-template"
-      }
     }
   }
 }

@@ -53,8 +53,7 @@ export default class BitMap {
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
+  allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
   workspaceLane: WorkspaceLane | null;
 
   constructor(

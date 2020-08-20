@@ -3,6 +3,7 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 import './hook-require';
+import fs from 'fs-extra';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve, join } from 'path';
@@ -58,14 +59,27 @@ async function getConfig() {
   return Config.loadGlobal(configOpts.global);
 }
 
+function getAspectDir(aspectName: string): string {
+  let dirPath: string;
+  try {
+    const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
+    dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
+  } catch (err) {
+    dirPath = resolve(__dirname, '../..', aspectName, 'dist');
+  }
+  if (!fs.existsSync(dirPath)) {
+    throw new Error(`unable to find ${aspectName} in ${dirPath}`);
+  }
+  return dirPath;
+}
+
 async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   const aspectName = id.split('/')[1];
   if (!aspectName) throw new Error('could not retrieve aspect name');
-  const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
-  const dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
+  const dirPath = getAspectDir(aspectName);
   const files = await readdir(dirPath);
-  const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.`));
+  const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
   // eslint-disable-next-line
   require(resolve(`${dirPath}/${runtimeFile}`));

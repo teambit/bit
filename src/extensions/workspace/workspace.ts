@@ -285,7 +285,7 @@ export class Workspace implements ComponentFactory {
     return this.executeLoadSlot(workspaceComponent);
   }
 
-  async addEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
+  async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
     const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
     if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
       const systemDescriptor = await env.__getDescriptor();
@@ -596,7 +596,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {

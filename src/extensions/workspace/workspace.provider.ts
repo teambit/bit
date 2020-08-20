@@ -139,7 +139,7 @@ export default async function provideWorkspace(
   }
   component.registerHost(workspace);
 
-  onComponentLoadSlot.register(workspace.addEnvSystemDescriptor.bind(workspace));
+  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
 
   return workspace;
 }

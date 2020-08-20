@@ -59,7 +59,7 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   if (!aspectName) throw new Error('could not retrieve aspect name');
   const dirPath = resolve(`${__dirname}/extensions/${aspectName}`);
   const files = await readdir(dirPath);
-  const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.`));
+  const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
   // eslint-disable-next-line
   require(resolve(`${dirPath}/${runtimeFile}`));
