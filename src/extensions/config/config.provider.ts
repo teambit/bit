@@ -23,14 +23,6 @@ export default async function provideConfig(_deps, _config, _slots, harmony: Har
   const consumerInfo = await getConsumerInfo(process.cwd());
   const config: Config = await tryToGetConfig(consumerInfo?.path || process.cwd());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigLoading(onLegacyWorkspaceLoad(config));
-
-  // TODO: change once config become maybe
-  if (config.extensions) {
-    // Send all configs to harmony
-    config?.extensions.forEach((extension) => {
-      harmony.config.set(extension.stringId, extension.config);
-    });
-  }
   return config;
 }
 
