@@ -1,7 +1,7 @@
 import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentAspect } from './component.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { componentSchema } from './component.graphql';
 import { ComponentFactory } from './component-factory';
 import { HostNotFound } from './exceptions';

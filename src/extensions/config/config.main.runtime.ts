@@ -1,5 +1,5 @@
 import configProvider from './config.provider';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { ConfigAspect } from './config.aspect';
 
 const ConfigMain = {

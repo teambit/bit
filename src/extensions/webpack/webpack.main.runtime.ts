@@ -1,7 +1,7 @@
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
 import { WebpackAspect } from './webpack.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { WebpackDevServer } from './webpack.dev-server';
 import { DevServer, BundlerContext, BundlerMain, BundlerAspect, DevServerContext } from '../bundler';
 import { WorkspaceAspect, Workspace } from '../workspace';

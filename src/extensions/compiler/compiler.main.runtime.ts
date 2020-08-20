@@ -1,5 +1,5 @@
 import { CompilerAspect } from './compiler.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import { WorkspaceAspect } from '../workspace';
 import { Workspace } from '../workspace';
 import { CLIMain } from '../cli';

@@ -3,7 +3,7 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
 import { IsolatorAspect } from './isolator.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
 import { Component, ComponentMap } from '../component';
 import ConsumerComponent from '../../consumer/component';

@@ -8,7 +8,7 @@ import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { GraphQLModule } from '@graphql-modules/core';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { GraphqlAspect } from './graphql.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { Schema } from './schema';
 import { Logger, LoggerAspect, LoggerMain } from '../logger';
 

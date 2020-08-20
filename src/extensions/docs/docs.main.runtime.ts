@@ -1,5 +1,5 @@
 import { DocsAspect } from './docs.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { Component } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component';

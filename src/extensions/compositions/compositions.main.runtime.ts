@@ -1,5 +1,5 @@
 import { CompositionsAspect } from './compositions.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { Component, ComponentAspect } from '../component';
 import { ExecutionContext } from '../environments';
 import { ComponentMap } from '../component';

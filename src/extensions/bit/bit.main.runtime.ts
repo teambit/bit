@@ -1,5 +1,5 @@
 import { BitAspect } from './bit.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { manifestsMap } from './manifests';
 import { provideBit } from './bit.provider';
 import { ExtensionDataList } from '../../consumer/config/extension-data';

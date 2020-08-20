@@ -5,7 +5,7 @@ import { EnvRuntime, Runtime } from './runtime';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { EnvsAspect } from './environments.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { GraphqlAspect, GraphqlMain } from '../graphql';
 
 export type EnvsRegistry = SlotRegistry<Environment>;

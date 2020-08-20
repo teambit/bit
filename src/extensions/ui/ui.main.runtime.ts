@@ -5,7 +5,7 @@ import getPort from 'get-port';
 import fs from 'fs-extra';
 import webpack from 'webpack';
 import { UIAspect } from './ui.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import { CLIMain } from '../cli';
 import { StartCmd } from './start.cmd';
 import { GraphqlAspect } from '../graphql';

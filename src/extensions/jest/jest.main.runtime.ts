@@ -1,5 +1,5 @@
 import { JestAspect } from './jest.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { JestTester } from './jest.tester';
 
 export class JestMain {

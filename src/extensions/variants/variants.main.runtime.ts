@@ -1,7 +1,7 @@
 import R from 'ramda';
 import _ from 'lodash';
 import { VariantsAspect } from './variants.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { PathLinuxRelative } from '../../utils/path';

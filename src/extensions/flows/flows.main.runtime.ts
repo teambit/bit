@@ -1,7 +1,7 @@
 import { Flows } from './flows';
 import { WorkspaceAspect, Workspace } from '../workspace';
 import { FlowsAspect } from './flows.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 
 type ScriptDeps = [Workspace];
 

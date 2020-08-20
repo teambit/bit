@@ -1,5 +1,5 @@
 import { LoggerAspect } from './logger.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { Logger } from './logger';
 
 export class LoggerMain {

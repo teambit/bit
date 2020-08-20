@@ -1,5 +1,5 @@
 import { InsightsAspect } from './insights.aspect';
-import { MainRuntime, CLIAspect } from '../cli/cli.aspect';
+import { MainRuntime, CLIAspect } from '../cli';
 import { provide } from './insight.provider';
 import { GraphAspect } from '../graph';
 

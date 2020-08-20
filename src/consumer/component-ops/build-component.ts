@@ -1,7 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
-import Vinyl from '../../extensions/generator/node_modules/vinyl';
+import Vinyl from 'vinyl';
 import Dists from '../component/sources/dists';
 import ConsumerComponent from '../component/consumer-component';
 import { Scope } from '../../scope';

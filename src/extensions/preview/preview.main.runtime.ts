@@ -2,7 +2,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { PreviewAspect } from './preview.aspect';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { generateLink } from './generate-link';
 import { ComponentMap, ComponentAspect, ComponentMain } from '../component';
 import { PreviewTask } from './preview.task';

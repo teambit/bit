@@ -5,7 +5,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
 import { catchErrors } from './middlewares';
 import { Logger, LoggerAspect, LoggerMain } from '../logger';
-import { MainRuntime } from '../cli/cli.aspect';
+import { MainRuntime } from '../cli';
 import { ExpressAspect } from './express.aspect';
 
 export type ExpressConfig = {

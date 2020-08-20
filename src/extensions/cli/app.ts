@@ -1,17 +1,21 @@
+/* eslint-disable import/first */
+// eslint-disable-next-line no-console
+process.on('uncaughtException', (err) => console.log('uncaughtException', err));
+
 import './hook-require';
-import { Config } from '@teambit/harmony';
+import { Config } from '@teambit/harmony/dist/harmony-config';
 import { Extension } from '@teambit/harmony/dist/extension';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { readdir } from 'fs-extra';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { handleErrorAndExit } from '../../cli/command-runner';
 import { BitAspect, registerCoreExtensions } from '../bit';
-import { CLIAspect, MainRuntime } from '../cli';
 import { bootstrap } from '../../bootstrap';
-import { CLIMain } from '../cli';
 import { getConsumerInfo } from '../../consumer';
 import { propogateUntil as propagateUntil } from '../../utils';
 import { ConfigAspect, ConfigRuntime } from '../config';
+import { CLIAspect, MainRuntime } from './cli.aspect';
+import { CLIMain } from './cli.main.runtime';
 
 initApp();
 
@@ -58,7 +62,8 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   const aspectName = id.split('/')[1];
   if (!aspectName) throw new Error('could not retrieve aspect name');
-  const dirPath = resolve(`${__dirname}/extensions/${aspectName}`);
+  const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
+  const dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.`));
   if (!runtimeFile) return;
@@ -69,8 +74,7 @@ async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
 async function runCLI() {
   const config = await getConfig();
   registerCoreExtensions();
-  loadLegacyConfig(config);
-  // const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config);
+  await loadLegacyConfig(config);
   const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
