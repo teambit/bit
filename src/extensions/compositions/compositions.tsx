@@ -43,8 +43,7 @@ export function Compositions() {
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id.legacyComponentId.name },
   });
-  const properties = R.path(['workspace', 'getDocs', 'properties'], data);
-
+  const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
   useEffect(() => {
@@ -60,7 +59,6 @@ export function Compositions() {
             <TabList>
               <Tab>compositions</Tab>
               <Tab>properties</Tab>
-              <Tab>dependencies</Tab>
             </TabList>
             <TabPanel>
               <CompositionsPanel
@@ -75,8 +73,7 @@ export function Compositions() {
                 // TODO - make table look good in panel
                 <PropTable rows={properties} />
               ) : (
-                // TODO - make this look good
-                <div>no props</div>
+                <div />
               )}
             </TabPanel>
             <TabPanel></TabPanel>

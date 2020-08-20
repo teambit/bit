@@ -9,7 +9,8 @@
   .menu {
     width: 300px;
     padding: 0;
-    top: 60px;
+    right: 0;
+    top: 43px;
     font-size: var(--p-xs);
     border-radius: 6px;
   }
@@ -41,13 +42,20 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 7px;
   border-radius: 6px;
   user-select: none;
+  transition: background-color 300ms ease-in-out;
+  &:hover {
+    background-color: var(--bg-dent);
+  }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
     background-color: var(--bg-color);
     color: var(--base-color);
+    &:hover {
+      background-color: var(--bg-color);
+    }
   }
   > div {
     margin-right: 5px;

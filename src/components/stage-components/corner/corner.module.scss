@@ -1,22 +1,25 @@
-$topbarHeight: 64px;
+$topbarHeight: 56px;
 
 .corner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: $topbarHeight;
-  background: #ededed;
+  background: var(--border-color);
   padding: 16px;
   user-select: none;
   box-sizing: border-box;
-  width: 100%;
-  max-width: 264px;
+  width: 30%;
 
   .link {
     text-decoration: none;
     color: var(--text-highlight);
+    transition: color 300ms ease-in-out;
     &:active {
       color: var(--text-highlight);
+    }
+    &:hover {
+      color: var(--base-color);
     }
   }
 
@@ -25,7 +28,7 @@ $topbarHeight: 64px;
     margin-right: 8px;
     width: 32px;
     height: 32px;
-    background: white;
+    background: var(--bg-base);
     border-radius: 50%;
     line-height: 32px;
     text-align: center;
