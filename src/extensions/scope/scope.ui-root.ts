@@ -8,6 +8,7 @@ export class ScopeUIRoot implements UIRoot {
      */
     private scope: ScopeMain
   ) {}
+  aspectPaths: string[];
 
   readonly name = 'scope';
 

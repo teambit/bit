@@ -11,7 +11,6 @@ import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { handleErrorAndExit } from '../../cli/command-runner';
 import { BitAspect, registerCoreExtensions } from '../bit';
 import { bootstrap } from '../../bootstrap';
-import { HarmonyConfig } from '../../components/modules/harmony-config';
 import { getConsumerInfo } from '../../consumer';
 import { propogateUntil as propagateUntil } from '../../utils';
 import { ConfigAspect, ConfigRuntime } from '../config';

@@ -1,7 +1,7 @@
 import React from 'react';
-import { ComponentPreview } from '../extensions/preview';
-import { ComponentModel } from '../../component';
-import { Composition } from '../composition';
+import { ComponentPreview } from '../../../extensions/preview';
+import { ComponentModel } from '../../../extensions/component';
+import { Composition } from '../../../extensions/compositions';
 
 export type ComponentCompositionProps = {
   component: ComponentModel;

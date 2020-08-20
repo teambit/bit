@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import { ComponentConfigFileAlreadyExistsError } from '../../src/extensions/workspace';
+import { AlreadyExistsError } from '../../src/extensions/workspace/component-config-file/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -81,7 +81,7 @@ describe('component config', function () {
         it('should throw error if override not used', () => {
           componentJsonPath = helper.componentJson.composePath('bar');
           const ejectCmd = () => helper.command.ejectConf('bar/foo');
-          const error = new ComponentConfigFileAlreadyExistsError(componentJsonPath);
+          const error = new AlreadyExistsError(componentJsonPath);
           helper.general.expectToThrow(ejectCmd, error);
         });
         it('should success if override used', () => {
