@@ -18,6 +18,8 @@
     "outDir": "./dist"
   },
   "include": [
+    "components",
+    "extensions",
     "src",
     "e2e"
   ],
