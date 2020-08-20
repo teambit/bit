@@ -30,7 +30,7 @@ import { pathIsInside } from '../../utils';
 import { Config } from '../component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
-import { OnComponentLoad } from './on-component-load';
+import { OnComponentLoad, ExtensionData } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '../isolator';
 import { ComponentMap } from '../component';
@@ -43,6 +43,7 @@ import { ResolvedComponent } from '../../components/utils/resolved-component';
 import { DependencyLifecycleType } from '../dependency-resolver';
 import type { AspectLoaderMain } from '../aspect-loader';
 import { RequireableComponent } from '../../components/utils/requireable-component';
+import { EnvsMain } from '../environments';
 
 export type EjectConfResult = {
   configPath: string;
@@ -111,7 +112,9 @@ export class Workspace implements ComponentFactory {
     /**
      * on component change slot.
      */
-    private onComponentChangeSlot: OnComponentChangeSlot
+    private onComponentChangeSlot: OnComponentChangeSlot,
+
+    private envs: EnvsMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -278,6 +281,19 @@ export class Workspace implements ComponentFactory {
     component.state = state;
     const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
     return this.executeLoadSlot(workspaceComponent);
+  }
+
+  async addEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
+    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
+      const systemDescriptor = await env.__getDescriptor();
+
+      return {
+        type: systemDescriptor.type,
+      };
+    }
+
+    return {};
   }
 
   private async executeLoadSlot(component: Component) {

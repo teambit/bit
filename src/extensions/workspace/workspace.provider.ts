@@ -26,6 +26,7 @@ import { EXT_NAME } from './constants';
 import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
 import { LoggerMain } from '../logger';
 import type { AspectLoaderMain } from '../aspect-loader';
+import { EnvsMain } from '../environments';
 
 export type WorkspaceDeps = [
   CLIMain,
@@ -38,7 +39,8 @@ export type WorkspaceDeps = [
   GraphqlMain,
   UiMain,
   BundlerMain,
-  AspectLoaderMain
+  AspectLoaderMain,
+  EnvsMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -73,6 +75,7 @@ export default async function provideWorkspace(
     ui,
     bundler,
     aspectLoader,
+    envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
   [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
@@ -95,7 +98,8 @@ export default async function provideWorkspace(
     undefined,
     harmony,
     onComponentLoadSlot,
-    onComponentChangeSlot
+    onComponentChangeSlot,
+    envs
   );
 
   ManyComponentsWriter.registerExternalInstaller({
@@ -134,6 +138,8 @@ export default async function provideWorkspace(
     cli.register(new WatchCommand(watcher));
   }
   component.registerHost(workspace);
+
+  onComponentLoadSlot.register(workspace.addEnvSystemDescriptor.bind(workspace));
 
   return workspace;
 }
