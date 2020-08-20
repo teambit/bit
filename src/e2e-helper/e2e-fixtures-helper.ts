@@ -196,6 +196,8 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
         dependencies: [],
         defaultConfig: {},
       });
+      export default Ext${index}Aspect;
+
       `;
     };
     const mainImp = (index) => {
@@ -206,8 +208,6 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       export class Ext${index}Main {
         static runtime = MainRuntime;
         static dependencies = [];
-        static runtime = MainRuntime;
-        static dependencies = [];
 
 
         constructor(config) {
@@ -215,12 +215,13 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
         }
 
         printName() {
-          console.log(MyExtension.id)
+          console.log('ext ${index}');
         }
         static async provider(_deps, config) {
           return new Ext${index}Main(config);
         }
       }
+      export default Ext${index}Main;
       Ext${index}Aspect.addRuntime(Ext${index}Main);
       `;
     };

@@ -469,7 +469,7 @@ export default class CommandHelper {
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
   }
 
-  compile(id = 'bar/foo', options?: Record<string, any>) {
+  compile(id = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit compile ${id} ${parsedOpts}`);
   }
