@@ -1,5 +1,4 @@
 import path from 'path';
-import { Harmony } from '@teambit/harmony';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
   WorkspaceConfigLoadFunction,
@@ -17,7 +16,7 @@ export type ConfigDeps = [];
 
 export type ConfigConfig = {};
 
-export default async function provideConfig(_deps, _config, _slots, harmony: Harmony) {
+export default async function provideConfig() {
   LegacyWorkspaceConfig.registerOnWorkspaceConfigIsExist(onLegacyWorkspaceConfigIsExist());
   LegacyWorkspaceConfig.registerOnWorkspaceConfigEnsuring(onLegacyWorkspaceEnsure());
   const consumerInfo = await getConsumerInfo(process.cwd());
