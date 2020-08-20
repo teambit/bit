@@ -9,6 +9,7 @@ import type { ReactRouterUI } from '../react-router';
 import { ReactRouterAspect } from '../react-router';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
+import { UIAspect, UIRuntime } from './ui.aspect';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
@@ -90,6 +91,8 @@ export class UiUI {
 
   static dependencies = [GraphqlAspect, ReactRouterAspect];
 
+  static runtime = UIRuntime;
+
   static async provider(
     [graphql, router]: [GraphqlUI, ReactRouterUI],
     config,
@@ -100,3 +103,5 @@ export class UiUI {
 }
 
 export default UiUI;
+
+UIAspect.addRuntime(UiUI);

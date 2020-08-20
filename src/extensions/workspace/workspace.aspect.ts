@@ -5,3 +5,5 @@ export const WorkspaceAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default WorkspaceAspect;

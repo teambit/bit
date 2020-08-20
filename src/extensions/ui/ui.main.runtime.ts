@@ -99,7 +99,11 @@ export class UiMain {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = createWebpackConfig(uiRoot.path, [await this.generateRoot(uiRoot.extensionsPaths, name)], name);
+    const config = createWebpackConfig(
+      uiRoot.path,
+      [await this.generateRoot(uiRoot.extensionsPaths, uiRoot.aspectPaths, name)],
+      name
+    );
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -184,8 +188,8 @@ export class UiMain {
   /**
    * generate the root file of the UI runtime.
    */
-  async generateRoot(extensionPaths: string[], rootExtensionName: string) {
-    const contents = await createRoot(extensionPaths, rootExtensionName);
+  async generateRoot(extensionPaths: string[], aspectPaths: string[], rootExtensionName: string) {
+    const contents = await createRoot(extensionPaths, aspectPaths, rootExtensionName);
     const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);

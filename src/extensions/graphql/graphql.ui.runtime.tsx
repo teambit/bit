@@ -7,6 +7,8 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { onError } from 'apollo-link-error';
 import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
+import { UIRuntime } from '../ui';
+import { GraphqlAspect } from './graphql.aspect';
 
 export class GraphqlUI {
   constructor(
@@ -22,6 +24,8 @@ export class GraphqlUI {
   getProvider = ({ children }: { children: JSX.Element }) => {
     return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
   };
+
+  static runtime = UIRuntime;
 
   static async provider() {
     const httpLink = new HttpLink({
@@ -57,3 +61,5 @@ export class GraphqlUI {
     return new GraphqlUI(client);
   }
 }
+
+GraphqlAspect.addRuntime(GraphqlUI);

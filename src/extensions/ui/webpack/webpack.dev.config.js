@@ -121,6 +121,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title) {
       extensions: ['.ts', '.tsx', '.js'],
     },
 
+    node: {
+      fs: 'empty',
+    },
+
     module: {
       rules: [
         {

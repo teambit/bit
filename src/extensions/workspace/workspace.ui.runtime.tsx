@@ -7,6 +7,7 @@ import { UIRootUI as UIRoot } from '../ui';
 import { UiUI, UIAspect } from '../ui';
 import { ComponentUI, ComponentAspect } from '../component';
 import { WorkspaceAspect } from './workspace.aspect';
+import { UIRuntime } from '../ui';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -65,6 +66,8 @@ export class WorkspaceUI {
 
   static dependencies = [UIAspect, ComponentAspect];
 
+  static runtime = UIRuntime;
+
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
   static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
@@ -76,3 +79,5 @@ export class WorkspaceUI {
 }
 
 export default WorkspaceUI;
+
+WorkspaceAspect.addRuntime(WorkspaceUI);

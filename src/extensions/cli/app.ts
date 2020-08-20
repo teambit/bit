@@ -3,6 +3,7 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 import './hook-require';
+import { Config } from '@teambit/harmony/dist/harmony-config';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve, join } from 'path';
 import { readdir } from 'fs-extra';
@@ -48,14 +49,14 @@ async function getConfig() {
   };
 
   if (consumerInfo) {
-    return HarmonyConfig.load('workspace.jsonc', configOpts);
+    return Config.load('workspace.jsonc', configOpts);
   }
 
   if (scopePath && !consumerInfo) {
-    return HarmonyConfig.load('scope.jsonc', configOpts);
+    return Config.load('scope.jsonc', configOpts);
   }
 
-  return HarmonyConfig.loadGlobal(configOpts.global);
+  return Config.loadGlobal(configOpts.global);
 }
 
 async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {

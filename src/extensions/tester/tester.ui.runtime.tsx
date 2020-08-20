@@ -1,8 +1,12 @@
 import { WorkspaceAspect } from '../workspace';
 import type { WorkspaceUI } from '../workspace';
+import { UIRuntime } from '../ui';
+import { TesterAspect } from './tester.aspect';
 
 export class TesterUI {
   static dependencies = [WorkspaceAspect];
+
+  static runtime = UIRuntime;
 
   stageKey?: string;
 
@@ -25,3 +29,5 @@ export class TesterUI {
 }
 
 export default TesterUI;
+
+TesterAspect.addRuntime(TesterUI);

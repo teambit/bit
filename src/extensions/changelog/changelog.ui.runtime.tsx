@@ -2,10 +2,14 @@ import React from 'react';
 import { ChangeLogPage } from './ui/change-log-page';
 import { ComponentUI, ComponentAspect } from '../component';
 import { ChangelogSection } from './changelog.section';
+import { UIRuntime } from '../ui';
+import { ChangelogAspect } from './changelog.aspect';
 
 export class ChangeLogUI {
   static id = 'teambit.bit/changelog';
   static dependencies = [ComponentAspect];
+
+  static runtime = UIRuntime;
 
   ChangeLog = () => {
     return <ChangeLogPage />;
@@ -23,3 +27,5 @@ export class ChangeLogUI {
 }
 
 export default ChangeLogUI;
+
+ChangelogAspect.addRuntime(ChangeLogUI);
