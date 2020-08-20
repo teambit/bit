@@ -5,3 +5,5 @@ export const GraphqlAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default GraphqlAspect;

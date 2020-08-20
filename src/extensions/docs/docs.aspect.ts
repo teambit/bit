@@ -5,3 +5,5 @@ export const DocsAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default DocsAspect;

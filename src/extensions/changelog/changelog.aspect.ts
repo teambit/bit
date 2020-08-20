@@ -5,3 +5,5 @@ export const ChangelogAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default ChangelogAspect;

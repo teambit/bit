@@ -5,3 +5,5 @@ export const NotificationsAspect = Aspect.create({
   dependencies: [],
   defaultConfig: {},
 });
+
+export default NotificationsAspect;
