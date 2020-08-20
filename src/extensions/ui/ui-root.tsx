@@ -20,6 +20,11 @@ export interface UIRoot extends ComponentDir {
   extensionsPaths: string[];
 
   /**
+   * paths for all extensions to load.
+   */
+  aspectPaths: string[];
+
+  /**
    * resolve components from a given pattern.
    */
   resolvePattern(pattern: string): Promise<Component[]>;

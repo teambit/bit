@@ -1,4 +1,5 @@
 import './hook-require';
+import { Config } from '@teambit/harmony';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve } from 'path';
 import { readdir } from 'fs-extra';
@@ -8,7 +9,6 @@ import { BitAspect, registerCoreExtensions } from '../bit';
 import { CLIAspect, MainRuntime } from '../cli';
 import { bootstrap } from '../../bootstrap';
 import { CLIMain } from '../cli';
-import { HarmonyConfig } from '../../components/modules/harmony-config';
 import { getConsumerInfo } from '../../consumer';
 import { propogateUntil as propagateUntil } from '../../utils';
 import { ConfigAspect, ConfigRuntime } from '../config';
@@ -44,14 +44,14 @@ async function getConfig() {
   };
 
   if (consumerInfo) {
-    return HarmonyConfig.load('workspace.jsonc', configOpts);
+    return Config.load('workspace.jsonc', configOpts);
   }
 
   if (scopePath && !consumerInfo) {
-    return HarmonyConfig.load('scope.jsonc', configOpts);
+    return Config.load('scope.jsonc', configOpts);
   }
 
-  return HarmonyConfig.loadGlobal(configOpts.global);
+  return Config.loadGlobal(configOpts.global);
 }
 
 async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {

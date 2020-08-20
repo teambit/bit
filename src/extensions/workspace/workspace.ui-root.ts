@@ -31,13 +31,25 @@ export class WorkspaceUIRoot implements UIRoot {
   get extensionsPaths() {
     // TODO: @gilad please make sure to automate this for all extensions configured in the workspace.
     return [
-      require.resolve('./workspace.ui'),
-      require.resolve('../tester/tester.ui'),
-      require.resolve('../changelog/changelog.ui'),
-      require.resolve('../component'),
-      require.resolve('../compositions/compositions.ui'),
-      require.resolve('../docs/docs.ui'),
-      require.resolve('../notifications/notification.ui'),
+      require.resolve('./workspace.ui.runtime'),
+      require.resolve('../tester/tester.ui.runtime'),
+      require.resolve('../changelog/changelog.ui.runtime'),
+      require.resolve('../component/component.ui.runtime'),
+      require.resolve('../compositions/compositions.ui.runtime'),
+      require.resolve('../docs/docs.ui.runtime'),
+      require.resolve('../notifications/notification.ui.runtime'),
+    ];
+  }
+
+  get aspectPaths() {
+    return [
+      require.resolve('./workspace.aspect'),
+      require.resolve('../tester/tester.aspect'),
+      require.resolve('../changelog/changelog.aspect'),
+      require.resolve('../component/component.aspect'),
+      require.resolve('../compositions/compositions.aspect'),
+      require.resolve('../docs/docs.aspect'),
+      require.resolve('../notifications/notifications.aspect'),
     ];
   }
 

@@ -139,13 +139,14 @@ export class GraphqlMain {
 
   private getModuleDependencies(extensionId: string): GraphQLModule[] {
     const extension = this.context.extensions.get(extensionId);
-    // @ts-ignore
-    const deps = extension?.dependencies.map((ext) => ext.id || ext.name);
+    if (!extension) throw new Error(`aspect ${extensionId} was not found`);
+    const deps = this.context.getDependencies(extension);
+    const ids = deps.map((dep) => dep.id);
 
     // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
       .map(([depId, module]) => {
-        const dep = deps?.includes(depId);
+        const dep = ids.includes(depId);
         if (!dep) return undefined;
         return module;
       })

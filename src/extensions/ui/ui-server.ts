@@ -54,7 +54,7 @@ export class UIServer {
   async getDevConfig() {
     return devConfig(
       this.uiRoot.path,
-      [await this.ui.generateRoot(this.uiRoot.extensionsPaths, this.uiRootExtension)],
+      [await this.ui.generateRoot(this.uiRoot.extensionsPaths, this.uiRoot.aspectPaths, this.uiRootExtension)],
       this.uiRootExtension
     );
   }
