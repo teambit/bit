@@ -108,7 +108,7 @@ export class PreviewMain {
 
   async getPreviewExtensions(context: ExecutionContext) {
     context.env.getPreviewExtensions();
-    const link = this.ui.createLink();
+    // const link = this.ui.createLink();
 
     return {};
   }
@@ -129,7 +129,7 @@ export class PreviewMain {
     this.previewSlot.register(previewDef);
   }
 
-  static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<PreviewExtension>()];
+  static slots = [Slot.withType<PreviewDefinition>()];
 
   static runtime = MainRuntime;
   static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
@@ -147,7 +147,7 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerTask(new PreviewTask(bundler, preview));
+    // builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }
