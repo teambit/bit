@@ -6,7 +6,9 @@ export class ComponentID {
      * legacy bit component id
      */
     // private legacyComponentId: BitId
-    public legacyComponentId: BitId
+    public legacyComponentId: BitId,
+
+    readonly _scope?: string
   ) {}
 
   /**
@@ -57,6 +59,7 @@ export class ComponentID {
    * return the scope if included in the ID.
    */
   get scope() {
+    if (this._scope) return this._scope;
     return this._legacy.scope;
   }
 
@@ -86,8 +89,9 @@ export class ComponentID {
   /**
    * generate a component ID from a string.
    */
-  static fromString(idStr: string, hasScope?: boolean) {
-    return new ComponentID(BitId.parse(idStr, hasScope));
+  static fromString(idStr: string) {
+    const legacyId = BitId.parse(idStr, true);
+    return new ComponentID(legacyId);
   }
 
   static fromObject(object: any) {

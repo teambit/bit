@@ -1,12 +1,12 @@
 import { UIRoot } from '@teambit/ui';
 import { Component, ComponentID } from '@teambit/component';
-import { Workspace } from '.';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import { BundlerMain } from '@teambit/bundler';
 import { PostStartOptions, ProxyEntry } from '@teambit/ui/ui-root';
 import { ComponentServer } from '@teambit/bundler/component-server';
 import { flatten } from 'bit-bin/dist/utils';
+import { Workspace } from './workspace';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(

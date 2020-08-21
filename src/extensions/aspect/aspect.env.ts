@@ -14,4 +14,18 @@ export class AspectEnv implements Environment {
       type: AspectEnvType,
     };
   }
+
+  getDependencies() {
+    return {
+      dependencies: {
+        react: '-',
+      },
+      // TODO: add this only if using ts
+      devDependencies: {
+        '@types/react': '16.9.43',
+        '@types/jest': '~26.0.9',
+        '@types/react-router-dom': '^5.1.5',
+      },
+    };
+  }
 }

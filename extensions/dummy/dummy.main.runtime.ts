@@ -1,3 +1,4 @@
+import { MainRuntime } from '@teambit/cli';
 import { DummyAspect } from './dummy.aspect';
 
 export class DummyMain {
