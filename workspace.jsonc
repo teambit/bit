@@ -5,8 +5,6 @@
     "defaultDirectory": "components",
     "vendorDirectory": "vendor",
     "extensions": {
-      "teambit.bit/aspect": {},
-      "teambit.bit/workspace": {},
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}"
@@ -42,11 +40,13 @@
     }
   },
   "teambit.bit/variants": {
+    "components": {
+      "teambit.bit/react": {}
+    },
+    "extensions": {
+      "teambit.bit/aspect": {}
+    },
     "extensions/cli": {
-      "teambit.bit/react": {
-        "env": "teambit.bit/envs",
-        "config": {}
-      },
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
@@ -54,6 +54,7 @@
         }
       },
       "teambit.bit/dependency-resolver": {
+
         "policy": {
           "devDependencies": {
             "@types/mocha": "^5.2.7",

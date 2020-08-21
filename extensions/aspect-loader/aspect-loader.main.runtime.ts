@@ -80,7 +80,7 @@ export class AspectLoaderMain {
       const id = requireableExtension.component.id.toString();
       try {
         // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
-        const aspect = requireableExtension.require();
+        const aspect = await requireableExtension.require();
         const manifest = aspect.default || aspect;
         // manifest.id = id;
         return manifest;

@@ -32,29 +32,29 @@ export class WorkspaceUIRoot implements UIRoot {
   get extensionsPaths() {
     // TODO: @gilad please make sure to automate this for all extensions configured in the workspace.
     return [
-      require.resolve('./workspace.ui.runtime'),
-      require.resolve('../tester/tester.ui.runtime'),
-      require.resolve('../changelog/changelog.ui.runtime'),
-      require.resolve('@teambit/component/component.ui.runtime'),
-      require.resolve('../compositions/compositions.ui.runtime'),
-      require.resolve('../docs/docs.ui.runtime'),
-      require.resolve('../graphql/graphql.ui.runtime'),
-      require.resolve('../react-router/react-router.ui.runtime'),
-      require.resolve('../notifications/notification.ui.runtime'),
+      // require.resolve('./workspace.ui.runtime'),
+      // require.resolve('../tester/tester.ui.runtime'),
+      // require.resolve('../changelog/changelog.ui.runtime'),
+      // require.resolve('@teambit/component/component.ui.runtime'),
+      // require.resolve('../compositions/compositions.ui.runtime'),
+      // require.resolve('../docs/docs.ui.runtime'),
+      // require.resolve('../graphql/graphql.ui.runtime'),
+      // require.resolve('../react-router/react-router.ui.runtime'),
+      // require.resolve('../notifications/notification.ui.runtime'),
     ];
   }
 
   get aspectPaths() {
     return [
-      require.resolve('./workspace.aspect'),
-      require.resolve('../tester/tester.aspect'),
-      require.resolve('../changelog/changelog.aspect'),
-      require.resolve('@teambit/component/component.aspect'),
-      require.resolve('../compositions/compositions.aspect'),
-      require.resolve('../docs/docs.aspect'),
-      require.resolve('../graphql/graphql.aspect'),
-      require.resolve('../react-router/react-router.aspect'),
-      require.resolve('../notifications/notifications.aspect'),
+      // require.resolve('./workspace.aspect'),
+      // require.resolve('../tester/tester.aspect'),
+      // require.resolve('../changelog/changelog.aspect'),
+      // require.resolve('@teambit/component/component.aspect'),
+      // require.resolve('../compositions/compositions.aspect'),
+      // require.resolve('../docs/docs.aspect'),
+      // require.resolve('../graphql/graphql.aspect'),
+      // require.resolve('../react-router/react-router.aspect'),
+      // require.resolve('../notifications/notifications.aspect'),
     ];
   }
 
