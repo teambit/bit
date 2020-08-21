@@ -14,8 +14,4 @@ export class AspectEnv implements Environment {
       type: AspectEnvType,
     };
   }
-
-  getCompiler() {
-    return this.reactEnv.getCompiler();
-  }
 }

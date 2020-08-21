@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { join } from 'path';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
 import { Harmony } from '@teambit/harmony';
@@ -18,26 +18,18 @@ import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from 'bit-bin/dist/utils/path';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import { DependencyResolverMain, PackageManagerInstallOptions } from '@teambit/dependency-resolver';
-import { WorkspaceExtConfig } from './types';
 import { Logger } from '@teambit/logger';
 import type { VariantsMain } from '@teambit/variants';
 import { ComponentScopeDirMap } from '@teambit/config';
 import legacyLogger from 'bit-bin/dist/logger/logger';
-import { ComponentConfigFile } from './component-config-file';
 import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import { pathIsInside } from 'bit-bin/dist/utils';
 import { Config } from '@teambit/component';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
-import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
-import { OnComponentLoad, ExtensionData } from './on-component-load';
-import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { IsolateComponentsOptions } from '@teambit/isolator';
 import { ComponentMap } from '@teambit/component';
-import { ComponentStatus } from './workspace-component/component-status';
-import { WorkspaceComponent } from './workspace-component';
 import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
-import { Watcher } from './watch/watcher';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { ResolvedComponent } from '@teambit/utils.resolved-component';
 import { DependencyLifecycleType } from '@teambit/dependency-resolver';
@@ -45,7 +37,18 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { EnvsMain } from '@teambit/environments';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from './workspace.aspect';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceComponent } from './workspace-component';
+import { Watcher } from './watch/watcher';
+import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
+import { OnComponentLoad, ExtensionData } from './on-component-load';
+import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
+import { ComponentConfigFile } from './component-config-file';
+import { WorkspaceExtConfig } from './types';
+import { fileName } from '*?worker';
 
 export type EjectConfResult = {
   configPath: string;
@@ -576,17 +579,20 @@ export class Workspace implements ComponentFactory {
   }
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    // TODO: @gilad we should make sure to cache this process.
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
     const graph = await this.getGraph(components);
 
-    const allComponents = graph.nodes().map((id) => {
-      const component = graph.node(id);
-      return component;
+    const allIds = graph.nodes().map((id) => {
+      const consumerComponent = graph.node(id);
+      return ComponentID.fromLegacy(consumerComponent.id);
     });
 
+    const allComponents = await this.getMany(allIds);
+
     const targetAspects = allComponents.filter((component: ConsumerComponent) => {
-      const data = component.extensions.findExtension(WorkspaceAspect.id)?.data;
+      const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;
       return data.type === 'aspect';
@@ -616,6 +622,24 @@ export class Workspace implements ComponentFactory {
     await this.loadAspects(extensionsToLoad, throwOnError);
   }
 
+  private async getCompiler(component: Component) {
+    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    return env?.getCompiler();
+  }
+
+  async getRuntimePath(component: Component, modulePath: string): Promise<string | null> {
+    const runtimeFile = component.filesystem.files.find((file: AbstractVinyl) => {
+      return file.relative.includes(`.${MainRuntime.name}.runtime`);
+    });
+
+    // @david we should add a compiler api for this.
+    if (!runtimeFile) return null;
+    const compiler = await this.getCompiler(component);
+    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
+
+    return join(modulePath, dist);
+  }
+
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
@@ -627,8 +651,16 @@ export class Workspace implements ComponentFactory {
       if (!isExist) {
         missingPaths = true;
       }
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const requireFunc = () => require(localPath);
+
+      const requireFunc = async () => {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const aspect = require(localPath);
+        // require aspect runtimes
+        const runtimePath = await this.getRuntimePath(component, localPath);
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        if (runtimePath) require(runtimePath);
+        return aspect;
+      };
       return new RequireableComponent(component, requireFunc);
     });
     const resolved = await Promise.all(resolveP);

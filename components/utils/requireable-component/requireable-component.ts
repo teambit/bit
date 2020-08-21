@@ -6,7 +6,7 @@ type RequireFunc = () => any;
 export class RequireableComponent {
   constructor(readonly component: Component, readonly requireFunc: RequireFunc) {}
 
-  require() {
+  async require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     return this.requireFunc();
   }
