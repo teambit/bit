@@ -313,6 +313,11 @@
                 "name": "app.ts"
             },
             {
+                "relativePath": "bin/bit",
+                "test": false,
+                "name": "bit"
+            },
+            {
                 "relativePath": "cli.aspect.ts",
                 "test": false,
                 "name": "cli.aspect.ts"
