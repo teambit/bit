@@ -2,9 +2,9 @@ import React from 'react';
 import classNames from 'classnames';
 import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { VersionLabel } from '../workspace-sections/version-label';
+import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
-import { PillLabel } from '../pill-label';
+import { PillLabel } from '@teambit/staged-components.pill-label';
 import styles from './version-dropdown.module.scss';
 
 type VersionDropdownProps = {

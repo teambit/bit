@@ -6,7 +6,7 @@ import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 
 import styles from './overview-link.module.scss';
-import { NavLink } from 'bit-bin/dist/extensions/react-router';
+import { NavLink } from '@teambit/react-router';
 
 export function OverviewLink() {
   return (

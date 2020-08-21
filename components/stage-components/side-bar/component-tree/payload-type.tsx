@@ -1,3 +1,3 @@
-import { WorkspaceModelComponent } from 'bit-bin/dist/extensions/workspace';
+import { WorkspaceModelComponent } from '@teambit/workspace';
 
 export type PayloadType = WorkspaceModelComponent | undefined;

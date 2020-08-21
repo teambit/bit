@@ -1,8 +1,8 @@
 import React from 'react';
 import classNames from 'classnames';
-import { AccountObj } from '../version-block';
-import { TimeAgo } from '../../workspace-components/time-ago';
-import { UserAvatar } from '../../workspace-components/Avatar';
+import { AccountObj } from '@teambit/staged-components.workspace-sections.version-block';
+import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
+import { UserAvatar } from '@teambit/staged-components.workspace-components.avatar';
 import styles from './contributors.module.scss';
 
 export type ContributorsProps = {

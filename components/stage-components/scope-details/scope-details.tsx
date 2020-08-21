@@ -2,10 +2,10 @@ import React from 'react';
 import classNames from 'classnames';
 import { Subtitle } from '@teambit/documenter-temp.ui.sub-title';
 import { ConsumableLink } from '@teambit/documenter-temp.ui.consumable-link';
-import { UserAvatar, AccountObj } from '../workspace-components/Avatar';
+import { UserAvatar, AccountObj } from '@teambit/staged-components.workspace-components.avatar';
 
-import { ScopeTitle } from '../scope-title';
-import { ScopeLabels } from '../scope-labels';
+import { ScopeTitle } from '@teambit/staged-components.scope-title';
+import { ScopeLabels } from '@teambit/staged-components.scope-labels';
 import styles from './scope-details.module.scss';
 
 type ScopeDetailsProps = {

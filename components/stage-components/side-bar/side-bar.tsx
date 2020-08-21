@@ -5,9 +5,9 @@ import { Input } from '@teambit/evangelist-temp.input.input';
 import { ComponentTree } from './component-tree';
 import styles from './styles.module.scss';
 import { OverviewLink } from './overview-link/overview-link';
-import { ComponentID } from 'bit-bin/dist/extensions/component';
-import { DeprecationInfo } from 'bit-bin/dist/extensions/deprecation';
-import { Descriptor } from 'bit-bin/dist/extensions/environments';
+import { ComponentID } from '@teambit/component';
+import { DeprecationInfo } from '@teambit/deprecation';
+import { Descriptor } from '@teambit/environments';
 
 export type Component = {
   id: ComponentID;

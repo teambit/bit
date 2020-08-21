@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 
-import { PillLabel } from '../pill-label';
+import { PillLabel } from '@teambit/staged-components.pill-label';
 import styles from './scope-labels.module.scss';
 
 type ScopeLabelsProps = {
