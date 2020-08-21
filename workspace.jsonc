@@ -26,9 +26,9 @@
       }
     }
   },
-    // "teambit.bit/dummy": {
+    "teambit.bit/dummy": {
 
-    // },
+    },
   "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,

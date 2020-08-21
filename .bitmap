@@ -1117,6 +1117,30 @@
         "exported": false,
         "lanes": []
     },
+    "dummy": {
+        "files": [
+            {
+                "relativePath": "dummy.aspect.ts",
+                "test": false,
+                "name": "dummy.aspect.ts"
+            },
+            {
+                "relativePath": "dummy.main.runtime.ts",
+                "test": false,
+                "name": "dummy.main.runtime.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/dummy",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "environments": {
         "files": [
             {
