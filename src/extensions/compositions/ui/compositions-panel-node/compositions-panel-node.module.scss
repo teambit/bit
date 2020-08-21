@@ -1,0 +1,15 @@
+.linkWrapper {
+  background-color: var(--base-color);
+  &.active {
+    display: flex;
+    background-color: var(--base-color);
+    height: 40px;
+  }
+}
+.panelLink {
+  cursor: pointer;
+}
+
+.composition {
+  width: 200px;
+}
