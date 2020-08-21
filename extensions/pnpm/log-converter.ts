@@ -1,5 +1,5 @@
 import { LogBase } from '@pnpm/logger';
-import { Logger } from '../logger';
+import { Logger } from '@teambit/logger';
 
 export function logConverter(logger: Logger) {
   return (log: LogBase) => {

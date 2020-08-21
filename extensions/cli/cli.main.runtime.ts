@@ -1,13 +1,13 @@
 import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
 import didYouMean from 'didyoumean';
-import { Command } from '../../cli/command';
+import { Command } from 'bit-bin/dist/cli/command';
 import CommandRegistry from './registry';
-import { register } from '../../cli/command-registry';
+import { register } from 'bit-bin/dist/cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
-import { buildRegistry } from '../../cli';
-import LegacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+import { buildRegistry } from 'bit-bin/dist/cli';
+import LegacyLoadExtensions from 'bit-bin/dist/legacy-extensions/extensions-loader';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { CLIAspect, MainRuntime } from './cli.aspect';

@@ -1,8 +1,8 @@
-import { Component } from '../component';
-import ConsumerComponent from '../../consumer/component';
-import { Dependencies, DependenciesFilterFunction } from '../../consumer/component/dependencies';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { BitId } from '../../bit-id';
+import { Component } from '@teambit/component';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { Dependencies, DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { BitId } from 'bit-bin/dist/bit-id';
 import { DependenciesObjectDefinition, SemverVersion } from './types';
 
 export type DepVersionModifierFunc = (

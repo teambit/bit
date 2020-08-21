@@ -3,9 +3,9 @@ import classNames from 'classnames';
 
 import { Separator } from '@teambit/documenter-temp.ui.separator';
 import { H1 } from '@teambit/documenter-temp.ui.heading';
-import { ComponentContext } from '../../component';
+import { ComponentContext } from '@teambit/component';
 import styles from './change-log-page.module.scss';
-import { VersionBlock } from '../../../components/stage-components/workspace-sections/version-block';
+import { VersionBlock } from '@teambit/staged-components.workspace-sections.version-block';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 

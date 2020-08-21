@@ -1,5 +1,5 @@
-import { Environment } from '../environments';
-import { ReactEnv } from '../react';
+import { Environment } from '@teambit/environments';
+import { ReactEnv } from '@teambit/react';
 
 export const AspectEnvType = 'aspect';
 

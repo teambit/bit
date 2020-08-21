@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { CommandOptions, Command } from '../cli';
+import { CommandOptions, Command } from '@teambit/cli';
 import { Publisher, PublishResult, PublisherOptions } from './publisher';
 
 type PublishArgs = [string];

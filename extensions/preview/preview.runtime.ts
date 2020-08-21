@@ -1,8 +1,8 @@
 import { Harmony } from '@teambit/harmony';
-import { DocsAspect } from '../docs';
+import { DocsAspect } from '@teambit/docs';
 import { PreviewPreview } from './preview.preview.runtime';
-import { CompositionsAspect } from '../compositions';
-import { GraphqlAspect } from '../graphql';
+import { CompositionsAspect } from '@teambit/compositions';
+import { GraphqlAspect } from '@teambit/graphql';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 /**

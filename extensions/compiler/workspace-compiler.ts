@@ -1,22 +1,22 @@
 /* eslint-disable max-classes-per-file */
 import path from 'path';
 import BluebirdPromise from 'bluebird';
-import { Workspace } from '../workspace';
-import { DEFAULT_DIST_DIRNAME } from '../../constants';
-import ConsumerComponent from '../../consumer/component';
-import { BitId, BitIds } from '../../bit-id';
-import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import logger from '../../logger/logger';
-import loader from '../../cli/loader';
-import { Dist, SourceFile } from '../../consumer/component/sources';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { Workspace } from '@teambit/workspace';
+import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import logger from 'bit-bin/dist/logger/logger';
+import loader from 'bit-bin/dist/cli/loader';
+import { Dist, SourceFile } from 'bit-bin/dist/consumer/component/sources';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { Compiler } from './types';
-import { ComponentID } from '../component';
-import { Component } from '../component';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import { OnComponentChangeResult } from '../workspace';
-import { ConsumerNotFound } from '../../consumer/exceptions';
-import { EnvsMain } from '../environments';
+import { ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { OnComponentChangeResult } from '@teambit/workspace';
+import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
+import { EnvsMain } from '@teambit/environments';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 

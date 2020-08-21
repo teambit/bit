@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import React from 'react';
 import { Color } from 'ink';
-import { Command, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace, EjectConfOptions, EjectConfResult } from './workspace';
 
 type EjectConfArgs = [string];

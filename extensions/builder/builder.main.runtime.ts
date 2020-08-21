@@ -1,20 +1,20 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect } from './builder.aspect';
-import { MainRuntime, CLIAspect } from '../cli';
-import { EnvsAspect, EnvsMain } from '../environments';
-import { Workspace, WorkspaceAspect } from '../workspace';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderCmd } from './run.cmd';
-import { Component, ComponentID, ComponentAspect } from '../component';
+import { Component, ComponentID, ComponentAspect } from '@teambit/component';
 import { BuilderService } from './builder.service';
-import { BitId } from '../../bit-id';
-import { CLIMain } from '../cli';
+import { BitId } from 'bit-bin/dist/bit-id';
+import { CLIMain } from '@teambit/cli';
 import { ExtensionArtifact } from './artifact';
-import { GraphqlAspect, GraphqlMain } from '../graphql';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { builderSchema } from './builder.graphql';
 import { BuildTask } from './types';
-import { ScopeMain, ScopeAspect } from '../scope';
-import { LoggerAspect, LoggerMain } from '../logger';
-import { AspectLoaderAspect, AspectLoaderMain } from '../aspect-loader';
+import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 

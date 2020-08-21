@@ -1,11 +1,11 @@
-import { Environment } from '../environments';
-import { Tester } from '../tester';
-import { BuildTask } from '../builder';
-import { Compiler } from '../compiler';
-import type { CompilerMain } from '../compiler';
-import { DevServer, DevServerContext } from '../bundler';
+import { Environment } from '@teambit/environments';
+import { Tester } from '@teambit/tester';
+import { BuildTask } from '@teambit/builder';
+import { Compiler } from '@teambit/compiler';
+import type { CompilerMain } from '@teambit/compiler';
+import { DevServer, DevServerContext } from '@teambit/bundler';
 import type { StencilMain } from './stencil.main.runtime';
-import type { WebpackMain } from '../webpack';
+import type { WebpackMain } from '@teambit/webpack';
 import webpackConfig from './webpack/webpack.config';
 
 /**

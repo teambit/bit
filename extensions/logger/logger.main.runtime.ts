@@ -1,5 +1,5 @@
 import { LoggerAspect } from './logger.aspect';
-import { MainRuntime } from '../cli';
+import { MainRuntime } from '@teambit/cli';
 import { Logger } from './logger';
 
 export class LoggerMain {

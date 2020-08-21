@@ -1,6 +1,6 @@
-import { WorkspaceAspect } from '../workspace';
-import type { WorkspaceUI } from '../workspace';
-import { UIRuntime } from '../ui';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { WorkspaceUI } from '@teambit/workspace';
+import { UIRuntime } from '@teambit/ui';
 import { TesterAspect } from './tester.aspect';
 
 export class TesterUI {

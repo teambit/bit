@@ -1,6 +1,6 @@
 import { ReplaySubject, Subject } from 'rxjs';
-import { ContainerExec } from '../../isolator';
-import logger from '../../../logger/logger';
+import { ContainerExec } from '@teambit/isolator';
+import logger from 'bit-bin/dist/logger/logger';
 
 export function listenToExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<unknown> {
   logger.debug(`flowsExt, createExecutionStream of ${id} started`);

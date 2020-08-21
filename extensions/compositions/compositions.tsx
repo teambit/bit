@@ -7,14 +7,14 @@ import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane'
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { PropTable } from '@teambit/documenter-temp.ui.property-table';
 import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
-import { CollapsibleSplitter } from '../../components/stage-components/splitter';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { Composition } from './composition';
-import { ComponentModel } from '../component';
-import { ComponentContext } from '../component';
+import { ComponentModel } from '@teambit/component';
+import { ComponentContext } from '@teambit/component';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
-import { TabContainer, Tab, TabList, TabPanel } from '../panels';
-import { PanelContainer, Panel } from '../panels';
+import { TabContainer, Tab, TabList, TabPanel } from '@teambit/panels';
+import { PanelContainer, Panel } from '@teambit/panels';
 import styles from './compositions.module.scss';
 
 const GET_COMPONENT = gql`

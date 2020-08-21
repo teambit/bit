@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
 import { uniq, flatten } from 'ramda';
 import { ExecutionOptions } from './options';
-import { Component } from '../../component';
+import { Component } from '@teambit/component';
 
 export function createSubGraph(components: Component[], options: ExecutionOptions, graph: Graph) {
   const shouldStay = uniq(

@@ -4,22 +4,22 @@ import { omit, isEmpty } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
-} from '../../consumer/config/workspace-config';
-import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
-import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
+} from 'bit-bin/dist/consumer/config/workspace-config';
+import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from 'bit-bin/dist/constants';
+import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
-import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { AbstractVinyl } from '../../consumer/component/sources';
-import { Compilers, Testers } from '../../consumer/config/abstract-config';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
 
-import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { isFeatureEnabled, HARMONY_FEATURE, isHarmonyEnabled } from '../../api/consumer/lib/feature-toggle';
-import logger from '../../logger/logger';
-import { InvalidBitJson } from '../../consumer/config/exceptions';
-import { ILegacyWorkspaceConfig, ExtensionDataList } from '../../consumer/config';
-import { ResolveModulesConfig } from '../../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { EnvType } from 'bit-bin/dist/legacy-extensions/env-extension-types';
+import { isFeatureEnabled, HARMONY_FEATURE, isHarmonyEnabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
+import logger from 'bit-bin/dist/logger/logger';
+import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
+import { ILegacyWorkspaceConfig, ExtensionDataList } from 'bit-bin/dist/consumer/config';
+import { ResolveModulesConfig } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { HostConfig } from './types';
-import { Analytics } from '../../analytics/analytics';
+import { Analytics } from 'bit-bin/dist/analytics/analytics';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 

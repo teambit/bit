@@ -1,7 +1,7 @@
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
-import { ComponentMap } from '../component';
+import { ComponentMap } from '@teambit/component';
 import { DependenciesObjectDefinition } from './types';
-import { PathAbsolute } from '../../utils/path';
+import { PathAbsolute } from 'bit-bin/dist/utils/path';
 
 const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,

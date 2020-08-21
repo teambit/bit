@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { Component } from '../component';
+import { Component } from '@teambit/component';
 import { PreviewMain } from './preview.main.runtime';
 
 export function previewSchema(previewExtension: PreviewMain) {

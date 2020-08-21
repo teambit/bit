@@ -3,23 +3,23 @@ import hash from 'object-hash';
 import fs from 'fs-extra';
 import { map, equals } from 'ramda';
 import { IsolatorAspect } from './isolator.aspect';
-import { MainRuntime } from '../cli';
-import { CACHE_ROOT, PACKAGE_JSON } from '../../constants';
-import { Component, ComponentMap } from '../component';
-import ConsumerComponent from '../../consumer/component';
+import { MainRuntime } from '@teambit/cli';
+import { CACHE_ROOT, PACKAGE_JSON } from 'bit-bin/dist/constants';
+import { Component, ComponentMap } from '@teambit/component';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import CapsuleList from './capsule-list';
-import { BitId, BitIds } from '../../bit-id';
-import PackageJsonFile from '../../consumer/component/package-json-file';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
-import { DEPENDENCIES_FIELDS } from '../../constants';
-import { Logger, LoggerAspect, LoggerMain } from '../logger';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { DEPENDENCIES_FIELDS } from 'bit-bin/dist/constants';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
-import { DependencyResolverAspect, DependencyResolverMain } from '../dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 

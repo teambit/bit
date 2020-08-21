@@ -1,21 +1,21 @@
 import { Harmony, SlotRegistry } from '@teambit/harmony';
-import type { ScopeMain } from '../scope';
+import type { ScopeMain } from '@teambit/scope';
 import { Workspace } from './workspace';
-import type { ComponentMain } from '../component';
-import { loadConsumerIfExist, Consumer } from '../../consumer';
-import { IsolatorMain } from '../isolator';
-import ConsumerComponent from '../../consumer/component';
-import { DependencyResolverMain } from '../dependency-resolver';
-import type { VariantsMain } from '../variants';
+import type { ComponentMain } from '@teambit/component';
+import { loadConsumerIfExist, Consumer } from 'bit-bin/dist/consumer';
+import { IsolatorMain } from '@teambit/isolator';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { VariantsMain } from '@teambit/variants';
 import { WorkspaceExtConfig } from './types';
-import { GraphqlMain } from '../graphql';
+import { GraphqlMain } from '@teambit/graphql';
 import getWorkspaceSchema from './workspace.graphql';
 import InstallCmd from './install.cmd';
-import { CLIMain } from '../cli';
+import { CLIMain } from '@teambit/cli';
 import EjectConfCmd from './eject-conf.cmd';
-import { UiMain } from '../ui';
+import { UiMain } from '@teambit/ui';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { BundlerMain } from '../bundler';
+import { BundlerMain } from '@teambit/bundler';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { OnComponentLoad } from './on-component-load';
@@ -23,10 +23,10 @@ import { OnComponentChange } from './on-component-change';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
 import { EXT_NAME } from './constants';
-import ManyComponentsWriter from '../../consumer/component-ops/many-components-writer';
-import { LoggerMain } from '../logger';
-import type { AspectLoaderMain } from '../aspect-loader';
-import { EnvsMain } from '../environments';
+import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+import { LoggerMain } from '@teambit/logger';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { EnvsMain } from '@teambit/environments';
 
 export type WorkspaceDeps = [
   CLIMain,

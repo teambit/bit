@@ -1,4 +1,4 @@
-import { ComponentModel } from '../../../component';
+import { ComponentModel } from '@teambit/component';
 
 export class ScopeModel {
   constructor(

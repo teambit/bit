@@ -1,12 +1,12 @@
 import path from 'path';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
-import ConsumerComponent from '../../consumer/component';
-import { BitId } from '../../bit-id';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import Symlink from '../../links/symlink';
-import { ComponentID } from '../component';
-import { Logger } from '../logger';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { BitId } from 'bit-bin/dist/bit-id';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import Symlink from 'bit-bin/dist/links/symlink';
+import { ComponentID } from '@teambit/component';
+import { Logger } from '@teambit/logger';
 
 export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsuleList: CapsuleList, logger: Logger) {
   logger.debug(`symlinkDependenciesToCapsules, ${capsules.length} capsules`);

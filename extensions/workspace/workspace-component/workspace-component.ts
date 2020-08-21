@@ -1,4 +1,4 @@
-import { Component, TagMap, State, Snap, ComponentID } from '../../component';
+import { Component, TagMap, State, Snap, ComponentID } from '@teambit/component';
 import { Workspace } from '../workspace';
 import { Issues } from './issues';
 import { ComponentStatus } from './component-status';

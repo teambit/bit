@@ -1,7 +1,7 @@
 import { Config } from '@stencil/core';
 import { createCompiler } from '@stencil/core/compiler';
-import { DevServer } from '../bundler';
-import { Workspace } from '../workspace';
+import { DevServer } from '@teambit/bundler';
+import { Workspace } from '@teambit/workspace';
 
 export class StencilDevServer implements DevServer {
   constructor(

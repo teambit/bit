@@ -1,4 +1,4 @@
-import { BitId } from '../../bit-id';
+import { BitId } from 'bit-bin/dist/bit-id';
 
 export class ComponentID {
   constructor(

@@ -1,5 +1,5 @@
-import { ComponentFS, ComponentConfig } from '../component';
-import { PathLinux } from '../../utils/path';
+import { ComponentFS, ComponentConfig } from '@teambit/component';
+import { PathLinux } from 'bit-bin/dist/utils/path';
 import { ComponentManifest } from './manifest/component-manifest';
 /**
  * Allowed values are valid semver values and the "-" sign.

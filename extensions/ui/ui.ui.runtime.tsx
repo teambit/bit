@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { UIRootUI as UIRoot } from '../ui';
-import type { GraphqlUI } from '../graphql';
-import { GraphqlAspect } from '../graphql';
-import type { ReactRouterUI } from '../react-router';
-import { ReactRouterAspect } from '../react-router';
+import type { GraphqlUI } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ReactRouterUI } from '@teambit/react-router';
+import { ReactRouterAspect } from '@teambit/react-router';
 import { ClientContext } from './ui/client-context';
 import { Compose } from './compose';
 import { UIAspect, UIRuntime } from './ui.aspect';

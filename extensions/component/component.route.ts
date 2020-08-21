@@ -1,6 +1,6 @@
-import { Route, Request, Response } from '../express';
+import { Route, Request, Response } from '@teambit/express';
 import { ComponentID } from './id';
-import { NextFunction } from '../express';
+import { NextFunction } from '@teambit/express';
 import { ComponentMain } from './component.main.runtime';
 
 export class ComponentRoute implements Route {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Section } from '../component';
+import { Section } from '@teambit/component';
 import { DocsUI } from './docs.ui.runtime';
 import { Overview } from './overview';
 

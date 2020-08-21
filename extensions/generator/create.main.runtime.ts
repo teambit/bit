@@ -1,6 +1,6 @@
 import { CreateAspect } from './create.aspect';
-import { MainRuntime, CLIAspect } from '../cli';
-import { WorkspaceAspect } from '../workspace';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { provideCreate } from './create.provider';
 
 export const CreateMain = {

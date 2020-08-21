@@ -1,7 +1,7 @@
 import { InsightsAspect } from './insights.aspect';
-import { MainRuntime, CLIAspect } from '../cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
 import { provide } from './insight.provider';
-import { GraphAspect } from '../graph';
+import { GraphAspect } from '@teambit/graph';
 
 export const InsightsMain = {
   runtime: MainRuntime,

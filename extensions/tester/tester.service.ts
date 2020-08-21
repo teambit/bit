@@ -1,8 +1,8 @@
 import { join } from 'path';
-import { EnvService, ExecutionContext } from '../environments';
+import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Tester, TestResults } from './tester';
 import { detectTestFiles } from './utils';
-import { Workspace } from '../workspace';
+import { Workspace } from '@teambit/workspace';
 import { NoTestFilesFound } from './exceptions';
 import { TesterOptions } from './tester.main.runtime';
 

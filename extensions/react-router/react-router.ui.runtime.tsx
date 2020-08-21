@@ -3,7 +3,7 @@ import { Slot } from '@teambit/harmony';
 import { BrowserRouter, RouteProps } from 'react-router-dom';
 import { SlotRouter, RouteSlot } from './slot-router';
 import { ReactRouterAspect } from './react-router.aspect';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 
 export class ReactRouterUI {
   constructor(

@@ -2,15 +2,15 @@
 import path from 'path';
 import Vinyl from 'vinyl';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
-import { Workspace } from '../workspace';
-import { BitId } from '../../bit-id';
-import { composeComponentPath } from '../../utils/bit/compose-component-path';
-import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { AbstractVinyl } from '../../consumer/component/sources';
-import { PathOsBasedRelative } from '../../utils/path';
-import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
+import { Workspace } from '@teambit/workspace';
+import { BitId } from 'bit-bin/dist/bit-id';
+import { composeComponentPath } from 'bit-bin/dist/utils/bit/compose-component-path';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import { CreateExtConfig } from './types';
-import { ConsumerNotFound } from '../../consumer/exceptions';
+import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };

@@ -9,12 +9,12 @@ import { Extension } from '@teambit/harmony/dist/extension';
 import { resolve, join } from 'path';
 import { readdir } from 'fs-extra';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
-import { handleErrorAndExit } from '../../cli/command-runner';
-import { BitAspect, registerCoreExtensions } from '../bit';
-import { bootstrap } from '../../bootstrap';
-import { getConsumerInfo } from '../../consumer';
-import { propogateUntil as propagateUntil } from '../../utils';
-import { ConfigAspect, ConfigRuntime } from '../config';
+import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
+import { BitAspect, registerCoreExtensions } from '@teambit/bit';
+import { bootstrap } from 'bit-bin/dist/bootstrap';
+import { getConsumerInfo } from 'bit-bin/dist/consumer';
+import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
+import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { CLIMain } from './cli.main.runtime';
 

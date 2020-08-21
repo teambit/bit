@@ -1,8 +1,8 @@
 import { DeprecationAspect } from './deprecation.aspect';
-import { MainRuntime } from '../cli';
-import { GraphqlAspect, GraphqlMain } from '../graphql';
+import { MainRuntime } from '@teambit/cli';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { deprecationSchema } from './deprecation.graphql';
-import { Component, ComponentAspect } from '../component';
+import { Component, ComponentAspect } from '@teambit/component';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;

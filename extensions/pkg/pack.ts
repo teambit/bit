@@ -1,15 +1,15 @@
 import path from 'path';
 import execa from 'execa';
 import fs from 'fs-extra';
-import LegacyScope from '../../scope/scope';
+import LegacyScope from 'bit-bin/dist/scope/scope';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
-import { IsolatorMain } from '../isolator';
-import GeneralError from '../../error/general-error';
-import IsolatedEnvironment from '../../environment';
-import { ComponentID } from '../component';
-import { Consumer } from '../../consumer';
-import { Workspace } from '../workspace';
+import { IsolatorMain } from '@teambit/isolator';
+import GeneralError from 'bit-bin/dist/error/general-error';
+import IsolatedEnvironment from 'bit-bin/dist/environment';
+import { ComponentID } from '@teambit/component';
+import { Consumer } from 'bit-bin/dist/consumer';
+import { Workspace } from '@teambit/workspace';
 
 export type PackResult = {
   pkgJson: Record<any, string>;

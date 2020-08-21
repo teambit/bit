@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import { BitId } from '../../../bit-id';
-import GeneralError from '../../../error/general-error';
+import { BitId } from 'bit-bin/dist/bit-id';
+import GeneralError from 'bit-bin/dist/error/general-error';
 
 const DEV_ENV = 'development';
 const RUNTIME_ENV = 'runtime';

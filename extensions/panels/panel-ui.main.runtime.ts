@@ -1,5 +1,5 @@
 import { PanelUiAspect } from './panel-ui.aspect';
-import { MainRuntime } from '../cli';
+import { MainRuntime } from '@teambit/cli';
 
 export class PanelUIMain {
   static runtime = MainRuntime;

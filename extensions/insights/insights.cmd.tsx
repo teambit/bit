@@ -1,7 +1,7 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, Box, Text } from 'ink';
-import { Command, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '@teambit/cli';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
 

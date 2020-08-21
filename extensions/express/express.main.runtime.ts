@@ -4,8 +4,8 @@ import cors from 'cors';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Route, Middleware, Request, Response } from './types';
 import { catchErrors } from './middlewares';
-import { Logger, LoggerAspect, LoggerMain } from '../logger';
-import { MainRuntime } from '../cli';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { MainRuntime } from '@teambit/cli';
 import { ExpressAspect } from './express.aspect';
 
 export type ExpressConfig = {

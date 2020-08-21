@@ -3,8 +3,8 @@ import webpack, { Configuration, Compiler } from 'webpack';
 import pMapSeries from 'p-map-series';
 import merge from 'webpack-merge';
 import configFactory from './config/webpack.config';
-import { Bundler, Target, BundlerComponentResult } from '../bundler';
-import { Logger } from '../logger';
+import { Bundler, Target, BundlerComponentResult } from '@teambit/bundler';
+import { Logger } from '@teambit/logger';
 
 export class WebpackBundler implements Bundler {
   constructor(

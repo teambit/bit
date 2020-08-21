@@ -1,19 +1,19 @@
 import { resolve } from 'path';
-import { Environment } from '../environments';
-import { Tester, TesterMain } from '../tester';
-import { BuildTask } from '../builder';
-import { Compiler, CompilerMain } from '../compiler';
-import { DevServer, BundlerContext, DevServerContext } from '../bundler';
+import { Environment } from '@teambit/environments';
+import { Tester, TesterMain } from '@teambit/tester';
+import { BuildTask } from '@teambit/builder';
+import { Compiler, CompilerMain } from '@teambit/compiler';
+import { DevServer, BundlerContext, DevServerContext } from '@teambit/bundler';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
-import { Workspace } from '../workspace';
-import { Bundler } from '../bundler';
-import { pathNormalizeToLinux } from '../../utils';
+import { Workspace } from '@teambit/workspace';
+import { Bundler } from '@teambit/bundler';
+import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { ReactMainConfig } from './react.main.runtime';
-import { TypescriptMain } from '../typescript';
-import { WebpackMain } from '../webpack';
-import { JestMain } from '../jest';
-import { PkgMain } from '../pkg';
+import { TypescriptMain } from '@teambit/typescript';
+import { WebpackMain } from '@teambit/webpack';
+import { JestMain } from '@teambit/jest';
+import { PkgMain } from '@teambit/pkg';
 
 export const AspectEnvType = 'react';
 

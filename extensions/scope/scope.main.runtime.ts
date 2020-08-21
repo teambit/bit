@@ -2,9 +2,9 @@ import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import BluebirdPromise from 'bluebird';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import LegacyScope from '../../scope/scope';
-import { PersistOptions } from '../../scope/types';
-import { BitIds as ComponentsIds, BitId } from '../../bit-id';
+import LegacyScope from 'bit-bin/dist/scope/scope';
+import { PersistOptions } from 'bit-bin/dist/scope/types';
+import { BitIds as ComponentsIds, BitId } from 'bit-bin/dist/bit-id';
 import {
   Component,
   ComponentID,
@@ -15,28 +15,28 @@ import {
   Tag,
   TagMap,
   ComponentAspect,
-} from '../component';
-import type { ComponentMain } from '../component';
-import { loadScopeIfExist } from '../../scope/scope-loader';
-import { Version, ModelComponent } from '../../scope/models';
-import { Config } from '../component';
-import { Ref } from '../../scope/objects';
+} from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
+import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
+import { Version, ModelComponent } from 'bit-bin/dist/scope/models';
+import { Config } from '@teambit/component';
+import { Ref } from 'bit-bin/dist/scope/objects';
 import { ComponentNotFound } from './exceptions';
-import { UIAspect } from '../ui';
-import type { UiMain } from '../ui';
+import { UIAspect } from '@teambit/ui';
+import type { UiMain } from '@teambit/ui';
 import { ScopeUIRoot } from './scope.ui-root';
-import { GraphqlAspect } from '../graphql';
-import type { GraphqlMain } from '../graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { GraphqlMain } from '@teambit/graphql';
 import { scopeSchema } from './scope.graphql';
-import { CLIMain } from '../cli';
+import { CLIMain } from '@teambit/cli';
 import { ExportCmd } from './export/export-cmd';
-import { IsolatorMain, IsolatorAspect } from '../isolator';
-import { Logger, LoggerAspect, LoggerMain } from '../logger';
-import { RequireableComponent } from '../../components/utils/requireable-component';
+import { IsolatorMain, IsolatorAspect } from '@teambit/isolator';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { ScopeAspect } from './scope.aspect';
-import { MainRuntime, CLIAspect } from '../cli';
-import type { AspectLoaderMain } from '../aspect-loader';
-import { AspectLoaderAspect } from '../aspect-loader';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;

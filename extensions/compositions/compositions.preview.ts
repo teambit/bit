@@ -1,4 +1,4 @@
-import { PreviewAspect, PreviewPreview } from '../preview';
+import { PreviewAspect, PreviewPreview } from '@teambit/preview';
 
 export class CompositionsPreview {
   constructor(

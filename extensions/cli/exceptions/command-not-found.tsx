@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitError } from '../../../error/bit-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 export class CommandNotFound extends BitError {
   commandName: string;

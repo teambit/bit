@@ -7,11 +7,11 @@ import webpack from 'webpack';
 import getPort from 'get-port';
 import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
-import { GraphqlMain } from '../graphql';
-import { ExpressMain } from '../express';
+import { GraphqlMain } from '@teambit/graphql';
+import { ExpressMain } from '@teambit/express';
 import { UiMain } from './ui.main.runtime';
 import { UIRoot, ProxyEntry } from './ui-root';
-import { Logger } from '../logger';
+import { Logger } from '@teambit/logger';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');

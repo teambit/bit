@@ -6,14 +6,14 @@ import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane'
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
-import { RouteSlot, SlotRouter } from '../../../react-router';
-import { useDataQuery } from '../../../ui';
-import { FullLoader } from '../../../../to-eject/full-loader';
+import { RouteSlot, SlotRouter } from '@teambit/react-router';
+import { useDataQuery } from '@teambit/ui';
+import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { WorkspaceOverview } from './workspace-overview';
-import { TopBar } from '../../../../components/stage-components/top-bar';
-import { SideBar } from '../../../../components/stage-components/side-bar';
-import { Corner } from '../../../../components/stage-components/corner';
-import { CollapsibleSplitter } from '../../../../components/stage-components/splitter';
+import { TopBar } from '@teambit/staged-components.top-bar';
+import { SideBar } from '@teambit/staged-components.side-bar';
+import { Corner } from '@teambit/staged-components.corner';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import styles from './workspace.module.scss';
 
 const WORKSPACE = gql`

@@ -1,11 +1,11 @@
 import { join } from 'path';
-import { BuildTask, BuildContext, BuildResults } from '../builder';
-import { Bundler, BundlerContext, Target, BundlerMain } from '../bundler';
-import { ComponentMap } from '../component';
+import { BuildTask, BuildContext, BuildResults } from '@teambit/builder';
+import { Bundler, BundlerContext, Target, BundlerMain } from '@teambit/bundler';
+import { ComponentMap } from '@teambit/component';
 import { PreviewDefinition } from './preview-definition';
-import { Capsule } from '../isolator';
-import { AbstractVinyl } from '../../consumer/component/sources';
-import { Compiler } from '../compiler';
+import { Capsule } from '@teambit/isolator';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { Compiler } from '@teambit/compiler';
 import { PreviewMain } from './preview.main.runtime';
 
 export class PreviewTask implements BuildTask {

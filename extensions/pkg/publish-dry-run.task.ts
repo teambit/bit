@@ -1,7 +1,7 @@
-import { BuildContext } from '../builder';
-import { BuildTask, BuildResults } from '../builder';
+import { BuildContext } from '@teambit/builder';
+import { BuildTask, BuildResults } from '@teambit/builder';
 import { Publisher } from './publisher';
-import { Logger } from '../logger';
+import { Logger } from '@teambit/logger';
 
 /**
  * publish build task is running "publish --dry-run" to avoid later npm errors during export

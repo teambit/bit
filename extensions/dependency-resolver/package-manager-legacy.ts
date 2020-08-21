@@ -6,10 +6,10 @@ import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
-import { Logger } from '../logger';
-import { Capsule } from '../isolator';
-import { pipeOutput } from '../../utils/child_process';
-import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
+import { Logger } from '@teambit/logger';
+import { Capsule } from '@teambit/isolator';
+import { pipeOutput } from 'bit-bin/dist/utils/child_process';
+import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
 
 export default class PackageManager {
   private emitter = new EventEmitter();

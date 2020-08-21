@@ -1,8 +1,8 @@
 import React from 'react';
 import { ChangeLogPage } from './ui/change-log-page';
-import { ComponentUI, ComponentAspect } from '../component';
+import { ComponentUI, ComponentAspect } from '@teambit/component';
 import { ChangelogSection } from './changelog.section';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 import { ChangelogAspect } from './changelog.aspect';
 
 export class ChangeLogUI {

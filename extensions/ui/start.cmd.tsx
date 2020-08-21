@@ -1,5 +1,5 @@
 import React from 'react';
-import { Command, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '@teambit/cli';
 import type { UiMain } from './ui.main.runtime';
 import { UIServerConsole } from './env-console';
 

@@ -8,13 +8,13 @@ import {
 } from '../types';
 import { Manifest, ManifestToJsonOptions } from './manifest';
 import { ComponentManifest } from './component-manifest';
-import { Component, ComponentID } from '../../component';
-import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
+import { Component, ComponentID } from '@teambit/component';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
 import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
-import { Dependency, DependenciesFilterFunction } from '../../../consumer/component/dependencies';
+import { Dependency, DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
 import { MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
-import { BitId } from '../../../bit-id';
+import { BitId } from 'bit-bin/dist/bit-id';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {

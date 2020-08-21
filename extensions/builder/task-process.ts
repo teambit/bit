@@ -1,10 +1,10 @@
 import { flatten } from 'ramda';
 import { BuildTask, BuildResults, BuildContext } from './types';
-import GeneralError from '../../error/general-error';
-import { ExtensionDataEntry } from '../../consumer/config/extension-data';
-import { Component } from '../component';
-import { Capsule } from '../isolator';
-import { Artifact } from '../../consumer/component/sources/artifact';
+import GeneralError from 'bit-bin/dist/error/general-error';
+import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
+import { Component } from '@teambit/component';
+import { Capsule } from '@teambit/isolator';
+import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
 
 export class TaskProcess {
   constructor(

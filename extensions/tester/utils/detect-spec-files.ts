@@ -1,4 +1,4 @@
-import { Component } from '../../component';
+import { Component } from '@teambit/component';
 
 /**
  * detect test files in components

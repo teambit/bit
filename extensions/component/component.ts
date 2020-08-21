@@ -10,7 +10,7 @@ import { TagMap } from './tag-map';
 import { State } from './state';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
-import { capitalize } from '../../components/utils/capitalize';
+import { capitalize } from '@teambit/utils.capitalize';
 // import { Author } from './types';
 
 /**

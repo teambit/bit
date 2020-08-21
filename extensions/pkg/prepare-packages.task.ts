@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { BuildContext } from '../builder';
-import { BuildTask, BuildResults } from '../builder';
-import { Logger } from '../logger';
-import { Compiler } from '../compiler';
-import { Capsule } from '../isolator';
-import PackageJsonFile from '../../consumer/component/package-json-file';
+import { BuildContext } from '@teambit/builder';
+import { BuildTask, BuildResults } from '@teambit/builder';
+import { Logger } from '@teambit/logger';
+import { Compiler } from '@teambit/compiler';
+import { Capsule } from '@teambit/isolator';
+import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 
 /**
  * prepare packages for publishing. practically. remove the source files and copy the dists files

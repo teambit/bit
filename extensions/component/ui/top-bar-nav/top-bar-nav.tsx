@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import { useRouteMatch } from 'react-router-dom';
 
 import styles from './top-bar-nav.module.scss';
-import { extendPath } from '../../../react-router';
-import { NavLink, NavLinkProps } from '../../../react-router';
+import { extendPath } from '@teambit/react-router';
+import { NavLink, NavLinkProps } from '@teambit/react-router';
 
 export function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();

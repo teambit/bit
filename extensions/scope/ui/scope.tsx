@@ -2,15 +2,15 @@ import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
-import { RouteSlot, SlotRouter } from '../../react-router';
+import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { ScopeOverview } from './scope-overview';
-import { FullLoader } from '../../../to-eject/full-loader';
+import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { ScopeProvider } from './scope-provider';
-import { Corner } from '../../../components/stage-components/corner';
-import { SideBar } from '../../../components/stage-components/side-bar';
+import { Corner } from '@teambit/staged-components.corner';
+import { SideBar } from '@teambit/staged-components.side-bar';
 import { useScope } from './use-scope';
-import { TopBar } from '../../../components/stage-components/top-bar';
-import { CollapsibleSplitter } from '../../../components/stage-components/splitter';
+import { TopBar } from '@teambit/staged-components.top-bar';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import styles from './scope.module.scss';
 
 export type ScopeProps = {

@@ -1,7 +1,7 @@
 import { AspectAspect } from './aspect.aspect';
-import { MainRuntime } from '../cli';
-import { ReactAspect, ReactMain } from '../react';
-import { EnvsMain, EnvsAspect } from '../environments';
+import { MainRuntime } from '@teambit/cli';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { EnvsMain, EnvsAspect } from '@teambit/environments';
 import { AspectEnv } from './aspect.env';
 
 export class AspectMain {

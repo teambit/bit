@@ -1,5 +1,5 @@
 import { Environment } from '../environment';
-import { Component } from '../../component';
+import { Component } from '@teambit/component';
 
 export class EnvRuntime {
   constructor(

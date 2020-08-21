@@ -5,7 +5,7 @@ import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
 import { Separator } from '@teambit/base-ui-temp.elements.separator';
 import { NotificationContext, Message } from '../notification-context';
 import styles from './notification.module.scss';
-import { TimeAgo } from '../../../../components/stage-components/workspace-components/time-ago';
+import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
 
 const DISMISS_TIME = +styles.dismissTime;
 

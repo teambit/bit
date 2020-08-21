@@ -1,4 +1,4 @@
-import { ComponentID } from '../../component';
+import { ComponentID } from '@teambit/component';
 
 export class PreviewArtifactNotFound extends Error {
   constructor(readonly componentId: ComponentID) {

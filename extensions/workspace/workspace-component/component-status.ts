@@ -1,4 +1,4 @@
-import { ComponentStatus as LegacyComponentStatus } from '../../../consumer/component-ops/component-status-loader';
+import { ComponentStatus as LegacyComponentStatus } from 'bit-bin/dist/consumer/component-ops/component-status-loader';
 
 export type ModifyInfo = {
   hasModifiedFiles: boolean;

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
-import { Schema } from '../graphql';
-import { Component } from '../component';
+import { Schema } from '@teambit/graphql';
+import { Component } from '@teambit/component';
 import { DeprecationMain } from './deprecation.main.runtime';
 
 export function deprecationSchema(deprecation: DeprecationMain): Schema {

@@ -2,14 +2,14 @@
 import { Graph } from 'graphlib';
 import { ReplaySubject } from 'rxjs';
 import { ExecutionOptions } from '../network/options';
-import { ComponentID, Component } from '../../component';
+import { ComponentID, Component } from '@teambit/component';
 import { Network } from '../network';
-import { BitId } from '../../../bit-id';
-import { Consumer } from '../../../consumer';
-import { Workspace } from '../../workspace';
+import { BitId } from 'bit-bin/dist/bit-id';
+import { Consumer } from 'bit-bin/dist/consumer';
+import { Workspace } from '@teambit/workspace';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
 import { Flow } from '../flow';
-import { Capsule } from '../../isolator';
+import { Capsule } from '@teambit/isolator';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };

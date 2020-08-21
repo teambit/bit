@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import { TypescriptCompiler } from './typescript.compiler';
-import { Logger } from '../logger';
+import { Logger } from '@teambit/logger';
 
 describe('TypescriptCompiler', () => {
   describe('getDistPathBySrcPath', () => {

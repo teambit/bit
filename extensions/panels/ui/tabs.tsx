@@ -9,7 +9,7 @@ import {
   TabPanel as TabPanelBase,
 } from 'react-tabs';
 
-import { clickable } from '../../../to-eject/css-components/clickable';
+import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import styles from './tabs.module.scss';
 
 export type TabContainerProps = Tabs;

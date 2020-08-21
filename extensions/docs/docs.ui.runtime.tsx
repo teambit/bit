@@ -1,6 +1,6 @@
-import { ComponentUI, ComponentAspect } from '../component';
+import { ComponentUI, ComponentAspect } from '@teambit/component';
 import { OverviewSection } from './overview.section';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 import { DocsAspect } from './docs.aspect';
 
 export class DocsUI {

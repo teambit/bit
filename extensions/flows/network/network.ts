@@ -3,14 +3,14 @@ import { mergeMap, map, filter, mergeAll, tap, concatAll } from 'rxjs/operators'
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
-import { Workspace } from '../../workspace';
-import { Consumer } from '../../../consumer';
-import DependencyGraph from '../../../scope/graph/scope-graph';
+import { Workspace } from '@teambit/workspace';
+import { Consumer } from 'bit-bin/dist/consumer';
+import DependencyGraph from 'bit-bin/dist/scope/graph/scope-graph';
 import { ExecutionOptions } from './options';
 import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
-import { ComponentID } from '../../component';
-import { Capsule } from '../../isolator';
+import { ComponentID } from '@teambit/component';
+import { Capsule } from '@teambit/isolator';
 import { toposortByLevels } from '../util/sort-graph-by-levels';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;

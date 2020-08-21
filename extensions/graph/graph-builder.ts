@@ -1,8 +1,8 @@
-import { Workspace } from '../workspace';
+import { Workspace } from '@teambit/workspace';
 import { ComponentGraph } from './component-graph';
-import { ComponentFactory } from '../component';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
-import { ScopeMain } from '../scope';
+import { ComponentFactory } from '@teambit/component';
+import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
+import { ScopeMain } from '@teambit/scope';
 
 export class GraphBuilder {
   _graph?: ComponentGraph;

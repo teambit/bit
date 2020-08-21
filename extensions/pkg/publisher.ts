@@ -1,14 +1,14 @@
 import execa from 'execa';
 import Bluebird from 'bluebird';
-import { IsolatorMain, Capsule } from '../isolator';
-import { Scope } from '../../scope';
-import { Logger } from '../logger';
-import { BitId, BitIds } from '../../bit-id';
-import { ComponentID } from '../component';
-import { PublishPostExportResult } from '../../scope/component-ops/publish-during-export';
-import GeneralError from '../../error/general-error';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
-import { Workspace } from '../workspace';
+import { IsolatorMain, Capsule } from '@teambit/isolator';
+import { Scope } from 'bit-bin/dist/scope';
+import { Logger } from '@teambit/logger';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { ComponentID } from '@teambit/component';
+import { PublishPostExportResult } from 'bit-bin/dist/scope/component-ops/publish-during-export';
+import GeneralError from 'bit-bin/dist/error/general-error';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { Workspace } from '@teambit/workspace';
 
 export type PublisherOptions = {
   dryRun?: boolean;

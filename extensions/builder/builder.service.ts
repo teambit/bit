@@ -1,7 +1,7 @@
-import { EnvService, ExecutionContext } from '../environments';
-import { Workspace } from '../workspace';
+import { EnvService, ExecutionContext } from '@teambit/environments';
+import { Workspace } from '@teambit/workspace';
 import { BuildPipe } from './build-pipe';
-import { Logger } from '../logger';
+import { Logger } from '@teambit/logger';
 import { BuildTask } from './types';
 import { TaskSlot } from './builder.main.runtime';
 

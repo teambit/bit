@@ -1,12 +1,12 @@
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import { Slot } from '@teambit/harmony';
-import { NavLinkProps } from '../react-router';
+import { NavLinkProps } from '@teambit/react-router';
 import { Component } from './ui/component';
-import { RouteSlot, NavigationSlot } from '../react-router';
+import { RouteSlot, NavigationSlot } from '@teambit/react-router';
 import { Menu } from './ui/menu';
 import { ComponentAspect } from '../component';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 
 export type Server = {
   env: string;

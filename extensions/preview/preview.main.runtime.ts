@@ -3,19 +3,19 @@ import { writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { generateLink, makeReExport, makeLinkUpdater } from './generate-link';
 import { PreviewAspect } from './preview.aspect';
-import { ComponentMap } from '../component/component-map';
-import { BundlerAspect, BundlerMain } from '../bundler';
-import { BuilderAspect, BuilderMain } from '../builder';
+import { ComponentMap } from '@teambit/component/component-map';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { PreviewTask } from './preview.task';
 import { PreviewDefinition } from './preview-definition';
-import { ExecutionContext, EnvsAspect, EnvsMain } from '../environments';
+import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
 import { PreviewRoute } from './preview.route';
-import { Component, ComponentAspect, ComponentMain } from '../component';
+import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
 import { makeTempDir } from './mk-temp-dir';
-import { MainRuntime } from '../cli';
-import { UIAspect, UiMain } from '../ui';
+import { MainRuntime } from '@teambit/cli';
+import { UIAspect, UiMain } from '@teambit/ui';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 

@@ -3,7 +3,7 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Packer, PackOptions } from './pack';
-import { CommandOptions, Command } from '../cli';
+import { CommandOptions, Command } from '@teambit/cli';
 
 type PackArgs = [string, string];
 

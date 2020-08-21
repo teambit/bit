@@ -1,6 +1,6 @@
 import { createTesting } from '@stencil/core/testing';
-import { Tester, TestResults, TesterContext } from '../tester';
-import { Workspace } from '../workspace';
+import { Tester, TestResults, TesterContext } from '@teambit/tester';
+import { Workspace } from '@teambit/workspace';
 
 export class StencilTester implements Tester {
   constructor(private workspace: Workspace) {}

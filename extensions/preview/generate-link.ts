@@ -1,4 +1,4 @@
-import { ComponentMap } from '../component/component-map';
+import { ComponentMap } from '@teambit/component/component-map';
 
 // :TODO refactor to building an AST and generate source code based on it.
 export function generateLink(componentMap: ComponentMap<string[]>, defaultModule?: string): string {

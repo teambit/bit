@@ -2,7 +2,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
-import { GraphBuilder } from '../../graph';
+import { GraphBuilder } from '@teambit/graph';
 import NoDataForInsight from '../exceptions/no-data-for-insight';
 
 export const INSIGHT_NAME = 'cyclic dependencies';

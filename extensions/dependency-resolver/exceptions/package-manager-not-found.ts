@@ -1,4 +1,4 @@
-import { BitError } from '../../../error/bit-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 export class PackageManagerNotFound extends BitError {
   constructor(private packageManagerName: string) {

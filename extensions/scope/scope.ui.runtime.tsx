@@ -1,15 +1,15 @@
 import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
-import { RouteSlot } from '../react-router';
-import { UIRootUI as UIRoot } from '../ui';
-import { UIAspect } from '../ui';
-import type { UiUI } from '../ui';
+import { RouteSlot } from '@teambit/react-router';
+import { UIRootUI as UIRoot } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
+import type { UiUI } from '@teambit/ui';
 import { Scope } from './ui/scope';
-import { ComponentAspect } from '../component';
-import type { ComponentUI } from '../component';
+import { ComponentAspect } from '@teambit/component';
+import type { ComponentUI } from '@teambit/component';
 import { ScopeAspect } from './scope.aspect';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 
 export type MenuItem = {
   label: JSX.Element | string | null;

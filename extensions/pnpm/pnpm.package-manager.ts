@@ -1,14 +1,14 @@
 import { join } from 'path';
 import { install } from './lynx';
-import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '../dependency-resolver';
-import { ComponentMap } from '../component';
+import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
   DependenciesObjectDefinition,
-} from '../dependency-resolver';
-import { Logger } from '../logger';
-import { PkgMain } from '../pkg';
+} from '@teambit/dependency-resolver';
+import { Logger } from '@teambit/logger';
+import { PkgMain } from '@teambit/pkg';
 
 const userHome = require('user-home');
 

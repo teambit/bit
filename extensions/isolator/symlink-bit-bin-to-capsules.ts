@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { Capsule } from './capsule';
-import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import { Logger } from '../logger';
+import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
+import { Logger } from '@teambit/logger';
 
 export async function symlinkBitBinToCapsules(capsules: Capsule[], logger: Logger) {
   logger.debug(`symlink bit bin to capsules, ${capsules.length} capsules`);
@@ -12,7 +12,7 @@ export async function symlinkBitBinToCapsules(capsules: Capsule[], logger: Logge
 
 export async function copyBitBinToCapsuleRoot(root: string, logger: Logger) {
   logger.debug(`symlink bit-bin package to capsule root`);
-  const localBitBinPath = path.join(__dirname, '../../..');
+  const localBitBinPath = path.join(__dirname, 'bit-bin/dist/..');
   const targetPath = path.join(root, './node_modules/bit-bin');
   await fs.copy(localBitBinPath, targetPath);
 }
@@ -20,7 +20,7 @@ export async function copyBitBinToCapsuleRoot(root: string, logger: Logger) {
 async function linkBitBinInCapsule(capsule: Capsule) {
   const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
   const getLocalBitBinPath = () => {
-    const pathOutsideNodeModules = path.join(__dirname, '../../..');
+    const pathOutsideNodeModules = path.join(__dirname, 'bit-bin/dist/..');
     return pathOutsideNodeModules;
     // if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
     //   return pathOutsideNodeModules;

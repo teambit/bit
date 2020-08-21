@@ -1,4 +1,4 @@
-import { Component } from '../../component';
+import { Component } from '@teambit/component';
 
 export type EnvContext = {
   components: Component[];

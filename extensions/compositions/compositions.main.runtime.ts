@@ -1,17 +1,17 @@
 import { CompositionsAspect } from './compositions.aspect';
-import { MainRuntime } from '../cli';
-import { Component, ComponentAspect } from '../component';
-import { ExecutionContext } from '../environments';
-import { ComponentMap } from '../component';
+import { MainRuntime } from '@teambit/cli';
+import { Component, ComponentAspect } from '@teambit/component';
+import { ExecutionContext } from '@teambit/environments';
+import { ComponentMap } from '@teambit/component';
 import { Composition } from './composition';
 import { compositionsSchema } from './compositions.graphql';
-import { AbstractVinyl } from '../../consumer/component/sources';
-import { Workspace, WorkspaceAspect } from '../workspace';
-import { ExtensionData } from '../workspace';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { ExtensionData } from '@teambit/workspace';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
-import { PreviewMain, PreviewAspect } from '../preview';
-import { SchemaMain, SchemaAspect } from '../schema';
-import { GraphqlAspect, GraphqlMain } from '../graphql';
+import { PreviewMain, PreviewAspect } from '@teambit/preview';
+import { SchemaMain, SchemaAspect } from '@teambit/schema';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 
 export type CompositionsConfig = {
   /**

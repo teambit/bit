@@ -1,6 +1,6 @@
 import CapsuleList from './capsule-list';
-import Graph from '../../scope/graph/graph';
-import { ComponentID } from '../component';
+import Graph from 'bit-bin/dist/scope/graph/graph';
+import { ComponentID } from '@teambit/component';
 import { Capsule } from './capsule';
 
 export class Network {

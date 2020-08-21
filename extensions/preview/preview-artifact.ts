@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '../../consumer/component/sources';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 
 export class PreviewArtifact {
   constructor(private artifacts: AbstractVinyl[]) {}

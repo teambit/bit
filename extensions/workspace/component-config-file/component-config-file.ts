@@ -3,11 +3,11 @@ import fs from 'fs-extra';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import stringifyPackage from 'stringify-package';
-import { ExtensionDataList } from '../../../consumer/config/extension-data';
-import { COMPONENT_CONFIG_FILE_NAME } from '../../../constants';
-import { PathOsBasedAbsolute } from '../../../utils/path';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { COMPONENT_CONFIG_FILE_NAME } from 'bit-bin/dist/constants';
+import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import { AlreadyExistsError } from './exceptions';
-import { ComponentID } from '../../component';
+import { ComponentID } from '@teambit/component';
 
 interface ComponentConfigFileOptions {
   indent: number;

@@ -6,10 +6,10 @@ import { path, equals } from 'ramda';
 import { promises as fs } from 'fs';
 import { lock, unlock } from 'proper-lockfile';
 import { join } from 'path';
-import { CACHE_ROOT } from '../../constants';
-import { Capsule } from '../isolator';
-import ConsumerComponent from '../../consumer/component';
-import { AbstractVinyl } from '../../consumer/component/sources';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
+import { Capsule } from '@teambit/isolator';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 
 export class ExecutionCache {
   constructor(private pathToCache: string) {}

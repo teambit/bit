@@ -1,12 +1,12 @@
 import { difference } from 'ramda';
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
-import { MainRuntime } from '../cli';
-import { LoggerAspect, Logger } from '../logger';
-import type { LoggerMain } from '../logger';
+import { MainRuntime } from '@teambit/cli';
+import { LoggerAspect, Logger } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
 import { UNABLE_TO_LOAD_EXTENSION_FROM_LIST, UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { CannotLoadExtension } from './exceptions';
-import { RequireableComponent } from '../../components/utils/requireable-component';
+import { RequireableComponent } from '@teambit/utils.requireable-component';
 
 export type AspectDescriptor = {
   /**

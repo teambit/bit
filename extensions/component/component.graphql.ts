@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { Component } from './component';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
 

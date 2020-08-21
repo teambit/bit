@@ -1,7 +1,7 @@
 import { Component } from './component';
 import { ComponentID } from './id';
 import { State } from './state';
-import { BitId } from '../../bit-id';
+import { BitId } from 'bit-bin/dist/bit-id';
 
 export interface ComponentFactory {
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;

@@ -1,12 +1,12 @@
-import { UIRoot } from '../ui';
-import { Component, ComponentID } from '../component';
+import { UIRoot } from '@teambit/ui';
+import { Component, ComponentID } from '@teambit/component';
 import { Workspace } from '.';
-import { PathOsBased } from '../../utils/path';
-import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
-import { BundlerMain } from '../bundler';
-import { PostStartOptions, ProxyEntry } from '../ui/ui-root';
-import { ComponentServer } from '../bundler/component-server';
-import { flatten } from '../../utils';
+import { PathOsBased } from 'bit-bin/dist/utils/path';
+import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
+import { BundlerMain } from '@teambit/bundler';
+import { PostStartOptions, ProxyEntry } from '@teambit/ui/ui-root';
+import { ComponentServer } from '@teambit/bundler/component-server';
+import { flatten } from 'bit-bin/dist/utils';
 
 export class WorkspaceUIRoot implements UIRoot {
   constructor(
@@ -35,7 +35,7 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('./workspace.ui.runtime'),
       require.resolve('../tester/tester.ui.runtime'),
       require.resolve('../changelog/changelog.ui.runtime'),
-      require.resolve('../component/component.ui.runtime'),
+      require.resolve('@teambit/component/component.ui.runtime'),
       require.resolve('../compositions/compositions.ui.runtime'),
       require.resolve('../docs/docs.ui.runtime'),
       require.resolve('../graphql/graphql.ui.runtime'),
@@ -49,7 +49,7 @@ export class WorkspaceUIRoot implements UIRoot {
       require.resolve('./workspace.aspect'),
       require.resolve('../tester/tester.aspect'),
       require.resolve('../changelog/changelog.aspect'),
-      require.resolve('../component/component.aspect'),
+      require.resolve('@teambit/component/component.aspect'),
       require.resolve('../compositions/compositions.aspect'),
       require.resolve('../docs/docs.aspect'),
       require.resolve('../graphql/graphql.aspect'),

@@ -1,7 +1,7 @@
-import { PreviewDefinition } from '../preview';
-import { ComponentMap, Component } from '../component';
-import { ExecutionContext } from '../environments';
-import { AbstractVinyl } from '../../consumer/component/sources';
+import { PreviewDefinition } from '@teambit/preview';
+import { ComponentMap, Component } from '@teambit/component';
+import { ExecutionContext } from '@teambit/environments';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { CompositionsMain } from './compositions.main.runtime';
 
 export class CompositionPreviewDefinition implements PreviewDefinition {

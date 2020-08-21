@@ -7,7 +7,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { onError } from 'apollo-link-error';
 import { GraphQLProvider } from './graphql-provider';
 import { createLink } from './create-link';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 import { GraphqlAspect } from './graphql.aspect';
 
 export class GraphqlUI {

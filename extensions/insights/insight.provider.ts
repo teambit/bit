@@ -1,9 +1,9 @@
-import { GraphBuilder } from '../graph';
+import { GraphBuilder } from '@teambit/graph';
 import getCoreInsights from './core-insights-getter';
 import { InsightManager } from './insight-manager';
 import { Insight } from './insight';
 import InsightsCmd from './insights.cmd';
-import { CLIMain } from '../cli';
+import { CLIMain } from '@teambit/cli';
 
 export type InsightDeps = [GraphBuilder, CLIMain];
 

@@ -3,7 +3,7 @@
 import { Subject } from 'rxjs';
 import { join } from 'path';
 import { listenToExecutionStream } from './execution-stream';
-import { Capsule, ContainerExec } from '../../isolator';
+import { Capsule, ContainerExec } from '@teambit/isolator';
 
 export const PackageMarker = '@';
 

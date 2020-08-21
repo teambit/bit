@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
 import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
-import { ComponentComposition } from '../../../../compositions';
+import { ComponentComposition } from '@teambit/compositions';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';
 

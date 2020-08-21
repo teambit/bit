@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from '../cli';
+import { Command, CommandOptions } from '@teambit/cli';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {

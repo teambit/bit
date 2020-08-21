@@ -1,4 +1,4 @@
-import { BitError } from '../../../error/bit-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 export class ScopeNotFound extends BitError {
   constructor(readonly scopePath?: string) {

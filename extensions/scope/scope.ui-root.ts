@@ -1,4 +1,4 @@
-import { UIRoot } from '../ui';
+import { UIRoot } from '@teambit/ui';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeUIRoot implements UIRoot {

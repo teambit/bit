@@ -1,8 +1,8 @@
 import { join } from 'path';
-import { BuildContext } from '../builder';
-import { BuildTask, BuildResults } from '../builder';
+import { BuildContext } from '@teambit/builder';
+import { BuildTask, BuildResults } from '@teambit/builder';
 import { Tester } from './tester';
-import { CACHE_ROOT } from '../../constants';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import { detectTestFiles } from './utils';
 
 // move else where!!!

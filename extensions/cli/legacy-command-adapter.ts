@@ -1,6 +1,6 @@
 import { Command, CommandOptions, GenericObject } from '.';
-import { LegacyCommand } from '../../cli/legacy-command';
-import allHelp from '../../cli/templates/all-help';
+import { LegacyCommand } from 'bit-bin/dist/cli/legacy-command';
+import allHelp from 'bit-bin/dist/cli/templates/all-help';
 import { getID } from '.';
 import { CLIMain } from './cli.main.runtime';
 

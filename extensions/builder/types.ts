@@ -1,6 +1,6 @@
-import { Component, ComponentID } from '../component';
-import { Network } from '../isolator';
-import { ExecutionContext } from '../environments';
+import { Component, ComponentID } from '@teambit/component';
+import { Network } from '@teambit/isolator';
+import { ExecutionContext } from '@teambit/environments';
 
 export interface BuildContext extends ExecutionContext {
   /**

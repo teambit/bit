@@ -1,5 +1,5 @@
 import { runCLI } from 'jest';
-import { Tester, TestResults, TesterContext } from '../tester';
+import { Tester, TestResults, TesterContext } from '@teambit/tester';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}

@@ -1,23 +1,23 @@
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { PkgAspect } from './pkg.aspect';
-import { MainRuntime, CLIAspect } from '../cli';
-// import { BitCli as CLI, BitCliExt as CLIExtension } from '../cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+// import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
 import { PublishCmd } from './publish.cmd';
 import { Packer, PackResult, PackOptions } from './pack';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
-import ConsumerComponent from '../../consumer/component';
-import { CLIMain } from '../cli';
-import { IsolatorMain, IsolatorAspect } from '../isolator';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { CLIMain } from '@teambit/cli';
+import { IsolatorMain, IsolatorAspect } from '@teambit/isolator';
 import { Publisher } from './publisher';
 import { PublishDryRunTask } from './publish-dry-run.task';
-import { Component } from '../component';
-import { WorkspaceAspect, Workspace } from '../workspace';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { Component } from '@teambit/component';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PreparePackagesTask } from './prepare-packages.task';
-import { ScopeAspect, ScopeMain } from '../scope';
-import { LoggerAspect, LoggerMain } from '../logger';
-import { EnvsAspect, EnvsMain } from '../environments';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 
 export interface PackageJsonProps {
   [key: string]: any;

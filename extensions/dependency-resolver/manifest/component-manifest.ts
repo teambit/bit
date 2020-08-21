@@ -1,7 +1,7 @@
 import { SemVer } from 'semver';
 import { Manifest } from './manifest';
 import { DependenciesObjectDefinition } from '../types';
-import { Component } from '../../component';
+import { Component } from '@teambit/component';
 
 export class ComponentManifest extends Manifest {
   constructor(

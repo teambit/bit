@@ -2,12 +2,12 @@ import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
 import { Workspace } from './ui';
-import { RouteSlot } from '../react-router';
-import { UIRootUI as UIRoot } from '../ui';
-import { UiUI, UIAspect } from '../ui';
-import { ComponentUI, ComponentAspect } from '../component';
+import { RouteSlot } from '@teambit/react-router';
+import { UIRootUI as UIRoot } from '@teambit/ui';
+import { UiUI, UIAspect } from '@teambit/ui';
+import { ComponentUI, ComponentAspect } from '@teambit/component';
 import { WorkspaceAspect } from './workspace.aspect';
-import { UIRuntime } from '../ui';
+import { UIRuntime } from '@teambit/ui';
 
 export type MenuItem = {
   label: JSX.Element | string | null;

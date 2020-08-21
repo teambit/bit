@@ -1,4 +1,4 @@
-import { EnvService, ExecutionContext } from '../environments';
+import { EnvService, ExecutionContext } from '@teambit/environments';
 
 export class DocsService implements EnvService {
   async run(context: ExecutionContext) {

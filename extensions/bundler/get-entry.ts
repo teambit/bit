@@ -1,8 +1,8 @@
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
-import { ExecutionContext } from '../environments';
-import { PathOsBased } from '../../utils/path';
-import { GetBitMapComponentOptions } from '../../consumer/bit-map/bit-map';
-import { ComponentID } from '../component';
+import { ExecutionContext } from '@teambit/environments';
+import { PathOsBased } from 'bit-bin/dist/utils/path';
+import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
+import { ComponentID } from '@teambit/component';
 
 export type ComponentDir = {
   componentDir?: (

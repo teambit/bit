@@ -1,4 +1,4 @@
-import { Command } from '../../cli/command';
+import { Command } from 'bit-bin/dist/cli/command';
 import { AlreadyExistsError } from './exceptions';
 
 export default class CommandRegistry {
