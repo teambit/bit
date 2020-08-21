@@ -9,7 +9,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 
 export class FlattenedDependencyLoader {
   private cache: { [bitIdStr: string]: Component } = {};
-  constructor(private consumer: Consumer) {}
+  constructor(private consumer: Consumer, private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>) {}
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds());
     const devDependencies = await this.loadManyDependencies(component.devDependencies.getAllIds());
@@ -34,6 +34,12 @@ export class FlattenedDependencyLoader {
       const componentMap = this.consumer.bitMap.getComponentIfExist(dependencyId);
       const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
       if (couldBeModified) {
+        if (this.loadComponentsFunc) {
+          const dependency = await this.loadComponentsFunc([dependencyId]);
+          if (!dependency.length || !dependency[0])
+            throw new Error(`unable to load ${dependencyId.toString()} using custom load function`);
+          return dependency[0];
+        }
         return this.consumer.loadComponentForCapsule(dependencyId);
       }
       // for capsule, a dependency might have been installed as a package in the workspace, and as

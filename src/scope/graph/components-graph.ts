@@ -68,10 +68,18 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 export async function buildOneGraphForComponents(
   ids: BitId[],
   consumer: Consumer,
-  direction: 'normal' | 'reverse' = 'normal'
+  direction: 'normal' | 'reverse' = 'normal',
+  loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
 ): Promise<Graph> {
-  const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer);
+  const getComponents = async () => {
+    if (loadComponentsFunc) {
+      return loadComponentsFunc(ids);
+    }
+    const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
+    return components;
+  };
+  const components = await getComponents();
+  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, loadComponentsFunc);
   const componentsWithDeps = await pMapSeries(components, (component: Component) =>
     flattenedDependencyLoader.load(component)
   );
@@ -90,7 +98,6 @@ export async function buildOneGraphForComponentsUsingScope(
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
   const components = await scope.getManyConsumerComponents(ids);
-
   const loadFlattened = async (component: Component): Promise<Component[]> => {
     return scope.getManyConsumerComponents(component.getAllFlattenedDependencies());
   };
