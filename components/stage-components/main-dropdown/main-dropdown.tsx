@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { TooltipDrawer } from '@teambit/evangelist-temp.surfaces.tooltip';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import styles from './main-dropdown.module.scss';
-import { hoverable } from '../../../to-eject/css-components/hoverable';
+import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 
 // type MainDropdownProps = {
 // } & React.HTMLAttributes<HTMLDivElement>;

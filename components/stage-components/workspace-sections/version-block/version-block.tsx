@@ -1,8 +1,8 @@
 import React, { HTMLAttributes } from 'react';
 import classNames from 'classnames';
 import { H3 } from '@teambit/documenter-temp.ui.heading';
-import { Author, Snap } from '../../../../extensions/component';
-import { NavLink } from '../../../../extensions/react-router';
+import { Author, Snap } from 'bit-bin/dist/extensions/component';
+import { NavLink } from 'bit-bin/dist/extensions/react-router';
 import { StatusDot } from '../../side-bar/component-tree/status-dot';
 import { Contributors } from '../contributors';
 import { Labels } from '../version-label';

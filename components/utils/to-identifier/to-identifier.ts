@@ -1,4 +1,4 @@
-import { camelCase } from '../../../utils';
+import { camelCase } from 'bit-bin/dist/utils';
 
 /**
  * formats a string as identifier.

@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { VersionLabel } from '../workspace-sections/version-label';
-import { hoverable } from '../../../to-eject/css-components/hoverable';
+import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import { PillLabel } from '../pill-label';
 import styles from './version-dropdown.module.scss';
 

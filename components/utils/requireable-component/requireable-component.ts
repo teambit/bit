@@ -1,5 +1,5 @@
-import { Component } from '../../../extensions/component';
-import { Capsule } from '../../../extensions/isolator';
+import { Component } from 'bit-bin/dist/extensions/component';
+import { Capsule } from 'bit-bin/dist/extensions/isolator';
 
 type RequireFunc = () => any;
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { ComponentPreview } from '../../../extensions/preview';
-import { ComponentModel } from '../../../extensions/component';
-import { Composition } from '../../../extensions/compositions';
+import { ComponentPreview } from 'bit-bin/dist/extensions/preview';
+import { ComponentModel } from 'bit-bin/dist/extensions/component';
+import { Composition } from 'bit-bin/dist/extensions/compositions';
 
 export type ComponentCompositionProps = {
   component: ComponentModel;

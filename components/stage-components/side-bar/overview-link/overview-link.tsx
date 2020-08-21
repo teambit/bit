@@ -2,11 +2,11 @@ import React from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { Separator } from '@teambit/documenter-temp.ui.separator';
-import { hoverable } from '../../../../to-eject/css-components/hoverable';
-import { clickable } from '../../../../to-eject/css-components/clickable';
+import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
+import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 
 import styles from './overview-link.module.scss';
-import { NavLink } from '../../../../extensions/react-router';
+import { NavLink } from 'bit-bin/dist/extensions/react-router';
 
 export function OverviewLink() {
   return (
