@@ -26,9 +26,6 @@
       }
     }
   },
-    "teambit.bit/dummy": {
-
-    },
   "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,
@@ -43,23 +40,10 @@
   },
   "teambit.bit/variants": {
     "extensions/cli": {
-      "teambit.bit/react": {
-        "env": "teambit.bit/envs",
-        "config": {}
-      },
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
-          "bin": "bin/bit.js"
-        }
-      },
-      "teambit.bit/dependency-resolver": {
-        "policy": {
-          "devDependencies": {
-            "@types/mocha": "^5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "^12.12.27"
-          }
+          "bin": "bin/bit"
         }
       }
     }

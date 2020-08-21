@@ -5,7 +5,7 @@ import { NavLinkProps } from '@teambit/react-router';
 import { Component } from './ui/component';
 import { RouteSlot, NavigationSlot } from '@teambit/react-router';
 import { Menu } from './ui/menu';
-import { ComponentAspect } from '../component';
+import { ComponentAspect } from './component.aspect';
 import { UIRuntime } from '@teambit/ui';
 
 export type Server = {

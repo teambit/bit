@@ -21,6 +21,10 @@ async function linkBitBinInCapsule(capsule: Capsule) {
   const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
   const getLocalBitBinPath = () => {
     const pathOutsideNodeModules = path.join(__dirname, 'bit-bin/dist/..');
+    const dirInIsolator = path.normalize('node_modules/@teambit/isolator/dist/bit-bin');
+    if (pathOutsideNodeModules.includes(dirInIsolator)) {
+      return pathOutsideNodeModules.replace(dirInIsolator, '');
+    }
     return pathOutsideNodeModules;
     // if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
     //   return pathOutsideNodeModules;
