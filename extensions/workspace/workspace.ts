@@ -567,12 +567,16 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraph(components: Component[]) {
+    const loadComponentsFunc = async (ids: BitId[]) => {
+      const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
+      return loadedComps.map((c) => c.state._consumer);
+    };
     const ids = components.map((component) => component.id._legacy);
-    return buildOneGraphForComponents(ids, this.consumer);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc);
   }
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id)));
+    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
     const graph = await this.getGraph(components);
 

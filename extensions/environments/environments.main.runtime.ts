@@ -1,12 +1,12 @@
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { MainRuntime } from '@teambit/cli';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Component, ComponentAspect } from '@teambit/component';
 import { Environment } from './environment';
 import { EnvRuntime, Runtime } from './runtime';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { environmentsSchema } from './environments.graphql';
 import { EnvsAspect } from './environments.aspect';
-import { MainRuntime } from '@teambit/cli';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 

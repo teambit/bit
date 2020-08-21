@@ -120,7 +120,7 @@ export default async function provideWorkspace(
     };
   });
 
-  await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
 
   const workspaceSchema = getWorkspaceSchema(workspace);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
@@ -139,7 +139,9 @@ export default async function provideWorkspace(
   }
   component.registerHost(workspace);
 
-  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
+  cli.registerOnStart(async () => {
+    await workspace.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
+  });
 
   return workspace;
 }

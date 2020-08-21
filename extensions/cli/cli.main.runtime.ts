@@ -1,3 +1,4 @@
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
 import didYouMean from 'didyoumean';
@@ -12,22 +13,30 @@ import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 
+export type OnStart = () => void;
+
+export type OnStartSlot = SlotRegistry<OnStart>;
+
 export class CLIMain {
   readonly groups: { [k: string]: string } = {};
   static dependencies = [];
 
-  static provider() {
-    const cli = new CLIMain(new CommandRegistry({}));
-    return CLIProvider([cli]);
+  static provider(deps, config, [onStartSlot]: [OnStartSlot]) {
+    const cli = new CLIMain(new CommandRegistry({}), onStartSlot);
+    return CLIProvider([cli], onStartSlot);
   }
 
   static runtime = MainRuntime;
+
+  static slots = [Slot.withType<OnStart>()];
 
   constructor(
     /**
      * paper's command registry
      */
-    private registry: CommandRegistry
+    private registry: CommandRegistry,
+
+    private onStartSlot: OnStartSlot
   ) {}
 
   private setDefaults(command: Command) {
@@ -46,6 +55,12 @@ export class CLIMain {
       }
     }
   }
+
+  registerOnStart(onStartFn: OnStart) {
+    this.onStartSlot.register(onStartFn);
+    return this;
+  }
+
   /**
    * registers a new command in to the CLI.
    */
@@ -70,10 +85,17 @@ export class CLIMain {
     return this.registry.commands;
   }
 
+  private async invokeOnStart() {
+    const onStartFns = this.onStartSlot.values();
+    const promises = onStartFns.map(async (onStart) => onStart());
+    return Promise.all(promises);
+  }
+
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   async run() {
+    await this.invokeOnStart();
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
       Help()(this.commands, this.groups);
@@ -116,7 +138,7 @@ export class CLIMain {
   }
 }
 
-export async function CLIProvider([cliExtension]: [CLIMain]) {
+export async function CLIProvider([cliExtension]: [CLIMain], onStartSlot: OnStartSlot) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach((extension) => {

@@ -28,7 +28,6 @@ import { ExpressAspect } from '@teambit/express';
 import { AspectAspect } from '@teambit/aspect';
 
 export const manifestsMap = {
-  [AspectAspect.id]: AspectAspect,
   [CLIAspect.id]: CLIAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -56,4 +55,5 @@ export const manifestsMap = {
   [VariantsAspect.id]: VariantsAspect,
   [DeprecationAspect.id]: DeprecationAspect,
   [ExpressAspect.id]: ExpressAspect,
+  [AspectAspect.id]: AspectAspect,
 };
