@@ -26,6 +26,17 @@ import { CompositionsAspect } from '@teambit/compositions';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { ExpressAspect } from '@teambit/express';
 import { AspectAspect } from '@teambit/aspect';
+import { WebpackAspect } from '@teambit/webpack';
+import { SchemaAspect } from '@teambit/schema';
+import { ConfigAspect } from '@teambit/config';
+import AspectLoaderAspect from '@teambit/aspect-loader';
+import { BitAspect } from './bit.aspect';
+import { ReactRouterAspect } from '@teambit/react-router';
+import { PanelUiAspect } from '@teambit/panels';
+import { TypescriptAspect } from '@teambit/typescript';
+import { NotificationsAspect } from '@teambit/notifications';
+import { BundlerAspect } from '@teambit/bundler';
+import { JestAspect } from '@teambit/jest';
 
 export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,
@@ -56,4 +67,19 @@ export const manifestsMap = {
   [DeprecationAspect.id]: DeprecationAspect,
   [ExpressAspect.id]: ExpressAspect,
   [AspectAspect.id]: AspectAspect,
+  [WebpackAspect.id]: WebpackAspect,
+  [SchemaAspect.id]: SchemaAspect,
+  [AspectLoaderAspect.id]: AspectLoaderAspect,
+  [ReactRouterAspect.id]: ReactRouterAspect,
+  [PanelUiAspect.id]: PanelUiAspect,
+  [TypescriptAspect.id]: TypescriptAspect,
+  [NotificationsAspect.id]: NotificationsAspect,
+  [BundlerAspect.id]: BundlerAspect,
+  [JestAspect.id]: JestAspect,
 };
+
+export function isCoreAspect(id: string) {
+  const _reserved = [BitAspect.id, ConfigAspect.id];
+  if (_reserved.includes(id)) return true;
+  return !!manifestsMap[id];
+}

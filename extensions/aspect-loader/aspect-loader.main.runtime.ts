@@ -106,7 +106,7 @@ export class AspectLoaderMain {
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   async loadExtensionsByManifests(extensionsManifests: ExtensionManifest[], throwOnError = true) {
     try {
-      await this.harmony.set(extensionsManifests);
+      await this.harmony.load(extensionsManifests);
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts

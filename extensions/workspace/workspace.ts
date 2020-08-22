@@ -8,6 +8,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { link } from 'bit-bin/dist/api/consumer';
+import { isCoreAspect } from '@teambit/bit';
 import type { ScopeMain } from '@teambit/scope';
 import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
@@ -48,7 +49,6 @@ import { OnComponentLoad, ExtensionData } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ComponentConfigFile } from './component-config-file';
 import { WorkspaceExtConfig } from './types';
-import { fileName } from '*?worker';
 
 export type EjectConfResult = {
   configPath: string;
@@ -578,10 +578,32 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc);
   }
 
+  // TODO: refactor to aspect-loader after handling of default scope.
+  async isCoreAspect(id: ComponentID) {
+    const scope = await this.componentDefaultScope(id);
+    if (!scope) throw new Error('default scope not defined');
+    // const newId = id.changeScope(scope);
+    // TODO: fix properly ASAP after resolving default scope issue.
+    return isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
+  }
+
+  private async filterCoreAspects(components: Component[]) {
+    const promises = components.map(async (component) => {
+      return {
+        isCore: await this.isCoreAspect(component.id),
+        component,
+      };
+    });
+
+    const res = await Promise.all(promises);
+    return res.filter((aspect) => !aspect.isCore).map((aspect) => aspect.component);
+  }
+
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     // TODO: @gilad we should make sure to cache this process.
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
+    // TODO: skip the loading of all core extensions to this graph. improve caching later.
     const graph = await this.getGraph(components);
 
     const allIds = graph.nodes().map((id) => {
@@ -591,16 +613,22 @@ export class Workspace implements ComponentFactory {
 
     const allComponents = await this.getMany(allIds);
 
-    const targetAspects = allComponents.filter((component: ConsumerComponent) => {
+    const aspects = allComponents.filter((component: ConsumerComponent) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;
       return data.type === 'aspect';
     });
 
-    const requireableExtensions: any = await this.requireComponents(targetAspects);
+    const userAspects = await this.filterCoreAspects(aspects);
+
+    const requireableExtensions: any = await this.requireComponents(userAspects);
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
+
+  // async getExtensions(runtime: RuntimeDefinition) {
+
+  // }
 
   /**
    * Load all unloaded extensions from a list
@@ -749,12 +777,17 @@ export class Workspace implements ComponentFactory {
     }
     // remove the scope before search in bitmap
     let stringIdWithoutScope;
+    // let scope;
     if (typeof id === 'string') {
-      stringIdWithoutScope = BitId.parse(id, true).toStringWithoutScope();
+      const _id = BitId.parse(id, true);
+      stringIdWithoutScope = _id.toStringWithoutScope();
+      // scope = _id.scope;
     } else if (id instanceof BitId) {
       stringIdWithoutScope = id.toStringWithoutScope();
+      // scope = id.scope;
     } else {
       stringIdWithoutScope = id._legacy.toStringWithoutScope();
+      // scope = id.scope;
     }
     const legacyId = this.consumer.getParsedId(stringIdWithoutScope, useVersionFromBitmap);
     return ComponentID.fromLegacy(legacyId);
