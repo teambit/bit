@@ -8,4 +8,5 @@ try {
     console.error(`** bit was moved. please run "npm run install-harmony && npm run build-harmony", then try again **`);
     process.exit(1);
   }
+  throw err;
 }
