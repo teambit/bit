@@ -4,12 +4,12 @@ import { getScopeComponent, addMany as addManyInternal, build, buildAll as build
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
-import { registerCoreExtensions } from './extensions/bit';
-import { manifestsMap as coreExtensions } from './extensions/bit';
+// import { registerCoreExtensions } from './extensions/bit';
+// import { manifestsMap as coreExtensions } from './extensions/bit';
 
 export * from '@teambit/harmony';
 export { default as harmony } from '@teambit/harmony';
-export { coreExtensions };
+// export { coreExtensions };
 
 HooksManager.init();
 let harmonyLoaded = false;
@@ -87,7 +87,7 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
   if (options.cwd) {
     process.chdir(options.cwd);
   }
-  registerCoreExtensions();
+  // registerCoreExtensions();
   // await harmony.run(ConfigAspect);
   // await harmony.set([BitAspect]);
   process.chdir(originalCwd);
@@ -105,5 +105,5 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
  * @returns
  */
 export function getDeclarationCoreExtension(extensionId: string) {
-  return coreExtensions[extensionId];
+  // return coreExtensions[extensionId];
 }
