@@ -33,6 +33,11 @@
     "aspect-loader": {
         "files": [
             {
+                "relativePath": "aspect-definition.ts",
+                "test": false,
+                "name": "aspect-definition.ts"
+            },
+            {
                 "relativePath": "aspect-loader.aspect.ts",
                 "test": false,
                 "name": "aspect-loader.aspect.ts"
@@ -75,6 +80,11 @@
                 "relativePath": "bit.aspect.ts",
                 "test": false,
                 "name": "bit.aspect.ts"
+            },
+            {
+                "relativePath": "bit.docs.tsx",
+                "test": false,
+                "name": "bit.docs.tsx"
             },
             {
                 "relativePath": "bit.main.runtime.ts",
@@ -740,9 +750,9 @@
                 "name": "compositions.preview-definition.ts"
             },
             {
-                "relativePath": "compositions.preview.ts",
+                "relativePath": "compositions.preview.runtime.ts",
                 "test": false,
-                "name": "compositions.preview.ts"
+                "name": "compositions.preview.runtime.ts"
             },
             {
                 "relativePath": "compositions.tsx",
@@ -2137,11 +2147,6 @@
                 "relativePath": "preview.route.ts",
                 "test": false,
                 "name": "preview.route.ts"
-            },
-            {
-                "relativePath": "preview.runtime.ts",
-                "test": false,
-                "name": "preview.runtime.ts"
             },
             {
                 "relativePath": "preview.task.ts",

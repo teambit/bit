@@ -2,10 +2,10 @@ import { join } from 'path';
 import { BuildTask, BuildContext, BuildResults } from '@teambit/builder';
 import { Bundler, BundlerContext, Target, BundlerMain } from '@teambit/bundler';
 import { ComponentMap } from '@teambit/component';
-import { PreviewDefinition } from './preview-definition';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { Compiler } from '@teambit/compiler';
+import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 
 export class PreviewTask implements BuildTask {
@@ -59,7 +59,7 @@ export class PreviewTask implements BuildTask {
     return 'public';
   }
 
-  private async makeEntries(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext) {
+  private async makeEntries(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
     const previewLinks = await Promise.all(
       defs.map(async (previewDef) => {
         const moduleMap = await previewDef.getModuleMap([capsule.component]);
@@ -75,9 +75,10 @@ export class PreviewTask implements BuildTask {
 
     // if needed, could write to the capsule's /dist dir
     // i.e. join(capsule.path, 'dist', `__${random()}`);
-    const entryPath = this.preview.writeLinks(previewLinks);
+    const entryPath = await this.preview.writeLinks(previewLinks);
 
-    return [require.resolve('./preview.runtime'), entryPath];
+    const previewMain = await this.preview.writePreviewRuntime();
+    return [require.resolve(previewMain), entryPath];
   }
 
   private getPathsFromMap(

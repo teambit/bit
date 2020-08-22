@@ -27,9 +27,10 @@ export function makeReExport(entries: [string, string][]) {
   return makeExports(reexport);
 }
 
-export function makeLinkUpdater(targetPath: string) {
+export function makeLinkUpdater(targetPath: string, previewMain: string) {
   return `
-var preview = require('${require.resolve('./preview.preview.runtime')}');
+var previewRuntime = require('${previewMain}');
+var preview = require('${require.resolve('./preview.preview.runtime')}')
 var modulesIndex = require('${targetPath}');
 var updateModules = preview.updateModules;
 

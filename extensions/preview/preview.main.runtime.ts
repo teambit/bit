@@ -1,21 +1,21 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'fs-extra';
 import { resolve, join } from 'path';
-import { generateLink, makeReExport, makeLinkUpdater } from './generate-link';
-import { PreviewAspect } from './preview.aspect';
-import { ComponentMap } from '@teambit/component/component-map';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { PreviewTask } from './preview.task';
-import { PreviewDefinition } from './preview-definition';
-import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
-import { PreviewRoute } from './preview.route';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { MainRuntime } from '@teambit/cli';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
+import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
+import { generateLink, makeReExport, makeLinkUpdater } from './generate-link';
+import { PreviewRoute } from './preview.route';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
 import { makeTempDir } from './mk-temp-dir';
-import { MainRuntime } from '@teambit/cli';
-import { UIAspect, UiMain } from '@teambit/ui';
+import { PreviewAspect, PreviewRuntime } from './preview.aspect';
+import { PreviewTask } from './preview.task';
+import { PreviewDefinition } from './preview-definition';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -60,13 +60,24 @@ export class PreviewMain {
       })
     );
 
-    const entryPath = this.writeLinks(previewLinks);
+    const entryPath = await this.writeLinks(previewLinks);
 
-    return [require.resolve('./preview.runtime'), entryPath];
+    return [entryPath];
+  }
+
+  async writePreviewRuntime() {
+    const [name, uiRoot] = this.ui.getUi();
+    const filePath = await this.ui.generateRoot(
+      await uiRoot.resolveAspects(PreviewRuntime.name),
+      name,
+      'preview',
+      PreviewAspect.id
+    );
+    return filePath;
   }
 
   /** writes a series of link files that will load the component previews */
-  writeLinks(
+  async writeLinks(
     /** previews data structure to serialize and write down */
     previews: { name: string; modulePaths: ComponentMap<string[]>; templatePath?: string }[],
     /** folder to write links at. (Default - os.temp) */
@@ -76,8 +87,9 @@ export class PreviewMain {
       this.writePreviewLink(dir, name, modulePaths, templatePath)
     );
 
+    const previewRuntime = await this.writePreviewRuntime();
     const indexFilePath = this.writeIndexFile(linkFiles, dir);
-    const updaterPath = this.writeUpdater(dir, indexFilePath);
+    const updaterPath = this.writeUpdater(dir, indexFilePath, previewRuntime);
 
     return updaterPath;
   }
@@ -114,8 +126,8 @@ export class PreviewMain {
   }
 
   /** generates an 'updater' file that injects previews into preview.preview.tsx */
-  private writeUpdater(dir: string, targetPath: string) {
-    const content = makeLinkUpdater(targetPath);
+  private writeUpdater(dir: string, targetPath: string, previewMain: string) {
+    const content = makeLinkUpdater(targetPath, previewMain);
     const path = resolve(join(dir, `__updater.js`));
     writeFileSync(path, content);
 
@@ -147,7 +159,7 @@ export class PreviewMain {
       },
     ]);
 
-    // builder.registerTask(new PreviewTask(bundler, preview));
+    builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }

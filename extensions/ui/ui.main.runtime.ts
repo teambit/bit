@@ -16,7 +16,7 @@ import { Logger, LoggerMain, LoggerAspect } from '@teambit/logger';
 import type { AspectMain } from '@teambit/aspect';
 import { AspectDefinition } from '../aspect-loader/aspect-definition';
 import { StartCmd } from './start.cmd';
-import { UIAspect } from './ui.aspect';
+import { UIAspect, UIRuntime } from './ui.aspect';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIServer } from './ui-server';
 import createWebpackConfig from './webpack/webpack.config';
@@ -102,7 +102,7 @@ export class UiMain {
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const config = createWebpackConfig(
       uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(), name)],
+      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       name
     );
 
@@ -193,9 +193,14 @@ export class UiMain {
   /**
    * generate the root file of the UI runtime.
    */
-  async generateRoot(aspectDefs: AspectDefinition[], rootExtensionName: string) {
-    const contents = await createRoot(aspectDefs, rootExtensionName);
-    const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
+  async generateRoot(
+    aspectDefs: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = UIRuntime.name,
+    rootAspect = UIAspect.id
+  ) {
+    const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
+    const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;

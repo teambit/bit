@@ -1,11 +1,11 @@
-import { DocsAspect } from './docs.aspect';
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
 import { ComponentMap } from '@teambit/component';
 import { PreviewMain, PreviewAspect } from '@teambit/preview';
-import { DocsPreviewDefinition } from './docs.preview-definition';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { DocsPreviewDefinition } from './docs.preview-definition';
+import { DocsAspect } from './docs.aspect';
 
 export type ComponentDocs = {
   files: string[];
@@ -35,12 +35,12 @@ export class DocsMain {
    */
   getDocsMap(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/docs.ts/);
+      return component.state.filesystem.byRegex(/.docs.ts/);
     });
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    return component.state.filesystem.byRegex(/docs.ts/);
+    return component.state.filesystem.byRegex(/.docs.ts/);
   }
 
   // async docsPreviewTarget(context: ExecutionContext) {

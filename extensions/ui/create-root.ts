@@ -1,8 +1,14 @@
 import { parse } from 'path';
 import { camelCase } from 'lodash';
 import { AspectDefinition } from '../aspect-loader/aspect-definition';
+import { UIAspect } from './ui.aspect';
 
-export async function createRoot(aspectDefs: AspectDefinition[], rootExtensionName?: string) {
+export async function createRoot(
+  aspectDefs: AspectDefinition[],
+  rootExtensionName?: string,
+  rootAspect = UIAspect.id,
+  runtime = 'ui'
+) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
 
   return `
@@ -19,13 +25,13 @@ ${getImportStatements(
 Harmony.load([${getIdentifiers(
     aspectDefs.map((def) => def.aspectPath),
     'Aspect'
-  )}], 'ui', {})
+  )}], '${runtime}', {})
   .then((harmony) => {
     harmony
       .run()
       .then(() => {
-        const uiExtension = harmony.get('teambit.bit/ui');
-        uiExtension.render(${rootId});
+        const rootExtension = harmony.get('${rootAspect}');
+        rootExtension.render(${rootId});
       })
       .catch((err) => {
         throw err;

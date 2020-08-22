@@ -626,7 +626,7 @@ export class Workspace implements ComponentFactory {
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
-  async resolveAspects() {
+  async resolveAspects(runtimeName: string) {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
@@ -643,7 +643,7 @@ export class Workspace implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.getRuntimePath(component, localPath, 'ui'),
+        runtimesPath: await this.getRuntimePath(component, localPath, runtimeName),
       };
     });
 

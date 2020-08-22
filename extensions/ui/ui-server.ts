@@ -12,6 +12,7 @@ import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
 import { UiMain } from './ui.main.runtime';
 import { UIRoot, ProxyEntry } from './ui-root';
+import { UIRuntime } from './ui.aspect';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -54,7 +55,7 @@ export class UIServer {
   async getDevConfig(): Promise<webpack.Configuration> {
     return devConfig(
       this.uiRoot.path,
-      [await this.ui.generateRoot(await this.uiRoot.resolveAspects(), this.uiRootExtension)],
+      [await this.ui.generateRoot(await this.uiRoot.resolveAspects(UIRuntime.name), this.uiRootExtension)],
       this.uiRootExtension
     );
   }
