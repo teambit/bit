@@ -151,7 +151,7 @@
     "@teambit/explorer-temp.ui.component-card": "^0.0.4",
     "@teambit/explorer-temp.ui.component-grid": "^0.0.1",
     "@teambit/gitconfig": "^2.0.6",
-    "@teambit/harmony": "0.2.3",
+    "@teambit/harmony": "0.2.4",
     "@teambit/utils-temp.utils.sub-paths": "0.0.1",
     "@teambit/utils-temp.utils.time-ago": "0.0.1",
     "@testing-library/jest-dom": "^5.9.0",
