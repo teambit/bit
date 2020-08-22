@@ -29,6 +29,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.path;
   }
 
+  async resolveAspects() {
+    return this.workspace.resolveAspects();
+  }
+
   get extensionsPaths() {
     // TODO: @gilad please make sure to automate this for all extensions configured in the workspace.
     return [

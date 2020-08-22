@@ -1,13 +1,14 @@
 import React from 'react';
 import classnames from 'classnames';
+import { VersionDropdown } from '@teambit/staged-components.version-dropdown';
+import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavigationSlot } from '@teambit/react-router';
+import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { TopBarNav } from '../top-bar-nav';
 import { TopBarWidgetLink } from '../top-bar-widget-link';
 import { useComponent } from '../use-component';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
-import { VersionDropdown } from '@teambit/staged-components.version-dropdown/version-dropdown';
-import { MainDropdown } from '@teambit/staged-components.main-dropdown';
+
 import styles from './menu.module.scss';
 
 export type MenuProps = {

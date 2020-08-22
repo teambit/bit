@@ -5,7 +5,7 @@ export class DummyMain {
   static runtime = MainRuntime;
 
   static async provider() {
-    console.log('hi from dummy');
+    // console.log('hi from dummy');
     return new DummyMain();
   }
 }

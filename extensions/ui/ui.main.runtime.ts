@@ -4,24 +4,25 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import getPort from 'get-port';
 import fs from 'fs-extra';
 import webpack from 'webpack';
-import { UIAspect } from './ui.aspect';
 import { MainRuntime, CLIAspect } from '@teambit/cli';
 import { CLIMain } from '@teambit/cli';
-import { StartCmd } from './start.cmd';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { GraphqlMain } from '@teambit/graphql';
-import createWebpackConfig from './webpack/webpack.config';
-import { UIRoot } from './ui-root';
-import { UnknownUI } from './exceptions';
-import { createRoot } from './create-root';
 import { sha1 } from 'bit-bin/dist/utils';
 import { ExpressMain, ExpressAspect } from '@teambit/express';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIBuildCmd } from './ui-build.cmd';
-import { UIServer } from './ui-server';
 import { Logger, LoggerMain, LoggerAspect } from '@teambit/logger';
 import type { AspectMain } from '@teambit/aspect';
+import { AspectDefinition } from '../aspect-loader/aspect-definition';
+import { StartCmd } from './start.cmd';
+import { UIAspect } from './ui.aspect';
+import { UIBuildCmd } from './ui-build.cmd';
+import { UIServer } from './ui-server';
+import createWebpackConfig from './webpack/webpack.config';
+import { UIRoot } from './ui-root';
+import { UnknownUI } from './exceptions';
+import { createRoot } from './create-root';
 
 export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, LoggerMain, AspectMain];
 
@@ -101,7 +102,7 @@ export class UiMain {
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const config = createWebpackConfig(
       uiRoot.path,
-      [await this.generateRoot(uiRoot.extensionsPaths, uiRoot.aspectPaths, name)],
+      [await this.generateRoot(await uiRoot.resolveAspects(), name)],
       name
     );
 
@@ -185,15 +186,15 @@ export class UiMain {
     return uiSlot;
   }
 
-  createLink(extensionPaths: string[], aspectPaths: string[], rootExtensionName: string) {
-    return createRoot(extensionPaths, aspectPaths, rootExtensionName);
+  createLink(aspectDefs: AspectDefinition[], rootExtensionName: string) {
+    return createRoot(aspectDefs, rootExtensionName);
   }
 
   /**
    * generate the root file of the UI runtime.
    */
-  async generateRoot(extensionPaths: string[], aspectPaths: string[], rootExtensionName: string) {
-    const contents = await createRoot(extensionPaths, aspectPaths, rootExtensionName);
+  async generateRoot(aspectDefs: AspectDefinition[], rootExtensionName: string) {
+    const contents = await createRoot(aspectDefs, rootExtensionName);
     const filepath = resolve(join(__dirname, `ui.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);

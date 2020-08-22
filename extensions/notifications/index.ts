@@ -1,2 +1,4 @@
+import { NotificationsAspect } from './notifications.aspect';
+
 export * from './ui';
-export { NotificationsAspect } from './notifications.aspect';
+export default NotificationsAspect;

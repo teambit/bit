@@ -1,12 +1,14 @@
 import { difference } from 'ramda';
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
-import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, Logger } from '@teambit/logger';
 import type { LoggerMain } from '@teambit/logger';
+import { RequireableComponent } from '@teambit/utils.requireable-component';
+import { Component } from '@teambit/component';
+import { AspectDefinition } from './aspect-definition';
+import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION_FROM_LIST, UNABLE_TO_LOAD_EXTENSION } from './constants';
 import { CannotLoadExtension } from './exceptions';
-import { RequireableComponent } from '@teambit/utils.requireable-component';
 
 export type AspectDescriptor = {
   /**
@@ -18,6 +20,13 @@ export type AspectDescriptor = {
    * icon of the extension.
    */
   icon: string;
+};
+
+export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
+
+export type ResolvedAspect = {
+  aspectPath: string;
+  runtimesPath: string;
 };
 
 export class AspectLoaderMain {
@@ -52,6 +61,16 @@ export class AspectLoaderMain {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(configuredAspects, loadedExtensions);
     return extensionsToLoad;
+  }
+
+  async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
+    const promises = components.map(async (component) => {
+      const resolvedAspect = await resolver(component);
+      return new AspectDefinition(component, resolvedAspect.aspectPath, resolvedAspect.runtimesPath);
+    });
+
+    const aspectDefs = await Promise.all(promises);
+    return aspectDefs.filter((def) => def.runtimePath);
   }
 
   /**
