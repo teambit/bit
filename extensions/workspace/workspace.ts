@@ -1,7 +1,7 @@
 import path, { join } from 'path';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
-import { Harmony } from '@teambit/harmony';
+import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
 import { difference } from 'ramda';
@@ -626,9 +626,33 @@ export class Workspace implements ComponentFactory {
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
-  // async getExtensions(runtime: RuntimeDefinition) {
+  async resolveAspects() {
+    let missingPaths = false;
+    const stringIds: string[] = [];
+    const ids = this.harmony.extensionsIds;
+    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
+    const components = await this.getMany(componentIds);
+    const aspectDefs = this.aspectLoader.resolveAspects(components, async (component) => {
+      stringIds.push(component.id.toString());
+      const packageName = componentIdToPackageName(component.state._consumer);
+      const localPath = path.join(this.path, 'node_modules', packageName);
+      const isExist = await fs.pathExists(localPath);
+      if (!isExist) {
+        missingPaths = true;
+      }
 
-  // }
+      return {
+        aspectPath: localPath,
+        runtimesPath: await this.getRuntimePath(component, localPath, 'ui'),
+      };
+    });
+
+    if (missingPaths) {
+      await link(stringIds, false);
+    }
+
+    return aspectDefs;
+  }
 
   /**
    * Load all unloaded extensions from a list
@@ -655,9 +679,9 @@ export class Workspace implements ComponentFactory {
     return env?.getCompiler();
   }
 
-  async getRuntimePath(component: Component, modulePath: string): Promise<string | null> {
+  async getRuntimePath(component: Component, modulePath: string, runtime: string): Promise<string | null> {
     const runtimeFile = component.filesystem.files.find((file: AbstractVinyl) => {
-      return file.relative.includes(`.${MainRuntime.name}.runtime`);
+      return file.relative.includes(`.${runtime}.runtime`);
     });
 
     // @david we should add a compiler api for this.
@@ -684,7 +708,7 @@ export class Workspace implements ComponentFactory {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(localPath);
         // require aspect runtimes
-        const runtimePath = await this.getRuntimePath(component, localPath);
+        const runtimePath = await this.getRuntimePath(component, localPath, MainRuntime.name);
         // eslint-disable-next-line global-require, import/no-dynamic-require
         if (runtimePath) require(runtimePath);
         return aspect;

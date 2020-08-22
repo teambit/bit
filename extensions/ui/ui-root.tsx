@@ -1,6 +1,7 @@
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
 import { Component } from '@teambit/component';
 import { ComponentDir } from '@teambit/bundler/get-entry';
+import { AspectDefinition } from '../aspect-loader/aspect-definition';
 // import { WebpackDevServer } from '../webpack/webpack.dev-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
@@ -20,6 +21,11 @@ export interface UIRoot extends ComponentDir {
    * paths for all extensions to load.
    */
   extensionsPaths: string[];
+
+  /**
+   * resolve all aspects in the UI root.
+   */
+  resolveAspects(): Promise<AspectDefinition[]>;
 
   /**
    * paths for all extensions to load.

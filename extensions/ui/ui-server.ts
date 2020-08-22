@@ -1,3 +1,6 @@
+import { GraphqlMain } from '@teambit/graphql';
+import { ExpressMain } from '@teambit/express';
+import { Logger } from '@teambit/logger';
 import { Server } from 'http';
 import { join } from 'path';
 import httpProxy from 'http-proxy';
@@ -7,11 +10,8 @@ import webpack from 'webpack';
 import getPort from 'get-port';
 import express, { Express } from 'express';
 import { devConfig } from './webpack/webpack.dev.config';
-import { GraphqlMain } from '@teambit/graphql';
-import { ExpressMain } from '@teambit/express';
 import { UiMain } from './ui.main.runtime';
 import { UIRoot, ProxyEntry } from './ui-root';
-import { Logger } from '@teambit/logger';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -54,7 +54,7 @@ export class UIServer {
   async getDevConfig(): Promise<webpack.Configuration> {
     return devConfig(
       this.uiRoot.path,
-      [await this.ui.generateRoot(this.uiRoot.extensionsPaths, this.uiRoot.aspectPaths, this.uiRootExtension)],
+      [await this.ui.generateRoot(await this.uiRoot.resolveAspects(), this.uiRootExtension)],
       this.uiRootExtension
     );
   }

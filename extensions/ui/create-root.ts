@@ -1,17 +1,25 @@
 import { parse } from 'path';
 import { camelCase } from 'lodash';
+import { AspectDefinition } from '../aspect-loader/aspect-definition';
 
-export async function createRoot(extensionsPaths: string[], aspectPaths: string[], rootExtensionName?: string) {
+export async function createRoot(aspectDefs: AspectDefinition[], rootExtensionName?: string) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
 
   return `
 import { Harmony } from '@teambit/harmony';
-import UIAspect from './ui.aspect';
-import UIRuntime from './ui.ui.runtime';
-${getImportStatements(aspectPaths, 'Aspect')}
-${getImportStatements(extensionsPaths, 'Runtime')}
+${getImportStatements(
+  aspectDefs.map((def) => def.aspectPath),
+  'Aspect'
+)}
+${getImportStatements(
+  aspectDefs.map((def) => def.runtimePath),
+  'Runtime'
+)}
 
-Harmony.load([UIAspect, ${getIdentifiers(aspectPaths, 'Aspect')}], 'ui', {})
+Harmony.load([${getIdentifiers(
+    aspectDefs.map((def) => def.aspectPath),
+    'Aspect'
+  )}], 'ui', {})
   .then((harmony) => {
     harmony
       .run()
