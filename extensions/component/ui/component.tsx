@@ -1,7 +1,7 @@
 import React from 'react';
+import { RouteSlot, SlotSubRouter } from '@teambit/react-router';
 import { ComponentProvider } from './context';
 import styles from './component.module.scss';
-import { RouteSlot, SlotSubRouter } from '@teambit/react-router';
 import { useComponent } from './use-component';
 
 export type ComponentProps = {
