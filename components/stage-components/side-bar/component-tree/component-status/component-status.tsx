@@ -7,7 +7,11 @@ export type ComponentStatusProps = {
   status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ComponentStatus({ status, className }: ComponentStatusProps) {
+export function ComponentStatus({ status, className, ...rest }: ComponentStatusProps) {
   if (!status) return null;
-  return <div className={classNames(styles.status, styles[status], className)}>{status[0].toUpperCase()}</div>;
+  return (
+    <div {...rest} className={classNames(styles.status, styles[status], className)}>
+      {status[0].toUpperCase()}
+    </div>
+  );
 }

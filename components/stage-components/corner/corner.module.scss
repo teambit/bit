@@ -13,6 +13,7 @@ $topbarHeight: 56px;
 
   .link {
     text-decoration: none;
+    text-transform: capitalize;
     color: var(--text-highlight);
     transition: color 300ms ease-in-out;
     &:active {
