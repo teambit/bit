@@ -1,6 +1,6 @@
 default_image: &default_image
   docker:
-    - image: circleci/node:10.13.0
+    - image: circleci/node:10.14.2
 
 default_resource_class: &default_resource_class
   resource_class: small

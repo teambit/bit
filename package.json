@@ -445,7 +445,7 @@
     "/dist"
   ],
   "engines": {
-    "node": ">=10.13.0"
+    "node": ">=10.14.2"
   },
   "lint-staged": {
     "*.{ts,js,css,scss,tsx}": [
