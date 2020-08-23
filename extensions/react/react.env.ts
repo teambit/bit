@@ -4,16 +4,16 @@ import { Tester, TesterMain } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { DevServer, BundlerContext, DevServerContext } from '@teambit/bundler';
-import webpackConfigFactory from './webpack/webpack.config';
-import previewConfigFactory from './webpack/webpack.preview.config';
 import { Workspace } from '@teambit/workspace';
 import { Bundler } from '@teambit/bundler';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
-import { ReactMainConfig } from './react.main.runtime';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
+import webpackConfigFactory from './webpack/webpack.config';
+import previewConfigFactory from './webpack/webpack.preview.config';
+import { ReactMainConfig } from './react.main.runtime';
 
 export const AspectEnvType = 'react';
 
