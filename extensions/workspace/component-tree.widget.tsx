@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tree';
-import { WorkspaceContext } from '../ui/workspace/workspace-context';
-import { ComponentStatusResolver } from '@teambit/stage-components.side-bar.component-tree';
+import { ComponentStatusResolver } from '@teambit/staged-components.side-bar';
+import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export class ComponentTreeWidget implements ComponentTreeNode {
   widget = ({ component }: ComponentTreeNodeProps) => {

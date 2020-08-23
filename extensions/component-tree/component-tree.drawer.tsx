@@ -1,9 +1,9 @@
 import React from 'react';
 import { Drawer } from '@teambit/sidebar';
-import { ComponentTree } from '@teambit/staged-components.workspace-sections.version-label';
+import { ComponentTree } from '@teambit/staged-components.side-bar';
 import { useComponentHost } from '@teambit/component';
 import { FullLoader } from '@teambit/staged-components.full-loader';
-import { ComponentTreeSlot } from '../component-tree.ui';
+import { ComponentTreeSlot } from './component-tree.ui.runtime';
 
 export class ComponentTreeDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}

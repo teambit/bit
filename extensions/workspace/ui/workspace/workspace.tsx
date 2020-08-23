@@ -9,12 +9,12 @@ import { useDataQuery } from '@teambit/ui';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { TopBar } from '@teambit/staged-components.top-bar';
 import { Corner } from '@teambit/staged-components.corner';
-import { Collapser } from '@teambit/stage-components.sidebar-collapser';
+import { Collapser } from '@teambit/staged-components.side-bar';
 import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
-import styles from './workspace.module.scss';
 import { WorkspaceOverview } from './workspace-overview';
 import { Workspace as WorkspaceModel } from './workspace-model';
 import { WorkspaceProvider } from './workspace-provider';
+import styles from './workspace.module.scss';
 
 const WORKSPACE = gql`
   {

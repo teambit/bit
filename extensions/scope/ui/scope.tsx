@@ -6,11 +6,11 @@ import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { TopBar } from '@teambit/staged-components.top-bar';
 import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { Collapser } from '@teambit/staged-components.side-bar';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
 import { useScope } from './use-scope';
-import { Collapser } from '@teambit/components/stage-components/sidebar-collapser';
 
 import styles from './scope.module.scss';
 
