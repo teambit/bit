@@ -959,6 +959,7 @@ workflows:
       -
         setup_harmony:
           requires:
+            - set_npm_registries
             - install_npm_deps
             - build
       -
