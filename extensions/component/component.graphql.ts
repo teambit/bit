@@ -69,6 +69,8 @@ export function componentSchema(componentExtension: ComponentMain) {
       }
 
       type ComponentHost {
+        name: String!
+
         # load a component.
         get(id: String!, withState: Boolean): Component
 
@@ -113,9 +115,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
         },
-        // list: async (host: ComponentFactory, { offset, limit }: { offset: number; limit: number }) => {
-        // return host.list();
-        // },
+        name: async (host: ComponentFactory) => {
+          return host.name;
+        },
       },
       Query: {
         getHost: (componentExt: ComponentMain, { id }: { id: string }) => {
