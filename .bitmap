@@ -1564,6 +1564,11 @@
                 "name": "graphql.main.runtime.ts"
             },
             {
+                "relativePath": "graphql.preview.runtime.tsx",
+                "test": false,
+                "name": "graphql.preview.runtime.tsx"
+            },
+            {
                 "relativePath": "graphql.ui.runtime.tsx",
                 "test": false,
                 "name": "graphql.ui.runtime.tsx"
@@ -3990,5 +3995,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.1"
+    "version": "14.8.9-dev.3"
 }
