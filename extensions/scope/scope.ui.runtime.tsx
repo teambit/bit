@@ -2,14 +2,12 @@ import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { RouteProps } from 'react-router-dom';
 import { RouteSlot } from '@teambit/react-router';
-import { UIRootUI as UIRoot } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui';
-import type { UiUI } from '@teambit/ui';
-import { Scope } from './ui/scope';
+import { UIRootUI as UIRoot, UIAspect, UiUI, UIRuntime } from '@teambit/ui';
 import { ComponentAspect } from '@teambit/component';
 import type { ComponentUI } from '@teambit/component';
+import { SidebarUI, SidebarAspect } from '@teambit/sidebar';
 import { ScopeAspect } from './scope.aspect';
-import { UIRuntime } from '@teambit/ui';
+import { Scope } from './ui/scope';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -29,7 +27,8 @@ export class ScopeUI {
     /**
      * menu slot
      */
-    private menuSlot: RouteSlot
+    private menuSlot: RouteSlot,
+    private sidebar: SidebarUI
   ) {
     this.registerExplicitRoutes();
   }
@@ -65,15 +64,20 @@ export class ScopeUI {
     };
   }
 
-  static dependencies = [UIAspect, ComponentAspect];
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot);
+  static async provider(
+    [ui, componentUi, sidebar]: [UiUI, ComponentUI, SidebarUI],
+    config,
+    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+  ) {
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
     ui.registerRoot(scopeUi.root);
+    sidebar.registerDrawer();
 
     return scopeUi;
   }

@@ -2,6 +2,7 @@ import React, { ReactNode, useReducer } from 'react';
 import { gql } from 'apollo-boost';
 import { Route } from 'react-router-dom';
 import 'reset-css';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { useDataQuery } from '@teambit/ui';
