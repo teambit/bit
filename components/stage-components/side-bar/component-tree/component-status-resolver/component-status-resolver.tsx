@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentStatus } from '../component-status/component-status';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { StatusTooltip } from '../component-tooltip';
-import { ComponentID } from '../../../../../extensions/component';
+import { ComponentID } from '@teambit/component';
 import styles from './component-status-resolver.module.scss';
 
 export type ComponentStatusResolverProps = {

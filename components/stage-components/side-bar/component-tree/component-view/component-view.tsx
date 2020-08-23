@@ -3,14 +3,14 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '@teambit/react-router';
+import { ComponentTreeSlot } from '@teambit/component-tree';
+import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
+import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import { TreeNodeProps } from '../recursive-tree';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
 import { getName } from '../utils/get-name';
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import { PayloadType } from '../payload-type';
-import { ComponentTreeSlot } from '../../../../../extensions/component-tree/component-tree.ui';
 
 import styles from './component-view.module.scss';
 

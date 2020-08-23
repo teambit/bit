@@ -9,7 +9,6 @@ import { ComponentTreeContextProvider } from './component-tree-context';
 import { RootNode } from './root-node';
 
 import { indentStyle } from './indent';
-import { Component } from './../side-bar';
 import { PayloadType } from './payload-type';
 import styles from './component-tree.module.scss';
 

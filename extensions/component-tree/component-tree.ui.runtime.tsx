@@ -1,5 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { SidebarUI, SidebarAspect } from '@teambit/sidebar';
+import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIRuntime } from '@teambit/ui';
 import { ComponentTreeNode } from './component-tree-node';
 import { ComponentTreeDrawer } from './component-tree.drawer';
