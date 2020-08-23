@@ -546,6 +546,21 @@
                 "name": "history-graph.ts"
             },
             {
+                "relativePath": "host/component-host-model.ts",
+                "test": false,
+                "name": "component-host-model.ts"
+            },
+            {
+                "relativePath": "host/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "host/use-component-host.ts",
+                "test": false,
+                "name": "use-component-host.ts"
+            },
+            {
                 "relativePath": "id.ts",
                 "test": false,
                 "name": "id.ts"
@@ -2911,6 +2926,21 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "component-tree/component-tooltip/component-tooltip.module.scss",
+                "test": false,
+                "name": "component-tooltip.module.scss"
+            },
+            {
+                "relativePath": "component-tree/component-tooltip/component-tooltip.tsx",
+                "test": false,
+                "name": "component-tooltip.tsx"
+            },
+            {
+                "relativePath": "component-tree/component-tooltip/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "component-tree/component-tree-context.tsx",
                 "test": false,
                 "name": "component-tree-context.tsx"
@@ -2996,6 +3026,21 @@
                 "name": "tree-types.ts"
             },
             {
+                "relativePath": "component-tree/root-node/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree/root-node/root-node.module.scss",
+                "test": false,
+                "name": "root-node.module.scss"
+            },
+            {
+                "relativePath": "component-tree/root-node/root-node.tsx",
+                "test": false,
+                "name": "root-node.tsx"
+            },
+            {
                 "relativePath": "component-tree/status-dot/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -3039,6 +3084,21 @@
                 "relativePath": "side-bar.tsx",
                 "test": false,
                 "name": "side-bar.tsx"
+            },
+            {
+                "relativePath": "sidebar-collapser/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "sidebar-collapser/sidebar-collapser.module.scss",
+                "test": false,
+                "name": "sidebar-collapser.module.scss"
+            },
+            {
+                "relativePath": "sidebar-collapser/sidebar-collapser.tsx",
+                "test": false,
+                "name": "sidebar-collapser.tsx"
             },
             {
                 "relativePath": "styles.module.scss",
@@ -3940,6 +4000,11 @@
                 "relativePath": "component-config-file/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree.widget.tsx",
+                "test": false,
+                "name": "component-tree.widget.tsx"
             },
             {
                 "relativePath": "constants.ts",
