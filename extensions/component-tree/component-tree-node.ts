@@ -1,5 +1,5 @@
 import { ComponentType } from 'react';
-import { ComponentModel } from '../component/ui';
+import { ComponentModel } from '@teambit/component';
 
 export type ComponentTreeNodeProps = {
   /**

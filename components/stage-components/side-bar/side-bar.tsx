@@ -23,6 +23,7 @@ type SideBarProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function SideBar({ components, selected, ...rest }: SideBarProps) {
+  // TODO - @oded check if this is still used
   const componentsData = useMemo(() => components.map((component) => component), [components]);
   const history = useHistory();
 

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import { ComponentTreeSlot } from '../../../../extensions/component-tree/component-tree.ui';
-import { ComponentModel } from '../../../../extensions/component/ui';
+import { ComponentTreeSlot } from '@teambit/component-tree';
+import { ComponentModel } from '@teambit/component';
 import { inflateToTree } from './inflate-paths';
 import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
