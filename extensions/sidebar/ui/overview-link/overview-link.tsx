@@ -12,7 +12,10 @@ export function OverviewLink() {
         exact
         href="/"
         activeClassName={styles.active}
-        className={classNames(hoverable, clickable, styles.overviewLink)}
+        className={classNames(
+          // hoverable, clickable, // TODO - return these somehow @oded
+          styles.overviewLink
+        )}
       >
         Components
         <Icon of="comps" className={styles.icon} />

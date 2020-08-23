@@ -6,6 +6,8 @@ $topbarHeight: 64px;
 
 .main {
   width: 100%;
+  height: 100vh;
+  overflow-y: scroll;
 }
 
 .workspaceWrapper {
@@ -13,9 +15,11 @@ $topbarHeight: 64px;
   overflow: hidden;
 }
 
-.sideBar {
-  border-right: 1px solid #ededed;
-  flex: 1;
+.sidebarContainer {
+  position: relative;
+  width: 100%;
+}
 
-  overflow: auto;
+.sideBar {
+  position: relative;
 }
