@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { Environment } from '@teambit/environments';
 import { Tester, TesterMain } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
@@ -100,7 +100,12 @@ export class ReactEnv implements Environment {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
 
-    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path));
+    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
+    const targets = context.components.map((component) => {
+      return join(this.pkg.getPackageName(component));
+    });
+
+    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path, targets));
   }
 
   async getBundler(context: BundlerContext): Promise<Bundler> {
