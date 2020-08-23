@@ -14,7 +14,7 @@ import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Logger, LoggerMain, LoggerAspect } from '@teambit/logger';
 import type { AspectMain } from '@teambit/aspect';
-import { AspectDefinition } from '../aspect-loader/aspect-definition';
+import { AspectDefinition } from '@teambit/aspect-loader';
 import { StartCmd } from './start.cmd';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { UIBuildCmd } from './ui-build.cmd';

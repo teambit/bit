@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { install } from './lynx';
 import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
 import {
@@ -21,6 +20,7 @@ export class PnpmPackageManager implements PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
+    const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir
       ? join(installOptions?.cacheRootDir, '.pnpm-store')
       : join(userHome, '.pnpm-store');
