@@ -227,8 +227,6 @@ jobs:
         # -
           # run: 'bit config set hub_domain hub-stg.bit.dev'
       -
-        run: 'cat ~/Library/Caches/Bit/config/config.json'
-      -
         save_cache:
           key: bit-global-config-v1
           paths:
@@ -509,6 +507,26 @@ jobs:
         run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
+  setup_harmony:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'install harmony'
+          command: 'cd bit && npm run install-harmony'
+      -
+        run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/build-harmony
+            - bit/node_modules
   e2e_test:
     <<: *defaults
     environment:
@@ -567,7 +585,27 @@ jobs:
           name: 'npm link bit to global'
           command: cd bit && npm link
       -
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        run: 'bit config set hub_domain hub.bit.dev'
+        # uncomment to configure circle to run against stg environment
+        # -
+          # run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      -
+        save_cache:
+          key: bit-global-config-v2
+          paths:
+            - ~/Library/Caches/Bit/config/config.json
       -
         run:
           name: 'Run e2e tests'
@@ -919,6 +957,11 @@ workflows:
           requires:
             - install_npm_deps
       -
+        setup_harmony:
+          requires:
+            - install_npm_deps
+            - build
+      -
         configure-bit:
           requires:
             - build
@@ -958,7 +1001,8 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - configure-bit
+            - setup_harmony
+            # - configure-bit
             # - pack
       -
         performance_e2e_test:
