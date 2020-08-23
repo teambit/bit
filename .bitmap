@@ -712,6 +712,50 @@
         "exported": false,
         "lanes": []
     },
+    "component-tree": {
+        "files": [
+            {
+                "relativePath": "component-tree-node.ts",
+                "test": false,
+                "name": "component-tree-node.ts"
+            },
+            {
+                "relativePath": "component-tree.aspect.ts",
+                "test": false,
+                "name": "component-tree.aspect.ts"
+            },
+            {
+                "relativePath": "component-tree.composition.tsx",
+                "test": false,
+                "name": "component-tree.composition.tsx"
+            },
+            {
+                "relativePath": "component-tree.docs.tsx",
+                "test": false,
+                "name": "component-tree.docs.tsx"
+            },
+            {
+                "relativePath": "component-tree.drawer.tsx",
+                "test": false,
+                "name": "component-tree.drawer.tsx"
+            },
+            {
+                "relativePath": "component-tree.ui.runtime.tsx",
+                "test": false,
+                "name": "component-tree.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/component-tree",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "compositions": {
         "files": [
             {
@@ -1562,6 +1606,11 @@
                 "relativePath": "graphql.main.runtime.ts",
                 "test": false,
                 "name": "graphql.main.runtime.ts"
+            },
+            {
+                "relativePath": "graphql.preview.runtime.tsx",
+                "test": false,
+                "name": "graphql.preview.runtime.tsx"
             },
             {
                 "relativePath": "graphql.ui.runtime.tsx",
@@ -2582,6 +2631,90 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/scope",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "sidebar": {
+        "files": [
+            {
+                "relativePath": "drawer.module.scss",
+                "test": false,
+                "name": "drawer.module.scss"
+            },
+            {
+                "relativePath": "drawer.ts",
+                "test": false,
+                "name": "drawer.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "sidebar.aspect.ts",
+                "test": false,
+                "name": "sidebar.aspect.ts"
+            },
+            {
+                "relativePath": "sidebar.ui.runtime.tsx",
+                "test": false,
+                "name": "sidebar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "ui/drawer/drawer.module.scss",
+                "test": false,
+                "name": "drawer.module.scss"
+            },
+            {
+                "relativePath": "ui/drawer/drawer.tsx",
+                "test": false,
+                "name": "drawer.tsx"
+            },
+            {
+                "relativePath": "ui/drawer/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/overview-link/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/overview-link/overview-link.module.scss",
+                "test": false,
+                "name": "overview-link.module.scss"
+            },
+            {
+                "relativePath": "ui/overview-link/overview-link.tsx",
+                "test": false,
+                "name": "overview-link.tsx"
+            },
+            {
+                "relativePath": "ui/side-bar/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/side-bar/side-bar.module.scss",
+                "test": false,
+                "name": "side-bar.module.scss"
+            },
+            {
+                "relativePath": "ui/side-bar/side-bar.tsx",
+                "test": false,
+                "name": "side-bar.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/sidebar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3990,5 +4123,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.1"
+    "version": "14.8.9-dev.3"
 }
