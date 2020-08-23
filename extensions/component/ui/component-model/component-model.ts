@@ -109,6 +109,10 @@ export class ComponentModel {
     );
   }
 
+  static fromArray(componentsProps: ComponentModelProps[]) {
+    return componentsProps.map((rawComponent) => ComponentModel.from(rawComponent));
+  }
+
   static empty() {
     return new ComponentModel(
       ComponentID.fromObject({ name: 'root' }),
