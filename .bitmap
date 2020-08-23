@@ -2758,6 +2758,30 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/full-loader": {
+        "files": [
+            {
+                "relativePath": "full-loader.module.scss",
+                "test": false,
+                "name": "full-loader.module.scss"
+            },
+            {
+                "relativePath": "full-loader.tsx",
+                "test": false,
+                "name": "full-loader.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "src/to-eject/full-loader",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/main-dropdown": {
         "files": [
             {
