@@ -516,6 +516,9 @@ jobs:
         attach_workspace:
           at: ./
       -
+        restore_cache:
+          key: bitsrc-registry6
+      -
         run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
@@ -964,10 +967,10 @@ workflows:
             - set_npm_registries
             - install_npm_deps
             - build
-      -
-        configure-bit:
-          requires:
-            - build
+      # -
+      #   configure-bit:
+      #     requires:
+      #       - build
       -
         unit_test:
           requires:
