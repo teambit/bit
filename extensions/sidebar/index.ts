@@ -1,4 +1,5 @@
 import { SidebarAspect } from './sidebar.aspect';
 
-export { SidebarUI } from './sidebar.ui.runtimes';
+export { Drawer } from './drawer';
+export { SidebarUI } from './sidebar.ui.runtime';
 export default SidebarAspect;

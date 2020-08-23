@@ -20,7 +20,8 @@
   "include": [
     "src",
     "extensions",
-    "e2e"
+    "e2e",
+    "components"
   ],
   "exclude": [
     "components",
