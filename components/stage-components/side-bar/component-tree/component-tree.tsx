@@ -1,24 +1,26 @@
-import React, { useMemo, ComponentType } from 'react';
+import React, { useMemo, useCallback } from 'react';
+import { ComponentTreeSlot } from '../../../../extensions/component-tree/component-tree.ui';
+import { ComponentModel } from '../../../../extensions/component/ui';
 import { inflateToTree } from './inflate-paths';
-import { TreeNodeContext, TreeNode } from './recursive-tree';
+import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
-import { ComponentView, ComponentViewProps } from './component-view';
+import { ComponentView } from './component-view';
 import { ComponentTreeContextProvider } from './component-tree-context';
+import { RootNode } from './root-node';
 
-import styles from './component-tree.module.scss';
 import { indentStyle } from './indent';
 import { Component } from './../side-bar';
 import { PayloadType } from './payload-type';
+import styles from './component-tree.module.scss';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
-  components: Component[];
+  components: ComponentModel[];
+  treeNodeSlot: ComponentTreeSlot;
 };
 
-export function ComponentTree(props: ComponentTreeProps) {
-  const { components, onSelect, selected } = props;
-
+export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: ComponentTreeProps) {
   const rootNode = useMemo(
     () =>
       inflateToTree(
@@ -29,40 +31,25 @@ export function ComponentTree(props: ComponentTreeProps) {
     [components]
   );
 
+  const TreeNodeRenderer = useCallback(
+    function TreeNode(props: TreeNodeProps<PayloadType>) {
+      const children = props.node.children;
+
+      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+      // // TODO - handle scopes view
+      // if (!id.includes('/')) return ScopeView;
+      return <NamespaceView {...props} />;
+    },
+    [treeNodeSlot]
+  );
+
   return (
     <div className={styles.componentTree} style={indentStyle(0)}>
-      <TreeNodeContext.Provider value={getTreeNodeComponent}>
+      <TreeNodeContext.Provider value={TreeNodeRenderer}>
         <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} />
         </ComponentTreeContextProvider>
       </TreeNodeContext.Provider>
     </div>
   );
-}
-
-function RootNode({ node }: { node: TreeNode<PayloadType> }) {
-  if (!node.id) {
-    if (!node.children) return null;
-
-    return (
-      <>
-        {node.children.map((rootNode) => (
-          <RootNode key={rootNode.id} node={rootNode} />
-        ))}
-      </>
-    );
-  }
-
-  const Node = getTreeNodeComponent(node);
-
-  return <Node node={node} depth={0} />;
-}
-
-function getTreeNodeComponent(node: TreeNode<PayloadType>): ComponentType<ComponentViewProps<PayloadType>> {
-  const { children } = node;
-
-  if (!children) return ComponentView;
-  // TODO - how to tell scopes from namespaces?
-  // if (!id.includes('/')) return ScopeView;
-  return NamespaceView;
 }
