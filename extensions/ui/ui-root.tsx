@@ -1,7 +1,7 @@
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
 import { Component } from '@teambit/component';
 import { ComponentDir } from '@teambit/bundler/get-entry';
-import { AspectDefinition } from '../aspect-loader/aspect-definition';
+import { AspectDefinition } from '@teambit/aspect-loader';
 // import { WebpackDevServer } from '../webpack/webpack.dev-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
