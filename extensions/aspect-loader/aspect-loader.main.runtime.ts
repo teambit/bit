@@ -26,7 +26,7 @@ export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
 
 export type ResolvedAspect = {
   aspectPath: string;
-  runtimesPath: string;
+  runtimesPath: string | null;
 };
 
 export class AspectLoaderMain {
