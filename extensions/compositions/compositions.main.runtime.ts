@@ -1,17 +1,16 @@
-import { CompositionsAspect } from './compositions.aspect';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
 import { ComponentMap } from '@teambit/component';
-import { Composition } from './composition';
-import { compositionsSchema } from './compositions.graphql';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { ExtensionData } from '@teambit/workspace';
-import { CompositionPreviewDefinition } from './compositions.preview-definition';
 import { PreviewMain, PreviewAspect } from '@teambit/preview';
 import { SchemaMain, SchemaAspect } from '@teambit/schema';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { CompositionPreviewDefinition } from './compositions.preview-definition';
+import { Composition } from './composition';
+import { compositionsSchema } from './compositions.graphql';
+import { CompositionsAspect } from './compositions.aspect';
 
 export type CompositionsConfig = {
   /**
@@ -46,7 +45,7 @@ export class CompositionsMain {
    */
   getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/composition.ts/);
+      return component.state.filesystem.byRegex(/.composition.ts/);
     });
   }
 
@@ -91,10 +90,6 @@ export class CompositionsMain {
     return module.exports.map((exportModel) => {
       return new Composition(exportModel.identifier, file.relative);
     });
-  }
-
-  private async getTemplate(context: ExecutionContext) {
-    return context.env.getMounter();
   }
 
   static defaultConfig = {

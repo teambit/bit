@@ -1,4 +1,5 @@
 import { PreviewAspect, PreviewPreview } from '@teambit/preview';
+import { PreviewRuntime } from '@teambit/preview';
 
 export class CompositionsPreview {
   constructor(
@@ -25,6 +26,8 @@ export class CompositionsPreview {
     return module[chosen];
   }
 
+  static runtime = PreviewRuntime;
+
   static dependencies = [PreviewAspect];
 
   static async provider([preview]: [PreviewPreview]) {
@@ -38,3 +41,5 @@ export class CompositionsPreview {
     return compPreview;
   }
 }
+
+PreviewAspect.addRuntime(CompositionsPreview);

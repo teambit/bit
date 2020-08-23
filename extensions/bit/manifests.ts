@@ -30,13 +30,13 @@ import { WebpackAspect } from '@teambit/webpack';
 import { SchemaAspect } from '@teambit/schema';
 import { ConfigAspect } from '@teambit/config';
 import AspectLoaderAspect from '@teambit/aspect-loader';
-import { BitAspect } from './bit.aspect';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { PanelUiAspect } from '@teambit/panels';
 import { TypescriptAspect } from '@teambit/typescript';
 import { NotificationsAspect } from '@teambit/notifications';
 import { BundlerAspect } from '@teambit/bundler';
 import { JestAspect } from '@teambit/jest';
+import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
   [CLIAspect.id]: CLIAspect,

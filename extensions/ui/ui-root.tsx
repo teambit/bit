@@ -25,7 +25,7 @@ export interface UIRoot extends ComponentDir {
   /**
    * resolve all aspects in the UI root.
    */
-  resolveAspects(): Promise<AspectDefinition[]>;
+  resolveAspects(runtimeName: string): Promise<AspectDefinition[]>;
 
   /**
    * paths for all extensions to load.

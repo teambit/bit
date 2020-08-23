@@ -1,7 +1,7 @@
 import { ComponentUI, ComponentAspect } from '@teambit/component';
+import { UIRuntime } from '@teambit/ui';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
-import { UIRuntime } from '@teambit/ui';
 
 export class CompositionsUI {
   static dependencies = [ComponentAspect];
