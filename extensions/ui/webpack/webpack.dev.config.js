@@ -19,7 +19,7 @@ module.exports = {
   devConfig: createWebpackConfig,
 };
 
-function createWebpackConfig(workspaceDir, entryFiles, title) {
+function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
