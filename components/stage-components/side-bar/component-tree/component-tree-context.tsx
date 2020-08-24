@@ -1,4 +1,4 @@
-import React, { createContext, useMemo, ReactNode } from 'react';
+import React, { createContext, ReactNode, useMemo } from 'react';
 
 export interface ComponentTreeContextType {
   onSelect?: (id: string, event?: React.MouseEvent) => any;

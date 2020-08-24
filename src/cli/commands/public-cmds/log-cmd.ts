@@ -1,8 +1,9 @@
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { getComponentLogs } from '../../../api/consumer';
-import { paintLog } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { paintLog } from '../../chalk-box';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Log implements LegacyCommand {
   name = 'log <id>';

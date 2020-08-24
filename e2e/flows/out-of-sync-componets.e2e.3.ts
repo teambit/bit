@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
+import { IMPORT_PENDING_MSG } from '../../src/constants';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
-import { IMPORT_PENDING_MSG } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

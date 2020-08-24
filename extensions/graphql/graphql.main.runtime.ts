@@ -1,16 +1,17 @@
-import { createServer, Server } from 'http';
-import express, { Express } from 'express';
+import { GraphQLModule } from '@graphql-modules/core';
+import { MainRuntime } from '@teambit/cli';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import cors from 'cors';
-import { PubSub } from 'graphql-subscriptions';
+import express, { Express } from 'express';
 import graphqlHTTP from 'express-graphql';
 import { execute, subscribe } from 'graphql';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import { GraphQLModule } from '@graphql-modules/core';
+import { PubSub } from 'graphql-subscriptions';
+import { createServer, Server } from 'http';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+
 import { GraphqlAspect } from './graphql.aspect';
-import { MainRuntime } from '@teambit/cli';
 import { Schema } from './schema';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export type GraphQLConfig = {
   port: number;

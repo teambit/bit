@@ -1,12 +1,13 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { tagAction, tagAllAction } from '../../../api/consumer';
-import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../../api/consumer/lib/tag';
-import { isString } from '../../../utils';
-import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG, TagResults } from '../../../api/consumer/lib/tag';
+import { BASE_DOCS_DOMAIN, DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { isString } from '../../../utils';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';

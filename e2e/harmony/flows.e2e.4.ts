@@ -1,9 +1,10 @@
-import path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { IS_WINDOWS } from '../../src/constants';
+import fs from 'fs-extra';
+import path from 'path';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { IS_WINDOWS } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

@@ -1,9 +1,9 @@
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
-import Config from './Config';
 import cabinet from '../filing-cabinet';
 import precinct from '../precinct';
+import Config from './Config';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const debug = require('debug')('tree');
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

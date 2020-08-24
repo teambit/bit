@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import * as api from '../../src/api';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('show api', function () {
   this.timeout(0);

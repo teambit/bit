@@ -1,17 +1,17 @@
-import React, { useContext, useCallback } from 'react';
-import _ from 'lodash';
-import classNames from 'classnames';
+import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '@teambit/react-router';
-import { ComponentTreeSlot } from '@teambit/component-tree';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
-import { TreeNodeProps } from '../recursive-tree';
+import classNames from 'classnames';
+import _ from 'lodash';
+import React, { useCallback, useContext } from 'react';
+
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
-import { getName } from '../utils/get-name';
 import { PayloadType } from '../payload-type';
-
+import { TreeNodeProps } from '../recursive-tree';
+import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
 
 export type ComponentViewProps<Payload = any> = {

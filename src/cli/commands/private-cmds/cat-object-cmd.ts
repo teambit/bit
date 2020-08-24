@@ -1,5 +1,5 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { catObject } from '../../../api/scope';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class CatObject implements LegacyCommand {
   name = 'cat-object <hash>';

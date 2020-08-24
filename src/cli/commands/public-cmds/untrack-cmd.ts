@@ -1,9 +1,10 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { untrack } from '../../../api/consumer';
-import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import GeneralError from '../../../error/general-error';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untrack implements LegacyCommand {
   name = 'untrack [ids...]';

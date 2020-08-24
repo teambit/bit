@@ -1,5 +1,5 @@
 import { createTesting } from '@stencil/core/testing';
-import { Tester, TestResults, TesterContext } from '@teambit/tester';
+import { Tester, TesterContext, TestResults } from '@teambit/tester';
 import { Workspace } from '@teambit/workspace';
 
 export class StencilTester implements Tester {

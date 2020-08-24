@@ -1,10 +1,11 @@
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { test } from '../../../api/consumer';
-import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
-import GeneralError from '../../../error/general-error';
 import { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
+import GeneralError from '../../../error/general-error';
+import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
 

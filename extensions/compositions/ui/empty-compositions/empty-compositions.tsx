@@ -1,5 +1,6 @@
-import React from 'react';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import React from 'react';
+
 import styles from './empty-compositions.module.scss';
 
 export function EmptyCompositions() {

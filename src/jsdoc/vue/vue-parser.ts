@@ -1,9 +1,10 @@
-import * as domain from 'domain';
 import vuedoc from '@vuedoc/parser';
+import * as domain from 'domain';
+
+import logger from '../../logger/logger';
+import { pathNormalizeToLinux } from '../../utils';
 import { PathOsBased } from '../../utils/path';
 import { Doclet } from '../types';
-import { pathNormalizeToLinux } from '../../utils';
-import logger from '../../logger/logger';
 
 function formatProperty(prop) {
   const { name, description, type, required } = prop;

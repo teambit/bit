@@ -1,4 +1,5 @@
 import prompt from 'prompt';
+
 import loader from '../cli/loader';
 import { PromptCanceled } from './exceptions';
 

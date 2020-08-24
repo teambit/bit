@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { extendPath } from './extend-path';
 
 it('should return prefix when path is undefined', () => {

@@ -1,4 +1,5 @@
 import firstline from 'firstline';
+
 import { AUTO_GENERATED_STAMP } from '../constants';
 import { PathOsBased } from './path';
 

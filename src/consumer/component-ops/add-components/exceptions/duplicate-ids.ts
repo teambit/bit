@@ -1,5 +1,6 @@
-import R from 'ramda';
 import toArray from 'lodash.toarray';
+import R from 'ramda';
+
 import AbstractError from '../../../../error/abstract-error';
 
 export default class DuplicateIds extends AbstractError {

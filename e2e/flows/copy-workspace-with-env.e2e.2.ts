@@ -1,8 +1,9 @@
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/broken-symlink-files';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

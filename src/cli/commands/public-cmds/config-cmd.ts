@@ -1,11 +1,12 @@
 /* eslint max-classes-per-file: 0 */
-import rightpad from 'pad-right';
 import chalk from 'chalk';
-import { LegacyCommand } from '../../legacy-command';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import rightpad from 'pad-right';
+
 // import { config } from '../../../api/consumer';
 // const config = require('../../../api/consumer/lib/global-config');
 import * as config from '../../../api/consumer/lib/global-config';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { LegacyCommand } from '../../legacy-command';
 
 class ConfigSet implements LegacyCommand {
   name = 'set <key> <val>';

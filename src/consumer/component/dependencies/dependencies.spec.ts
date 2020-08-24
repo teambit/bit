@@ -1,9 +1,10 @@
-import R from 'ramda';
 import { expect } from 'chai';
-import { Dependencies } from './';
+import R from 'ramda';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
 import { BitId } from '../../../bit-id';
+import { Dependencies } from './';
 
 describe('Dependencies', () => {
   describe('validate()', () => {

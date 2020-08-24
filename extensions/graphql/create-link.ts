@@ -1,6 +1,6 @@
-import { WebSocketLink } from 'apollo-link-ws';
-import { split } from 'apollo-link';
 import { HttpLink } from 'apollo-boost';
+import { split } from 'apollo-link';
+import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 
 /**

@@ -1,11 +1,12 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { fetch } from '../../../api/consumer';
-import { ComponentWithDependencies } from '../../../scope';
-import { ImportDetails } from '../../../consumer/component-ops/import-components';
-import { formatPlainComponentItemWithVersions } from '../../chalk-box';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { ImportDetails } from '../../../consumer/component-ops/import-components';
+import { ComponentWithDependencies } from '../../../scope';
+import { formatPlainComponentItemWithVersions } from '../../chalk-box';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Fetch implements LegacyCommand {
   name = 'fetch [ids...]';

@@ -1,6 +1,6 @@
-import { loadConsumer, Consumer } from '../../../consumer';
-import { linkAllToNodeModules } from '../../../links';
+import { Consumer, loadConsumer } from '../../../consumer';
 import { changeCodeFromRelativeToModulePaths } from '../../../consumer/component-ops/codemod-components';
+import { linkAllToNodeModules } from '../../../links';
 
 export default async function linkAction(ids: string[], changeRelativeToModulePaths: boolean) {
   const consumer: Consumer = await loadConsumer();

@@ -1,9 +1,10 @@
 import * as path from 'path';
+
+import BitId from '../../bit-id/bit-id';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 import GeneralError from '../../error/general-error';
 import { PathOsBasedRelative } from '../path';
-import BitId from '../../bit-id/bit-id';
 import componentIdToPackageName from './component-id-to-package-name';
-import { ExtensionDataList } from '../../consumer/config/extension-data';
 
 export default function getNodeModulesPathOfComponent({
   bindingPrefix,

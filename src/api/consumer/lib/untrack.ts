@@ -1,6 +1,6 @@
-import { loadConsumer, Consumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
 import { BitId, BitIds } from '../../../bit-id';
+import { Consumer, loadConsumer } from '../../../consumer';
+import ComponentsList from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function untrack(

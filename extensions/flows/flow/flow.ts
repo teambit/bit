@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable no-plusplus */
 /* eslint-disable max-len */
-import { Subject, ReplaySubject } from 'rxjs';
-import { executeTask } from '../task';
 import { Capsule } from '@teambit/isolator';
 import logger from 'bit-bin/dist/logger/logger';
+import { ReplaySubject, Subject } from 'rxjs';
+
+import { executeTask } from '../task';
 
 export class Flow {
   private result: any[] = [];

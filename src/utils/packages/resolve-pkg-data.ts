@@ -1,8 +1,9 @@
 import R from 'ramda';
-import { PathLinuxAbsolute } from '../path';
-import PackageJson from '../../consumer/component/package-json';
-import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
+
 import { BitId } from '../../bit-id';
+import PackageJson from '../../consumer/component/package-json';
+import { PathLinuxAbsolute } from '../path';
+import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
 export interface ResolvedPackageData {
   fullPath: PathLinuxAbsolute;

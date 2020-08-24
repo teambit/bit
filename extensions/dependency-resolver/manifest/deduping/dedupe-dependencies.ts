@@ -1,8 +1,8 @@
-import { indexByDepId } from './index-by-dep-id';
-import { hoistDependencies } from './hoist-dependencies';
-import { mergeWithRootDeps } from './merge-with-root';
-import { PackageName, DependenciesObjectDefinition, SemverVersion } from '../../types';
+import { DependenciesObjectDefinition, PackageName, SemverVersion } from '../../types';
 import { ComponentDependenciesMap } from '../workspace-manifest';
+import { hoistDependencies } from './hoist-dependencies';
+import { indexByDepId } from './index-by-dep-id';
+import { mergeWithRootDeps } from './merge-with-root';
 
 export { getEmptyDedupedDependencies } from './hoist-dependencies';
 

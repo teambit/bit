@@ -1,7 +1,8 @@
-import gql from 'graphql-tag';
-import { Schema } from '@teambit/graphql';
-import { EnvsMain } from './environments.main.runtime';
 import { Component } from '@teambit/component';
+import { Schema } from '@teambit/graphql';
+import gql from 'graphql-tag';
+
+import { EnvsMain } from './environments.main.runtime';
 
 export function environmentsSchema(environments: EnvsMain): Schema {
   return {

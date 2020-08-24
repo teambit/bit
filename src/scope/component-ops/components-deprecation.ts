@@ -1,9 +1,10 @@
 import groupArray from 'group-array';
-import logger from '../../logger/logger';
-import { BitIds, BitId } from '../../bit-id';
-import { BitIdStr } from '../../bit-id/bit-id';
+
 import { Scope } from '..';
+import { BitId, BitIds } from '../../bit-id';
+import { BitIdStr } from '../../bit-id/bit-id';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
+import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
 
 export type DeprecationResult = {

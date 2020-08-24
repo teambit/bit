@@ -1,8 +1,9 @@
+import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { Capsule } from '@teambit/isolator';
 import fs from 'fs-extra';
 import path from 'path';
-import { BuildTask, BuildContext, BuildResults } from '@teambit/builder';
+
 import { Compiler } from './types';
-import { Capsule } from '@teambit/isolator';
 
 /**
  * compiler build task. Allows to compile components during component build.

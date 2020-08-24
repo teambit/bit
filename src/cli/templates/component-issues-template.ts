@@ -1,13 +1,14 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import ConsumerComponent from '../../consumer/component/consumer-component';
-import {
-  UntrackedFileDependencyEntry,
-  RelativeComponentsAuthoredEntry,
-} from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
-import Component from '../../consumer/component/consumer-component';
+
 import { Analytics } from '../../analytics/analytics';
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
+import ConsumerComponent from '../../consumer/component/consumer-component';
+import Component from '../../consumer/component/consumer-component';
+import {
+  RelativeComponentsAuthoredEntry,
+  UntrackedFileDependencyEntry,
+} from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:

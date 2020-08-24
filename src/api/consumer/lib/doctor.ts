@@ -1,24 +1,23 @@
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import os from 'os';
-import tar from 'tar-stream';
 import fs from 'fs-extra';
+import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
-import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
-import DoctorRegistrar from '../../../doctor/doctor-registrar';
-import Diagnosis from '../../../doctor/diagnosis';
-import { getWithoutExt, getExt } from '../../../utils';
-import { ExamineResult } from '../../../doctor/diagnosis';
-import logger from '../../../logger/logger';
-import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
-import * as globalConfig from './global-config';
-import { getConsumerInfo } from '../../../consumer/consumer-locator';
+import tar from 'tar-stream';
+
+import { BIT_VERSION, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
-import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
-import DiagnosisNotFound from './exceptions/diagnosis-not-found';
-import { ConsumerInfo } from '../../../consumer/consumer-locator';
-import npmClient from '../../../npm-client';
 import WorkspaceConfig from '../../../consumer/config/workspace-config';
+import { ConsumerInfo, getConsumerInfo } from '../../../consumer/consumer-locator';
+import Diagnosis, { ExamineResult } from '../../../doctor/diagnosis';
+import DoctorRegistrar from '../../../doctor/doctor-registrar';
+import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
+import logger from '../../../logger/logger';
+import npmClient from '../../../npm-client';
+import { getExt, getWithoutExt } from '../../../utils';
+import DiagnosisNotFound from './exceptions/diagnosis-not-found';
+import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
+import * as globalConfig from './global-config';
 
 // run specific check
 export type DoctorMetaData = {

@@ -1,15 +1,15 @@
-import React from 'react';
+import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
+import React from 'react';
 import {
-  Tabs,
   Tab as BaseTab,
-  TabProps as BaseTabProps,
   TabList as BaseTabList,
   TabListProps as BaseTabListProps,
   TabPanel as TabPanelBase,
+  TabProps as BaseTabProps,
+  Tabs,
 } from 'react-tabs';
 
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import styles from './tabs.module.scss';
 
 export type TabContainerProps = Tabs;

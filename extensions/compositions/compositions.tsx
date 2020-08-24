@@ -1,22 +1,21 @@
-import React, { useContext, useState, useEffect, useReducer } from 'react';
-import head from 'lodash.head';
-import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
-import R from 'ramda';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter-temp.ui.property-table';
-import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
-import { Composition } from './composition';
-import { ComponentModel } from '@teambit/component';
-import { ComponentContext } from '@teambit/component';
+import { Panel, PanelContainer, Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import { ComponentComposition } from './ui';
-import { TabContainer, Tab, TabList, TabPanel } from '@teambit/panels';
-import { PanelContainer, Panel } from '@teambit/panels';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { gql } from 'apollo-boost';
+import head from 'lodash.head';
+import R from 'ramda';
+import React, { useContext, useEffect, useReducer, useState } from 'react';
+
+import { Composition } from './composition';
 import styles from './compositions.module.scss';
+import { ComponentComposition } from './ui';
+import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
+import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
 
 const GET_COMPONENT = gql`
   query($id: String!) {

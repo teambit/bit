@@ -1,5 +1,6 @@
-import gql from 'graphql-tag';
 import { ComponentFactory } from '@teambit/component';
+import gql from 'graphql-tag';
+
 import { ReactMain } from './react.main.runtime';
 
 export function reactSchema(react: ReactMain) {

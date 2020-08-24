@@ -1,6 +1,6 @@
 import {
-  getDependenciesFromMemberExpression,
   getDependenciesFromCallExpression,
+  getDependenciesFromMemberExpression,
   getSpecifierValueForImportDeclaration,
 } from '../parser-helper';
 /**

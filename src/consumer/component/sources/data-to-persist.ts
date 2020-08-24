@@ -1,13 +1,14 @@
-import * as path from 'path';
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
-import AbstractVinyl from './abstract-vinyl';
+import * as path from 'path';
+
+import Capsule from '../../../../legacy-capsule/core/capsule';
+import { CONCURRENT_IO_LIMIT as concurrency } from '../../../constants';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
-import RemovePath from './remove-path';
 import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
-import { CONCURRENT_IO_LIMIT as concurrency } from '../../../constants';
-import Capsule from '../../../../legacy-capsule/core/capsule';
+import AbstractVinyl from './abstract-vinyl';
+import RemovePath from './remove-path';
 
 export default class DataToPersist {
   files: AbstractVinyl[];

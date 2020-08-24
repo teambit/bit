@@ -1,15 +1,15 @@
 import R from 'ramda';
-import Dependency from './dependency';
-import { RelativePath } from './dependency';
+
 import { BitId, BitIds } from '../../../bit-id';
-import Scope from '../../../scope/scope';
-import { isValidPath } from '../../../utils';
-import ValidationError from '../../../error/validation-error';
-import validateType from '../../../utils/validate-type';
 import { BitIdStr } from '../../../bit-id/bit-id';
-import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
-import { PathLinux } from '../../../utils/path';
+import ValidationError from '../../../error/validation-error';
+import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
+import { isValidPath } from '../../../utils';
+import { PathLinux } from '../../../utils/path';
+import validateType from '../../../utils/validate-type';
+import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
+import Dependency, { RelativePath } from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {

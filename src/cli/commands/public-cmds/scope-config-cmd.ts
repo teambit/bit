@@ -1,8 +1,9 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
-import { LegacyCommand } from '../../legacy-command';
-import { objectToStringifiedTupleArray } from '../../../utils';
+
 import { scopeConfig } from '../../../api/scope';
+import { objectToStringifiedTupleArray } from '../../../utils';
+import { LegacyCommand } from '../../legacy-command';
 
 class ScopeConfigGet implements LegacyCommand {
   name = 'get <key>';

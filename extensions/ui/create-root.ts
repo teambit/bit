@@ -1,6 +1,7 @@
-import { parse } from 'path';
-import { camelCase } from 'lodash';
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { camelCase } from 'lodash';
+import { parse } from 'path';
+
 import { UIAspect } from './ui.aspect';
 
 export async function createRoot(
@@ -10,6 +11,7 @@ export async function createRoot(
   runtime = 'ui'
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
+  const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `
 import { Harmony } from '@teambit/harmony';
@@ -18,7 +20,8 @@ ${getImportStatements(
   'Aspect'
 )}
 ${getImportStatements(
-  aspectDefs.map((def) => def.runtimePath),
+  // @ts-ignore no nulls can be found here - see above.
+  defs.map((def) => def.runtimePath),
   'Runtime'
 )}
 

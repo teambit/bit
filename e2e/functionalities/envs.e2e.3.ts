@@ -1,17 +1,18 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject-bound-to-workspace';
-import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+
 import { BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../src/constants';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
+import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject-bound-to-workspace';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
-import ExtensionSchemaError from '../../src/legacy-extensions/exceptions/extension-schema-error';
-import ExtensionLoadError from '../../src/legacy-extensions/exceptions/extension-load-error';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
+import ExtensionLoadError from '../../src/legacy-extensions/exceptions/extension-load-error';
+import ExtensionSchemaError from '../../src/legacy-extensions/exceptions/extension-schema-error';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

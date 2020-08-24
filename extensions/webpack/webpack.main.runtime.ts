@@ -1,13 +1,14 @@
+import { BundlerAspect, BundlerContext, BundlerMain, DevServer, DevServerContext } from '@teambit/bundler';
+import { MainRuntime } from '@teambit/cli';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
-import { WebpackAspect } from './webpack.aspect';
-import { MainRuntime } from '@teambit/cli';
-import { WebpackDevServer } from './webpack.dev-server';
-import { DevServer, BundlerContext, BundlerMain, BundlerAspect, DevServerContext } from '@teambit/bundler';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+
 import configFactory from './config/webpack.dev.config';
+import { WebpackAspect } from './webpack.aspect';
 import { WebpackBundler } from './webpack.bundler';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { WebpackDevServer } from './webpack.dev-server';
 
 export class WebpackMain {
   constructor(

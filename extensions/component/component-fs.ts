@@ -1,7 +1,7 @@
-import path from 'path';
 import { MemoryFS } from '@teambit/any-fs';
 import type { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { auto } from 'bit-bin/dist/utils/eol';
+import path from 'path';
 
 /**
  * The virtual component filesystem

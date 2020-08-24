@@ -1,6 +1,6 @@
-import BitObject from './objects/object';
 import { toBase64ArrayBuffer } from '../utils';
 import ModelComponent from './models/model-component';
+import BitObject from './objects/object';
 
 export default class ComponentObjects {
   component: Buffer;

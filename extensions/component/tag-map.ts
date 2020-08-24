@@ -1,8 +1,9 @@
-import { SemVer, rcompare } from 'semver';
+import { rcompare, SemVer } from 'semver';
+
 import { CouldNotFindLatest } from './exceptions';
+import { Hash } from './hash';
 // eslint-disable-next-line import/no-cycle
 import { Tag } from './tag';
-import { Hash } from './hash';
 
 export class TagMap extends Map<SemVer, Tag> {
   /**

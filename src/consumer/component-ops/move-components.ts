@@ -1,20 +1,21 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { NodeModuleLinker, reLinkDependents } from '../../links';
-import * as packageJsonUtils from '../component/package-json-utils';
-import GeneralError from '../../error/general-error';
-import Consumer from '../consumer';
-import { PathOsBasedRelative, PathOsBasedAbsolute, pathJoinLinux } from '../../utils/path';
-import { PathChangeResult } from '../bit-map/bit-map';
-import Component from '../component/consumer-component';
-import moveSync from '../../utils/fs/move-sync';
-import RemovePath from '../component/sources/remove-path';
+
+import { BitId } from '../../bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { BitId } from '../../bit-id';
+import GeneralError from '../../error/general-error';
+import { NodeModuleLinker, reLinkDependents } from '../../links';
 import { isDirEmptySync } from '../../utils';
+import moveSync from '../../utils/fs/move-sync';
+import { pathJoinLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathChangeResult } from '../bit-map/bit-map';
 import { PathChange } from '../bit-map/component-map';
+import Component from '../component/consumer-component';
+import * as packageJsonUtils from '../component/package-json-utils';
+import RemovePath from '../component/sources/remove-path';
+import Consumer from '../consumer';
 
 export async function movePaths(
   consumer: Consumer,

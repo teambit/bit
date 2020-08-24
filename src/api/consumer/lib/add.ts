@@ -1,15 +1,16 @@
 import * as path from 'path';
-import { PathOsBased } from '../../../utils/path';
+
+import { BIT_MAP, POST_ADD_HOOK } from '../../../constants';
+import { Consumer, loadConsumer } from '../../../consumer';
 import AddComponents from '../../../consumer/component-ops/add-components';
 import {
-  AddProps,
-  AddContext,
   AddActionResults,
+  AddContext,
+  AddProps,
   PathOrDSL,
 } from '../../../consumer/component-ops/add-components/add-components';
-import { loadConsumer, Consumer } from '../../../consumer';
-import { POST_ADD_HOOK, BIT_MAP } from '../../../constants';
 import HooksManager from '../../../hooks';
+import { PathOsBased } from '../../../utils/path';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

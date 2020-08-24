@@ -1,16 +1,17 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
-import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import { statusInvalidComponentsMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE, IMPORT_PENDING_MSG } from '../../src/constants';
+import fs from 'fs-extra';
+import * as path from 'path';
+
+import { statusFailureMsg, statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import {
-  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
   componentIssuesLabels,
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
 } from '../../src/cli/templates/component-issues-template';
+import { IMPORT_PENDING_MSG, MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
+import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 const assertArrays = require('chai-arrays');
 

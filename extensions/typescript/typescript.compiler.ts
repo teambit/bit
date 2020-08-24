@@ -1,14 +1,13 @@
-import path from 'path';
-import fs from 'fs-extra';
-import ts from 'typescript';
-import { Compiler } from '@teambit/compiler';
-import { BuildResults, BuildContext } from '@teambit/builder';
-import { TranspileOpts, TranspileOutput } from '@teambit/compiler';
-import { Logger } from '@teambit/logger';
-import { TypeScriptCompilerOptions } from './compiler-options';
+import { BuildContext, BuildResults } from '@teambit/builder';
+import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component';
-import { CapsuleList } from '@teambit/isolator';
-import { Network } from '@teambit/isolator';
+import { CapsuleList, Network } from '@teambit/isolator';
+import { Logger } from '@teambit/logger';
+import fs from 'fs-extra';
+import path from 'path';
+import ts from 'typescript';
+
+import { TypeScriptCompilerOptions } from './compiler-options';
 
 type ComponentError = { componentId: ComponentID; error: string };
 

@@ -3,21 +3,22 @@
 /**
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
-import ts from 'typescript';
-import path from 'path';
-import getModuleType from 'module-definition';
-import resolve from 'resolve';
-import amdLookup from 'module-lookup-amd';
-import stylusLookup from 'stylus-lookup';
-import sassLookup from 'sass-lookup';
-import resolveDependencyPath from 'resolve-dependency-path';
 import appModulePath from 'app-module-path';
 import webpackResolve from 'enhanced-resolve';
 import isRelative from 'is-relative-path';
+import getModuleType from 'module-definition';
+import amdLookup from 'module-lookup-amd';
 import objectAssign from 'object-assign';
+import path from 'path';
+import resolve from 'resolve';
+import resolveDependencyPath from 'resolve-dependency-path';
+import sassLookup from 'sass-lookup';
+import stylusLookup from 'stylus-lookup';
+import ts from 'typescript';
+
+import { isRelativeImport } from '../../../../../utils';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import vueLookUp from '../lookups/vue-lookup';
-import { isRelativeImport } from '../../../../../utils';
 
 const debug = require('debug')('cabinet');
 

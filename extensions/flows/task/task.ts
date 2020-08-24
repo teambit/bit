@@ -1,9 +1,10 @@
 /* eslint-disable max-classes-per-file */
 
-import { Subject } from 'rxjs';
-import { join } from 'path';
-import { listenToExecutionStream } from './execution-stream';
 import { Capsule, ContainerExec } from '@teambit/isolator';
+import { join } from 'path';
+import { Subject } from 'rxjs';
+
+import { listenToExecutionStream } from './execution-stream';
 
 export const PackageMarker = '@';
 

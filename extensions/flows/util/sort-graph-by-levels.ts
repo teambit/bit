@@ -1,6 +1,6 @@
-import { Graph, alg } from 'graphlib';
-import logger from 'bit-bin/dist/logger/logger';
 import { BitIdStr } from 'bit-bin/dist/bit-id/bit-id';
+import logger from 'bit-bin/dist/logger/logger';
+import { alg, Graph } from 'graphlib';
 
 type Level = {
   inEdgeCount: number;

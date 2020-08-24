@@ -1,9 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
+import { Command, CommandOptions } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
+import React from 'react';
+
 import { Packer, PackOptions } from './pack';
-import { CommandOptions, Command } from '@teambit/cli';
 
 type PackArgs = [string, string];
 

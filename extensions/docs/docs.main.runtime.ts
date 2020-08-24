@@ -1,11 +1,11 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
-import { ComponentMap } from '@teambit/component';
-import { PreviewMain, PreviewAspect } from '@teambit/preview';
+import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { DocsPreviewDefinition } from './docs.preview-definition';
+
 import { DocsAspect } from './docs.aspect';
+import { DocsPreviewDefinition } from './docs.preview-definition';
 
 export type ComponentDocs = {
   files: string[];

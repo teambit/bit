@@ -1,16 +1,16 @@
+import graphlib, { Graph } from 'graphlib';
 import R from 'ramda';
 import semver from 'semver';
-import graphlib, { Graph } from 'graphlib';
-import ModelComponent from '../models/model-component';
+
 import { BitId, BitIds } from '../../bit-id';
-import Scope from '../scope';
-import { ComponentsAndVersions } from '../scope';
-import { Dependency } from '../../consumer/component/dependencies';
 import Component from '../../consumer/component/consumer-component';
-import { Version } from '../models';
-import { getAllFlattenedDependencies } from './get-flattened-dependencies';
-import { buildComponentsGraphForComponentsAndVersion } from '../graph/components-graph';
+import { Dependency } from '../../consumer/component/dependencies';
 import { isTag } from '../../version/version-parser';
+import { buildComponentsGraphForComponentsAndVersion } from '../graph/components-graph';
+import { Version } from '../models';
+import ModelComponent from '../models/model-component';
+import Scope, { ComponentsAndVersions } from '../scope';
+import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
 const removeNils = R.reject(R.isNil);
 

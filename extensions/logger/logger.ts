@@ -1,8 +1,9 @@
-import stc from 'string-to-color';
-import chalk from 'chalk';
-import { LongProcessLogger } from './long-process-logger';
-import logger from 'bit-bin/dist/logger/logger';
 import loader from 'bit-bin/dist/cli/loader';
+import logger from 'bit-bin/dist/logger/logger';
+import chalk from 'chalk';
+import stc from 'string-to-color';
+
+import { LongProcessLogger } from './long-process-logger';
 
 export class Logger {
   constructor(private extensionName: string) {}

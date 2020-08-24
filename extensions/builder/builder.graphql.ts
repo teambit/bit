@@ -1,5 +1,6 @@
-import gql from 'graphql-tag';
 import { Component } from '@teambit/component';
+import gql from 'graphql-tag';
+
 import { BuilderMain } from './builder.main.runtime';
 
 export function builderSchema(builder: BuilderMain) {

@@ -1,10 +1,11 @@
-import React from 'react';
+import { ComponentModel } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { ComponentModel } from '@teambit/component';
-import { SideBar } from './ui';
+import React from 'react';
+
 import { Drawer } from './drawer';
 import { SidebarAspect } from './sidebar.aspect';
+import { SideBar } from './ui';
 
 export type ComponentTypeProps = {
   component: ComponentModel;

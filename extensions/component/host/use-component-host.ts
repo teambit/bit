@@ -1,5 +1,6 @@
-import gql from 'graphql-tag';
 import { useDataQuery } from '@teambit/ui';
+import gql from 'graphql-tag';
+
 import { ComponentHostModel } from './component-host-model';
 
 const COMPONENT_HOST = gql`

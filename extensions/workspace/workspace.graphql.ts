@@ -1,4 +1,5 @@
 import gql from 'graphql-tag';
+
 import { Workspace } from './workspace';
 import { WorkspaceComponent } from './workspace-component';
 

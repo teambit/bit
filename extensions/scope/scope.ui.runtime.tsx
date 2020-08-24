@@ -1,11 +1,12 @@
-import React from 'react';
-import { Slot } from '@teambit/harmony';
-import { RouteProps } from 'react-router-dom';
-import { RouteSlot } from '@teambit/react-router';
-import { UIRootUI as UIRoot, UIAspect, UiUI, UIRuntime } from '@teambit/ui';
-import { ComponentAspect } from '@teambit/component';
 import type { ComponentUI } from '@teambit/component';
-import { SidebarUI, SidebarAspect } from '@teambit/sidebar';
+import { ComponentAspect } from '@teambit/component';
+import { Slot } from '@teambit/harmony';
+import { RouteSlot } from '@teambit/react-router';
+import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
+import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
+import React from 'react';
+import { RouteProps } from 'react-router-dom';
+
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 

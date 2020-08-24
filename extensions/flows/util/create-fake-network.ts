@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Graph } from 'graphlib';
-import { ReplaySubject } from 'rxjs';
-import { ExecutionOptions } from '../network/options';
-import { ComponentID, Component } from '@teambit/component';
-import { Network } from '../network';
+import { Component, ComponentID } from '@teambit/component';
+import { Capsule } from '@teambit/isolator';
+import { Workspace } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { Consumer } from 'bit-bin/dist/consumer';
-import { Workspace } from '@teambit/workspace';
-import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
+import { Graph } from 'graphlib';
+import { ReplaySubject } from 'rxjs';
+
 import { Flow } from '../flow';
-import { Capsule } from '@teambit/isolator';
+import { Network } from '../network';
+import { ExecutionOptions } from '../network/options';
+import { createFakeCapsule, getFakeCapsuleLocation } from './create-capsule';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };

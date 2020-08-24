@@ -1,19 +1,19 @@
 import pMapSeries from 'p-map-series';
 import R from 'ramda';
-import AbstractConfig from './abstract-config';
-import { Compilers, Testers } from './abstract-config';
-import logger from '../../logger/logger';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
-import Component from '../component/consumer-component';
-import { ComponentOverridesData } from './component-overrides';
-import filterObject from '../../utils/filter-object';
-import PackageJsonFile from '../component/package-json-file';
-import ShowDoctorError from '../../error/show-doctor-error';
-import { BitId } from '../../bit-id';
+
 import { Consumer } from '..';
+import { BitId } from '../../bit-id';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
+import ShowDoctorError from '../../error/show-doctor-error';
+import logger from '../../logger/logger';
+import filterObject from '../../utils/filter-object';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import Component from '../component/consumer-component';
+import PackageJsonFile from '../component/package-json-file';
+import AbstractConfig, { Compilers, Testers } from './abstract-config';
+import { ComponentOverridesData } from './component-overrides';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 
 type ConfigProps = {
   lang?: string;

@@ -1,8 +1,8 @@
 import { Consumer } from '..';
-import Lane, { LaneComponent } from '../../scope/models/lane';
-import GeneralError from '../../error/general-error';
-import { isValidIdChunk } from '../../utils';
 import { BitIds } from '../../bit-id';
+import GeneralError from '../../error/general-error';
+import Lane, { LaneComponent } from '../../scope/models/lane';
+import { isValidIdChunk } from '../../utils';
 import WorkspaceLane from '../bit-map/workspace-lane';
 
 export default async function createNewLane(

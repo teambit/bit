@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
-import classNames from 'classnames';
-import ReactTooltip from 'react-tooltip';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import classNames from 'classnames';
+import React, { ReactNode } from 'react';
+import ReactTooltip from 'react-tooltip';
+
 import styles from './sidebar-collapser.module.scss';
 
 type CollapserProps = {

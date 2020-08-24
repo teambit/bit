@@ -1,41 +1,43 @@
+import { AspectAspect } from '@teambit/aspect';
+import AspectLoaderAspect from '@teambit/aspect-loader';
+import { BuilderAspect } from '@teambit/builder';
+import { BundlerAspect } from '@teambit/bundler';
 import { CLIAspect } from '@teambit/cli';
 import { CompilerAspect } from '@teambit/compiler';
 import { ComponentAspect } from '@teambit/component';
-import { GraphAspect } from '@teambit/graph';
-import { CreateAspect } from '@teambit/generator';
+import { CompositionsAspect } from '@teambit/compositions';
+import { ConfigAspect } from '@teambit/config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DeprecationAspect } from '@teambit/deprecation';
+import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/environments';
+import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
+import { CreateAspect } from '@teambit/generator';
+import { GraphAspect } from '@teambit/graph';
+import { GraphqlAspect } from '@teambit/graphql';
 import { InsightsAspect } from '@teambit/insights';
 import { IsolatorAspect } from '@teambit/isolator';
-import { LoggerAspect } from '@teambit/logger';
-import { PkgAspect } from '@teambit/pkg';
-import { ReactAspect } from '@teambit/react';
-import { ScopeAspect } from '@teambit/scope';
-import { TesterAspect } from '@teambit/tester';
-import { BuilderAspect } from '@teambit/builder';
-import { VariantsAspect } from '@teambit/variants';
-import { GraphqlAspect } from '@teambit/graphql';
-import { PnpmAspect } from '@teambit/pnpm';
-import { WorkspaceAspect } from '@teambit/workspace';
-import { UIAspect } from '@teambit/ui';
-import { PreviewAspect } from '@teambit/preview';
-import { DocsAspect } from '@teambit/docs';
-import { StencilAspect } from '@teambit/stencil';
-import { CompositionsAspect } from '@teambit/compositions';
-import { DeprecationAspect } from '@teambit/deprecation';
-import { ExpressAspect } from '@teambit/express';
-import { AspectAspect } from '@teambit/aspect';
-import { WebpackAspect } from '@teambit/webpack';
-import { SchemaAspect } from '@teambit/schema';
-import { ConfigAspect } from '@teambit/config';
-import AspectLoaderAspect from '@teambit/aspect-loader';
-import { ReactRouterAspect } from '@teambit/react-router';
-import { PanelUiAspect } from '@teambit/panels';
-import { TypescriptAspect } from '@teambit/typescript';
-import { NotificationsAspect } from '@teambit/notifications';
-import { BundlerAspect } from '@teambit/bundler';
 import { JestAspect } from '@teambit/jest';
+import { LoggerAspect } from '@teambit/logger';
+import { NodeAspect } from '@teambit/node';
+import { NotificationsAspect } from '@teambit/notifications';
+import { PanelUiAspect } from '@teambit/panels';
+import { PkgAspect } from '@teambit/pkg';
+import { PnpmAspect } from '@teambit/pnpm';
+import { PreviewAspect } from '@teambit/preview';
+import { ReactAspect } from '@teambit/react';
+import { ReactRouterAspect } from '@teambit/react-router';
+import { SchemaAspect } from '@teambit/schema';
+import { ScopeAspect } from '@teambit/scope';
+import { StencilAspect } from '@teambit/stencil';
+import { TesterAspect } from '@teambit/tester';
+import { TypescriptAspect } from '@teambit/typescript';
+import { UIAspect } from '@teambit/ui';
+import { VariantsAspect } from '@teambit/variants';
+import { WebpackAspect } from '@teambit/webpack';
+import { WorkspaceAspect } from '@teambit/workspace';
+
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -73,6 +75,7 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,

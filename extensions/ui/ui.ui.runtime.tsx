@@ -1,14 +1,15 @@
-import React, { ReactNode } from 'react';
-import ReactDOM from 'react-dom';
-import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { GraphqlUI } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
-import { ClientContext } from './ui/client-context';
+import React, { ReactNode } from 'react';
+import ReactDOM from 'react-dom';
+
 import { Compose } from './compose';
-import { UIAspect, UIRuntime } from './ui.aspect';
 import { UIRootUI as UIRoot } from './ui-root.ui';
+import { UIAspect, UIRuntime } from './ui.aspect';
+import { ClientContext } from './ui/client-context';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;

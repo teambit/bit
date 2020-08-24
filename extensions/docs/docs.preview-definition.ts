@@ -1,8 +1,9 @@
-import { PreviewDefinition } from '@teambit/preview';
-import { ComponentMap, Component } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
-import { DocsMain } from './docs.main.runtime';
+import { PreviewDefinition } from '@teambit/preview';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+
+import { DocsMain } from './docs.main.runtime';
 
 export class DocsPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'overview';

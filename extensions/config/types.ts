@@ -1,5 +1,5 @@
+import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
-import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 
 /**
  * An interface implemented by component host (workspace / scope) config file

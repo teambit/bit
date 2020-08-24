@@ -1,11 +1,11 @@
-import { LegacyCommand } from '../../legacy-command';
-import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../../../utils';
-import { scopeList } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
-import logger from '../../../logger/logger';
+import { scopeList } from '../../../api/scope';
 import { ListScopeResult } from '../../../consumer/component/components-list';
+import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 

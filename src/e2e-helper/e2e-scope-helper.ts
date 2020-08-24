@@ -1,14 +1,15 @@
 /* eslint no-console: 0 */
 
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
+import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
+import { generateRandomStr } from '../utils';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
-import { generateRandomStr } from '../utils';
-import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

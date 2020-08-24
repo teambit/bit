@@ -1,11 +1,10 @@
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import logger from '../logger/logger';
-import TesterExtension from './tester-extension';
+import BaseExtension, { BaseExtensionModel } from './base-extension';
 import CompilerExtension from './compiler-extension';
 import EnvExtension from './env-extension';
-import { EnvType, EnvLoadArgsProps, EnvExtensionProps } from './env-extension-types';
-import BaseExtension from './base-extension';
-import { BaseExtensionModel } from './base-extension';
+import { EnvExtensionProps, EnvLoadArgsProps, EnvType } from './env-extension-types';
+import TesterExtension from './tester-extension';
 
 export default (async function makeEnv(envType: EnvType, props: EnvLoadArgsProps): Promise<EnvExtension> {
   logger.silly(`env-factory, create ${envType}`);

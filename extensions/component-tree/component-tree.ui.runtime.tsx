@@ -1,9 +1,10 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIRuntime } from '@teambit/ui';
+
 import { ComponentTreeNode } from './component-tree-node';
-import { ComponentTreeDrawer } from './component-tree.drawer';
 import { ComponentTreeAspect } from './component-tree.aspect';
+import { ComponentTreeDrawer } from './component-tree.drawer';
 
 export type ComponentTreeSlot = SlotRegistry<ComponentTreeNode>;
 

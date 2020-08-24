@@ -1,8 +1,8 @@
-import path from 'path';
 import assert from 'assert';
-import sinon from 'sinon';
-import rewire from 'rewire';
 import mock from 'mock-fs';
+import path from 'path';
+import rewire from 'rewire';
+import sinon from 'sinon';
 
 const cabinetNonDefault = rewire('./');
 const cabinet = cabinetNonDefault.default;

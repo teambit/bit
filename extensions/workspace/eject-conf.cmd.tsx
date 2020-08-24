@@ -1,8 +1,9 @@
-import chalk from 'chalk';
-import React from 'react';
-import { Color } from 'ink';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace, EjectConfOptions, EjectConfResult } from './workspace';
+import chalk from 'chalk';
+import { Color } from 'ink';
+import React from 'react';
+
+import { EjectConfOptions, EjectConfResult, Workspace } from './workspace';
 
 type EjectConfArgs = [string];
 // From the cli we might get those as string in case we run it like --propagate true (return string) as opposed to only --propagate

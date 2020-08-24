@@ -1,4 +1,5 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+
 import { LoaderApi } from './loader-context';
 
 export function useLoaderApi(): [LoaderApi, boolean] {

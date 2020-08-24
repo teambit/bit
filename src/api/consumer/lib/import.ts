@@ -1,17 +1,17 @@
 import fs from 'fs-extra';
 import glob from 'glob';
-import R from 'ramda';
 import * as path from 'path';
+import R from 'ramda';
 import semver from 'semver';
-import { Consumer, loadConsumer } from '../../../consumer';
+
+import { Analytics } from '../../../analytics/analytics';
+import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
-import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { BitId } from '../../../bit-id';
-import { ImportOptions } from '../../../consumer/component-ops/import-components';
-import { Analytics } from '../../../analytics/analytics';
+import { Consumer, loadConsumer } from '../../../consumer';
+import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
 import GeneralError from '../../../error/general-error';
-import ImportComponents from '../../../consumer/component-ops/import-components';
+import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 
 const key = R.compose(R.head, R.keys);

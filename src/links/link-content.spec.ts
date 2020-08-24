@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 
 describe('getLinkContent', () => {

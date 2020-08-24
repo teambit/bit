@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';

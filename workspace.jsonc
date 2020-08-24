@@ -1,9 +1,11 @@
 {
   "$schema": "",
   "teambit.bit/workspace": {
+    "name": "bit",
+    "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit2.core",
     "defaultDirectory": "components",
-    "vendorDirectory": "vendor",
+    // "vendorDirectory": "vendor",
     "extensions": {
       "teambit.bit/pkg": {
         "packageJson": {
@@ -24,7 +26,6 @@
       }
     }
   },
-  "teambit.bit/dummy": {},
   "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,
@@ -43,6 +44,9 @@
     },
     "extensions": {
       "teambit.bit/aspect": {}
+    },
+    "toolbox": {
+      // "teambit.bit/node": {}
     },
     "extensions/cli": {
       "teambit.bit/pkg": {

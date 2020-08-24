@@ -1,6 +1,6 @@
-import EnvExtension from './env-extension';
-import { EnvExtensionProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension-types';
 import { COMPILER_ENV_TYPE } from '../constants';
+import EnvExtension from './env-extension';
+import { EnvExtensionModel, EnvExtensionOptions, EnvExtensionProps } from './env-extension-types';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
 export type CompilerExtensionModel = EnvExtensionModel;

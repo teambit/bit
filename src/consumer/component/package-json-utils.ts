@@ -1,23 +1,23 @@
-import R from 'ramda';
 import fs from 'fs-extra';
+import R from 'ramda';
 import { compact } from 'ramda-adjunct';
+
 import { BitId, BitIds } from '../../bit-id';
-import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
-import ComponentMap from '../bit-map/component-map';
-import { pathRelativeLinux } from '../../utils';
-import Consumer from '../consumer';
-import { pathNormalizeToLinux } from '../../utils/path';
-import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
-import logger from '../../logger/logger';
-import JSONFile from './sources/json-file';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import PackageJsonFile from './package-json-file';
-import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
-import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
+import logger from '../../logger/logger';
+import { pathRelativeLinux } from '../../utils';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
+import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
+import { PathLinux, pathNormalizeToLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
+import BitMap from '../bit-map/bit-map';
+import ComponentMap from '../bit-map/component-map';
+import Component from '../component/consumer-component';
+import Consumer from '../consumer';
 import PackageJson from './package-json';
+import PackageJsonFile from './package-json-file';
+import JSONFile from './sources/json-file';
 
 /**
  * Add components as dependencies to root package.json

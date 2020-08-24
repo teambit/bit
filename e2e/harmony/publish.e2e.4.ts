@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
 import { generateRandomStr } from '../../src/utils';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 

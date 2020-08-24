@@ -1,11 +1,12 @@
-import R from 'ramda';
-import _ from 'lodash';
-import { VariantsAspect } from './variants.aspect';
 import { MainRuntime } from '@teambit/cli';
 import ConsumerOverrides from 'bit-bin/dist/consumer/config/consumer-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { PathLinuxRelative } from 'bit-bin/dist/utils/path';
 import { pathIsInside, stripTrailingChar } from 'bit-bin/dist/utils';
+import { PathLinuxRelative } from 'bit-bin/dist/utils/path';
+import _ from 'lodash';
+import R from 'ramda';
+
+import { VariantsAspect } from './variants.aspect';
 
 export const MATCH_ALL_ITEM = '*';
 const PATTERNS_DELIMITER = ',';

@@ -1,10 +1,11 @@
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import fs from 'fs-extra';
-import * as fixtures from '../../src/fixtures/fixtures';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import * as path from 'path';
+
 import { FailedLoadForTag } from '../../src/consumer/component/exceptions/failed-load-for-tag';
 import { NoComponentDir } from '../../src/consumer/component/exceptions/no-component-dir';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 

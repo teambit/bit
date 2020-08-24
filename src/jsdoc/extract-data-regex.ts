@@ -1,7 +1,8 @@
 import doctrine from 'doctrine';
-import exampleTagParser from './example-tag-parser';
-import { PathOsBased } from '../utils/path';
+
 import { pathNormalizeToLinux } from '../utils';
+import { PathOsBased } from '../utils/path';
+import exampleTagParser from './example-tag-parser';
 import { Doclet } from './types';
 
 function formatTag(tag: Record<string, any>): Record<string, any> {

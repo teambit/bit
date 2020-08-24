@@ -1,9 +1,10 @@
-import * as semver from 'semver';
 import chalk from 'chalk';
-import { BIT_VERSION, BASE_DOCS_DOMAIN } from '../../constants';
+import * as semver from 'semver';
+
 import loader from '../../cli/loader/loader';
-import { OldClientVersion } from './exceptions';
+import { BASE_DOCS_DOMAIN, BIT_VERSION } from '../../constants';
 import logger from '../../logger/logger';
+import { OldClientVersion } from './exceptions';
 
 const createMajorMessage = (remoteVersion, currentVersion) =>
   chalk.red(

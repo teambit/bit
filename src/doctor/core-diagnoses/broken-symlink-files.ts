@@ -1,11 +1,11 @@
-import * as path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
+import * as path from 'path';
 import R from 'ramda';
-import Diagnosis from '../diagnosis';
-import { ExamineBareResult } from '../diagnosis';
+
 import { loadConsumer } from '../../consumer';
 import { Scope } from '../../scope';
+import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 type BrokenSymlink = { symlinkPath: string; brokenPath: string; pathToDelete: string };
 export const DIAGNOSIS_NAME = 'check environment symlinks';

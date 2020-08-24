@@ -1,8 +1,8 @@
-import { loadScope } from '../../../scope';
-import { loadConsumerIfExist, loadConsumer } from '../../../consumer';
+import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
+import { HarmonyMigrator } from '../../../consumer/migrations/harmony-migrator';
 import logger from '../../../logger/logger';
 import { MigrationResult } from '../../../migration/migration-helper';
-import { HarmonyMigrator } from '../../../consumer/migrations/harmony-migrator';
+import { loadScope } from '../../../scope';
 
 /**
  * Running migration process for consumer and / or scope - to update the stores (bitObjects, bit.map.json) to the current version

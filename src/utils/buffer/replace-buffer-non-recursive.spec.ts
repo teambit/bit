@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import replaceBuffer from '../../utils/buffer/replace-buffer-non-recursive';
 
 describe('ReplaceBuffer', () => {

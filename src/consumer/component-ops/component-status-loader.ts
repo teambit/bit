@@ -1,14 +1,15 @@
 import BluebirdPromise from 'bluebird';
+
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
-import { MissingBitMapComponent } from '../bit-map/exceptions';
-import { ModelComponent } from '../../scope/models';
-import MissingFilesFromComponent from '../component/exceptions/missing-files-from-component';
-import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { ModelComponent } from '../../scope/models';
+import { MissingBitMapComponent } from '../bit-map/exceptions';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import MissingFilesFromComponent from '../component/exceptions/missing-files-from-component';
+import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 
 export type ComponentStatus = {
   modified: boolean;

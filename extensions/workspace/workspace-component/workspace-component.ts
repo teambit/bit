@@ -1,7 +1,8 @@
-import { Component, TagMap, State, Snap, ComponentID } from '@teambit/component';
+import { Component, ComponentID, Snap, State, TagMap } from '@teambit/component';
+
 import { Workspace } from '../workspace';
-import { Issues } from './issues';
 import { ComponentStatus } from './component-status';
+import { Issues } from './issues';
 
 // TODO: refactor this to a composition rather than to use inheritance
 export class WorkspaceComponent extends Component {

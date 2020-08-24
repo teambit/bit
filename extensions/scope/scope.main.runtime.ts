@@ -1,42 +1,42 @@
-import { compact, slice } from 'lodash';
-import { SemVer } from 'semver';
-import BluebirdPromise from 'bluebird';
-import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
-import LegacyScope from 'bit-bin/dist/scope/scope';
-import { PersistOptions } from 'bit-bin/dist/scope/types';
-import { BitIds as ComponentsIds, BitId } from 'bit-bin/dist/bit-id';
-import {
-  Component,
-  ComponentID,
-  ComponentFactory,
-  State,
-  Snap,
-  ComponentFS,
-  Tag,
-  TagMap,
-  ComponentAspect,
-} from '@teambit/component';
-import type { ComponentMain } from '@teambit/component';
-import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
-import { Version, ModelComponent } from 'bit-bin/dist/scope/models';
-import { Config } from '@teambit/component';
-import { Ref } from 'bit-bin/dist/scope/objects';
-import { ComponentNotFound } from './exceptions';
-import { UIAspect } from '@teambit/ui';
-import type { UiMain } from '@teambit/ui';
-import { ScopeUIRoot } from './scope.ui-root';
-import { GraphqlAspect } from '@teambit/graphql';
-import type { GraphqlMain } from '@teambit/graphql';
-import { scopeSchema } from './scope.graphql';
-import { CLIMain } from '@teambit/cli';
-import { ExportCmd } from './export/export-cmd';
-import { IsolatorMain, IsolatorAspect } from '@teambit/isolator';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { RequireableComponent } from '@teambit/utils.requireable-component';
-import { ScopeAspect } from './scope.aspect';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { ComponentMain } from '@teambit/component';
+import {
+  Component,
+  ComponentAspect,
+  ComponentFactory,
+  ComponentFS,
+  ComponentID,
+  Config,
+  Snap,
+  State,
+  Tag,
+  TagMap,
+} from '@teambit/component';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
+import { RequireableComponent } from '@teambit/utils.requireable-component';
+import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
+import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
+import { Ref } from 'bit-bin/dist/scope/objects';
+import LegacyScope from 'bit-bin/dist/scope/scope';
+import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
+import { PersistOptions } from 'bit-bin/dist/scope/types';
+import BluebirdPromise from 'bluebird';
+import { compact, slice } from 'lodash';
+import { SemVer } from 'semver';
+
+import { ComponentNotFound } from './exceptions';
+import { ExportCmd } from './export/export-cmd';
+import { ScopeAspect } from './scope.aspect';
+import { scopeSchema } from './scope.graphql';
+import { ScopeUIRoot } from './scope.ui-root';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;

@@ -9,18 +9,19 @@
  * removing the component files, so then it's easier to rollback.
  */
 import R from 'ramda';
-import { BitIds, BitId } from '../../bit-id';
+
 import { Consumer } from '..';
-import * as packageJsonUtils from '../component/package-json-utils';
-import { installPackages } from '../../npm-client/install-packages';
-import logger from '../../logger/logger';
+import { BitId, BitIds } from '../../bit-id';
 import defaultErrorHandler from '../../cli/default-error-handler';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import PackageJsonFile from '../component/package-json-file';
-import deleteComponentsFiles from './delete-component-files';
+import logger from '../../logger/logger';
+import { installPackages } from '../../npm-client/install-packages';
 import DependencyGraph from '../../scope/graph/scope-graph';
-import Component from '../component/consumer-component';
+import { getScopeRemotes } from '../../scope/scope-remotes';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import Component from '../component/consumer-component';
+import PackageJsonFile from '../component/package-json-file';
+import * as packageJsonUtils from '../component/package-json-utils';
+import deleteComponentsFiles from './delete-component-files';
 
 export type EjectResults = {
   ejectedComponents: BitIds;

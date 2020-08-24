@@ -1,4 +1,5 @@
 import R from 'ramda';
+
 import { BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../constants';
 import CommandHelper from './e2e-command-helper';
 

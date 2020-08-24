@@ -1,9 +1,10 @@
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import CapsuleList from './capsule-list';
-import { BitIds } from 'bit-bin/dist/bit-id';
 import { ComponentID } from '@teambit/component';
-import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
+import { BitIds } from 'bit-bin/dist/bit-id';
 import BitMap from 'bit-bin/dist/consumer/bit-map';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
+
+import CapsuleList from './capsule-list';
 
 export default async function writeComponentsToCapsules(components: ConsumerComponent[], capsuleList: CapsuleList) {
   components = components.map((c) => c.clone());

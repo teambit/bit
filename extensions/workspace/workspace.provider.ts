@@ -1,32 +1,33 @@
-import { Harmony, SlotRegistry } from '@teambit/harmony';
-import type { ScopeMain } from '@teambit/scope';
-import { Workspace } from './workspace';
-import type { ComponentMain } from '@teambit/component';
-import { loadConsumerIfExist, Consumer } from 'bit-bin/dist/consumer';
-import { IsolatorMain } from '@teambit/isolator';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { VariantsMain } from '@teambit/variants';
-import { WorkspaceExtConfig } from './types';
-import { GraphqlMain } from '@teambit/graphql';
-import getWorkspaceSchema from './workspace.graphql';
-import InstallCmd from './install.cmd';
-import { CLIMain } from '@teambit/cli';
-import EjectConfCmd from './eject-conf.cmd';
-import { UiMain } from '@teambit/ui';
-import { WorkspaceUIRoot } from './workspace.ui-root';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
-import { CapsuleListCmd } from './capsule-list.cmd';
+import { CLIMain } from '@teambit/cli';
+import type { ComponentMain } from '@teambit/component';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { EnvsMain } from '@teambit/environments';
+import { GraphqlMain } from '@teambit/graphql';
+import { Harmony, SlotRegistry } from '@teambit/harmony';
+import { IsolatorMain } from '@teambit/isolator';
+import { LoggerMain } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { UiMain } from '@teambit/ui';
+import type { VariantsMain } from '@teambit/variants';
+import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+
 import { CapsuleCreateCmd } from './capsule-create.cmd';
-import { OnComponentLoad } from './on-component-load';
+import { CapsuleListCmd } from './capsule-list.cmd';
+import { EXT_NAME } from './constants';
+import EjectConfCmd from './eject-conf.cmd';
+import InstallCmd from './install.cmd';
 import { OnComponentChange } from './on-component-change';
+import { OnComponentLoad } from './on-component-load';
+import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
-import { EXT_NAME } from './constants';
-import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
-import { LoggerMain } from '@teambit/logger';
-import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { EnvsMain } from '@teambit/environments';
+import { Workspace } from './workspace';
+import getWorkspaceSchema from './workspace.graphql';
+import { WorkspaceUIRoot } from './workspace.ui-root';
 
 export type WorkspaceDeps = [
   CLIMain,

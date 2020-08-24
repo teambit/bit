@@ -1,24 +1,25 @@
 /* eslint-disable max-lines */
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
 import * as path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
+import { InvalidName } from '../../src/bit-id/exceptions';
+import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
+import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
+import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
 import {
   ExcludedMainFile,
   IncorrectIdForImportedComponent,
+  MainFileIsDir,
+  MissingComponentIdForImportedComponent,
+  MissingMainFileMultipleComponents,
+  PathOutsideConsumer,
   TestIsDirectory,
   VersionShouldBeRemoved,
-  MissingMainFileMultipleComponents,
-  MissingComponentIdForImportedComponent,
-  MainFileIsDir,
-  PathOutsideConsumer,
 } from '../../src/consumer/component-ops/add-components/exceptions';
-import { InvalidName } from '../../src/bit-id/exceptions';
-import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
-import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
 import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

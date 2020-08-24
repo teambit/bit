@@ -1,18 +1,19 @@
-import R from 'ramda';
 import fs from 'fs-extra';
 import * as path from 'path';
-import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
-import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
-import { PathOsBasedRelative, PathLinux, PathOsBased, PathLinuxRelative } from '../../utils/path';
-import Consumer from '../consumer';
+import R from 'ramda';
+
 import { BitId, BitIds } from '../../bit-id';
+import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
+import ValidationError from '../../error/validation-error';
+import { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
+import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
-import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
-import ValidationError from '../../error/validation-error';
+import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import { RemoteLaneId } from '../../lane-id/lane-id';
+import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined

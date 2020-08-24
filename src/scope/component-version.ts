@@ -1,16 +1,17 @@
-import semver from 'semver';
 import R from 'ramda';
-import ModelComponent from './models/model-component';
-import Version from './models/version';
+import semver from 'semver';
+
 import { BitId, BitIds } from '../bit-id';
-import Repository from './objects/repository';
-import ComponentObjects from './component-objects';
-import logger from '../logger/logger';
 import ConsumerComponent from '../consumer/component';
-import { HashMismatch } from './exceptions';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import CustomError from '../error/custom-error';
 import ShowDoctorError from '../error/show-doctor-error';
+import logger from '../logger/logger';
+import ComponentObjects from './component-objects';
+import { HashMismatch } from './exceptions';
+import ModelComponent from './models/model-component';
+import Version from './models/version';
+import Repository from './objects/repository';
 
 export default class ComponentVersion {
   readonly component: ModelComponent;

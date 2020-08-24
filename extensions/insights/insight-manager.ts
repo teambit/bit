@@ -1,6 +1,6 @@
-import { Insight, InsightResult } from './insight';
 import InsightAlreadyExists from './exceptions/insight-already-exists';
 import InsightNotFound from './exceptions/insight-not-found';
+import { Insight, InsightResult } from './insight';
 
 export class InsightManager {
   /** insights is an insight registry */

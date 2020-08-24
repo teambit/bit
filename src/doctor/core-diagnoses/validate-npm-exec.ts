@@ -1,6 +1,5 @@
-import Diagnosis from '../diagnosis';
-import { ExamineBareResult } from '../diagnosis';
 import npmClient from '../../npm-client';
+import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateNpmExec extends Diagnosis {
   name = 'validate npm exec';

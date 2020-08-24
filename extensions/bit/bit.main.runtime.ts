@@ -1,8 +1,9 @@
-import { BitAspect } from './bit.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { manifestsMap } from './manifests';
-import { provideBit } from './bit.provider';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+
+import { BitAspect } from './bit.aspect';
+import { provideBit } from './bit.provider';
+import { manifestsMap } from './manifests';
 
 const manifests = Object.values(manifestsMap);
 

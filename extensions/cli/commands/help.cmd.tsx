@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React from 'react';
-import { Color, Box, Text, render } from 'ink';
 import { Command } from 'bit-bin/dist/cli/command';
+import { Box, Color, render, Text } from 'ink';
+import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {

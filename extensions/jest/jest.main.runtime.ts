@@ -1,5 +1,6 @@
-import { JestAspect } from './jest.aspect';
 import { MainRuntime } from '@teambit/cli';
+
+import { JestAspect } from './jest.aspect';
 import { JestTester } from './jest.tester';
 
 export class JestMain {

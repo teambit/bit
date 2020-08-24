@@ -1,22 +1,23 @@
+import chalk from 'chalk';
 import http from 'http';
-import uuid from 'uuid';
 import open from 'open';
 import os from 'os';
-import chalk from 'chalk';
 import url from 'url';
-import { setSync, getSync } from '../../api/consumer/lib/global-config';
+import uuid from 'uuid';
+
+import { getSync, setSync } from '../../api/consumer/lib/global-config';
 import {
+  CFG_HUB_LOGIN_KEY,
+  CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   DEFAULT_HUB_LOGIN,
-  CFG_HUB_LOGIN_KEY,
   DEFAULT_REGISTRY_URL,
-  CFG_REGISTRY_URL_KEY,
   PREVIOUSLY_DEFAULT_REGISTRY_URL,
 } from '../../constants';
-import { LoginFailed } from '../exceptions';
-import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import logger from '../../logger/logger';
 import { npmLogin } from '../../registry';
+import { LoginFailed } from '../exceptions';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;

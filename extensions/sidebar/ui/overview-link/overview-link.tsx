@@ -1,8 +1,9 @@
-import React from 'react';
-import classNames from 'classnames';
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { Separator } from '@teambit/documenter-temp.ui.separator';
+import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '@teambit/react-router/nav-link';
+import classNames from 'classnames';
+import React from 'react';
+
 import styles from './overview-link.module.scss';
 
 export function OverviewLink() {

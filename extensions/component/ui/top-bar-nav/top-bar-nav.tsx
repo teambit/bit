@@ -1,10 +1,9 @@
-import React from 'react';
+import { extendPath, NavLink, NavLinkProps } from '@teambit/react-router';
 import classnames from 'classnames';
+import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 
 import styles from './top-bar-nav.module.scss';
-import { extendPath } from '@teambit/react-router';
-import { NavLink, NavLinkProps } from '@teambit/react-router';
 
 export function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();

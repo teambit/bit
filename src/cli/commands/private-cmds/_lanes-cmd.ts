@@ -1,11 +1,11 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
-import logger from '../../../logger/logger';
-import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
-import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
-import { LaneData } from '../../../scope/lanes/lanes';
 import lanesList from '../../../api/scope/lib/scope-lanes-list';
+import logger from '../../../logger/logger';
+import { LaneData } from '../../../scope/lanes/lanes';
+import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 

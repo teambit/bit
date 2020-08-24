@@ -1,7 +1,8 @@
 import { expect } from 'chai';
-import { packageNameToComponentId } from './package-name-to-component-id';
+
+import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { BitIds, BitId } from '../../bit-id';
+import { packageNameToComponentId } from './package-name-to-component-id';
 
 describe('packageNameToComponentId', function () {
   this.timeout(0);

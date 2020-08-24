@@ -1,16 +1,16 @@
-import { loadConsumer, loadConsumerIfExist, Consumer } from '../../../consumer';
+import { BitId } from '../../../bit-id';
+import BitIds from '../../../bit-id/bit-ids';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_DEPRECATE, BEFORE_REMOTE_UNDEPRECATE } from '../../../cli/loader/loader-messages';
-import { BitId } from '../../../bit-id';
-import {
-  deprecateRemote,
-  deprecateMany,
-  undeprecateRemote,
-  undeprecateMany,
-} from '../../../scope/component-ops/components-deprecation';
+import { Consumer, loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import { Remotes } from '../../../remotes';
+import {
+  deprecateMany,
+  deprecateRemote,
+  undeprecateMany,
+  undeprecateRemote,
+} from '../../../scope/component-ops/components-deprecation';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
-import BitIds from '../../../bit-id/bit-ids';
 
 export async function deprecate({ ids, remote }: { ids: string[]; remote: boolean }): Promise<any> {
   if (remote) {

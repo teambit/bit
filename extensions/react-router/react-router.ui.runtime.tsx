@@ -1,9 +1,10 @@
-import React from 'react';
 import { Slot } from '@teambit/harmony';
-import { BrowserRouter, RouteProps } from 'react-router-dom';
-import { SlotRouter, RouteSlot } from './slot-router';
-import { ReactRouterAspect } from './react-router.aspect';
 import { UIRuntime } from '@teambit/ui';
+import React from 'react';
+import { BrowserRouter, RouteProps } from 'react-router-dom';
+
+import { ReactRouterAspect } from './react-router.aspect';
+import { RouteSlot, SlotRouter } from './slot-router';
 
 export class ReactRouterUI {
   constructor(

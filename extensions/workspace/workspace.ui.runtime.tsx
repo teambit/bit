@@ -1,16 +1,15 @@
-import React from 'react';
-import { Slot } from '@teambit/harmony';
-import { RouteProps } from 'react-router-dom';
-import { RouteSlot } from '@teambit/react-router';
-import { UIRootUI as UIRoot } from '@teambit/ui';
-import { UiUI, UIAspect } from '@teambit/ui';
-import { UIRuntime } from '@teambit/ui';
-import { ComponentUI, ComponentAspect } from '@teambit/component';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI } from '@teambit/component-tree';
-import { WorkspaceAspect } from './workspace.aspect';
-import { Workspace } from './ui';
+import { Slot } from '@teambit/harmony';
+import { RouteSlot } from '@teambit/react-router';
+import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
+import React from 'react';
+import { RouteProps } from 'react-router-dom';
+
 import { ComponentTreeWidget } from './component-tree.widget';
+import { Workspace } from './ui';
+import { WorkspaceAspect } from './workspace.aspect';
 
 export type MenuItem = {
   label: JSX.Element | string | null;

@@ -1,7 +1,7 @@
 import R from 'ramda';
+
 import { BitId } from '../../../bit-id';
-import { PathLinux } from '../../../utils/path';
-import { pathJoinLinux } from '../../../utils/path';
+import { pathJoinLinux, PathLinux } from '../../../utils/path';
 import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
 

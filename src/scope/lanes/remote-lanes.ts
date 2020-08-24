@@ -1,13 +1,14 @@
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 import R from 'ramda';
-import { REMOTE_REFS_DIR } from '../../constants';
-import { Ref } from '../objects';
-import { Lane } from '../models';
+
 import { BitId } from '../../bit-id';
-import { LaneComponent } from '../models/lane';
+import { REMOTE_REFS_DIR } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import { glob } from '../../utils';
+import { Lane } from '../models';
+import { LaneComponent } from '../models/lane';
+import { Ref } from '../objects';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 

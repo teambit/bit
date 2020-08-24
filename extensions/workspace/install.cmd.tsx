@@ -1,8 +1,9 @@
-import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace, WorkspaceInstallOptions } from './workspace';
-import { Logger } from '@teambit/logger';
 import { DependencyLifecycleType } from '@teambit/dependency-resolver';
+import { Logger } from '@teambit/logger';
+import chalk from 'chalk';
+
+import { Workspace, WorkspaceInstallOptions } from './workspace';
 
 type InstallCmdOptions = {
   variants: string;

@@ -1,6 +1,7 @@
 import * as path from 'path';
-import stripTrailingChar from './string/strip-trailing-char';
+
 import { DEFAULT_SEPARATOR } from '../constants';
+import stripTrailingChar from './string/strip-trailing-char';
 
 export function pathIsInside(thePath: string, potentialParent: string): boolean {
   // For inside-directory checking, we want to allow trailing slashes, so normalize.

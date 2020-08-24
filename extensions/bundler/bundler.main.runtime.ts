@@ -1,15 +1,16 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { BundlerAspect } from './bundler.aspect';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
-import { DevServerService } from './dev-server.service';
-import { devServerSchema } from './dev-server.graphql';
-import { ComponentServer } from './component-server';
-import { BrowserRuntime } from './browser-runtime';
-import { UIRoot } from '@teambit/ui';
-import { BundlerContext } from './dev-server-context';
-import { EnvsMain, EnvsAspect } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { UIRoot } from '@teambit/ui';
+
+import { BrowserRuntime } from './browser-runtime';
+import { BundlerAspect } from './bundler.aspect';
+import { ComponentServer } from './component-server';
+import { BundlerContext } from './dev-server-context';
+import { devServerSchema } from './dev-server.graphql';
+import { DevServerService } from './dev-server.service';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 

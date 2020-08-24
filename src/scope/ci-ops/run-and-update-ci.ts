@@ -1,5 +1,6 @@
 import { serializeError } from 'serialize-error';
-import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
+
+import { buildInScope, modifyCIProps, testInScope } from '../../api/scope';
 
 export default async function runAndUpdateCI({
   id,
