@@ -550,19 +550,19 @@ jobs:
       -
         attach_workspace:
           at: ./
-      -
-        run: 'sudo npm i -g yarn'
-      -
-        run:
+      # -
+      #   run: 'sudo npm i -g yarn'
+      # -
+      #   run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-          name: 'update npm to latest version'
-          command: 'npm i -g npm@latest'
+          # name: 'update npm to latest version'
+          # command: 'npm i -g npm@latest'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      # -
+      #   run:
+      #     name: 'save SHA to a file'
+      #     command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
@@ -602,16 +602,16 @@ jobs:
         run: 'bit config set user.name tester'
       -
         run: 'bit config set user.email ci@bit.dev'
-      -
-        run: 'bit config set hub_domain hub.bit.dev'
+      # -
+      #   run: 'bit config set hub_domain hub.bit.dev'
         # uncomment to configure circle to run against stg environment
-        # -
-          # run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         save_cache:
-          key: bit-global-config-v2
+          key: bit-global-config-v3
           paths:
             - ~/Library/Caches/Bit/config/config.json
       -
