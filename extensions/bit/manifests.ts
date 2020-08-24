@@ -86,6 +86,7 @@ export function isCoreAspect(id: string) {
   return !!manifestsMap[id];
 }
 
-export function getCoreAspects() {
-  return Object.keys(manifestsMap);
+export function getAllCoreAspectsIds(): string[] {
+  const _reserved = [BitAspect.id, ConfigAspect.id];
+  return [...Object.keys(manifestsMap), ..._reserved];
 }

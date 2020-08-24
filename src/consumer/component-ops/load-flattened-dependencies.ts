@@ -9,14 +9,22 @@ import { COMPONENT_ORIGINS } from '../../constants';
 
 export class FlattenedDependencyLoader {
   private cache: { [bitIdStr: string]: Component } = {};
-  constructor(private consumer: Consumer, private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>) {}
+  constructor(
+    private consumer: Consumer,
+    private ignoreIds = new BitIds(),
+    private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
+  ) {}
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds());
     const devDependencies = await this.loadManyDependencies(component.devDependencies.getAllIds());
     const extensionDependencies = await this.loadManyDependencies(component.extensions.extensionsBitIds);
-    await this.loadFlattened(dependencies);
-    await this.loadFlattened(devDependencies);
-    await this.loadFlattened(extensionDependencies);
+
+    // const filterIgnoreIds = (comps) => comps.filter((dep) => !this.ignoreIds.has(dep.id));
+    const filterIgnoreIds = (comps) => comps;
+
+    await this.loadFlattened(filterIgnoreIds(dependencies));
+    await this.loadFlattened(filterIgnoreIds(devDependencies));
+    await this.loadFlattened(filterIgnoreIds(extensionDependencies));
 
     return new ComponentWithDependencies({
       component,

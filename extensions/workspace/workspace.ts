@@ -13,7 +13,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { IsolatorMain, Network } from '@teambit/isolator';
 import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { PathOsBasedRelative, PathOsBased } from 'bit-bin/dist/utils/path';
@@ -50,6 +50,7 @@ import { OnComponentLoad, ExtensionData } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ComponentConfigFile } from './component-config-file';
 import { WorkspaceExtConfig } from './types';
+import { getAllCoreAspectsIds } from '@teambit/bit';
 
 export type EjectConfResult = {
   configPath: string;
@@ -576,13 +577,16 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  async getGraph(components: Component[]) {
+  async getGraphWithoutCore(components: Component[]) {
     const loadComponentsFunc = async (ids: BitId[]) => {
       const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
       return loadedComps.map((c) => c.state._consumer);
     };
     const ids = components.map((component) => component.id._legacy);
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc);
+    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
+    const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
@@ -611,8 +615,7 @@ export class Workspace implements ComponentFactory {
     // TODO: @gilad we should make sure to cache this process.
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
-    // TODO: skip the loading of all core extensions to this graph. improve caching later.
-    const graph = await this.getGraph(components);
+    const graph = await this.getGraphWithoutCore(components);
 
     const allIds = graph.nodes().map((id) => {
       const consumerComponent = graph.node(id);
@@ -628,9 +631,8 @@ export class Workspace implements ComponentFactory {
       return data.type === 'aspect';
     });
 
-    const userAspects = await this.filterCoreAspects(aspects);
-
-    const requireableExtensions: any = await this.requireComponents(userAspects);
+    // no need to filter core aspects as they are not included in the graph
+    const requireableExtensions: any = await this.requireComponents(aspects);
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
@@ -677,7 +679,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {

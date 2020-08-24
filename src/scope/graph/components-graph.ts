@@ -11,6 +11,7 @@ import { ComponentsAndVersions } from '../scope';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import { Scope } from '..';
+import logger from '../../logger/logger';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -69,7 +70,8 @@ export async function buildOneGraphForComponents(
   ids: BitId[],
   consumer: Consumer,
   direction: 'normal' | 'reverse' = 'normal',
-  loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
+  loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>,
+  ignoreIds?: BitIds
 ): Promise<Graph> {
   const getComponents = async () => {
     if (loadComponentsFunc) {
@@ -79,13 +81,13 @@ export async function buildOneGraphForComponents(
     return components;
   };
   const components = await getComponents();
-  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, loadComponentsFunc);
+  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
   const componentsWithDeps = await pMapSeries(components, (component: Component) =>
     flattenedDependencyLoader.load(component)
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));
 
-  return buildGraphFromComponentsObjects(allComponents, direction);
+  return buildGraphFromComponentsObjects(allComponents, direction, ignoreIds);
 }
 
 /**
@@ -107,7 +109,11 @@ export async function buildOneGraphForComponentsUsingScope(
   return buildGraphFromComponentsObjects(allComponents, direction);
 }
 
-function buildGraphFromComponentsObjects(components: Component[], direction: 'normal' | 'reverse' = 'normal'): Graph {
+function buildGraphFromComponentsObjects(
+  components: Component[],
+  direction: 'normal' | 'reverse' = 'normal',
+  ignoreIds = new BitIds()
+): Graph {
   const graph = new Graph();
   // set vertices
   components.forEach((component) => {
@@ -127,6 +133,7 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   components.forEach((component: Component) => {
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
       depIds.forEach((depId) => {
+        if (ignoreIds.has(depId)) return;
         if (!graph.hasNode(depId.toString())) {
           throw new Error(`buildGraphFromComponentsObjects: missing node of ${depId.toString()}`);
         }
