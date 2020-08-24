@@ -157,7 +157,8 @@ export default class BitId {
     if (!R.is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
-    if (id.includes(VERSION_DELIMITER)) {
+
+    if (id.includes(VERSION_DELIMITER) && id.lastIndexOf(VERSION_DELIMITER) > 0) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
       version = newVersion;
@@ -184,7 +185,7 @@ export default class BitId {
 
     if (!isValidIdChunk(name)) throw new InvalidName(name);
     if (scope && !isValidScopeName(scope)) {
-      throw new InvalidScopeName(scope);
+      throw new InvalidScopeName(scope, id);
     }
 
     return new BitId({

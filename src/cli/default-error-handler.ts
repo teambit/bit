@@ -350,7 +350,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     InvalidScopeName,
     (err) =>
       `error: "${chalk.bold(
-        err.scopeName
+        err.id || err.scopeName
       )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
   ],
   [
