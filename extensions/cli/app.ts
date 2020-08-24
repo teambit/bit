@@ -3,21 +3,22 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 import './hook-require';
-import fs from 'fs-extra';
-import { Config } from '@teambit/harmony/dist/harmony-config';
-import { Extension } from '@teambit/harmony/dist/extension';
-import { resolve, join } from 'path';
-import { readdir } from 'fs-extra';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
-import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
+
+import { getAspectDef, getAspectDir } from '@teambit/aspect-loader';
 import { BitAspect, registerCoreExtensions } from '@teambit/bit';
+import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { Harmony, RuntimeDefinition } from '@teambit/harmony';
+import { Extension } from '@teambit/harmony/dist/extension';
+import { Config } from '@teambit/harmony/dist/harmony-config';
 import { bootstrap } from 'bit-bin/dist/bootstrap';
+import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
-import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import fs, { readdir } from 'fs-extra';
+import { join, resolve } from 'path';
+
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { CLIMain } from './cli.main.runtime';
-import { getAspectDef, getAspectDir } from '@teambit/aspect-loader';
 
 initApp();
 

@@ -1,5 +1,5 @@
-import Config from './config';
 import ComponentFS from './component-fs';
+import Config from './config';
 
 export class State {
   constructor(

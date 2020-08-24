@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import { DocsApp } from './docs-app';
 
 export default function DocsRoot(Provider: React.ComponentType, componentId: string, docs: any, compositions: any) {

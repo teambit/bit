@@ -1,13 +1,14 @@
 import chalk from 'chalk';
 import * as path from 'path';
 import R from 'ramda';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { add } from '../../../api/consumer';
-import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
-import AddTestsWithoutId from '../exceptions/add-tests-without-id';
-import { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import GeneralError from '../../../error/general-error';
+import { PathOsBased } from '../../../utils/path';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add implements LegacyCommand {
   name = 'add [path...]';

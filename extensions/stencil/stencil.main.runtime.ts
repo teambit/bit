@@ -1,16 +1,17 @@
 import { TranspileOptions } from '@stencil/core/compiler';
-import { StencilAspect } from './stencil.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { StencilCompiler } from './stencil.compiler';
-import { StencilEnv } from './stencil.env';
-import { CompilerAspect } from '@teambit/compiler';
 import type { CompilerMain } from '@teambit/compiler';
-import { StencilTester } from './stencil.tester';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { CompilerAspect } from '@teambit/compiler';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import type { WebpackMain } from '@teambit/webpack';
 // import { StencilDevServer } from './stencil.dev-server';
 import { WebpackAspect } from '@teambit/webpack';
-import type { WebpackMain } from '@teambit/webpack';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+
+import { StencilAspect } from './stencil.aspect';
+import { StencilCompiler } from './stencil.compiler';
+import { StencilEnv } from './stencil.env';
+import { StencilTester } from './stencil.tester';
 
 export class StencilMain {
   constructor(

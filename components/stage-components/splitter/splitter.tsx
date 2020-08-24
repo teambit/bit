@@ -1,10 +1,10 @@
-import React from 'react';
-import cn from 'classnames';
-
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
 // import { Icon } from '@teambit/evangelist-temp.elements.icon';
 // import { Button } from '@bit/bit.gui.atoms.text-button';
 import Splitter from '@teambit/base-ui-temp.surfaces.splitter';
+import cn from 'classnames';
+import React from 'react';
+
 // import { SplitterProps } from '../../splitter-props';
 import styles from './splitter.module.scss';
 

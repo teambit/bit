@@ -1,8 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color, Text, Box } from 'ink';
 import { Command } from '@teambit/cli';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Box, Color, Text } from 'ink';
+import React from 'react';
+
 import { Create } from './create';
 
 export class CreateCmd implements Command {

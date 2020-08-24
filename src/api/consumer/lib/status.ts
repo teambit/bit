@@ -1,14 +1,15 @@
 import R from 'ramda';
-import { loadConsumer } from '../../../consumer';
-import ComponentsList, { DivergedComponent } from '../../../consumer/component/components-list';
-import Component from '../../../consumer/component';
-import { InvalidComponent } from '../../../consumer/component/consumer-component';
-import { ModelComponent } from '../../../scope/models';
+
 import { Analytics } from '../../../analytics/analytics';
+import { BitId, BitIds } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
-import { BitId, BitIds } from '../../../bit-id';
+import { loadConsumer } from '../../../consumer';
+import Component from '../../../consumer/component';
 import ComponentsPendingImport from '../../../consumer/component-ops/exceptions/components-pending-import';
+import ComponentsList, { DivergedComponent } from '../../../consumer/component/components-list';
+import { InvalidComponent } from '../../../consumer/component/consumer-component';
+import { ModelComponent } from '../../../scope/models';
 
 export type StatusResult = {
   newComponents: Component[];

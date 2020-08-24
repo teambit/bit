@@ -1,7 +1,7 @@
-import React from 'react';
-import { Section } from '@teambit/documenter-temp.ui.section';
-import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
 import { CompositionsOverview } from '@teambit/compositions';
+import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
+import { Section } from '@teambit/documenter-temp.ui.section';
+import React from 'react';
 
 export type CompositionsSummaryProps = {
   compositions: {};

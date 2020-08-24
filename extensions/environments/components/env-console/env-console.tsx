@@ -1,7 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color, Box } from 'ink';
+import { Box, Color } from 'ink';
+import React, { useEffect, useState } from 'react';
+
 import { EnvRuntime } from '../../runtime';
 
 export type EnvConsoleProps = {

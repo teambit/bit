@@ -1,7 +1,8 @@
 import Table from 'tty-table';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { catScope } from '../../../api/scope';
 import ModelComponent from '../../../scope/models/model-component';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class CatScope implements LegacyCommand {
   name = 'cat-scope [scopePath]';

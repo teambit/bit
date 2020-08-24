@@ -1,31 +1,32 @@
-import path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
+import path from 'path';
+
 import { Consumer } from '../..';
 import { BitId, BitIds } from '../../../bit-id';
-import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
-import { Version, Lane } from '../../../scope/models';
-import threeWayMerge, { MergeResultsThreeWay } from './three-way-merge';
-import { Ref } from '../../../scope/objects';
-import {
-  MergeStrategy,
-  getMergeStrategyInteractive,
-  ApplyVersionResult,
-  MergeOptions,
-  FileStatus,
-  ApplyVersionResults,
-} from './merge-version';
-import Component from '../../component/consumer-component';
-import { Tmp } from '../../../scope/repositories';
-import { pathNormalizeToLinux } from '../../../utils';
-import GeneralError from '../../../error/general-error';
 import { COMPONENT_ORIGINS } from '../../../constants';
-import ManyComponentsWriter from '../../component-ops/many-components-writer';
-import { UnmergedComponent } from '../../../scope/lanes/unmerged-components';
-import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
+import GeneralError from '../../../error/general-error';
+import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import { getDivergeData } from '../../../scope/component-ops/get-diverge-data';
+import { UnmergedComponent } from '../../../scope/lanes/unmerged-components';
+import { Lane, Version } from '../../../scope/models';
+import { Ref } from '../../../scope/objects';
+import { Tmp } from '../../../scope/repositories';
+import { pathNormalizeToLinux } from '../../../utils';
+import ManyComponentsWriter from '../../component-ops/many-components-writer';
+import Component from '../../component/consumer-component';
+import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
+import {
+  ApplyVersionResult,
+  ApplyVersionResults,
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+  MergeStrategy,
+} from './merge-version';
+import threeWayMerge, { MergeResultsThreeWay } from './three-way-merge';
 
 export type ComponentStatus = {
   componentFromFS?: Component | null;

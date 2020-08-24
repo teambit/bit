@@ -1,14 +1,15 @@
 import { expect } from 'chai';
+
+import {
+  DEV_DEP_LIFECYCLE_TYPE,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+  PEER_DEP_LIFECYCLE_TYPE,
+  RUNTIME_DEP_LIFECYCLE_TYPE,
+} from '../../constants';
+import { DependencyLifecycleType, SemverVersion } from '../../types';
+import { DedupedDependencies } from './dedupe-dependencies';
 import { hoistDependencies } from './hoist-dependencies';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
-import {
-  RUNTIME_DEP_LIFECYCLE_TYPE,
-  DEV_DEP_LIFECYCLE_TYPE,
-  PEER_DEP_LIFECYCLE_TYPE,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
-} from '../../constants';
-import { DedupedDependencies } from './dedupe-dependencies';
-import { SemverVersion, DependencyLifecycleType } from '../../types';
 
 const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
 

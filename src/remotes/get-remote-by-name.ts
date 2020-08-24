@@ -1,6 +1,6 @@
 import { Consumer } from '../consumer';
-import { Remotes, Remote } from '.';
 import { getScopeRemotes } from '../scope/scope-remotes';
+import { Remote, Remotes } from '.';
 
 export default async function getRemoteByName(remoteName: string, consumer?: Consumer): Promise<Remote> {
   if (consumer) {

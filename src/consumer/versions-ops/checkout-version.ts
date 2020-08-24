@@ -1,20 +1,28 @@
-import * as path from 'path';
 import pMapSeries from 'p-map-series';
-import { BitId } from '../../bit-id';
+import * as path from 'path';
+
 import { Consumer } from '..';
-import ConsumerComponent from '../component';
+import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
-import { pathNormalizeToLinux } from '../../utils/path';
-import { PathOsBased } from '../../utils/path';
-import Version from '../../scope/models/version';
-import { SourceFile } from '../component/sources';
-import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
-import { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComponents } from './merge-version';
-import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
-import ManyComponentsWriter from '../component-ops/many-components-writer';
-import { Tmp } from '../../scope/repositories';
 import { ComponentWithDependencies } from '../../scope';
+import Version from '../../scope/models/version';
+import { Tmp } from '../../scope/repositories';
+import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
+import ConsumerComponent from '../component';
+import ManyComponentsWriter from '../component-ops/many-components-writer';
+import { SourceFile } from '../component/sources';
+import {
+  ApplyVersionResult,
+  ApplyVersionResults,
+  FailedComponents,
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+  MergeStrategy,
+  threeWayMerge,
+} from './merge-version';
+import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined

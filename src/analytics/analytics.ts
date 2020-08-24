@@ -1,26 +1,27 @@
 /* eslint max-classes-per-file: 0 */
-import { serializeError } from 'serialize-error';
-import * as path from 'path';
+import { fork } from 'child_process';
 import hashObj from 'object-hash';
-import uniqid from 'uniqid';
-import yn from 'yn';
-import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
-import { fork } from 'child_process';
-import { setSync, getSync } from '../api/consumer/lib/global-config';
-import { analyticsPrompt, errorReportingPrompt } from '../prompts';
+import * as path from 'path';
+import R from 'ramda';
+import { serializeError } from 'serialize-error';
+import uniqid from 'uniqid';
+import yn from 'yn';
+
+import { getSync, setSync } from '../api/consumer/lib/global-config';
 import {
-  CFG_ANALYTICS_USERID_KEY,
-  CFG_ANALYTICS_REPORTING_KEY,
-  CFG_ANALYTICS_ERROR_REPORTS_KEY,
+  BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
+  CFG_ANALYTICS_ENVIRONMENT_KEY,
+  CFG_ANALYTICS_ERROR_REPORTS_KEY,
+  CFG_ANALYTICS_REPORTING_KEY,
+  CFG_ANALYTICS_USERID_KEY,
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-  CFG_ANALYTICS_ENVIRONMENT_KEY,
-  BIT_VERSION,
 } from '../constants';
+import { analyticsPrompt, errorReportingPrompt } from '../prompts';
 
 const LEVEL = {
   DEBUG: 'debug',

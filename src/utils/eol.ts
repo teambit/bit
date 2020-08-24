@@ -1,4 +1,5 @@
 import { isBinaryFileSync } from 'isbinaryfile';
+
 import replaceBuffer from './buffer/replace-buffer-non-recursive';
 
 const isWindows = typeof process !== 'undefined' && process.platform === 'win32';

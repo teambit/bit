@@ -1,5 +1,6 @@
-import path from 'path';
 import { expect } from 'chai';
+import path from 'path';
+
 import * as buildTree from './build-tree';
 
 const fixtures = `${__dirname}/../../../../../fixtures`;

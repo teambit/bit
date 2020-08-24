@@ -1,8 +1,8 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { installAction } from '../../../api/consumer';
-import linkTemplate from '../../templates/link-template';
-import { LinksResult } from '../../../links/node-modules-linker';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { LinksResult } from '../../../links/node-modules-linker';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import linkTemplate from '../../templates/link-template';
 
 export default class Install implements LegacyCommand {
   name = 'install [ids...]';

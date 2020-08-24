@@ -1,13 +1,14 @@
 /* eslint max-classes-per-file: 0 */
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
 import R from 'ramda';
-import { ModelComponent, Symlink } from '../models';
-import { BitObject, Ref } from '.';
+
+import LaneId from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import InvalidIndexJson from '../exceptions/invalid-index-json';
+import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
-import LaneId from '../../lane-id/lane-id';
+import { BitObject, Ref } from '.';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 

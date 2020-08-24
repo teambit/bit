@@ -1,14 +1,15 @@
-import fs from 'fs-extra';
 import gitconfig from '@teambit/gitconfig';
+import fs from 'fs-extra';
 import yn from 'yn';
+
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import {
-  CFG_USER_NAME_KEY,
-  CFG_USER_EMAIL_KEY,
-  CFG_SSH_KEY_FILE_KEY,
-  DEFAULT_SSH_KEY_FILE,
-  CFG_USER_TOKEN_KEY,
   CFG_REPOSITORY_REPORTING_KEY,
+  CFG_SSH_KEY_FILE_KEY,
+  CFG_USER_EMAIL_KEY,
+  CFG_USER_NAME_KEY,
+  CFG_USER_TOKEN_KEY,
+  DEFAULT_SSH_KEY_FILE,
 } from '../../constants';
 import logger from '../../logger/logger';
 

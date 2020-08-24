@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { reduce, filter, map } from 'rxjs/operators';
-import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-network';
+import { filter, map, reduce } from 'rxjs/operators';
+
+import { createTestNetworkStream, GraphTestCase } from '../util/create-fake-network';
 import { flattenReplaySubject } from '../util/flatten-nested-map';
 
 //

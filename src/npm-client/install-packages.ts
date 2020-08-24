@@ -1,14 +1,15 @@
-import R from 'ramda';
 import fs from 'fs-extra';
 import * as path from 'path';
-import npmClient from '.';
+import R from 'ramda';
+
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
-import { ComponentWithDependencies } from '../scope';
+import { DEFAULT_PACKAGE_MANAGER, PACKAGE_JSON } from '../constants';
 import Consumer from '../consumer/consumer';
-import { PathOsBasedRelative, PathAbsolute } from '../utils/path';
+import { ComponentWithDependencies } from '../scope';
 import filterAsync from '../utils/array/filter-async';
-import { PACKAGE_JSON, DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { PathAbsolute, PathOsBasedRelative } from '../utils/path';
+import npmClient from '.';
 
 export async function installPackages(
   consumer: Consumer,

@@ -1,5 +1,6 @@
-import { isAbsolute } from 'path';
 import fs from 'fs-extra';
+import { isAbsolute } from 'path';
+
 import GeneralError from '../../error/general-error';
 import { PathOsBasedAbsolute } from '../path';
 

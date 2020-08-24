@@ -1,9 +1,10 @@
-import React from 'react';
-import { ChangeLogPage } from './ui/change-log-page';
-import { ComponentUI, ComponentAspect } from '@teambit/component';
-import { ChangelogSection } from './changelog.section';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
+import React from 'react';
+
 import { ChangelogAspect } from './changelog.aspect';
+import { ChangelogSection } from './changelog.section';
+import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangeLogUI {
   static id = 'teambit.bit/changelog';

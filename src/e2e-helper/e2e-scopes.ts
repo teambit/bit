@@ -1,7 +1,8 @@
-import * as path from 'path';
+import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
-import fs from 'fs-extra';
+import * as path from 'path';
+
 import { generateRandomStr } from '../utils';
 
 export type ScopesOptions = {

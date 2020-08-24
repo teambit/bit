@@ -1,6 +1,7 @@
+import chalk from 'chalk';
 import inquirer from 'inquirer';
 import format from 'string-format';
-import chalk from 'chalk';
+
 import { init, listScope } from '../../api/consumer';
 import logger from '../../logger/logger';
 

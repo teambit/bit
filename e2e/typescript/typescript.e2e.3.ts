@@ -1,12 +1,13 @@
 // covers init, tag, create, import commands and
 
-import * as path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import * as fixtures from '../../src/fixtures/fixtures';
+import fs from 'fs-extra';
+import * as path from 'path';
+
 import { AUTO_GENERATED_STAMP, IS_WINDOWS } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 

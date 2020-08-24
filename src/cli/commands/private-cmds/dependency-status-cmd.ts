@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { LegacyCommand } from '../../legacy-command';
+
 import { dependencyStatus } from '../../../api/consumer';
-import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
+import { DependencyStatusProps, DependencyStatusResult } from '../../../consumer/component-ops/dependency-status';
+import { LegacyCommand } from '../../legacy-command';
 
 export default class DependencyStatus implements LegacyCommand {
   name = 'dependency-status [mainFile...]';

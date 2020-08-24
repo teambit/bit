@@ -1,6 +1,7 @@
-import { parse } from 'path';
-import { camelCase } from 'lodash';
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { camelCase } from 'lodash';
+import { parse } from 'path';
+
 import { UIAspect } from './ui.aspect';
 
 export async function createRoot(

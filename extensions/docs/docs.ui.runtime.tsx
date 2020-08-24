@@ -1,7 +1,8 @@
-import { ComponentUI, ComponentAspect } from '@teambit/component';
-import { OverviewSection } from './overview.section';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
+
 import { DocsAspect } from './docs.aspect';
+import { OverviewSection } from './overview.section';
 
 export class DocsUI {
   static dependencies = [ComponentAspect];

@@ -1,13 +1,14 @@
+import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
-import chalk from 'chalk';
+
 import { Consumer } from '..';
-import { COMPONENT_ORIGINS, WORKSPACE_JSONC } from '../../constants';
-import logger from '../../logger/logger';
-import { individualFilesDesc } from '../../cli/commands/public-cmds/status-cmd';
-import GeneralError from '../../error/general-error';
-import PackageJsonFile from '../component/package-json-file';
 import { addFeature, HARMONY_FEATURE } from '../../api/consumer/lib/feature-toggle';
+import { individualFilesDesc } from '../../cli/commands/public-cmds/status-cmd';
+import { COMPONENT_ORIGINS, WORKSPACE_JSONC } from '../../constants';
+import GeneralError from '../../error/general-error';
+import logger from '../../logger/logger';
+import PackageJsonFile from '../component/package-json-file';
 
 type MigrateResult = { individualFiles: string[]; changedToRootDir: string[] };
 

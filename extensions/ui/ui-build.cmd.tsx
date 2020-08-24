@@ -1,4 +1,5 @@
 import { Command } from '@teambit/cli';
+
 import { UiMain } from './ui.main.runtime';
 
 export class UIBuildCmd implements Command {

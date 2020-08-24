@@ -1,10 +1,11 @@
 // import { ComponentMeta } from '@teambit/component';
 import { ComponentID } from '@teambit/component';
-import { ComponentStatus } from '../../workspace-component/component-status';
-import { DeprecationInfo } from '@teambit/deprecation';
-import { Descriptor } from '@teambit/environments';
 import { ComponentModel } from '@teambit/component';
 import { ComponentModelProps } from '@teambit/component';
+import { DeprecationInfo } from '@teambit/deprecation';
+import { Descriptor } from '@teambit/environments';
+
+import { ComponentStatus } from '../../workspace-component/component-status';
 
 export type WorkspaceModelComponent = {
   id: ComponentID;

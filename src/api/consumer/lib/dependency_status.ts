@@ -1,6 +1,8 @@
-import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
-import getDependencyStatus from '../../../consumer/component-ops/dependency-status';
-import { loadConsumer, Consumer } from '../../../consumer';
+import { Consumer, loadConsumer } from '../../../consumer';
+import getDependencyStatus, {
+  DependencyStatusProps,
+  DependencyStatusResult,
+} from '../../../consumer/component-ops/dependency-status';
 
 export default (async function dependencyStatus(
   dependencyStatusProps: DependencyStatusProps

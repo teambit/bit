@@ -1,10 +1,10 @@
 import { Consumer } from '..';
-import { MergeStrategy, ApplyVersionResults } from '../versions-ops/merge-version';
+import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
-import { BitId } from '../../bit-id';
 import { Lane } from '../../scope/models';
 import { Tmp } from '../../scope/repositories';
+import { ApplyVersionResults, MergeStrategy } from '../versions-ops/merge-version';
 import { ComponentStatus, getComponentStatus, merge } from '../versions-ops/merge-version/merge-snaps';
 
 export async function mergeLanes({

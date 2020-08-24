@@ -1,18 +1,18 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { importAction } from '../../../api/consumer';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { EnvironmentOptions } from '../../../api/consumer/lib/import';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import Component from '../../../consumer/component';
+import { ImportDetails, ImportOptions } from '../../../consumer/component-ops/import-components';
+import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
+import GeneralError from '../../../error/general-error';
+import { ComponentWithDependencies } from '../../../scope';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
-import Component from '../../../consumer/component';
-import { ComponentWithDependencies } from '../../../scope';
-import { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
-import { EnvironmentOptions } from '../../../api/consumer/lib/import';
-import GeneralError from '../../../error/general-error';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
-import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
-import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';

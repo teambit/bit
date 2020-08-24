@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+
 import { LinksResult } from '../../links/node-modules-linker';
 
 export default (results: LinksResult[]): string => {

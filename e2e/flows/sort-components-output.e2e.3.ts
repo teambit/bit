@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import * as fixtures from '../../src/fixtures/fixtures';
+
 import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 /**
  * expect the components 'bar/foo', 'utils/is-string', 'utils/is-type' to be sorted in this order

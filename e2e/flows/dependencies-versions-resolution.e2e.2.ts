@@ -1,8 +1,9 @@
-import * as path from 'path';
 import { expect } from 'chai';
+import * as path from 'path';
+
+import { OVERRIDE_COMPONENT_PREFIX } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { OVERRIDE_COMPONENT_PREFIX } from '../../src/constants';
 
 describe('dependencies versions resolution', function () {
   this.timeout(0);

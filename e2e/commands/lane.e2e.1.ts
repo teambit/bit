@@ -1,13 +1,14 @@
-import path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
+import path from 'path';
+
+import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { DEFAULT_LANE } from '../../src/constants';
+import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import { removeChalkCharacters } from '../../src/utils';
-import { DEFAULT_LANE } from '../../src/constants';
-import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 
 chai.use(require('chai-fs'));
 

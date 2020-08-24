@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
-import { AUTO_GENERATED_STAMP, AUTO_GENERATED_MSG } from '../constants';
+
+import { AUTO_GENERATED_MSG, AUTO_GENERATED_STAMP } from '../constants';
 
 export type OutputFileParams = {
   filePath: string;

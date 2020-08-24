@@ -1,11 +1,12 @@
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
 import R from 'ramda';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
+
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));

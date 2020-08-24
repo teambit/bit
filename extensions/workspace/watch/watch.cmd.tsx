@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+
 import { Watcher } from './watcher';
 
 export class WatchCommand implements Command {

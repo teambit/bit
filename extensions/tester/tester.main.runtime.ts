@@ -1,13 +1,13 @@
-import { merge } from 'lodash';
-import { TesterAspect } from './tester.aspect';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
-import { TestCmd } from './test.cmd';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { TesterService } from './tester.service';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import { TesterTask } from './tester.task';
-import { CLIMain } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { merge } from 'lodash';
+
+import { TestCmd } from './test.cmd';
+import { TesterAspect } from './tester.aspect';
+import { TesterService } from './tester.service';
+import { TesterTask } from './tester.task';
 
 export type TesterExtensionConfig = {
   /**

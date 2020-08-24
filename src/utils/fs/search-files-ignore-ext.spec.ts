@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import searchFilesIgnoreExt from './search-files-ignore-ext';
 
 describe('searchFilesIgnoreExt', () => {

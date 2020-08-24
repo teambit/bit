@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { replacePlaceHolderWithComponentValue } from './component-placeholders';
 
 describe('replacePlaceHolderWithComponentValue', () => {

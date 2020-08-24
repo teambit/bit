@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
+
 import styles from './component-tooltip.module.scss';
 
 // TODO - how do I get the status type without tying this to workspace?

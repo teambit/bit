@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { TreeNodeProps, TreeLayer } from '../recursive-tree';
-import { indentStyle, indentClass } from '../indent';
-import { getName } from '../utils/get-name';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
-import { StatusDot } from '../status-dot/status-dot';
-import styles from './component-nodes.module.scss';
+import classNames from 'classnames';
+import React, { useState } from 'react';
+
+import { indentClass, indentStyle } from '../indent';
 import { PayloadType } from '../payload-type';
+import { TreeLayer, TreeNodeProps } from '../recursive-tree';
+import { StatusDot } from '../status-dot/status-dot';
+import { getName } from '../utils/get-name';
+import styles from './component-nodes.module.scss';
 
 export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
   return (

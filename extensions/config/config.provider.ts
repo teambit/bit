@@ -1,16 +1,17 @@
-import path from 'path';
+import { getConsumerInfo } from 'bit-bin/dist/consumer';
+import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from 'bit-bin/dist/consumer/config';
+import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
-  WorkspaceConfigLoadFunction,
   WorkspaceConfigIsExistFunction,
+  WorkspaceConfigLoadFunction,
 } from 'bit-bin/dist/consumer/config/workspace-config';
-import { Config } from './config';
-import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from 'bit-bin/dist/consumer/config';
-import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
-import { WorkspaceConfig, LegacyInitProps, transformLegacyPropsToExtensions } from './workspace-config';
-import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
+import path from 'path';
+
+import { Config } from './config';
 import InvalidConfigFile from './exceptions/invalid-config-file';
+import { LegacyInitProps, transformLegacyPropsToExtensions, WorkspaceConfig } from './workspace-config';
 
 export type ConfigDeps = [];
 

@@ -1,6 +1,7 @@
 import semver from 'semver';
-import { InvalidVersionChange, InvalidVersion } from './exceptions';
+
 import { DEFAULT_BIT_RELEASE_TYPE, LATEST } from '../constants';
+import { InvalidVersion, InvalidVersionChange } from './exceptions';
 
 export default class Version {
   versionNum: string | null | undefined;

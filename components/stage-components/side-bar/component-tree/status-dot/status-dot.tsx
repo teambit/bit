@@ -1,7 +1,8 @@
-import React from 'react';
 import classNames from 'classnames';
-import styles from './status-dot.module.scss';
+import React from 'react';
+
 import { StatusTypes } from '../recursive-tree';
+import styles from './status-dot.module.scss';
 
 export type StatusDotProps = {
   status?: StatusTypes;

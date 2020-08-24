@@ -1,33 +1,34 @@
+import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
-import chalk from 'chalk';
-import { NothingToImport } from '../exceptions';
+
+import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
-import Component from '../component';
-import { Consumer } from '../../consumer';
-import { ComponentWithDependencies, Scope } from '../../scope';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import logger from '../../logger/logger';
-import { pathNormalizeToLinux } from '../../utils';
-import GeneralError from '../../error/general-error';
-import { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
-import { applyModifiedVersion } from '../versions-ops/checkout-version';
-import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
-import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
-import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
-import hasWildcard from '../../utils/string/has-wildcard';
-import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import Remotes from '../../remotes/remotes';
-import DependencyGraph from '../../scope/graph/scope-graph';
+import { Consumer } from '../../consumer';
+import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { Version, ModelComponent, Lane } from '../../scope/models';
-import ComponentsPendingMerge from './exceptions/components-pending-merge';
-import { isTag } from '../../version/version-parser';
-import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
+import Remotes from '../../remotes/remotes';
+import { ComponentWithDependencies, Scope } from '../../scope';
+import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
+import DependencyGraph from '../../scope/graph/scope-graph';
+import { Lane, ModelComponent, Version } from '../../scope/models';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import { pathNormalizeToLinux } from '../../utils';
+import hasWildcard from '../../utils/string/has-wildcard';
+import { isTag } from '../../version/version-parser';
+import Component from '../component';
+import { NothingToImport } from '../exceptions';
+import { applyModifiedVersion } from '../versions-ops/checkout-version';
+import { FileStatus, getMergeStrategyInteractive, MergeOptions, threeWayMerge } from '../versions-ops/merge-version';
+import { FilesStatus, MergeStrategy } from '../versions-ops/merge-version/merge-version';
+import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
+import ComponentsPendingMerge from './exceptions/components-pending-merge';
+import ManyComponentsWriter from './many-components-writer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty

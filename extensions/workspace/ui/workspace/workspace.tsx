@@ -1,18 +1,20 @@
-import React, { ReactNode, useReducer } from 'react';
-import { gql } from 'apollo-boost';
-import { Route } from 'react-router-dom';
 import 'reset-css';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
-import { useDataQuery } from '@teambit/ui';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
-import { TopBar } from '@teambit/staged-components.top-bar';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
-import { WorkspaceOverview } from './workspace-overview';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { TopBar } from '@teambit/staged-components.top-bar';
+import { useDataQuery } from '@teambit/ui';
+import { gql } from 'apollo-boost';
+import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import React, { ReactNode, useReducer } from 'react';
+import { Route } from 'react-router-dom';
+
 import { Workspace as WorkspaceModel } from './workspace-model';
+import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
 

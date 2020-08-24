@@ -1,9 +1,10 @@
-import React from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color, Box, Text } from 'ink';
 import { Command, CommandOptions } from '@teambit/cli';
-import { InsightManager } from './insight-manager';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Box, Color, Text } from 'ink';
+import React from 'react';
+
 import { InsightResult } from './insight';
+import { InsightManager } from './insight-manager';
 
 export default class InsightsCmd implements Command {
   name = 'insights [...names]';

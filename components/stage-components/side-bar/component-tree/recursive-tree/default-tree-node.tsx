@@ -1,7 +1,8 @@
 import React from 'react';
-import { TreeNodeProps } from './tree-types';
-import { TreeLayer } from './tree-layer';
+
 import { indentClass, indentStyle } from '../indent';
+import { TreeLayer } from './tree-layer';
+import { TreeNodeProps } from './tree-types';
 
 export function DefaultTreeNode({ node, depth }: TreeNodeProps) {
   if (!node.children) {

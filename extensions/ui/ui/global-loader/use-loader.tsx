@@ -1,5 +1,6 @@
-import { useState, useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { v1 } from 'uuid';
+
 import { LoaderContext } from './loader-context';
 
 export function useLoader(loading: boolean) {

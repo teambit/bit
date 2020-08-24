@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+
 import Scope from './scope';
 
 export default class Repository {

@@ -1,16 +1,17 @@
 /* eslint max-classes-per-file: 0 */
-import path from 'path';
-import Vinyl from 'vinyl';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
-import { composeComponentPath } from 'bit-bin/dist/utils/bit/compose-component-path';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { PathOsBasedRelative } from 'bit-bin/dist/utils/path';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
-import { CreateExtConfig } from './types';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
+import { composeComponentPath } from 'bit-bin/dist/utils/bit/compose-component-path';
+import { PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import path from 'path';
+import Vinyl from 'vinyl';
+
+import { CreateExtConfig } from './types';
 
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };

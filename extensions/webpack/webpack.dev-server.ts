@@ -1,7 +1,7 @@
+import { DevServer } from '@teambit/bundler';
 import { Server } from 'http';
 import webpack, { Configuration } from 'webpack';
 import WsDevServer from 'webpack-dev-server';
-import { DevServer } from '@teambit/bundler';
 
 export class WebpackDevServer implements DevServer {
   constructor(private config: Configuration) {}

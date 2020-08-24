@@ -1,8 +1,8 @@
-import { loadScope } from '../../../scope';
-import { Remote } from '../../../remotes';
-import { GlobalRemotes } from '../../../global-config';
-import { getScopeRemotes } from '../../../scope/scope-remotes';
 import GeneralError from '../../../error/general-error';
+import { GlobalRemotes } from '../../../global-config';
+import { Remote } from '../../../remotes';
+import { loadScope } from '../../../scope';
+import { getScopeRemotes } from '../../../scope/scope-remotes';
 
 function buildRemote(url: string): Remote {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -1,17 +1,17 @@
 import R from 'ramda';
-import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
-import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
-import { loadConsumer, Consumer } from '../../../consumer';
-import checkoutVersion from '../../../consumer/versions-ops/checkout-version';
+
+import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
-import { BitId } from '../../../bit-id';
-import GeneralError from '../../../error/general-error';
 import { LATEST } from '../../../constants';
-import hasWildcard from '../../../utils/string/has-wildcard';
+import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
-import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import checkoutVersion, { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
+import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);

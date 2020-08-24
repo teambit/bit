@@ -1,10 +1,11 @@
-import { join } from 'path';
-import { BuildTask, BuildContext, BuildResults } from '@teambit/builder';
-import { Bundler, BundlerContext, Target, BundlerMain } from '@teambit/bundler';
+import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
+import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { Compiler } from '@teambit/compiler';
+import { join } from 'path';
+
 import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 

@@ -1,12 +1,12 @@
 import { Scope } from '..';
-import { Lane } from '../models';
-import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
-import { LaneItem, IndexType } from '../objects/components-index';
-import { Ref, Repository } from '../objects';
-import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
-import { TrackLane, ScopeJson } from '../scope-json';
-import GeneralError from '../../error/general-error';
 import { BitId } from '../../bit-id';
+import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
+import GeneralError from '../../error/general-error';
+import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
+import { Lane } from '../models';
+import { Ref, Repository } from '../objects';
+import { IndexType, LaneItem } from '../objects/components-index';
+import { ScopeJson, TrackLane } from '../scope-json';
 
 export default class Lanes {
   objects: Repository;

@@ -1,7 +1,8 @@
-import React from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '@teambit/react-router';
+import classNames from 'classnames';
+import React from 'react';
+
 import { Drawer } from '../../drawer';
 import styles from './drawer.module.scss';
 

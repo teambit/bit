@@ -1,24 +1,25 @@
-import { ReactAspect } from './react.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { Environment, EnvsAspect, EnvsMain } from '@teambit/environments';
-import { ReactEnv } from './react.env';
-import { JestAspect } from '@teambit/jest';
-import { TypescriptAspect } from '@teambit/typescript';
-import { CompilerAspect } from '@teambit/compiler';
-import { WebpackAspect } from '@teambit/webpack';
-import type { JestMain } from '@teambit/jest';
-import type { TypescriptMain } from '@teambit/typescript';
 import type { CompilerMain } from '@teambit/compiler';
-import type { WebpackMain } from '@teambit/webpack';
+import { CompilerAspect } from '@teambit/compiler';
 import { Component } from '@teambit/component';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { reactSchema } from './react.graphql';
-import { GraphqlAspect } from '@teambit/graphql';
-import { PkgAspect } from '@teambit/pkg';
-import { TesterAspect } from '@teambit/tester';
+import { Environment, EnvsAspect, EnvsMain } from '@teambit/environments';
 import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { JestMain } from '@teambit/jest';
+import { JestAspect } from '@teambit/jest';
 import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
+import type { TypescriptMain } from '@teambit/typescript';
+import { TypescriptAspect } from '@teambit/typescript';
+import type { WebpackMain } from '@teambit/webpack';
+import { WebpackAspect } from '@teambit/webpack';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+
+import { ReactAspect } from './react.aspect';
+import { ReactEnv } from './react.env';
+import { reactSchema } from './react.graphql';
 
 type ReactDeps = [
   EnvsMain,

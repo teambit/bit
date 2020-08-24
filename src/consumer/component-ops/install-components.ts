@@ -1,11 +1,12 @@
 import * as path from 'path';
-import { linkAllToNodeModules, NodeModuleLinker } from '../../links';
-import { installPackages } from '../../npm-client/install-packages';
-import { COMPONENT_ORIGINS } from '../../constants';
+
 import { Consumer } from '..';
-import { BitId } from '../../bit-id';
-import { LinksResult } from '../../links/node-modules-linker';
 import { Analytics } from '../../analytics/analytics';
+import { BitId } from '../../bit-id';
+import { COMPONENT_ORIGINS } from '../../constants';
+import { linkAllToNodeModules, NodeModuleLinker } from '../../links';
+import { LinksResult } from '../../links/node-modules-linker';
+import { installPackages } from '../../npm-client/install-packages';
 
 /**
  * does the following (the order is important):

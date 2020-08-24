@@ -1,27 +1,28 @@
 import R from 'ramda';
-import { BitObject, Ref } from '../objects';
-import ComponentObjects from '../component-objects';
-import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
-import { MergeConflict, ComponentNotFound } from '../exceptions';
-import { ModelComponent, Version, Source, Symlink } from '../models';
-import { BitId, BitIds } from '../../bit-id';
-import { ComponentProps } from '../models/model-component';
-import ConsumerComponent from '../../consumer/component';
+
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import logger from '../../logger/logger';
-import Repository from '../objects/repository';
-import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
-import Consumer from '../../consumer/consumer';
-import { PathOsBased, PathLinux, pathNormalizeToLinux } from '../../utils/path';
+import { BitId, BitIds } from '../../bit-id';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
-import { isHash, isTag } from '../../version/version-parser';
-import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import Lane from '../models/lane';
-import UnmergedComponents from '../lanes/unmerged-components';
-import GeneralError from '../../error/general-error';
-import { getAllVersionHashesByVersionsObjects, getAllVersionHashes } from '../component-ops/traverse-versions';
+import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import { Artifact } from '../../consumer/component/sources/artifact';
+import Consumer from '../../consumer/consumer';
+import GeneralError from '../../error/general-error';
+import logger from '../../logger/logger';
+import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../utils/path';
+import { isHash, isTag } from '../../version/version-parser';
+import ComponentObjects from '../component-objects';
+import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
+import { ComponentNotFound, MergeConflict } from '../exceptions';
+import ComponentNeedsUpdate from '../exceptions/component-needs-update';
+import UnmergedComponents from '../lanes/unmerged-components';
+import { ModelComponent, Source, Symlink, Version } from '../models';
+import Lane from '../models/lane';
+import { ComponentProps } from '../models/model-component';
+import { BitObject, Ref } from '../objects';
+import Repository from '../objects/repository';
+import Scope from '../scope';
 
 export type ComponentTree = {
   component: ModelComponent;

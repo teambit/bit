@@ -1,72 +1,71 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
 import R from 'ramda';
-import { pathNormalizeToLinux } from '../../utils';
-import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
-import { Dist, License, SourceFile } from '../component/sources';
-import Consumer from '../consumer';
+
+import Capsule from '../../../legacy-capsule/core/capsule';
+import { Analytics } from '../../analytics/analytics';
 import BitId from '../../bit-id/bit-id';
-import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
+import loader from '../../cli/loader';
+import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
+import {
+  BASE_WEB_DOMAIN,
+  BIT_WORKSPACE_TMP_DIRNAME,
+  COMPILER_ENV_TYPE,
+  COMPONENT_ORIGINS,
+  DEFAULT_BINDINGS_PREFIX,
+  DEFAULT_LANGUAGE,
+  TESTER_ENV_TYPE,
+} from '../../constants';
+import IsolatedEnvironment from '../../environment/environment';
+import Isolator, { IsolateOptions } from '../../environment/isolator';
+import GeneralError from '../../error/general-error';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
-import SpecsResults from '../specs-results';
-import injectConf from '../component-ops/inject-conf';
-import ComponentSpecsFailed from '../exceptions/component-specs-failed';
-import MissingFilesFromComponent from './exceptions/missing-files-from-component';
-import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
-import IsolatedEnvironment from '../../environment/environment';
-import { Log } from '../../scope/models/version';
-import { ScopeListItem } from '../../scope/models/model-component';
-import BitMap from '../bit-map';
-import ComponentMap from '../bit-map/component-map';
-import { ComponentOrigin } from '../bit-map/component-map';
-import logger from '../../logger/logger';
-import loader from '../../cli/loader';
 import CompilerExtension from '../../legacy-extensions/compiler-extension';
-import TesterExtension from '../../legacy-extensions/tester-extension';
-import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
-import FileSourceNotFound from './exceptions/file-source-not-found';
-import {
-  DEFAULT_LANGUAGE,
-  DEFAULT_BINDINGS_PREFIX,
-  COMPONENT_ORIGINS,
-  COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  BASE_WEB_DOMAIN,
-} from '../../constants';
-import ComponentWithDependencies from '../../scope/component-dependencies';
-import { Dependency, Dependencies } from './dependencies';
-import Dists from './sources/dists';
-import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import { RawTestsResults } from '../specs-results/specs-results';
-import ExternalTestErrors from './exceptions/external-test-errors';
-import GeneralError from '../../error/general-error';
-import { Analytics } from '../../analytics/analytics';
-import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import Version from '../../version';
-import buildComponent from '../component-ops/build-component';
-import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
-import { ManipulateDirItem } from '../component-ops/manipulate-dir';
-import DataToPersist from './sources/data-to-persist';
-import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
-import ComponentOverrides from '../config/component-overrides';
+import { EnvType } from '../../legacy-extensions/env-extension-types';
 import makeEnv from '../../legacy-extensions/env-factory';
-import PackageJsonFile from './package-json-file';
-import Isolator, { IsolateOptions } from '../../environment/isolator';
-import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
-import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
+import TesterExtension from '../../legacy-extensions/tester-extension';
+import logger from '../../logger/logger';
+import ComponentWithDependencies from '../../scope/component-dependencies';
+import { ScopeListItem } from '../../scope/models/model-component';
+import { Log } from '../../scope/models/version';
+import Scope from '../../scope/scope';
+import { pathNormalizeToLinux } from '../../utils';
+import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
+import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import Version from '../../version';
+import BitMap from '../bit-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
+import buildComponent from '../component-ops/build-component';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import injectConf from '../component-ops/inject-conf';
+import { ManipulateDirItem, stripSharedDirFromPath } from '../component-ops/manipulate-dir';
+import { Dist, License, SourceFile } from '../component/sources';
+import ComponentConfig, { ILegacyWorkspaceConfig } from '../config';
+import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
-import { isSchemaSupport, SchemaFeature, CURRENT_SCHEMA, SchemaName } from './component-schema';
+import Consumer from '../consumer';
+import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import ComponentSpecsFailed from '../exceptions/component-specs-failed';
+import SpecsResults from '../specs-results';
+import { RawTestsResults } from '../specs-results/specs-results';
+import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
+import { Dependencies, Dependency } from './dependencies';
+import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
+import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
+import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
+import ExternalTestErrors from './exceptions/external-test-errors';
+import FileSourceNotFound from './exceptions/file-source-not-found';
+import MainFileRemoved from './exceptions/main-file-removed';
+import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import { NoComponentDir } from './exceptions/no-component-dir';
-import Capsule from '../../../legacy-capsule/core/capsule';
+import PackageJsonFile from './package-json-file';
+import DataToPersist from './sources/data-to-persist';
+import Dists from './sources/dists';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 

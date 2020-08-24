@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { TreeLayerProps } from './tree-types';
+
 import { TreeNodeContext } from './tree-node-context';
+import { TreeLayerProps } from './tree-types';
 
 export function TreeLayer<Payload = any>({ childNodes, depth }: TreeLayerProps<Payload>) {
   const TreeNodeRenderer = useContext(TreeNodeContext);

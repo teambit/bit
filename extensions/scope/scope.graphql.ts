@@ -1,6 +1,7 @@
-import gql from 'graphql-tag';
-import { ScopeMain } from './scope.main.runtime';
 import { ComponentID } from '@teambit/component';
+import gql from 'graphql-tag';
+
+import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema() {
   return {

@@ -1,7 +1,8 @@
-import R from 'ramda';
-import * as path from 'path';
 import fs from 'fs-extra';
 import set from 'lodash.set';
+import * as path from 'path';
+import R from 'ramda';
+
 import ScopesData from './e2e-scopes';
 
 export default class BitJsonHelper {

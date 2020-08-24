@@ -1,13 +1,15 @@
-import { join } from 'path';
-import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
   DependenciesObjectDefinition,
+  DependencyResolverMain,
+  PackageManager,
+  PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { PkgMain } from '@teambit/pkg';
+import { join } from 'path';
 
 const userHome = require('user-home');
 

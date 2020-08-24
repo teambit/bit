@@ -1,7 +1,8 @@
-import path from 'path';
 import fs from 'fs-extra';
-import { WORKSPACE_LANES_DIR } from '../../constants';
+import path from 'path';
+
 import { BitId, BitIds } from '../../bit-id';
+import { WORKSPACE_LANES_DIR } from '../../constants';
 
 type Lanes = { [laneName: string]: BitIds };
 

@@ -1,15 +1,15 @@
 /* eslint-disable no-empty */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import path, { join } from 'path';
-import { EventEmitter } from 'events';
-import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
-import execa from 'execa';
-import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
+import { Logger } from '@teambit/logger';
 import { pipeOutput } from 'bit-bin/dist/utils/child_process';
 import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
+import { EventEmitter } from 'events';
+import execa from 'execa';
+import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
+import path, { join } from 'path';
 
 export default class PackageManager {
   private emitter = new EventEmitter();

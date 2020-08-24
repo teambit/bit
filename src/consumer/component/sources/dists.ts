@@ -1,22 +1,22 @@
 import * as path from 'path';
-import Dist from './dist';
-import Consumer from '../../consumer';
-import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
-import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
-import ComponentMap from '../../bit-map/component-map';
-import logger from '../../../logger/logger';
-import { getLinksInDistToWrite } from '../../../links';
-import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
+
 import { BitId } from '../../../bit-id';
-import Component from '../consumer-component';
-import { pathNormalizeToLinux } from '../../../utils/path';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, NODE_PATH_SEPARATOR } from '../../../constants';
+import { getLinksInDistToWrite } from '../../../links';
+import logger from '../../../logger/logger';
+import { ComponentWithDependencies } from '../../../scope';
 import Source from '../../../scope/models/source';
 import { DistFileModel } from '../../../scope/models/version';
-import DataToPersist from './data-to-persist';
-import { ComponentWithDependencies } from '../../../scope';
+import { pathRelativeLinux, searchFilesIgnoreExt } from '../../../utils';
+import { PathLinux, pathNormalizeToLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
 import BitMap from '../../bit-map';
+import ComponentMap from '../../bit-map/component-map';
 import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
 import { ILegacyWorkspaceConfig } from '../../config';
+import Consumer from '../../consumer';
+import Component from '../consumer-component';
+import DataToPersist from './data-to-persist';
+import Dist from './dist';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths

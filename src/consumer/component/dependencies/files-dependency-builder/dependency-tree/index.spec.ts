@@ -1,10 +1,11 @@
 import assert from 'assert';
-import sinon from 'sinon';
-import path from 'path';
 import mockfs from 'mock-fs';
+import path from 'path';
 import rewire from 'rewire';
-import Config from './Config';
+import sinon from 'sinon';
+
 import precinct from '../precinct';
+import Config from './Config';
 
 const expect = require('chai').expect;
 

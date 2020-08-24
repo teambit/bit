@@ -1,7 +1,7 @@
-import { Command, CommandOptions, GenericObject } from '.';
 import { LegacyCommand } from 'bit-bin/dist/cli/legacy-command';
 import allHelp from 'bit-bin/dist/cli/templates/all-help';
-import { getID } from '.';
+
+import { Command, CommandOptions, GenericObject, getID } from '.';
 import { CLIMain } from './cli.main.runtime';
 
 export class LegacyCommandAdapter implements Command {

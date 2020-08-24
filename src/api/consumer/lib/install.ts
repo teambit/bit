@@ -1,6 +1,6 @@
 import { Consumer, loadConsumer } from '../../../consumer';
+import { install, installIds } from '../../../consumer/component-ops/install-components';
 import { LinksResult } from '../../../links/node-modules-linker';
-import { installIds, install } from '../../../consumer/component-ops/install-components';
 
 export default (async function installAction(
   ids: string[],

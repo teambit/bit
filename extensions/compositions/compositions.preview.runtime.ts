@@ -1,4 +1,5 @@
 import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
+
 import { CompositionsAspect } from './compositions.aspect';
 
 export class CompositionsPreview {

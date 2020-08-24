@@ -1,13 +1,14 @@
 import commander from 'commander';
-import { LegacyCommand, CommandOptions } from './legacy-command';
-import { Commands } from '../legacy-extensions/extension';
-import { camelCase, first } from '../utils';
-import logger from '../logger/logger';
+
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
-import globalFlags from './global-flags';
+import { Commands } from '../legacy-extensions/extension';
+import logger from '../logger/logger';
+import { camelCase, first } from '../utils';
 import { Command } from './command';
 import { CommandRunner } from './command-runner';
+import globalFlags from './global-flags';
+import { CommandOptions, LegacyCommand } from './legacy-command';
 
 function parseSubcommandFromArgs(args: [any]) {
   if (typeof first(args) === 'string') return first(args);

@@ -1,8 +1,9 @@
-import { parse, stringify, assign } from 'comment-json';
-import * as path from 'path';
+import { assign, parse, stringify } from 'comment-json';
 import fs from 'fs-extra';
-import ScopesData from './e2e-scopes';
+import * as path from 'path';
+
 import { WORKSPACE_JSONC } from '../constants';
+import ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class BitJsoncHelper {

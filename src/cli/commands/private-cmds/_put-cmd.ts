@@ -1,10 +1,10 @@
-import { LegacyCommand } from '../../legacy-command';
-import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
-import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
+import { put } from '../../../api/scope';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 export default class Put implements LegacyCommand {

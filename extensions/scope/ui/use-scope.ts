@@ -1,6 +1,7 @@
-import gql from 'graphql-tag';
-import { ScopeModel } from './scope-model';
 import { useDataQuery } from '@teambit/ui';
+import gql from 'graphql-tag';
+
+import { ScopeModel } from './scope-model';
 
 const SCOPE = gql`
   {

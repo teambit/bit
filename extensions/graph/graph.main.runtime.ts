@@ -1,9 +1,10 @@
-import { GraphAspect } from './graph.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { provide } from './graph.provider';
-import { WorkspaceAspect } from '@teambit/workspace';
-import { ScopeAspect } from '@teambit/scope';
 import { ComponentAspect } from '@teambit/component';
+import { ScopeAspect } from '@teambit/scope';
+import { WorkspaceAspect } from '@teambit/workspace';
+
+import { GraphAspect } from './graph.aspect';
+import { provide } from './graph.provider';
 
 export const GraphMain = {
   name: 'graph',

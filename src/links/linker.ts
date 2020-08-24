@@ -1,20 +1,20 @@
 import R from 'ramda';
-import Component from '../consumer/component/consumer-component';
-import logger from '../logger/logger';
-import { pathNormalizeToLinux } from '../utils';
-import * as linkGenerator from '../links/link-generator';
-import NodeModuleLinker from './node-modules-linker';
-import Consumer from '../consumer/consumer';
-import ComponentWithDependencies from '../scope/component-dependencies';
-import * as packageJsonUtils from '../consumer/component/package-json-utils';
-import { LinksResult } from './node-modules-linker';
-import ComponentMap from '../consumer/bit-map/component-map';
-import DataToPersist from '../consumer/component/sources/data-to-persist';
-import { BitIds, BitId } from '../bit-id';
-import ComponentsList from '../consumer/component/components-list';
-import BitMap from '../consumer/bit-map/bit-map';
+
+import { BitId, BitIds } from '../bit-id';
 import { COMPONENT_ORIGINS } from '../constants';
+import BitMap from '../consumer/bit-map/bit-map';
+import ComponentMap from '../consumer/bit-map/component-map';
 import { throwForNonLegacy } from '../consumer/component/component-schema';
+import ComponentsList from '../consumer/component/components-list';
+import Component from '../consumer/component/consumer-component';
+import * as packageJsonUtils from '../consumer/component/package-json-utils';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
+import Consumer from '../consumer/consumer';
+import * as linkGenerator from '../links/link-generator';
+import logger from '../logger/logger';
+import ComponentWithDependencies from '../scope/component-dependencies';
+import { pathNormalizeToLinux } from '../utils';
+import NodeModuleLinker, { LinksResult } from './node-modules-linker';
 
 export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitMap.getAllIdsAvailableOnLane();

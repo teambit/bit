@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { TreeNodeContext, TreeNode } from '../recursive-tree';
+
 import { PayloadType } from '../payload-type';
+import { TreeNode, TreeNodeContext } from '../recursive-tree';
 
 export function RootNode({ node }: { node: TreeNode<PayloadType> }) {
   const TreeNodeRenderer = useContext(TreeNodeContext);

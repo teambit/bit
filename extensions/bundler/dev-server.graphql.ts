@@ -1,7 +1,8 @@
-import gql from 'graphql-tag';
-import { Schema } from '@teambit/graphql';
-import { BundlerMain } from './bundler.main.runtime';
 import { Component } from '@teambit/component';
+import { Schema } from '@teambit/graphql';
+import gql from 'graphql-tag';
+
+import { BundlerMain } from './bundler.main.runtime';
 
 export function devServerSchema(bundler: BundlerMain): Schema {
   return {

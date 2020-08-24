@@ -1,21 +1,22 @@
-import R from 'ramda';
 import { PJV } from 'package-json-validator';
+import R from 'ramda';
 import packageNameValidate from 'validate-npm-package-name';
-import validateType from '../utils/validate-type';
+
 import { BitId, BitIds } from '../bit-id';
-import VersionInvalid from './exceptions/version-invalid';
-import { isValidPath } from '../utils';
-import Version from './models/version';
-import { Dependencies } from '../consumer/component/dependencies';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
-import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
-import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import { DEPENDENCIES_FIELDS } from '../constants';
-import GeneralError from '../error/general-error';
-import { PathLinux } from '../utils/path';
-import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
 import { SchemaName } from '../consumer/component/component-schema';
+import { Dependencies } from '../consumer/component/dependencies';
+import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
+import PackageJsonFile from '../consumer/component/package-json-file';
+import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
+import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
+import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
+import GeneralError from '../error/general-error';
+import { isValidPath } from '../utils';
+import { PathLinux } from '../utils/path';
+import validateType from '../utils/validate-type';
+import VersionInvalid from './exceptions/version-invalid';
+import Version from './models/version';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.

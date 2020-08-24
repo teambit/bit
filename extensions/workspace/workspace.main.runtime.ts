@@ -1,22 +1,22 @@
-import { Slot } from '@teambit/harmony';
-import { WorkspaceAspect } from './workspace.aspect';
-import { MainRuntime } from '@teambit/cli';
-import workspaceProvider from './workspace.provider';
-import { ScopeAspect } from '@teambit/scope';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { BundlerAspect } from '@teambit/bundler';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { EnvsAspect } from '@teambit/environments';
+import { GraphqlAspect } from '@teambit/graphql';
+import { Slot } from '@teambit/harmony';
 import { IsolatorAspect } from '@teambit/isolator';
 import { LoggerAspect } from '@teambit/logger';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { VariantsAspect } from '@teambit/variants';
-import { EXT_NAME } from './constants';
-import { GraphqlAspect } from '@teambit/graphql';
-import { CLIAspect } from '@teambit/cli';
+import { ScopeAspect } from '@teambit/scope';
 import { UIAspect } from '@teambit/ui';
-import { BundlerAspect } from '@teambit/bundler';
-import { OnComponentLoad } from './on-component-load';
+import { VariantsAspect } from '@teambit/variants';
+
+import { EXT_NAME } from './constants';
 import { OnComponentChange } from './on-component-change';
-import { AspectLoaderAspect } from '@teambit/aspect-loader';
-import { EnvsAspect } from '@teambit/environments';
+import { OnComponentLoad } from './on-component-load';
+import { WorkspaceAspect } from './workspace.aspect';
+import workspaceProvider from './workspace.provider';
 
 export const WorkspaceMain = {
   name: EXT_NAME,

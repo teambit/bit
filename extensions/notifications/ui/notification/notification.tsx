@@ -1,11 +1,12 @@
-import React, { useContext, useCallback, useState } from 'react';
-import classNames from 'classnames';
+import { Separator } from '@teambit/base-ui-temp.elements.separator';
 import { Card } from '@teambit/base-ui-temp.surfaces.card';
 import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
-import { Separator } from '@teambit/base-ui-temp.elements.separator';
-import { NotificationContext, Message } from '../notification-context';
-import styles from './notification.module.scss';
 import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
+import classNames from 'classnames';
+import React, { useCallback, useContext, useState } from 'react';
+
+import { Message, NotificationContext } from '../notification-context';
+import styles from './notification.module.scss';
 
 const DISMISS_TIME = +styles.dismissTime;
 

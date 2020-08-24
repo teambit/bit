@@ -1,6 +1,6 @@
 import { BitId } from '../../bit-id';
-import logger from '../../logger/logger';
 import { loadConsumer } from '../../consumer';
+import logger from '../../logger/logger';
 
 export type PublishResults = {
   publishedComponents: {

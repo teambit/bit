@@ -1,5 +1,6 @@
-import path from 'path';
 import isRelative from 'is-relative-path';
+import path from 'path';
+
 import { ScopeJson } from '../scope-json';
 
 export type ContentTransformer = (content: Buffer) => Buffer;

@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import * as fixtures from '../../src/fixtures/fixtures';
 import { Extensions } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 

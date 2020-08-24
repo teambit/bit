@@ -1,5 +1,5 @@
+import { BuildContext, BuildResults } from '@teambit/builder';
 import { ConcreteService } from '@teambit/environments';
-import { BuildResults, BuildContext } from '@teambit/builder';
 
 export type TranspileOpts = {
   componentDir: string; // absolute path of the component's root directory

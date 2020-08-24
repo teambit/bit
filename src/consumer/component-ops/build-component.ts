@@ -1,28 +1,29 @@
+import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
 import Vinyl from 'vinyl';
-import Dists from '../component/sources/dists';
-import ConsumerComponent from '../component/consumer-component';
-import { Scope } from '../../scope';
-import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
-import IsolatedEnvironment from '../../environment';
-import ComponentMap from '../bit-map/component-map';
-import logger from '../../logger/logger';
-import { DEFAULT_DIST_DIRNAME } from '../../constants';
-import ExternalBuildErrors from '../component/exceptions/external-build-errors';
-import Consumer from '../consumer';
-import { PathLinux } from '../../utils/path';
-import { isString } from '../../utils';
-import GeneralError from '../../error/general-error';
-import { Dist } from '../component/sources';
-import Isolator from '../../environment/isolator';
+
 import Capsule from '../../../legacy-capsule/core/capsule';
-import ComponentWithDependencies from '../../scope/component-dependencies';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
+import IsolatedEnvironment from '../../environment';
+import Isolator from '../../environment/isolator';
+import GeneralError from '../../error/general-error';
 import { CompilerResults } from '../../legacy-extensions/compiler-api';
-import PackageJsonFile from '../component/package-json-file';
-import Component from '../component/consumer-component';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
+import logger from '../../logger/logger';
+import { Scope } from '../../scope';
+import ComponentWithDependencies from '../../scope/component-dependencies';
+import { isString } from '../../utils';
+import { PathLinux } from '../../utils/path';
+import ComponentMap from '../bit-map/component-map';
+import ConsumerComponent from '../component/consumer-component';
+import Component from '../component/consumer-component';
+import ExternalBuildErrors from '../component/exceptions/external-build-errors';
+import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
+import PackageJsonFile from '../component/package-json-file';
+import { Dist } from '../component/sources';
+import Dists from '../component/sources/dists';
+import Consumer from '../consumer';
 
 type BuildResults = {
   builtFiles: Vinyl[];

@@ -1,17 +1,17 @@
-import * as path from 'path';
 import BluebirdPromise from 'bluebird';
-import Consumer from '../consumer';
-import { BitIds, BitId } from '../../bit-id';
-import logger from '../../logger/logger';
-import Component from './consumer-component';
-import { InvalidComponent } from '../component/consumer-component';
-import { getLatestVersionNumber } from '../../utils';
+import * as path from 'path';
+
+import { BitId, BitIds } from '../../bit-id';
 import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
-import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
-import { getScopeRemotes } from '../../scope/scope-remotes';
-import { ModelComponent } from '../../scope/models';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import logger from '../../logger/logger';
 import CompsAndLanesObjects from '../../scope/comps-and-lanes-objects';
+import { ModelComponent } from '../../scope/models';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import { getLatestVersionNumber } from '../../utils';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import Component, { InvalidComponent } from '../component/consumer-component';
+import Consumer from '../consumer';
+import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
 
 export default class ComponentLoader {
   _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components

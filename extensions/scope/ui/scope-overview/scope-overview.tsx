@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
-import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
-import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
-import { Separator } from '@teambit/documenter-temp.ui.separator';
 import { ComponentComposition } from '@teambit/compositions';
-import { ScopeContext } from '../scope-context';
+import { Separator } from '@teambit/documenter-temp.ui.separator';
+import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
+import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
 import { ScopeDetails } from '@teambit/staged-components.scope-details';
+import React, { useContext } from 'react';
+
+import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
 
 // TODO - @oded - remove mock data once we get real data

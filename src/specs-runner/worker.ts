@@ -1,9 +1,10 @@
 import { serializeError } from 'serialize-error';
+
 import { testInProcess } from '../api/consumer/lib/test';
 import loader from '../cli/loader';
-import ExternalErrors from '../error/external-errors';
-import ExternalError from '../error/external-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import ExternalError from '../error/external-error';
+import ExternalErrors from '../error/external-errors';
 
 export type SerializedSpecsResultsWithComponentId = {
   type: 'error' | 'results';

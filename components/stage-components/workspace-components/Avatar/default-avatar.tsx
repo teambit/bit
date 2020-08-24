@@ -1,7 +1,8 @@
-import React from 'react';
 import classNames from 'classnames';
-import styles from './styles.module.scss';
+import React from 'react';
+
 import { AccountObj } from './avatar';
+import styles from './styles.module.scss';
 
 type DefaultAvatarProps = {
   account?: AccountObj;

@@ -1,8 +1,8 @@
-import R from 'ramda';
-import isGlob from 'is-glob';
 import fs from 'fs-extra';
-import { pathNormalizeToLinux } from './path';
-import { PathOsBased } from './path';
+import isGlob from 'is-glob';
+import R from 'ramda';
+
+import { pathNormalizeToLinux, PathOsBased } from './path';
 
 const DSL = ['{PARENT}', '{FILE_NAME}'];
 

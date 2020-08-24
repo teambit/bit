@@ -1,8 +1,9 @@
-import path from 'path';
-import fs from 'fs-extra';
-import { Capsule } from './capsule';
-import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
 import { Logger } from '@teambit/logger';
+import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
+import fs from 'fs-extra';
+import path from 'path';
+
+import { Capsule } from './capsule';
 
 export async function symlinkBitBinToCapsules(capsules: Capsule[], logger: Logger) {
   logger.debug(`symlink bit bin to capsules, ${capsules.length} capsules`);

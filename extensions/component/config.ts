@@ -1,7 +1,7 @@
-import { PathLinux } from 'bit-bin/dist/utils/path';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
 import { ComponentOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { PathLinux } from 'bit-bin/dist/utils/path';
 // import { CustomResolvedPath } from 'bit-bin/dist/consumer/component/consumer-component';
 // import { ComponentOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 

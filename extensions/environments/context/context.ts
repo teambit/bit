@@ -1,5 +1,6 @@
-import { Runtime, EnvRuntime } from '../runtime';
 import type { Component } from '@teambit/component';
+
+import { EnvRuntime, Runtime } from '../runtime';
 
 export type ServiceMap<T> = {
   [env: string]: T;

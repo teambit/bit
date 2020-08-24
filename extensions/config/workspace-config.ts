@@ -1,25 +1,25 @@
-import * as path from 'path';
-import * as fs from 'fs-extra';
-import { omit, isEmpty } from 'ramda';
-import { parse, stringify, assign } from 'comment-json';
+import { Analytics } from 'bit-bin/dist/analytics/analytics';
+import { HARMONY_FEATURE, isFeatureEnabled, isHarmonyEnabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
+import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from 'bit-bin/dist/constants';
+import { ResolveModulesConfig } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { ExtensionDataList, ILegacyWorkspaceConfig } from 'bit-bin/dist/consumer/config';
+import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
+import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
 } from 'bit-bin/dist/consumer/config/workspace-config';
-import { WORKSPACE_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from 'bit-bin/dist/constants';
-import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
-import InvalidConfigFile from './exceptions/invalid-config-file';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
-
 import { EnvType } from 'bit-bin/dist/legacy-extensions/env-extension-types';
-import { isFeatureEnabled, HARMONY_FEATURE, isHarmonyEnabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
 import logger from 'bit-bin/dist/logger/logger';
-import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
-import { ILegacyWorkspaceConfig, ExtensionDataList } from 'bit-bin/dist/consumer/config';
-import { ResolveModulesConfig } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { assign, parse, stringify } from 'comment-json';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { isEmpty, omit } from 'ramda';
+
+import InvalidConfigFile from './exceptions/invalid-config-file';
 import { HostConfig } from './types';
-import { Analytics } from 'bit-bin/dist/analytics/analytics';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion'];
 

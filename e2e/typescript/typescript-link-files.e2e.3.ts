@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import { IS_WINDOWS } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('typescript components with link files', function () {
   this.timeout(0);
