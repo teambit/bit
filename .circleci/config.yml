@@ -590,6 +590,7 @@ jobs:
         restore_cache:
           key: npm-global-bin-v1
           # key: bitsrc-registry-stg-v2
+      - run: ls -l /home/circleci/.npm-global/bin
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
