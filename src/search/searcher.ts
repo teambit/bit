@@ -1,9 +1,9 @@
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { Doc } from './indexer';
-import buildQuery from './query-builder';
-import serverlessIndex from './serverless-index';
+// import buildQuery from './query-builder';
+// import serverlessIndex from './serverless-index';
 
-const numOfResultsPerPage = 15;
+// const numOfResultsPerPage = 15;
 
 // function totalHits(index: Promise<any>, query: string) {
 //   return new Promise((resolve, reject) => {
@@ -44,12 +44,12 @@ const numOfResultsPerPage = 15;
  * @param {Array<any>} results
  * @return {Array<any>}
  */
-function sortSearchResults(results: Array<any>): Array<any> {
-  return results.sort((a, b) => {
-    if (a.score !== b.score) return a.score - b.score;
-    return a.document.name.length - b.document.name.length;
-  });
-}
+// function sortSearchResults(results: Array<any>): Array<any> {
+//   return results.sort((a, b) => {
+//     if (a.score !== b.score) return a.score - b.score;
+//     return a.document.name.length - b.document.name.length;
+//   });
+// }
 
 function formatter(doc: Doc | any): string {
   if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') {
@@ -66,30 +66,30 @@ function formatter(doc: Doc | any): string {
  * @param {string} path
  * @return {Promise}
  */
-function search(queryStr: string, path: string): Promise<Doc[]> {
-  return new Promise((resolve) => {
-    const index = serverlessIndex.initializeIndex(path);
-    const searchResults = [];
-    const query = buildQuery(queryStr);
-    return index.then((indexInstance) => {
-      indexInstance
-        .search({
-          query,
-          pageSize: numOfResultsPerPage,
-        })
-        .on('data', function (data) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          searchResults.push(data);
-        })
-        .on('end', function () {
-          const searchResultsSorted = sortSearchResults(searchResults);
-          return resolve(searchResultsSorted.map((result) => result.document));
-        });
-    });
-  });
-}
+// function search(queryStr: string, path: string): Promise<Doc[]> {
+//   return new Promise((resolve) => {
+//     const index = serverlessIndex.initializeIndex(path);
+//     const searchResults = [];
+//     const query = buildQuery(queryStr);
+//     return index.then((indexInstance) => {
+//       indexInstance
+//         .search({
+//           query,
+//           pageSize: numOfResultsPerPage,
+//         })
+//         .on('data', function (data) {
+//           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+//           searchResults.push(data);
+//         })
+//         .on('end', function () {
+//           const searchResultsSorted = sortSearchResults(searchResults);
+//           return resolve(searchResultsSorted.map((result) => result.document));
+//         });
+//     });
+//   });
+// }
 
 module.exports = {
-  search,
+  // search,
   formatter,
 };
