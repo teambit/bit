@@ -133,7 +133,7 @@ function buildGraphFromComponentsObjects(
   components.forEach((component: Component) => {
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
       depIds.forEach((depId) => {
-        if (ignoreIds.has(depId)) return;
+        if (ignoreIds.hasWithoutScope(depId)) return;
         if (!graph.hasNode(depId.toString())) {
           throw new Error(`buildGraphFromComponentsObjects: missing node of ${depId.toString()}`);
         }

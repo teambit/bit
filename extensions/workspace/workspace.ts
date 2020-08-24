@@ -583,10 +583,8 @@ export class Workspace implements ComponentFactory {
     };
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = getAllCoreAspectsIds();
-    const coreAspectsComponentIds = await Promise.all(
-      coreAspectsStringIds.map((id) => this.resolveComponentId(id, true))
-    );
-    const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.legacyComponentId));
+    const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
+    const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds);
     return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
   }
 
