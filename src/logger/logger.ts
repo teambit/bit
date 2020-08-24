@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import winston, { Logger } from 'winston';
+import winston, { Logger, LogEntry } from 'winston';
 import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
@@ -124,6 +124,10 @@ class BitLogger {
       }
     }
     winston.loggers.get('consoleOnly')[level](actualMessage);
+  }
+
+  profile(id: string, meta?: LogEntry) {
+    this.logger.profile(id, meta);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {

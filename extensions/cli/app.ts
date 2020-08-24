@@ -93,5 +93,5 @@ async function runCLI() {
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
   const cli = harmony.get<CLIMain>('teambit.bit/cli');
-  cli.run();
+  await cli.run();
 }
