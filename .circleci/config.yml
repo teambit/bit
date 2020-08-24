@@ -150,6 +150,10 @@ jobs:
       #     command: 'cd bit && npm run dev-link bit'
       -
         run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
       -
