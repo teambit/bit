@@ -14,20 +14,25 @@ type CollapserProps = {
    * content to be placed in the tooltip
    */
   tooltipContent?: ReactNode;
+  /**
+   * options to place the collapser to the right or left of the element
+   */
+  placement?: 'right' | 'left';
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Collapser({ isOpen, id, tooltipContent, onClick, ...rest }: CollapserProps) {
+export function Collapser({ isOpen, id, tooltipContent, placement = 'right', onClick, ...rest }: CollapserProps) {
+  const icon = `${placement}-rounded-corners`;
   return (
     <div
       {...rest}
       onClick={onClick}
-      className={classNames(styles.collapser, { [styles.open]: isOpen })}
+      className={classNames(styles.collapser, styles[placement], { [styles.open]: isOpen })}
       data-tip=""
       data-for={id}
     >
       <div className={styles.circle}>
         <div>
-          <Icon of="right-rounded-corners" />
+          <Icon of={icon} />
         </div>
       </div>
       <ReactTooltip place="top" id={id} effect="solid">

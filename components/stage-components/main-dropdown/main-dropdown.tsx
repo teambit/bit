@@ -16,7 +16,12 @@ export function MainDropdown() {
         tooltipClass={styles.menu}
         placeholder=""
         clickOutside
-        PlaceholderComponent={() => <Icon className={classNames(styles.icon)} of="more" />}
+        PlaceholderComponent={() => (
+          <div>
+            <div className={styles.overlay} />
+            <Icon className={classNames(styles.icon)} of="more" />
+          </div>
+        )}
       >
         <div>
           <MenuBlock title="General">

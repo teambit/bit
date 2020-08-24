@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useReducer } from 'react';
 import head from 'lodash.head';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
@@ -11,6 +11,7 @@ import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { Composition } from './composition';
 import { ComponentModel } from '@teambit/component';
 import { ComponentContext } from '@teambit/component';
+import { Collapser } from '@teambit/staged-components.side-bar';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 import { ComponentComposition } from './ui';
 import { TabContainer, Tab, TabList, TabPanel } from '@teambit/panels';
@@ -49,12 +50,25 @@ export function Compositions() {
   useEffect(() => {
     selectComposition(component.compositions[0]);
   }, [component]);
+
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, component.compositions.length > 0);
+  const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
+
   return (
     <PanelContainer className={styles.compositionsPage}>
-      <TupleSplitPane max={100} ratio={61} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
+      <TupleSplitPane max={100} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
         <CompositionContent component={component} selected={selected} />
         <Panel>
+          <Collapser
+            id="compositionsCollapser"
+            placement="left"
+            isOpen={isSidebarOpen}
+            onClick={handleSidebarToggle}
+            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
+            className={styles.collapser}
+          />
           <TabContainer>
             <TabList>
               <Tab>compositions</Tab>
@@ -71,7 +85,7 @@ export function Compositions() {
             <TabPanel>
               {properties && properties.length > 0 ? (
                 // TODO - make table look good in panel
-                <PropTable rows={properties} />
+                <PropTable rows={properties} showListView />
               ) : (
                 <div />
               )}
