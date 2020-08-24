@@ -191,7 +191,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        exclude: /@pmmmwh/, // added to remove the default value of `/node_modules/`
+        exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
         include: aspectPaths,
       }),
       // Re-generate index.html with injected script tag.

@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { ReactAspect } from '../react.aspect';
 
-export default function (workspaceDir: string): Configuration {
+export default function (workspaceDir: string, targets: string[]): Configuration {
   return {
     devServer: {
       sockPath: `_hmr/${ReactAspect.id}`,
@@ -96,7 +96,11 @@ export default function (workspaceDir: string): Configuration {
 
     plugins: [
       new ReactRefreshWebpackPlugin({
-        overlay: true,
+        overlay: {
+          sockPath: `_hmr/${ReactAspect.id}`,
+        },
+        exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
+        include: targets,
       }),
     ],
   };
