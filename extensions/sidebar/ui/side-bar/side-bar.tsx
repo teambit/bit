@@ -28,6 +28,7 @@ export function SideBar({ drawerSlot }: SideBarProps) {
   return (
     <div className={styles.sidebar}>
       {drawerSlot.toArray().map(([id, drawer]) => {
+        if (!drawer || !drawer.name) return null;
         return (
           <DrawerUI
             isOpen={openDrawerList.includes(id)}

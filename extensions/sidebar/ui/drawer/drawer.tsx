@@ -11,6 +11,7 @@ export type DrawerProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: DrawerProps) {
+  if (!drawer) return null;
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
       <div className={classNames(styles.drawerName, { [styles.open]: isOpen })} onClick={onToggle}>
