@@ -1,4 +1,3 @@
-import { WorkspaceModelComponent } from '@teambit/workspace';
+import { ComponentModel } from '@teambit/component';
 
-export type PayloadType = WorkspaceModelComponent | undefined;
-// TODO - check that this works. in my branch its 'ComponentModel'
+export type PayloadType = ComponentModel | undefined;

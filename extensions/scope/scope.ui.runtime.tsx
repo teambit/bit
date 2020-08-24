@@ -58,7 +58,7 @@ export class ScopeUI {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} />,
+          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} sidebar={<this.sidebar.render />} />,
         },
       ],
     };
@@ -77,7 +77,6 @@ export class ScopeUI {
   ) {
     const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
     ui.registerRoot(scopeUi.root);
-    sidebar.registerDrawer();
 
     return scopeUi;
   }
