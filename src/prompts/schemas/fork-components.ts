@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+
 import BitId from '../../bit-id/bit-id';
 
 /**

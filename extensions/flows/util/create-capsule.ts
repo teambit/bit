@@ -1,9 +1,9 @@
-import { join, dirname, resolve } from 'path';
-import { State, Console } from '@teambit/capsule';
-import { tmpdir } from 'os';
-import { mkdirp, writeFile } from 'fs-extra';
+import { Console, State } from '@teambit/capsule';
 import { Component } from '@teambit/component';
-import { FsContainer, Capsule } from '@teambit/isolator';
+import { Capsule, FsContainer } from '@teambit/isolator';
+import { mkdirp, writeFile } from 'fs-extra';
+import { tmpdir } from 'os';
+import { dirname, join, resolve } from 'path';
 
 type CapsuleContent = { [k: string]: string };
 

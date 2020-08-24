@@ -1,5 +1,6 @@
-import { remove } from 'fs-extra';
 import { expect } from 'chai';
+import { remove } from 'fs-extra';
+
 import { createFakeCapsule } from '../util/create-capsule';
 import { executeTask } from './task';
 

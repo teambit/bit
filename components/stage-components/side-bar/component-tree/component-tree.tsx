@@ -1,16 +1,16 @@
-import React, { useMemo, useCallback } from 'react';
-import { ComponentTreeSlot } from '@teambit/component-tree';
 import { ComponentModel } from '@teambit/component';
-import { inflateToTree } from './inflate-paths';
-import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
-import { /* ScopeView, */ NamespaceView } from './component-nodes';
-import { ComponentView } from './component-view';
-import { ComponentTreeContextProvider } from './component-tree-context';
-import { RootNode } from './root-node';
+import { ComponentTreeSlot } from '@teambit/component-tree';
+import React, { useCallback, useMemo } from 'react';
 
-import { indentStyle } from './indent';
-import { PayloadType } from './payload-type';
+import { /* ScopeView, */ NamespaceView } from './component-nodes';
+import { ComponentTreeContextProvider } from './component-tree-context';
 import styles from './component-tree.module.scss';
+import { ComponentView } from './component-view';
+import { indentStyle } from './indent';
+import { inflateToTree } from './inflate-paths';
+import { PayloadType } from './payload-type';
+import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
+import { RootNode } from './root-node';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;

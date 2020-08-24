@@ -1,7 +1,8 @@
-import React from 'react';
 import classNames from 'classnames';
-import styles from './component-status.module.scss';
+import React from 'react';
+
 import { StatusTypes } from '../recursive-tree';
+import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {
   status?: StatusTypes;

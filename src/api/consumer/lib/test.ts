@@ -1,11 +1,11 @@
-import { loadConsumer, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
-import ComponentsList from '../../../consumer/component/components-list';
 import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
 import { TESTS_FORK_LEVEL } from '../../../constants';
-import specsRunner from '../../../specs-runner/specs-runner';
-import GeneralError from '../../../error/general-error';
+import { Consumer, loadConsumer } from '../../../consumer';
+import ComponentsList from '../../../consumer/component/components-list';
 import { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
+import GeneralError from '../../../error/general-error';
+import specsRunner from '../../../specs-runner/specs-runner';
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 

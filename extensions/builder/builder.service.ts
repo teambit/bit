@@ -1,9 +1,10 @@
 import { EnvService, ExecutionContext } from '@teambit/environments';
-import { Workspace } from '@teambit/workspace';
-import { BuildPipe } from './build-pipe';
 import { Logger } from '@teambit/logger';
-import { BuildTask } from './types';
+import { Workspace } from '@teambit/workspace';
+
+import { BuildPipe } from './build-pipe';
 import { TaskSlot } from './builder.main.runtime';
+import { BuildTask } from './types';
 
 export class BuilderService implements EnvService {
   constructor(

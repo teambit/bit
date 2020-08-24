@@ -1,10 +1,11 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+
 import { lane } from '../../../api/consumer';
-import { LaneResults } from '../../../api/consumer/lib/lane';
-import { LaneData } from '../../../scope/lanes/lanes';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { LaneResults } from '../../../api/consumer/lib/lane';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { LaneData } from '../../../scope/lanes/lanes';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Lane implements LegacyCommand {
   name = 'lane [name]';

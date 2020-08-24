@@ -1,10 +1,11 @@
-import React from 'react';
-import classNames from 'classnames';
-import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
+import { PillLabel } from '@teambit/staged-components.pill-label';
 import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
-import { PillLabel } from '@teambit/staged-components.pill-label';
+import classNames from 'classnames';
+import React from 'react';
+
 import styles from './version-dropdown.module.scss';
 
 type VersionDropdownProps = {

@@ -1,4 +1,5 @@
 import ora, { Ora, PersistOptions } from 'ora';
+
 import { SPINNER_TYPE } from '../../constants';
 
 export class Loader {

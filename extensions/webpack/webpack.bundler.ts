@@ -1,10 +1,11 @@
-import { flatten } from 'lodash';
-import webpack, { Configuration, Compiler } from 'webpack';
-import pMapSeries from 'p-map-series';
-import merge from 'webpack-merge';
-import configFactory from './config/webpack.config';
-import { Bundler, Target, BundlerComponentResult } from '@teambit/bundler';
+import { Bundler, BundlerComponentResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
+import { flatten } from 'lodash';
+import pMapSeries from 'p-map-series';
+import webpack, { Compiler, Configuration } from 'webpack';
+import merge from 'webpack-merge';
+
+import configFactory from './config/webpack.config';
 
 export class WebpackBundler implements Bundler {
   constructor(

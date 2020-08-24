@@ -1,15 +1,16 @@
-import { countBy, sortBy, forEachObjIndexed, uniq, prop } from 'ramda';
-import { intersect, parseRange } from 'semver-intersect';
+import { countBy, forEachObjIndexed, prop, sortBy, uniq } from 'ramda';
 import semver from 'semver';
-import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
-import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
-import { PackageName, DependenciesObjectDefinition, SemverVersion, DependencyLifecycleType } from '../../types';
+import { intersect, parseRange } from 'semver-intersect';
+
 import {
-  PEER_DEP_LIFECYCLE_TYPE,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
   DEV_DEP_LIFECYCLE_TYPE,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+  PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../constants';
+import { DependenciesObjectDefinition, DependencyLifecycleType, PackageName, SemverVersion } from '../../types';
+import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
+import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
 
 type ItemsGroupedByRangeOrVersion = {
   ranges: PackageNameIndexItem[];

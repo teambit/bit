@@ -1,4 +1,5 @@
 import assert from 'assert';
+
 import detective from './';
 
 describe('detective-less', function () {

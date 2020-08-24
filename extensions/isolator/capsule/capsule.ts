@@ -1,12 +1,13 @@
-import v4 from 'uuid';
-import glob from 'glob';
-import path from 'path';
+import { NodeFS } from '@teambit/any-fs';
+import { Capsule as CapsuleTemplate, Console, Exec, State } from '@teambit/capsule';
+import { Component } from '@teambit/component';
 import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
-import { Capsule as CapsuleTemplate, Exec, Console, State } from '@teambit/capsule';
-import { NodeFS } from '@teambit/any-fs';
+import glob from 'glob';
+import path from 'path';
+import v4 from 'uuid';
+
 import FsContainer, { BitExecOption } from './container';
-import { Component } from '@teambit/component';
 import ContainerExec from './container-exec';
 
 export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {

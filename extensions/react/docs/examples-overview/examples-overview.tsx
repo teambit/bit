@@ -1,11 +1,11 @@
-import React from 'react';
-import classNames from 'classnames';
-import { Example } from '@teambit/documenter-temp.types.docs-file';
-import { Section, SectionProps } from '@teambit/documenter-temp.ui.section';
-import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
 import { Paragraph } from '@teambit/base-ui-temp.text.paragraph';
-import { Playground } from '../playground';
+import { Example } from '@teambit/documenter-temp.types.docs-file';
+import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
+import { Section, SectionProps } from '@teambit/documenter-temp.ui.section';
+import classNames from 'classnames';
+import React from 'react';
 
+import { Playground } from '../playground';
 import styles from './examples-overview.module.scss';
 
 export type ExamplesOverviewProps = {

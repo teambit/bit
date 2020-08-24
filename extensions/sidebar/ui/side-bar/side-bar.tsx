@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+
 import { DrawerSlot } from '../../sidebar.ui.runtime';
-import styles from './side-bar.module.scss';
 import { DrawerUI } from '../drawer';
+import styles from './side-bar.module.scss';
 
 export type SideBarProps = {
   /**

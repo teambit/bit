@@ -1,7 +1,7 @@
+import { ResolvedComponent } from '@teambit/utils.resolved-component';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import fs from 'fs-extra';
 import path from 'path';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { ResolvedComponent } from '@teambit/utils.resolved-component';
 
 export async function symlinkCapsulesInNodeModules(isolatedEnvs: ResolvedComponent[]) {
   await Promise.all(

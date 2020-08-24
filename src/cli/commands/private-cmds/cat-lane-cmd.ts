@@ -1,5 +1,5 @@
-import { LegacyCommand } from '../../legacy-command';
 import { catLane } from '../../../api/scope';
+import { LegacyCommand } from '../../legacy-command';
 
 export default class CatLane implements LegacyCommand {
   name = 'cat-lane [id]';

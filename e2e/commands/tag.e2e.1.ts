@@ -1,13 +1,14 @@
 // covers also init, create, tag, import and export commands
 
-import * as path from 'path';
 import chai, { expect } from 'chai';
+import * as path from 'path';
+
+import { NOTHING_TO_TAG_MSG } from '../../src/api/consumer/lib/tag';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
-import { NOTHING_TO_TAG_MSG } from '../../src/api/consumer/lib/tag';
 
 const assertArrays = require('chai-arrays');
 

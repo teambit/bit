@@ -1,7 +1,8 @@
-import rightpad from 'pad-right';
 import chalk from 'chalk';
-import allCommands from './all-help';
+import rightpad from 'pad-right';
+
 import { BASE_DOCS_DOMAIN } from '../../constants';
+import allCommands from './all-help';
 
 const SPACE = ' ';
 const TITLE_LEFT_SPACES_NUMBER = 2;

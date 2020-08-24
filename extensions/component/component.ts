@@ -1,16 +1,17 @@
-import { SemVer } from 'semver';
 import { AnyFS } from '@teambit/any-fs';
+import { capitalize } from '@teambit/utils.capitalize';
+import { SemVer } from 'semver';
+
+import { ComponentFactory } from './component-factory';
+import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
-import ComponentFS from './component-fs';
-import { ComponentFactory } from './component-factory';
 // eslint-disable-next-line import/no-cycle
 import { ComponentID } from './id';
-import { TagMap } from './tag-map';
-import { State } from './state';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
-import { capitalize } from '@teambit/utils.capitalize';
+import { State } from './state';
+import { TagMap } from './tag-map';
 // import { Author } from './types';
 
 /**

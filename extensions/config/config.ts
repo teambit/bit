@@ -1,8 +1,9 @@
 import { GlobalConfig } from '@teambit/harmony';
-import { ConfigType, HostConfig } from './types';
+import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config';
 import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
-import { WorkspaceConfig, WorkspaceConfigFileProps, LegacyInitProps } from './workspace-config';
-import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+
+import { ConfigType, HostConfig } from './types';
+import { LegacyInitProps, WorkspaceConfig, WorkspaceConfigFileProps } from './workspace-config';
 
 // export type ConfigProps = {
 //   workspaceConfig: WorkspaceConfig;

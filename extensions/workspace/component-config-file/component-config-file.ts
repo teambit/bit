@@ -1,13 +1,14 @@
-import path from 'path';
-import fs from 'fs-extra';
+import { ComponentID } from '@teambit/component';
+import { COMPONENT_CONFIG_FILE_NAME } from 'bit-bin/dist/constants';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
+import fs from 'fs-extra';
+import path from 'path';
 import stringifyPackage from 'stringify-package';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { COMPONENT_CONFIG_FILE_NAME } from 'bit-bin/dist/constants';
-import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+
 import { AlreadyExistsError } from './exceptions';
-import { ComponentID } from '@teambit/component';
 
 interface ComponentConfigFileOptions {
   indent: number;

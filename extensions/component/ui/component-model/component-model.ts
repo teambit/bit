@@ -1,10 +1,11 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
-import { ComponentStatus } from '@teambit/workspace';
 import { Descriptor } from '@teambit/environments';
+import { ComponentStatus } from '@teambit/workspace';
+
 import { ComponentID } from '../../id';
-import { TagMap } from '../../tag-map';
 import { Tag } from '../../tag';
+import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 

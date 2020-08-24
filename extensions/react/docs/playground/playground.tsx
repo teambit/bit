@@ -1,10 +1,9 @@
-import React from 'react';
-import classNames from 'classnames';
-import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
-
-import prismTheme from 'prism-react-renderer/themes/github';
-import { Error as errorClass } from '@teambit/base-ui-temp.input.error';
 import { roundnessClass } from '@teambit/base-ui-temp.css-components.roundness';
+import { Error as errorClass } from '@teambit/base-ui-temp.input.error';
+import classNames from 'classnames';
+import prismTheme from 'prism-react-renderer/themes/github';
+import React from 'react';
+import { LiveEditor, LiveError, LivePreview, LiveProvider } from 'react-live';
 
 import styles from './playground.module.scss';
 

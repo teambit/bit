@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AccountObj } from './avatar';
 // import Tooltip from 'react-tooltip';
-
 import styles from './styles.module.scss';
 import { addQueryParams } from './utils';
 // import { v1 } from 'uuid';

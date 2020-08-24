@@ -1,6 +1,7 @@
-import { AddressInfo } from 'net';
 import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
+import { AddressInfo } from 'net';
+
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 

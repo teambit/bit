@@ -1,14 +1,15 @@
-import R from 'ramda';
 import graphlib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
+import R from 'ramda';
+
 import { Scope } from '..';
-import { DependencyNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { flattenDependencyIds } from '../flatten-dependencies';
-import ScopeComponentsImporter from './scope-components-importer';
-import { AllDependenciesGraphs } from '../graph/components-graph';
-import GeneralError from '../../error/general-error';
 import { BitIdStr } from '../../bit-id/bit-id';
+import GeneralError from '../../error/general-error';
+import { DependencyNotFound } from '../exceptions';
+import { flattenDependencyIds } from '../flatten-dependencies';
+import { AllDependenciesGraphs } from '../graph/components-graph';
+import ScopeComponentsImporter from './scope-components-importer';
 
 // eslint-disable-next-line
 export async function getAllFlattenedDependencies(

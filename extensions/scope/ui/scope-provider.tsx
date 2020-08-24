@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+
 import { ScopeContext } from './scope-context';
 import { ScopeModel } from './scope-model';
 

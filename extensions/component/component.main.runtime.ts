@@ -1,13 +1,14 @@
-import { flatten } from 'lodash';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentAspect } from './component.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { componentSchema } from './component.graphql';
-import { ComponentFactory } from './component-factory';
-import { HostNotFound } from './exceptions';
-import { Route, ExpressMain, ExpressAspect } from '@teambit/express';
-import { ComponentRoute } from './component.route';
+import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { flatten } from 'lodash';
+
+import { ComponentFactory } from './component-factory';
+import { ComponentAspect } from './component.aspect';
+import { componentSchema } from './component.graphql';
+import { ComponentRoute } from './component.route';
+import { HostNotFound } from './exceptions';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 

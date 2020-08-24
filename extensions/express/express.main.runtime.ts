@@ -1,12 +1,13 @@
-import { flatten, lowerCase, concat } from 'lodash';
-import express, { Express } from 'express';
-import cors from 'cors';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Route, Middleware, Request, Response } from './types';
-import { catchErrors } from './middlewares';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { MainRuntime } from '@teambit/cli';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import cors from 'cors';
+import express, { Express } from 'express';
+import { concat, flatten, lowerCase } from 'lodash';
+
 import { ExpressAspect } from './express.aspect';
+import { catchErrors } from './middlewares';
+import { Middleware, Request, Response, Route } from './types';
 
 export type ExpressConfig = {
   port: number;

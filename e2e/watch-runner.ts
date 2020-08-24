@@ -1,11 +1,12 @@
 /* eslint no-console: 0 */
-import rightpad from 'pad-right';
 import chalk from 'chalk';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { ChildProcess } from 'child_process';
-import Helper from '../src/e2e-helper/e2e-helper';
+import rightpad from 'pad-right';
+
 // @todo: move this file to the watch extension and then move the following constants to the extension
 import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/constants';
+import Helper from '../src/e2e-helper/e2e-helper';
 
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
 

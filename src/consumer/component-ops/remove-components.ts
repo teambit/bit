@@ -1,18 +1,19 @@
-import R from 'ramda';
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
+import R from 'ramda';
+
 import { Consumer } from '..';
 import BitIds from '../../bit-id/bit-ids';
-import RemovedLocalObjects from '../../scope/removed-local-objects';
-import logger from '../../logger/logger';
 import { LATEST_BIT_VERSION } from '../../constants';
 import GeneralError from '../../error/general-error';
-import { getScopeRemotes } from '../../scope/scope-remotes';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import Component from '../component/consumer-component';
-import deleteComponentsFiles from '../component-ops/delete-component-files';
-import * as packageJsonUtils from '../component/package-json-utils';
+import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
+import RemovedLocalObjects from '../../scope/removed-local-objects';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import deleteComponentsFiles from '../component-ops/delete-component-files';
+import Component from '../component/consumer-component';
+import * as packageJsonUtils from '../component/package-json-utils';
 
 /**
  * Remove components local and remote

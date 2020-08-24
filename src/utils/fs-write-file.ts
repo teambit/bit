@@ -1,5 +1,5 @@
-import { userInfo } from 'os';
 import fs from 'fs-extra';
+import { userInfo } from 'os';
 
 export type Options = {
   uid?: number | null | undefined;

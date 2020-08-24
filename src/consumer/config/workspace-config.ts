@@ -1,23 +1,23 @@
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractConfig from './abstract-config';
-import { Compilers, Testers } from './abstract-config';
-import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
+
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER,
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
 } from '../../constants';
-import filterObject from '../../utils/filter-object';
-import { PathOsBasedAbsolute, PathOsBased } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
+import filterObject from '../../utils/filter-object';
+import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
+import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import AbstractConfig, { Compilers, Testers } from './abstract-config';
 import ConsumerOverrides from './consumer-overrides';
+import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
+import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
 import { ExtensionDataList } from './extension-data';
-import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;

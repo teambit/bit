@@ -1,10 +1,11 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import json from 'comment-json';
+import fs from 'fs-extra';
+import * as path from 'path';
+
 import { BIT_MAP } from '../constants';
+import { LANE_KEY } from '../consumer/bit-map/bit-map';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
-import { LANE_KEY } from '../consumer/bit-map/bit-map';
 
 export default class BitMapHelper {
   scopes: ScopesData;

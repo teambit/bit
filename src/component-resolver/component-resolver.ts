@@ -1,9 +1,10 @@
-import * as path from 'path';
 import glob from 'glob';
+import * as path from 'path';
+
 import { BitId } from '../bit-id';
-import { LATEST_BIT_VERSION, BITS_DIRNAME } from '../constants';
-import { ComponentNotFound } from '../scope/exceptions';
+import { BITS_DIRNAME, LATEST_BIT_VERSION } from '../constants';
 import logger from '../logger/logger';
+import { ComponentNotFound } from '../scope/exceptions';
 import { PathOsBased } from '../utils/path';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {

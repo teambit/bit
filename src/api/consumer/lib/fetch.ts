@@ -1,9 +1,10 @@
 import R from 'ramda';
-import { Consumer, loadConsumer } from '../../../consumer';
-import loader from '../../../cli/loader';
-import GeneralError from '../../../error/general-error';
-import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
+
 import { Analytics } from '../../../analytics/analytics';
+import loader from '../../../cli/loader';
+import { Consumer, loadConsumer } from '../../../consumer';
+import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
+import GeneralError from '../../../error/general-error';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 export default async function fetch(ids: string[], lanes: boolean, components: boolean) {

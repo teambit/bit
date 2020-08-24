@@ -1,7 +1,7 @@
-import execa from 'execa';
-import rightpad from 'pad-right';
 import chalk from 'chalk';
+import execa from 'execa';
 import pSeries from 'p-series';
+import rightpad from 'pad-right';
 
 export type InteractiveInputs = InteractiveInputDefinition[];
 

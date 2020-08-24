@@ -1,5 +1,6 @@
-import format from 'string-format';
 import path from 'path';
+import format from 'string-format';
+
 import ConsumerComponent from '../../consumer/component';
 
 /**

@@ -1,8 +1,9 @@
 import execa from 'execa';
+
+import logger from '../logger/logger';
 import { PathLinux, PathOsBased } from '../utils/path';
 import GitNotFound from './git/exceptions/git-not-found';
 import getGitExecutablePath from './git/git-executable';
-import logger from '../logger/logger';
 
 export type MergeFileResult = {
   filePath: PathLinux;

@@ -1,8 +1,9 @@
 import harmony from '@teambit/harmony';
 import pWaitFor from 'p-wait-for';
-import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
-import { AddProps } from './consumer/component-ops/add-components/add-components';
+
+import { addMany as addManyInternal, build, buildAll as buildAllApi, getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
+import { AddProps } from './consumer/component-ops/add-components/add-components';
 import HooksManager from './hooks';
 // import { registerCoreExtensions } from './extensions/bit';
 // import { manifestsMap as coreExtensions } from './extensions/bit';
@@ -104,6 +105,6 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
  * @param {string} extensionId
  * @returns
  */
-export function getDeclarationCoreExtension(extensionId: string) {
+export function getDeclarationCoreExtension() {
   // return coreExtensions[extensionId];
 }

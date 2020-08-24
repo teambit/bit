@@ -1,6 +1,7 @@
-import React from 'react';
-import { ComponentPreview } from '@teambit/preview';
 import { ComponentModel } from '@teambit/component';
+import { ComponentPreview } from '@teambit/preview';
+import React from 'react';
+
 import { Composition } from '../composition';
 
 export type ComponentCompositionProps = {

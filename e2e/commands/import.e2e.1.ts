@@ -5,15 +5,16 @@
 // so bad because it practically tests the backward compatibility of bit < v14.8.0
 
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
+import * as path from 'path';
+
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
-import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 

@@ -1,6 +1,7 @@
 import R from 'ramda';
-import { inflate, getStringifyArgs } from '../../utils';
+
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import { getStringifyArgs, inflate } from '../../utils';
 import { typesObj as types } from '../object-registrar';
 import { BitObject } from '.';
 

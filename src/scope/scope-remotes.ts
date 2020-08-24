@@ -1,8 +1,9 @@
 import R from 'ramda';
-import { Scope } from '.';
+
+import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import { Remotes } from '../remotes';
-import { BitId } from '../bit-id';
+import { Scope } from '.';
 
 export function getScopeRemotes(scope: Scope): Promise<Remotes> {
   function mergeRemotes(globalRemotes: GlobalRemotes) {

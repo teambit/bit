@@ -6,8 +6,9 @@
  * It is used to update the final tree.
  */
 import R from 'ramda';
+
 import { processPath } from './generate-tree-madge';
-import { ImportSpecifier, Specifier, LinkFile } from './types/dependency-tree-type';
+import { ImportSpecifier, LinkFile, Specifier } from './types/dependency-tree-type';
 
 const debug = require('debug')('path-map');
 

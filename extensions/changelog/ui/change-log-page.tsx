@@ -1,11 +1,11 @@
-import React, { HTMLAttributes, useContext } from 'react';
-import classNames from 'classnames';
-
-import { Separator } from '@teambit/documenter-temp.ui.separator';
-import { H1 } from '@teambit/documenter-temp.ui.heading';
 import { ComponentContext } from '@teambit/component';
-import styles from './change-log-page.module.scss';
+import { H1 } from '@teambit/documenter-temp.ui.heading';
+import { Separator } from '@teambit/documenter-temp.ui.separator';
 import { VersionBlock } from '@teambit/staged-components.workspace-sections.version-block';
+import classNames from 'classnames';
+import React, { HTMLAttributes, useContext } from 'react';
+
+import styles from './change-log-page.module.scss';
 
 type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 

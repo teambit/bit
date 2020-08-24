@@ -1,13 +1,14 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
+
+import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import {
-  DEFAULT_DIR_MSG_Q,
-  PACKAGE_MANAGER_MSG_Q,
   CHOOSE_COMPILER_MSG_Q,
   CHOOSE_CUSTOM_COMPILER_MSG_Q,
+  DEFAULT_DIR_MSG_Q,
+  PACKAGE_MANAGER_MSG_Q,
 } from '../../src/interactive/commands/init-interactive';
-import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE, IS_WINDOWS } from '../../src/constants';
 import { INTERACTIVE_KEYS } from '../../src/interactive/utils/run-interactive-cmd';
 
 const assertArrays = require('chai-arrays');

@@ -1,6 +1,6 @@
-import BitObject from '../objects/object';
-import { getStringifyArgs } from '../../utils';
 import { BitId } from '../../bit-id';
+import { getStringifyArgs } from '../../utils';
+import BitObject from '../objects/object';
 
 export type SymlinkProp = {
   scope: string;

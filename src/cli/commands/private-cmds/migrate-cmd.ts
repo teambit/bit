@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { migrate } from '../../../api/consumer';
 import { migrateToHarmony } from '../../../api/consumer/lib/migrate';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Migrate implements LegacyCommand {
   name = 'migrate [scopePath]';

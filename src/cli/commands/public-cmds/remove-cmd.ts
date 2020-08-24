@@ -1,14 +1,15 @@
-import yn from 'yn';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import yn from 'yn';
+
 import { remove } from '../../../api/consumer';
-import RemovedObjects from '../../../scope/removed-components';
-import RemovedLocalObjects from '../../../scope/removed-local-objects';
-import paintRemoved from '../../templates/remove-template';
-import { removePrompt } from '../../../prompts';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { removePrompt } from '../../../prompts';
+import RemovedObjects from '../../../scope/removed-components';
+import RemovedLocalObjects from '../../../scope/removed-local-objects';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';

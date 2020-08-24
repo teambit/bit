@@ -2,19 +2,19 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   settings: {
     react: {
-      version: 'detect'
+      version: 'detect',
     },
     'import/resolver': {
       node: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx']
-      }
-    }
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+    },
   },
   parserOptions: {
     project: './tsconfig.json',
     ecmaFeatures: {
-      jsx: true // Allows for the parsing of JSX
-    }
+      jsx: true, // Allows for the parsing of JSX
+    },
   },
   extends: [
     'airbnb-typescript/base',
@@ -26,12 +26,13 @@ module.exports = {
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
-    'prettier/@typescript-eslint'
+    'prettier/@typescript-eslint',
   ],
   plugins: [
     '@typescript-eslint',
     // 'eslint-comments',
-    'promise'
+    'promise',
+    'simple-import-sort',
     // 'mocha',
     // 'unicorn'
   ],
@@ -41,7 +42,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { args: 'after-used' }],
     '@typescript-eslint/no-use-before-define': [
       'error',
-      { functions: false, classes: true, variables: true, typedefs: true }
+      { functions: false, classes: true, variables: true, typedefs: true },
     ],
 
     // ERRORS OF plugin:@typescript-eslint/recommended
@@ -68,6 +69,11 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-return-assign': [0, 'except-parens'],
     'class-methods-use-this': 'off',
+    'simple-import-sort/sort': 'error',
+    'sort-imports': 'off',
+    'import/first': 'error',
+    'import/newline-after-import': 'error',
+    'import/no-duplicates': 'error',
     'prefer-destructuring': 'off',
     'import/no-extraneous-dependencies': 'off',
     'no-restricted-syntax': [2, 'ForInStatement', 'LabeledStatement', 'WithStatement'],
@@ -81,14 +87,14 @@ module.exports = {
         ignoreComments: true,
         ignoreRegExpLiterals: true,
         ignoreStrings: true,
-        ignoreTemplateLiterals: true
-      }
+        ignoreTemplateLiterals: true,
+      },
     ],
     'max-lines': [2, 1800],
     'func-names': [0],
 
     // ERRORS OF plugin:react/recommended
-    'react/no-unescaped-entities': 'off'
+    'react/no-unescaped-entities': 'off',
   },
   // return the no-cycle once "import type" is working
   // overrides: [
@@ -102,6 +108,6 @@ module.exports = {
   env: {
     browser: true,
     node: true,
-    mocha: true
-  }
+    mocha: true,
+  },
 };

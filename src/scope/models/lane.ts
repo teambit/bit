@@ -1,15 +1,16 @@
 import { v4 } from 'uuid';
-import { BitObject, Ref, Repository } from '../objects';
-import { getStringifyArgs, filterObject, sha1 } from '../../utils';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
-import { BitId } from '../../bit-id';
-import logger from '../../logger/logger';
-import ValidationError from '../../error/validation-error';
-import { DEFAULT_LANE } from '../../constants';
-import LaneObjects from '../lane-objects';
-import { Version } from '.';
+
 import { Scope } from '..';
+import { BitId } from '../../bit-id';
+import { DEFAULT_LANE } from '../../constants';
+import ValidationError from '../../error/validation-error';
+import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
+import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
+import LaneObjects from '../lane-objects';
+import { BitObject, Ref, Repository } from '../objects';
+import { Version } from '.';
 
 export type LaneProps = {
   name: string;

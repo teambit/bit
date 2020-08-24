@@ -1,8 +1,8 @@
-import ComponentWithDependencies from './component-dependencies';
-import ComponentVersion from './component-version';
-import ComponentObjects from './component-objects';
-import Repository from './objects/repository';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
+import ComponentWithDependencies from './component-dependencies';
+import ComponentObjects from './component-objects';
+import ComponentVersion from './component-version';
+import Repository from './objects/repository';
 
 export default class VersionDependencies {
   component: ComponentVersion;

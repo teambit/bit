@@ -1,11 +1,12 @@
-import { serializeError } from 'serialize-error';
 import { render } from 'ink';
-import { Command, CLIArgs, Flags } from './command';
+import { serializeError } from 'serialize-error';
+
 import { migrate } from '../api/consumer';
-import defaultHandleError from './default-error-handler';
-import { isNumeric, buildCommandMessage, packCommand } from '../utils';
-import loader from './loader';
 import logger, { writeLogToScreen } from '../logger/logger';
+import { buildCommandMessage, isNumeric, packCommand } from '../utils';
+import { CLIArgs, Command, Flags } from './command';
+import defaultHandleError from './default-error-handler';
+import loader from './loader';
 
 export class CommandRunner {
   constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}

@@ -1,4 +1,5 @@
 import { ComponentMap } from '@teambit/component';
+
 import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {

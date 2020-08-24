@@ -1,23 +1,23 @@
-import { SlotRegistry, Slot } from '@teambit/harmony';
-import { PkgAspect } from './pkg.aspect';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+
+import { Packer, PackOptions, PackResult } from './pack';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
-import { PublishCmd } from './publish.cmd';
-import { Packer, PackResult, PackOptions } from './pack';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { CLIMain } from '@teambit/cli';
-import { IsolatorMain, IsolatorAspect } from '@teambit/isolator';
-import { Publisher } from './publisher';
-import { PublishDryRunTask } from './publish-dry-run.task';
-import { Component } from '@teambit/component';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PkgAspect } from './pkg.aspect';
 import { PreparePackagesTask } from './prepare-packages.task';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { PublishDryRunTask } from './publish-dry-run.task';
+import { PublishCmd } from './publish.cmd';
+import { Publisher } from './publisher';
 
 export interface PackageJsonProps {
   [key: string]: any;

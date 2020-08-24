@@ -1,8 +1,8 @@
-import npmRegistryName from './npm-registry-name';
-import { NODE_PATH_COMPONENT_SEPARATOR, Extensions } from '../../constants';
 import BitId from '../../bit-id/bit-id';
+import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { replacePlaceHolderForPackageName } from './component-placeholders';
+import npmRegistryName from './npm-registry-name';
 
 /**
  * convert a component name to a valid npm package name

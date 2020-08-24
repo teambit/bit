@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
-import { Color, Box, Text, render } from 'ink';
-import { Insight, InsightResult, RawResult } from '../insight';
 import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
+import { Box, Color, render, Text } from 'ink';
+import React from 'react';
+
+import { Insight, InsightResult, RawResult } from '../insight';
 // import NoDataForInsight from '../exceptions/no-data-for-insight';
 
 export const INSIGHT_NAME = 'duplicate dependencies';

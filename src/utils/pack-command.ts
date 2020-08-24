@@ -1,4 +1,5 @@
 import zlib from 'zlib';
+
 import toBase64 from './string/to-base64';
 
 module.exports = function packCmd(obj, base64 = true, compress = true) {

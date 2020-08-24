@@ -1,24 +1,25 @@
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
+import R from 'ramda';
+
 import { Scope } from '..';
-import { Remotes } from '../../remotes';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
-import { BitId, BitIds } from '../../bit-id';
-import VersionDependencies from '../version-dependencies';
-import logger from '../../logger/logger';
-import { RemoteScopeNotFound, PermissionDenied } from '../network/exceptions';
-import { ComponentNotFound, DependencyNotFound } from '../exceptions';
 import { Analytics } from '../../analytics/analytics';
-import SourcesRepository, { ComponentDef } from '../repositories/sources';
-import ComponentVersion from '../component-version';
-import ComponentObjects from '../component-objects';
-import GeneralError from '../../error/general-error';
-import { getScopeRemotes } from '../scope-remotes';
+import { BitId, BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
-import { splitBy } from '../../utils';
-import { ModelComponent, Version, Lane } from '../models';
+import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
+import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
+import { Remotes } from '../../remotes';
+import { splitBy } from '../../utils';
+import ComponentObjects from '../component-objects';
+import ComponentVersion from '../component-version';
+import { ComponentNotFound, DependencyNotFound } from '../exceptions';
+import { Lane, ModelComponent, Version } from '../models';
+import { PermissionDenied, RemoteScopeNotFound } from '../network/exceptions';
+import SourcesRepository, { ComponentDef } from '../repositories/sources';
+import { getScopeRemotes } from '../scope-remotes';
+import VersionDependencies from '../version-dependencies';
 
 const removeNils = R.reject(R.isNil);
 

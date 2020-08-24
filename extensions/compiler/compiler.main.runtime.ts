@@ -1,13 +1,12 @@
-import { CompilerAspect } from './compiler.aspect';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
-import { WorkspaceAspect } from '@teambit/workspace';
-import { Workspace } from '@teambit/workspace';
-import { CLIMain } from '@teambit/cli';
-import { CompileCmd } from './compiler.cmd';
-import { WorkspaceCompiler } from './workspace-compiler';
-import { CompilerTask } from './compiler.task';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { BitId } from 'bit-bin/dist/bit-id';
+
+import { CompilerAspect } from './compiler.aspect';
+import { CompileCmd } from './compiler.cmd';
+import { CompilerTask } from './compiler.task';
+import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
   static runtime = MainRuntime;

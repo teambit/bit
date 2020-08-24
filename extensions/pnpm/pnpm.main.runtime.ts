@@ -1,9 +1,10 @@
-import { PnpmAspect } from './pnpm.aspect';
 import { MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { PnpmPackageManager } from './pnpm.package-manager';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { PkgAspect, PkgMain } from '@teambit/pkg';
+
+import { PnpmAspect } from './pnpm.aspect';
+import { PnpmPackageManager } from './pnpm.package-manager';
 
 export class PnpmMain {
   static runtime = MainRuntime;

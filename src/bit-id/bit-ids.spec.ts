@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { BitId, BitIds } from '.';
 
 describe('bitIds', () => {

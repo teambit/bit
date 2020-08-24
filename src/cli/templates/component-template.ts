@@ -1,14 +1,15 @@
 import c from 'chalk';
-import { table } from 'table';
 import rightpad from 'pad-right';
-import ConsumerComponent from '../../consumer/component/consumer-component';
-import paintDocumentation from './docs-template';
+import { table } from 'table';
+
 import {
   componentToPrintableForDiff,
   getDiffBetweenObjects,
   prettifyFieldName,
 } from '../../consumer/component-ops/components-object-diff';
+import ConsumerComponent from '../../consumer/component/consumer-component';
 import { DependenciesInfo } from '../../scope/graph/scope-graph';
+import paintDocumentation from './docs-template';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {

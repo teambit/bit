@@ -1,13 +1,14 @@
+import { expect } from 'chai';
+import fs from 'fs-extra';
 import * as path from 'path';
 import tar from 'tar';
-import fs from 'fs-extra';
-import { expect } from 'chai';
-import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+
 import defaultErrorHandler from '../cli/default-error-handler';
-import { removeChalkCharacters, generateRandomStr } from '../utils';
+import { BIT_HIDDEN_DIR, BIT_VERSION, DEFAULT_LANE, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+import { generateRandomStr, removeChalkCharacters } from '../utils';
+import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import NpmHelper from './e2e-npm-helper';
-import CommandHelper from './e2e-command-helper';
 import ScopesData from './e2e-scopes';
 
 export default class GeneralHelper {

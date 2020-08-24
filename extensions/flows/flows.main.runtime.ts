@@ -1,7 +1,8 @@
-import { Flows } from './flows';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { FlowsAspect } from './flows.aspect';
 import { MainRuntime } from '@teambit/cli';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+
+import { Flows } from './flows';
+import { FlowsAspect } from './flows.aspect';
 
 type ScriptDeps = [Workspace];
 

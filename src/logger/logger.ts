@@ -1,13 +1,14 @@
 import chalk from 'chalk';
-import yn from 'yn';
+import * as path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import winston, { Logger, LogEntry } from 'winston';
-import * as path from 'path';
-import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
+import winston, { LogEntry, Logger } from 'winston';
+import yn from 'yn';
+
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '../constants';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once

@@ -1,10 +1,11 @@
 /* eslint-disable no-plusplus */
 import { expect } from 'chai';
-import { Subject } from 'rxjs';
 import { remove } from 'fs-extra';
-import { Flow } from './flow';
-import { createFakeCapsule } from '../util/create-capsule';
+import { Subject } from 'rxjs';
+
 import { getTestCase } from '../task/task.spec';
+import { createFakeCapsule } from '../util/create-capsule';
+import { Flow } from './flow';
 
 //
 // qballer TODO - refactor these tests to make them shorter,

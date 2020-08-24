@@ -1,10 +1,11 @@
-import R from 'ramda';
 import { expect } from 'chai';
-import Version from '../../scope/models/version';
-import versionFixture from '../../../fixtures/version-model-object.json';
+import R from 'ramda';
+
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
-import GeneralError from '../../error/general-error';
+import versionFixture from '../../../fixtures/version-model-object.json';
 import { SchemaName } from '../../consumer/component/component-schema';
+import GeneralError from '../../error/general-error';
+import Version from '../../scope/models/version';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '');

@@ -1,5 +1,6 @@
-import React from 'react';
 import { docsFile } from '@teambit/documenter-temp.types.docs-file';
+import React from 'react';
+
 import { Base } from './base';
 
 export type DocsAppProps = {

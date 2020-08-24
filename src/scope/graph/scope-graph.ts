@@ -1,13 +1,14 @@
 import GraphLib, { Graph } from 'graphlib';
+
 import { BitId, BitIds } from '../../bit-id';
-import { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
-import Scope from '../scope';
-import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
-import Component from '../../consumer/component/consumer-component';
-import { getLatestVersionNumber } from '../../utils';
-import Consumer from '../../consumer/consumer';
 import ComponentsList from '../../consumer/component/components-list';
+import Component from '../../consumer/component/consumer-component';
+import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import Consumer from '../../consumer/consumer';
+import { getLatestVersionNumber } from '../../utils';
+import { ModelComponent, Version } from '../models';
+import Scope from '../scope';
 
 export type DependenciesInfo = {
   id: BitId;

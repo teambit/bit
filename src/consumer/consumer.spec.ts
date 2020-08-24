@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+
 import Consumer from '../consumer/consumer';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 

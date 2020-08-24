@@ -1,13 +1,13 @@
-import { loadScope, Scope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
-import { PRE_SEND_OBJECTS, POST_SEND_OBJECTS } from '../../../constants';
+import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
+import { loadScope, Scope } from '../../../scope';
+import ComponentObjects from '../../../scope/component-objects';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import ComponentObjects from '../../../scope/component-objects';
 import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 import LaneObjects from '../../../scope/lane-objects';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

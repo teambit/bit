@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { VersionTag } from './version-tag';
 
 export const Basic = () => {

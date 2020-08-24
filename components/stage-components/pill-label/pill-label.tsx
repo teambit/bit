@@ -1,5 +1,6 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
+
 import styles from './pill-label.module.scss';
 
 // TODO - export to base-ui when possible and use in versionLabel

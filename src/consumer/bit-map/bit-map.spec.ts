@@ -1,9 +1,10 @@
-import * as path from 'path';
 import { expect } from 'chai';
-import BitMap from './bit-map';
+import * as path from 'path';
+
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
+import BitMap from './bit-map';
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 

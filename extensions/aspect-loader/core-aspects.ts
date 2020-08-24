@@ -1,5 +1,5 @@
-import { resolve, join } from 'path';
-import { readdir, existsSync } from 'fs-extra';
+import { existsSync, readdir } from 'fs-extra';
+import { join, resolve } from 'path';
 
 export function getAspectDir(id: string): string {
   const aspectName = id.split('/')[1];

@@ -1,10 +1,11 @@
 import fs from 'fs-extra';
-import { v4 } from 'uuid';
 import * as path from 'path';
-import Repository from '../repository';
+import { v4 } from 'uuid';
+
 import { BIT_TMP_DIRNAME } from '../../constants';
-import { PathOsBased } from '../../utils/path';
 import logger from '../../logger/logger';
+import { PathOsBased } from '../../utils/path';
+import Repository from '../repository';
 
 export default class Tmp extends Repository {
   getPath(): string {

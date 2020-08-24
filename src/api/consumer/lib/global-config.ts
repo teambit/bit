@@ -1,8 +1,9 @@
 import gitconfig from '@teambit/gitconfig';
 import R from 'ramda';
-import Config from '../../../global-config/config';
-import GeneralError from '../../../error/general-error';
+
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
+import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {

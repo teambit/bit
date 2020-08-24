@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+
 import { MessageId, MessageLevel, NotificationApi } from '../../notification-api';
 
 export type Message = {

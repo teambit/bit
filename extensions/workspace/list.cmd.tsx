@@ -1,8 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import React from 'react';
+import { Command } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command } from '@teambit/cli';
+import React from 'react';
+
 import { Workspace } from './workspace';
 
 export class ListCmd implements Command {

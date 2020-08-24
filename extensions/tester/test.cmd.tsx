@@ -1,10 +1,11 @@
-import React from 'react';
-import { Box, Color } from 'ink';
 import { Command, CommandOptions, Flags } from '@teambit/cli';
-import type { TesterMain } from './tester.main.runtime';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import { Timer } from 'bit-bin/dist/toolbox/timer';
+import { Box, Color } from 'ink';
+import React from 'react';
+
+import type { TesterMain } from './tester.main.runtime';
 
 const chalk = require('chalk');
 

@@ -1,7 +1,8 @@
 import { expect } from 'chai';
+
 import { sleep } from '../sleep';
+import { TimerAlreadyRunning, TimerNotStarted } from './exceptions';
 import { Timer } from './timer';
-import { TimerNotStarted, TimerAlreadyRunning } from './exceptions';
 
 describe('Timer', () => {
   it('should stop after 100ms', async () => {

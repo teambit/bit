@@ -1,5 +1,6 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
+
 import styles from './panel.module.scss';
 
 export type PanelContainerProps = React.HTMLAttributes<HTMLDivElement>;

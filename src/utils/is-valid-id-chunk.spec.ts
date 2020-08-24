@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import isValidIdChunk from './is-valid-id-chunk';
 
 describe('isValidIdChunk', () => {

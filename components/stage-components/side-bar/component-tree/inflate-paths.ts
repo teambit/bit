@@ -1,4 +1,5 @@
 import { subPaths } from '@teambit/utils-temp.utils.sub-paths';
+
 import { TreeNode } from './recursive-tree';
 
 type KeyTree = { [filePath: string]: KeyTree | undefined };

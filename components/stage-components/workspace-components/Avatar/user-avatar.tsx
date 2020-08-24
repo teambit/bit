@@ -1,13 +1,14 @@
 // import { AccountObj } from '../../types/account';
 
-import React, { PureComponent } from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import classNames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AccountObj } from './avatar';
-// import Tooltip from 'components/Tooltip';
-import { addQueryParams, getInitials } from './utils';
 import avatarColors from './avatar-colors.module.scss';
 import styles from './styles.module.scss';
+// import Tooltip from 'components/Tooltip';
+import { addQueryParams, getInitials } from './utils';
 // import { v1 } from 'uuid';
 
 type UserAvatarProps = {

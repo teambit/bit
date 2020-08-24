@@ -1,8 +1,9 @@
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import fs from 'fs';
 import findUp from 'find-up';
+import fs from 'fs';
 import gitignore from 'parse-gitignore';
-import { IGNORE_LIST, GIT_IGNORE } from '../../constants';
+
+import { GIT_IGNORE, IGNORE_LIST } from '../../constants';
 
 function getGitIgnoreFile(dir: string) {
   const gitIgnoreFile = findUp.sync([GIT_IGNORE], { cwd: dir });

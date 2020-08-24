@@ -1,8 +1,9 @@
 import R from 'ramda';
 import Vinyl from 'vinyl';
-import getWithoutExt from './fs-no-ext';
-import { PathOsBased } from '../path';
+
 import logger from '../../logger/logger';
+import { PathOsBased } from '../path';
+import getWithoutExt from './fs-no-ext';
 
 const LOWER_PRIORITY_EXTENSIONS = ['d.ts'];
 const HIGHER_PRIORITY_EXTENSIONS = ['js'];

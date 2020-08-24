@@ -1,29 +1,28 @@
-import R from 'ramda';
-import { v4 } from 'uuid';
-import { ReleaseType } from 'semver';
-import * as RA from 'ramda-adjunct';
 import pMapSeries from 'p-map-series';
+import R from 'ramda';
+import * as RA from 'ramda-adjunct';
+import { ReleaseType } from 'semver';
+import { v4 } from 'uuid';
+
 import { Scope } from '..';
-import Consumer from '../../consumer/consumer';
-import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import Component from '../../consumer/component/consumer-component';
-import loader from '../../cli/loader';
-import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
-import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
-import { pathJoinLinux } from '../../utils';
-import { BitIds, BitId } from '../../bit-id';
-import ValidationError from '../../error/validation-error';
+import { BitId, BitIds } from '../../bit-id';
+import loader from '../../cli/loader';
+import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import { COMPONENT_ORIGINS, Extensions } from '../../constants';
-import { PathLinux } from '../../utils/path';
-import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
-import { AutoTagResult } from './auto-tag';
-import { buildComponentsGraph } from '../graph/components-graph';
-import ShowDoctorError from '../../error/show-doctor-error';
-import { getAllFlattenedDependencies } from './get-flattened-dependencies';
-import { sha1 } from '../../utils';
-import GeneralError from '../../error/general-error';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
+import Component from '../../consumer/component/consumer-component';
+import Consumer from '../../consumer/consumer';
+import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
+import GeneralError from '../../error/general-error';
+import ShowDoctorError from '../../error/show-doctor-error';
+import ValidationError from '../../error/validation-error';
+import logger from '../../logger/logger';
+import { pathJoinLinux, sha1 } from '../../utils';
+import { PathLinux } from '../../utils/path';
+import { buildComponentsGraph } from '../graph/components-graph';
+import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
+import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {

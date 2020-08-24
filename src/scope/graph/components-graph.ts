@@ -1,17 +1,17 @@
-import R from 'ramda';
-import pMapSeries from 'p-map-series';
 import graphLib, { Graph as GraphLib } from 'graphlib';
-import Graph from './graph';
-import Component from '../../consumer/component/consumer-component';
-import Dependencies from '../../consumer/component/dependencies/dependencies';
-import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
-import ComponentWithDependencies from '../component-dependencies';
-import GeneralError from '../../error/general-error';
-import { ComponentsAndVersions } from '../scope';
+import pMapSeries from 'p-map-series';
+import R from 'ramda';
+
+import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { Scope } from '..';
-import logger from '../../logger/logger';
+import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
+import Component from '../../consumer/component/consumer-component';
+import Dependencies from '../../consumer/component/dependencies/dependencies';
+import GeneralError from '../../error/general-error';
+import ComponentWithDependencies from '../component-dependencies';
+import { ComponentsAndVersions } from '../scope';
+import Graph from './graph';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;

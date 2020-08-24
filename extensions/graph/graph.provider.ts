@@ -1,7 +1,8 @@
-import { Workspace } from '@teambit/workspace';
 import { ComponentFactory } from '@teambit/component';
-import { GraphBuilder } from './graph-builder';
 import { ScopeMain } from '@teambit/scope';
+import { Workspace } from '@teambit/workspace';
+
+import { GraphBuilder } from './graph-builder';
 
 export type GraphDeps = [Workspace, ScopeMain, ComponentFactory];
 

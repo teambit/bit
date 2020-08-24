@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { move } from '../../../api/consumer';
-import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Move implements LegacyCommand {
   name = 'move <from> <to>';

@@ -1,8 +1,9 @@
 /* eslint max-classes-per-file: 0 */
 
 import chalk from 'chalk';
+
+import { getResolver, resetResolver, setResolver } from '../../../api/scope/lib/resolver';
 import { LegacyCommand } from '../../legacy-command';
-import { getResolver, setResolver, resetResolver } from '../../../api/scope/lib/resolver';
 
 class ResolverSet implements LegacyCommand {
   name = 'set <resolverPath>';

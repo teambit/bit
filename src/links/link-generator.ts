@@ -1,34 +1,34 @@
+import groupBy from 'lodash.groupby';
 import * as path from 'path';
 import R from 'ramda';
-import groupBy from 'lodash.groupby';
+
+import { BitId, BitIds } from '../bit-id';
 import {
-  DEFAULT_INDEX_NAME,
-  COMPONENT_ORIGINS,
-  ANGULAR_PACKAGE_IDENTIFIER,
   ANGULAR_BIT_ENTRY_POINT_FILE,
+  ANGULAR_PACKAGE_IDENTIFIER,
+  COMPONENT_ORIGINS,
+  DEFAULT_INDEX_NAME,
 } from '../constants';
-import { getExt } from '../utils';
-import { OutputFileParams } from '../utils/fs-output-file';
-import logger from '../logger/logger';
-import { ComponentWithDependencies } from '../scope';
+import BitMap from '../consumer/bit-map';
+import ComponentMap from '../consumer/bit-map/component-map';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 import Component from '../consumer/component/consumer-component';
 import { Dependency } from '../consumer/component/dependencies';
 import { RelativePath } from '../consumer/component/dependencies/dependency';
-import { BitIds, BitId } from '../bit-id';
-import Consumer from '../consumer/consumer';
-import ComponentMap from '../consumer/bit-map/component-map';
-import { PathOsBasedAbsolute } from '../utils/path';
-import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
-import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS, EXTENSIONS_NOT_SUPPORT_DIRS } from './link-content';
-import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import { LinkFileType } from './dependency-file-link-generator';
-import LinkFile from './link-file';
-import BitMap from '../consumer/bit-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
+import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
+import Consumer from '../consumer/consumer';
+import logger from '../logger/logger';
+import { ComponentWithDependencies } from '../scope';
+import { getExt } from '../utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import Symlink from './symlink';
+import { OutputFileParams } from '../utils/fs-output-file';
 import getWithoutExt from '../utils/fs/fs-no-ext';
-import { throwForNonLegacy } from '../consumer/component/component-schema';
+import { PathOsBasedAbsolute } from '../utils/path';
+import DependencyFileLinkGenerator, { LinkFileType } from './dependency-file-link-generator';
+import { EXTENSIONS_NOT_SUPPORT_DIRS, getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS } from './link-content';
+import LinkFile from './link-file';
+import Symlink from './symlink';
 
 type SymlinkType = {
   source: PathOsBasedAbsolute; // symlink is pointing to this path

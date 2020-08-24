@@ -1,14 +1,15 @@
 import R from 'ramda';
-import { loadConsumer, loadConsumerIfExist, Consumer } from '../../../consumer';
+
+import { BitId, BitIds } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
-import { BitId, BitIds } from '../../../bit-id';
-import hasWildcard from '../../../utils/string/has-wildcard';
-import ComponentsList from '../../../consumer/component/components-list';
-import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import { Consumer, loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import removeComponents from '../../../consumer/component-ops/remove-components';
-import { getRemoteBitIdsByWildcards } from './list-scope';
+import ComponentsList from '../../../consumer/component/components-list';
 import removeLanes from '../../../consumer/lanes/remove-lanes';
+import hasWildcard from '../../../utils/string/has-wildcard';
+import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import { getRemoteBitIdsByWildcards } from './list-scope';
 
 export default (async function remove({
   ids,

@@ -1,15 +1,15 @@
-import * as path from 'path';
-import fs from 'fs-extra';
-import tar from 'tar';
 import chalk from 'chalk';
-import FsHelper from './e2e-fs-helper';
-import CommandHelper from './e2e-command-helper';
+import fs from 'fs-extra';
+import * as path from 'path';
+import tar from 'tar';
+
 import * as fixtures from '../../src/fixtures/fixtures';
+import CommandHelper from './e2e-command-helper';
+import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
-import ScopesData from './e2e-scopes';
 import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
-import { indexer } from '../search';
+import ScopesData from './e2e-scopes';
 
 export default class FixtureHelper {
   fs: FsHelper;

@@ -1,9 +1,8 @@
+import getConfig from '@pnpm/config';
 import defaultReporter from '@pnpm/default-reporter';
 // import createClient from '@pnpm/client'
 // import { createFetchFromRegistry } from '@pnpm/fetch';
 import { LogBase, streamParser } from '@pnpm/logger';
-// import createFetcher from '@pnpm/tarball-fetcher';
-import { mutateModules, MutatedProject } from 'supi';
 // import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
 import { StoreController } from '@pnpm/package-store';
 import { createNewStoreController } from '@pnpm/store-connection-manager';
@@ -11,8 +10,8 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-
-import getConfig from '@pnpm/config';
+// import createFetcher from '@pnpm/tarball-fetcher';
+import { MutatedProject, mutateModules } from 'supi';
 // import { createResolver } from './create-resolver';
 
 async function createStoreController(storeDir: string): Promise<StoreController> {

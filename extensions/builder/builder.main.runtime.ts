@@ -1,20 +1,20 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { BuilderAspect } from './builder.aspect';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { BuilderCmd } from './run.cmd';
-import { Component, ComponentID, ComponentAspect } from '@teambit/component';
-import { BuilderService } from './builder.service';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { CLIMain } from '@teambit/cli';
-import { ExtensionArtifact } from './artifact';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { builderSchema } from './builder.graphql';
-import { BuildTask } from './types';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component, ComponentAspect, ComponentID } from '@teambit/component';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { BitId } from 'bit-bin/dist/bit-id';
+
+import { ExtensionArtifact } from './artifact';
+import { BuilderAspect } from './builder.aspect';
+import { builderSchema } from './builder.graphql';
+import { BuilderService } from './builder.service';
+import { BuilderCmd } from './run.cmd';
+import { BuildTask } from './types';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 

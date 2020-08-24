@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import versionParser from '../version/version-parser';
 import { InvalidVersion } from './exceptions';
 

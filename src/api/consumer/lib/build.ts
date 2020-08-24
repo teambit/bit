@@ -1,9 +1,10 @@
 import R from 'ramda';
-import { loadConsumer, Consumer } from '../../../consumer';
-import Component from '../../../consumer/component';
-import { COMPONENT_ORIGINS } from '../../../constants';
+
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
+import { COMPONENT_ORIGINS } from '../../../constants';
+import { Consumer, loadConsumer } from '../../../consumer';
+import Component from '../../../consumer/component';
 
 export async function build(
   id: string,

@@ -1,9 +1,10 @@
 import hash from 'object-hash';
 import yn from 'yn';
+
 import { getSync } from '../api/consumer/lib/global-config';
 import { CFG_ANALYTICS_ANONYMOUS_KEY } from '../constants';
-import cloneErrorObject, { systemFields } from './clone-error-object';
 import logger from '../logger/logger';
+import cloneErrorObject, { systemFields } from './clone-error-object';
 
 export default function hashErrorIfNeeded(error: Error) {
   let clonedError = error;

@@ -1,7 +1,8 @@
-import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '.';
 import { CapsuleList } from '@teambit/isolator';
+import chalk from 'chalk';
+
+import { Workspace } from '.';
 
 type CreateOpts = {
   baseDir?: string;

@@ -1,43 +1,44 @@
+import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { v4 } from 'uuid';
-import { equals, forEachObjIndexed, isEmpty, clone } from 'ramda';
-import { Ref, BitObject } from '../objects';
-import ScopeMeta from './scopeMeta';
-import Source from './source';
-import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, filterObject, getStringifyArgs, sha1 } from '../../utils';
-import Version from './version';
+
+import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
+import BitId from '../../bit-id/bit-id';
 import {
-  DEFAULT_LANGUAGE,
+  COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
-  COMPILER_ENV_TYPE,
+  DEFAULT_LANGUAGE,
   TESTER_ENV_TYPE,
 } from '../../constants';
-import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
-import Repository from '../objects/repository';
-import ComponentVersion from '../component-version';
-import { SourceFile, Dist, License } from '../../consumer/component/sources';
-import ComponentObjects from '../component-objects';
-import SpecsResults from '../../consumer/specs-results';
-import logger from '../../logger/logger';
-import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import { getDivergeData } from '../component-ops/get-diverge-data';
-import versionParser, { isHash, isTag } from '../../version/version-parser';
+import { Dist, License, SourceFile } from '../../consumer/component/sources';
+import { Artifact } from '../../consumer/component/sources/artifact';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
+import SpecsResults from '../../consumer/specs-results';
+import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
-import findDuplications from '../../utils/array/find-duplications';
-import { Lane } from '.';
 import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
-import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
+import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
+import logger from '../../logger/logger';
+import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
+import findDuplications from '../../utils/array/find-duplications';
+import versionParser, { isHash, isTag } from '../../version/version-parser';
+import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
-import { getAllVersionsInfo, getAllVersionHashes } from '../component-ops/traverse-versions';
-import { Artifact } from '../../consumer/component/sources/artifact';
+import { getDivergeData } from '../component-ops/get-diverge-data';
+import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
+import ComponentVersion from '../component-version';
+import { VersionAlreadyExists, VersionNotFound } from '../exceptions';
+import { BitObject, Ref } from '../objects';
+import Repository from '../objects/repository';
+import { Lane } from '.';
+import ScopeMeta from './scopeMeta';
+import Source from './source';
+import Version from './version';
 
 type State = {
   versions?: {

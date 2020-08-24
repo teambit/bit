@@ -1,6 +1,7 @@
-import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { IsolatorMain } from '@teambit/isolator';
+import chalk from 'chalk';
+
 import { Workspace } from './workspace';
 
 export class CapsuleListCmd implements Command {

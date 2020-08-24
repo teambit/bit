@@ -1,21 +1,22 @@
 /**
  * this file had been forked from https://github.com/dependents/node-precinct
  */
-import fs from 'fs';
-import path from 'path';
-import getModuleType from 'module-definition';
-import Walker from 'node-source-walk';
 import detectiveAmd from 'detective-amd';
 import detectiveStylus from 'detective-stylus';
+import fs from 'fs';
+import getModuleType from 'module-definition';
+import Walker from 'node-source-walk';
+import path from 'path';
+
+import { SUPPORTED_EXTENSIONS } from '../../../../../constants';
+import detectiveCss from '../detectives/detective-css';
 import detectiveEs6 from '../detectives/detective-es6';
 import detectiveLess from '../detectives/detective-less';
 import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
-import detectiveCss from '../detectives/detective-css';
-import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveStylable from '../detectives/detective-stylable';
+import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveVue from '../detectives/detective-vue';
-import { SUPPORTED_EXTENSIONS } from '../../../../../constants';
 
 const debug = require('debug')('precinct');
 

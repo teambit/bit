@@ -1,5 +1,5 @@
-import Capsule from '../../legacy-capsule/core/capsule';
 import FsContainer from '../../legacy-capsule/container/fs-container';
+import Capsule from '../../legacy-capsule/core/capsule';
 
 export default (async function createCapsule(type = 'fs', dir?: string): Promise<Capsule> {
   const containerFactory = getContainerFactory();

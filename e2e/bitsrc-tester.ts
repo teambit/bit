@@ -1,4 +1,5 @@
 import requestify from 'requestify';
+
 import { BASE_WEB_DOMAIN } from '../src/constants';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_WEB_DOMAIN}` : `https://api-stg.${BASE_WEB_DOMAIN}`;

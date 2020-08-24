@@ -1,10 +1,10 @@
-import logger from '../../logger/logger';
 import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
-import Consumer from '../consumer';
+import logger from '../../logger/logger';
 import DataToPersist from '../component/sources/data-to-persist';
-import RemovePath from '../component/sources/remove-path';
 import Dists from '../component/sources/dists';
+import RemovePath from '../component/sources/remove-path';
+import Consumer from '../consumer';
 
 export default (async function deleteComponentsFiles(
   consumer: Consumer,

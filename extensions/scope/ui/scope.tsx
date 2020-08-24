@@ -1,18 +1,18 @@
-import React, { useReducer } from 'react';
-import { Route } from 'react-router-dom';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
+import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
-import { TopBar } from '@teambit/staged-components.top-bar';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { Collapser } from '@teambit/staged-components.side-bar';
+import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { TopBar } from '@teambit/staged-components.top-bar';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import React, { useReducer } from 'react';
+import { Route } from 'react-router-dom';
+
 import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
-import { useScope } from './use-scope';
-
 import styles from './scope.module.scss';
+import { useScope } from './use-scope';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -32,7 +32,6 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
     return <FullLoader />;
   }
 
-  const ids = scope.components.map((component) => component);
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>

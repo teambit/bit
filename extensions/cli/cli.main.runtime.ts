@@ -1,17 +1,18 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import commander from 'commander';
-import { splitWhen, equals } from 'ramda';
-import didYouMean from 'didyoumean';
-import { Command } from 'bit-bin/dist/cli/command';
-import CommandRegistry from './registry';
-import { register } from 'bit-bin/dist/cli/command-registry';
-import { AlreadyExistsError } from './exceptions/already-exists';
-import { Help } from './commands/help.cmd';
 import { buildRegistry } from 'bit-bin/dist/cli';
+import { Command } from 'bit-bin/dist/cli/command';
+import { register } from 'bit-bin/dist/cli/command-registry';
 import LegacyLoadExtensions from 'bit-bin/dist/legacy-extensions/extensions-loader';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
-import { CommandNotFound } from './exceptions/command-not-found';
+import commander from 'commander';
+import didYouMean from 'didyoumean';
+import { equals, splitWhen } from 'ramda';
+
 import { CLIAspect, MainRuntime } from './cli.aspect';
+import { Help } from './commands/help.cmd';
+import { AlreadyExistsError } from './exceptions/already-exists';
+import { CommandNotFound } from './exceptions/command-not-found';
+import { LegacyCommandAdapter } from './legacy-command-adapter';
+import CommandRegistry from './registry';
 
 export type OnStart = () => void;
 
@@ -138,7 +139,7 @@ export class CLIMain {
   }
 }
 
-export async function CLIProvider([cliExtension]: [CLIMain], onStartSlot: OnStartSlot) {
+export async function CLIProvider([cliExtension]: [CLIMain]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach((extension) => {

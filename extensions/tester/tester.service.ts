@@ -1,10 +1,11 @@
-import { join } from 'path';
 import { EnvService, ExecutionContext } from '@teambit/environments';
-import { Tester, TestResults } from './tester';
-import { detectTestFiles } from './utils';
 import { Workspace } from '@teambit/workspace';
+import { join } from 'path';
+
 import { NoTestFilesFound } from './exceptions';
+import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
+import { detectTestFiles } from './utils';
 
 export class TesterService implements EnvService {
   constructor(

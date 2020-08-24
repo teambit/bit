@@ -1,21 +1,22 @@
-import * as path from 'path';
-import R from 'ramda';
-import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Ajv from 'ajv';
+import fs from 'fs-extra';
+import * as path from 'path';
+import R from 'ramda';
 import semver from 'semver';
+
+import { Analytics } from '../analytics/analytics';
+import { BitId } from '../bit-id';
+import Environment from '../environment';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
-import { BitId } from '../bit-id';
-import { EnvExtensionOptions } from './env-extension-types';
-import { ExtensionOptions } from './extension';
-import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
-import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import { PathOsBased } from '../utils/path';
-import { Analytics } from '../analytics/analytics';
+import { EnvExtensionOptions } from './env-extension-types';
+import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import ExtensionLoadError from './exceptions/extension-load-error';
-import Environment from '../environment';
+import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import ExtensionSchemaError from './exceptions/extension-schema-error';
+import { ExtensionOptions } from './extension';
 
 const ajv = new Ajv();
 

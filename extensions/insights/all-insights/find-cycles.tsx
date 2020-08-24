@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
-import { Box, Text } from 'ink';
-import { Insight, InsightResult, RawResult } from '../insight';
 import { GraphBuilder } from '@teambit/graph';
+import { Box, Text } from 'ink';
+import React from 'react';
+
 import NoDataForInsight from '../exceptions/no-data-for-insight';
+import { Insight, InsightResult, RawResult } from '../insight';
 
 export const INSIGHT_NAME = 'cyclic dependencies';
 
