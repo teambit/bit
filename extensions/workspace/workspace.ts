@@ -1,14 +1,14 @@
 import path, { join } from 'path';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 import BluebirdPromise from 'bluebird';
 import { merge } from 'lodash';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { link } from 'bit-bin/dist/api/consumer';
-import { isCoreAspect, getCoreAspects } from '@teambit/bit';
+import { isCoreAspect, getAllCoreAspectsIds } from '@teambit/bit';
 import type { ScopeMain } from '@teambit/scope';
 import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
@@ -50,7 +50,6 @@ import { OnComponentLoad, ExtensionData } from './on-component-load';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ComponentConfigFile } from './component-config-file';
 import { WorkspaceExtConfig } from './types';
-import { getAllCoreAspectsIds } from '@teambit/bit';
 
 export type EjectConfResult = {
   configPath: string;
@@ -640,7 +639,7 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const coreAspectsIds = getCoreAspects();
+    const coreAspectsIds = getAllCoreAspectsIds();
     const userAspectsIds: string[] = difference(ids, coreAspectsIds);
     const componentIds = await Promise.all(userAspectsIds.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);

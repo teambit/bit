@@ -1,5 +1,5 @@
-import { PreviewAspect, PreviewPreview } from '@teambit/preview';
-import { PreviewRuntime } from '@teambit/preview';
+import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
+import { CompositionsAspect } from './compositions.aspect';
 
 export class CompositionsPreview {
   constructor(
@@ -42,4 +42,4 @@ export class CompositionsPreview {
   }
 }
 
-PreviewAspect.addRuntime(CompositionsPreview);
+CompositionsAspect.addRuntime(CompositionsPreview);
