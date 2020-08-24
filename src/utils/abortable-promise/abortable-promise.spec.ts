@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import AbortablePromise from './abortable-promise';
 import { MissingAbortFn } from './exceptions';
 

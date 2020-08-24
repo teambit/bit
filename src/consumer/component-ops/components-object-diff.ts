@@ -1,13 +1,14 @@
+import arrayDifference from 'array-difference';
+import chalk from 'chalk';
+import normalize from 'normalize-path';
+import diff from 'object-diff';
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
-import chalk from 'chalk';
-import diff from 'object-diff';
-import normalize from 'normalize-path';
-import arrayDifference from 'array-difference';
-import Component from '../component/consumer-component';
-import { FieldsDiff } from './components-diff';
+
 import { Consumer } from '..';
+import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
+import { FieldsDiff } from './components-diff';
 
 type ConfigDiff = {
   fieldName: string;

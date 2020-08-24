@@ -1,5 +1,6 @@
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Module from 'module';
+
 import filterObject from './filter-object';
 
 // remove any cached module path for a module name (Module._pathCache)

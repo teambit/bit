@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import BitId from '../../bit-id/bit-id';
 import ConsumerOverrides from './consumer-overrides';
 

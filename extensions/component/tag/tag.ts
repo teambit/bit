@@ -1,4 +1,5 @@
 import { SemVer } from 'semver';
+
 import { Snap, SnapProps } from '../snap';
 
 export type TagProps = {

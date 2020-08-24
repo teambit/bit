@@ -1,7 +1,8 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { PreviewType } from './preview-type';
+
 import { PreviewNotFound } from './exceptions';
-import { PreviewRuntime, PreviewAspect } from './preview.aspect';
+import { PreviewType } from './preview-type';
+import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 

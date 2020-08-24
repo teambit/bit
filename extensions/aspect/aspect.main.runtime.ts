@@ -1,8 +1,9 @@
-import { EnvsMain, EnvsAspect } from '@teambit/environments';
 import { MainRuntime } from '@teambit/cli';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { ReactAspect, ReactMain } from '@teambit/react';
-import { AspectEnv } from './aspect.env';
+
 import { AspectAspect } from './aspect.aspect';
+import { AspectEnv } from './aspect.env';
 
 export class AspectMain {
   static runtime = MainRuntime;

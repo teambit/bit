@@ -1,15 +1,15 @@
-import R from 'ramda';
-import chalk from 'chalk';
-import { exportAction } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from 'bit-bin/dist/constants';
-import { EjectResults } from 'bit-bin/dist/consumer/component-ops/eject-components';
-import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
-import GeneralError from 'bit-bin/dist/error/general-error';
-import { Lane } from 'bit-bin/dist/scope/models';
-import { throwForUsingLaneIfDisabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
-import { PublishResults } from 'bit-bin/dist/scope/component-ops/publish-during-export';
 import { Command, CommandOptions } from '@teambit/cli';
+import { exportAction } from 'bit-bin/dist/api/consumer';
+import { throwForUsingLaneIfDisabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
+import { BitId } from 'bit-bin/dist/bit-id';
+import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
+import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
+import { EjectResults } from 'bit-bin/dist/consumer/component-ops/eject-components';
+import GeneralError from 'bit-bin/dist/error/general-error';
+import { PublishResults } from 'bit-bin/dist/scope/component-ops/publish-during-export';
+import { Lane } from 'bit-bin/dist/scope/models';
+import chalk from 'chalk';
+import R from 'ramda';
 
 type ExportResults = {
   componentsIds: BitId[];

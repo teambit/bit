@@ -1,10 +1,11 @@
 import normalize from 'normalize-path';
 import R from 'ramda';
-import fileTypesPlugins from '../plugins/file-types-plugins';
-import { getWithoutExt, getExt } from '../utils';
-import logger from '../logger/logger';
-import { PathOsBased } from '../utils/path';
+
 import { ImportSpecifier } from '../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import logger from '../logger/logger';
+import fileTypesPlugins from '../plugins/file-types-plugins';
+import { getExt, getWithoutExt } from '../utils';
+import { PathOsBased } from '../utils/path';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",

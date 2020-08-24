@@ -1,54 +1,64 @@
-import path, { join } from 'path';
-import fs from 'fs-extra';
-import { slice } from 'lodash';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { getAspectDef } from '@teambit/aspect-loader';
+import { getAllCoreAspectsIds, isCoreAspect } from '@teambit/bit';
+import { MainRuntime } from '@teambit/cli';
+import type { ComponentMain } from '@teambit/component';
+import {
+  Component,
+  ComponentFactory,
+  ComponentFS,
+  ComponentID,
+  ComponentMap,
+  Config,
+  State,
+  TagMap,
+} from '@teambit/component';
+import { ComponentScopeDirMap } from '@teambit/config';
+import {
+  DependencyLifecycleType,
+  DependencyResolverMain,
+  PackageManagerInstallOptions,
+} from '@teambit/dependency-resolver';
+import { EnvsMain } from '@teambit/environments';
+import { Harmony } from '@teambit/harmony';
+import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
+import { Logger } from '@teambit/logger';
+import type { ScopeMain } from '@teambit/scope';
+import { RequireableComponent } from '@teambit/utils.requireable-component';
+import { ResolvedComponent } from '@teambit/utils.resolved-component';
+import type { VariantsMain } from '@teambit/variants';
+import { link } from 'bit-bin/dist/api/consumer';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
+import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
+import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
+import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
+import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import legacyLogger from 'bit-bin/dist/logger/logger';
+import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
+import { pathIsInside } from 'bit-bin/dist/utils';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PathOsBased, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
-import { merge } from 'lodash';
+import fs from 'fs-extra';
+import { merge, slice } from 'lodash';
+import path, { join } from 'path';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
-import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
-import { link } from 'bit-bin/dist/api/consumer';
-import { isCoreAspect } from '@teambit/bit';
-import type { ScopeMain } from '@teambit/scope';
-import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '@teambit/component';
-import type { ComponentMain } from '@teambit/component';
-import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { IsolatorMain, Network } from '@teambit/isolator';
-import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
-import { PathOsBasedRelative, PathOsBased } from 'bit-bin/dist/utils/path';
-import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
-import { DependencyResolverMain, PackageManagerInstallOptions } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import type { VariantsMain } from '@teambit/variants';
-import { ComponentScopeDirMap } from '@teambit/config';
-import legacyLogger from 'bit-bin/dist/logger/logger';
-import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import { pathIsInside } from 'bit-bin/dist/utils';
-import { Config } from '@teambit/component';
-import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
-import { IsolateComponentsOptions } from '@teambit/isolator';
-import { ComponentMap } from '@teambit/component';
-import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { ResolvedComponent } from '@teambit/utils.resolved-component';
-import { DependencyLifecycleType } from '@teambit/dependency-resolver';
-import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { RequireableComponent } from '@teambit/utils.requireable-component';
-import { EnvsMain } from '@teambit/environments';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect } from './workspace.aspect';
-import { ComponentStatus } from './workspace-component/component-status';
-import { WorkspaceComponent } from './workspace-component';
-import { Watcher } from './watch/watcher';
-import { OnComponentLoadSlot, OnComponentChangeSlot } from './workspace.provider';
-import { OnComponentLoad, ExtensionData } from './on-component-load';
-import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
+
 import { ComponentConfigFile } from './component-config-file';
+import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
+import { ExtensionData, OnComponentLoad } from './on-component-load';
 import { WorkspaceExtConfig } from './types';
+import { Watcher } from './watch/watcher';
+import { WorkspaceComponent } from './workspace-component';
+import { ComponentStatus } from './workspace-component/component-status';
+import { WorkspaceAspect } from './workspace.aspect';
+import { OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
 
 export type EjectConfResult = {
   configPath: string;
@@ -575,13 +585,16 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  async getGraph(components: Component[]) {
+  async getGraphWithoutCore(components: Component[]) {
     const loadComponentsFunc = async (ids: BitId[]) => {
       const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
       return loadedComps.map((c) => c.state._consumer);
     };
     const ids = components.map((component) => component.id._legacy);
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc);
+    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
+    const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
@@ -605,12 +618,12 @@ export class Workspace implements ComponentFactory {
     return res.filter((aspect) => !aspect.isCore).map((aspect) => aspect.component);
   }
 
+  // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     // TODO: @gilad we should make sure to cache this process.
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
-    // TODO: skip the loading of all core extensions to this graph. improve caching later.
-    const graph = await this.getGraph(components);
+    const graph = await this.getGraphWithoutCore(components);
 
     const allIds = graph.nodes().map((id) => {
       const consumerComponent = graph.node(id);
@@ -626,9 +639,8 @@ export class Workspace implements ComponentFactory {
       return data.type === 'aspect';
     });
 
-    const userAspects = await this.filterCoreAspects(aspects);
-
-    const requireableExtensions: any = await this.requireComponents(userAspects);
+    // no need to filter core aspects as they are not included in the graph
+    const requireableExtensions: any = await this.requireComponents(aspects);
     await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
   }
 
@@ -636,9 +648,11 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
+    const coreAspectsIds = getAllCoreAspectsIds();
+    const userAspectsIds: string[] = difference(ids, coreAspectsIds);
+    const componentIds = await Promise.all(userAspectsIds.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
-    const aspectDefs = this.aspectLoader.resolveAspects(components, async (component) => {
+    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       stringIds.push(component.id.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
@@ -653,18 +667,27 @@ export class Workspace implements ComponentFactory {
       };
     });
 
+    const coreAspectDefs = await Promise.all(
+      coreAspectsIds.map(async (coreId) => {
+        const rawDef = await getAspectDef(coreId, runtimeName);
+        return this.aspectLoader.loadDefinition(rawDef);
+      })
+    );
+
+    const coreAspectsInRuntime = coreAspectDefs.filter((coreAspect) => coreAspect.runtimePath);
+
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs;
+    return aspectDefs.concat(coreAspectsInRuntime);
   }
 
   /**
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {

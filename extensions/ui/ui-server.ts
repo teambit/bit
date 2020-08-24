@@ -1,18 +1,19 @@
-import { GraphqlMain } from '@teambit/graphql';
 import { ExpressMain } from '@teambit/express';
+import { GraphqlMain } from '@teambit/graphql';
 import { Logger } from '@teambit/logger';
-import { Server } from 'http';
-import { join } from 'path';
-import httpProxy from 'http-proxy';
-import WebpackDevServer from 'webpack-dev-server';
-import fallback from 'express-history-api-fallback';
-import webpack from 'webpack';
-import getPort from 'get-port';
 import express, { Express } from 'express';
-import { devConfig } from './webpack/webpack.dev.config';
-import { UiMain } from './ui.main.runtime';
-import { UIRoot, ProxyEntry } from './ui-root';
+import fallback from 'express-history-api-fallback';
+import getPort from 'get-port';
+import { Server } from 'http';
+import httpProxy from 'http-proxy';
+import { join } from 'path';
+import webpack from 'webpack';
+import WebpackDevServer from 'webpack-dev-server';
+
+import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
+import { UiMain } from './ui.main.runtime';
+import { devConfig } from './webpack/webpack.dev.config';
 
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');

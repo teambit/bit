@@ -1,11 +1,12 @@
 import { Graph as GraphLib } from 'graphlib';
 import R from 'ramda';
-import Consumer from '../../consumer/consumer';
-import ComponentsList from '../../consumer/component/components-list';
-import Component from '../../consumer/component';
-import { ModelComponent, Version } from '../models';
+
 import { BitId } from '../../bit-id';
+import Component from '../../consumer/component';
+import ComponentsList from '../../consumer/component/components-list';
+import Consumer from '../../consumer/consumer';
 import { loadScope } from '../index';
+import { ModelComponent, Version } from '../models';
 import Scope from '../scope';
 
 export default class Graph extends GraphLib {

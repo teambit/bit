@@ -1,18 +1,19 @@
 import pMapSeries from 'p-map-series';
-import { BitId } from '../../bit-id';
-import { LaneComponent } from '../../scope/models/lane';
-import { getMergeStrategyInteractive } from '../versions-ops/merge-version';
+
 import { Consumer } from '..';
-import { ComponentStatus, applyVersion, CheckoutProps } from '../versions-ops/checkout-version';
-import { Tmp } from '../../scope/repositories';
-import GeneralError from '../../error/general-error';
+import { BitId } from '../../bit-id';
 import { DEFAULT_LANE } from '../../constants';
-import ManyComponentsWriter from '../component-ops/many-components-writer';
+import GeneralError from '../../error/general-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
-import createNewLane from './create-lane';
-import WorkspaceLane from '../bit-map/workspace-lane';
 import { Version } from '../../scope/models';
+import { LaneComponent } from '../../scope/models/lane';
+import { Tmp } from '../../scope/repositories';
+import WorkspaceLane from '../bit-map/workspace-lane';
+import ManyComponentsWriter from '../component-ops/many-components-writer';
+import { applyVersion, CheckoutProps, ComponentStatus } from '../versions-ops/checkout-version';
+import { getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
+import createNewLane from './create-lane';
 
 export type SwitchProps = {
   create: boolean;

@@ -1,4 +1,4 @@
-import { toBase64, fromBase64, isString } from '../utils';
+import { fromBase64, isString, toBase64 } from '../utils';
 
 export const pack = (x: Array<string> | string): string => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

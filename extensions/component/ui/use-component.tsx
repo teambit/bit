@@ -1,6 +1,7 @@
 import { useRouteMatch } from 'react-router-dom';
-import { ComponentModel } from './component-model';
+
 import { ComponentID } from '../id';
+import { ComponentModel } from './component-model';
 import { useComponentQuery } from './use-component-query';
 
 export function useComponent(host: string, id?: ComponentID): ComponentModel | undefined {

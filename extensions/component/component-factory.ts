@@ -1,9 +1,15 @@
+import { BitId } from 'bit-bin/dist/bit-id';
+
 import { Component } from './component';
 import { ComponentID } from './id';
 import { State } from './state';
-import { BitId } from 'bit-bin/dist/bit-id';
 
 export interface ComponentFactory {
+  /**
+   * name of the component host.
+   */
+  name: string;
+
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**

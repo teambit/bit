@@ -1,32 +1,33 @@
-import { SemVer } from 'semver';
-import R from 'ramda';
-import fs from 'fs-extra';
-import { SlotRegistry, Slot } from '@teambit/harmony';
-import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
+import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
+// TODO: it's weird we take it from here.. think about it../workspace/utils
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
+import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import fs from 'fs-extra';
+import R from 'ramda';
+import { SemVer } from 'semver';
+
+import { ROOT_NAME } from './constants';
+import { DependencyGraph } from './dependency-graph';
+import { DependencyInstaller } from './dependency-installer';
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
+import { PackageManagerNotFound } from './exceptions';
+import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
+import { PackageManager } from './package-manager';
 import {
+  DependenciesObjectDefinition,
   DependenciesPolicy,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
-  DependenciesObjectDefinition,
   WorkspaceDependenciesPolicy,
 } from './types';
-import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PackageManager } from './package-manager';
-// TODO: it's weird we take it from here.. think about it../workspace/utils
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { DependencyInstaller } from './dependency-installer';
-import { PackageManagerNotFound } from './exceptions';
-import { Component } from '@teambit/component';
-import { DependencyGraph } from './dependency-graph';
-import { WorkspaceManifest, CreateFromComponentsOptions } from './manifest/workspace-manifest';
-import { ROOT_NAME } from './constants';
-import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
-import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { EnvsMain, EnvsAspect } from '@teambit/environments';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;

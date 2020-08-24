@@ -1,12 +1,13 @@
-import { TypescriptAspect } from './typescript.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { TypescriptCompiler } from './typescript.compiler';
-import { SchemaAspect } from '@teambit/schema';
-import type { SchemaMain } from '@teambit/schema';
-import { TypeScriptParser } from './typescript.parser';
-import { TypeScriptCompilerOptions } from './compiler-options';
 import { Compiler } from '@teambit/compiler';
-import { Logger, LoggerMain, LoggerAspect } from '@teambit/logger';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
+
+import { TypeScriptCompilerOptions } from './compiler-options';
+import { TypescriptAspect } from './typescript.aspect';
+import { TypescriptCompiler } from './typescript.compiler';
+import { TypeScriptParser } from './typescript.parser';
 
 export class TypescriptMain {
   constructor(private logger: Logger) {}

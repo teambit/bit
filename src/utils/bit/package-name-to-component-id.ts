@@ -1,7 +1,8 @@
 import R from 'ramda';
-import { Consumer } from '../../consumer';
+
 import { BitId } from '../../bit-id';
 import { NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
+import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 
 /**

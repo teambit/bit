@@ -1,10 +1,10 @@
 import * as path from 'path';
 import R from 'ramda';
-import { PathLinux } from '../../../utils/path';
+
+import { DEFAULT_INDEX_EXTS, DEFAULT_INDEX_NAME, DEFAULT_SEPARATOR } from '../../../constants';
+import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 import { MissingMainFile } from '../../bit-map/exceptions';
-import { DEFAULT_INDEX_EXTS, DEFAULT_INDEX_NAME, DEFAULT_SEPARATOR } from '../../../constants';
-import { pathJoinLinux, pathNormalizeToLinux } from '../../../utils/path';
 import { AddedComponent } from './add-components';
 
 export default function determineMainFile(

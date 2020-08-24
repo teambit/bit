@@ -1,16 +1,17 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import * as pathlib from 'path';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { initScope } from '../../../api/scope';
+import R from 'ramda';
+
 import { init } from '../../../api/consumer';
+import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
+import { initScope } from '../../../api/scope';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
+import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
-import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
-import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
-import { addFeature, HARMONY_FEATURE } from '../../../api/consumer/lib/feature-toggle';
+import clean from '../../../utils/object-clean';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Init implements LegacyCommand {
   name = 'init [path]';

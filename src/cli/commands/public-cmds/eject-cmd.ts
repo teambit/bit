@@ -1,6 +1,6 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import ejectTemplate from '../../templates/eject-template';
 
 export default class Eject implements LegacyCommand {

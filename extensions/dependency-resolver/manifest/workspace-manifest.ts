@@ -1,20 +1,21 @@
-import { SemVer } from 'semver';
-import {
-  DependenciesObjectDefinition,
-  PackageName,
-  ComponentsManifestsMap,
-  SemverVersion,
-  DepObjectValue,
-} from '../types';
-import { Manifest, ManifestToJsonOptions } from './manifest';
-import { ComponentManifest } from './component-manifest';
 import { Component, ComponentID } from '@teambit/component';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
-import { dedupeDependencies, DedupedDependencies, getEmptyDedupedDependencies } from './deduping';
-import { Dependency, DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
-import { MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
 import { BitId } from 'bit-bin/dist/bit-id';
+import { DependenciesFilterFunction, Dependency } from 'bit-bin/dist/consumer/component/dependencies';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { SemVer } from 'semver';
+
+import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
+import { MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
+import {
+  ComponentsManifestsMap,
+  DependenciesObjectDefinition,
+  DepObjectValue,
+  PackageName,
+  SemverVersion,
+} from '../types';
+import { ComponentManifest } from './component-manifest';
+import { DedupedDependencies, dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
+import { Manifest, ManifestToJsonOptions } from './manifest';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
@@ -34,6 +35,7 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
 };
 export class WorkspaceManifest extends Manifest {
   constructor(
+    // TODO: please prefer readonly on public
     public name: string,
     public version: SemVer,
     public dependencies: DependenciesObjectDefinition,
@@ -85,6 +87,8 @@ export class WorkspaceManifest extends Manifest {
     );
     return workspaceManifest;
   }
+
+  getComponentMap() {}
 
   toJson(options: WorkspaceManifestToJsonOptions = {}): Record<string, any> {
     const manifest = super.toJson(options);

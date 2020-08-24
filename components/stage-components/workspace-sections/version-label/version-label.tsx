@@ -1,7 +1,8 @@
-import React from 'react';
-import classNames from 'classnames';
-import styles from './version-label.module.scss';
 import { PillLabel } from '@teambit/staged-components.pill-label';
+import classNames from 'classnames';
+import React from 'react';
+
+import styles from './version-label.module.scss';
 
 type VersionLabelProps = {
   status: 'latest' | 'checked-out';

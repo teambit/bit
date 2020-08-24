@@ -1,5 +1,6 @@
+import { Request, Response, Route } from '@teambit/express';
 import mime from 'mime';
-import { Route, Request, Response } from '@teambit/express';
+
 import { PreviewMain } from './preview.main.runtime';
 
 export class PreviewRoute implements Route {

@@ -1,15 +1,16 @@
-import { join } from 'path';
-import { PackageManager, PackageManagerInstallOptions, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
   DependenciesObjectDefinition,
+  DependencyResolverMain,
+  PackageManager,
+  PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { PkgMain } from '@teambit/pkg';
-
-const userHome = require('user-home');
+import { join } from 'path';
+import userHome from 'user-home';
 
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
@@ -20,6 +21,7 @@ export class PnpmPackageManager implements PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir
       ? join(installOptions?.cacheRootDir, '.pnpm-store')

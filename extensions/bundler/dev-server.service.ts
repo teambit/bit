@@ -1,11 +1,12 @@
 import { EnvService, ExecutionContext } from '@teambit/environments';
-import { DevServer } from './dev-server';
-import { selectPort } from './select-port';
-import { ComponentServer } from './component-server';
-import { BrowserRuntimeSlot } from './bundler.main.runtime';
-import { DevServerContext } from './dev-server-context';
 import { UIRoot } from '@teambit/ui';
+
+import { BrowserRuntimeSlot } from './bundler.main.runtime';
+import { ComponentServer } from './component-server';
+import { DevServer } from './dev-server';
+import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
+import { selectPort } from './select-port';
 
 export class DevServerService implements EnvService {
   constructor(

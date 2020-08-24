@@ -1,10 +1,11 @@
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import fs from 'fs-extra';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
-import * as fixtures from '../../src/fixtures/fixtures';
+import * as path from 'path';
+
 import { BASE_WEB_DOMAIN } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
+import BitsrcTester, { supportTestingOnBitsrc, username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 

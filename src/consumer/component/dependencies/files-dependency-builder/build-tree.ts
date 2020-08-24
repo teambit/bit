@@ -1,20 +1,20 @@
+import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-import { set } from 'lodash';
-import generateTree from './generate-tree-madge';
+
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
-import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
-import { PathMapItem } from './path-map';
+import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
+import { PathOsBased } from '../../../../utils/path';
+import generateTree from './generate-tree-madge';
+import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
+import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
 import {
-  Tree,
+  DependencyTreeParams,
   FileObject,
   ImportSpecifier,
-  DependencyTreeParams,
   ResolveModulesConfig,
+  Tree,
 } from './types/dependency-tree-type';
-import { PathOsBased } from '../../../../utils/path';
-import { MissingGroupItem, MissingHandler, FoundPackages } from './missing-handler';
-import { resolvePackageData, ResolvedPackageData } from '../../../../utils/packages';
 
 export type LinkFile = {
   file: string;

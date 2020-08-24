@@ -1,9 +1,10 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
 import symlinkOrCopy from 'symlink-or-copy';
+
+import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
 import { PathOsBased } from '../path';
-import ShowDoctorError from '../../error/show-doctor-error';
 
 /**
  * @param srcPath the path where the symlink is pointing to

@@ -1,14 +1,15 @@
-import v4 from 'uuid';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { Scope, ComponentWithDependencies } from '../scope';
+import v4 from 'uuid';
+
 import { BitId, BitIds } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
-import { outputFile } from '../utils';
-import logger from '../logger/logger';
 import { Consumer } from '../consumer';
-import { PathOsBased } from '../utils/path';
 import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
+import logger from '../logger/logger';
+import { ComponentWithDependencies, Scope } from '../scope';
+import { outputFile } from '../utils';
+import { PathOsBased } from '../utils/path';
 import { IsolateOptions } from './isolator';
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';

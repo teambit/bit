@@ -1,10 +1,10 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { show } from '../../../api/consumer';
-import paintComponent from '../../templates/component-template';
-import ConsumerComponent from '../../../consumer/component/consumer-component';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import ConsumerComponent from '../../../consumer/component/consumer-component';
 import GeneralError from '../../../error/general-error';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import paintComponent from '../../templates/component-template';
 
 export default class Show implements LegacyCommand {
   name = 'show <id>';

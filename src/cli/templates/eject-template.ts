@@ -1,6 +1,7 @@
 import chalk from 'chalk';
-import { EjectResults } from '../../consumer/component-ops/eject-components';
+
 import { BASE_WEB_DOMAIN } from '../../constants';
+import { EjectResults } from '../../consumer/component-ops/eject-components';
 
 export const successEjectMessage = 'successfully ejected the following components';
 export const failureEjectMessage = 'failed to eject the following components';

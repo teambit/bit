@@ -1,4 +1,5 @@
 import semver from 'semver';
+
 import BitMap from '../../bit-map';
 
 /**

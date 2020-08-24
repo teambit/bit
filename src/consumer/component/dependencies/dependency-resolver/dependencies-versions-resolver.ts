@@ -1,18 +1,19 @@
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
+
 import { BitId } from '../../../../bit-id';
-import Component from '../../../component/consumer-component';
-import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
-import { PathLinux } from '../../../../utils/path';
-import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
-import Dependencies from '../dependencies';
+import logger from '../../../../logger/logger';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
-import Dependency from '../dependency';
+import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
+import { resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
+import { PathLinux } from '../../../../utils/path';
+import Component from '../../../component/consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
-import { resolvePackagePath, resolvePackageData } from '../../../../utils/packages';
 import { throwForNonLegacy } from '../../component-schema';
+import Dependencies from '../dependencies';
+import Dependency from '../dependency';
 
 /**
  * The dependency version is determined by the following strategies by this order.

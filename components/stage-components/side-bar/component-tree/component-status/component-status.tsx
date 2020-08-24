@@ -1,13 +1,18 @@
-import React from 'react';
 import classNames from 'classnames';
-import styles from './component-status.module.scss';
+import React from 'react';
+
 import { StatusTypes } from '../recursive-tree';
+import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {
   status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ComponentStatus({ status, className }: ComponentStatusProps) {
+export function ComponentStatus({ status, className, ...rest }: ComponentStatusProps) {
   if (!status) return null;
-  return <div className={classNames(styles.status, styles[status], className)}>{status[0].toUpperCase()}</div>;
+  return (
+    <div {...rest} className={classNames(styles.status, styles[status], className)}>
+      {status[0].toUpperCase()}
+    </div>
+  );
 }

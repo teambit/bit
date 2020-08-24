@@ -1,11 +1,11 @@
-import ConsumerNotFound from './consumer-not-found';
-import ConsumerAlreadyExists from './consumer-already-exists';
-import NothingToImport from './nothing-to-import';
+import ComponentOutOfSync from './component-out-of-sync';
 import ComponentSpecsFailed from './component-specs-failed';
+import ConsumerAlreadyExists from './consumer-already-exists';
+import ConsumerNotFound from './consumer-not-found';
+import LoginFailed from './login-failed';
 import MissingDependencies from './missing-dependencies';
 import NewerVersionFound from './newer-version-found';
-import LoginFailed from './login-failed';
-import ComponentOutOfSync from './component-out-of-sync';
+import NothingToImport from './nothing-to-import';
 
 export {
   ConsumerNotFound,

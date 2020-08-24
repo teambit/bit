@@ -1,7 +1,8 @@
-import * as path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import * as path from 'path';
+
 import { WRAPPER_DIR } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 const fixturePackageJson = { name: 'nice-package' };
 const fixturePackageJsonV2 = { name: 'nice-package-v2' }; // name must be valid, otherwise, npm skips it and install from nested dirs

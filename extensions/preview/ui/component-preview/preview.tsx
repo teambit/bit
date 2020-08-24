@@ -1,5 +1,5 @@
-import React, { CSSProperties } from 'react';
 import { ComponentModel } from '@teambit/component';
+import React, { CSSProperties } from 'react';
 
 export type ComponentPreviewProps = {
   /**

@@ -1,9 +1,10 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { SchemaAspect } from './schema.aspect';
 import { MainRuntime } from '@teambit/cli';
-import { Module } from './schemas';
-import { Parser } from './parser';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+
 import { ParserNotFound } from './exceptions';
+import { Parser } from './parser';
+import { SchemaAspect } from './schema.aspect';
+import { Module } from './schemas';
 
 export type ParserSlot = SlotRegistry<Parser>;
 

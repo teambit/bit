@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
-import isDirEmpty from './is-dir-empty';
+
 import logger from '../../logger/logger';
+import isDirEmpty from './is-dir-empty';
 
 export default (async function removeEmptyDir(dirPath: string): Promise<boolean> {
   const isExist = await fs.pathExists(dirPath);

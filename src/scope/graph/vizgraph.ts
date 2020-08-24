@@ -1,11 +1,12 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import execa from 'execa';
-import graphviz, { Digraph } from 'graphviz';
+import fs from 'fs-extra';
 import { Graph } from 'graphlib';
-import logger from '../../logger/logger';
+import graphviz, { Digraph } from 'graphviz';
+import * as path from 'path';
+
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
+import logger from '../../logger/logger';
 import { getLatestVersionNumber } from '../../utils';
 
 // const Graph = GraphLib.Graph;

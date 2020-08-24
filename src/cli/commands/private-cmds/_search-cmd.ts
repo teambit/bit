@@ -1,11 +1,11 @@
-import { LegacyCommand } from '../../legacy-command';
-import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
-import { searchAdapter } from '../../../search';
-import { Doc } from '../../../search/indexer';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { searchAdapter } from '../../../search';
+import { Doc } from '../../../search/indexer';
+import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 export default class Search implements LegacyCommand {

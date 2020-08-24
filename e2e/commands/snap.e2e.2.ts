@@ -1,13 +1,14 @@
-import path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { HASH_SIZE } from '../../src/constants';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { MergeConflictOnRemote } from '../../src/scope/exceptions';
-import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
+import fs from 'fs-extra';
+import path from 'path';
+
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { HASH_SIZE } from '../../src/constants';
+import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
+import { MergeConflictOnRemote } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 

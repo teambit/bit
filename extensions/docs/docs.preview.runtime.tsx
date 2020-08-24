@@ -1,6 +1,6 @@
-import { PreviewPreview, PreviewAspect } from '@teambit/preview';
-import { PreviewRuntime } from '@teambit/preview';
 import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
+import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
+
 import { DocsAspect } from './docs.aspect';
 
 export class DocsPreview {

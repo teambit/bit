@@ -1,18 +1,17 @@
-import * as path from 'path';
 import chalk from 'chalk';
+import * as path from 'path';
+
 import { BitId, BitIds } from '../../../bit-id';
-import Component from '../../component/consumer-component';
-import Consumer from '../../consumer';
-import SourceFile from '../../component/sources/source-file';
-import { resolveConflictPrompt } from '../../../prompts';
-import { pathNormalizeToLinux } from '../../../utils/path';
-import twoWayMergeVersions from './two-way-merge';
-import { MergeResultsTwoWay } from './two-way-merge';
-import { PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
-import ComponentWriter from '../../component-ops/component-writer';
-import { Tmp } from '../../../scope/repositories';
+import { resolveConflictPrompt } from '../../../prompts';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import { Tmp } from '../../../scope/repositories';
+import { pathNormalizeToLinux, PathOsBased } from '../../../utils/path';
+import ComponentWriter from '../../component-ops/component-writer';
+import Component from '../../component/consumer-component';
+import SourceFile from '../../component/sources/source-file';
+import Consumer from '../../consumer';
+import twoWayMergeVersions, { MergeResultsTwoWay } from './two-way-merge';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };

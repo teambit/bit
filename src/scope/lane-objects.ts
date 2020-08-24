@@ -1,6 +1,6 @@
-import BitObject from './objects/object';
 import { toBase64ArrayBuffer } from '../utils';
 import { Lane } from './models';
+import BitObject from './objects/object';
 
 export default class LaneObjects {
   lane: Buffer;

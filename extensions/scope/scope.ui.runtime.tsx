@@ -1,15 +1,14 @@
-import React from 'react';
-import { Slot } from '@teambit/harmony';
-import { RouteProps } from 'react-router-dom';
-import { RouteSlot } from '@teambit/react-router';
-import { UIRootUI as UIRoot } from '@teambit/ui';
-import { UIAspect } from '@teambit/ui';
-import type { UiUI } from '@teambit/ui';
-import { Scope } from './ui/scope';
-import { ComponentAspect } from '@teambit/component';
 import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import { Slot } from '@teambit/harmony';
+import { RouteSlot } from '@teambit/react-router';
+import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
+import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
+import React from 'react';
+import { RouteProps } from 'react-router-dom';
+
 import { ScopeAspect } from './scope.aspect';
-import { UIRuntime } from '@teambit/ui';
+import { Scope } from './ui/scope';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -29,7 +28,8 @@ export class ScopeUI {
     /**
      * menu slot
      */
-    private menuSlot: RouteSlot
+    private menuSlot: RouteSlot,
+    private sidebar: SidebarUI
   ) {
     this.registerExplicitRoutes();
   }
@@ -59,20 +59,24 @@ export class ScopeUI {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} />,
+          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} sidebar={<this.sidebar.render />} />,
         },
       ],
     };
   }
 
-  static dependencies = [UIAspect, ComponentAspect];
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
-  static async provider([ui, componentUi]: [UiUI, ComponentUI], config, [routeSlot, menuSlot]: [RouteSlot, RouteSlot]) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot);
+  static async provider(
+    [ui, componentUi, sidebar]: [UiUI, ComponentUI, SidebarUI],
+    config,
+    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+  ) {
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
     ui.registerRoot(scopeUi.root);
 
     return scopeUi;

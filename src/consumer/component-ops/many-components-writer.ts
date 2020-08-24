@@ -1,26 +1,26 @@
-import * as path from 'path';
-import R from 'ramda';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
-import { moveExistingComponent } from './move-components';
-import { getAllComponentsLinks } from '../../links';
-import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
-import * as packageJsonUtils from '../component/package-json-utils';
-import { ComponentWithDependencies } from '../../scope';
-import Component from '../component/consumer-component';
-import { COMPONENT_ORIGINS, DEFAULT_DIR_DEPENDENCIES } from '../../constants';
-import logger from '../../logger/logger';
-import Consumer from '../consumer';
-import { isDir, isDirEmptySync } from '../../utils';
-import GeneralError from '../../error/general-error';
-import ComponentMap from '../bit-map/component-map';
-import ComponentWriter from './component-writer';
-import { ComponentWriterProps } from './component-writer';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import DataToPersist from '../component/sources/data-to-persist';
-import BitMap from '../bit-map';
-import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
+import * as path from 'path';
+import R from 'ramda';
+
 import { BitId } from '../../bit-id';
+import { COMPONENT_ORIGINS, DEFAULT_DIR_DEPENDENCIES } from '../../constants';
+import GeneralError from '../../error/general-error';
+import { getAllComponentsLinks } from '../../links';
+import logger from '../../logger/logger';
+import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
+import { ComponentWithDependencies } from '../../scope';
+import { isDir, isDirEmptySync } from '../../utils';
+import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import BitMap from '../bit-map';
+import ComponentMap from '../bit-map/component-map';
+import Component from '../component/consumer-component';
+import * as packageJsonUtils from '../component/package-json-utils';
+import DataToPersist from '../component/sources/data-to-persist';
+import Consumer from '../consumer';
+import ComponentWriter, { ComponentWriterProps } from './component-writer';
+import { moveExistingComponent } from './move-components';
 
 interface ExternalPackageInstaller {
   install: Function;

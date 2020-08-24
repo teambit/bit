@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
-import { ComponentContext } from './component-context';
+
 import { ComponentModel } from '../component-model';
+import { ComponentContext } from './component-context';
 
 export type ComponentProviderProps = {
   /**

@@ -1,6 +1,6 @@
-import { loadScope, Scope } from '../../../scope';
 import GeneralError from '../../../error/general-error';
 import LaneId from '../../../lane-id/lane-id';
+import { loadScope, Scope } from '../../../scope';
 
 export default async function catLane(name: string) {
   const scope: Scope = await loadScope();

@@ -1,7 +1,8 @@
-import React from 'react';
 import { Command, CommandOptions } from '@teambit/cli';
-import type { UiMain } from './ui.main.runtime';
+import React from 'react';
+
 import { UIServerConsole } from './env-console';
+import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';

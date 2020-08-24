@@ -1,9 +1,9 @@
-import { loadScope, Scope, ComponentWithDependencies } from '../../../scope';
-import { loadConsumer } from '../../../consumer';
-import logger from '../../../logger/logger';
 import BitId from '../../../bit-id/bit-id';
-import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
+import { loadConsumer } from '../../../consumer';
 import Isolator, { IsolateOptions } from '../../../environment/isolator';
+import logger from '../../../logger/logger';
+import { ComponentWithDependencies, loadScope, Scope } from '../../../scope';
+import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 
 export interface WorkspaceIsolateOptions extends IsolateOptions {

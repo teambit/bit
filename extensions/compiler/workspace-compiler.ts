@@ -1,22 +1,21 @@
 /* eslint-disable max-classes-per-file */
-import path from 'path';
-import BluebirdPromise from 'bluebird';
-import { Workspace } from '@teambit/workspace';
+import { Component, ComponentID } from '@teambit/component';
+import { EnvsMain } from '@teambit/environments';
+import { OnComponentChangeResult, Workspace } from '@teambit/workspace';
+import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
-import logger from 'bit-bin/dist/logger/logger';
-import loader from 'bit-bin/dist/cli/loader';
 import { Dist, SourceFile } from 'bit-bin/dist/consumer/component/sources';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { Compiler } from './types';
-import { ComponentID } from '@teambit/component';
-import { Component } from '@teambit/component';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
-import { OnComponentChangeResult } from '@teambit/workspace';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
-import { EnvsMain } from '@teambit/environments';
+import logger from 'bit-bin/dist/logger/logger';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import BluebirdPromise from 'bluebird';
+import path from 'path';
+
+import { Compiler } from './types';
 
 type BuildResult = { component: string; buildResults: string[] | null | undefined };
 

@@ -2,7 +2,6 @@ import React from 'react';
 
 import { Notification } from '../notification';
 import { Message } from '../notification-context';
-
 import styles from './notification-center.module.scss';
 
 export type NotificationCenterProps = {

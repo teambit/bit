@@ -1,7 +1,6 @@
-import { loadConsumer, Consumer } from '../../../consumer';
+import { Consumer, loadConsumer } from '../../../consumer';
+import EjectComponents, { EjectResults } from '../../../consumer/component-ops/eject-components';
 import GeneralError from '../../../error/general-error';
-import EjectComponents from '../../../consumer/component-ops/eject-components';
-import { EjectResults } from '../../../consumer/component-ops/eject-components';
 
 export default (async function eject(ids: string[], force: boolean): Promise<EjectResults> {
   if (!ids || !ids.length) {

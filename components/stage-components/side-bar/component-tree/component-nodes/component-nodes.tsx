@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { TreeNodeProps, TreeLayer } from '../recursive-tree';
-import { indentStyle, indentClass } from '../indent';
-import { getName } from '../utils/get-name';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
-import { StatusDot } from '../status-dot/status-dot';
-import styles from './component-nodes.module.scss';
+import classNames from 'classnames';
+import React, { useState } from 'react';
+
+import { indentClass, indentStyle } from '../indent';
 import { PayloadType } from '../payload-type';
+import { TreeLayer, TreeNodeProps } from '../recursive-tree';
+import { StatusDot } from '../status-dot/status-dot';
+import { getName } from '../utils/get-name';
+import styles from './component-nodes.module.scss';
 
 export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
   return (
@@ -21,7 +22,7 @@ export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
     </>
   );
 }
-export function NamespaceView({ node, depth, status }: TreeNodeProps<PayloadType>) {
+export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
   const [collapsed, collapse] = useState(false);
 
   return (
@@ -35,7 +36,7 @@ export function NamespaceView({ node, depth, status }: TreeNodeProps<PayloadType
             <Icon className={styles.arrow} of="fat-arrow-down" />
             <span className={styles.name}>{getName(node.id)}</span>
           </div>
-          <div className={styles.right}>{status && <StatusDot status="new" />}</div>
+          <div className={styles.right}>{<StatusDot status="new" />}</div>
         </div>
       )}
 

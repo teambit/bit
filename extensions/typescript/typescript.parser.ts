@@ -1,6 +1,6 @@
-import ts, { SourceFile, VariableStatement, isVariableStatement, isFunctionDeclaration } from 'typescript';
+import { Export, Module, Parser } from '@teambit/schema';
 import { readFileSync } from 'fs';
-import { Parser, Module, Export } from '@teambit/schema';
+import ts, { isFunctionDeclaration, isVariableStatement, SourceFile, VariableStatement } from 'typescript';
 
 export class TypeScriptParser implements Parser {
   public extension = /.ts/;

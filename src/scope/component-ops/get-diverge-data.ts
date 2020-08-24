@@ -1,7 +1,8 @@
 import R from 'ramda';
-import { Repository, Ref } from '../objects';
-import { ModelComponent, Version } from '../models';
+
 import { ParentNotFound } from '../exceptions';
+import { ModelComponent, Version } from '../models';
+import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
 import { getAllVersionHashes } from './traverse-versions';
 

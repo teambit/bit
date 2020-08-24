@@ -1,9 +1,10 @@
+import { AnyFS, NodeFS } from '@teambit/any-fs';
+import { Container, ContainerFactoryOptions, ContainerStatus, Exec, ExecOptions } from '@teambit/capsule';
+import execa from 'execa';
 import fs from 'fs-extra';
 import * as path from 'path';
-import execa from 'execa';
-import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
-import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { Stream } from 'stream';
+
 import ContainerExec from './container-exec';
 
 const debug = require('debug')('fs-container');

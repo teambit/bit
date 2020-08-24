@@ -1,4 +1,5 @@
 import { SemVer } from 'semver';
+
 import { DependenciesObjectDefinition } from '../types';
 
 export interface ManifestToJsonOptions {

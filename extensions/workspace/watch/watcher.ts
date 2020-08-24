@@ -1,16 +1,17 @@
+import { ComponentID } from '@teambit/component';
+import { build } from 'bit-bin/dist/api/consumer';
+import { BitId } from 'bit-bin/dist/bit-id';
+import loader from 'bit-bin/dist/cli/loader';
+import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from 'bit-bin/dist/constants';
+import { Consumer } from 'bit-bin/dist/consumer';
+import logger from 'bit-bin/dist/logger/logger';
+import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar from 'chokidar';
 import R from 'ramda';
-import chalk from 'chalk';
+
 import { Workspace } from '../workspace';
-import loader from 'bit-bin/dist/cli/loader';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from 'bit-bin/dist/constants';
-import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
-import { Consumer } from 'bit-bin/dist/consumer';
-import { ComponentID } from '@teambit/component';
-import logger from 'bit-bin/dist/logger/logger';
-import { build } from 'bit-bin/dist/api/consumer';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 

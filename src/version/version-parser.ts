@@ -1,7 +1,8 @@
 import semver from 'semver';
-import Version from './version';
-import { LATEST, LATEST_TESTED_MARK, HASH_SIZE } from '../constants';
+
+import { HASH_SIZE, LATEST, LATEST_TESTED_MARK } from '../constants';
 import { InvalidVersion } from './exceptions';
+import Version from './version';
 
 function isLatest(versionStr: string): boolean {
   return versionStr === LATEST;

@@ -1,8 +1,9 @@
-import pMapSeries from 'p-map-series';
-import { TaskProcess } from './task-process';
-import { BuildTask, BuildContext } from './types';
 import { Logger } from '@teambit/logger';
+import pMapSeries from 'p-map-series';
+
 import { InvalidTask } from './exceptions';
+import { TaskProcess } from './task-process';
+import { BuildContext, BuildTask } from './types';
 
 export class BuildPipe {
   constructor(

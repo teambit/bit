@@ -1,4 +1,5 @@
 import * as path from 'path';
+
 import removeEmptyDir from './remove-empty-dir';
 
 export default (async function removeContainingDirIfEmpty(componentDir: string): Promise<boolean> {

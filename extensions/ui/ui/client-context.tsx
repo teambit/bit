@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
 import { Theme } from '@teambit/base-ui-temp.theme.theme-provider';
+import React, { ReactNode } from 'react';
 
-import { useLoaderApi, LoaderContext, LoaderRibbon } from './global-loader';
+import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
 
 export function ClientContext({ children }: { children: ReactNode }) {
   const [loaderApi, isLoading] = useLoaderApi();

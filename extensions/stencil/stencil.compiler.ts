@@ -1,7 +1,6 @@
-import { transpileSync, TranspileOptions } from '@stencil/core/compiler';
-import { Compiler } from '@teambit/compiler';
+import { TranspileOptions, transpileSync } from '@stencil/core/compiler';
 import { BuildContext, BuildResults } from '@teambit/builder';
-import { TranspileOutput, TranspileOpts } from '@teambit/compiler';
+import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 
 export class StencilCompiler implements Compiler {
   constructor(private transpileOpts: TranspileOptions) {}

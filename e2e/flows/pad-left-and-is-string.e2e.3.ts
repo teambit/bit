@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
+
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
+import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));

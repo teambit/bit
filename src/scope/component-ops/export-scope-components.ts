@@ -1,28 +1,29 @@
 import graphLib, { Graph } from 'graphlib';
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
+import R from 'ramda';
+
 import { BitId, BitIds } from '../../bit-id';
+import { DEFAULT_LANE, Extensions, LATEST } from '../../constants';
+import GeneralError from '../../error/general-error';
+import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
-import { MergeConflictOnRemote, MergeConflict } from '../exceptions';
+import { Remote, Remotes } from '../../remotes';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import replacePackageName from '../../utils/string/replace-package-name';
 import ComponentObjects from '../component-objects';
+import CompsAndLanesObjects from '../comps-and-lanes-objects';
+import { MergeConflict, MergeConflictOnRemote } from '../exceptions';
+import ComponentNeedsUpdate from '../exceptions/component-needs-update';
+import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
+import LaneObjects from '../lane-objects';
+import { Lane, ModelComponent, Symlink, Version } from '../models';
+import Source from '../models/source';
+import { BitObject, Ref } from '../objects';
 import { ComponentTree, LaneTree } from '../repositories/sources';
-import { Ref, BitObject } from '../objects';
-import { ModelComponent, Symlink, Version, Lane } from '../models';
+import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
-import { Remotes, Remote } from '../../remotes';
-import Scope from '../scope';
-import { LATEST, DEFAULT_LANE, Extensions } from '../../constants';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import Source from '../models/source';
-import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import CompsAndLanesObjects from '../comps-and-lanes-objects';
-import LaneObjects from '../lane-objects';
-import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
-import GeneralError from '../../error/general-error';
-import replacePackageName from '../../utils/string/replace-package-name';
-import { RemoteLaneId } from '../../lane-id/lane-id';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future

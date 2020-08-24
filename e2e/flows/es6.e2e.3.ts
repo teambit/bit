@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('es6 components', function () {

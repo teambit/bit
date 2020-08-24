@@ -1,4 +1,5 @@
 import R from 'ramda';
+
 import BitId from '../../bit-id/bit-id';
 
 export default function isBitIdMatchByWildcards(bitId: BitId, idsWithWildcard: string[] | string): boolean {

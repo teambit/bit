@@ -1,11 +1,12 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
-import { ComponentID } from '../../id';
-import { TagMap } from '../../tag-map';
-import { Tag } from '../../tag';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/environments';
-import { TagProps } from '../../tag/tag';
 import { ComponentStatus } from '@teambit/workspace';
+
+import { ComponentID } from '../../id';
+import { Tag } from '../../tag';
+import { TagMap } from '../../tag-map';
+import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 
 export type ComponentModelProps = {
@@ -107,6 +108,10 @@ export class ComponentModel {
       deprecation,
       env
     );
+  }
+
+  static fromArray(componentsProps: ComponentModelProps[]) {
+    return componentsProps.map((rawComponent) => ComponentModel.from(rawComponent));
   }
 
   static empty() {

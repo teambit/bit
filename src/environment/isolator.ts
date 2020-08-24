@@ -1,31 +1,32 @@
-import R from 'ramda';
 import execa from 'execa';
-import * as path from 'path';
-import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import createCapsule from './capsule-factory';
-import Consumer from '../consumer/consumer';
-import { Scope, ComponentWithDependencies } from '../scope';
-import { BitId } from '../bit-id';
-import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
-import logger from '../logger/logger';
-import { FlattenedDependencyLoader } from '../consumer/component-ops/load-flattened-dependencies';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import Component from '../consumer/component/consumer-component';
-import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
-import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
-import npmClient from '../npm-client';
-import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
-import DataToPersist from '../consumer/component/sources/data-to-persist';
-import BitMap from '../consumer/bit-map';
-import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
-import GeneralError from '../error/general-error';
-import { PathOsBased } from '../utils/path';
-import loader from '../cli/loader';
-import { PackageManagerResults } from '../npm-client/npm-client';
-import { throwForNonLegacy } from '../consumer/component/component-schema';
+import * as path from 'path';
+import R from 'ramda';
+import semver from 'semver';
+
 import Capsule from '../../legacy-capsule/core/capsule';
+import { BitId } from '../bit-id';
+import loader from '../cli/loader';
+import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
+import BitMap from '../consumer/bit-map';
+import { FlattenedDependencyLoader } from '../consumer/component-ops/load-flattened-dependencies';
+import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
+import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
+import Component from '../consumer/component/consumer-component';
+import PackageJsonFile from '../consumer/component/package-json-file';
+import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
+import Consumer from '../consumer/consumer';
+import GeneralError from '../error/general-error';
+import logger from '../logger/logger';
+import npmClient from '../npm-client';
+import { PackageManagerResults } from '../npm-client/npm-client';
+import { ComponentWithDependencies, Scope } from '../scope';
+import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import { PathOsBased } from '../utils/path';
+import createCapsule from './capsule-factory';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to

@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import R from 'ramda';
-import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
-import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+
 import NothingToCompareTo from '../../src/api/consumer/lib/exceptions/nothing-to-compare-to';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 
 const assertArrays = require('chai-arrays');
 

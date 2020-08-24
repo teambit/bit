@@ -1,17 +1,17 @@
-import { ReplaySubject, from } from 'rxjs';
-import { mergeMap, map, filter, mergeAll, tap, concatAll } from 'rxjs/operators';
-
-import { Graph } from 'graphlib';
-import { EventEmitter } from 'events';
+import { ComponentID } from '@teambit/component';
+import { Capsule } from '@teambit/isolator';
 import { Workspace } from '@teambit/workspace';
 import { Consumer } from 'bit-bin/dist/consumer';
 import DependencyGraph from 'bit-bin/dist/scope/graph/scope-graph';
+import { EventEmitter } from 'events';
+import { Graph } from 'graphlib';
+import { from, ReplaySubject } from 'rxjs';
+import { concatAll, filter, map, mergeAll, mergeMap, tap } from 'rxjs/operators';
+
+import { Flow } from '../flow';
+import { toposortByLevels } from '../util/sort-graph-by-levels';
 import { ExecutionOptions } from './options';
 import { createSubGraph, getNeighborsByDirection } from './sub-graph';
-import { Flow } from '../flow';
-import { ComponentID } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
-import { toposortByLevels } from '../util/sort-graph-by-levels';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully

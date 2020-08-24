@@ -1,5 +1,6 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
 import { mapToObject } from '../utils';
 

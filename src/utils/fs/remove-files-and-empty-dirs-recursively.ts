@@ -1,8 +1,9 @@
-import * as path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
-import removeEmptyDir from './remove-empty-dir';
+import * as path from 'path';
+
 import logger from '../../logger/logger';
+import removeEmptyDir from './remove-empty-dir';
 
 /**
  * This function will remove the list of files from fs

@@ -1,13 +1,14 @@
-import React from 'react';
-import ApolloClient from 'apollo-client';
-import { HttpLink } from 'apollo-link-http';
-import { ApolloLink } from 'apollo-link';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { WebSocketLink } from 'apollo-link-ws';
-import { onError } from 'apollo-link-error';
-import { GraphQLProvider } from './graphql-provider';
-import { createLink } from './create-link';
 import { UIRuntime } from '@teambit/ui';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
+import { ApolloLink } from 'apollo-link';
+import { onError } from 'apollo-link-error';
+import { HttpLink } from 'apollo-link-http';
+import { WebSocketLink } from 'apollo-link-ws';
+import React from 'react';
+
+import { createLink } from './create-link';
+import { GraphQLProvider } from './graphql-provider';
 import { GraphqlAspect } from './graphql.aspect';
 
 export class GraphqlUI {
@@ -17,6 +18,10 @@ export class GraphqlUI {
      */
     private client: ApolloClient<any>
   ) {}
+
+  async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
+    return this.client.query(options);
+  }
 
   /**
    * get the graphQL provider

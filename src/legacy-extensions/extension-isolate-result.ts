@@ -1,11 +1,12 @@
 import path from 'path';
 import Vinyl from 'vinyl';
-import { ComponentWithDependencies } from '../scope';
-import Isolator from '../environment/isolator';
-import ConsumerComponent from '../consumer/component';
-import { Dist, AbstractVinyl } from '../consumer/component/sources';
-import { getComponentsDependenciesLinks } from '../links/link-generator';
+
 import Capsule from '../../legacy-capsule/core/capsule';
+import ConsumerComponent from '../consumer/component';
+import { AbstractVinyl, Dist } from '../consumer/component/sources';
+import Isolator from '../environment/isolator';
+import { getComponentsDependenciesLinks } from '../links/link-generator';
+import { ComponentWithDependencies } from '../scope';
 
 /**
  * This is a formal API for extension developers, changes in this API should result a major version.

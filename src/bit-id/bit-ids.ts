@@ -1,4 +1,5 @@
 import R from 'ramda';
+
 import BitId, { BitIdStr } from '../bit-id/bit-id';
 import forEach from '../utils/object/foreach';
 import getLatestVersionNumber from '../utils/resolveLatestVersion';

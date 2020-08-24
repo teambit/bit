@@ -1,6 +1,6 @@
-import React from 'react';
-import { NavLink as BaseNavLink, LinkProps as BaseLinkProps, NavLinkProps as BaseNavLinkProps } from 'react-router-dom';
 import { LocationState } from 'history';
+import React from 'react';
+import { LinkProps as BaseLinkProps, NavLink as BaseNavLink, NavLinkProps as BaseNavLinkProps } from 'react-router-dom';
 
 /* props of NavLink except props of Link - activeClassName, exact, strict, etc */
 // TODO: move to base-ui

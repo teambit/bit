@@ -1,11 +1,12 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { AbstractVinyl } from '../consumer/component/sources';
-import { AUTO_GENERATED_STAMP, AUTO_GENERATED_MSG } from '../constants';
-import { PathOsBased } from '../utils/path';
+
 import { BitId } from '../bit-id';
-import logger from '../logger/logger';
+import { AUTO_GENERATED_MSG, AUTO_GENERATED_STAMP } from '../constants';
+import { AbstractVinyl } from '../consumer/component/sources';
 import ValidationError from '../error/validation-error';
+import logger from '../logger/logger';
+import { PathOsBased } from '../utils/path';
 
 export default class LinkFile extends AbstractVinyl {
   override = false;

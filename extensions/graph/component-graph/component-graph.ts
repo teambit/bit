@@ -1,10 +1,10 @@
-import { Graph } from 'cleargraph';
-import { Graph as LegacyGraph } from 'graphlib';
-import { Component } from '@teambit/component';
-import { Dependency } from '../dependency';
+import { Component, ComponentFactory } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
-import { ComponentFactory } from '@teambit/component';
+import { Graph } from 'cleargraph';
+import { Graph as LegacyGraph } from 'graphlib';
+
+import { Dependency } from '../dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];

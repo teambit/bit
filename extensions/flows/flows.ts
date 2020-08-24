@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-classes-per-file */
-import { EventEmitter } from 'events';
-import { Workspace } from '@teambit/workspace';
-import { Network, GetFlow } from './network';
 import { ComponentID } from '@teambit/component';
-import { Flow } from './flow/flow';
-import { ExecutionOptions } from './network/options';
-import { BitId } from 'bit-bin/dist/bit-id';
 import { Capsule } from '@teambit/isolator';
-import { PostFlow, getWorkspaceGraph } from './network/network';
-import { getExecutionCache } from './cache';
+import { Workspace } from '@teambit/workspace';
+import { BitId } from 'bit-bin/dist/bit-id';
 import logger from 'bit-bin/dist/logger/logger';
+import { EventEmitter } from 'events';
+
+import { getExecutionCache } from './cache';
+import { Flow } from './flow/flow';
+import { GetFlow, Network } from './network';
+import { getWorkspaceGraph, PostFlow } from './network/network';
+import { ExecutionOptions } from './network/options';
 
 export class Flows {
   private emitter = new EventEmitter();

@@ -1,7 +1,6 @@
 import { Component } from '@teambit/component';
+import { ConcreteService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
-import { ExecutionContext } from '@teambit/environments';
-import { ConcreteService } from '@teambit/environments';
 
 export type TestResults = {
   total: number;

@@ -1,14 +1,15 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
+import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 import Component from '../../../consumer/component';
+import { ModelComponent } from '../../../scope/models';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
-import { ModelComponent } from '../../../scope/models';
-import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { formatMissing, getInvalidComponentLabel } from '../../templates/component-issues-template';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`

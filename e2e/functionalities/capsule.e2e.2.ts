@@ -1,11 +1,12 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+
+import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
-import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 

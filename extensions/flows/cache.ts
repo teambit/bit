@@ -1,15 +1,15 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createHash } from 'crypto';
-import { path, equals } from 'ramda';
-import { promises as fs } from 'fs';
-import { lock, unlock } from 'proper-lockfile';
-import { join } from 'path';
-import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import { Capsule } from '@teambit/isolator';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { createHash } from 'crypto';
+import { promises as fs } from 'fs';
+import { join } from 'path';
+import { lock, unlock } from 'proper-lockfile';
+import { equals, path } from 'ramda';
 
 export class ExecutionCache {
   constructor(private pathToCache: string) {}

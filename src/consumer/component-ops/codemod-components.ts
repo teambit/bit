@@ -1,14 +1,15 @@
 import path from 'path';
-import Component from '../component/consumer-component';
-import { SourceFile } from '../component/sources';
-import { RelativeComponentsAuthoredEntry } from '../component/dependencies/dependency-resolver/dependencies-resolver';
+
+import { Consumer } from '..';
+import { BitId, BitIds } from '../../bit-id';
+import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
-import DataToPersist from '../component/sources/data-to-persist';
-import { BitId, BitIds } from '../../bit-id';
-import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux } from '../../utils';
-import { Consumer } from '..';
+import Component from '../component/consumer-component';
+import { RelativeComponentsAuthoredEntry } from '../component/dependencies/dependency-resolver/dependencies-resolver';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { SourceFile } from '../component/sources';
+import DataToPersist from '../component/sources/data-to-persist';
 
 export type CodemodResult = {
   id: BitId;

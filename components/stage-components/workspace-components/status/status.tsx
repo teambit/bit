@@ -1,8 +1,9 @@
-import React from 'react';
-import classNames from 'classnames';
-import styles from './status.module.scss';
-import colors from './status-colors.module.scss';
 import { JobStatus } from '@teambit/staged-components.workspace-sections.version-block';
+import classNames from 'classnames';
+import React from 'react';
+
+import colors from './status-colors.module.scss';
+import styles from './status.module.scss';
 
 type StatusProps = {
   status: JobStatus;

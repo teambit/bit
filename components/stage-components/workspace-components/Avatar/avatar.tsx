@@ -1,7 +1,8 @@
 import React from 'react';
-import { UserAvatar } from './user-avatar';
-import { OrgAvatar } from './org-avatar';
+
 import { DefaultAvatar } from './default-avatar';
+import { OrgAvatar } from './org-avatar';
+import { UserAvatar } from './user-avatar';
 
 export enum AccountTypes {
   org = 'organization',

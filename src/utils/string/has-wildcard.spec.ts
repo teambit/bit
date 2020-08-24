@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import hasWildcard from './has-wildcard';
 
 describe('hasWildcard', () => {

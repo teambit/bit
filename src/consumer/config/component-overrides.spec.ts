@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import ComponentOverrides from './component-overrides';
+
 import { OVERRIDE_COMPONENT_PREFIX } from '../../constants';
+import ComponentOverrides from './component-overrides';
 
 describe('ComponentOverrides', () => {
   describe('getIgnoredComponents', () => {

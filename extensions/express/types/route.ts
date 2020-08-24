@@ -1,6 +1,6 @@
+import { NextFunction } from './next';
 import { Request } from './request';
 import { Response } from './response';
-import { NextFunction } from './next';
 
 /**
  * define express Middleware

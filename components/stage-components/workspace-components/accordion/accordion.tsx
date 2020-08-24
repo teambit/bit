@@ -1,5 +1,6 @@
-import React, { useState, HTMLAttributes } from 'react';
 import classNames from 'classnames';
+import React, { HTMLAttributes, useState } from 'react';
+
 import styles from './accordion.module.scss';
 
 type AccordionProps = {

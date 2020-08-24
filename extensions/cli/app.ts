@@ -2,19 +2,23 @@
 // eslint-disable-next-line no-console
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
+require('v8-compile-cache');
+
 import './hook-require';
-import fs from 'fs-extra';
-import { Config } from '@teambit/harmony/dist/harmony-config';
-import { Extension } from '@teambit/harmony/dist/extension';
-import { resolve, join } from 'path';
-import { readdir } from 'fs-extra';
-import { Harmony, RuntimeDefinition } from '@teambit/harmony';
-import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
+
+import { getAspectDir } from '@teambit/aspect-loader';
 import { BitAspect, registerCoreExtensions } from '@teambit/bit';
+import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { Harmony, RuntimeDefinition } from '@teambit/harmony';
+import { Extension } from '@teambit/harmony/dist/extension';
+import { Config } from '@teambit/harmony/dist/harmony-config';
 import { bootstrap } from 'bit-bin/dist/bootstrap';
+import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
-import { ConfigAspect, ConfigRuntime } from '@teambit/config';
+import { readdir } from 'fs-extra';
+import { resolve } from 'path';
+
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { CLIMain } from './cli.main.runtime';
 
@@ -46,6 +50,7 @@ async function getConfig() {
       name: '.bitrc.jsonc',
     },
     shouldThrow: false,
+    cwd: consumerInfo?.path || scopePath,
   };
 
   if (consumerInfo) {
@@ -59,25 +64,10 @@ async function getConfig() {
   return Config.loadGlobal(configOpts.global);
 }
 
-function getAspectDir(aspectName: string): string {
-  let dirPath: string;
-  try {
-    const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
-    dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
-  } catch (err) {
-    dirPath = resolve(__dirname, '../..', aspectName, 'dist');
-  }
-  if (!fs.existsSync(dirPath)) {
-    throw new Error(`unable to find ${aspectName} in ${dirPath}`);
-  }
-  return dirPath;
-}
-
-async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
+export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
-  const aspectName = id.split('/')[1];
-  if (!aspectName) throw new Error('could not retrieve aspect name');
-  const dirPath = getAspectDir(aspectName);
+  if (!id) throw new Error('could not retrieve aspect id');
+  const dirPath = getAspectDir(id);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
@@ -93,5 +83,5 @@ async function runCLI() {
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 
   const cli = harmony.get<CLIMain>('teambit.bit/cli');
-  cli.run();
+  await cli.run();
 }

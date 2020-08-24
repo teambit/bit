@@ -1,12 +1,13 @@
-import * as path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import * as path from 'path';
+
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 import {
-  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
   componentIssuesLabels,
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
 } from '../../src/cli/templates/component-issues-template';
+import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

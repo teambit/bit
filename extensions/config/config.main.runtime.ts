@@ -1,6 +1,7 @@
-import configProvider from './config.provider';
 import { MainRuntime } from '@teambit/cli';
+
 import { ConfigAspect } from './config.aspect';
+import configProvider from './config.provider';
 
 const ConfigMain = {
   name: 'config',

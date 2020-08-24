@@ -1,5 +1,6 @@
-import React from 'react';
 import classNames from 'classnames';
+import React from 'react';
+
 import styles from './separator.module.scss';
 
 // type SeparatorProps = {} & React.HTMLAttributes<HTMLDivElement>;

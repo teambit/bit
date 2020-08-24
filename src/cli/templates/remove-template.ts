@@ -1,5 +1,6 @@
-import R from 'ramda';
 import chalk from 'chalk';
+import R from 'ramda';
+
 import { BitId } from '../../bit-id';
 
 export default (

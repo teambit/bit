@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { table } from 'table';
+
 import Diagnosis from '../../doctor/diagnosis';
 
 // const NAME_COLUMN_WIDTH = 100;

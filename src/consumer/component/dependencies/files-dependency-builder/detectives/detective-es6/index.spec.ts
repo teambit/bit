@@ -3,6 +3,7 @@
  */
 
 import { expect } from 'chai';
+
 import detective from './';
 
 const assert = require('assert');

@@ -1,7 +1,8 @@
 import BluebirdPromise from 'bluebird';
-import { EnvRuntime } from './env-runtime';
-import { EnvService } from '../services';
+
 import { ExecutionContext } from '../context';
+import { EnvService } from '../services';
+import { EnvRuntime } from './env-runtime';
 
 export class Runtime {
   constructor(

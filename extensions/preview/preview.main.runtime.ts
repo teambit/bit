@@ -1,23 +1,24 @@
 import { writeFileSync } from 'fs-extra';
-import { resolve, join } from 'path';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { join, resolve } from 'path';
+
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
+import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambit/component';
+import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { ComponentMap } from '@teambit/component';
-import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Compiler } from '@teambit/compiler';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { generateLink, makeReExport, makePreviewRegister } from './generate-link';
-import { PreviewRoute } from './preview.route';
+
 import { PreviewArtifactNotFound } from './exceptions';
-import { PreviewArtifact } from './preview-artifact';
+import { generateLink, makeReExport, makePreviewRegister } from './generate-link';
 import { makeTempDir } from './mk-temp-dir';
-import { PreviewAspect, PreviewRuntime } from './preview.aspect';
-import { PreviewTask } from './preview.task';
+import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
+import { PreviewAspect, PreviewRuntime } from './preview.aspect';
+import { PreviewRoute } from './preview.route';
+import { PreviewTask } from './preview.task';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 

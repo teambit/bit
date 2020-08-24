@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { build, buildAll } from '../../../api/consumer';
-import { empty } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { empty } from '../../../utils';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Build implements LegacyCommand {
   name = 'build [id]';

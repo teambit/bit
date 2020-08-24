@@ -1,20 +1,25 @@
 import R from 'ramda';
+
+import { BitId } from '../../bit-id';
+import {
+  COMPONENT_ORIGINS,
+  DEPENDENCIES_FIELDS,
+  MANUALLY_ADD_DEPENDENCY,
+  MANUALLY_REMOVE_DEPENDENCY,
+  OVERRIDE_COMPONENT_PREFIX,
+  OVERRIDE_FILE_PREFIX,
+} from '../../constants';
+import { filterObject } from '../../utils';
+import { ComponentOrigin } from '../bit-map/component-map';
 import ComponentConfig from './component-config';
 import {
-  MANUALLY_REMOVE_DEPENDENCY,
-  MANUALLY_ADD_DEPENDENCY,
-  OVERRIDE_FILE_PREFIX,
-  OVERRIDE_COMPONENT_PREFIX,
-  DEPENDENCIES_FIELDS,
-  COMPONENT_ORIGINS,
-} from '../../constants';
-import { ConsumerOverridesOfComponent } from './consumer-overrides';
-import { overridesBitInternalFields, nonPackageJsonFields, overridesForbiddenFields } from './consumer-overrides';
-import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
-import { BitId } from '../../bit-id';
-import { ComponentOrigin } from '../bit-map/component-map';
+  ConsumerOverridesOfComponent,
+  nonPackageJsonFields,
+  overridesBitInternalFields,
+  overridesForbiddenFields,
+} from './consumer-overrides';
 import { ExtensionDataList } from './extension-data';
-import { filterObject } from '../../utils';
+import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 
 // consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];

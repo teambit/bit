@@ -53,6 +53,11 @@
                 "name": "constants.ts"
             },
             {
+                "relativePath": "core-aspects.ts",
+                "test": false,
+                "name": "core-aspects.ts"
+            },
+            {
                 "relativePath": "exceptions/cannot-load-extension.ts",
                 "test": false,
                 "name": "cannot-load-extension.ts"
@@ -144,11 +149,6 @@
                 "relativePath": "builder.service.ts",
                 "test": false,
                 "name": "builder.service.ts"
-            },
-            {
-                "relativePath": "builder.spec.ts",
-                "test": false,
-                "name": "builder.spec.ts"
             },
             {
                 "relativePath": "exceptions/index.ts",
@@ -546,6 +546,21 @@
                 "name": "history-graph.ts"
             },
             {
+                "relativePath": "host/component-host-model.ts",
+                "test": false,
+                "name": "component-host-model.ts"
+            },
+            {
+                "relativePath": "host/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "host/use-component-host.ts",
+                "test": false,
+                "name": "use-component-host.ts"
+            },
+            {
                 "relativePath": "id.ts",
                 "test": false,
                 "name": "id.ts"
@@ -708,6 +723,50 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/component",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "component-tree": {
+        "files": [
+            {
+                "relativePath": "component-tree-node.ts",
+                "test": false,
+                "name": "component-tree-node.ts"
+            },
+            {
+                "relativePath": "component-tree.aspect.ts",
+                "test": false,
+                "name": "component-tree.aspect.ts"
+            },
+            {
+                "relativePath": "component-tree.composition.tsx",
+                "test": false,
+                "name": "component-tree.composition.tsx"
+            },
+            {
+                "relativePath": "component-tree.docs.tsx",
+                "test": false,
+                "name": "component-tree.docs.tsx"
+            },
+            {
+                "relativePath": "component-tree.drawer.tsx",
+                "test": false,
+                "name": "component-tree.drawer.tsx"
+            },
+            {
+                "relativePath": "component-tree.ui.runtime.tsx",
+                "test": false,
+                "name": "component-tree.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/component-tree",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2591,6 +2650,90 @@
         "exported": false,
         "lanes": []
     },
+    "sidebar": {
+        "files": [
+            {
+                "relativePath": "drawer.module.scss",
+                "test": false,
+                "name": "drawer.module.scss"
+            },
+            {
+                "relativePath": "drawer.ts",
+                "test": false,
+                "name": "drawer.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "sidebar.aspect.ts",
+                "test": false,
+                "name": "sidebar.aspect.ts"
+            },
+            {
+                "relativePath": "sidebar.ui.runtime.tsx",
+                "test": false,
+                "name": "sidebar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "ui/drawer/drawer.module.scss",
+                "test": false,
+                "name": "drawer.module.scss"
+            },
+            {
+                "relativePath": "ui/drawer/drawer.tsx",
+                "test": false,
+                "name": "drawer.tsx"
+            },
+            {
+                "relativePath": "ui/drawer/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/overview-link/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/overview-link/overview-link.module.scss",
+                "test": false,
+                "name": "overview-link.module.scss"
+            },
+            {
+                "relativePath": "ui/overview-link/overview-link.tsx",
+                "test": false,
+                "name": "overview-link.tsx"
+            },
+            {
+                "relativePath": "ui/side-bar/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/side-bar/side-bar.module.scss",
+                "test": false,
+                "name": "side-bar.module.scss"
+            },
+            {
+                "relativePath": "ui/side-bar/side-bar.tsx",
+                "test": false,
+                "name": "side-bar.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/sidebar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/corner": {
         "files": [
             {
@@ -2611,6 +2754,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/stage-components/corner",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/full-loader": {
+        "files": [
+            {
+                "relativePath": "full-loader.module.scss",
+                "test": false,
+                "name": "full-loader.module.scss"
+            },
+            {
+                "relativePath": "full-loader.tsx",
+                "test": false,
+                "name": "full-loader.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/stage-components/full-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2783,6 +2950,21 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "component-tree/component-tooltip/component-tooltip.module.scss",
+                "test": false,
+                "name": "component-tooltip.module.scss"
+            },
+            {
+                "relativePath": "component-tree/component-tooltip/component-tooltip.tsx",
+                "test": false,
+                "name": "component-tooltip.tsx"
+            },
+            {
+                "relativePath": "component-tree/component-tooltip/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "component-tree/component-tree-context.tsx",
                 "test": false,
                 "name": "component-tree-context.tsx"
@@ -2868,6 +3050,21 @@
                 "name": "tree-types.ts"
             },
             {
+                "relativePath": "component-tree/root-node/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree/root-node/root-node.module.scss",
+                "test": false,
+                "name": "root-node.module.scss"
+            },
+            {
+                "relativePath": "component-tree/root-node/root-node.tsx",
+                "test": false,
+                "name": "root-node.tsx"
+            },
+            {
                 "relativePath": "component-tree/status-dot/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2911,6 +3108,21 @@
                 "relativePath": "side-bar.tsx",
                 "test": false,
                 "name": "side-bar.tsx"
+            },
+            {
+                "relativePath": "sidebar-collapser/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "sidebar-collapser/sidebar-collapser.module.scss",
+                "test": false,
+                "name": "sidebar-collapser.module.scss"
+            },
+            {
+                "relativePath": "sidebar-collapser/sidebar-collapser.tsx",
+                "test": false,
+                "name": "sidebar-collapser.tsx"
             },
             {
                 "relativePath": "styles.module.scss",
@@ -3409,6 +3621,30 @@
         "exported": false,
         "lanes": []
     },
+    "toolbox/string/capitalize": {
+        "files": [
+            {
+                "relativePath": "capitalize.spec.ts",
+                "test": false,
+                "name": "capitalize.spec.ts"
+            },
+            {
+                "relativePath": "capitalize.ts",
+                "test": false,
+                "name": "capitalize.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/capitalize",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "typescript": {
         "files": [
             {
@@ -3812,6 +4048,11 @@
                 "relativePath": "component-config-file/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree.widget.tsx",
+                "test": false,
+                "name": "component-tree.widget.tsx"
             },
             {
                 "relativePath": "constants.ts",

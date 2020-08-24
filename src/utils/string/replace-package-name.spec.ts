@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import replacePackageName from './replace-package-name';
 
 describe('replacePackageName', () => {

@@ -1,22 +1,37 @@
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import Component from '../component/consumer-component';
-import ComponentWithDependencies from '../../scope/component-dependencies';
+import R from 'ramda';
+
 import { Consumer } from '..';
-import BitIds from '../../bit-id/bit-ids';
 import BitId from '../../bit-id/bit-id';
+import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
+import ComponentWithDependencies from '../../scope/component-dependencies';
+import Component from '../component/consumer-component';
 
 export class FlattenedDependencyLoader {
   private cache: { [bitIdStr: string]: Component } = {};
-  constructor(private consumer: Consumer, private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>) {}
+  constructor(
+    private consumer: Consumer,
+    private ignoreIds = new BitIds(),
+    private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
+  ) {}
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds());
     const devDependencies = await this.loadManyDependencies(component.devDependencies.getAllIds());
     const extensionDependencies = await this.loadManyDependencies(component.extensions.extensionsBitIds);
-    await this.loadFlattened(dependencies);
-    await this.loadFlattened(devDependencies);
-    await this.loadFlattened(extensionDependencies);
+
+    const filterIgnoreIds = (comps: any[]) => {
+      if (!this.ignoreIds.length) {
+        // workaround for old @teambit/cli. for some reason, comps sometimes have null/undefined
+        // and as a result, even comps.filter(x => x) causes of errors later on.
+        return comps;
+      }
+      return comps.filter((dep) => !this.ignoreIds.has(dep.id));
+    };
+
+    await this.loadFlattened(filterIgnoreIds(dependencies));
+    await this.loadFlattened(filterIgnoreIds(devDependencies));
+    await this.loadFlattened(filterIgnoreIds(extensionDependencies));
 
     return new ComponentWithDependencies({
       component,

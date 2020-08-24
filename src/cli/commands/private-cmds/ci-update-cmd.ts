@@ -1,10 +1,10 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { outputJsonFile } from '../../../utils';
 import { ciUpdateAction } from '../../../api/scope';
-import { paintCiResults } from '../../chalk-box';
-import SpecsResults from '../../../consumer/specs-results';
 import Dists from '../../../consumer/component/sources/dists';
+import SpecsResults from '../../../consumer/specs-results';
+import { outputJsonFile } from '../../../utils';
 import { PathOsBased } from '../../../utils/path';
+import { paintCiResults } from '../../chalk-box';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class CiUpdate implements LegacyCommand {
   name = 'ci-update <id> [scopePath]';

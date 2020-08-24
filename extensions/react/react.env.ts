@@ -1,19 +1,19 @@
-import { resolve, join } from 'path';
-import { Environment } from '@teambit/environments';
-import { Tester, TesterMain } from '@teambit/tester';
 import { BuildTask } from '@teambit/builder';
+import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
-import { DevServer, BundlerContext, DevServerContext } from '@teambit/bundler';
-import { Workspace } from '@teambit/workspace';
-import { Bundler } from '@teambit/bundler';
-import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
-import { TypescriptMain } from '@teambit/typescript';
-import { WebpackMain } from '@teambit/webpack';
+import { Environment } from '@teambit/environments';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
+import { Tester, TesterMain } from '@teambit/tester';
+import { TypescriptMain } from '@teambit/typescript';
+import { WebpackMain } from '@teambit/webpack';
+import { Workspace } from '@teambit/workspace';
+import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import { join, resolve } from 'path';
+
+import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
-import { ReactMainConfig } from './react.main.runtime';
 
 export const AspectEnvType = 'react';
 

@@ -1,8 +1,8 @@
 import { loadConsumer } from '../../../consumer';
-import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
-import logger from '../../../logger/logger';
 import SpecsResults from '../../../consumer/specs-results';
+import logger from '../../../logger/logger';
+import { loadScope, Scope } from '../../../scope';
 
 export default function testInScope({
   id,

@@ -1,27 +1,28 @@
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
 import * as RA from 'ramda-adjunct';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, Extensions } from '../../../../constants';
-import ComponentMap from '../../../bit-map/component-map';
-import { BitId, BitIds } from '../../../../bit-id';
-import Component from '../../../component/consumer-component';
-import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../utils';
-import logger from '../../../../logger/logger';
-import Consumer from '../../../../consumer/consumer';
-import { ImportSpecifier, FileObject, Tree } from '../files-dependency-builder/types/dependency-tree-type';
-import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
-import Dependencies from '../dependencies';
-import GeneralError from '../../../../error/general-error';
+import semver from 'semver';
+
 import { Dependency } from '..';
-import { RelativePath } from '../dependency';
-import { isSupportedExtension } from '../../../../links/link-content';
-import OverridesDependencies from './overrides-dependencies';
-import ShowDoctorError from '../../../../error/show-doctor-error';
-import PackageJsonFile from '../../package-json-file';
-import { getDependencyTree } from '../files-dependency-builder';
-import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
+import { BitId, BitIds } from '../../../../bit-id';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, Extensions } from '../../../../constants';
 import { ExtensionDataEntry } from '../../../../consumer/config';
+import Consumer from '../../../../consumer/consumer';
+import GeneralError from '../../../../error/general-error';
+import ShowDoctorError from '../../../../error/show-doctor-error';
+import { isSupportedExtension } from '../../../../links/link-content';
+import logger from '../../../../logger/logger';
+import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
+import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
+import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../../utils/path';
+import ComponentMap from '../../../bit-map/component-map';
+import Component from '../../../component/consumer-component';
+import PackageJsonFile from '../../package-json-file';
+import Dependencies from '../dependencies';
+import { RelativePath } from '../dependency';
+import { getDependencyTree } from '../files-dependency-builder';
+import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
+import OverridesDependencies from './overrides-dependencies';
 
 export type AllDependencies = {
   dependencies: Dependency[];
