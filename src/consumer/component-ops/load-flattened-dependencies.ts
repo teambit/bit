@@ -18,9 +18,14 @@ export class FlattenedDependencyLoader {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds());
     const devDependencies = await this.loadManyDependencies(component.devDependencies.getAllIds());
     const extensionDependencies = await this.loadManyDependencies(component.extensions.extensionsBitIds);
-    const allDependencies = [...dependencies, ...devDependencies, ...extensionDependencies];
-    const allDependenciesFiltered = allDependencies.filter((dep) => !this.ignoreIds.has(dep.id));
-    await this.loadFlattened(allDependenciesFiltered);
+
+    // const filterIgnoreIds = (comps) => comps.filter((dep) => !this.ignoreIds.has(dep.id));
+    const filterIgnoreIds = (comps) => comps;
+
+    await this.loadFlattened(filterIgnoreIds(dependencies));
+    await this.loadFlattened(filterIgnoreIds(devDependencies));
+    await this.loadFlattened(filterIgnoreIds(extensionDependencies));
+
 
     return new ComponentWithDependencies({
       component,
