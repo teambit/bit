@@ -101,11 +101,11 @@ export class ReactEnv implements Environment {
     });
 
     // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
-    const targets = context.components.map((component) => {
-      return join(this.pkg.getPackageName(component));
-    });
+    const packagePaths = context.components
+      .map(comp => this.pkg.getPackageName(comp))
+      .map(packageName => join(this.workspace.path, 'node_modules', packageName));
 
-    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path, targets));
+    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path, packagePaths));
   }
 
   async getBundler(context: BundlerContext): Promise<Bundler> {

@@ -18,9 +18,9 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
   /**
    * map entries and return a new component map.
    */
-  map<NewType>(predicate: (value: T) => NewType): ComponentMap<NewType> {
+  map<NewType>(predicate: (value: T, component: Component) => NewType): ComponentMap<NewType> {
     const tuples: [string, [Component, NewType]][] = this.toArray().map(([component, value]) => {
-      const newValue = predicate(value);
+      const newValue = predicate(value, component);
       return [component.id.fullName, [component, newValue]];
     });
 

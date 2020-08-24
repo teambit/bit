@@ -36,12 +36,6 @@ var updateModules = preview.updateModules;
 
 updateModules(modulesIndex);
 
-if(module.hot){
-  module.hot.accept('${targetPath}', function() {
-    var modules = require('${targetPath}');
-    updateModules(modules);
-  });
-}
 `;
 }
 

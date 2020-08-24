@@ -8,7 +8,8 @@ import { UIAspect, UiMain } from '@teambit/ui';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
 import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
-import { generateLink, makeReExport, makeLinkUpdater } from './generate-link';
+import { Compiler } from '@teambit/compiler';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PreviewRoute } from './preview.route';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
@@ -45,16 +46,37 @@ export class PreviewMain {
     return this.previewSlot.values();
   }
 
+  private toDist(moduleMap: ComponentMap<string[]>, context: ExecutionContext) {
+    const compiler: Compiler = context.env.getCompiler();
+
+    const distMap = moduleMap.map((paths, component) => {
+      return paths.map((path) => {
+          // @TODO - @David, should have a decent way to get to the dist from source files.
+        const packageName = componentIdToPackageName(component.state._consumer);
+        const distPath = compiler.getDistPathBySrcPath(path);
+        const npmPath = join(packageName, distPath);
+        const absPath = require.resolve(npmPath);
+        return absPath;
+      });
+    });
+
+    return distMap;
+  }
+
   async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
     const previews = this.previewSlot.values();
 
     const previewLinks = await Promise.all(
       previews.map(async (p) => {
         const moduleMap = await p.getModuleMap(context.components);
+        const modulePaths = this.toDist(
+          moduleMap.map((files) => files.map((file) => file.relative)),
+          context
+        );
 
         return {
           name: p.prefix,
-          modulePaths: moduleMap.map((files) => files.map((file) => file.path)),
+          modulePaths,
           templatePath: await p.renderTemplatePath?.(context),
         };
       })

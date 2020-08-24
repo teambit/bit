@@ -54,11 +54,13 @@ export class UIServer {
    */
   async getDevConfig(): Promise<webpack.Configuration> {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
+    const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
+    
     return devConfig(
       this.uiRoot.path,
       [await this.ui.generateRoot(aspects, this.uiRootExtension)],
       this.uiRootExtension,
-      aspects.map((aspect) => aspect.aspectPath)
+      aspectsPaths
     );
   }
 
