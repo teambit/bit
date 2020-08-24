@@ -10,6 +10,7 @@ import { ComponentMap } from '@teambit/component';
 import { ExecutionContext, EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Compiler } from '@teambit/compiler';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { generateLink, makeReExport, makePreviewRegister } from './generate-link';
 import { PreviewRoute } from './preview.route';
 import { PreviewArtifactNotFound } from './exceptions';
 import { PreviewArtifact } from './preview-artifact';
@@ -149,8 +150,8 @@ export class PreviewMain {
 
   /** generates an 'updater' file that injects previews into preview.preview.tsx */
   private writeUpdater(dir: string, targetPath: string, previewMain: string) {
-    const content = makeLinkUpdater(targetPath, previewMain);
-    const path = resolve(join(dir, `__updater.js`));
+    const content = makePreviewRegister(targetPath, previewMain);
+    const path = resolve(join(dir, `__registerPreview.js`));
     writeFileSync(path, content);
 
     return path;

@@ -6,7 +6,6 @@ import { PreviewRuntime, PreviewAspect } from './preview.aspect';
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
 let PREVIEW_MODULES: Record<string, previewModule> = {};
-let RERENDER = () => {};
 
 type previewModule = {
   componentMap: Record<string, any[]>;
@@ -90,10 +89,8 @@ export class PreviewPreview {
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
     const preview = new PreviewPreview(previewSlot);
 
-    RERENDER = preview.render;
-
     window.addEventListener('hashchange', () => {
-      RERENDER();
+      preview.render;
     });
 
     return preview;
@@ -107,9 +104,8 @@ export class PreviewPreview {
  * as target components reside in another project all together,
  * we cannot reference them from here, and they have to reference us.
  */
-export function updateModules(modules: Record<string, previewModule>) {
+export function setModules(modules: Record<string, previewModule>) {
   PREVIEW_MODULES = modules;
-  RERENDER();
 }
 
 PreviewAspect.addRuntime(PreviewPreview);
