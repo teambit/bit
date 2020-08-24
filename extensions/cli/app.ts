@@ -46,6 +46,7 @@ async function getConfig() {
       name: '.bitrc.jsonc',
     },
     shouldThrow: false,
+    cwd: consumerInfo?.path || scopePath,
   };
 
   if (consumerInfo) {
