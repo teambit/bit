@@ -75,6 +75,8 @@ export class ComponentUI {
   static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
 
   static async provider(deps, config, [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]) {
+    // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
+    // TODO: add contextual hook for ComponentHost @uri/@oded
     const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);
     return componentUI;
   }

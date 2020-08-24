@@ -1,3 +1,3 @@
-import { WorkspaceModelComponent } from '@teambit/workspace';
+import { ComponentModel } from '@teambit/component';
 
-export type PayloadType = WorkspaceModelComponent | undefined;
+export type PayloadType = ComponentModel | undefined;

@@ -1,5 +1,5 @@
 import { ComponentAspect } from './component.aspect';
-
+export { useComponentHost } from './host';
 export { Component } from './component';
 export { ComponentID } from './id';
 export { default as ComponentFS } from './component-fs';

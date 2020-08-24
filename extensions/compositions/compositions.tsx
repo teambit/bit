@@ -52,7 +52,7 @@ export function Compositions() {
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
   return (
     <PanelContainer className={styles.compositionsPage}>
-      <TupleSplitPane max={100} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
+      <TupleSplitPane max={100} ratio={61} min={10} layout={Layout.row} Splitter={CollapsibleSplitter}>
         <CompositionContent component={component} selected={selected} />
         <Panel>
           <TabContainer>

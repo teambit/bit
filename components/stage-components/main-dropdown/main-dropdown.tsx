@@ -2,8 +2,8 @@ import React, { ReactNode } from 'react';
 import classNames from 'classnames';
 import { TooltipDrawer } from '@teambit/evangelist-temp.surfaces.tooltip';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import styles from './main-dropdown.module.scss';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
+import styles from './main-dropdown.module.scss';
 
 // type MainDropdownProps = {
 // } & React.HTMLAttributes<HTMLDivElement>;
