@@ -573,7 +573,7 @@ jobs:
           at: ./
       # -
       #   run: 'sudo npm i -g yarn'
-      # -
+      -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
