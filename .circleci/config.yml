@@ -142,6 +142,10 @@ jobs:
         run:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
       # -
       #   save_cache:
       #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
@@ -584,10 +588,6 @@ jobs:
       #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       # -
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      -
-        run:
-          name: 'npm link bit to global'
-          command: cd bit && npm link
       -
         run: which bit
       -
