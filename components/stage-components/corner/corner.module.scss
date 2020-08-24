@@ -10,6 +10,7 @@ $topbarHeight: 56px;
   user-select: none;
   box-sizing: border-box;
   width: 30%;
+  max-width: 264px; // for now until we have the split pane in pixels
 
   .link {
     text-decoration: none;
