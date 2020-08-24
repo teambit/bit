@@ -639,7 +639,9 @@ jobs:
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
-        run: 'npm run build-harmony'
+        run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
       -
         save_cache:
           key: bit-global-config-v3
