@@ -638,8 +638,8 @@ jobs:
         run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-        -
-          run: 'npm run build-harmony'
+      -
+        run: 'npm run build-harmony'
       -
         save_cache:
           key: bit-global-config-v3
