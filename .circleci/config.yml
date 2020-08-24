@@ -144,10 +144,14 @@ jobs:
         run:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
+      # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'cd bit && npm run dev-link bit'
       -
         run:
           name: 'link bit to path'
-          command: 'cd bit && npm run dev-link bit'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
       -
         run: which bit
       -
@@ -162,11 +166,11 @@ jobs:
       #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       #     paths:
       #       - ./bit/node_modules
-      # -
-      #   save_cache:
-      #     key: npm-global-bin-v1
-      #     paths:
-      #       - /home/circleci/.npm-global/bin
+      -
+        save_cache:
+          key: npm-global-bin-v2
+          paths:
+            - /home/circleci/.npm-global/bin
       -
         persist_to_workspace:
           root: .
@@ -592,15 +596,15 @@ jobs:
       -
         restore_cache:
           key: bitsrc-registry6
-      # -
-      #   restore_cache:
-      #     key: npm-global-bin-v1
           # key: bitsrc-registry-stg-v2
-      # - run: ls -l /home/circleci/.npm-global/bin
       -
-        run:
-          name: 'link bit to path'
-          command: 'cd bit && npm run dev-link bit'
+        restore_cache:
+          key: npm-global-bin-v2
+      - run: ls -l /home/circleci/.npm-global/bin
+      # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'cd bit && npm run dev-link bit'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
