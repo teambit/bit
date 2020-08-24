@@ -37,6 +37,7 @@
     "build": "run-s build:src",
     "build:types": "./scripts/build-types.bash",
     "install-harmony": "cd build-harmony && yarn",
+    "link-bit-bin": "ln -sf `pwd` node_modules/bit-bin",
     "build-harmony": "rm -rf node_modules/bit-bin/bit && ln -sf `pwd` node_modules/bit-bin && build-harmony/node_modules/.bin/cli link && build-harmony/node_modules/.bin/cli compile",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
