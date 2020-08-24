@@ -1,10 +1,11 @@
 import { Configuration } from 'webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { ReactAspect } from '../react.aspect';
 
 export default function (workspaceDir: string): Configuration {
   return {
     devServer: {
-      sockPath: '_hmr/@teambit/react',
+      sockPath: `_hmr/${ReactAspect.id}`,
     },
     module: {
       rules: [
