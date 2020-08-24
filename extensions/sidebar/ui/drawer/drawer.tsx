@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { NavLink } from '@teambit/react-router';
 import { Drawer } from '../../drawer';
 import styles from './drawer.module.scss';
 
@@ -14,12 +15,14 @@ export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: Drawe
   if (!drawer) return null;
   return (
     <div {...rest} className={classNames(styles.drawer, className)}>
-      <div className={classNames(styles.drawerName, { [styles.open]: isOpen })} onClick={onToggle}>
-        <div>
+      <div className={classNames(styles.drawerName, { [styles.open]: isOpen })}>
+        <div onClick={onToggle}>
           <Icon className={classNames(styles.arrow, { [styles.collapsed]: !isOpen })} of="fat-arrow-down" />
-          {drawer.name}
+          <span>{drawer.name}</span>
         </div>
-        <Icon of="comps" className={styles.icon} />
+        <NavLink href="/" className={styles.link}>
+          <Icon of="comps" />
+        </NavLink>
       </div>
 
       <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>
