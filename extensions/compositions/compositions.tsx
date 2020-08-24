@@ -62,7 +62,7 @@ export function Compositions() {
         <CompositionContent component={component} selected={selected} />
         <Panel>
           <Collapser
-            id="workspaceSidebarCollapser"
+            id="compositionsCollapser"
             placement="left"
             isOpen={isSidebarOpen}
             onClick={handleSidebarToggle}
