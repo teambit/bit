@@ -531,7 +531,6 @@ jobs:
           root: .
           paths:
             - bit/build-harmony
-            - bit/node_modules
   e2e_test:
     <<: *defaults
     environment:
