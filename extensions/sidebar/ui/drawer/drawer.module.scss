@@ -34,6 +34,29 @@
       transform: rotate(-0.25turn);
     }
   }
+  > div {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 5px;
+    > span {
+      &:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+.link {
+  text-decoration: none;
+  color: var(--text-muted);
+  &:hover {
+    color: var(--text-highlight);
+  }
 }
 
 .drawerContent {
