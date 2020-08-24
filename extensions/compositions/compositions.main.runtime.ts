@@ -2,6 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { flatten } from 'bit-bin/dist/utils';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { ExtensionData } from '@teambit/workspace';
 import { PreviewMain, PreviewAspect } from '@teambit/preview';
@@ -69,9 +70,11 @@ export class CompositionsMain {
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
 
-    return files.flatMap((file) => {
-      return this.computeCompositions(component, file);
-    });
+    return flatten(
+      files.map((file) => {
+        return this.computeCompositions(component, file);
+      })
+    );
   }
 
   async onComponentLoad(component: Component): Promise<ExtensionData> {

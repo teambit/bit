@@ -75,6 +75,8 @@ export class ReactMain {
     return env;
   }
 
+  createDevServer() {}
+
   /**
    * override the jest configuration.
    */

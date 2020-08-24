@@ -17,6 +17,7 @@ export type VariantsComponentConfig = {
   exclude?: string[];
   defaultScope?: string;
   extensions: ExtensionDataList;
+  maxSpecificity: number;
 };
 
 type MatchedPattern = {
@@ -98,11 +99,11 @@ export class VariantsMain {
     });
 
     const mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
-
     const result = {
       defaultScope,
       extensions: mergedExtensions,
       propagate,
+      maxSpecificity: sortedMatches.length ? sortedMatches[0].specificity : -1,
     };
     return result;
   }

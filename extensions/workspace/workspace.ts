@@ -479,18 +479,25 @@ export class Workspace implements ComponentFactory {
     let configFileExtensions;
     let variantsExtensions;
     let wsDefaultExtensions;
-    let ScopeMains;
+    let scopeExtensions;
+    let mergeFromScope = true;
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.extensions;
+      // do not merge from scope data when there is component config file
+      mergeFromScope = false;
     } else {
-      ScopeMains = componentFromScope?.config?.extensions || new ExtensionDataList();
+      scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
     const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDir(componentDir);
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
+      // Do not merge from scope when there is specific variant (which is not *) that match the component
+      if (variantConfig.maxSpecificity > 0) {
+        mergeFromScope = false;
+      }
     }
     const isVendor = this.isVendorComponent(componentId);
     if (!isVendor) {
@@ -517,9 +524,8 @@ export class Workspace implements ComponentFactory {
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
     await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
 
-    // In case there are no config file for the component use extension from the scope
-    if (!componentConfigFile) {
-      extensionsToMerge.push(ScopeMains);
+    if (mergeFromScope && continuePropagating) {
+      extensionsToMerge.push(scopeExtensions);
     }
 
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);

@@ -1,6 +1,6 @@
 default_image: &default_image
   docker:
-    - image: circleci/node:10.13.0
+    - image: circleci/node:10.14.2
 
 default_resource_class: &default_resource_class
   resource_class: small
@@ -99,6 +99,8 @@ jobs:
         run: npm config set @bit:registry https://node.bit.dev
       -
         run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      -
+        run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
         # run: 'npm config set @bit:registry https://node-stg.bit.dev'
@@ -106,7 +108,7 @@ jobs:
         # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
-          key: bitsrc-registry5
+          key: bitsrc-registry6
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -117,13 +119,15 @@ jobs:
     environment:
       SKIP_FETCH_BINARY: true
       # SKIP_LOCAL_BUILD_BINARY: true
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       -
         attach_workspace:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry5
+          key: bitsrc-registry6
       -
         run:
           name: 'save SHA to a file'
@@ -141,10 +145,36 @@ jobs:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
       # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'cd bit && npm run dev-link bit'
+      -
+        run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run: which bit
+            # -
+      #   run:
+      #     name: 'npm link bit to global'
+      #     command: cd bit && npm link
+      # - run: ls -l /home/circleci/.npm-global/bin
+      # -
       #   save_cache:
       #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       #     paths:
       #       - ./bit/node_modules
+      -
+        save_cache:
+          key: npm-global-bin-v2
+          paths:
+            - /home/circleci/.npm-global/bin
       -
         persist_to_workspace:
           root: .
@@ -204,7 +234,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry5
+          key: bitsrc-registry6
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -226,8 +256,6 @@ jobs:
         # uncomment to configure circle to run against stg environment
         # -
           # run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run: 'cat ~/Library/Caches/Bit/config/config.json'
       -
         save_cache:
           key: bit-global-config-v1
@@ -509,6 +537,29 @@ jobs:
         run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
+  setup_harmony:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        restore_cache:
+          key: bitsrc-registry6
+      -
+        run:
+          name: 'install harmony'
+          command: 'cd bit && npm run install-harmony'
+      -
+        run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/build-harmony
+            - bit/node_modules/bit-bin
   e2e_test:
     <<: *defaults
     environment:
@@ -520,19 +571,19 @@ jobs:
       -
         attach_workspace:
           at: ./
-      -
-        run: 'sudo npm i -g yarn'
-      -
-        run:
+      # -
+      #   run: 'sudo npm i -g yarn'
+      # -
+      #   run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-          name: 'update npm to latest version'
-          command: 'npm i -g npm@latest'
+          # name: 'update npm to latest version'
+          # command: 'npm i -g npm@latest'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      # -
+      #   run:
+      #     name: 'save SHA to a file'
+      #     command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
@@ -549,8 +600,16 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry5
+          key: bitsrc-registry6
           # key: bitsrc-registry-stg-v2
+      -
+        restore_cache:
+          key: npm-global-bin-v2
+      - run: ls -l /home/circleci/.npm-global/bin
+      # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'cd bit && npm run dev-link bit'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -563,11 +622,27 @@ jobs:
       # -
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
-        run:
-          name: 'npm link bit to global'
-          command: cd bit && npm link
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      # -
+      #   run: 'bit config set hub_domain hub.bit.dev'
+        # uncomment to configure circle to run against stg environment
+      -
+        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      -
+        save_cache:
+          key: bit-global-config-v3
+          paths:
+            - ~/Library/Caches/Bit/config/config.json
       -
         run:
           name: 'Run e2e tests'
@@ -666,7 +741,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry5
+          key: bitsrc-registry6
           # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
@@ -919,9 +994,15 @@ workflows:
           requires:
             - install_npm_deps
       -
-        configure-bit:
+        setup_harmony:
           requires:
+            - set_npm_registries
+            - install_npm_deps
             - build
+      # -
+      #   configure-bit:
+      #     requires:
+      #       - build
       -
         unit_test:
           requires:
@@ -958,7 +1039,8 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - configure-bit
+            - setup_harmony
+            # - configure-bit
             # - pack
       -
         performance_e2e_test:

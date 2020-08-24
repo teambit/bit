@@ -72,7 +72,7 @@ class Analytics {
     const cmd = process.argv.slice(2);
     function shouldPromptForAnalytics() {
       // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
-      if (cmd.length && cmd[0] !== 'config') {
+      if (cmd.length && cmd[0] !== 'config' && !process.env.CI) {
         const analyticsReporting = getSync(CFG_ANALYTICS_REPORTING_KEY);
         const errorReporting = getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY);
         return R.isNil(analyticsReporting) && R.isNil(errorReporting);
