@@ -85,7 +85,7 @@ export function Compositions() {
             <TabPanel>
               {properties && properties.length > 0 ? (
                 // TODO - make table look good in panel
-                <PropTable rows={properties} />
+                <PropTable rows={properties} showListView />
               ) : (
                 <div />
               )}
