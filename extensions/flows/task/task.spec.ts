@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
 import { executeTask } from './task';
 
-describe('task', function () {
-  after(async () => {
+describe.skip('task', function () {
+  afterEach(async () => {
     return remove('/tmp/@bit-test');
   });
   describe('should run bash commands', function () {

@@ -7,7 +7,7 @@ import { NodeEnv } from './node.env';
 export class NodeMain {
   // please replace to the nodeJS icon.
   icon() {
-    return 'https://static.bit.dev/extensions-icons/react.svg';
+    return 'https://static.bit.dev/extensions-icons/node.svg';
   }
 
   static runtime = MainRuntime;

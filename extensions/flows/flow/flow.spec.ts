@@ -10,7 +10,7 @@ import { getTestCase } from '../task/task.spec';
 // qballer TODO - refactor these tests to make them shorter,
 //                they violate the dry principle.
 
-describe('flows', function () {
+describe.skip('flows', function () {
   it('should support flow with errors', async function () {
     const id = '@bit-test2/flow1';
     const fakeFS = getTestCase(id);

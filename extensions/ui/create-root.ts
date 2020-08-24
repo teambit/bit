@@ -10,6 +10,7 @@ export async function createRoot(
   runtime = 'ui'
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
+  const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `
 import { Harmony } from '@teambit/harmony';
@@ -18,7 +19,8 @@ ${getImportStatements(
   'Aspect'
 )}
 ${getImportStatements(
-  aspectDefs.map((def) => def.runtimePath),
+  // @ts-ignore no nulls can be found here - see above.
+  defs.map((def) => def.runtimePath),
   'Runtime'
 )}
 

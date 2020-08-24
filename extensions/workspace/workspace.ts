@@ -8,7 +8,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { link } from 'bit-bin/dist/api/consumer';
-import { isCoreAspect } from '@teambit/bit';
+import { isCoreAspect, getCoreAspects } from '@teambit/bit';
 import type { ScopeMain } from '@teambit/scope';
 import { Component, ComponentID, State, ComponentFactory, ComponentFS, TagMap } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
@@ -35,6 +35,7 @@ import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-pac
 import { ResolvedComponent } from '@teambit/utils.resolved-component';
 import { DependencyLifecycleType } from '@teambit/dependency-resolver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { getAspectDef } from '@teambit/aspect-loader';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { EnvsMain } from '@teambit/environments';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
@@ -605,6 +606,7 @@ export class Workspace implements ComponentFactory {
     return res.filter((aspect) => !aspect.isCore).map((aspect) => aspect.component);
   }
 
+  // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     // TODO: @gilad we should make sure to cache this process.
     const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
@@ -636,9 +638,11 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
+    const coreAspectsIds = getCoreAspects();
+    const userAspectsIds: string[] = difference(ids, coreAspectsIds);
+    const componentIds = await Promise.all(userAspectsIds.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
-    const aspectDefs = this.aspectLoader.resolveAspects(components, async (component) => {
+    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       stringIds.push(component.id.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
@@ -653,11 +657,20 @@ export class Workspace implements ComponentFactory {
       };
     });
 
+    const coreAspectDefs = await Promise.all(
+      coreAspectsIds.map(async (coreId) => {
+        const rawDef = await getAspectDef(coreId, runtimeName);
+        return this.aspectLoader.loadDefinition(rawDef);
+      })
+    );
+
+    const coreAspectsInRuntime = coreAspectDefs.filter((coreAspect) => coreAspect.runtimePath);
+
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs;
+    return aspectDefs.concat(coreAspectsInRuntime);
   }
 
   /**

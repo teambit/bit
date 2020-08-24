@@ -53,6 +53,11 @@
                 "name": "constants.ts"
             },
             {
+                "relativePath": "core-aspects.ts",
+                "test": false,
+                "name": "core-aspects.ts"
+            },
+            {
                 "relativePath": "exceptions/cannot-load-extension.ts",
                 "test": false,
                 "name": "cannot-load-extension.ts"
@@ -144,11 +149,6 @@
                 "relativePath": "builder.service.ts",
                 "test": false,
                 "name": "builder.service.ts"
-            },
-            {
-                "relativePath": "builder.spec.ts",
-                "test": false,
-                "name": "builder.spec.ts"
             },
             {
                 "relativePath": "exceptions/index.ts",
@@ -2777,7 +2777,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "src/to-eject/full-loader",
+        "rootDir": "components/stage-components/full-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3617,6 +3617,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/tester",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "toolbox/string/capitalize": {
+        "files": [
+            {
+                "relativePath": "capitalize.spec.ts",
+                "test": false,
+                "name": "capitalize.spec.ts"
+            },
+            {
+                "relativePath": "capitalize.ts",
+                "test": false,
+                "name": "capitalize.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/capitalize",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

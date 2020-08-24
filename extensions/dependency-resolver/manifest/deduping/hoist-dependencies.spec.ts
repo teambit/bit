@@ -95,7 +95,7 @@ describe('hoistDependencies', () => {
     describe('item is exact version', () => {
       const dependencyName = 'package-dependency';
       const dependencyVersion = '1.0.0';
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
           range: dependencyVersion,
@@ -120,7 +120,7 @@ describe('hoistDependencies', () => {
     describe('item is range', () => {
       const dependencyName = 'package-dependency';
       const dependencyVersion = '^1.0.0';
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
           range: dependencyVersion,
@@ -145,7 +145,7 @@ describe('hoistDependencies', () => {
     describe('item is peer dependency', () => {
       const dependencyName = 'package-dependency';
       const dependencyVersion = '1.0.0';
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const item: PackageNameIndexItem = {
           range: dependencyVersion,
@@ -167,7 +167,7 @@ describe('hoistDependencies', () => {
   describe('dependency that appears only as peer (in many components)', () => {
     const dependencyName = 'package-dependency';
     describe('when there are no conflicts between versions', () => {
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const items = generateItems(3, undefined, undefined, PEER_DEP_LIFECYCLE_TYPE);
         index.set(dependencyName, items);
@@ -187,7 +187,7 @@ describe('hoistDependencies', () => {
       const dependencyName1 = 'package-dependency-1';
       const dependencyName2 = 'package-dependency-2';
 
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const items1 = generateItemsFromArrays(undefined, ['4.0.0', '5.0.0'], PEER_DEP_LIFECYCLE_TYPE);
         const items2 = generateItemsFromArrays(undefined, ['^4.0.0', '^5.0.0'], PEER_DEP_LIFECYCLE_TYPE);
@@ -214,7 +214,7 @@ describe('hoistDependencies', () => {
   describe('dependency that appears only with exact versions', () => {
     const dependencyName = 'package-dependency';
     const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
-    before(() => {
+    beforeEach(() => {
       index = new Map();
       const items = generateItemsFromArrays(
         undefined,
@@ -253,7 +253,7 @@ describe('hoistDependencies', () => {
   describe('dependency that appears only with ranges', () => {
     const dependencyName = 'package-dependency';
     const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
-    before(() => {
+    beforeEach(() => {
       index = new Map();
       const items = generateItemsFromArrays(
         undefined,
@@ -301,7 +301,7 @@ describe('hoistDependencies', () => {
     const dependencyName = 'package-dependency';
     const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[DEV_DEP_LIFECYCLE_TYPE];
     describe('when there is a version which satisfy more components than the best range', () => {
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const items = generateItemsFromArrays(
           undefined,
@@ -337,7 +337,7 @@ describe('hoistDependencies', () => {
       });
     });
     describe('when there is a best range which satisfy more components than the most common version', () => {
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const items = generateItemsFromArrays(
           undefined,
@@ -377,7 +377,7 @@ describe('hoistDependencies', () => {
       // there is best range which intersect 4 ranges (^4.0.5)
       // there is range that intersects 2 components and version that match 3 components (should return this version -
       // that practically matches 5 components. (^6.0.2(3) + 6.0.4(2))
-      before(() => {
+      beforeEach(() => {
         index = new Map();
         const items = generateItemsFromArrays(
           undefined,

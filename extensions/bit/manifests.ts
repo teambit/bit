@@ -34,6 +34,7 @@ import { ReactRouterAspect } from '@teambit/react-router';
 import { PanelUiAspect } from '@teambit/panels';
 import { TypescriptAspect } from '@teambit/typescript';
 import { NotificationsAspect } from '@teambit/notifications';
+import { NodeAspect } from '@teambit/node';
 import { BundlerAspect } from '@teambit/bundler';
 import { JestAspect } from '@teambit/jest';
 import { BitAspect } from './bit.aspect';
@@ -73,6 +74,7 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,
@@ -82,4 +84,8 @@ export function isCoreAspect(id: string) {
   const _reserved = [BitAspect.id, ConfigAspect.id];
   if (_reserved.includes(id)) return true;
   return !!manifestsMap[id];
+}
+
+export function getCoreAspects() {
+  return Object.keys(manifestsMap);
 }

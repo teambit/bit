@@ -7,7 +7,7 @@ import { flattenReplaySubject } from '../util/flatten-nested-map';
 // a graph of inter connected capsules where a->b if a is liable for b (b depends on a).
 //
 //
-describe('Network', () => {
+describe.skip('Network', () => {
   function getTestCaseFunc(toExpect: string, graph: { [k: string]: string[] } = { 'bit/a': [] }, input = ['bit/a']) {
     return async function (this: any) {
       const testCase: GraphTestCase = {

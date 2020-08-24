@@ -17,6 +17,7 @@ import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { CLIMain } from './cli.main.runtime';
+import { getAspectDef, getAspectDir } from '@teambit/aspect-loader';
 
 initApp();
 
@@ -59,25 +60,10 @@ async function getConfig() {
   return Config.loadGlobal(configOpts.global);
 }
 
-function getAspectDir(aspectName: string): string {
-  let dirPath: string;
-  try {
-    const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
-    dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
-  } catch (err) {
-    dirPath = resolve(__dirname, '../..', aspectName, 'dist');
-  }
-  if (!fs.existsSync(dirPath)) {
-    throw new Error(`unable to find ${aspectName} in ${dirPath}`);
-  }
-  return dirPath;
-}
-
-async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
+export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
-  const aspectName = id.split('/')[1];
-  if (!aspectName) throw new Error('could not retrieve aspect name');
-  const dirPath = getAspectDir(aspectName);
+  if (!id) throw new Error('could not retrieve aspect id');
+  const dirPath = getAspectDir(id);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
