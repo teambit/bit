@@ -509,8 +509,8 @@ jobs:
           at: ./
       -
         run:
-          name: 'link bit-bin'
-          command: 'cd bit && npm run link-bit-bin'
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'run ESLint'
@@ -529,8 +529,8 @@ jobs:
           at: ./
       -
         run:
-          name: 'link bit-bin'
-          command: 'cd bit && npm run link-bit-bin'
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'run TSC'
@@ -543,8 +543,8 @@ jobs:
           at: ./
       -
         run:
-          name: 'link bit-bin'
-          command: 'cd bit && npm run link-bit-bin'
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'generate types'
