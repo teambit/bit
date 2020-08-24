@@ -89,6 +89,7 @@ export default function (workspaceDir: string): Configuration {
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
+        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
     },
 

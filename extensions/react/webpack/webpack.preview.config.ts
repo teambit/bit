@@ -198,6 +198,7 @@ export default function (): Configuration {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
+        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
