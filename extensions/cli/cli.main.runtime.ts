@@ -139,7 +139,7 @@ export class CLIMain {
   }
 }
 
-export async function CLIProvider([cliExtension]: [CLIMain], onStartSlot: OnStartSlot) {
+export async function CLIProvider([cliExtension]: [CLIMain]) {
   const legacyExtensions = await LegacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach((extension) => {

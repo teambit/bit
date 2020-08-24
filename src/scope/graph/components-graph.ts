@@ -9,7 +9,6 @@ import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-fla
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';

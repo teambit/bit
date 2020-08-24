@@ -1,13 +1,10 @@
 import chai, { expect } from 'chai';
 
+import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../extensions/aspect-loader/constants';
+import { CannotLoadExtension } from '../../extensions/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import {
-  UNABLE_TO_LOAD_EXTENSION,
-  UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
-} from '../../src/extensions/aspect-loader/constants';
-import { CannotLoadExtension } from '../../src/extensions/aspect-loader/exceptions';
 
 chai.use(require('chai-fs'));
 

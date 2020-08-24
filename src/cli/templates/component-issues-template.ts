@@ -4,7 +4,6 @@ import R from 'ramda';
 import { Analytics } from '../../analytics/analytics';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
 import ConsumerComponent from '../../consumer/component/consumer-component';
-import Component from '../../consumer/component/consumer-component';
 import {
   RelativeComponentsAuthoredEntry,
   UntrackedFileDependencyEntry,
@@ -77,7 +76,7 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
   return result;
 }
 
-export function formatMissing(missingComponent: Component) {
+export function formatMissing(missingComponent: ConsumerComponent) {
   function formatMissingStr(key: string, value, label, formatIssueFunc: (any) => string = componentIssueToString) {
     if (!value || R.isEmpty(value)) return '';
 

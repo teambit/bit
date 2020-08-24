@@ -17,7 +17,6 @@ import { isString } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import ComponentMap from '../bit-map/component-map';
 import ConsumerComponent from '../component/consumer-component';
-import Component from '../component/consumer-component';
 import ExternalBuildErrors from '../component/exceptions/external-build-errors';
 import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
 import PackageJsonFile from '../component/package-json-file';
@@ -242,7 +241,7 @@ async function _build({
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
 async function _isNeededToReBuild(
   consumer: Consumer | null | undefined,
-  component: Component,
+  component: ConsumerComponent,
   noCache: boolean | null | undefined
 ): Promise<boolean> {
   if (noCache) return true;
