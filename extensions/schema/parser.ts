@@ -14,5 +14,5 @@ export interface Parser {
   /**
    * Extract module public api.
    */
-  extractApi?: (modulePath: string) => any; //TODO:[uri]: Define public api interface
+  extractApi?: (modulePath: string) => Module; //TODO:[uri]: Define public api interface
 }

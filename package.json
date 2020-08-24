@@ -93,6 +93,7 @@
     "@babel/preset-react": "^7.10.1",
     "@babel/runtime": "^7.8.4",
     "@graphql-modules/core": "^0.7.17",
+    "@microsoft/api-extractor": "^7.9.10",
     "@pnpm/config": "^11.2.3",
     "@pnpm/default-reporter": "^7.5.0",
     "@pnpm/default-resolver": "^10.0.3",
