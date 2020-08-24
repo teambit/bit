@@ -2,6 +2,8 @@
 // eslint-disable-next-line no-console
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
+require('v8-compile-cache');
+
 import './hook-require';
 import fs from 'fs-extra';
 import { Config } from '@teambit/harmony/dist/harmony-config';
