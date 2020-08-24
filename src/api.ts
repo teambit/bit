@@ -105,6 +105,6 @@ export async function loadCoreExtensions(options: LoadCoreExtensionsOptions = {}
  * @param {string} extensionId
  * @returns
  */
-export function getDeclarationCoreExtension(extensionId: string) {
+export function getDeclarationCoreExtension() {
   // return coreExtensions[extensionId];
 }

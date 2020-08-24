@@ -4,7 +4,6 @@ import * as path from 'path';
 import tar from 'tar';
 
 import * as fixtures from '../../src/fixtures/fixtures';
-import { indexer } from '../search';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';

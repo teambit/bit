@@ -1,7 +1,5 @@
 // import { ComponentMeta } from '@teambit/component';
-import { ComponentID } from '@teambit/component';
-import { ComponentModel } from '@teambit/component';
-import { ComponentModelProps } from '@teambit/component';
+import { ComponentID, ComponentModel, ComponentModelProps } from '@teambit/component';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/environments';
 

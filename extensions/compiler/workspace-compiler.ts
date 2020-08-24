@@ -1,6 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { ComponentID } from '@teambit/component';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/environments';
 import { OnComponentChangeResult, Workspace } from '@teambit/workspace';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';

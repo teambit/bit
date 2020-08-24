@@ -32,7 +32,6 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
     return <FullLoader />;
   }
 
-  const ids = scope.components.map((component) => component);
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
