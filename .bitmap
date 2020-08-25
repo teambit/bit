@@ -82,6 +82,11 @@
     "bit": {
         "files": [
             {
+                "relativePath": "app.ts",
+                "test": false,
+                "name": "app.ts"
+            },
+            {
                 "relativePath": "bit.aspect.ts",
                 "test": false,
                 "name": "bit.aspect.ts"
@@ -100,6 +105,11 @@
                 "relativePath": "bit.provider.ts",
                 "test": false,
                 "name": "bit.provider.ts"
+            },
+            {
+                "relativePath": "hook-require.ts",
+                "test": false,
+                "name": "hook-require.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -318,11 +328,6 @@
     "cli": {
         "files": [
             {
-                "relativePath": "app.ts",
-                "test": false,
-                "name": "app.ts"
-            },
-            {
                 "relativePath": "bin/bit",
                 "test": false,
                 "name": "bit"
@@ -356,11 +361,6 @@
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "hook-require.ts",
-                "test": false,
-                "name": "hook-require.ts"
             },
             {
                 "relativePath": "index.ts",

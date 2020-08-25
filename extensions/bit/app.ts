@@ -3,11 +3,9 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 require('v8-compile-cache');
-
 import './hook-require';
 
 import { getAspectDir } from '@teambit/aspect-loader';
-import { BitAspect, registerCoreExtensions } from '@teambit/bit';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { Extension } from '@teambit/harmony/dist/extension';
@@ -19,8 +17,11 @@ import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 
-import { CLIAspect, MainRuntime } from './cli.aspect';
-import { CLIMain } from './cli.main.runtime';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIMain } from '@teambit/cli/cli.main.runtime';
+
+import { BitAspect } from './bit.aspect';
+import { registerCoreExtensions } from './bit.main.runtime';
 
 initApp();
 
