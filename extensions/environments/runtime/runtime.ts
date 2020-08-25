@@ -1,5 +1,4 @@
 import BluebirdPromise from 'bluebird';
-
 import { ExecutionContext } from '../context';
 import { EnvService } from '../services';
 import { EnvRuntime } from './env-runtime';

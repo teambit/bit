@@ -3240,6 +3240,11 @@
                 "name": "avatar-colors.module.scss"
             },
             {
+                "relativePath": "avatar.docs.tsx",
+                "test": false,
+                "name": "avatar.docs.tsx"
+            },
+            {
                 "relativePath": "avatar.tsx",
                 "test": false,
                 "name": "avatar.tsx"

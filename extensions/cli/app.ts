@@ -18,7 +18,6 @@ import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
-
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { CLIMain } from './cli.main.runtime';
 

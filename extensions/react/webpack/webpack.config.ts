@@ -1,11 +1,10 @@
 import { Configuration } from 'webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import { ReactAspect } from '../react.aspect';
 
-export default function (workspaceDir: string, targets: string[]): Configuration {
+export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
   return {
     devServer: {
-      sockPath: `_hmr/${ReactAspect.id}`,
+      sockPath: `_hmr/${envId}`,
     },
     module: {
       rules: [
@@ -17,10 +16,11 @@ export default function (workspaceDir: string, targets: string[]): Configuration
         },
         {
           test: /\.(js|jsx|tsx|ts)$/,
-          exclude: /node_modules/,
-          include: workspaceDir,
+          // TODO: use a more specific exclude for our selfs
+          exclude: [/node_modules/, /dist/],
           loader: require.resolve('babel-loader'),
           options: {
+            babelrc: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
@@ -97,10 +97,10 @@ export default function (workspaceDir: string, targets: string[]): Configuration
     plugins: [
       new ReactRefreshWebpackPlugin({
         overlay: {
-          sockPath: `_hmr/${ReactAspect.id}`,
+          sockPath: `_hmr/${envId}`,
         },
-        exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
-        include: targets,
+        // TODO: use a more specific exclude for our selfs
+        exclude: [/dist/, /node_modules/],
       }),
     ],
   };

@@ -95,6 +95,8 @@ export class ReactEnv implements Environment {
       .map((comp) => this.pkg.getPackageName(comp))
       .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
 
+    console.log(packagePaths);
+
     return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
   }
 

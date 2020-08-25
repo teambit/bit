@@ -6,7 +6,7 @@ import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
-let PREVIEW_MODULES: Record<string, previewModule> = {};
+const PREVIEW_MODULES = {};
 
 type previewModule = {
   componentMap: Record<string, any[]>;
@@ -98,15 +98,11 @@ export class PreviewPreview {
   }
 }
 
-// I don't like this implementation, it seems too loose and unpredictable.
-// I'd rather have a dynamic import using `process.env.previewPath` or something of this sort.
-
-/** allows other extensions to inject preview definitions.
- * as target components reside in another project all together,
- * we cannot reference them from here, and they have to reference us.
- */
-export function setModules(modules: Record<string, previewModule>) {
-  PREVIEW_MODULES = modules;
+export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
+  PREVIEW_MODULES[previewName] = {
+    mainModule: defaultModule,
+    componentMap,
+  };
 }
 
 PreviewAspect.addRuntime(PreviewPreview);
