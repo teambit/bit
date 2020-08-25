@@ -4,7 +4,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { /* ScopeView, */ NamespaceView } from './component-nodes';
 import { ComponentTreeContextProvider } from './component-tree-context';
-import styles from './component-tree.module.scss';
 import { ComponentView } from './component-view';
 import { indentStyle } from './indent';
 import { inflateToTree } from './inflate-paths';
@@ -43,7 +42,7 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: 
   );
 
   return (
-    <div className={styles.componentTree} style={indentStyle(0)}>
+    <div style={indentStyle(0)}>
       <TreeNodeContext.Provider value={TreeNodeRenderer}>
         <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} />

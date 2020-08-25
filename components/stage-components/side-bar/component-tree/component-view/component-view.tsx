@@ -2,7 +2,6 @@ import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { NavLink } from '@teambit/react-router';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import _ from 'lodash';
 import React, { useCallback, useContext } from 'react';
@@ -38,7 +37,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   return (
     <NavLink
       href={`/${node.id}`}
-      className={classNames(indentClass, clickable, hoverable, styles.component)}
+      className={classNames(indentClass, clickable, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}
     >

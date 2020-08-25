@@ -17,6 +17,7 @@
   border-left: 0px solid transparent;
 
   &:hover {
+    background: var(--bg-topping-highlight);
     .envIcon {
       filter: grayscale(0);
     }
