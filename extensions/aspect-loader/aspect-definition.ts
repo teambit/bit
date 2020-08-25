@@ -4,7 +4,7 @@ export type AspectDefinitionProps = {
   id?: string;
   component?: Component;
   aspectPath: string;
-  runtimePath: string;
+  runtimePath: string | null;
 };
 
 export class AspectDefinition {
