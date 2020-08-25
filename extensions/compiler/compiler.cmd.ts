@@ -1,9 +1,8 @@
 /* eslint-disable no-console */
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import ora from 'ora';
 
-// import cliSpinners from 'cli-spinners';
-// import ora, { Ora, PersistOptions } from 'ora';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
@@ -22,16 +21,11 @@ export class CompileCmd implements Command {
   constructor(private compile: WorkspaceCompiler) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
-    // console.log(cliSpinners.dots);
-    // this.spinner.start(text);
-    // (this.createNewSpinner()).start();
-    // const spinner = ora('Loading unicorns').start();
-    // setTimeout(() => {
-    //   spinner.color = 'yellow';
-    //   spinner.text = 'Loading rainbows';
-    // }, 1000);
+    const spinner = ora('Compiling your components, hold tight.').start();
 
     const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    spinner.stop();
+    console.log(``);
     console.log(`  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}`);
 
     if (verbose) {
@@ -42,7 +36,6 @@ export class CompileCmd implements Command {
         .map((componentId) => ({ status: 'SUCCESS', componentId }))
         .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
     }
-
     return `${compileResults.length} components have been compiled successfully`;
   }
 
@@ -55,8 +48,4 @@ export class CompileCmd implements Command {
       code: 0,
     };
   }
-
-  // private createNewSpinner(): Ora {
-  //   return ora({ spinner: cliSpinners.dots12, text: '' });
-  // }
 }
