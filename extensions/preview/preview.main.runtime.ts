@@ -1,5 +1,3 @@
-import { writeFileSync } from 'fs-extra';
-import { join, resolve } from 'path';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
@@ -7,7 +5,10 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
+import { writeFileSync } from 'fs-extra';
 import { flatten } from 'lodash';
+import { join, resolve } from 'path';
+
 import { PreviewArtifactNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';

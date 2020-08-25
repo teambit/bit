@@ -4,6 +4,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';

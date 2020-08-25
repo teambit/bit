@@ -1,12 +1,12 @@
-import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
-import TerserPlugin from 'terser-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
+import postcssNormalize from 'postcss-normalize';
 import safePostCssParser from 'postcss-safe-parser';
+import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
+import TerserPlugin from 'terser-webpack-plugin';
+import webpack, { Configuration, EnvironmentPlugin } from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
-import postcssNormalize from 'postcss-normalize';
 
 const moduleFileExtensions = [
   'web.mjs',

@@ -4,8 +4,9 @@ import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { join } from 'path';
 import { flatten } from 'lodash';
+import { join } from 'path';
+
 import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 
