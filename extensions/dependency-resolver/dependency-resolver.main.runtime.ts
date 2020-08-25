@@ -160,8 +160,8 @@ export class DependencyResolverMain {
     let policiesFromEnv: DependenciesPolicy = {};
     let policiesFromHooks: DependenciesPolicy = {};
     let policiesFromConfig: DependenciesPolicy = {};
-    const env = this.envs.getEnvFromExtensions(configuredExtensions)?.env;
-    if (env?.getDependencies && typeof env.getDependencies === 'function') {
+    const env = this.envs.getEnvFromExtensions(configuredExtensions).env;
+    if (env.getDependencies && typeof env.getDependencies === 'function') {
       policiesFromEnv = await env.getDependencies();
     }
     const configuredIds = configuredExtensions.ids;
