@@ -36,7 +36,16 @@ export class CompileCmd implements Command {
         .map((componentId) => ({ status: 'SUCCESS', componentId }))
         .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
     }
-    return `${compileResults.length} components have been compiled successfully`;
+
+    const taskSummary =
+      `${chalk.green('√')} ${compileResults.length} components passed \n` + `${chalk.red('X')} 2 components failed:`;
+    console.log(``);
+    console.log(taskSummary);
+
+    console.log(``);
+    return `Finished. (2 minutes)`;
+
+    // return `${compileResults.length} components have been compiled successfully`;
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
