@@ -2753,7 +2753,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/corner",
+        "rootDir": "components/corner",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2777,7 +2777,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/full-loader",
+        "rootDir": "components/full-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2801,7 +2801,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/main-dropdown",
+        "rootDir": "components/main-dropdown",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2825,7 +2825,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/pill-label",
+        "rootDir": "components/pill-label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2849,7 +2849,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-details",
+        "rootDir": "components/scope-details",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2873,7 +2873,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-labels",
+        "rootDir": "components/scope-labels",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2897,7 +2897,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-title",
+        "rootDir": "components/scope-title",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3166,7 +3166,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/side-bar",
+        "rootDir": "components/side-bar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3190,7 +3190,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/splitter",
+        "rootDir": "components/splitter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3214,7 +3214,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/top-bar",
+        "rootDir": "components/top-bar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3238,31 +3238,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/version-dropdown",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/workspace-components/accordion": {
-        "files": [
-            {
-                "relativePath": "accordion.module.scss",
-                "test": false,
-                "name": "accordion.module.scss"
-            },
-            {
-                "relativePath": "accordion.tsx",
-                "test": false,
-                "name": "accordion.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/accordion",
+        "rootDir": "components/version-dropdown",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3311,7 +3287,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/Avatar",
+        "rootDir": "components/Avatar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3340,7 +3316,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/label",
+        "rootDir": "components/label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3364,7 +3340,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/separator",
+        "rootDir": "components/separator",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3393,7 +3369,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/status",
+        "rootDir": "components/status",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3417,7 +3393,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/time-ago",
+        "rootDir": "components/time-ago",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3446,7 +3422,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/version-tag",
+        "rootDir": "components/version-tag",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3470,7 +3446,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/contributors",
+        "rootDir": "components/contributors",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3499,7 +3475,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/version-block",
+        "rootDir": "components/version-block",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3523,7 +3499,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/version-label",
+        "rootDir": "components/version-label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

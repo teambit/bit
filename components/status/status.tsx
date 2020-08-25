@@ -1,9 +1,15 @@
-import { JobStatus } from '@teambit/staged-components.workspace-sections.version-block';
 import classNames from 'classnames';
 import React from 'react';
 
 import colors from './status-colors.module.scss';
 import styles from './status.module.scss';
+
+export enum JobStatus {
+  fail = 'fail',
+  pass = 'pass',
+  running = 'running',
+  pending = 'pending',
+}
 
 type StatusProps = {
   status: JobStatus;
