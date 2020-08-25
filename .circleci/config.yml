@@ -643,10 +643,10 @@ jobs:
       #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       # -
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      -
-        run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony'
+      # -
+      #   run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony'
       -
         run: which bit
       -
