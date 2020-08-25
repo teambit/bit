@@ -2402,9 +2402,9 @@
                 "name": "html.js"
             },
             {
-                "relativePath": "webpack/webpack.config.js",
+                "relativePath": "webpack/webpack.config.ts",
                 "test": false,
-                "name": "webpack.config.js"
+                "name": "webpack.config.ts"
             },
             {
                 "relativePath": "webpack/webpack.preview-dev.config.js",
@@ -2412,9 +2412,9 @@
                 "name": "webpack.preview-dev.config.js"
             },
             {
-                "relativePath": "webpack/webpack.preview.config.js",
+                "relativePath": "webpack/webpack.preview.config.ts",
                 "test": false,
-                "name": "webpack.preview.config.js"
+                "name": "webpack.preview.config.ts"
             }
         ],
         "mainFile": "index.ts",
@@ -3273,6 +3273,11 @@
                 "relativePath": "avatar-colors.module.scss",
                 "test": false,
                 "name": "avatar-colors.module.scss"
+            },
+            {
+                "relativePath": "avatar.docs.tsx",
+                "test": false,
+                "name": "avatar.docs.tsx"
             },
             {
                 "relativePath": "avatar.tsx",

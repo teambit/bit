@@ -14,6 +14,7 @@ import { join, resolve } from 'path';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import { Configuration } from 'webpack';
 
 export const AspectEnvType = 'react';
 
@@ -60,13 +61,6 @@ export class ReactEnv implements Environment {
     private config: ReactMainConfig
   ) {}
 
-  private _tsconfig: any;
-
-  setTsConfig(tsconfig: any) {
-    this._tsconfig = tsconfig;
-    return this;
-  }
-
   /**
    * returns a component tester.
    */
@@ -79,7 +73,7 @@ export class ReactEnv implements Environment {
    */
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = targetConfig || this._tsconfig || require('./typescript/tsconfig.json');
+    const tsconfig = targetConfig || require('./typescript/tsconfig.json');
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -93,19 +87,26 @@ export class ReactEnv implements Environment {
   getLinter() {}
 
   /**
+   * get the default react webpack config.
+   */
+  getWebpackConfig(context: DevServerContext): Configuration {
+    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
+    const packagePaths = context.components
+      .map((comp) => this.pkg.getPackageName(comp))
+      .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
+
+    return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
+  }
+
+  /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext): DevServer {
+  getDevServer(context: DevServerContext, config?: Configuration): DevServer {
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
 
-    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
-    const targets = context.components.map((component) => {
-      return join(this.pkg.getPackageName(component));
-    });
-
-    return this.webpack.createDevServer(withDocs, webpackConfigFactory(this.workspace.path, targets));
+    return this.webpack.createDevServer(withDocs, config || this.getWebpackConfig(context));
   }
 
   async getBundler(context: BundlerContext): Promise<Bundler> {

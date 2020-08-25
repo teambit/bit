@@ -82,7 +82,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [OnComponentLoadSlot, OnComponentChangeSlot, OnComponentAddSlot],
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [
+    OnComponentLoadSlot,
+    OnComponentChangeSlot,
+    OnComponentAddSlot
+  ],
   harmony: Harmony
 ) {
   const consumer = await getConsumer();

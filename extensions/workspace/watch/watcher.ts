@@ -97,7 +97,7 @@ export class Watcher {
     const newDirs: string[] = R.difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
     if (!newDirs.length) return;
     this.fsWatcher.add(newDirs);
-    await Bluebird.mapSeries(newDirs, dir => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
+    await Bluebird.mapSeries(newDirs, (dir) => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
   }
 
   private async executeWatchOperationsOnComponent(bitId: BitId, isChange = true) {
