@@ -36,14 +36,13 @@ export class PreviewPreview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            if (!PREVIEW_MODULES[prevName]?.componentMap[componentId]) return undefined;
+            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
             return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
           .filter((module) => !!module)
       : [];
 
-    const previewModule = PREVIEW_MODULES[name];
-    return preview.render(componentId, previewModule, includes);
+    return preview.render(componentId, PREVIEW_MODULES[name], includes);
   };
 
   /**
@@ -91,7 +90,7 @@ export class PreviewPreview {
     const preview = new PreviewPreview(previewSlot);
 
     window.addEventListener('hashchange', () => {
-      preview.render;
+      preview.render();
     });
 
     return preview;
