@@ -443,7 +443,7 @@
   },
   "files": [
     "/bin",
-    "/components",
+    "/legacy-capsule",
     "/dist"
   ],
   "engines": {

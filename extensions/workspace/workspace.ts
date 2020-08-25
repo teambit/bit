@@ -656,7 +656,7 @@ export class Workspace implements ComponentFactory {
 
     const allComponents = await this.getMany(allIds);
 
-    const aspects = allComponents.filter((component: ConsumerComponent) => {
+    const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;

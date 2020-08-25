@@ -4,27 +4,8 @@
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit2.core",
-    "defaultDirectory": "components",
+    "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
-    "extensions": {
-      "teambit.bit/pkg": {
-        "packageJson": {
-          "name": "@teambit/{name}"
-        }
-      },
-      "teambit.bit/dependency-resolver": {
-        "policy": {
-          "devDependencies": {
-            "@types/mocha": "^5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "^12.12.27"
-          },
-          "peerDependencies": {
-            "react": "^16.13.1"
-          }
-        }
-      }
-    }
   },
   "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.bit/pnpm",
@@ -34,11 +15,36 @@
       "peerDependencies": {
         "react": "^16.13.1",
         "browserslist": "^4",
-        "mz": "^2.7.0"
+        "mz": "^2.7.0",
+        "bit-bin": "14.8.9-dev.3"
       }
     }
   },
   "teambit.bit/variants": {
+    "*":{
+      "teambit.bit/pkg": {
+        "packageJson": {
+          "name": "@teambit/{name}"
+        }
+      },
+      "teambit.bit/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "bit-bin": "-"
+          },
+          "devDependencies": {
+            "@types/mocha": "^5.2.7",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.27",
+            "bit-bin": "-"
+          },
+          "peerDependencies": {
+            "react": "^16.13.1",
+            "bit-bin": "14.8.9-dev.3"
+          }
+        }
+      }
+    },
     "components": {
       "teambit.bit/react": {}
     },
@@ -48,11 +54,27 @@
     "toolbox": {
       // "teambit.bit/node": {}
     },
-    "extensions/cli": {
+    "extensions/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
           "bin": "bin/bit"
+        }
+      },
+      "teambit.bit/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "bit-bin": "14.8.9-dev.3",
+            "react": "^16.13.1"
+          },
+          "devDependencies": {
+            "@types/mocha": "^5.2.7",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.27"
+          },
+          "peerDependencies":{
+            "bit-bin": "-"
+          }
         }
       }
     }

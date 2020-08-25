@@ -30,7 +30,7 @@ export class TesterService implements EnvService {
 
     if (!testMatch.length) {
       // throw new NoTestFilesFound(this.testsRegex);
-      return;
+      return undefined;
     }
 
     const testerContext = Object.assign(context, {

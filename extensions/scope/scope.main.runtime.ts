@@ -318,6 +318,7 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     }
 
+    // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema());
     componentExt.registerHost(scope);
