@@ -8,18 +8,18 @@ export class JestTester implements Tester {
     const config: any = {
       rootDir: context.rootPath,
       watch: context.watch,
-      runInBand: context.debug,
+      // runInBand: context.debug,
     };
 
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
-    Object.assign(jestConfig, {
+    const jestConfigWithSpecs = Object.assign(jestConfig, {
       testMatch: context.specFiles,
     });
 
-    Object.assign(config, jestConfig);
+    const withEnv = Object.assign(jestConfigWithSpecs, config);
     // :TODO he we should match results to components and format them accordingly. (e.g. const results = runCLI(...))
-    await runCLI(config, [this.jestConfig]);
+    await runCLI(withEnv, [this.jestConfig]);
     return {
       total: 50,
     };
