@@ -5,6 +5,7 @@ export class AlreadyExistsError extends BitError {
     super(`config file at ${filePath} already exist. use override in case you want to override it`);
   }
   report() {
-    // return this.message;
+    // TODO: why ts is yelling about it?
+    return this.message;
   }
 }
