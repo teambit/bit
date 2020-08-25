@@ -6,7 +6,21 @@
     "defaultScope": "teambit2.core",
     "defaultDirectory": "components",
     // "vendorDirectory": "vendor",
-    "extensions": {
+  },
+  "teambit.bit/dependency-resolver": {
+    "packageManager": "teambit.bit/pnpm",
+    "strictPeerDependencies": true,
+    "extraArgs": [],
+    "policy": {
+      "peerDependencies": {
+        "react": "^16.13.1",
+        "browserslist": "^4",
+        "mz": "^2.7.0"
+      }
+    }
+  },
+  "teambit.bit/variants": {
+    "*":{
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}"
@@ -24,21 +38,7 @@
           }
         }
       }
-    }
-  },
-  "teambit.bit/dependency-resolver": {
-    "packageManager": "teambit.bit/pnpm",
-    "strictPeerDependencies": true,
-    "extraArgs": [],
-    "policy": {
-      "peerDependencies": {
-        "react": "^16.13.1",
-        "browserslist": "^4",
-        "mz": "^2.7.0"
-      }
-    }
-  },
-  "teambit.bit/variants": {
+    },
     "components": {
       "teambit.bit/react": {}
     },
@@ -46,9 +46,9 @@
       "teambit.bit/aspect": {}
     },
     "toolbox": {
-      // "teambit.bit/node": {}
+      "teambit.bit/node": {}
     },
-    "extensions/cli": {
+    "extensions/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
