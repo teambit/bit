@@ -4,6 +4,16 @@ interface VendorConfig {
 
 export interface WorkspaceExtConfig {
   /**
+   * name of the workspace.
+   */
+  name: string;
+
+  /**
+   * path to icon.
+   */
+  icon: string;
+
+  /**
    * applies only on bit.dev. configure the main owner of your workspace
    */
   defaultOwner: string;
@@ -27,9 +37,4 @@ export interface WorkspaceExtConfig {
    * All component extensions applied by default on all components in the workspace (except vendor components)
    */
   extensions: { [extensionsId: string]: string };
-
-  /**
-   * name of the workspace.
-   */
-  name: string;
 }
