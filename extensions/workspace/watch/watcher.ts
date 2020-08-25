@@ -1,17 +1,16 @@
-import Bluebird from 'bluebird';
 import { ComponentID } from '@teambit/component';
 import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
-import { BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from 'bit-bin/dist/constants';
+import { BIT_MAP, BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
-import { BIT_MAP } from 'bit-bin/dist/constants';
 
 import { Workspace } from '../workspace';
 
@@ -97,7 +96,7 @@ export class Watcher {
     const newDirs: string[] = R.difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
     if (!newDirs.length) return;
     this.fsWatcher.add(newDirs);
-    await Bluebird.mapSeries(newDirs, dir => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
+    await Bluebird.mapSeries(newDirs, (dir) => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
   }
 
   private async executeWatchOperationsOnComponent(bitId: BitId, isChange = true) {
@@ -133,7 +132,6 @@ export class Watcher {
       return;
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
-    return;
   }
 
   private completeWatch(start: number) {

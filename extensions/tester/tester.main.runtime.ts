@@ -1,6 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'lodash';
 
@@ -8,7 +9,6 @@ import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export type TesterExtensionConfig = {
   /**
