@@ -4,7 +4,7 @@
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit2.core",
-    "defaultDirectory": "components",
+    "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
   "teambit.bit/dependency-resolver": {
@@ -15,7 +15,8 @@
       "peerDependencies": {
         "react": "^16.13.1",
         "browserslist": "^4",
-        "mz": "^2.7.0"
+        "mz": "^2.7.0",
+        "bit-bin": "14.8.9-dev.3"
       }
     }
   },
@@ -28,13 +29,18 @@
       },
       "teambit.bit/dependency-resolver": {
         "policy": {
+          "dependencies": {
+            "bit-bin": "-"
+          },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
-            "@types/node": "^12.12.27"
+            "@types/node": "^12.12.27",
+            "bit-bin": "-"
           },
           "peerDependencies": {
-            "react": "^16.13.1"
+            "react": "^16.13.1",
+            "bit-bin": "14.8.9-dev.3"
           }
         }
       }
@@ -53,6 +59,22 @@
         "packageJson": {
           "name": "@teambit/{name}",
           "bin": "bin/bit"
+        }
+      },
+      "teambit.bit/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "bit-bin": "14.8.9-dev.3",
+            "react": "^16.13.1"
+          },
+          "devDependencies": {
+            "@types/mocha": "^5.2.7",
+            // why this is needed? try to automate this
+            "@types/node": "^12.12.27"
+          },
+          "peerDependencies":{
+            "bit-bin": "-"
+          }
         }
       }
     }
