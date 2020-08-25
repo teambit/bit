@@ -87,6 +87,11 @@
                 "name": "app.ts"
             },
             {
+                "relativePath": "bin/bit",
+                "test": false,
+                "name": "bit"
+            },
+            {
                 "relativePath": "bit.aspect.ts",
                 "test": false,
                 "name": "bit.aspect.ts"
@@ -327,11 +332,6 @@
     },
     "cli": {
         "files": [
-            {
-                "relativePath": "bin/bit",
-                "test": false,
-                "name": "bit"
-            },
             {
                 "relativePath": "cli.aspect.ts",
                 "test": false,
