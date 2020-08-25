@@ -29,8 +29,7 @@ export class TesterService implements EnvService {
     }, []);
 
     if (!testMatch.length) {
-      // throw new NoTestFilesFound(this.testsRegex);
-      return;
+      throw new NoTestFilesFound(this.testsRegex);
     }
 
     const testerContext = Object.assign(context, {
