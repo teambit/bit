@@ -20,6 +20,7 @@ import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
+import { OnComponentAdd } from './on-component-add';
 import { OnComponentChange } from './on-component-change';
 import { OnComponentLoad } from './on-component-load';
 import { WorkspaceExtConfig } from './types';
@@ -28,7 +29,6 @@ import { Watcher } from './watch/watcher';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
-import { OnComponentAdd } from './on-component-add';
 
 export type WorkspaceDeps = [
   CLIMain,
