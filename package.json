@@ -450,7 +450,12 @@
     "node": ">=10.14.2"
   },
   "lint-staged": {
-    "*.{ts,js,css,scss,tsx}": [
+    "*.{ts,js,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{css,scss}": [
       "prettier --write",
       "git add"
     ]
