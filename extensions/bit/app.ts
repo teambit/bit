@@ -22,6 +22,8 @@ import { CLIMain } from '@teambit/cli/cli.main.runtime';
 
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
+// TODO: expose this type from harmony
+import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 
 initApp();
 
@@ -46,10 +48,11 @@ async function getConfig() {
   const cwd = process.cwd();
   const consumerInfo = await getConsumerInfo(cwd);
   const scopePath = propagateUntil(cwd);
-  const configOpts = {
-    global: {
-      name: '.bitrc.jsonc',
-    },
+  const globalConfigOpts = {
+    name: '.bitrc.jsonc',
+  };
+  const configOpts: ConfigOptions = {
+    global: globalConfigOpts,
     shouldThrow: false,
     cwd: consumerInfo?.path || scopePath,
   };
@@ -62,7 +65,7 @@ async function getConfig() {
     return Config.load('scope.jsonc', configOpts);
   }
 
-  return Config.loadGlobal(configOpts.global);
+  return Config.loadGlobal(globalConfigOpts);
 }
 
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {

@@ -24,7 +24,7 @@ export class CLIMain {
 
   static provider(deps, config, [onStartSlot]: [OnStartSlot]) {
     const cli = new CLIMain(new CommandRegistry({}), onStartSlot);
-    return CLIProvider([cli], onStartSlot);
+    return CLIProvider([cli]);
   }
 
   static runtime = MainRuntime;
