@@ -7,8 +7,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { Compiler } from '@teambit/compiler';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { flatten } from 'lodash';
 import { PreviewArtifactNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -45,23 +44,6 @@ export class PreviewMain {
     return this.previewSlot.values();
   }
 
-  private toDist(moduleMap: ComponentMap<string[]>, context: ExecutionContext) {
-    const compiler: Compiler = context.env.getCompiler();
-
-    const distMap = moduleMap.map((paths, component) => {
-      return paths.map((path) => {
-        // @TODO - @David, should have a decent way to get to the dist from source files.
-        const packageName = componentIdToPackageName(component.state._consumer);
-        const distPath = compiler.getDistPathBySrcPath(path);
-        const npmPath = join(packageName, distPath);
-        const absPath = require.resolve(npmPath);
-        return npmPath;
-      });
-    });
-
-    return distMap;
-  }
-
   /**
    * write a link for a loading custom modules dynamically.
    * @param prefix write
@@ -94,21 +76,17 @@ export class PreviewMain {
         previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
       );
 
-      const outputFiles = map
-        .toArray()
-        .flatMap(([, files]) => {
+      const outputFiles = flatten(
+        map.toArray().map(([, files]) => {
           return files.map((file) => file.path);
         })
-        .concat([link]);
+      ).concat([link]);
 
       return outputFiles;
     });
 
     const resolved = await Promise.all(paths);
     return resolved.flatMap((array) => array).concat([previewRuntime]);
-    // const entryPath = await this.writeLinks(previewLinks);
-
-    // return [entryPath];
   }
 
   async writePreviewRuntime() {
