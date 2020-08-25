@@ -645,8 +645,9 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    // TODO: @gilad we should make sure to cache this process.
-    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
+    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const componentIds = await Promise.all(idsWithoutCore.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);
 
