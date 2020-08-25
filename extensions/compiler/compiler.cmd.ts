@@ -2,6 +2,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import ora from 'ora';
+import prettyTime from 'pretty-time';
 
 import { WorkspaceCompiler } from './workspace-compiler';
 
@@ -21,9 +22,11 @@ export class CompileCmd implements Command {
   constructor(private compile: WorkspaceCompiler) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
+    const startTimestamp = process.hrtime();
     const spinner = ora('Compiling your components, hold tight.').start();
 
     const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    const compileTimeLength = process.hrtime(startTimestamp);
     spinner.stop();
     console.log(``);
     console.log(`  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}`);
@@ -37,13 +40,14 @@ export class CompileCmd implements Command {
         .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
     }
 
-    const taskSummary =
-      `${chalk.green('√')} ${compileResults.length} components passed \n` + `${chalk.red('X')} 2 components failed:`;
     console.log(``);
+    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed \n${chalk.red(
+      'X'
+    )} 2 components failed:`;
     console.log(taskSummary);
 
     console.log(``);
-    return `Finished. (2 minutes)`;
+    return `Finished. (${prettyTime(compileTimeLength)})`;
 
     // return `${compileResults.length} components have been compiled successfully`;
   }
