@@ -68,6 +68,14 @@ export class Logger {
     if (message) this.info(message);
     loader.succeed(message);
   }
+
+  /**
+   * turn off the logger.
+   */
+  off() {
+    return loader.off();
+  }
+
   /**
    * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
    */
