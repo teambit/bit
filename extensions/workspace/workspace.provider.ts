@@ -28,6 +28,7 @@ import { Watcher } from './watch/watcher';
 import { Workspace } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
+import { OnComponentAdd } from './on-component-add';
 
 export type WorkspaceDeps = [
   CLIMain,
@@ -47,6 +48,8 @@ export type WorkspaceDeps = [
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
 
 export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
+
+export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type WorkspaceCoreConfig = {
   /**
@@ -79,7 +82,7 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot]: [OnComponentLoadSlot, OnComponentChangeSlot],
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [OnComponentLoadSlot, OnComponentChangeSlot, OnComponentAddSlot],
   harmony: Harmony
 ) {
   const consumer = await getConsumer();
@@ -100,7 +103,8 @@ export default async function provideWorkspace(
     harmony,
     onComponentLoadSlot,
     onComponentChangeSlot,
-    envs
+    envs,
+    onComponentAddSlot
   );
 
   ManyComponentsWriter.registerExternalInstaller({

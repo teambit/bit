@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import { ComponentID } from '@teambit/component';
 import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
@@ -8,17 +9,19 @@ import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
-import chokidar from 'chokidar';
+import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
+import { BIT_MAP } from 'bit-bin/dist/constants';
 
 import { Workspace } from '../workspace';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
 export class Watcher {
+  private fsWatcher: FSWatcher;
   constructor(
     private workspace: Workspace,
-    private trackDirs: { [dir: string]: string } = {},
+    private trackDirs: { [dir: string]: BitId } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
@@ -34,7 +37,8 @@ export class Watcher {
 
   async watchAll() {
     // TODO: run build in the beginning of process (it's work like this in other envs)
-    const watcher = this.getWatcher();
+    this.createWatcher();
+    const watcher = this.fsWatcher;
     const log = logger.console.bind(logger);
     log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
     log(chalk.yellow(`node version: ${process.version}`));
@@ -70,40 +74,66 @@ export class Watcher {
 
   private async handleChange(filePath: string, isNew = false) {
     const start = new Date().getTime();
+    if (filePath.endsWith(BIT_MAP)) {
+      await this.handleBitmapChanges();
+      return this.completeWatch(start);
+    }
     const componentId = await this.getBitIdByPathAndReloadConsumer(filePath, isNew);
     if (!componentId) {
       logger.console(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch(start);
     }
-    if (this.isComponentWatchedExternally(componentId)) {
+    await this.executeWatchOperationsOnComponent(componentId);
+    return this.completeWatch(start);
+  }
+
+  /**
+   * if .bitmap has change, it's possible that a new component has added. trigger onComponentAdd.
+   */
+  private async handleBitmapChanges() {
+    const previewsTrackDirs = { ...this.trackDirs };
+    await this.workspace._reloadConsumer();
+    this.setTrackDirs();
+    const newDirs: string[] = R.difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
+    if (!newDirs.length) return;
+    this.fsWatcher.add(newDirs);
+    await Bluebird.mapSeries(newDirs, dir => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
+  }
+
+  private async executeWatchOperationsOnComponent(bitId: BitId, isChange = true) {
+    if (this.isComponentWatchedExternally(bitId)) {
       // update capsule, once done, it automatically triggers the external watcher
-      await this.workspace.load([componentId]);
-      return this.completeWatch(start);
+      await this.workspace.load([bitId]);
+      return;
     }
-    const component = await this.workspace.consumer.loadComponent(componentId);
-    const idStr = componentId.toString();
+    const component = await this.workspace.consumer.loadComponent(bitId);
+    const idStr = bitId.toString();
     if (component.isLegacy) {
       await this.buildLegacy(idStr);
-      return this.completeWatch(start);
+      return;
     }
-    logger.console(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
+    const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
+    logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
     let buildResults;
+    const componentId = new ComponentID(bitId);
     try {
-      buildResults = await this.workspace.triggerOnComponentChange(new ComponentID(componentId));
+      buildResults = isChange
+        ? await this.workspace.triggerOnComponentChange(componentId)
+        : await this.workspace.triggerOnComponentAdd(componentId);
     } catch (err) {
       // do not exist the watch process on errors, just print them
       logger.console(err.message || err);
-      return this.completeWatch(start);
+      return;
     }
     if (buildResults && buildResults.length) {
       buildResults.forEach((extensionResult) => {
         logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
         logger.console(`\t${extensionResult.results.toString()}`);
       });
-      return this.completeWatch(start);
+      return;
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
-    return this.completeWatch(start);
+    return;
   }
 
   private completeWatch(start: number) {
@@ -148,8 +178,7 @@ export class Watcher {
     if (isNew && !componentId) {
       const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
       if (trackDir) {
-        const id = this.trackDirs[trackDir];
-        const bitId = this.consumer.getParsedId(id);
+        const bitId = this.trackDirs[trackDir];
         // loading the component causes the bitMap to be updated with the new path
         await this.consumer.loadComponent(bitId);
         componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
@@ -159,9 +188,9 @@ export class Watcher {
     return componentId;
   }
 
-  private getWatcher() {
+  private createWatcher() {
     const pathsToWatch = this.getPathsToWatch();
-    return chokidar.watch(pathsToWatch, {
+    this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // Using the function way since the regular way not working as expected
       // It might be solved when upgrading to chokidar > 3.0.0
@@ -181,21 +210,32 @@ export class Watcher {
     });
   }
 
-  private getPathsToWatch(): string[] {
+  setTrackDirs() {
+    this.trackDirs = {};
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    const paths = componentsFromBitMap.map((componentMap) => {
-      const componentId = componentMap.id.toString();
+    componentsFromBitMap.forEach((componentMap) => {
+      const componentId = componentMap.id;
       const trackDir = componentMap.getTrackDir();
       if (trackDir) {
         this.trackDirs[trackDir] = componentId;
       }
+    });
+  }
+
+  private getPathsToWatch(): string[] {
+    this.setTrackDirs();
+    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
+    const paths = componentsFromBitMap.map((componentMap) => {
+      const componentId = componentMap.id;
+      const trackDir = componentMap.getTrackDir();
       const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
       const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
       if (this.verbose) {
-        logger.console(`watching ${chalk.bold(componentId)}\n${absPaths.join('\n')}`);
+        logger.console(`watching ${chalk.bold(componentId.toString())}\n${absPaths.join('\n')}`);
       }
       return absPaths;
     });
-    return R.flatten(paths);
+    const bitmap = this.consumer.toAbsolutePath(BIT_MAP);
+    return [...R.flatten(paths), bitmap];
   }
 }

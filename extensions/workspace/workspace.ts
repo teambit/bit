@@ -58,7 +58,8 @@ import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
+import { OnComponentChangeSlot, OnComponentLoadSlot, OnComponentAddSlot } from './workspace.provider';
+import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
 
 export type EjectConfResult = {
   configPath: string;
@@ -129,7 +130,12 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentChangeSlot: OnComponentChangeSlot,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    /**
+     * on component add slot.
+     */
+    private onComponentAddSlot: OnComponentAddSlot,
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -154,6 +160,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentChange(onComponentChangeFunc: OnComponentChange) {
     this.onComponentChangeSlot.register(onComponentChangeFunc);
+    return this;
+  }
+
+  registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
+    this.onComponentAddSlot.register(onComponentAddFunc);
     return this;
   }
 
@@ -334,6 +345,20 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       results.push({ extensionId: extension, results: onChangeResult });
+    });
+
+    return results;
+  }
+
+  async triggerOnComponentAdd(
+    id: ComponentID
+  ): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+    const component = await this.get(id);
+    const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
+    await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
+      const onAddResult = await onAddFunc(component);
+      results.push({ extensionId: extension, results: onAddResult });
     });
 
     return results;

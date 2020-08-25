@@ -17,6 +17,7 @@ import { OnComponentChange } from './on-component-change';
 import { OnComponentLoad } from './on-component-load';
 import { WorkspaceAspect } from './workspace.aspect';
 import workspaceProvider from './workspace.provider';
+import { OnComponentAdd } from './on-component-add';
 
 export const WorkspaceMain = {
   name: EXT_NAME,
@@ -35,7 +36,7 @@ export const WorkspaceMain = {
     AspectLoaderAspect,
     EnvsAspect,
   ],
-  slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>()],
+  slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>(), Slot.withType<OnComponentAdd>()],
   provider: workspaceProvider,
   defineRuntime: 'browser',
 };
