@@ -1,57 +1,16 @@
-import { ComponentMap } from '@teambit/component/component-map';
-
 // :TODO refactor to building an AST and generate source code based on it.
-export function generateLink(componentMap: ComponentMap<string[]>, defaultModule?: string): string {
+export function generateLink(prefix: string, componentMap: any, defaultModule?: string): string {
   return `
-var componentMap = ${stringifyComponentMap(componentMap)};
-
-${makeExports([
-  ['componentMap', 'componentMap'],
-  ['mainModule', defaultModule ? `require('${defaultModule}')` : '{}'],
-])}
-`;
-}
-
-export function makeExports(entries: [string, string][]) {
-  return `
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-${entries.map(([name, value]) => `exports.${name} = ${value};`).join('\n')}
-`;
-}
-
-export function makeReExport(entries: [string, string][]) {
-  const reexport = entries.map(([name, path]) => [name, `require('${path}')`] as [string, string]);
-  return makeExports(reexport);
-}
-
-export function makeLinkUpdater(targetPath: string, previewMain: string) {
-  return `
-var previewRuntime = require('${previewMain}');
-var preview = require('${require.resolve('./preview.preview.runtime')}')
-var modulesIndex = require('${targetPath}');
-var updateModules = preview.updateModules;
-
-updateModules(modulesIndex);
-
-if(module.hot){
-  module.hot.accept('${targetPath}', function() {
-    var modules = require('${targetPath}');
-    updateModules(modules);
-  });
-}
-`;
-}
-
-function stringifyComponentMap(componentMap: ComponentMap<string[]>) {
-  const items = componentMap
+import { linkModules } from '${require.resolve('./preview.preview.runtime')}';
+import harmony from '${require.resolve('@teambit/harmony')}';
+${defaultModule ? `const defaultModule = require('${defaultModule}'` : ''});
+linkModules('${prefix}', defaultModule, {
+  ${componentMap
     .toArray()
-    .map(
-      ([component, paths]) => `'${component.id.fullName}': [${paths.map((path) => `require('${path}')`).join(', ')}]`
-    )
-    .join(',\n');
-
-  return ['{', items, '}'].join('\n');
+    .map(([component, modulePaths]: any) => {
+      return `'${component.id.fullName}': [${modulePaths.map((path) => `require('${path}')`).join(', ')}]`;
+    })
+    .join(',\n')}
+});  
+`;
 }

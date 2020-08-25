@@ -3,7 +3,6 @@ import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
-import { searchAdapter } from '../../../search';
 import ComponentObjects from '../../component-objects';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
@@ -83,10 +82,6 @@ export default class Fs implements Network {
 
   list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
-  }
-
-  search(query: string, reindex: boolean): Promise<string> {
-    return searchAdapter.scopeSearch(this.scopePath, query, reindex);
   }
 
   show(bitId: BitId): Promise<Component> {

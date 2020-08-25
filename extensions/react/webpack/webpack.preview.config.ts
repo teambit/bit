@@ -1,14 +1,12 @@
-const webpack = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const safePostCssParser = require('postcss-safe-parser');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
-
-const postcssNormalize = require('postcss-normalize');
-const { EnvironmentPlugin } = require('webpack');
+import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
+import TerserPlugin from 'terser-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
+import safePostCssParser from 'postcss-safe-parser';
+import ManifestPlugin from 'webpack-manifest-plugin';
+import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
+import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
+import postcssNormalize from 'postcss-normalize';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -38,7 +36,7 @@ const sassModuleRegex = /\.module\.(scss|sass)$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-module.exports = function () {
+export default function (): Configuration {
   const isEnvProduction = true;
 
   // Variable used for enabling profiling in Production
@@ -52,7 +50,7 @@ module.exports = function () {
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
     const loaders = [
       {
         loader: MiniCssExtractPlugin.loader,
@@ -200,6 +198,7 @@ module.exports = function () {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
+        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -436,4 +435,4 @@ module.exports = function () {
     // our own hints via the FileSizeReporter
     performance: false,
   };
-};
+}

@@ -55,10 +55,6 @@ export default class Remote {
     return this.connect(strategiesNames).then((network) => network.list(namespacesUsingWildcards));
   }
 
-  search(query: string, reindex: boolean): Promise<any> {
-    return this.connect().then((network) => network.search(query, reindex));
-  }
-
   show(
     bitId: BitId,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES

@@ -1,19 +1,17 @@
-import 'reset-css';
-
+import React, { HTMLAttributes } from 'react';
 import { useQuery } from '@apollo/react-hooks';
-import { ComponentModel } from '@teambit/component';
-import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
-import { docsFile } from '@teambit/documenter-temp.types.docs-file';
-import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
-import React, { HTMLAttributes } from 'react';
-
-import styles from './base.module.scss';
-import { ComponentOverview } from './component-overview';
+import 'reset-css';
+import { gql } from 'apollo-boost';
+import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
+import { docsFile } from '@teambit/documenter-temp.types.docs-file';
+import { ComponentModel } from '@teambit/component';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
-import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
+import { ComponentOverview } from './component-overview';
+import { ExamplesOverview } from './examples-overview';
+import styles from './base.module.scss';
 
 export type DocsSectionProps = {
   docs: docsFile;

@@ -7,8 +7,7 @@ require('v8-compile-cache');
 import './hook-require';
 
 import { getAspectDir } from '@teambit/aspect-loader';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
-import { CLIMain } from '@teambit/cli/cli.main.runtime';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { Extension } from '@teambit/harmony/dist/extension';
