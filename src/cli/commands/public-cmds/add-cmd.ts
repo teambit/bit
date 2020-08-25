@@ -120,9 +120,9 @@ export default class Add implements LegacyCommand {
       R.flatten(
         addedComponents.map((result: AddResult) => {
           if (result.files.length === 0) {
-            return chalk.underline.red(`could not track component ${chalk.bold(result.id)}: no files to track`);
+            return chalk.underline.red(`could not track component ${chalk.bold(result.id.toString())}: no files to track`);
           }
-          const title = chalk.underline(`tracking component ${chalk.bold(result.id)}:\n`);
+          const title = chalk.underline(`tracking component ${chalk.bold(result.id.toString())}:\n`);
           const files = result.files.map((file) => chalk.green(`added ${file.relativePath}`));
           return title + files.join('\n');
         })
