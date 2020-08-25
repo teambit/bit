@@ -8,6 +8,7 @@ import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export type TesterExtensionConfig = {
   /**
@@ -30,7 +31,7 @@ export type TesterOptions = {
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect];
+  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect];
 
   constructor(
     /**
@@ -77,7 +78,11 @@ export class TesterMain {
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
   };
 
-  static async provider([cli, envs, workspace]: [CLIMain, EnvsMain, Workspace], config: TesterExtensionConfig) {
+  static async provider(
+    [cli, envs, workspace, loggerAspect]: [CLIMain, EnvsMain, Workspace, LoggerMain],
+    config: TesterExtensionConfig
+  ) {
+    const logger = loggerAspect.createLogger(TesterAspect.id);
     // @todo: Ran to fix.
     // @ts-ignore
     const tester = new TesterMain(
@@ -88,7 +93,7 @@ export class TesterMain {
     );
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
-      cli.register(new TestCmd(tester, workspace));
+      cli.register(new TestCmd(tester, workspace, logger));
     }
 
     return tester;
