@@ -1,3 +1,8 @@
+/* TODO[uri]:
+  1. Indication for Failures
+  2. Sorting the verbose
+*/
+
 /* eslint-disable no-console */
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
@@ -25,7 +30,17 @@ export class CompileCmd implements Command {
     const startTimestamp = process.hrtime();
     const spinner = ora('Compiling your components, hold tight.').start();
 
-    const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    let compileResults;
+    try {
+      compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    } catch (err) {
+      spinner.stop();
+      console.error(``, err);
+
+      console.log('');
+      return `Finished. (${prettyTime(process.hrtime(startTimestamp))})`;
+    }
+
     const compileTimeLength = process.hrtime(startTimestamp);
     spinner.stop();
     console.log(``);
@@ -37,7 +52,7 @@ export class CompileCmd implements Command {
       compileResults
         .map((componentResults) => componentResults.component)
         .map((componentId) => ({ status: 'SUCCESS', componentId }))
-        .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
+        .forEach((result) => console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`));
     }
 
     console.log(``);
@@ -48,8 +63,6 @@ export class CompileCmd implements Command {
 
     console.log(``);
     return `Finished. (${prettyTime(compileTimeLength)})`;
-
-    // return `${compileResults.length} components have been compiled successfully`;
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
