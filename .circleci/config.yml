@@ -1067,7 +1067,7 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - setup_harmony
+            # - setup_harmony
             # - configure-bit
             # - pack
       -
