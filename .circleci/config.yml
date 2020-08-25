@@ -1038,11 +1038,13 @@ workflows:
         lint:
           requires:
             - install_npm_deps
+            - build
             - setup_harmony
       -
         check_types:
           requires:
             - install_npm_deps
+            - build
             - setup_harmony
       -
         generate_types:
