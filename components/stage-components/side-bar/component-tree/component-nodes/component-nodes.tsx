@@ -1,6 +1,5 @@
 import { Icon } from '@teambit/evangelist-temp.elements.icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React, { useState } from 'react';
 
@@ -27,10 +26,7 @@ export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
   return (
     <div data-collapsed={collapsed}>
       {node.id && (
-        <div
-          className={classNames(indentClass, hoverable, clickable, styles.namespace)}
-          onClick={() => collapse(!collapsed)}
-        >
+        <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
           <div className={styles.left}>
             <Icon className={styles.arrow} of="fat-arrow-down" />
             <span className={styles.name}>{getName(node.id)}</span>
