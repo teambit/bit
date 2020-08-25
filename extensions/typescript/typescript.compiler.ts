@@ -145,6 +145,7 @@ export class TypescriptCompiler implements Compiler {
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
       getNewLine: () => ts.sys.newLine,
     };
+    let currentComponentFromBuilderStatus;
     const reportDiagnostic = (diagnostic: ts.Diagnostic) => {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
@@ -154,14 +155,18 @@ export class TypescriptCompiler implements Compiler {
         // this happens for example if one of the components and is not TS
         throw new Error(errorStr);
       }
-      const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName);
+      const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName) || currentComponentFromBuilderStatus;
       if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
       componentsErrors.push({ componentId, error: errorStr });
     };
     // this only works when `verbose` is `true` in the `ts.createSolutionBuilder` function.
     // it prints useful info, such as, every time it starts compiling a new capsule
     const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
-      this.logger.info(diag.messageText as string);
+      const msg = diag.messageText as string;
+      this.logger.info(msg);
+      const capsulePath = this.getCapsulePathFromBuilderStatus(msg);
+      if (!capsulePath) return;
+      currentComponentFromBuilderStatus = capsules.getIdByPathInCapsule(capsulePath);
     };
     const errorCounter = (errorCount: number) => this.logger.info(`total error found: ${errorCount}`);
     return ts.createSolutionBuilderHost(
@@ -205,5 +210,16 @@ export class TypescriptCompiler implements Compiler {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
+  }
+
+  /**
+   * the message is something like: "Building project '/Users/davidfirst/Library/Caches/Bit/capsules/dce2c8055fc028cc39ab2636b027e74c76a6140b/marketing_testimonial/tsconfig.json'..."
+   * fetch the capsule path from this message.
+   */
+  private getCapsulePathFromBuilderStatus(msg: string): string | undefined {
+    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return;
+    const msgTextSplit = msg.split("'");
+    if (msgTextSplit.length < 2) return;
+    return msgTextSplit[1];
   }
 }
