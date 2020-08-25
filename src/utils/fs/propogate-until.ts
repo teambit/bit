@@ -54,13 +54,13 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
  *  // => '/usr/local/var'
  * ```
  */
-export function propogateUntil(fromPath: string): string | null | undefined {
-  if (!fromPath) return null;
-  if (!fs.existsSync(fromPath)) return null;
+export function propogateUntil(fromPath: string): string | undefined {
+  if (!fromPath) return undefined;
+  if (!fs.existsSync(fromPath)) return undefined;
   const filePath = findUp.sync(
     [OBJECTS_DIR, path.join(BIT_HIDDEN_DIR, OBJECTS_DIR), path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR)],
     { cwd: fromPath }
   );
-  if (!filePath) return null;
+  if (!filePath) return undefined;
   return path.dirname(filePath);
 }
