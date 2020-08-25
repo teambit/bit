@@ -28,7 +28,7 @@ describe('create extension', function () {
       helper.fixtures.copyFixtureExtensions('react-create-template');
       helper.command.addComponent('react-create-template');
       helper.extensions.addExtensionToWorkspace('my-scope/react-create-template', {});
-      helper.extensions.addExtensionToWorkspace('teambit.bit/create', { template: 'react-create-template' });
+      helper.extensions.addExtensionToWorkspace('teambit.bit/generator', { template: 'react-create-template' });
       helper.scopeHelper.linkBitBin();
       helper.command.link();
       helper.command.create(COMPONENT_NAME);
