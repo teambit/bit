@@ -1,5 +1,5 @@
-import { MainRuntime } from 'bit-bin/dist/extensions/cli/cli.aspect';
-import { DependencyResolverAspect } from 'bit-bin/dist/extensions/dependency-resolver';
+import { MainRuntime } from '@teambit/cli';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionAddDependenciesAspect } from './extension-add-dependencies.aspect';
 
 export class ExtensionAddDependenciesMain {
