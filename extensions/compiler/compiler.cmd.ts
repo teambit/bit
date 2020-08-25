@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
-// import cliSpinners from 'cli-spinners';
-// import ora, { Ora, PersistOptions } from 'ora';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 
+// import cliSpinners from 'cli-spinners';
+// import ora, { Ora, PersistOptions } from 'ora';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
@@ -34,11 +34,14 @@ export class CompileCmd implements Command {
     const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
     console.log(`  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}`);
 
-    compileResults
-      .map((componentResults) => componentResults.component)
-      .map((componentId) => ({ status: 'SUCCESS', componentId }))
-      .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
-    // .forEach(result => console.log(`${chalk.red('>')} ${chalk.green('√')}\t${result.componentId}`))
+    if (verbose) {
+      console.log('compileResults', compileResults);
+    } else {
+      compileResults
+        .map((componentResults) => componentResults.component)
+        .map((componentId) => ({ status: 'SUCCESS', componentId }))
+        .forEach((result) => console.log(`${chalk.red('>')} ${result.status}\t${result.componentId}`));
+    }
 
     return `${compileResults.length} components have been compiled successfully`;
   }
