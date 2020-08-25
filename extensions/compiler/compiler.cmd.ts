@@ -47,11 +47,20 @@ export class CompileCmd implements Command {
     console.log(`  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}`);
 
     if (verbose) {
-      console.log('compileResults', compileResults);
+      compileResults
+        .map((componentResults) => ({
+          componentId: componentResults.component,
+          files: componentResults.buildResults,
+          status: 'SUCCESS',
+        }))
+        .forEach((result) => {
+          console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`);
+          result.files.forEach((file) => console.log(`\t\t - ${file}`));
+        });
     } else {
       compileResults
         .map((componentResults) => componentResults.component)
-        .map((componentId) => ({ status: 'SUCCESS', componentId }))
+        .map((componentId) => ({ componentId, status: 'SUCCESS' }))
         .forEach((result) => console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`));
     }
 
