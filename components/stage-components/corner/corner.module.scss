@@ -11,6 +11,9 @@ $topbarHeight: 56px;
   box-sizing: border-box;
   width: 30%;
   max-width: 264px; // for now until we have the split pane in pixels
+  @media screen and (max-width: 768px) {
+    display: none;
+  }
 
   .link {
     text-decoration: none;

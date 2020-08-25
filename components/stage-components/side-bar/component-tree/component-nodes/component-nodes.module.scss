@@ -17,6 +17,9 @@
   font-size: inherit;
   padding-right: 8px;
   font-size: var(--p-xs);
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
 
   .arrow {
     display: inline-block;
