@@ -3,13 +3,18 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 require('v8-compile-cache');
+
 import './hook-require';
 
 import { getAspectDir } from '@teambit/aspect-loader';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIMain } from '@teambit/cli/cli.main.runtime';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { Config } from '@teambit/harmony/dist/harmony-config';
+// TODO: expose this type from harmony
+import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { bootstrap } from 'bit-bin/dist/bootstrap';
 import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
@@ -17,13 +22,8 @@ import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 
-import { CLIAspect, MainRuntime } from '@teambit/cli';
-import { CLIMain } from '@teambit/cli/cli.main.runtime';
-
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
-// TODO: expose this type from harmony
-import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 
 initApp();
 

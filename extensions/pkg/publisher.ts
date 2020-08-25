@@ -1,5 +1,4 @@
-import R from 'ramda';
-import { ComponentID, Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -10,6 +9,7 @@ import { Scope } from 'bit-bin/dist/scope';
 import { PublishPostExportResult } from 'bit-bin/dist/scope/component-ops/publish-during-export';
 import Bluebird from 'bluebird';
 import execa from 'execa';
+import R from 'ramda';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -64,7 +64,7 @@ export class Publisher {
     if (this.options.dryRun) publishParams.push('--dry-run');
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
     if (extraArgs && Array.isArray(extraArgs) && extraArgs?.length) {
-      const extraArgsSplit = extraArgs.map(arg => arg.split(' '));
+      const extraArgsSplit = extraArgs.map((arg) => arg.split(' '));
       publishParams.push(...R.flatten(extraArgsSplit));
     }
     const publishParamsStr = publishParams.join(' ');
