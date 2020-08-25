@@ -51,6 +51,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
+import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ExtensionData, OnComponentLoad } from './on-component-load';
 import { WorkspaceExtConfig } from './types';
@@ -58,8 +59,7 @@ import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentChangeSlot, OnComponentLoadSlot, OnComponentAddSlot } from './workspace.provider';
-import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
+import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
 
 export type EjectConfResult = {
   configPath: string;
@@ -135,7 +135,7 @@ export class Workspace implements ComponentFactory {
     /**
      * on component add slot.
      */
-    private onComponentAddSlot: OnComponentAddSlot,
+    private onComponentAddSlot: OnComponentAddSlot
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -350,9 +350,7 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  async triggerOnComponentAdd(
-    id: ComponentID
-  ): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
@@ -557,7 +555,7 @@ export class Workspace implements ComponentFactory {
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
+    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
 
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
@@ -850,7 +848,7 @@ export class Workspace implements ComponentFactory {
     assumeIdWithScope = false,
     useVersionFromBitmap = true
   ): Promise<ComponentID> {
-    if (!assumeIdWithScope) {
+    if (!assumeIdWithScope && typeof id === 'string') {
       const legacyId = this.consumer.getParsedId(id.toString(), useVersionFromBitmap);
       return ComponentID.fromLegacy(legacyId);
     }
