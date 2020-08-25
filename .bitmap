@@ -4080,6 +4080,11 @@
                 "name": "list.cmd.tsx"
             },
             {
+                "relativePath": "on-component-add.ts",
+                "test": false,
+                "name": "on-component-add.ts"
+            },
+            {
                 "relativePath": "on-component-change.ts",
                 "test": false,
                 "name": "on-component-change.ts"

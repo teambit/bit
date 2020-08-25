@@ -509,6 +509,10 @@ jobs:
           at: ./
       -
         run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
+      -
+        run:
           name: 'run ESLint'
           command: 'cd bit && npm run lint-circle'
       -
@@ -525,6 +529,10 @@ jobs:
           at: ./
       -
         run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
+      -
+        run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
   generate_types:
@@ -533,6 +541,10 @@ jobs:
       -
         attach_workspace:
           at: ./
+      -
+        run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'generate types'

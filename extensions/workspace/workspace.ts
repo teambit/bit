@@ -51,6 +51,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
+import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ExtensionData, OnComponentLoad } from './on-component-load';
 import { WorkspaceExtConfig } from './types';
@@ -58,7 +59,7 @@ import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
+import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
 
 export type EjectConfResult = {
   configPath: string;
@@ -129,7 +130,12 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentChangeSlot: OnComponentChangeSlot,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    /**
+     * on component add slot.
+     */
+    private onComponentAddSlot: OnComponentAddSlot
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -154,6 +160,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentChange(onComponentChangeFunc: OnComponentChange) {
     this.onComponentChangeSlot.register(onComponentChangeFunc);
+    return this;
+  }
+
+  registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
+    this.onComponentAddSlot.register(onComponentAddFunc);
     return this;
   }
 
@@ -334,6 +345,18 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       results.push({ extensionId: extension, results: onChangeResult });
+    });
+
+    return results;
+  }
+
+  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+    const component = await this.get(id);
+    const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
+    await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
+      const onAddResult = await onAddFunc(component);
+      results.push({ extensionId: extension, results: onAddResult });
     });
 
     return results;
@@ -532,7 +555,7 @@ export class Workspace implements ComponentFactory {
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
+    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
 
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
@@ -620,8 +643,9 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    // TODO: @gilad we should make sure to cache this process.
-    const componentIds = await Promise.all(ids.map((id) => this.resolveComponentId(id, true)));
+    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const componentIds = await Promise.all(idsWithoutCore.map((id) => this.resolveComponentId(id, true)));
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);
 
@@ -824,7 +848,7 @@ export class Workspace implements ComponentFactory {
     assumeIdWithScope = false,
     useVersionFromBitmap = true
   ): Promise<ComponentID> {
-    if (!assumeIdWithScope) {
+    if (!assumeIdWithScope && typeof id === 'string') {
       const legacyId = this.consumer.getParsedId(id.toString(), useVersionFromBitmap);
       return ComponentID.fromLegacy(legacyId);
     }
