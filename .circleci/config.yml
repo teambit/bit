@@ -160,10 +160,6 @@ jobs:
       #   run:
       #     name: 'install harmony'
       #     command: 'cd bit && npm run install-harmony'
-      # -
-      #   run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -516,10 +512,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'run ESLint'
@@ -530,34 +522,20 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
-  check_types:
+  generate_and_check_types:
     <<: *defaults
     steps:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
-      -
-        run:
-          name: 'run TSC'
-          command: 'cd bit && npm run check-types'
-  generate_types:
-    <<: *defaults
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      # -
-      #   run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
       -
         run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
+      -
+        run:
+          name: 'run TSC'
+          command: 'cd bit && npm run check-types'
   setup_harmony:
     <<: *defaults
     steps:
@@ -643,10 +621,6 @@ jobs:
       #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       # -
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      # -
-      #   run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony'
       -
         run: which bit
       -
@@ -1041,14 +1015,9 @@ workflows:
             - build
             - setup_harmony
       -
-        check_types:
+        generate_and_check_types:
           requires:
             - install_npm_deps
-            - build
-            - setup_harmony
-      -
-        generate_types:
-          requires:
             - build
             - setup_harmony
       -
