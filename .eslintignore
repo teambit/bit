@@ -15,7 +15,6 @@ src/git-hooks/git-hooks-manager.ts
 src/hooks/hooks-manager.ts
 src/search/indexer.ts
 src/search/serverless-index.ts
-src/search/search-adapter.ts
 src/search/query-builder.ts
 src/legacy-extensions/core-extensions/ext-docs-parser.ts
 src/legacy-extensions/extension-command.ts

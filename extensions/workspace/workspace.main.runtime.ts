@@ -13,11 +13,11 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 
 import { EXT_NAME } from './constants';
+import { OnComponentAdd } from './on-component-add';
 import { OnComponentChange } from './on-component-change';
 import { OnComponentLoad } from './on-component-load';
 import { WorkspaceAspect } from './workspace.aspect';
 import workspaceProvider from './workspace.provider';
-import { OnComponentAdd } from './on-component-add';
 
 export const WorkspaceMain = {
   name: EXT_NAME,

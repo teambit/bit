@@ -31,7 +31,6 @@ import { link } from 'bit-bin/dist/api/consumer';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';

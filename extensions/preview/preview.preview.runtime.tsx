@@ -6,8 +6,7 @@ import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
-let PREVIEW_MODULES: Record<string, previewModule> = {};
-let RERENDER = () => {};
+const PREVIEW_MODULES = {};
 
 type previewModule = {
   componentMap: Record<string, any[]>;
@@ -37,14 +36,13 @@ export class PreviewPreview {
     const includes = preview.include
       ? preview.include
           .map((prevName) => {
-            if (!PREVIEW_MODULES[prevName]?.componentMap[componentId]) return undefined;
+            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
             return PREVIEW_MODULES[prevName].componentMap[componentId][0];
           })
           .filter((module) => !!module)
       : [];
 
-    const previewModule = PREVIEW_MODULES[name];
-    return preview.render(componentId, previewModule, includes);
+    return preview.render(componentId, PREVIEW_MODULES[name], includes);
   };
 
   /**
@@ -91,26 +89,19 @@ export class PreviewPreview {
   static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
     const preview = new PreviewPreview(previewSlot);
 
-    RERENDER = preview.render;
-
     window.addEventListener('hashchange', () => {
-      RERENDER();
+      preview.render();
     });
 
     return preview;
   }
 }
 
-// I don't like this implementation, it seems too loose and unpredictable.
-// I'd rather have a dynamic import using `process.env.previewPath` or something of this sort.
-
-/** allows other extensions to inject preview definitions.
- * as target components reside in another project all together,
- * we cannot reference them from here, and they have to reference us.
- */
-export function updateModules(modules: Record<string, previewModule>) {
-  PREVIEW_MODULES = modules;
-  RERENDER();
+export function linkModules(previewName: string, defaultModule: any, componentMap: { [key: string]: any }) {
+  PREVIEW_MODULES[previewName] = {
+    mainModule: defaultModule,
+    componentMap,
+  };
 }
 
 PreviewAspect.addRuntime(PreviewPreview);
