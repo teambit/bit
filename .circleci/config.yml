@@ -156,14 +156,14 @@ jobs:
         run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      -
-        run:
-          name: 'install harmony'
-          command: 'cd bit && npm run install-harmony'
-      -
-        run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony'
+      # -
+      #   run:
+      #     name: 'install harmony'
+      #     command: 'cd bit && npm run install-harmony'
+      # -
+      #   run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -187,7 +187,7 @@ jobs:
         persist_to_workspace:
           root: .
           paths:
-            - bit/build-harmony
+            # - bit/build-harmony
             - bit/node_modules
             - bit/releases
   validate-git-tag-and-version:
@@ -558,29 +558,30 @@ jobs:
         run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
-  # setup_harmony:
-  #   <<: *defaults
-  #   steps:
-  #     -
-  #       attach_workspace:
-  #         at: ./
-  #     -
-  #       restore_cache:
-  #         key: bitsrc-registry6
-  #     -
-  #       run:
-  #         name: 'install harmony'
-  #         command: 'cd bit && npm run install-harmony'
-  #     -
-  #       run:
-  #         name: 'build harmony'
-  #         command: 'cd bit && npm run build-harmony'
-  #     -
-  #       persist_to_workspace:
-  #         root: .
-  #         paths:
-  #           - bit/build-harmony
-  #           - bit/node_modules/bit-bin
+  setup_harmony:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        restore_cache:
+          key: bitsrc-registry6
+      -
+        run:
+          name: 'install harmony'
+          command: 'cd bit && npm run install-harmony'
+      -
+        run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/build-harmony
+            - bit/node_modules/bit-bin
+            - bit/node_modules/@teambit
   e2e_test:
     <<: *defaults
     environment:
@@ -1019,12 +1020,12 @@ workflows:
         build:
           requires:
             - install_npm_deps
-      # -
-      #   setup_harmony:
-      #     requires:
-      #       - set_npm_registries
-      #       - install_npm_deps
-      #       - build
+      -
+        setup_harmony:
+          requires:
+            - set_npm_registries
+            - install_npm_deps
+            - build
       # -
       #   configure-bit:
       #     requires:
@@ -1037,16 +1038,17 @@ workflows:
         lint:
           requires:
             - install_npm_deps
-            # - setup_harmony
+            - setup_harmony
       -
         check_types:
           requires:
             - install_npm_deps
-            # - setup_harmony
+            - setup_harmony
       -
         generate_types:
           requires:
             - build
+            - setup_harmony
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1067,7 +1069,9 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            # - setup_harmony
+            - install_npm_deps
+            - build
+            - setup_harmony
             # - configure-bit
             # - pack
       -
