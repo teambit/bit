@@ -56,9 +56,7 @@ export class CompileCmd implements Command {
     }
 
     console.log(``);
-    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed \n${chalk.red(
-      'X'
-    )} 2 components failed:`;
+    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed \n`;
     console.log(taskSummary);
 
     console.log(``);
