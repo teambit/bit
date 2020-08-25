@@ -1,4 +1,5 @@
-import { ComponentID } from '@teambit/component';
+import R from 'ramda';
+import { ComponentID, Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -61,6 +62,11 @@ export class Publisher {
   private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
     const publishParams = ['publish'];
     if (this.options.dryRun) publishParams.push('--dry-run');
+    const extraArgs = this.getExtraArgsFromConfig(capsule.component);
+    if (extraArgs && Array.isArray(extraArgs) && extraArgs?.length) {
+      const extraArgsSplit = extraArgs.map(arg => arg.split(' '));
+      publishParams.push(...R.flatten(extraArgsSplit));
+    }
     const publishParamsStr = publishParams.join(' ');
     const cwd = capsule.path;
     const componentIdStr = capsule.id.toString();
@@ -113,6 +119,11 @@ export class Publisher {
     const pkgExt = extensions.findExtension('teambit.bit/pkg');
     if (!pkgExt) return false;
     return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
+  }
+
+  private getExtraArgsFromConfig(component: Component): string | undefined {
+    const pkgExt = component.config.extensions.findExtension('teambit.bit/pkg');
+    return pkgExt?.config?.packageManagerPublishArgs;
   }
 
   private async throwForNonStagedOrTaggedComponents(bitIds: BitId[]) {
