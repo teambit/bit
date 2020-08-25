@@ -17,7 +17,6 @@ export interface Network {
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
   fetch(ids: BitId[] | RemoteLaneId[]): Promise<CompsAndLanesObjects>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
-  search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<Component | null | undefined>;
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;

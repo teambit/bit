@@ -11,7 +11,6 @@ import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeLog from './commands/private-cmds/_log-cmd';
 import Put from './commands/private-cmds/_put-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
-import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import UndeprecatePrivate from './commands/private-cmds/_undeprecate-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
@@ -48,7 +47,6 @@ import Move from './commands/public-cmds/move-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
-import Search from './commands/public-cmds/search-cmd';
 import Show from './commands/public-cmds/show-cmd';
 import Snap from './commands/public-cmds/snap-cmd';
 import Status from './commands/public-cmds/status-cmd';
@@ -93,14 +91,11 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Log(),
       new ScopeLog(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Search(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Test(),
       new Put(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Watch(),
       new ScopeList(),
-      new ScopeSearch(),
       new ScopeShow(),
       new ScopeGraph(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
