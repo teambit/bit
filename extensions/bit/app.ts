@@ -3,20 +3,24 @@
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
 
 require('v8-compile-cache');
+
 import './hook-require';
 
-import { readdir } from 'fs-extra';
-import { resolve } from 'path';
 import { getAspectDir } from '@teambit/aspect-loader';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
 import { Extension } from '@teambit/harmony/dist/extension';
 import { Config } from '@teambit/harmony/dist/harmony-config';
+// TODO: expose this type from harmony
+import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { bootstrap } from 'bit-bin/dist/bootstrap';
 import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
-import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
+import { readdir } from 'fs-extra';
+import { resolve } from 'path';
+
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 
@@ -43,10 +47,11 @@ async function getConfig() {
   const cwd = process.cwd();
   const consumerInfo = await getConsumerInfo(cwd);
   const scopePath = propagateUntil(cwd);
-  const configOpts = {
-    global: {
-      name: '.bitrc.jsonc',
-    },
+  const globalConfigOpts = {
+    name: '.bitrc.jsonc',
+  };
+  const configOpts: ConfigOptions = {
+    global: globalConfigOpts,
     shouldThrow: false,
     cwd: consumerInfo?.path || scopePath,
   };
@@ -59,7 +64,7 @@ async function getConfig() {
     return Config.load('scope.jsonc', configOpts);
   }
 
-  return Config.loadGlobal(configOpts.global);
+  return Config.loadGlobal(globalConfigOpts);
 }
 
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
