@@ -24,6 +24,8 @@ export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
 }
 export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
   const [collapsed, collapse] = useState(false);
+  
+  const displayName = getName(node.id.replace(/\/$/, ''));
 
   return (
     <div data-collapsed={collapsed}>
@@ -34,7 +36,7 @@ export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
         >
           <div className={styles.left}>
             <Icon className={styles.arrow} of="fat-arrow-down" />
-            <span className={styles.name}>{getName(node.id)}</span>
+            <span className={styles.name}>{displayName}</span>
           </div>
           <div className={styles.right}>{<StatusDot status="new" />}</div>
         </div>

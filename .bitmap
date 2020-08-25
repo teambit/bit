@@ -3015,9 +3015,44 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths.ts",
+                "relativePath": "component-tree/inflate-paths/attach-payload.ts",
+                "test": false,
+                "name": "attach-payload.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/inflate-paths.spec.ts",
+                "test": false,
+                "name": "inflate-paths.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/inflate-paths.ts",
                 "test": false,
                 "name": "inflate-paths.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.spec.ts",
+                "test": false,
+                "name": "key-tree-to-node-tree.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.ts",
+                "test": false,
+                "name": "key-tree-to-node-tree.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree.spec.ts",
+                "test": false,
+                "name": "key-tree.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree.ts",
+                "test": false,
+                "name": "key-tree.ts"
             },
             {
                 "relativePath": "component-tree/payload-type.tsx",
