@@ -60,7 +60,10 @@
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
-          "bin": "bin/bit"
+          // Change back to "bin": "bin/bit" once released to prod
+          "bin": {
+            "bbit": "bin/bit"
+          }
         }
       },
       "teambit.bit/dependency-resolver": {
