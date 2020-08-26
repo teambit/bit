@@ -1,9 +1,10 @@
+import { GraphqlMain } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
-import { Workspace } from './workspace';
+import { ComponentAdded, Workspace } from './workspace';
 import { WorkspaceComponent } from './workspace-component';
 
-export default (workspace: Workspace) => {
+export default (workspace: Workspace, graphql: GraphqlMain) => {
   return {
     typeDefs: gql`
       type ModifyInfo {
@@ -53,11 +54,24 @@ export default (workspace: Workspace) => {
         getComponent(id: String!): Component
       }
 
+      type ComponentAdded {
+        displayName: String
+      }
+
+      type Subscription {
+        componentAdded: String
+      }
+
       type Query {
         workspace: Workspace
       }
     `,
     resolvers: {
+      Subscription: {
+        componentAdded: {
+          subscribe: () => graphql.pubsub.asyncIterator([ComponentAdded]),
+        },
+      },
       Component: {
         status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
