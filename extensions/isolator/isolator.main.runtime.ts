@@ -103,7 +103,7 @@ export class IsolatorMain {
         },
       };
 
-      await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), { dedupe: true });
+      await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), { dedupe: true, copyPeerToRuntimeOnComponents: false, copyPeerToRuntimeOnRoot: true });
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components

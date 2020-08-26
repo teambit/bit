@@ -41,12 +41,13 @@ export class PnpmPackageManager implements PackageManager {
       components,
       options
     );
-    const rootManifest = workspaceManifest.toJson({ includeDir: true, copyPeerToRuntime: true });
+    const rootManifest = workspaceManifest.toJson({ includeDir: true, copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot });
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap,
       // In case of not deduping we want to install peers inside the components
-      !options.dedupe
+      // !options.dedupe
+      installOptions.copyPeerToRuntimeOnComponents
     );
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);

@@ -76,6 +76,8 @@ export type WorkspaceInstallOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
   dedupe: boolean;
+  copyPeerToRuntimeOnRoot?: boolean;
+  copyPeerToRuntimeOnComponents?: boolean;
 };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -813,6 +815,8 @@ export class Workspace implements ComponentFactory {
     };
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output

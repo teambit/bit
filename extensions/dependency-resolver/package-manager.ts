@@ -8,6 +8,10 @@ export type PackageManagerInstallOptions = {
    * decide whether to dedup dependencies.
    */
   dedupe?: boolean;
+
+  copyPeerToRuntimeOnRoot?: boolean;
+
+  copyPeerToRuntimeOnComponents?: boolean;
 };
 
 export interface PackageManager {
