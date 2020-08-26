@@ -58,7 +58,7 @@
       "teambit.bit/aspect": {}
     },
     "toolbox": {
-      // "teambit.bit/node": {}
+      "teambit.bit/react": {}
     },
     "extensions/bit": {
       "teambit.bit/pkg": {
