@@ -1,9 +1,3 @@
-/* TODO[uri]:
-  1. Indication for Failures
-  2. Sorting the verbose
-*/
-
-/* eslint-disable no-console */
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -30,16 +24,8 @@ export class CompileCmd implements Command {
     const startTimestamp = process.hrtime();
     const spinner = ora('Compiling your components, hold tight.').start();
 
-    let compileResults;
     let outputString = '';
-    try {
-      compileResults = await this.compile.compileComponents(components, { verbose, noCache });
-    } catch (err) {
-      spinner.stop();
-      console.error(``, err);
-
-      return `Finished. (${prettyTime(process.hrtime(startTimestamp))})`;
-    }
+    const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
 
     const compileTimeLength = process.hrtime(startTimestamp);
     spinner.stop();
