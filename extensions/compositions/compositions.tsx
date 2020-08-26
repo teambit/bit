@@ -1,8 +1,8 @@
 import { useQuery } from '@apollo/react-hooks';
-import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
+import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
 import { ComponentContext, ComponentModel } from '@teambit/component';
-import { PropTable } from '@teambit/documenter-temp.ui.property-table';
+import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Panel, PanelContainer, Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
 import { CollapsibleSplitter } from '@teambit/staged-components.splitter';

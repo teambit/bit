@@ -1,7 +1,7 @@
 // import React, { useMemo, useCallback } from 'react';
 // import { useHistory } from 'react-router-dom';
-// import { Icon } from '@teambit/evangelist-temp.elements.icon';
-// import { Input } from '@teambit/evangelist-temp.input.input';
+// import { Icon } from '@teambit/evangelist.elements.icon';
+// import { Input } from '@teambit/evangelist.input.input';
 // import { ComponentTree } from './component-tree';
 // import styles from './styles.module.scss';
 // import { OverviewLink } from './overview-link/overview-link';

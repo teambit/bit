@@ -1,6 +1,6 @@
-import { Separator } from '@teambit/base-ui-temp.elements.separator';
-import { Card } from '@teambit/base-ui-temp.surfaces.card';
-import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
+import { Separator } from '@teambit/base-ui.elements.separator';
+import { Card } from '@teambit/base-ui.surfaces.card';
+import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
 import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';

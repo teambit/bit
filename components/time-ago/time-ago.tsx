@@ -1,4 +1,4 @@
-import timeAgo from '@teambit/utils-temp.utils.time-ago';
+import timeAgo from '@teambit/base-ui.utils.time-ago';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useReducer } from 'react';
 

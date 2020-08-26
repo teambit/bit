@@ -27,7 +27,6 @@ export class Runtime {
         this.logger.error(err);
         return [];
       }
-      return undefined;
     });
 
     return contexts;
