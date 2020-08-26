@@ -2,7 +2,7 @@ type SemVer = string;
 type TimeStamp = string;
 type ComponentID = string;
 
-//TODO - @oded remove file
+// TODO - @oded remove file
 
 export enum JobStatus {
   fail = 'fail',
