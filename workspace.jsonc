@@ -3,7 +3,7 @@
   "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
-    "defaultScope": "teambit.bit",
+    "defaultScope": "teambit2.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
