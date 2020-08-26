@@ -309,8 +309,11 @@ export default class ComponentConfig extends AbstractConfig {
 
       await this.runOnLegacyLoadEvent(this.componentConfigLegacyLoadingRegistry, componentId, componentConfig);
     }
-
-    const extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
+    let extensionsAddedConfig = {};
+    // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file
+    if (!consumer.isLegacy) {
+      extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
+    }
 
     componentConfig.extensionsAddedConfig = extensionsAddedConfig;
 
