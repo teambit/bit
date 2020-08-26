@@ -55,7 +55,7 @@ export class CompileCmd implements Command {
         }))
         .forEach((result) => {
           console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`);
-          result.files.forEach((file) => console.log(`\t\t - ${file}`));
+          result?.files?.forEach((file) => console.log(`\t\t - ${file}`));
         });
     } else {
       compileResults
