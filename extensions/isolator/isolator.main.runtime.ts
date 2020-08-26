@@ -230,7 +230,6 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
   };
   addDependencies(packageJson);
   packageJson.addOrUpdateProperty('version', component.id.hasVersion() ? component.id.version : newVersion);
-  packageJson.removeDependency('bit-bin');
   return packageJson;
 }
 
