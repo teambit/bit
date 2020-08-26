@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { queryString } from './query-string';
 
 describe('queryString()', () => {
@@ -8,6 +7,7 @@ describe('queryString()', () => {
     });
 
     // @ts-ignore
+    // eslint-disable-next-line no-undef
     expect(str).toEqual('foo=bar');
   });
 
@@ -18,6 +18,7 @@ describe('queryString()', () => {
     });
 
     // @ts-ignore
+    // eslint-disable-next-line no-undef
     expect(str).toEqual('foo=bar&boo=app');
   });
 
@@ -27,6 +28,8 @@ describe('queryString()', () => {
       boo: false,
     });
 
+    // @ts-ignore
+    // eslint-disable-next-line no-undef
     expect(str).toEqual('foo=bar&boo=false');
   });
 });

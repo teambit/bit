@@ -1,4 +1,4 @@
-export function queryString(params: { [key: string]: string }) {
+export function queryString(params: { [key: string]: string | boolean }) {
   return Object.keys(params)
     .map((key) => `${key}=${params[key]}`)
     .join('&');
