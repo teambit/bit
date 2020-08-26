@@ -9,6 +9,7 @@ const WORKSPACE = gql`
     workspace {
       name
       path
+      icon
       components {
         id {
           name

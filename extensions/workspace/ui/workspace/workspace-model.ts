@@ -16,6 +16,7 @@ export type WorkspaceProps = {
   name: string;
   path: string;
   components: ComponentModelProps[];
+  icon: string;
 };
 
 export class Workspace {
@@ -31,6 +32,11 @@ export class Workspace {
     readonly path: string,
 
     /**
+     * icon of the workspace.
+     */
+    readonly icon: string,
+
+    /**
      * components container in the workspace.
      */
     readonly components: ComponentModel[]
@@ -43,10 +49,11 @@ export class Workspace {
     return this.components.find((component) => component.id.fullName === id.fullName);
   }
 
-  static from({ name, path, components }: WorkspaceProps) {
+  static from({ name, path, components, icon }: WorkspaceProps) {
     return new Workspace(
       name,
       path,
+      icon,
       components.map((value) => {
         return ComponentModel.from(value);
       })
@@ -54,6 +61,6 @@ export class Workspace {
   }
 
   static empty() {
-    return new Workspace('', '', []);
+    return new Workspace('', '', '', []);
   }
 }
