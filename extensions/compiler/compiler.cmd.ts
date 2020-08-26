@@ -1,8 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import ora from 'ora';
 import prettyTime from 'pretty-time';
 
+import { formatCompileResults } from './outputFormatter';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
@@ -18,44 +19,28 @@ export class CompileCmd implements Command {
     ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
 
-  constructor(private compile: WorkspaceCompiler) {}
+  constructor(private compile: WorkspaceCompiler, private logger: Logger) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
     const startTimestamp = process.hrtime();
-    const spinner = ora('Compiling your components, hold tight.').start();
+    this.logger.setStatusLine('Compiling your components, hold tight.');
 
     let outputString = '';
     const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
-
     const compileTimeLength = process.hrtime(startTimestamp);
-    spinner.stop();
+
     outputString += '\n';
     outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-
-    if (verbose) {
-      compileResults
-        .map((componentResults) => ({
-          componentId: componentResults.component,
-          files: componentResults.buildResults,
-          status: 'SUCCESS',
-        }))
-        .forEach((result) => {
-          outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}:\n`;
-          result?.files?.forEach((file) => (outputString += `\t\t - ${file}\n`));
-          outputString += '\n';
-        });
-    } else {
-      compileResults
-        .map((componentResults) => componentResults.component)
-        .map((componentId) => ({ componentId, status: 'SUCCESS' }))
-        .forEach((result) => (outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}\n`));
-    }
-
+    outputString += formatCompileResults(compileResults, verbose);
     outputString += '\n';
+
     const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed\nFinished. (${prettyTime(
       compileTimeLength
     )})`;
+
     outputString += taskSummary;
+    this.logger.clearStatusLine();
+
     return outputString;
   }
 
