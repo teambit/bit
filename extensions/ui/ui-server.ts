@@ -32,6 +32,11 @@ export type StartOptions = {
    * port for the UI server to bind. default is a port range of 4000-4200.
    */
   port?: number;
+
+  /**
+   * port for the ui sub
+   */
+  wsPort?: number;
 };
 
 export class UIServer {
@@ -68,31 +73,44 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ port }: StartOptions = {}) {
+  async start({ port, wsPort }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');
-    await this.configureProxy(app);
+    const server = await this.graphql.createServer({ app });
+    const subscriptionPort = await this.selectPort(wsPort || 4001);
+    this.graphql.createSubscription({}, subscriptionPort);
+
+    await this.configureProxy(app, server);
     app.use(express.static(root));
     app.use(fallback('index.html', { root }));
-    const server = await this.graphql.createServer({ app });
-
     server.listen(selectedPort);
     this._port = selectedPort;
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 
   // TODO - check if this is necessary
-  private async configureProxy(app: Express) {
-    const proxy = httpProxy.createProxyServer();
+  private async configureProxy(app: Express, server: Server) {
+    const proxServer = httpProxy.createProxyServer();
     const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
+    server.on('upgrade', function (req, socket, head) {
+      // TODO: put it on graphql aspect
+      if (req.url === '/subscriptions') {
+        proxServer.ws(req, socket, head, { target: { host: 'localhost', port: 4001 } });
+      }
+      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
+      if (!entry) return;
+      proxServer.ws(req, socket, head, {
+        target: entry.target,
+      });
+    });
     proxyEntries.forEach((entry) => {
-      entry.context.forEach((route) =>
+      entry.context.forEach((route) => {
         app.use(`${route}/*`, (req, res) => {
-          proxy.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
-        })
-      );
+          proxServer.web(req, res, { ...entry, target: `${entry.target}/${req.originalUrl}` });
+        });
+      });
     });
   }
 
@@ -138,7 +156,7 @@ export class UIServer {
       },
       {
         context: ['/subscriptions'],
-        target: 'ws://localhost:4000',
+        target: 'ws://localhost:4001',
         ws: true,
       },
     ];

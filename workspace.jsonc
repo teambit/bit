@@ -16,7 +16,8 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.3"
+        "bit-bin": "14.8.9-dev.3",
+        "graphql": "^14.3.1"
       }
     }
   },
@@ -40,7 +41,8 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.3"
+            "bit-bin": "14.8.9-dev.3",
+            "graphql": "^14.3.1"
           }
         }
       }
@@ -58,14 +60,18 @@
       "teambit.bit/pkg": {
         "packageJson": {
           "name": "@teambit/{name}",
-          "bin": "bin/bit"
+          // Change back to "bin": "bin/bit" once released to prod
+          "bin": {
+            "bbit": "bin/bit"
+          }
         }
       },
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "14.8.9-dev.3",
-            "react": "^16.13.1"
+            "react": "^16.13.1",
+            "graphql": "^14.3.1"
           },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
@@ -73,7 +79,9 @@
             "@types/node": "^12.12.27"
           },
           "peerDependencies":{
-            "bit-bin": "-"
+            "bit-bin": "-",
+            "graphql": "-",
+            "react": "-"
           }
         }
       }

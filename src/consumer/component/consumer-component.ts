@@ -1121,7 +1121,8 @@ export default class Component {
       workspaceConfig,
       overridesFromModel,
       componentConfig,
-      componentMap.origin
+      componentMap.origin,
+      consumer.isLegacy
     );
 
     const propsToLoadEnvs = {

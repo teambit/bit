@@ -13,5 +13,6 @@ $panelBg: #fafafa;
   background: $panelBg;
   height: 100%;
   width: 100%;
+  overflow-y: auto;
   border-left: 1px solid var(--border-color);
 }

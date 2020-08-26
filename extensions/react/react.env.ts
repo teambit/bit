@@ -10,11 +10,11 @@ import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
+import { Configuration } from 'webpack';
 
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
-import { Configuration } from 'webpack';
 
 export const AspectEnvType = 'react';
 

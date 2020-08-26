@@ -240,5 +240,15 @@ export default class ScopeHelper {
     const localBitBinPath = path.join(__dirname, '../..');
     fs.removeSync(bitBinPath);
     createSymlinkOrCopy(localBitBinPath, bitBinPath);
+    this.linkCoreAspects();
+  }
+
+  linkCoreAspects() {
+    const aspectsRoot = path.join(this.scopes.localPath, './node_modules/@teambit');
+    const localAspectsRoot = path.join(__dirname, '../../node_modules/@teambit');
+    console.log('aspectsRoot', aspectsRoot);
+    console.log('localAspectsRoot', localAspectsRoot);
+    fs.removeSync(aspectsRoot);
+    createSymlinkOrCopy(localAspectsRoot, aspectsRoot);
   }
 }

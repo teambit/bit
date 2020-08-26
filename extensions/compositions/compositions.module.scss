@@ -6,3 +6,15 @@
   padding-top: 20px;
   width: 100%;
 }
+
+.left {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow-y: auto;
+}
+
+.right {
+  width: 100%;
+  height: 100vh;
+}

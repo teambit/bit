@@ -109,7 +109,7 @@ export class WorkspaceUIRoot implements UIRoot {
         },
         {
           context: [`/_hmr/${server.context.envRuntime.id}`],
-          target: `ws://localhost:${server.port}`,
+          target: `http://localhost:${server.port}`,
           ws: true,
         },
       ];
