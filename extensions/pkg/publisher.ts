@@ -50,7 +50,8 @@ export class Publisher {
   }
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
-    const longProcessLogger = this.logger.createLongProcessLogger('publish components', capsules.length);
+    const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
+    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.publishOneCapsule(capsule);
