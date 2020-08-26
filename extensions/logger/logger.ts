@@ -52,7 +52,12 @@ export class Logger {
    */
   console(message?: string) {
     if (message) this.info(message);
-    loader.stopAndPersist({ text: message });
+    if (!loader.isStarted && logger.shouldWriteToConsole) {
+      // eslint-disable-next-line no-console
+      console.log(message);
+    } else {
+      loader.stopAndPersist({ text: message });
+    }
   }
   /**
    * print to the screen as a title, with bold text.
