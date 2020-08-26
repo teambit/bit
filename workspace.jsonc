@@ -16,15 +16,17 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.3",
+        "bit-bin": "14.8.9-dev.4",
         "graphql": "^14.3.1"
       }
     }
   },
   "teambit.bit/variants": {
-    "*":{
+    "*": {
       "teambit.bit/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false
@@ -43,7 +45,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.3",
+            "bit-bin": "14.8.9-dev.4",
             "graphql": "^14.3.1"
           }
         }
@@ -61,7 +63,9 @@
     "extensions/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": ["--access public"],
+          "packageManagerPublishArgs": [
+            "--access public"
+          ],
           "name": "@teambit/{name}",
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -73,7 +77,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.3",
+            "bit-bin": "14.8.9-dev.4",
             "react": "^16.13.1",
             "graphql": "^14.3.1"
           },
@@ -82,7 +86,7 @@
             // why this is needed? try to automate this
             "@types/node": "^12.12.27"
           },
-          "peerDependencies":{
+          "peerDependencies": {
             "bit-bin": "-",
             "graphql": "-",
             "react": "-"
