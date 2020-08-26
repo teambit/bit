@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 
-import { formatCompileResults } from './outputFormatter';
+import { formatCompileResults } from './output-formatter';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
