@@ -20,7 +20,7 @@ export function Corner({ name, icon }: CornerProps) {
     <div className={styles.corner}>
       <NavLink to="/" className={styles.link}>
         <UserAvatar size={25} account={{ name, profileImage: icon }} className={styles.avatar} />
-        {name}
+        <span>{name}</span>
       </NavLink>
     </div>
   );

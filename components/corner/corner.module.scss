@@ -16,6 +16,10 @@ $topbarHeight: 56px;
   }
 
   .link {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
     text-decoration: none;
     text-transform: capitalize;
     color: var(--text-highlight);
@@ -26,10 +30,17 @@ $topbarHeight: 56px;
     &:hover {
       color: var(--base-color);
     }
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
   }
 
   .avatar {
     margin-right: 10px;
+    min-width: 25px;
   }
 
   > b {
