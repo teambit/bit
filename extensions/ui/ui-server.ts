@@ -93,6 +93,7 @@ export class UIServer {
   // TODO - check if this is necessary
   private async configureProxy(app: Express, server: Server) {
     const proxServer = httpProxy.createProxyServer();
+    proxServer.on('error', (e) => this.logger.error(e.message));
     const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
     server.on('upgrade', function (req, socket, head) {
       // TODO: put it on graphql aspect
