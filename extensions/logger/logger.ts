@@ -23,6 +23,10 @@ export class Logger {
   error(message: string, ...meta: any[]) {
     logger.error(this.colorMessage(message), ...meta);
   }
+
+  get isLoaderStarted() {
+    return loader.isStarted;
+  }
   /**
    * use it for a long running process. upon creation it logs the `processDescription`.
    * if the process involves iteration over a list of items, such as running tag on a list of

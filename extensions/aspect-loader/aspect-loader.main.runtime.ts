@@ -110,14 +110,18 @@ export class AspectLoaderMain {
         return manifest;
       } catch (e) {
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
-        this.logger.consoleFailure(errorMsg);
+        if (this.logger.isLoaderStarted) {
+          this.logger.consoleFailure(errorMsg);
+        }
         this.logger.error(errorMsg, e);
         if (throwOnError) {
           // console.log(e);
           throw new CannotLoadExtension(id, e);
         }
-        this.logger.console(errorMsg);
-        this.logger.console(e.message);
+        if (!this.logger.isLoaderStarted) {
+          this.logger.console(errorMsg);
+          this.logger.console(e.message);
+        }
       }
       return undefined;
     });
@@ -137,7 +141,11 @@ export class AspectLoaderMain {
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
       this.logger.warn(warning, e);
-      this.logger.consoleFailure(warning);
+      if (this.logger.isLoaderStarted) {
+        this.logger.consoleFailure(warning);
+      } else {
+        this.logger.console(warning);
+      }
       if (throwOnError) {
         throw e;
       }
