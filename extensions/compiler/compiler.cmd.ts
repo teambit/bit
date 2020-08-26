@@ -55,15 +55,15 @@ export class CompileCmd implements Command {
           status: 'SUCCESS',
         }))
         .forEach((result) => {
-          outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}:`;
-          result?.files?.forEach((file) => (outputString += `\t\t - ${file}`));
+          outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}:\n`;
+          result?.files?.forEach((file) => (outputString += `\t\t - ${file}\n`));
           outputString += '\n';
         });
     } else {
       compileResults
         .map((componentResults) => componentResults.component)
         .map((componentId) => ({ componentId, status: 'SUCCESS' }))
-        .forEach((result) => (outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}`));
+        .forEach((result) => (outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}\n`));
     }
 
     outputString += '\n';
