@@ -47,7 +47,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
 
       path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: publicRoot,
+      publicPath: `${publicRoot}/`,
 
       futureEmitAssets: true,
 
