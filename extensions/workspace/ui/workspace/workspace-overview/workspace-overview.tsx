@@ -19,7 +19,7 @@ export function WorkspaceOverview() {
               <ComponentCard
                 id={component.id.fullName}
                 envIcon={component.environment?.icon}
-                preview={<ComponentComposition component={component} />}
+                preview={<ComponentComposition component={component} hotReload={false} />}
               />
             </div>
           );
