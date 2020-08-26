@@ -22,5 +22,5 @@ export class CompositionsSection implements Section {
     children: <Compositions />,
   };
 
-  order = 2;
+  order = 20;
 }

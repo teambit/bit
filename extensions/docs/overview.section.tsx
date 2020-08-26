@@ -24,5 +24,5 @@ export class OverviewSection implements Section {
     children: <Overview />,
   };
   
-  order = 1;
+  order = 10;
 }
