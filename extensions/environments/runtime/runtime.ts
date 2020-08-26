@@ -25,6 +25,7 @@ export class Runtime {
         };
       } catch (err) {
         this.logger.error(err);
+        return [];
       }
       return undefined;
     });
