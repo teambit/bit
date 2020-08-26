@@ -333,6 +333,11 @@
     "cli": {
         "files": [
             {
+                "relativePath": "bin/bit",
+                "test": false,
+                "name": "bit"
+            },
+            {
                 "relativePath": "cli.aspect.ts",
                 "test": false,
                 "name": "cli.aspect.ts"
@@ -3632,6 +3637,30 @@
         "exported": false,
         "lanes": []
     },
+    "toolbox/query-string": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "query-string.spec.ts",
+                "test": false,
+                "name": "query-string.spec.ts"
+            },
+            {
+                "relativePath": "query-string.ts",
+                "test": false,
+                "name": "query-string.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/query-string",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "toolbox/string/capitalize": {
         "files": [
             {
@@ -4124,6 +4153,11 @@
                 "relativePath": "ui/workspace/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/workspace/use-workspace.ts",
+                "test": false,
+                "name": "use-workspace.ts"
             },
             {
                 "relativePath": "ui/workspace/workspace-context.tsx",
