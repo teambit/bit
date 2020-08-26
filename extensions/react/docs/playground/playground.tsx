@@ -1,5 +1,5 @@
-import { roundnessClass } from '@teambit/base-ui-temp.css-components.roundness';
-import { Error as errorClass } from '@teambit/base-ui-temp.input.error';
+import { roundnessClass } from '@teambit/base-ui.css-components.roundness';
+import { Error as errorClass } from '@teambit/base-ui.input.error';
 import classNames from 'classnames';
 import prismTheme from 'prism-react-renderer/themes/github';
 import React from 'react';

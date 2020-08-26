@@ -1,5 +1,5 @@
-import { Separator } from '@teambit/documenter-temp.ui.separator';
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Separator } from '@teambit/documenter.ui.separator';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/react-router';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';

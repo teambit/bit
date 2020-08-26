@@ -108,7 +108,8 @@ export default async function provideWorkspace(
     onComponentLoadSlot,
     onComponentChangeSlot,
     envs,
-    onComponentAddSlot
+    onComponentAddSlot,
+    graphql
   );
 
   ManyComponentsWriter.registerExternalInstaller({
@@ -131,7 +132,7 @@ export default async function provideWorkspace(
 
   onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
 
-  const workspaceSchema = getWorkspaceSchema(workspace);
+  const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
   cli.register(new InstallCmd(workspace, logger));

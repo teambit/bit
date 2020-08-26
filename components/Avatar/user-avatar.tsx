@@ -1,6 +1,6 @@
 // import { AccountObj } from '../../types/account';
 
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 

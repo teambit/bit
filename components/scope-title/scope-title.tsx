@@ -1,5 +1,5 @@
-import { mutedText } from '@teambit/base-ui-temp.text.muted-text';
-import { H3 } from '@teambit/documenter-temp.ui.heading';
+import { mutedText } from '@teambit/base-ui.text.muted-text';
+import { H3 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React from 'react';
 

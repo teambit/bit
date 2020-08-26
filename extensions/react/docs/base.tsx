@@ -2,8 +2,8 @@ import 'reset-css';
 
 import { useQuery } from '@apollo/react-hooks';
 import { ComponentModel } from '@teambit/component';
-import { ThemeContext } from '@teambit/documenter-temp.theme.theme-context';
-import { docsFile } from '@teambit/documenter-temp.types.docs-file';
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { docsFile } from '@teambit/documenter.types.docs-file';
 import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';

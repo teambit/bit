@@ -20,6 +20,7 @@ import {
   PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
+import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -63,6 +64,8 @@ import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from '
 export type EjectConfResult = {
   configPath: string;
 };
+
+export const ComponentAdded = 'componentAdded';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -134,7 +137,9 @@ export class Workspace implements ComponentFactory {
     /**
      * on component add slot.
      */
-    private onComponentAddSlot: OnComponentAddSlot
+    private onComponentAddSlot: OnComponentAddSlot,
+
+    private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -343,6 +348,8 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
+      // TODO: find way to standardize event names.
+      this.graphql.pubsub.publish('componentChanged', component);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -355,6 +362,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
+      this.graphql.pubsub.publish(ComponentAdded, component);
       results.push({ extensionId: extension, results: onAddResult });
     });
 

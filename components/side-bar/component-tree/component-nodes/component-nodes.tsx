@@ -1,4 +1,4 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useState } from 'react';

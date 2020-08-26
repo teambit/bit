@@ -1,4 +1,4 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import React from 'react';
 
 import styles from './empty-compositions.module.scss';

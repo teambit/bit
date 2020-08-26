@@ -1,4 +1,4 @@
-import { Theme } from '@teambit/base-ui-temp.theme.theme-provider';
+import { Theme } from '@teambit/base-ui.theme.theme-provider';
 import React, { ReactNode } from 'react';
 
 import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
