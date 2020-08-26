@@ -26,13 +26,21 @@ export default class Link implements LegacyCommand {
     _args: any,
     flags: Record<string, any>
   ): string {
-    if (flags.json) {
-      return JSON.stringify(results, null, 2);
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const linksResultsStr = linkTemplate(results.linksResults);
-    const rewireResults = results.codemodResults ? `\n\n${codemodTemplate(results.codemodResults)}` : '';
-
-    return linksResultsStr + rewireResults;
+    console.log("sdfsdfsdfsd")
+    return '';
   }
+  // report(
+  //   results: { linksResults: LinksResult[]; codemodResults?: CodemodResult[] },
+  //   _args: any,
+  //   flags: Record<string, any>
+  // ): string {
+  //   if (flags.json) {
+  //     return JSON.stringify(results, null, 2);
+  //   }
+  //   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  //   const linksResultsStr = linkTemplate(results.linksResults);
+  //   const rewireResults = results.codemodResults ? `\n\n${codemodTemplate(results.codemodResults)}` : '';
+
+  //   return linksResultsStr + rewireResults;
+  // }
 }
