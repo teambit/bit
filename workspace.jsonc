@@ -3,7 +3,7 @@
   "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
-    "defaultScope": "teambit2.core",
+    "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
@@ -24,8 +24,10 @@
   "teambit.bit/variants": {
     "*":{
       "teambit.bit/pkg": {
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
-          "name": "@teambit/{name}"
+          "name": "@teambit/{name}",
+          "private": false
         }
       },
       "teambit.bit/dependency-resolver": {
@@ -59,7 +61,9 @@
     "extensions/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}",
+          "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
             "bbit": "bin/bit"
