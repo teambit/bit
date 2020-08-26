@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { LoggerAspect } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
 
@@ -10,7 +11,7 @@ import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect];
   constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
