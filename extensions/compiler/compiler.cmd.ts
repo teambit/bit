@@ -38,7 +38,6 @@ export class CompileCmd implements Command {
       spinner.stop();
       console.error(``, err);
 
-      console.log('');
       return `Finished. (${prettyTime(process.hrtime(startTimestamp))})`;
     }
 
