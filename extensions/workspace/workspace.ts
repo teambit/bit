@@ -66,6 +66,7 @@ export type EjectConfResult = {
 };
 
 export const ComponentAdded = 'componentAdded';
+export const ComponentChanged = 'componentChanged';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -349,7 +350,7 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
-      this.graphql.pubsub.publish('componentChanged', component);
+      this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -362,7 +363,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      this.graphql.pubsub.publish(ComponentAdded, component);
+      this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
