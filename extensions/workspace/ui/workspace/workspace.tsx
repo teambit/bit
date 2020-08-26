@@ -1,7 +1,7 @@
 import 'reset-css';
 
-import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
+import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';

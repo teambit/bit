@@ -1,6 +1,6 @@
-import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
-import { PropTable } from '@teambit/documenter-temp.ui.property-table';
-import { Section } from '@teambit/documenter-temp.ui.section';
+import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
+import { PropTable } from '@teambit/documenter.ui.property-table';
+import { Section } from '@teambit/documenter.ui.section';
 import React from 'react';
 
 export function Properties({ properties }: any) {
