@@ -31,6 +31,7 @@ export class CompileCmd implements Command {
     const spinner = ora('Compiling your components, hold tight.').start();
 
     let compileResults;
+    let outputString = '';
     try {
       compileResults = await this.compile.compileComponents(components, { verbose, noCache });
     } catch (err) {
@@ -43,8 +44,8 @@ export class CompileCmd implements Command {
 
     const compileTimeLength = process.hrtime(startTimestamp);
     spinner.stop();
-    console.log(``);
-    console.log(`  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}`);
+    outputString += '\n';
+    outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
 
     if (verbose) {
       compileResults
@@ -54,22 +55,23 @@ export class CompileCmd implements Command {
           status: 'SUCCESS',
         }))
         .forEach((result) => {
-          console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`);
-          result?.files?.forEach((file) => console.log(`\t\t - ${file}`));
+          outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}:`;
+          result?.files?.forEach((file) => (outputString += `\t\t - ${file}`));
+          outputString += '\n';
         });
     } else {
       compileResults
         .map((componentResults) => componentResults.component)
         .map((componentId) => ({ componentId, status: 'SUCCESS' }))
-        .forEach((result) => console.log(`${chalk.green('√')} ${result.status}\t${result.componentId}`));
+        .forEach((result) => (outputString += `${chalk.green('√')} ${result.status}\t${result.componentId}`));
     }
 
-    console.log(``);
-    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed \n`;
-    console.log(taskSummary);
-
-    console.log(``);
-    return `Finished. (${prettyTime(compileTimeLength)})`;
+    outputString += '\n';
+    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed\nFinished. (${prettyTime(
+      compileTimeLength
+    )})`;
+    outputString += taskSummary;
+    return outputString;
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
