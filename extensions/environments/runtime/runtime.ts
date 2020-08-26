@@ -1,5 +1,6 @@
-import BluebirdPromise from 'bluebird';
 import { Logger } from '@teambit/logger';
+import BluebirdPromise from 'bluebird';
+
 import { ExecutionContext } from '../context';
 import { EnvService } from '../services';
 import { EnvRuntime } from './env-runtime';
@@ -25,6 +26,7 @@ export class Runtime {
       } catch (err) {
         this.logger.error(err);
       }
+      return undefined;
     });
 
     return contexts;

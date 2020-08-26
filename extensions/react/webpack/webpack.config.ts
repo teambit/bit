@@ -1,5 +1,5 @@
-import { Configuration } from 'webpack';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { Configuration } from 'webpack';
 
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
   return {
