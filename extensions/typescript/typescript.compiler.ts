@@ -216,10 +216,10 @@ export class TypescriptCompiler implements Compiler {
    * the message is something like: "Building project '/Users/davidfirst/Library/Caches/Bit/capsules/dce2c8055fc028cc39ab2636b027e74c76a6140b/marketing_testimonial/tsconfig.json'..."
    * fetch the capsule path from this message.
    */
-  private getCapsulePathFromBuilderStatus(msg: string): string | undefined {
-    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return;
+  private getCapsulePathFromBuilderStatus(msg: string): string | null {
+    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return null;
     const msgTextSplit = msg.split("'");
-    if (msgTextSplit.length < 2) return;
+    if (msgTextSplit.length < 2) return null;
     return msgTextSplit[1];
   }
 }
