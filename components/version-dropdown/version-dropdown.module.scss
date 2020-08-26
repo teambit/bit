@@ -53,16 +53,16 @@
 }
 
 .placeholder {
-  cursor: pointer;
+  // cursor: pointer;
   display: flex;
   align-items: center;
   padding: 7px;
   border-radius: 6px;
   user-select: none;
   transition: background-color 300ms ease-in-out;
-  &:hover {
-    background-color: var(--bg-dent);
-  }
+  // &:hover {
+  //   background-color: var(--bg-dent);
+  // }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
     background-color: var(--bg-color);
