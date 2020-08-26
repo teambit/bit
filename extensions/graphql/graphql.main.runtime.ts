@@ -2,7 +2,6 @@ import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import cors from 'cors';
 import express, { Express } from 'express';
 import graphqlHTTP from 'express-graphql';
 import { execute, subscribe } from 'graphql';
@@ -62,7 +61,7 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    app.use(cors());
+    // app.use(cors());
     app.use(
       '/graphql',
       graphqlHTTP({
@@ -73,6 +72,20 @@ export class GraphqlMain {
 
     const subscriptionServer = createServer(app);
 
+    return subscriptionServer;
+  }
+
+  createSubscription(options: GraphQLServerOptions, port: number) {
+    // Create WebSocket listener server
+    const websocketServer = createServer((request, response) => {
+      response.writeHead(404);
+      response.end();
+    });
+
+    // Bind it to port and start listening
+    websocketServer.listen(port, () => this.logger.info(`Websocket Server is now running on http://localhost:${port}`));
+
+    const schema = this.createRootModule(options.schemaSlot);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const subServer = new SubscriptionServer(
       {
@@ -81,12 +94,10 @@ export class GraphqlMain {
         schema: schema.schema,
       },
       {
-        server: subscriptionServer,
+        server: websocketServer,
         path: this.config.subscriptionsPath,
       }
     );
-
-    return subscriptionServer;
   }
 
   /**
