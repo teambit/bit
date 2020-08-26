@@ -21,4 +21,6 @@ export class CompositionsSection implements Section {
     path: '~compositions',
     children: <Compositions />,
   };
+
+  order = 2;
 }

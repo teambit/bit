@@ -13,4 +13,5 @@ export class ChangelogSection implements Section {
     href: '~changelog',
     children: 'History',
   };
+  order = 3;
 }
