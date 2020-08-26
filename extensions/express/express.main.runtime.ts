@@ -1,7 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import cors from 'cors';
 import express, { Express } from 'express';
 import { concat, flatten, lowerCase } from 'lodash';
 
@@ -70,7 +69,7 @@ export class ExpressMain {
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
-    app.use(cors());
+    // app.use(cors());
 
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
