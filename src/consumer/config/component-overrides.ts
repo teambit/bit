@@ -73,7 +73,8 @@ export default class ComponentOverrides {
     workspaceConfig: ILegacyWorkspaceConfig,
     overridesFromModel: ComponentOverridesData | undefined,
     componentConfig: ComponentConfig,
-    origin: ComponentOrigin
+    origin: ComponentOrigin,
+    isLegacy: boolean
   ): Promise<ComponentOverrides> {
     const isAuthor = origin === COMPONENT_ORIGINS.AUTHORED;
     const isNotNested = origin !== COMPONENT_ORIGINS.NESTED;
@@ -96,11 +97,14 @@ export default class ComponentOverrides {
       }
       return isAuthor ? null : overridesFromModel;
     };
-
-    const extensionsAddedOverrides = await runOnLoadOverridesEvent(
-      this.componentOverridesLoadingRegistry,
-      componentConfig.parseExtensions()
-    );
+    let extensionsAddedOverrides = {};
+    // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file
+    if (!isLegacy) {
+      extensionsAddedOverrides = await runOnLoadOverridesEvent(
+        this.componentOverridesLoadingRegistry,
+        componentConfig.parseExtensions()
+      );
+    }
     const mergedLegacyConsumerOverridesWithExtensions = mergeOverrides(
       legacyOverridesFromConsumer || {},
       extensionsAddedOverrides
