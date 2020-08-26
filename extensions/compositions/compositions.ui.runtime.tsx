@@ -14,7 +14,7 @@ export class CompositionsUI {
     const section = new CompositionsSection(compositions);
 
     component.registerRoute(section.route);
-    component.registerNavigation(section.navigationLink);
+    component.registerNavigation(section.navigationLink, section.order);
 
     return compositions;
   }

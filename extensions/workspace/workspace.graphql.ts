@@ -50,6 +50,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       type Workspace {
         name: String
         path: String
+        icon: String
         components(offset: Int, limit: Int): [Component]
         getComponent(id: String!): Component
       }
@@ -91,6 +92,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       Workspace: {
         path: (ws) => ws.path,
         name: (ws) => ws.name,
+        icon: (ws) => ws.icon,
         components: async (ws: Workspace, { offset, limit }: { offset: number; limit: number }) => {
           return ws.list({ offset, limit });
         },

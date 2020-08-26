@@ -1,4 +1,3 @@
-import { Paragraph } from '@teambit/base-ui.text.paragraph';
 import { Example } from '@teambit/documenter.types.docs-file';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
@@ -32,7 +31,7 @@ function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
   return (
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
       {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
-      {example.description && <Paragraph>{example.description}</Paragraph>}
+      {example.description && <div>{example.description}</div>}
       <Playground code={example.code} scope={example.scope} />
     </Section>
   );

@@ -92,7 +92,6 @@ export function Compositions() {
                   <div />
                 )}
               </TabPanel>
-              <TabPanel></TabPanel>
             </TabContainer>
           </Panel>
         </div>

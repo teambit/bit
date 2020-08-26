@@ -183,6 +183,10 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
+  get icon() {
+    return this.config.icon;
+  }
+
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();

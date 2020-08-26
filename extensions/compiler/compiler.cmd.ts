@@ -1,5 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import { Logger } from '@teambit/logger';
+import chalk from 'chalk';
+import prettyTime from 'pretty-time';
 
+import { formatCompileResults } from './output-formatter';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
@@ -15,13 +19,29 @@ export class CompileCmd implements Command {
     ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
 
-  constructor(private compile: WorkspaceCompiler) {}
+  constructor(private compile: WorkspaceCompiler, private logger: Logger) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
+    const startTimestamp = process.hrtime();
+    this.logger.setStatusLine('Compiling your components, hold tight.');
+
+    let outputString = '';
     const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
-    // eslint-disable-next-line no-console
-    console.log('compileResults', compileResults);
-    return `${compileResults.length} components have been compiled successfully`;
+    const compileTimeLength = process.hrtime(startTimestamp);
+
+    outputString += '\n';
+    outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
+    outputString += formatCompileResults(compileResults, verbose);
+    outputString += '\n';
+
+    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed\nFinished. (${prettyTime(
+      compileTimeLength
+    )})`;
+
+    outputString += taskSummary;
+    this.logger.clearStatusLine();
+
+    return outputString;
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {

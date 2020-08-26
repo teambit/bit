@@ -49,7 +49,7 @@ export function ScopeOverview() {
             <div key={index}>
               <ComponentCard
                 id={component.id.fullName}
-                size={14093}
+                envIcon={component.environment?.icon}
                 preview={<ComponentComposition component={component} />}
               />
             </div>

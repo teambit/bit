@@ -426,6 +426,11 @@ export default class CommandHelper {
     return this.runCmd(`bit link ${ids} --rewire`);
   }
 
+  linkAndCompile(linkFlags?: string, compileId?: string, compileFlags?: Record<string, string>) {
+    this.link(linkFlags);
+    return this.compile(compileId, compileFlags);
+  }
+
   packComponent(id: string, options: Record<string, any>, extract = false) {
     const defaultOptions = {
       o: '',

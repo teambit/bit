@@ -15,9 +15,6 @@ import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 import { devConfig } from './webpack/webpack.dev.config';
 
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-
 export type UIServerProps = {
   graphql: GraphqlMain;
   express: ExpressMain;
@@ -65,7 +62,7 @@ export class UIServer {
     return devConfig(
       this.uiRoot.path,
       [await this.ui.generateRoot(aspects, this.uiRootExtension)],
-      this.uiRootExtension,
+      this.uiRoot.name,
       aspectsPaths
     );
   }
@@ -133,17 +130,6 @@ export class UIServer {
   private async selectPort(port?: number) {
     if (port) return port;
     return getPort({ port: getPort.makeRange(3000, 3200) });
-  }
-
-  private getBefore() {
-    return async (app: Express, server: Server) => {
-      // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
-      // middlewares before `redirectServedPath` otherwise will not have any effect
-      // This lets us fetch source contents from webpack for the error overlay
-      app.use(evalSourceMapMiddleware(server));
-      // This lets us open files from the runtime error overlay.
-      app.use(errorOverlayMiddleware());
-    };
   }
 
   private async getProxy() {
