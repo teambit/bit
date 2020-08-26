@@ -29,7 +29,12 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         placeholder=""
         clickToggles
         clickOutside
-        PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
+        PlaceholderComponent={() => (
+          <div>
+            <div className={styles.overlay} />
+            <VersionPlaceholder currentVersion={currentVersion} />
+          </div>
+        )}
       >
         <div>
           <div className={styles.title}>Select version to view</div>
