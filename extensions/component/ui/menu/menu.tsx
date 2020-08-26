@@ -1,4 +1,4 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavigationSlot } from '@teambit/react-router';
 import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import { VersionDropdown } from '@teambit/staged-components.version-dropdown';

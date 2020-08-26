@@ -1,7 +1,7 @@
 import { Author, Snap } from '@teambit/component';
-import { H3 } from '@teambit/documenter-temp.ui.heading';
+import { H3 } from '@teambit/documenter.ui.heading';
 import { NavLink } from '@teambit/react-router';
-import { StatusDot } from '@teambit/staged-components.side-bar/component-tree/status-dot';
+// import { StatusDot } from '@teambit/staged-components.side-bar/component-tree/status-dot';
 import { Contributors } from '@teambit/staged-components.workspace-sections.contributors';
 import { Labels } from '@teambit/staged-components.workspace-sections.version-label';
 import classNames from 'classnames';
@@ -27,10 +27,10 @@ export function VersionBlock({ version, isLatest, className, timestamp, author, 
     <div className={styles.versionWrapper}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={false} />
-        <NavLink className={styles.link} href="~tests">
+        {/* <NavLink className={styles.link} href="~tests">
           Tests
           <StatusDot status="new" />
-        </NavLink>
+        </NavLink> */}
         <NavLink className={styles.link} href="~compositions">
           Compositions
         </NavLink>

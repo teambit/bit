@@ -1,5 +1,5 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { TooltipDrawer } from '@teambit/evangelist-temp.surfaces.tooltip';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React, { ReactNode } from 'react';

@@ -1,4 +1,4 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 import React, { ReactNode } from 'react';
 import ReactTooltip from 'react-tooltip';

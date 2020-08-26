@@ -1,5 +1,5 @@
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
-import { Dropdown } from '@teambit/evangelist-temp.surfaces.dropdown';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
 import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
 import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';

@@ -1,5 +1,5 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { Icon } from '@teambit/evangelist-temp.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/react-router';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';

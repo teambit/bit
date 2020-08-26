@@ -1,4 +1,4 @@
-import { subPaths } from '@teambit/utils-temp.utils.sub-paths';
+import { subPaths } from '@teambit/base-ui.utils.sub-paths';
 
 export type KeyTree = {
   [filePath: string]: KeyTree | undefined;

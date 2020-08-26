@@ -1,7 +1,7 @@
 import { ComponentComposition } from '@teambit/compositions';
-import { Separator } from '@teambit/documenter-temp.ui.separator';
-import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
-import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
+import { Separator } from '@teambit/documenter.ui.separator';
+import { ComponentCard } from '@teambit/explorer.ui.component-card';
+import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
 import { ScopeDetails } from '@teambit/staged-components.scope-details';
 import React, { useContext } from 'react';
 
