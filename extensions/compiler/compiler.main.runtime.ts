@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
 
@@ -22,11 +22,12 @@ export class CompilerMain {
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
-  static async provider([cli, workspace, envs]: [CLIMain, Workspace, EnvsMain]) {
+  static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
     const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
-    cli.register(new CompileCmd(workspaceCompiler));
+    const logger = loggerMain.createLogger(CompilerAspect.id);
+    cli.register(new CompileCmd(workspaceCompiler, logger));
     return compilerMain;
   }
 }
