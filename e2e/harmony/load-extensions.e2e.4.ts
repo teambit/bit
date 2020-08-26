@@ -27,9 +27,12 @@ describe('load extensions', function () {
     let output;
     describe('loading simple extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
+        helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.bit/aspect');
         helper.command.addComponent('dummy-extension');
+        helper.command.link();
+        helper.command.compile();
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
       });
       it('should load the extension when loading the workspace', () => {
@@ -39,10 +42,13 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
         helper.fixtures.copyFixtureExtensions('non-requireable-extension');
         helper.command.addComponent('non-requireable-extension');
+        helper.extensions.addExtensionToVariant('non-requireable-extension', 'teambit.bit/aspect');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
+        helper.command.link();
+        helper.command.compile();
       });
       it('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
