@@ -23,6 +23,6 @@ export class OverviewSection implements Section {
     exact: true,
     children: <Overview />,
   };
-  
+
   order = 10;
 }

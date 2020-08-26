@@ -20,7 +20,7 @@ function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]
   // 0  - equal
   // <0 - first < second
   // >0 - first > second
-  
+
   return (first ?? 0) - (second ?? 0);
 }
 

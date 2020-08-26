@@ -18,7 +18,7 @@ export function WorkspaceOverview() {
             <div key={index}>
               <ComponentCard
                 id={component.id.fullName}
-                // footer={<CardFooter slot={}></CardFooter>}
+                envIcon={component.environment?.icon}
                 preview={<ComponentComposition component={component} hotReload={false} />}
               />
             </div>
