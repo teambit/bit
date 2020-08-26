@@ -60,6 +60,7 @@
   border-radius: 6px;
   user-select: none;
   transition: background-color 300ms ease-in-out;
+  background-color: var(--bg-color);
   // &:hover {
   //   background-color: var(--bg-dent);
   // }
@@ -71,9 +72,9 @@
       background-color: var(--bg-color);
     }
   }
-  > div {
-    margin-right: 5px;
-  }
+  // > div {
+  // margin-right: 5px;
+  // }
   .label {
     margin-right: 8px;
   }
