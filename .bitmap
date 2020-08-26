@@ -427,6 +427,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "output-formatter.ts",
+                "test": false,
+                "name": "output-formatter.ts"
+            },
+            {
                 "relativePath": "types.ts",
                 "test": false,
                 "name": "types.ts"
