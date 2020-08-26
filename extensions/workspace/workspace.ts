@@ -876,6 +876,13 @@ export class Workspace implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId);
   }
 
+  async resolveMultipleComponentIds(
+    ids: Array<string | ComponentID | BitId>,
+    assumeIdWithScope = false,
+    useVersionFromBitmap = true) {
+      return Promise.all(ids.map(id => this.resolveComponentId(id, assumeIdWithScope, useVersionFromBitmap)));
+  }
+
   /**
    * This will mutate the original extensions list and resolve it's ids
    *
