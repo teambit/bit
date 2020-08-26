@@ -42,6 +42,10 @@ export class WebpackMain {
     return merge(this.createConfig(context.entry, this.workspace.path, context.rootPath, context.publicPath), config);
   }
 
+  mergeConfig(target: Configuration, source: Configuration) {
+    return merge(target, source);
+  }
+
   createBundler(context: BundlerContext, envConfig: Configuration) {
     return new WebpackBundler(context.targets, envConfig, this.logger);
   }

@@ -1,6 +1,7 @@
 import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
 import { join } from 'path';
+
 import { NoTestFilesFound } from './exceptions';
 import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
@@ -29,8 +30,7 @@ export class TesterService implements EnvService {
     }, []);
 
     if (!testMatch.length) {
-      // throw new NoTestFilesFound(this.testsRegex);
-      return;
+      throw new NoTestFilesFound(this.testsRegex);
     }
 
     const testerContext = Object.assign(context, {

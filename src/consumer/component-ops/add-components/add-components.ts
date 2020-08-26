@@ -16,6 +16,7 @@ import BitMap from '../../../consumer/bit-map';
 import Consumer from '../../../consumer/consumer';
 import GeneralError from '../../../error/general-error';
 import ShowDoctorError from '../../../error/show-doctor-error';
+import { NodeModuleLinker } from '../../../links';
 import { isSupportedExtension } from '../../../links/link-content';
 import logger from '../../../logger/logger';
 import { ModelComponent } from '../../../scope/models';
@@ -48,7 +49,6 @@ import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import { NodeModuleLinker } from '../../../links';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
 type Warnings = {
@@ -782,7 +782,7 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
         if (addedResult) this.addedComponents.push(addedResult);
       }
     }
-    await this.linkComponents(this.addedComponents.map(item => item.id));
+    await this.linkComponents(this.addedComponents.map((item) => item.id));
     Analytics.setExtraData('num_components', this.addedComponents.length);
     return { addedComponents: this.addedComponents, warnings: this.warnings };
   }

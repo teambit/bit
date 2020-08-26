@@ -50,6 +50,16 @@ Configure the `publishConfig` prop with your registry data. For example:
 
 The auto-publishing during export is triggered only when this `publishConfig` or `name` is set
 
+In addition, you can specify args to the `npm publish` command by adding an array of args to `packageManagerPublishArgs`. For example:
+
+```js
+"ui/*": {
+  "teambit.bit/pkg": {
+    "packageManagerPublishArgs": ["--access public"]
+  }
+}
+```
+
 #### Placeholders
 
 * `{main}` main source file without the extension

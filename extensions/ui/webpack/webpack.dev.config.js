@@ -190,7 +190,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
     },
 
     plugins: [
-      new ReactRefreshWebpackPlugin(),
+      new ReactRefreshWebpackPlugin({
+        // exclude: /@pmmmwh/, // replaces the default value of `/node_modules/`
+        include: aspectPaths,
+      }),
       // Re-generate index.html with injected script tag.
       // The injected script tag contains a src value of the
       // filename output defined above.
