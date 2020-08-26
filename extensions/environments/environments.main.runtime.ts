@@ -2,6 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 
 import { Environment } from './environment';
@@ -54,7 +55,9 @@ export class EnvsMain {
     /**
      * slot for allowing extensions to register new environment.
      */
-    private envSlot: EnvsRegistry
+    private envSlot: EnvsRegistry,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -64,26 +67,18 @@ export class EnvsMain {
     return this.createRuntime(components);
   }
 
-  // @todo remove duplications from `aggregateByDefs`, it was copied and pasted
-  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition | null {
-    let id;
-    let env;
-    extensions.forEach((ext) => {
-      if (env) {
-        return;
-      }
-      id = ext.stringId;
-      env = this.envSlot.get(id);
-    });
-
-    if (!env) {
-      return null;
+  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
+    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.stringId));
+    if (envInExtensionList) {
+      return {
+        id: envInExtensionList.stringId,
+        env: this.envSlot.get(envInExtensionList.stringId) as Environment,
+      };
     }
-
-    return {
-      id,
-      env,
-    };
+    const defaultEnvId = 'teambit.bit/node';
+    const defaultEnv = this.envSlot.get(defaultEnvId);
+    if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
+    return { id: defaultEnvId, env: defaultEnv };
   }
 
   /**
@@ -134,41 +129,43 @@ export class EnvsMain {
 
   // refactor here
   private createRuntime(components: Component[]): Runtime {
-    return new Runtime(this.aggregateByDefs(components));
+    return new Runtime(this.aggregateByDefs(components), this.logger);
   }
 
-  // :TODO can be refactorerd to few utilities who will make repeating this very easy.
+  // :TODO can be refactored to few utilities who will make repeating this very easy.
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
-    const map = {};
-    components.forEach((current: Component) => {
-      // :TODO fix this api. replace with `this.id` and improve naming.
-      const envDef = this.getEnvFromExtensions(current.config.extensions);
-      if (!envDef) return;
+    const envsMap = {};
+    components.forEach((component: Component) => {
+      const envDef = this.getEnvFromExtensions(component.config.extensions);
       const envId = envDef.id;
       const env = envDef.env;
-      if (!env) throw new Error(`an environment was not registered in extension ${envId}`);
-
       // handle config as well when aggregating envs.
-      if (map[envId]) map[envId].components.push(current);
+      if (envsMap[envId]) envsMap[envId].components.push(component);
       else
-        map[envId] = {
-          components: [current],
+        envsMap[envId] = {
+          components: [component],
           env,
         };
-    }, {});
+    });
 
-    return Object.keys(map).map((key) => {
-      return new EnvRuntime(key, map[key].env, map[key].components);
+    return Object.keys(envsMap).map((key) => {
+      return new EnvRuntime(key, envsMap[key].env, envsMap[key].components);
     });
   }
 
   static slots = [Slot.withType<Environment>()];
 
   static defaultConfig = {};
-  static dependencies = [GraphqlAspect, ComponentAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect];
 
-  static async provider([graphql]: [GraphqlMain], config: EnvsConfig, [envSlot]: [EnvsRegistry], context: Harmony) {
-    const envs = new EnvsMain(config, context, envSlot);
+  static async provider(
+    [graphql, loggerAspect]: [GraphqlMain, LoggerMain],
+    config: EnvsConfig,
+    [envSlot]: [EnvsRegistry],
+    context: Harmony
+  ) {
+    const logger = loggerAspect.createLogger(EnvsAspect.id);
+    const envs = new EnvsMain(config, context, envSlot, logger);
     graphql.register(environmentsSchema(envs));
     return envs;
   }

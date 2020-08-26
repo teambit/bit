@@ -20,6 +20,7 @@ import {
   PackageManagerInstallOptions,
 } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
+import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -31,7 +32,6 @@ import { link } from 'bit-bin/dist/api/consumer';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
@@ -51,6 +51,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
+import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ExtensionData, OnComponentLoad } from './on-component-load';
 import { WorkspaceExtConfig } from './types';
@@ -58,12 +59,13 @@ import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentChangeSlot, OnComponentLoadSlot, OnComponentAddSlot } from './workspace.provider';
-import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
+import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
 
 export type EjectConfResult = {
   configPath: string;
 };
+
+export const ComponentAdded = 'componentAdded';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -136,6 +138,8 @@ export class Workspace implements ComponentFactory {
      * on component add slot.
      */
     private onComponentAddSlot: OnComponentAddSlot,
+
+    private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
@@ -344,20 +348,21 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
+      // TODO: find way to standardize event names.
+      this.graphql.pubsub.publish('componentChanged', component);
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
     return results;
   }
 
-  async triggerOnComponentAdd(
-    id: ComponentID
-  ): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
+      this.graphql.pubsub.publish(ComponentAdded, component);
       results.push({ extensionId: extension, results: onAddResult });
     });
 
@@ -557,7 +562,7 @@ export class Workspace implements ComponentFactory {
     }
 
     // It's before the scope extensions, since there is no need to resolve extensions from scope they are already resolved
-    await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
+    // await Promise.all(extensionsToMerge.map((extensions) => this.resolveExtensionsList(extensions)));
 
     if (mergeFromScope && continuePropagating) {
       extensionsToMerge.push(scopeExtensions);
@@ -658,7 +663,7 @@ export class Workspace implements ComponentFactory {
 
     const allComponents = await this.getMany(allIds);
 
-    const aspects = allComponents.filter((component: ConsumerComponent) => {
+    const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;
@@ -713,7 +718,7 @@ export class Workspace implements ComponentFactory {
    * Load all unloaded extensions from a list
    * @param extensions list of extensions with config to load
    */
-  async loadExtensions(extensions: ExtensionDataList, throwOnError = true): Promise<void> {
+  async loadExtensions(extensions: ExtensionDataList, throwOnError = false): Promise<void> {
     const extensionsIdsP = extensions.map(async (extensionEntry) => {
       // Core extension
       if (!extensionEntry.extensionId) {
@@ -725,7 +730,6 @@ export class Workspace implements ComponentFactory {
     const loadedExtensions = this.harmony.extensionsIds;
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
-
     await this.loadAspects(extensionsToLoad, throwOnError);
   }
 
@@ -850,7 +854,7 @@ export class Workspace implements ComponentFactory {
     assumeIdWithScope = false,
     useVersionFromBitmap = true
   ): Promise<ComponentID> {
-    if (!assumeIdWithScope) {
+    if (!assumeIdWithScope && typeof id === 'string') {
       const legacyId = this.consumer.getParsedId(id.toString(), useVersionFromBitmap);
       return ComponentID.fromLegacy(legacyId);
     }

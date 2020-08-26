@@ -1,4 +1,5 @@
 import { Command, CommandOptions, Flags } from '@teambit/cli';
+import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import { Timer } from 'bit-bin/dist/toolbox/timer';
@@ -22,7 +23,7 @@ export class TestCmd implements Command {
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
-  constructor(private tester: TesterMain, private workspace: Workspace) {}
+  constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
   async render([userPattern]: [string], { watch, debug }: Flags) {
     const timer = Timer.create();
@@ -33,7 +34,8 @@ export class TestCmd implements Command {
 
     // TODO: @david please add logger here instead.
     // eslint-disable-next-line no-console
-    console.log(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
+    this.logger.console(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
+    this.logger.off();
     await this.tester.test(components, {
       watch: Boolean(watch),
       debug: Boolean(debug),

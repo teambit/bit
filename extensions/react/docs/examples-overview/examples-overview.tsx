@@ -1,7 +1,7 @@
-import { Paragraph } from '@teambit/base-ui-temp.text.paragraph';
-import { Example } from '@teambit/documenter-temp.types.docs-file';
-import { LinkedHeading } from '@teambit/documenter-temp.ui.linked-heading';
-import { Section, SectionProps } from '@teambit/documenter-temp.ui.section';
+import { Paragraph } from '@teambit/base-ui.text.paragraph';
+import { Example } from '@teambit/documenter.types.docs-file';
+import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
+import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import classNames from 'classnames';
 import React from 'react';
 

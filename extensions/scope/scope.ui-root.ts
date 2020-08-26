@@ -2,6 +2,7 @@ import { UIRoot } from '@teambit/ui';
 
 import type { ScopeMain } from './scope.main.runtime';
 
+// @ts-ignore - @ran to implement the missing functions and remove it
 export class ScopeUIRoot implements UIRoot {
   constructor(
     /**

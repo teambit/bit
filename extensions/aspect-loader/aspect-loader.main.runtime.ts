@@ -116,7 +116,8 @@ export class AspectLoaderMain {
           // console.log(e);
           throw new CannotLoadExtension(id, e);
         }
-        this.logger.console(e);
+        this.logger.console(errorMsg);
+        this.logger.console(e.message);
       }
       return undefined;
     });

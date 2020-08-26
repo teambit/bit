@@ -9,13 +9,14 @@ import R from 'ramda';
 import format from 'string-format';
 
 import { Analytics } from '../../../analytics/analytics';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import { BitIdStr } from '../../../bit-id/bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, PACKAGE_JSON, VERSION_DELIMITER } from '../../../constants';
 import BitMap from '../../../consumer/bit-map';
 import Consumer from '../../../consumer/consumer';
 import GeneralError from '../../../error/general-error';
 import ShowDoctorError from '../../../error/show-doctor-error';
+import { NodeModuleLinker } from '../../../links';
 import { isSupportedExtension } from '../../../links/link-content';
 import logger from '../../../logger/logger';
 import { ModelComponent } from '../../../scope/models';
@@ -49,7 +50,7 @@ import MissingMainFileMultipleComponents from './exceptions/missing-main-file-mu
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
-export type AddResult = { id: string; files: ComponentMapFile[] };
+export type AddResult = { id: BitId; files: ComponentMapFile[] };
 type Warnings = {
   alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
@@ -302,7 +303,7 @@ export default class AddComponents {
     // $FlowFixMe it can't be null due to the filter function
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter((file) => file);
-    if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
+    if (!componentFiles.length) return { id: component.componentId, files: [] };
     if (foundComponentFromBitMap) {
       this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
@@ -355,7 +356,7 @@ export default class AddComponents {
       return componentMap;
     };
     const componentMap = getComponentMap();
-    return { id: componentId.toString(), files: componentMap.files };
+    return { id: componentId, files: componentMap.files };
   }
 
   /**
@@ -781,8 +782,20 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
         if (addedResult) this.addedComponents.push(addedResult);
       }
     }
+    await this.linkComponents(this.addedComponents.map((item) => item.id));
     Analytics.setExtraData('num_components', this.addedComponents.length);
     return { addedComponents: this.addedComponents, warnings: this.warnings };
+  }
+
+  async linkComponents(ids: BitId[]) {
+    if (this.consumer.isLegacy || this.trackDirFeature) {
+      // if trackDirFeature is set, it happens during the component-load and because we load the
+      // components in the next line, it gets into an infinite loop.
+      return;
+    }
+    const { components } = await this.consumer.loadComponents(BitIds.fromArray(ids));
+    const nodeModuleLinker = new NodeModuleLinker(components, this.consumer, this.consumer.bitMap);
+    await nodeModuleLinker.link();
   }
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {

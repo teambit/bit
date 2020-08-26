@@ -82,6 +82,16 @@
     "bit": {
         "files": [
             {
+                "relativePath": "app.ts",
+                "test": false,
+                "name": "app.ts"
+            },
+            {
+                "relativePath": "bin/bit",
+                "test": false,
+                "name": "bit"
+            },
+            {
                 "relativePath": "bit.aspect.ts",
                 "test": false,
                 "name": "bit.aspect.ts"
@@ -100,6 +110,11 @@
                 "relativePath": "bit.provider.ts",
                 "test": false,
                 "name": "bit.provider.ts"
+            },
+            {
+                "relativePath": "hook-require.ts",
+                "test": false,
+                "name": "hook-require.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -318,11 +333,6 @@
     "cli": {
         "files": [
             {
-                "relativePath": "app.ts",
-                "test": false,
-                "name": "app.ts"
-            },
-            {
                 "relativePath": "bin/bit",
                 "test": false,
                 "name": "bit"
@@ -356,11 +366,6 @@
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "hook-require.ts",
-                "test": false,
-                "name": "hook-require.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -671,6 +676,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/menu/menu-nav.tsx",
+                "test": false,
+                "name": "menu-nav.tsx"
+            },
+            {
                 "relativePath": "ui/menu/menu.module.scss",
                 "test": false,
                 "name": "menu.module.scss"
@@ -679,6 +689,11 @@
                 "relativePath": "ui/menu/menu.tsx",
                 "test": false,
                 "name": "menu.tsx"
+            },
+            {
+                "relativePath": "ui/menu/nav-plugin.tsx",
+                "test": false,
+                "name": "nav-plugin.tsx"
             },
             {
                 "relativePath": "ui/top-bar-nav/index.ts",
@@ -2402,9 +2417,9 @@
                 "name": "html.js"
             },
             {
-                "relativePath": "webpack/webpack.config.js",
+                "relativePath": "webpack/webpack.config.ts",
                 "test": false,
-                "name": "webpack.config.js"
+                "name": "webpack.config.ts"
             },
             {
                 "relativePath": "webpack/webpack.preview-dev.config.js",
@@ -2412,9 +2427,9 @@
                 "name": "webpack.preview-dev.config.js"
             },
             {
-                "relativePath": "webpack/webpack.preview.config.js",
+                "relativePath": "webpack/webpack.preview.config.ts",
                 "test": false,
-                "name": "webpack.preview.config.js"
+                "name": "webpack.preview.config.ts"
             }
         ],
         "mainFile": "index.ts",
@@ -2753,7 +2768,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/corner",
+        "rootDir": "components/corner",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2777,7 +2792,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/full-loader",
+        "rootDir": "components/full-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2801,7 +2816,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/main-dropdown",
+        "rootDir": "components/main-dropdown",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2825,7 +2840,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/pill-label",
+        "rootDir": "components/pill-label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2849,7 +2864,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-details",
+        "rootDir": "components/scope-details",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2873,7 +2888,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-labels",
+        "rootDir": "components/scope-labels",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2897,7 +2912,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/scope-title",
+        "rootDir": "components/scope-title",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3015,9 +3030,44 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths.ts",
+                "relativePath": "component-tree/inflate-paths/attach-payload.ts",
+                "test": false,
+                "name": "attach-payload.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/inflate-paths.spec.ts",
+                "test": false,
+                "name": "inflate-paths.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/inflate-paths.ts",
                 "test": false,
                 "name": "inflate-paths.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.spec.ts",
+                "test": false,
+                "name": "key-tree-to-node-tree.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.ts",
+                "test": false,
+                "name": "key-tree-to-node-tree.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree.spec.ts",
+                "test": false,
+                "name": "key-tree.spec.ts"
+            },
+            {
+                "relativePath": "component-tree/inflate-paths/key-tree.ts",
+                "test": false,
+                "name": "key-tree.ts"
             },
             {
                 "relativePath": "component-tree/payload-type.tsx",
@@ -3131,7 +3181,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/side-bar",
+        "rootDir": "components/side-bar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3155,7 +3205,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/splitter",
+        "rootDir": "components/splitter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3179,7 +3229,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/top-bar",
+        "rootDir": "components/top-bar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3203,31 +3253,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/version-dropdown",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/workspace-components/accordion": {
-        "files": [
-            {
-                "relativePath": "accordion.module.scss",
-                "test": false,
-                "name": "accordion.module.scss"
-            },
-            {
-                "relativePath": "accordion.tsx",
-                "test": false,
-                "name": "accordion.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/accordion",
+        "rootDir": "components/version-dropdown",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3276,7 +3302,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/Avatar",
+        "rootDir": "components/Avatar",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3305,7 +3331,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/label",
+        "rootDir": "components/label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3329,7 +3355,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/separator",
+        "rootDir": "components/separator",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3358,7 +3384,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/status",
+        "rootDir": "components/status",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3382,7 +3408,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/time-ago",
+        "rootDir": "components/time-ago",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3411,7 +3437,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-components/version-tag",
+        "rootDir": "components/version-tag",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3435,7 +3461,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/contributors",
+        "rootDir": "components/contributors",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3464,7 +3490,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/version-block",
+        "rootDir": "components/version-block",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3488,7 +3514,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "components/stage-components/workspace-sections/version-label",
+        "rootDir": "components/version-label",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3617,6 +3643,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/tester",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "toolbox/query-string": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "query-string.spec.ts",
+                "test": false,
+                "name": "query-string.spec.ts"
+            },
+            {
+                "relativePath": "query-string.ts",
+                "test": false,
+                "name": "query-string.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/query-string",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4115,6 +4165,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/workspace/use-workspace.ts",
+                "test": false,
+                "name": "use-workspace.ts"
+            },
+            {
                 "relativePath": "ui/workspace/workspace-context.tsx",
                 "test": false,
                 "name": "workspace-context.tsx"
@@ -4241,5 +4296,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.3"
+    "version": "14.8.9-dev.4"
 }

@@ -1,6 +1,6 @@
 import { ComponentComposition } from '@teambit/compositions';
-import { ComponentCard } from '@teambit/explorer-temp.ui.component-card';
-import { ComponentGrid } from '@teambit/explorer-temp.ui.component-grid';
+import { ComponentCard } from '@teambit/explorer.ui.component-card';
+import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
 import React, { useContext } from 'react';
 
 import { WorkspaceContext } from '../workspace-context';
@@ -18,8 +18,8 @@ export function WorkspaceOverview() {
             <div key={index}>
               <ComponentCard
                 id={component.id.fullName}
-                // footer={<CardFooter slot={}></CardFooter>}
-                preview={<ComponentComposition component={component} />}
+                envIcon={component.environment?.icon}
+                preview={<ComponentComposition component={component} hotReload={false} />}
               />
             </div>
           );

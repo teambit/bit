@@ -27,9 +27,11 @@ describe('load extensions', function () {
     let output;
     describe('loading simple extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
+        helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.bit/aspect');
         helper.command.addComponent('dummy-extension');
+        helper.command.linkAndCompile();
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
       });
       it('should load the extension when loading the workspace', () => {
@@ -39,19 +41,21 @@ describe('load extensions', function () {
     });
     describe('non requireable extension', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.fixtures.copyFixtureExtensions('non-requireable-extension');
-        helper.command.addComponent('non-requireable-extension');
-        helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-extension', config);
-      });
-      it('when config set to throw error on failed extensions', () => {
-        const func = () => helper.command.status();
-        const origError = new Error('error by purpose');
-        const error = new CannotLoadExtension('non-requireable-extension', origError);
-        helper.general.expectToThrow(func, error);
+        helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
+        helper.fixtures.copyFixtureExtensions('non-requireable-aspect');
+        helper.command.addComponent('non-requireable-aspect');
+        helper.extensions.addExtensionToVariant('non-requireable-aspect', 'teambit.bit/aspect');
+        helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-aspect', config);
+        helper.command.linkAndCompile();
       });
       // TODO: implement
-      describe.skip('when config set to ignore error on failed extensions', () => {
+      it.skip('when config set to throw error on failed extensions', () => {
+        const func = () => helper.command.status();
+        const origError = new Error('error by purpose');
+        const error = new CannotLoadExtension('non-requireable-aspect', origError);
+        helper.general.expectToThrow(func, error);
+      });
+      describe('when config set to ignore error on failed extensions', () => {
         before(() => {
           // TODO: set config to ignore errors and restore it in the end
           output = helper.command.status();
@@ -60,7 +64,7 @@ describe('load extensions', function () {
           expect(output).to.have.string('new components');
         });
         it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-extension'));
+          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-aspect'));
         });
       });
     });

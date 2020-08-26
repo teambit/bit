@@ -1,59 +1,20 @@
 import 'reset-css';
 
-import { Layout } from '@teambit/base-ui-temp.layout.split-pane-layout';
-import { TupleSplitPane } from '@teambit/base-ui-temp.surfaces.tuple-split-pane';
+import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
+import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';
 import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { TopBar } from '@teambit/staged-components.top-bar';
-import { useDataQuery } from '@teambit/ui';
-import { gql } from 'apollo-boost';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import React, { ReactNode, useReducer } from 'react';
 import { Route } from 'react-router-dom';
 
-import { Workspace as WorkspaceModel } from './workspace-model';
+import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
-
-const WORKSPACE = gql`
-  {
-    workspace {
-      name
-      path
-      components {
-        id {
-          name
-          version
-          scope
-        }
-        status {
-          isNew
-          isInScope
-          isStaged
-          modifyInfo {
-            hasModifiedFiles
-            hasModifiedDependencies
-          }
-          isDeleted
-        }
-        deprecation {
-          isDeprecate
-        }
-        server {
-          env
-          url
-        }
-        env {
-          id
-          icon
-        }
-      }
-    }
-  }
-`;
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
@@ -65,20 +26,18 @@ export type WorkspaceProps = {
  * main workspace component.
  */
 export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
-  const { data } = useDataQuery(WORKSPACE);
+  const workspace = useWorkspace();
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
-  if (!data) {
+  if (!workspace) {
     return (
       <div className={styles.emptyContainer}>
         <FullLoader />
       </div>
     );
   }
-
-  const workspace = WorkspaceModel.from(data.workspace);
 
   return (
     <WorkspaceProvider workspace={workspace}>
