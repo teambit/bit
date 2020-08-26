@@ -6,7 +6,7 @@ $topbarHeight: 56px;
   justify-content: space-between;
   height: $topbarHeight;
   background: var(--border-color);
-  padding: 16px;
+  padding: 10px;
   user-select: none;
   box-sizing: border-box;
   width: 30%;
@@ -29,14 +29,7 @@ $topbarHeight: 56px;
   }
 
   .avatar {
-    display: inline-block;
-    margin-right: 8px;
-    width: 32px;
-    height: 32px;
-    background: var(--bg-base);
-    border-radius: 50%;
-    line-height: 32px;
-    text-align: center;
+    margin-right: 10px;
   }
 
   > b {
