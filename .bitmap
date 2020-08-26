@@ -676,6 +676,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/menu/menu-nav.tsx",
+                "test": false,
+                "name": "menu-nav.tsx"
+            },
+            {
                 "relativePath": "ui/menu/menu.module.scss",
                 "test": false,
                 "name": "menu.module.scss"
@@ -684,6 +689,11 @@
                 "relativePath": "ui/menu/menu.tsx",
                 "test": false,
                 "name": "menu.tsx"
+            },
+            {
+                "relativePath": "ui/menu/nav-plugin.tsx",
+                "test": false,
+                "name": "nav-plugin.tsx"
             },
             {
                 "relativePath": "ui/top-bar-nav/index.ts",
