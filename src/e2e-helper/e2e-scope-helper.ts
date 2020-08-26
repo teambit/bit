@@ -9,6 +9,7 @@ import { generateRandomStr } from '../utils';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
+import NpmHelper from './e2e-npm-helper';
 import ScopesData from './e2e-scopes';
 
 export default class ScopeHelper {
