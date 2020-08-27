@@ -17,16 +17,18 @@ export class Runtime {
 
   async run(service: EnvService, options?: { [key: string]: any }): Promise<any[]> {
     const contexts = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
-      try {
+      // @todo: Ran, we can't have this try/catch for build process. otherwise, it tags without
+      // dists and the user have no idea about it.
+      // try {
         const res = await service.run(new ExecutionContext(this, env), options);
         return {
           env: env.id,
           res,
         };
-      } catch (err) {
-        this.logger.error(err);
-        return [];
-      }
+      // } catch (err) {
+      //   this.logger.error(err);
+      //   return [];
+      // }
     });
 
     return contexts;
