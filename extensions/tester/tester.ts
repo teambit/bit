@@ -3,6 +3,7 @@ import { ConcreteService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
 
 export type TestResults = {
+  errors?: Error[];
   total: number;
 };
 

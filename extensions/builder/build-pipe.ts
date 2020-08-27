@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 
 import { InvalidTask } from './exceptions';
 import { TaskProcess } from './task-process';
-import { BuildContext, BuildTask } from './types';
+import { BuildContext, BuildResults,BuildTask } from './types';
 
 export class BuildPipe {
   constructor(
@@ -17,7 +17,7 @@ export class BuildPipe {
   /**
    * execute a pipeline of build tasks.
    */
-  async execute(buildContext: BuildContext) {
+  async execute(buildContext: BuildContext): Promise<BuildResults[]> {
     const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
     const results = await pMapSeries(this.tasks, async (task: BuildTask) => {
       if (!task) {
@@ -25,12 +25,12 @@ export class BuildPipe {
       }
       longProcessLogger.logProgress(`${task.extensionId} ${task.description || ''}`);
       const taskResult = await task.execute(buildContext);
-      const taskProcess = new TaskProcess(task, taskResult, buildContext);
+      const taskProcess = new TaskProcess(task, taskResult, buildContext, this.logger);
       taskProcess.throwIfErrorsFound();
       this.logger.info(`task "${task.extensionId}" has completed successfully`);
-      const components = await taskProcess.saveTaskResults();
+      await taskProcess.saveTaskResults();
       this.logger.consoleSuccess();
-      return components;
+      return taskResult;
     });
     longProcessLogger.end();
     return results;
