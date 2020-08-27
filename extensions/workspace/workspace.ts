@@ -66,6 +66,7 @@ export type EjectConfResult = {
 };
 
 export const ComponentAdded = 'componentAdded';
+export const ComponentChanged = 'componentChanged';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -182,6 +183,10 @@ export class Workspace implements ComponentFactory {
     if (this.config.name) return this.config.name;
     const tokenizedPath = this.path.split('/');
     return tokenizedPath[tokenizedPath.length - 1];
+  }
+
+  get icon() {
+    return this.config.icon;
   }
 
   async hasModifiedDependencies(component: Component) {
@@ -351,7 +356,7 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
-      this.graphql.pubsub.publish('componentChanged', component);
+      this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -364,7 +369,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      this.graphql.pubsub.publish(ComponentAdded, component);
+      this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
@@ -816,7 +821,7 @@ export class Workspace implements ComponentFactory {
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
@@ -883,8 +888,9 @@ export class Workspace implements ComponentFactory {
   async resolveMultipleComponentIds(
     ids: Array<string | ComponentID | BitId>,
     assumeIdWithScope = false,
-    useVersionFromBitmap = true) {
-      return Promise.all(ids.map(id => this.resolveComponentId(id, assumeIdWithScope, useVersionFromBitmap)));
+    useVersionFromBitmap = true
+  ) {
+    return Promise.all(ids.map((id) => this.resolveComponentId(id, assumeIdWithScope, useVersionFromBitmap)));
   }
 
   /**

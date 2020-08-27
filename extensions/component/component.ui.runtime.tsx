@@ -6,7 +6,7 @@ import { RouteProps } from 'react-router-dom';
 
 import { ComponentAspect } from './component.aspect';
 import { Component } from './ui/component';
-import { Menu } from './ui/menu';
+import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 
 export type Server = {
   env: string;
@@ -27,7 +27,7 @@ export class ComponentUI {
   constructor(
     private routeSlot: RouteSlot,
 
-    private navSlot: NavigationSlot,
+    private navSlot: OrderedNavigationSlot,
 
     /**
      * slot for registering a new widget to the menu.
@@ -60,8 +60,11 @@ export class ComponentUI {
     return this;
   }
 
-  registerNavigation(nav: NavLinkProps) {
-    this.navSlot.register(nav);
+  registerNavigation(nav: NavLinkProps, order?: number) {
+    this.navSlot.register({
+      props: nav,
+      order,
+    });
   }
 
   registerWidget(widget: NavLinkProps) {
@@ -72,9 +75,13 @@ export class ComponentUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavigationSlot>(), Slot.withType<NavigationSlot>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavPlugin>(), Slot.withType<NavigationSlot>()];
 
-  static async provider(deps, config, [routeSlot, navSlot, widgetSlot]: [RouteSlot, NavigationSlot, NavigationSlot]) {
+  static async provider(
+    deps,
+    config,
+    [routeSlot, navSlot, widgetSlot]: [RouteSlot, OrderedNavigationSlot, NavigationSlot]
+  ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
     const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);

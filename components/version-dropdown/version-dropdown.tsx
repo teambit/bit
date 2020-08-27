@@ -1,8 +1,8 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
-import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
+// import { Icon } from '@teambit/evangelist.elements.icon';
+// import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
-import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
+// import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
+// import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -23,13 +23,18 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
   }
   return (
     <div className={styles.versionDropdown}>
-      <Dropdown
+      {/* <Dropdown
         className={styles.dropdown}
         dropClass={styles.menu}
         placeholder=""
         clickToggles
         clickOutside
-        PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
+        PlaceholderComponent={() => ( */}
+      <div>
+        {/* <div className={styles.overlay} /> */}
+        <VersionPlaceholder currentVersion={currentVersion} />
+      </div>
+      {/* )}
       >
         <div>
           <div className={styles.title}>Select version to view</div>
@@ -44,7 +49,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
             })}
           </div>
         </div>
-      </Dropdown>
+      </Dropdown> */}
     </div>
   );
 }
@@ -53,7 +58,7 @@ function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
   return (
     <div className={classNames(styles.placeholder)}>
       <div>{currentVersion}</div>
-      <Icon of="fat-arrow-down" />
+      {/* <Icon of="fat-arrow-down" /> */}
     </div>
   );
 }

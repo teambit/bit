@@ -427,6 +427,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "output-formatter.ts",
+                "test": false,
+                "name": "output-formatter.ts"
+            },
+            {
                 "relativePath": "types.ts",
                 "test": false,
                 "name": "types.ts"
@@ -720,6 +725,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/menu/menu-nav.tsx",
+                "test": false,
+                "name": "menu-nav.tsx"
+            },
+            {
                 "relativePath": "ui/menu/menu.module.scss",
                 "test": false,
                 "name": "menu.module.scss"
@@ -728,6 +738,11 @@
                 "relativePath": "ui/menu/menu.tsx",
                 "test": false,
                 "name": "menu.tsx"
+            },
+            {
+                "relativePath": "ui/menu/nav-plugin.tsx",
+                "test": false,
+                "name": "nav-plugin.tsx"
             },
             {
                 "relativePath": "ui/top-bar-nav/index.ts",
@@ -3637,7 +3652,31 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.bit/toolbox/string/capitalize@0.0.4": {
+    "toolbox/query-string": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "query-string.spec.ts",
+                "test": false,
+                "name": "query-string.spec.ts"
+            },
+            {
+                "relativePath": "query-string.ts",
+                "test": false,
+                "name": "query-string.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/query-string",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "toolbox/string/capitalize": {
         "files": [
             {
                 "relativePath": "capitalize.spec.ts",

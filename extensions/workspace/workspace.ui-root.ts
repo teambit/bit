@@ -24,7 +24,9 @@ export class WorkspaceUIRoot implements UIRoot {
 
   priority = true;
 
-  name = 'workspace';
+  get name() {
+    return this.workspace.name;
+  }
 
   get path() {
     return this.workspace.path;

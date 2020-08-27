@@ -14,7 +14,7 @@ export class DocsUI {
     const section = new OverviewSection(docs);
 
     component.registerRoute(section.route);
-    component.registerNavigation(section.navigationLink);
+    component.registerNavigation(section.navigationLink, section.order);
 
     return docs;
   }
