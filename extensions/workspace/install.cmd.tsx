@@ -13,7 +13,7 @@ type InstallCmdOptions = {
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'install dependencies';
+  description = 'Install dependencies';
   alias = 'in';
   group = 'component';
   shortDescription = '';

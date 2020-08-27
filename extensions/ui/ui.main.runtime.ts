@@ -250,8 +250,9 @@ export class UiMain {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return;
-    if (hash !== hashed) this.logger.console('workspace.json has been changed');
-    this.logger.console('Start building ui root');
+    if (hash !== hashed)
+      this.logger.console(`workspace.json has been changed. Rebuilding UI assets for ${uiRoot.name}`);
+    this.logger.console(`Building UI assets for ${uiRoot.name}`);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }

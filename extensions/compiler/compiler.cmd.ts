@@ -8,11 +8,9 @@ import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompileCmd implements Command {
   name = 'compile [component...]';
-  description = 'compile components';
-  shortDescription = '';
+  description = 'Compile components';
   alias = '';
-  group = 'development';
-  private = true;
+  group = 'component';
   options = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file'],

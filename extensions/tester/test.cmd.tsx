@@ -35,7 +35,9 @@ export class TestCmd implements Command {
 
     // TODO: @david please add logger here instead.
     // eslint-disable-next-line no-console
-    this.logger.console(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
+    this.logger.console(
+      `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
+    );
     await this.tester.test(components, {
       watch: Boolean(watch),
       debug: Boolean(debug),
