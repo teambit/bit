@@ -6,11 +6,11 @@ import { EnvService, ServiceExecutionResult } from '../services';
 import { EnvRuntime } from './env-runtime';
 import { EnvsExecutionResult } from './envs-execution-result';
 
-export type EnvResult = {
+export interface EnvResult<T extends ServiceExecutionResult> {
   env: EnvRuntime;
-  data?: ServiceExecutionResult;
+  data?: T;
   error?: Error;
-};
+}
 
 export class Runtime {
   constructor(
@@ -22,12 +22,12 @@ export class Runtime {
     private logger: Logger
   ) {}
 
-  async run(service: EnvService<any>, options?: { [key: string]: any }): Promise<EnvsExecutionResult> {
+  async run<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<EnvsExecutionResult<T>> {
     const errors: Error[] = [];
-    const contexts: EnvResult[] = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
+    const contexts: EnvResult<T>[] = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
       try {
         const serviceResult = await service.run(new ExecutionContext(this, env), options);
-        // return serviceResponse;
+
         return {
           env,
           data: serviceResult,

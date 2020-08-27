@@ -42,9 +42,10 @@ export class BundlerMain {
   async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     this.devService.uiRoot = root;
-    const executionResponse = await envRuntime.run(this.devService);
+    const executionResults = await envRuntime.run<ComponentServer>(this.devService);
 
-    this._componentServers = executionResponse.map((res) => res.res);
+    this._componentServers = executionResults.results.map((res) => res.data as ComponentServer);
+
     this.indexByComponent();
     return this._componentServers;
   }
