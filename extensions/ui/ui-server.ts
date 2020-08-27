@@ -29,11 +29,6 @@ export type StartOptions = {
    * port for the UI server to bind. default is a port range of 4000-4200.
    */
   port?: number;
-
-  /**
-   * port for the ui sub
-   */
-  wsPort?: number;
 };
 
 export class UIServer {
@@ -70,14 +65,12 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ port, wsPort }: StartOptions = {}) {
+  async start({ port }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');
     const server = await this.graphql.createServer({ app });
-    const subscriptionPort = await this.selectPort(wsPort || 4001);
-    this.graphql.createSubscription({}, subscriptionPort);
 
     await this.configureProxy(app, server);
     app.use(express.static(root));
@@ -93,10 +86,6 @@ export class UIServer {
     proxServer.on('error', (e) => this.logger.error(e.message));
     const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
     server.on('upgrade', function (req, socket, head) {
-      // TODO: put it on graphql aspect
-      if (req.url === '/subscriptions') {
-        proxServer.ws(req, socket, head, { target: { host: 'localhost', port: 4001 } });
-      }
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
       if (!entry) return;
       proxServer.ws(req, socket, head, {
@@ -143,7 +132,7 @@ export class UIServer {
       },
       {
         context: ['/subscriptions'],
-        target: 'ws://localhost:4001',
+        target: 'ws://localhost:4000',
         ws: true,
       },
     ];
