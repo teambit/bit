@@ -23,6 +23,7 @@ import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
+import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.config';
 
 export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
@@ -144,6 +145,7 @@ export class UiMain {
     if (uiRoot.postStart) uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
+    await this.openBrowser(`http://localhost:${targetPort}`);
     return uiServer;
   }
 
@@ -232,6 +234,11 @@ export class UiMain {
     if (hash === hashed) return;
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
+  }
+
+  private async openBrowser(url: string) {
+    const openBrowser = new OpenBrowser(this.logger);
+    openBrowser.open(url);
   }
 
   static defaultConfig = {
