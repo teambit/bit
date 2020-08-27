@@ -23,4 +23,14 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
       })
     );
   }
+
+  throwErrorsIfExist() {
+
+    if (!this.errors.length) return;
+    if (this.errors.length === 1 && this.errors[0] instanceof Error) throw this.errors[0];
+    // todo: fix to show the error per env.
+    const errorOutput = `found total ${this.errors.length} errors
+${this.errors.map(err => err.message).join('\n')}`;
+    throw new Error(errorOutput);
+  }
 }
