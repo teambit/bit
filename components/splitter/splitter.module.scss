@@ -1,20 +1,20 @@
 .collapsibleSplitter {
-  width: 5px;
-  border-left: 1px solid var(--border-color, #ededed);
+  width: 2px;
 }
 
 .highlighter {
   height: 100%;
   width: 100%;
+  
+  border: 1px solid transparent;
+  border-radius: 2px;
 
-  box-shadow: -2px 0 0 0 transparent;
-  transition: box-shadow 300ms ease-in-out;
+  transition: background-color 300ms ease-in-out;
+  background: transparent;
 
   &:hover,
   [data-is-dragging='true'] > .collapsibleSplitter > & {
-    // border-left: 1px solid var(--border-color, #ededed);
-    // outline-color: var(--base-color);
-    box-shadow: -2px 0 0 0 var(--base-color);
+    background: var(--base-color);
     transition-delay: 0.3s;
   }
 }

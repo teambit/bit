@@ -26,6 +26,7 @@
 
 .splitter {
   position: relative;
+  border-left: 1px solid var(--border-color, #ededed);
 }
 
 .sidebar {

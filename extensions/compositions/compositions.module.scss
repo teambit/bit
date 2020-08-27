@@ -1,5 +1,8 @@
+$panelBg: #fafafa;
+
 .compositionsPage {
-  flex: 1;
+  height: 100%;
+  width: 100%;
 }
 
 .compositionPreview {
@@ -8,13 +11,26 @@
 }
 
 .left {
-  width: 100%;
-  height: calc(100vh - 56px);
+  min-width: 200px;
+
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+
   display: flex;
   overflow-y: auto;
 }
 
 .right {
-  width: 100%;
-  height: calc(100vh - 56px);
+  position: relative;
+  background: $panelBg;
+  overflow-y: auto;
+}
+
+.splitter {
+  position: relative;
+  border-right: 1px solid var(--border-color, #ededed);
+}
+
+.collapser {
+  right: 0;
 }
