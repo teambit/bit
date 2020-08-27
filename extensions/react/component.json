@@ -18,6 +18,7 @@
       "policy": {
         "dependencies": {
           "react-app-polyfill": "+",
+          "react-refresh": "+",
           "jest-environment-jsdom-fourteen": "+",
           "react-native-web": "+",
           "identity-obj-proxy": "+",
