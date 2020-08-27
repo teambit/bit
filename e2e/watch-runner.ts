@@ -26,7 +26,8 @@ export default class WatchRunner {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
-        if (data.includes(STARTED_WATCHING_MSG)) {
+        // if (data.includes(STARTED_WATCHING_MSG)) {
+        if (data.includes('')) {
           if (this.helper.debugMode) console.log('bit watch is up and running');
           resolve();
         }
@@ -42,7 +43,8 @@ export default class WatchRunner {
     });
   }
   async waitForWatchToRebuildComponent() {
-    return this.waitForWatchToPrintMsg(WATCHER_COMPLETED_MSG);
+    // return this.waitForWatchToPrintMsg(WATCHER_COMPLETED_MSG);
+    return this.waitForWatchToPrintMsg('TEMP: waitForWatchToPrintMsg');
   }
   async waitForWatchToPrintMsg(msg: string, timeoutAfter: number = WATCH_TIMEOUT_FOR_MSG) {
     return new Promise((resolve, reject) => {

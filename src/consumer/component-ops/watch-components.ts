@@ -29,8 +29,8 @@ export default class WatchComponents {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     this.consumer = await loadConsumer();
     const watcher = this._getWatcher();
-    console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
-    console.log(chalk.yellow(`node version: ${process.version}`));
+    // console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
+    // console.log(chalk.yellow(`node version: ${process.version}`));
     const log = console.log.bind(console);
 
     return new Promise((resolve, reject) => {
@@ -41,10 +41,10 @@ export default class WatchComponents {
         });
       }
       watcher.on('ready', () => {
-        log(chalk.yellow(STARTED_WATCHING_MSG));
+        // log(chalk.yellow(STARTED_WATCHING_MSG));
       });
       watcher.on('change', (p) => {
-        log(`file ${p} has been changed`);
+        log(`file ${p} has been changed`); 
         this._handleChange(p).catch((err) => reject(err));
       });
       watcher.on('add', (p) => {
@@ -79,7 +79,7 @@ export default class WatchComponents {
     }
 
     loader.stop();
-    console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
+    // console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
   async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {

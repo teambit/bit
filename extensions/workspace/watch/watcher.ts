@@ -25,47 +25,44 @@ export class Watcher {
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
 
-  async watch(opts: { verbose?: boolean }) {
+  async watch(opts: {msgs, verbose?: boolean}) {
     this.verbose = Boolean(opts.verbose);
-    await this.watchAll();
+    await this.watchAll(opts.msgs);
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll() {
+  async watchAll(msgs) {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     this.createWatcher();
     const watcher = this.fsWatcher;
-    const log = logger.console.bind(logger);
-    log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
-    log(chalk.yellow(`node version: ${process.version}`));
+    msgs.onStart(this.workspace, process.hrtime());
+    // const log = logger.console.bind(logger);
+    // log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
+    // log(chalk.yellow(`node version: ${process.version}`));
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
-        watcher.on('all', (event, path) => {
-          log(`Event: "${event}". Path: ${path}`);
-        });
+        watcher.on('all', msgs.onAll);
       }
-      watcher.on('ready', () => {
-        log(chalk.yellow(STARTED_WATCHING_MSG));
-      });
+      watcher.on('ready', msgs.onReady);
       watcher.on('change', (p) => {
-        log(`file ${p} has been changed`);
+        msgs.onChange(p);
         this.handleChange(p).catch((err) => reject(err));
       });
       watcher.on('add', (p) => {
-        log(`file ${p} has been added`);
+        msgs.onAdd(p);
         this.handleChange(p, true).catch((err) => reject(err));
       });
       watcher.on('unlink', (p) => {
-        log(`file ${p} has been removed`);
+        msgs.onUnlink(p);
         this.handleChange(p).catch((err) => reject(err));
       });
       watcher.on('error', (err) => {
-        log(`Watcher error ${err}`);
+        msgs.onError(err);
         reject(err);
       });
     });
@@ -138,7 +135,7 @@ export class Watcher {
     const duration = new Date().getTime() - start;
     loader.stop();
     logger.console(`took ${duration}ms`);
-    logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
+    // logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
   private async buildLegacy(idStr: string) {
