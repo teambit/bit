@@ -21,7 +21,8 @@
     "src",
     "extensions",
     "e2e",
-    "components"
+    "components",
+    "toolbox"
   ],
   "exclude": [
     "node_modules",

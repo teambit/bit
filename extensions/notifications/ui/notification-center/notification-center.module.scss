@@ -1,11 +1,12 @@
 $animationTime: 300ms;
+$modal-z-index: 8000;
 
 .notificationCenter {
   position: fixed;
   right: 16px;
   bottom: 8px;
 
-  // TODO - overflow
+  z-index: $modal-z-index;
 }
 
 .timestamp {
