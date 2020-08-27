@@ -27,14 +27,14 @@ export class Watcher {
 
   async watch(opts: {msgs, verbose?: boolean}) {
     this.verbose = Boolean(opts.verbose);
-    await this.watchAll(opts.msgs);
+    await this.watchAll(opts.msgs, this.verbose);
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll(msgs) {
+  async watchAll(msgs, verbose) {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     this.createWatcher();
     const watcher = this.fsWatcher;
@@ -46,14 +46,11 @@ export class Watcher {
         watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {
-        // console.log('ready')
-        msgs.onReady(this.workspace)
+        msgs.onReady(this.workspace, this.getWatchPathsSortByComponent(), verbose)
       });
       watcher.on('change', async (filePath) => {
-        console.log('Change')
         const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
-        msgs.onChange(filePath, buildResults);
-        // console.log('---ss-s-> ',filePath)
+        msgs.onChange(filePath, buildResults, verbose);
       });
       watcher.on('add', (p) => {
         msgs.onAdd(p);
@@ -234,12 +231,32 @@ export class Watcher {
       const trackDir = componentMap.getTrackDir();
       const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
       const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
-      if (this.verbose) {
-        logger.console(`watching ${chalk.bold(componentId.toString())}\n${absPaths.join('\n')}`);
-      }
+      // if (this.verbose) {
+      //   logger.console(`watching ${chalk.bold(componentId.toString())}\n${absPaths.join('\n')}`);
+      // }
       return absPaths;
     });
     const bitmap = this.consumer.toAbsolutePath(BIT_MAP);
     return [...R.flatten(paths), bitmap];
+  }
+
+
+  private getWatchPathsSortByComponent() {
+    this.setTrackDirs();
+    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
+    return componentsFromBitMap.map((componentMap) => {
+      const componentId = componentMap.id;
+      const trackDir = componentMap.getTrackDir();
+      const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
+      const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
+      // if (this.verbose) {
+      //   logger.console(`watching ${chalk.bold(componentId.toString())}\n${absPaths.join('\n')}`);
+      // }
+      // return absPaths;
+      return {componentId: componentId.toString(), absPaths};
+    });
+    // const bitmap = this.consumer.toAbsolutePath(BIT_MAP);
+    // return [...R.flatten(paths), bitmap];
+    // return [...R.flatten(paths), bitmap];
   }
 }

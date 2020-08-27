@@ -30,14 +30,14 @@ export class WatchCommand implements Command {
   msgs = {
     onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
     onStart: (workspace) => {},
-    onReady: (workspace) => {
+    onReady: (workspace, watchPathsSortByComponent, verbose) => {
       console.log(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name}...\n`))
+      if (verbose)
+        console.log('watchPathsSortByComponent--> ', watchPathsSortByComponent);
     },
-    onChange: (filePath, buildResults) => {
+    onChange: (filePath, buildResults, verbose) => {
       console.log(`The file ${filePath} has been changed.\n\n`);
-      // console.dir(buildResults[0].results)
-      // console.dir(buildResults)
-      console.log(formatCompileResults(buildResults, false))
+      console.log(formatCompileResults(buildResults, verbose))
     },
     // onAdd: 'onAdd',
     onAdd: (p) => {
