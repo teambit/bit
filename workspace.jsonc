@@ -23,9 +23,11 @@
     }
   },
   "teambit.bit/variants": {
-    "*":{
+    "*": {
       "teambit.bit/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false
@@ -63,7 +65,9 @@
     "extensions/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": ["--access public"],
+          "packageManagerPublishArgs": [
+            "--access public"
+          ],
           "name": "@teambit/{name}",
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -85,7 +89,7 @@
             // why this is needed? try to automate this
             "@types/node": "^12.12.27"
           },
-          "peerDependencies":{
+          "peerDependencies": {
             "bit-bin": "-",
             "graphql": "-",
             "react": "-"
