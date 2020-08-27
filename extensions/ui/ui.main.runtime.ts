@@ -162,7 +162,8 @@ export class UiMain {
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
-    await this.openBrowser(`http://${this.config.host}:${targetPort}`);
+    // TODO: need to wait until compilation done, then open browser
+    // await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 
