@@ -35,10 +35,9 @@ export class WatchCommand implements Command {
     },
     onChange: (filePath, buildResults) => {
       console.log(`The file ${filePath} has been changed.\n\n`);
-      buildResults.then(v => {
-        console.log(formatCompileResults(v, false))
-      });
-      
+      // console.dir(buildResults[0].results)
+      // console.dir(buildResults)
+      console.log(formatCompileResults(buildResults, false))
     },
     // onAdd: 'onAdd',
     onAdd: (p) => {

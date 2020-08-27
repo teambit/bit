@@ -45,10 +45,15 @@ export class Watcher {
       if (process.env.BIT_LOG) {
         watcher.on('all', msgs.onAll);
       }
-      watcher.on('ready', () => {msgs.onReady(this.workspace)});
-      watcher.on('change', (p) => {
-        const buildResults = this.handleChange(p).catch((err) => reject(err));
-        msgs.onChange(p, buildResults);
+      watcher.on('ready', () => {
+        // console.log('ready')
+        msgs.onReady(this.workspace)
+      });
+      watcher.on('change', async (filePath) => {
+        console.log('Change')
+        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        msgs.onChange(filePath, buildResults);
+        // console.log('---ss-s-> ',filePath)
       });
       watcher.on('add', (p) => {
         msgs.onAdd(p);
@@ -126,9 +131,11 @@ export class Watcher {
       //   // logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
       //   logger.console(`\t${extensionResult.results.toString()}`);
       // });
-      return buildResults.map((extensionResult) => extensionResult.results.toString());
+      // return buildResults.map((extensionResult) => extensionResult.results.toString());
+      // console.log('--34--> ', buildResults.results)
+      // return buildResults.map((extensionResult) => extensionResult.results.toString());
 
-      // return buildResults;
+      return buildResults;
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
   }
