@@ -1,5 +1,6 @@
 import type { AspectMain } from '@teambit/aspect';
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
@@ -22,9 +23,10 @@ import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
+import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.config';
 
-export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, LoggerMain, AspectMain];
+export type UIDeps = [CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -91,6 +93,11 @@ export class UiMain {
     /**
      * ui logger instance.
      */
+    private cache: CacheMain,
+
+    /**
+     * ui logger instance.
+     */
     private logger: Logger
   ) {}
 
@@ -131,12 +138,14 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
+      await this.buildIfChanged(name, uiRoot);
       await uiServer.start({ port: targetPort });
     }
 
     if (uiRoot.postStart) uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
+    await this.openBrowser(`http://localhost:${targetPort}`);
     return uiServer;
   }
 
@@ -211,23 +220,45 @@ export class UiMain {
     return getPort({ port: getPort.makeRange(from, to) });
   }
 
+  private async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+    const aspects = await uiRoot.resolveAspects(runtime);
+    const hash = aspects.map((aspect) => {
+      return [aspect.aspectPath, aspect.runtimePath].join('');
+    });
+    return sha1(hash.join(''));
+  }
+
+  private async buildIfChanged(name: string, uiRoot: UIRoot) {
+    const hash = await this.buildUiHash(uiRoot);
+    const hashed = await this.cache.get(uiRoot.path);
+    if (hash === hashed) return;
+    await this.build(name);
+    await this.cache.set(uiRoot.path, hash);
+  }
+
+  private async openBrowser(url: string) {
+    const openBrowser = new OpenBrowser(this.logger);
+    openBrowser.open(url);
+  }
+
   static defaultConfig = {
     portRange: [3000, 3200],
   };
 
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, GraphqlAspect, ExpressAspect, ComponentAspect, LoggerAspect];
+  static dependencies = [CLIAspect, GraphqlAspect, ExpressAspect, ComponentAspect, CacheAspect, LoggerAspect];
 
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [cli, graphql, express, componentExtension, loggerMain]: UIDeps,
+    [cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
-    const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, logger);
+
+    const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
     cli.register(new StartCmd(ui));
     cli.register(new UIBuildCmd(ui));
     return ui;

@@ -32,14 +32,12 @@ export type ComponentPreviewProps = {
 /**
  * renders a preview of a component.
  */
-export function ComponentPreview({ component, style, previewName, queryParams, hotReload }: ComponentPreviewProps) {
+export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
   const serverUrl = `/api/${component.id.fullName}/@/preview`;
-  const host = (component.server && component.server.url) || serverUrl;
-  const qs = queryString({
-    hot: hotReload.toString(),
-  });
 
-  const url = `${host}?${qs}#${component.id.fullName}${`?preview=${previewName}&${queryParams && queryParams}` || ''}`;
+  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.fullName}${
+    `?preview=${previewName}&${queryParams && queryParams}` || ''
+  }`;
 
   return <iframe style={style} src={url} />;
 }
