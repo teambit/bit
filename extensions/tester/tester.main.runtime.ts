@@ -59,6 +59,9 @@ export class TesterMain {
     const options = this.getOptions(opts);
     const envRuntime = await this.envs.createEnvironment(components);
     const results = await envRuntime.run(this.service, options);
+
+    if (results.errors.length !== 0) throw new Error();
+
     return results;
   }
 

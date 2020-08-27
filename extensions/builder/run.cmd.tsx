@@ -22,10 +22,10 @@ export class BuilderCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     if (!this.workspace) throw new ConsumerNotFound();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
-    const results = await this.builder.build(components);
+    const envsExecutionResults = await this.builder.build(components);
     longProcessLogger.end();
-    this.logger.consoleSuccess();
-
-    return chalk.green(`the build has been completed. total: ${results.length} environments`);
+    envsExecutionResults.throwErrorsIfExist();
+    this.logger.consoleSuccess()
+    return chalk.green(`the build has been completed. total: ${envsExecutionResults.results.length} environments`);
   }
 }

@@ -1,5 +1,6 @@
 import { Component } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
+import { Logger } from '@teambit/logger';
 import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import GeneralError from 'bit-bin/dist/error/general-error';
@@ -12,12 +13,13 @@ export class TaskProcess {
     private task: BuildTask,
     private taskResult: BuildResults,
     private buildContext: BuildContext,
-    private extensionId = task.extensionId
+    private logger: Logger
   ) {}
 
   public throwIfErrorsFound() {
     const compsWithErrors = this.taskResult.components.filter((c) => c.errors.length);
     if (compsWithErrors.length) {
+      this.logger.consoleFailure(`task "${this.task.extensionId}" has failed`);
       const title = `Builder found the following errors while running "${this.task.extensionId}" task\n`;
       let totalErrors = 0;
       const errorsStr = compsWithErrors
@@ -32,7 +34,7 @@ export class TaskProcess {
     }
   }
 
-  public async saveTaskResults() {
+  public async saveTaskResults(): Promise<Component[]> {
     const { components } = this.buildContext;
     const resultsP = components.map(async (component) => {
       this.saveDataToComponent(component);
@@ -66,10 +68,10 @@ export class TaskProcess {
 
   private getExtensionDataEntry(component: Component): ExtensionDataEntry {
     const existingExtensionDataEntry =
-      component.config.extensions.findCoreExtension(this.extensionId) ||
-      component.config.extensions.findExtension(this.extensionId);
+      component.config.extensions.findCoreExtension(this.task.extensionId) ||
+      component.config.extensions.findExtension(this.task.extensionId);
     if (existingExtensionDataEntry) return existingExtensionDataEntry;
-    const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, this.extensionId);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, this.task.extensionId);
     component.config.extensions.push(extensionDataEntry);
     return extensionDataEntry;
   }
