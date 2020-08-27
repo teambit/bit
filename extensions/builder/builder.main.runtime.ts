@@ -51,6 +51,7 @@ export class BuilderMain {
   async build(components: Component[]) {
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
+
     return buildResult;
   }
 
