@@ -12,6 +12,7 @@ export default class Fetch implements LegacyCommand {
   name = 'fetch [ids...]';
   description = `fetch remote objects and store locally`;
   alias = '';
+  private = true;
   opts = [
     ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
     ['c', 'components', 'fetch components'],

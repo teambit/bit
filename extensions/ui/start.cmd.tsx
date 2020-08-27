@@ -1,26 +1,29 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import React from 'react';
 
+import { Logger } from '@teambit/logger';
 import { UIServerConsole } from './env-console';
 import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
-  description = 'start a dev environment for a workspace or a specific component';
+  description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
-  private = true;
-  group = 'development';
+  group = 'component';
   shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port', 'port of the UI server.'],
+    ['r', 'rebuild', 'rebuild the UI'],
   ] as CommandOptions;
 
   constructor(
     /**
      * access to the extension instance.
      */
-    private ui: UiMain
+    private ui: UiMain,
+
+    private logger: Logger
   ) {}
 
   private clearConsole() {
@@ -29,15 +32,17 @@ export class StartCmd implements Command {
 
   async render(
     [uiRootName, userPattern]: [string, string],
-    { dev, port }: { dev: boolean; port: string }
+    { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
   ): Promise<React.ReactElement> {
     // teambit.bit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
+    this.logger.off();
     const uiServer = await this.ui.createRuntime({
       uiRootName,
       pattern,
       dev,
       port: port ? parseInt(port) : undefined,
+      rebuild,
     });
 
     // clear the user console before moving interactive.

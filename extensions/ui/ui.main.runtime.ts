@@ -35,8 +35,20 @@ export type OnStart = () => void;
 export type OnStartSlot = SlotRegistry<OnStart>;
 
 export type UIConfig = {
+  /**
+   * port for the UI root to use.
+   */
   port?: number;
+
+  /**
+   * port range for the UI root to use.
+   */
   portRange: [number, number];
+
+  /**
+   * host for the UI root
+   */
+  host: string;
 };
 
 export type RuntimeOptions = {
@@ -59,6 +71,11 @@ export type RuntimeOptions = {
    * port of the config.
    */
   port?: number;
+
+  /**
+   * determine whether to rebuild the UI before start.
+   */
+  rebuild?: boolean;
 };
 
 export class UiMain {
@@ -121,7 +138,7 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
@@ -138,14 +155,14 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
-      await this.buildIfChanged(name, uiRoot);
+      await this.buildIfChanged(name, uiRoot, rebuild);
       await uiServer.start({ port: targetPort });
     }
 
-    if (uiRoot.postStart) uiRoot.postStart({ pattern });
+    if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
-    await this.openBrowser(`http://localhost:${targetPort}`);
+    await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 
@@ -228,10 +245,13 @@ export class UiMain {
     return sha1(hash.join(''));
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot) {
+  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined) {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed) return;
+    if (hash === hashed && !force) return;
+    if (hash !== hashed)
+      this.logger.console(`workspace.json has been changed. Rebuilding UI assets for ${uiRoot.name}`);
+    this.logger.console(`Building UI assets for ${uiRoot.name}`);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }
@@ -243,6 +263,7 @@ export class UiMain {
 
   static defaultConfig = {
     portRange: [3000, 3200],
+    host: 'localhost',
   };
 
   static runtime = MainRuntime;
@@ -259,7 +280,7 @@ export class UiMain {
     const logger = loggerMain.createLogger(UIAspect.id);
 
     const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
-    cli.register(new StartCmd(ui));
+    cli.register(new StartCmd(ui, logger));
     cli.register(new UIBuildCmd(ui));
     return ui;
   }
