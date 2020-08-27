@@ -286,6 +286,35 @@
         "exported": false,
         "lanes": []
     },
+    "cache": {
+        "files": [
+            {
+                "relativePath": "cache.aspect.ts",
+                "test": false,
+                "name": "cache.aspect.ts"
+            },
+            {
+                "relativePath": "cache.main.runtime.ts",
+                "test": false,
+                "name": "cache.main.runtime.ts"
+            },
+            {
+                "relativePath": "cache.spec.ts",
+                "test": false,
+                "name": "cache.spec.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/cache",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "changelog": {
         "files": [
             {
@@ -3780,6 +3809,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "open-browser.ts",
+                "test": false,
+                "name": "open-browser.ts"
             },
             {
                 "relativePath": "start.cmd.tsx",
