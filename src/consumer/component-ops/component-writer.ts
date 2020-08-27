@@ -174,8 +174,8 @@ export default class ComponentWriter {
       if (!this.consumer || this.consumer.isolated) {
         // bit-bin should not be installed in the capsule. it'll be symlinked later on.
         // see package-manager.linkBitBinInCapsule();
-        packageJson.removeDependency('bit-bin');
-        packageJson.copyPeerDependenciesToDev();
+        // packageJson.removeDependency('bit-bin');
+        // packageJson.copyPeerDependenciesToDev();
       }
 
       componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
