@@ -7,10 +7,9 @@ import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
-  description = 'start a dev environment for a workspace or a specific component';
+  description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
-  private = true;
-  group = 'development';
+  group = 'component';
   shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],

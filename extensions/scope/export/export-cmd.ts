@@ -54,6 +54,8 @@ export class ExportCmd implements Command {
   ] as CommandOptions;
   loader = true;
   migration = true;
+  group = 'collaborate';
+  shortDescription = 'Export components to a remote scope';
   remoteOp = true;
 
   async report(
