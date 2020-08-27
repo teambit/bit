@@ -4,7 +4,7 @@ import { Pane } from '@teambit/base-ui.surfaces.split-pane.pane';
 import { SplitPane } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
-import { Panel, Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
+import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
 import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { gql } from 'apollo-boost';

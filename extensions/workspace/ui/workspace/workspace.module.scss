@@ -2,11 +2,6 @@
   height: 100vh;
 }
 
-// .main {
-// width: 100%;
-// height: 100vh;
-// }
-
 .workspaceWrapper {
   display: flex;
   flex-direction: column;
@@ -31,6 +26,7 @@
 
 .sidebar {
   min-width: 100px;
+  max-width: 85%;
   position: relative;
 
   height: 100%;
