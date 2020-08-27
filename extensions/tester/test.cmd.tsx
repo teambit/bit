@@ -26,6 +26,7 @@ export class TestCmd implements Command {
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
   async render([userPattern]: [string], { watch, debug }: Flags) {
+    this.logger.off();
     const timer = Timer.create();
     timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
@@ -35,7 +36,6 @@ export class TestCmd implements Command {
     // TODO: @david please add logger here instead.
     // eslint-disable-next-line no-console
     this.logger.console(`testing ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`);
-    this.logger.off();
     await this.tester.test(components, {
       watch: Boolean(watch),
       debug: Boolean(debug),

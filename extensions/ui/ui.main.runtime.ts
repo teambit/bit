@@ -35,8 +35,20 @@ export type OnStart = () => void;
 export type OnStartSlot = SlotRegistry<OnStart>;
 
 export type UIConfig = {
+  /**
+   * port for the UI root to use.
+   */
   port?: number;
+
+  /**
+   * port range for the UI root to use.
+   */
   portRange: [number, number];
+
+  /**
+   * host for the UI root
+   */
+  host: string;
 };
 
 export type RuntimeOptions = {
@@ -59,6 +71,11 @@ export type RuntimeOptions = {
    * port of the config.
    */
   port?: number;
+
+  /**
+   * determine whether to rebuild the UI before start.
+   */
+  rebuild?: boolean;
 };
 
 export class UiMain {
@@ -142,10 +159,10 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    if (uiRoot.postStart) uiRoot.postStart({ pattern });
+    if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
-    await this.openBrowser(`http://localhost:${targetPort}`);
+    await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 
@@ -243,6 +260,7 @@ export class UiMain {
 
   static defaultConfig = {
     portRange: [3000, 3200],
+    host: 'localhost',
   };
 
   static runtime = MainRuntime;
@@ -259,7 +277,7 @@ export class UiMain {
     const logger = loggerMain.createLogger(UIAspect.id);
 
     const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
-    cli.register(new StartCmd(ui));
+    cli.register(new StartCmd(ui, logger));
     cli.register(new UIBuildCmd(ui));
     return ui;
   }
