@@ -6,6 +6,7 @@ import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 
 export class ComponentServer {
+  errors?: Error[];
   constructor(
     /**
      * components contained in the existing component server.

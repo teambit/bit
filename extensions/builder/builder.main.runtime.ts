@@ -2,6 +2,7 @@ import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsExecutionResult } from '@teambit/environments/runtime/envs-execution-result';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
