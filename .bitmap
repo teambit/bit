@@ -1017,6 +1017,11 @@
                 "name": "dependency-resolver.main.runtime.ts"
             },
             {
+                "relativePath": "dependency-version-resolver.ts",
+                "test": false,
+                "name": "dependency-version-resolver.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"

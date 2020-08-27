@@ -10,6 +10,18 @@ export type PackageManagerInstallOptions = {
   dedupe?: boolean;
 };
 
+export type ResolvedPackageVersion = {
+  packageName: string;
+  version: string | null;
+};
+
+export type PackageManagerResolveRemoteVersionOptions = {
+  rootDir: string;
+  cacheRootDir?: string;
+  fetchToCache?: boolean;
+  update?: boolean;
+};
+
 export interface PackageManager {
   /**
    * install dependencies
@@ -21,4 +33,9 @@ export interface PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     options?: PackageManagerInstallOptions
   ): Promise<void>;
+
+  resolveRemoteVersion(
+    packageName: string,
+    options: PackageManagerResolveRemoteVersionOptions
+  ): Promise<ResolvedPackageVersion>;
 }

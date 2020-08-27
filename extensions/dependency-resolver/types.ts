@@ -28,10 +28,8 @@ export interface DependenciesPolicyObject {
   [dependencyId: string]: DependencyPolicy;
 }
 
-export interface DependenciesPolicy {
-  dependencies?: DependenciesPolicyObject;
+export interface DependenciesPolicy extends WorkspaceDependenciesPolicy {
   devDependencies?: DependenciesPolicyObject;
-  peerDependencies?: DependenciesPolicyObject;
 }
 
 export interface WorkspaceDependenciesPolicy {
@@ -158,3 +156,9 @@ export type DepObjectValue = Record<PackageName, SemverVersion>;
 export type DepObjectKeyName = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
 export type ComponentsManifestsMap = Map<PackageName, ComponentManifest>;
+
+export type PolicyDep = {
+  packageName: string;
+  version: string;
+  lifecycleType: DependencyLifecycleType;
+};
