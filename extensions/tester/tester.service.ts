@@ -7,7 +7,7 @@ import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-export class TesterService implements EnvService {
+export class TesterService implements EnvService<TestResults> {
   constructor(
     readonly workspace: Workspace,
     /**

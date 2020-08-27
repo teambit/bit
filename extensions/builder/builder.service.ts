@@ -4,9 +4,11 @@ import { Workspace } from '@teambit/workspace';
 
 import { BuildPipe } from './build-pipe';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildTask } from './types';
+import { BuildResults,BuildTask } from './types';
 
-export class BuilderService implements EnvService {
+export type BuildServiceResults = { id: string, buildResults: BuildResults[], errors?: [] };
+
+export class BuilderService implements EnvService<BuildServiceResults> {
   constructor(
     /**
      * workspace extension.
@@ -27,7 +29,7 @@ export class BuilderService implements EnvService {
   /**
    * runs a pipeline of tasks on all components in the execution context.
    */
-  async run(context: ExecutionContext) {
+  async run(context: ExecutionContext): Promise<BuildServiceResults> {
     const title = `running build for environment ${context.id}, total ${context.components.length} components`;
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
@@ -45,9 +47,9 @@ export class BuilderService implements EnvService {
       capsuleGraph: await this.workspace.createNetwork(context.components.map((component) => component.id.toString())),
     });
 
-    const components = await buildPipe.execute(buildContext);
+    const buildResults = await buildPipe.execute(buildContext);
     longProcessLogger.end();
     this.logger.consoleSuccess();
-    return { id: context.id, components };
+    return { id: context.id, buildResults };
   }
 }
