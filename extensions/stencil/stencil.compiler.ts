@@ -43,9 +43,6 @@ export class StencilCompiler implements Compiler {
 
   async build(context: BuildContext): Promise<BuildResults> {
     const capsules = context.capsuleGraph.capsules;
-    const capsuleDirs = capsules.getAllCapsuleDirs();
-    // eslint-disable-next-line no-console
-    console.log('\ncapsuleDirs', capsuleDirs);
     await Promise.all(
       capsules.map(async (caps) => {
         // @ts-ignore need to update TypeScriptCompilerOptions
