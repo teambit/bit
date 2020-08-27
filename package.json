@@ -110,6 +110,7 @@
     "@pnpm/tarball-fetcher": "^8.0.1",
     "@pnpm/tarball-resolver": "^4.0.3",
     "@stencil/core": "^1.15.0",
+    "@stencil/sass": "^1.3.2",
     "@stencil/webpack": "0.0.6",
     "@svgr/webpack": "^5.4.0",
     "@teambit/any-fs": "0.0.5",

@@ -3501,6 +3501,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "mount.tsx",
+                "test": false,
+                "name": "mount.tsx"
+            },
+            {
                 "relativePath": "stencil.aspect.ts",
                 "test": false,
                 "name": "stencil.aspect.ts"
@@ -3509,6 +3514,11 @@
                 "relativePath": "stencil.compiler.ts",
                 "test": false,
                 "name": "stencil.compiler.ts"
+            },
+            {
+                "relativePath": "stencil.config.ts",
+                "test": false,
+                "name": "stencil.config.ts"
             },
             {
                 "relativePath": "stencil.dev-server.ts",
@@ -3539,6 +3549,11 @@
                 "relativePath": "webpack/webpack.config.js",
                 "test": false,
                 "name": "webpack.config.js"
+            },
+            {
+                "relativePath": "webpack/webpack.preview.config.js",
+                "test": false,
+                "name": "webpack.preview.config.js"
             }
         ],
         "mainFile": "index.ts",

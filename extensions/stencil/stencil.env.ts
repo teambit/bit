@@ -1,5 +1,5 @@
 import { BuildTask } from '@teambit/builder';
-import { DevServer, DevServerContext } from '@teambit/bundler';
+import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import type { CompilerMain } from '@teambit/compiler';
 import { Compiler } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -8,6 +8,7 @@ import type { WebpackMain } from '@teambit/webpack';
 
 import type { StencilMain } from './stencil.main.runtime';
 import webpackConfig from './webpack/webpack.config';
+import previewConfigFactory from './webpack/webpack.preview.config';
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -30,6 +31,13 @@ export class StencilEnv implements Environment {
     private webpack: WebpackMain
   ) {}
 
+  private _tsconfig: any;
+
+  setTsConfig(tsconfig: any) {
+    this._tsconfig = tsconfig;
+    return this;
+  }
+
   /**
    * returns a component tester.
    */
@@ -41,9 +49,16 @@ export class StencilEnv implements Environment {
    * returns a component compiler.
    */
   getCompiler(): Compiler {
-    return this.stencil.createCompiler({
-      module: 'esm',
-    });
+    // eslint-disable-next-line global-require
+    const tsconfig = this._tsconfig || require('./typescript/tsconfig.json');
+    return this.stencil.createCompiler(
+      {
+        module: 'esnext',
+        target: 'es2017',
+      },
+      {},
+      tsconfig
+    );
   }
 
   /**
@@ -58,6 +73,17 @@ export class StencilEnv implements Environment {
     return this.webpack.createDevServer(context, webpackConfig());
   }
 
+  async getBundler(context: BundlerContext): Promise<Bundler> {
+    return this.webpack.createBundler(context, previewConfigFactory());
+  }
+
+  /**
+   * return a function which mounts a given component to DOM
+   */
+  getMounter() {
+    return require.resolve('./mount');
+  }
+
   /**
    * return a path to a docs template.
    */
@@ -69,7 +95,35 @@ export class StencilEnv implements Environment {
    * adds dependencies to all configured components.
    */
   async getDependencies() {
-    return {};
+    return {
+      dependencies: {
+        react: '-',
+        '@stencil/core': '-',
+      },
+      // TODO: add this only if using ts
+      devDependencies: {
+        '@types/react': '^16.9.17',
+        '@stencil/core': '^1.12.2',
+        '@stencil/sass': '^1.3.2',
+      },
+      // TODO: take version from config
+      peerDependencies: {
+        react: '^16.12.0',
+      },
+    };
+  }
+
+  /**
+   * adds params to package.json component.
+   */
+  getPackageJsonProps() {
+    return {
+      stam: 'ok',
+      main: './dist/index.js',
+      module: './dist/index.mjs',
+      collection: './dist/collection/collection-manifest.json',
+      types: './dist/types/components.d.ts',
+    };
   }
 
   /**
