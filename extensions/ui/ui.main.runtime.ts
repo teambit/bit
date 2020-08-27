@@ -138,7 +138,7 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
@@ -155,7 +155,7 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
-      await this.buildIfChanged(name, uiRoot);
+      await this.buildIfChanged(name, uiRoot, rebuild);
       await uiServer.start({ port: targetPort });
     }
 
@@ -245,10 +245,12 @@ export class UiMain {
     return sha1(hash.join(''));
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot) {
+  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined) {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed) return;
+    if (hash === hashed && !force) return;
+    if (hash !== hashed) this.logger.console('workspace.json has been changed');
+    this.logger.console('Start building ui root');
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }

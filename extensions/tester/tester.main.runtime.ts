@@ -59,9 +59,6 @@ export class TesterMain {
     const options = this.getOptions(opts);
     const envRuntime = await this.envs.createEnvironment(components);
     const results = await envRuntime.run(this.service, options);
-
-    if (results.errors.length !== 0) throw new Error();
-
     return results;
   }
 
@@ -91,7 +88,7 @@ export class TesterMain {
     const tester = new TesterMain(
       envs,
       workspace,
-      new TesterService(workspace, config.testRegex),
+      new TesterService(workspace, config.testRegex, logger),
       new TesterTask(TesterAspect.id)
     );
     if (workspace && !workspace.consumer.isLegacy) {
