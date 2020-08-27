@@ -1,14 +1,5 @@
-import { Command, CommandOptions } from '@teambit/cli';
-
-import { Watcher } from './watcher';
-
-export class WatchCommand implements Command {
-
-  msgs = {
-    onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
-    onStart: (workspace, timestamp) => {
-      console.log(`
-        Watching for component changes in workspace ${workspace}.
+/**
+ Watching for component changes in workspace ${workspace}.
         Compiling all {num-components} components:
         
         STATUS           COMPONENT ID
@@ -24,17 +15,34 @@ export class WatchCommand implements Command {
         Finished. (2 minutes)
         
         Watching for component changes (${timestamp})...
-    `)
+ */
+//(${new Date().toISOString()}).\n
+// console.log(`Watching for component changes (${process.hrtime()})...`)
+
+import { Command, CommandOptions } from '@teambit/cli';
+
+import { Watcher } from './watcher';
+import chalk from 'chalk';
+import { formatCompileResults } from './output-formatter';
+
+export class WatchCommand implements Command {
+
+  msgs = {
+    onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
+    onStart: (workspace) => {},
+    onReady: (workspace) => {
+      console.log(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name}...\n`))
     },
-    // onReady: 'onReady',
-    onReady: () => {},
-    // onChange: 'onChange',
-    onChange: (p) => {
-      console.log(`file ${p} has been changed`);
+    onChange: (filePath, buildResults) => {
+      console.log(`The file ${filePath} has been changed.\n\n`);
+      buildResults.then(v => {
+        console.log(formatCompileResults(v, false))
+      });
+      
     },
     // onAdd: 'onAdd',
     onAdd: (p) => {
-      console.log(`file ${p} has been added`);
+      console.log(`The file ${p} has been added`);
     },
     // onUnlink: 'onUnlink',
     onUnlink: (p) => {

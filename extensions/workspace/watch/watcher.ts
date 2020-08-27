@@ -38,20 +38,17 @@ export class Watcher {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     this.createWatcher();
     const watcher = this.fsWatcher;
-    msgs.onStart(this.workspace, process.hrtime());
-    // const log = logger.console.bind(logger);
-    // log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
-    // log(chalk.yellow(`node version: ${process.version}`));
+    msgs.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
         watcher.on('all', msgs.onAll);
       }
-      watcher.on('ready', msgs.onReady);
+      watcher.on('ready', () => {msgs.onReady(this.workspace)});
       watcher.on('change', (p) => {
-        msgs.onChange(p);
-        this.handleChange(p).catch((err) => reject(err));
+        const buildResults = this.handleChange(p).catch((err) => reject(err));
+        msgs.onChange(p, buildResults);
       });
       watcher.on('add', (p) => {
         msgs.onAdd(p);
@@ -79,8 +76,10 @@ export class Watcher {
       logger.console(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch(start);
     }
-    await this.executeWatchOperationsOnComponent(componentId);
-    return this.completeWatch(start);
+
+    const buildResults = await this.executeWatchOperationsOnComponent(componentId);
+    this.completeWatch(start);
+    return buildResults;
   }
 
   /**
@@ -109,7 +108,7 @@ export class Watcher {
       return;
     }
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
-    logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
+    // logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`); <--- Is this important?
     let buildResults;
     const componentId = new ComponentID(bitId);
     try {
@@ -122,11 +121,14 @@ export class Watcher {
       return;
     }
     if (buildResults && buildResults.length) {
-      buildResults.forEach((extensionResult) => {
-        logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
-        logger.console(`\t${extensionResult.results.toString()}`);
-      });
-      return;
+      
+      // buildResults.forEach((extensionResult) => {
+      //   // logger.console(chalk.cyan(`\tresults from ${extensionResult.extensionId}`));
+      //   logger.console(`\t${extensionResult.results.toString()}`);
+      // });
+      return buildResults.map((extensionResult) => extensionResult.results.toString());
+
+      // return buildResults;
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
   }
