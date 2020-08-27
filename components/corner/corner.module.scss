@@ -6,7 +6,7 @@ $topbarHeight: 56px;
   justify-content: space-between;
   height: $topbarHeight;
   background: var(--border-color);
-  padding: 16px;
+  padding: 10px;
   user-select: none;
   box-sizing: border-box;
   width: 30%;
@@ -16,6 +16,10 @@ $topbarHeight: 56px;
   }
 
   .link {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
     text-decoration: none;
     text-transform: capitalize;
     color: var(--text-highlight);
@@ -26,17 +30,17 @@ $topbarHeight: 56px;
     &:hover {
       color: var(--base-color);
     }
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
   }
 
   .avatar {
-    display: inline-block;
-    margin-right: 8px;
-    width: 32px;
-    height: 32px;
-    background: var(--bg-base);
-    border-radius: 50%;
-    line-height: 32px;
-    text-align: center;
+    margin-right: 10px;
+    min-width: 25px;
   }
 
   > b {
