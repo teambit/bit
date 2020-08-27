@@ -264,7 +264,7 @@ export class UiMain {
   }
 
   static defaultConfig = {
-    portRange: [3000, 3200],
+    portRange: [3000, 3100],
     host: 'localhost',
   };
 

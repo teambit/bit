@@ -118,7 +118,7 @@ export class UIServer {
 
   private async selectPort(port?: number) {
     if (port) return port;
-    return getPort({ port: getPort.makeRange(3000, 3200) });
+    return getPort({ port: getPort.makeRange(3100, 3200) });
   }
 
   private async getProxy() {
