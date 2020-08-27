@@ -239,6 +239,7 @@ export class UiMain {
 
   private async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
+    aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
     const hash = aspects.map((aspect) => {
       return [aspect.aspectPath, aspect.runtimePath].join('');
     });
