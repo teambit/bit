@@ -1,7 +1,8 @@
 import 'reset-css';
 
 import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
+import { Pane } from '@teambit/base-ui.surfaces.split-pane.pane';
+import { SplitPane } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';
@@ -42,24 +43,26 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
-        <TopBar Corner={() => <Corner name={workspace.name} icon={workspace.icon} />} menu={menuSlot} />
-        <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          <div className={styles.sidebarContainer}>
+        <TopBar className={styles.topbar} Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
+
+        <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
+          <Pane className={styles.sidebar}>{sidebar}</Pane>
+          <CollapsibleSplitter className={styles.splitter}>
             <Collapser
               id="workspaceSidebarCollapser"
               isOpen={isSidebarOpen}
+              onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
               onClick={handleSidebarToggle}
               tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
             />
-            <div className={styles.sidebar}>{sidebar}</div>
-          </div>
-          <div className={styles.main}>
+          </CollapsibleSplitter>
+          <Pane>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">
               <WorkspaceOverview />
             </Route>
-          </div>
-        </TupleSplitPane>
+          </Pane>
+        </SplitPane>
       </div>
     </WorkspaceProvider>
   );

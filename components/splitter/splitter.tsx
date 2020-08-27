@@ -1,17 +1,14 @@
-import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import Splitter from '@teambit/base-ui.surfaces.split-pane.splitter';
+import { Splitter, SplitterProps } from '@teambit/base-ui.surfaces.split-pane.splitter';
 import cn from 'classnames';
 import React from 'react';
 
 import styles from './splitter.module.scss';
 
-export type SplitterProps = {
-  layout: Layout;
-  className?: string;
-  onDragStarted: () => void;
-  onLayoutChange?: (nextLayout?: Layout) => void;
-};
-
-export function CollapsibleSplitter(props: SplitterProps) {
-  return <Splitter {...props} className={cn(styles.collapsibleSplitter, props.className)}></Splitter>;
+export function CollapsibleSplitter({ children, className, ...rest }: SplitterProps) {
+  return (
+    <Splitter {...rest} className={cn(styles.collapsibleSplitter, className)}>
+      <div className={styles.highlighter} />
+      {children}
+    </Splitter>
+  );
 }
