@@ -41,7 +41,10 @@ export class PnpmPackageManager implements PackageManager {
       components,
       options
     );
-    const rootManifest = workspaceManifest.toJson({ includeDir: true, copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot });
+    const rootManifest = workspaceManifest.toJson({
+      includeDir: true,
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot
+    });
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap,
