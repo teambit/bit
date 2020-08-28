@@ -15,6 +15,7 @@ import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { PreviewTask } from './preview.task';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
@@ -114,6 +115,7 @@ export class PreviewMain {
   static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
 
   static async provider(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [bundler, builder, componentExtension, uiMain, envs]: [BundlerMain, BuilderMain, ComponentMain, UiMain, EnvsMain],
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
@@ -126,7 +128,7 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerTask(new PreviewTask(bundler, preview));
+    // builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }
