@@ -119,7 +119,7 @@ export class TypescriptCompiler implements Compiler {
     const host = this.createTsSolutionBuilderHost(capsules, componentsErrors);
     await this.writeProjectReferencesTsConfig(rootDir, capsuleDirs);
     const solutionBuilder = ts.createSolutionBuilder(host, [rootDir], { verbose: true });
-    solutionBuilder.clean();
+    // solutionBuilder.clean(); // probably not needed. revert otherwise.
     const result = solutionBuilder.build();
     if (result > 0 && !componentsErrors.length) {
       throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
@@ -184,7 +184,12 @@ export class TypescriptCompiler implements Compiler {
         const contents = await fs.readFile(typePath, 'utf8');
         const filename = path.basename(typePath);
 
-        await Promise.all(dirs.map((dir) => fs.outputFile(path.join(dir, 'types', filename), contents)));
+        await Promise.all(dirs.map(async (dir) => {
+          const filePath = path.join(dir, 'types', filename);
+          if (!(await fs.pathExists(filePath))) {
+            await fs.outputFile(filePath, contents);
+          }
+        }));
       })
     );
   }
