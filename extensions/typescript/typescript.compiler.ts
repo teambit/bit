@@ -150,7 +150,7 @@ export class TypescriptCompiler implements Compiler {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
-      this.logger.error(errorStr);
+      this.logger.consoleFailure(errorStr);
       if (!diagnostic.file) {
         // this happens for example if one of the components and is not TS
         throw new Error(errorStr);
@@ -163,12 +163,12 @@ export class TypescriptCompiler implements Compiler {
     // it prints useful info, such as, every time it starts compiling a new capsule
     const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
       const msg = diag.messageText as string;
-      this.logger.info(msg);
+      this.logger.console(msg);
       const capsulePath = this.getCapsulePathFromBuilderStatus(msg);
       if (!capsulePath) return;
       currentComponentFromBuilderStatus = capsules.getIdByPathInCapsule(capsulePath);
     };
-    const errorCounter = (errorCount: number) => this.logger.info(`total error found: ${errorCount}`);
+    const errorCounter = (errorCount: number) => this.logger.console(`total error found: ${errorCount}`);
     return ts.createSolutionBuilderHost(
       undefined,
       undefined,
