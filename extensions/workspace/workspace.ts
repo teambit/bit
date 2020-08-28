@@ -282,12 +282,7 @@ export class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.createNetwork(
-      components.map((c) => c.id.toString()),
-      {
-        packageManager: 'npm',
-      }
-    );
+    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.capsule;
       return accum;

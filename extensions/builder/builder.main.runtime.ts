@@ -55,6 +55,7 @@ export class BuilderMain {
    * env. at the end, the results contain the data and errors per env.
    */
   async build(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+    await this.workspace.createNetwork(components.map((c) => c.id.toString()));
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
 
