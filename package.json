@@ -426,7 +426,7 @@
     "eslint-plugin-simple-import-sort": "^5.0.3",
     "eslint-plugin-unicorn": "^12.1.0",
     "gh-release": "^3.5.0",
-    "husky": "^0.14.3",
+    "husky": "^4.2.5",
     "lint-staged": "^7.3.0",
     "mocha": "^5.1.1",
     "mocha-appveyor-reporter": "^0.4.2",
@@ -454,12 +454,13 @@
   "engines": {
     "node": ">=10.14.2"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
-    "*.{ts,js,tsx}": [
-      "prettier --write",
-      "git add"
-    ],
-    "*.{css,scss}": [
+    "*.{ts,js,tsx,css,scss}": [
       "prettier --write",
       "git add"
     ]

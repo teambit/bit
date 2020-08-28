@@ -102,7 +102,11 @@ export class IsolatorMain {
           ...workspacePolicy.peerDependencies,
         },
       };
-      const packageManagerInstallOptions = { dedupe: true, copyPeerToRuntimeOnComponents: false, copyPeerToRuntimeOnRoot: true };
+      const packageManagerInstallOptions = {
+        dedupe: true,
+        copyPeerToRuntimeOnComponents: false,
+        copyPeerToRuntimeOnRoot: true,
+      };
       await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
