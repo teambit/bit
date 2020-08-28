@@ -14,7 +14,7 @@ import { ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
-import { BuilderCmd } from './run.cmd';
+import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './types';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
