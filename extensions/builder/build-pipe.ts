@@ -1,9 +1,10 @@
 import { Logger } from '@teambit/logger';
-import pMapSeries from 'p-map-series';
+import Bluebird from 'bluebird';
+import prettyTime from 'pretty-time';
 
 import { InvalidTask } from './exceptions';
 import { TaskProcess } from './task-process';
-import { BuildContext, BuildResults,BuildTask } from './types';
+import { BuildContext, BuildResults, BuildTask } from './types';
 
 export class BuildPipe {
   constructor(
@@ -19,17 +20,18 @@ export class BuildPipe {
    */
   async execute(buildContext: BuildContext): Promise<BuildResults[]> {
     const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
-    const results = await pMapSeries(this.tasks, async (task: BuildTask) => {
+    const results = await Bluebird.mapSeries(this.tasks, async (task: BuildTask) => {
       if (!task) {
         throw new InvalidTask(task);
       }
       longProcessLogger.logProgress(`${task.extensionId} ${task.description || ''}`);
+      const startTask = process.hrtime();
       const taskResult = await task.execute(buildContext);
       const taskProcess = new TaskProcess(task, taskResult, buildContext, this.logger);
       taskProcess.throwIfErrorsFound();
-      this.logger.info(`task "${task.extensionId}" has completed successfully`);
+      const duration = prettyTime(process.hrtime(startTask));
+      this.logger.consoleSuccess(`task "${task.extensionId}" has completed successfully in ${duration}`);
       await taskProcess.saveTaskResults();
-      this.logger.consoleSuccess();
       return taskResult;
     });
     longProcessLogger.end();
