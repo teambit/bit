@@ -6,6 +6,8 @@ import { DependenciesObjectDefinition } from './types';
 
 const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
+  copyPeerToRuntimeOnRoot: true,
+  copyPeerToRuntimeOnComponents: false
 };
 
 export class DependencyInstaller {

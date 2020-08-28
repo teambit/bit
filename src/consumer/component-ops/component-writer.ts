@@ -171,13 +171,6 @@ export default class ComponentWriter {
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
-      if (!this.consumer || this.consumer.isolated) {
-        // bit-bin should not be installed in the capsule. it'll be symlinked later on.
-        // see package-manager.linkBitBinInCapsule();
-        packageJson.removeDependency('bit-bin');
-        packageJson.copyPeerDependenciesToDev();
-      }
-
       componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
