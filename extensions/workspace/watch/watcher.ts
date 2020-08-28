@@ -49,8 +49,10 @@ export class Watcher {
         msgs.onReady(this.workspace, this.getWatchPathsSortByComponent(), verbose)
       });
       watcher.on('change', async (filePath) => {
+        const startTime = new Date().getTime();
         const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
-        msgs.onChange(filePath, buildResults, verbose);
+        const duration = new Date().getTime() - startTime;
+        msgs.onChange(filePath, buildResults, verbose, duration);
       });
       watcher.on('add', (p) => {
         msgs.onAdd(p);
@@ -138,9 +140,9 @@ export class Watcher {
   }
 
   private completeWatch(start: number) {
-    const duration = new Date().getTime() - start;
+    // const duration = new Date().getTime() - start;
     loader.stop();
-    logger.console(`took ${duration}ms`);
+    // logger.console(`took ${duration}ms`);
     // logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 

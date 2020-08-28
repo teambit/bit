@@ -23,7 +23,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 
 import { Watcher } from './watcher';
 import chalk from 'chalk';
-import { formatCompileResults } from './output-formatter';
+import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 
 export class WatchCommand implements Command {
 
@@ -31,13 +31,16 @@ export class WatchCommand implements Command {
     onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
     onStart: (workspace) => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
-      console.log(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name}...\n`))
-      if (verbose)
-        console.log('watchPathsSortByComponent--> ', watchPathsSortByComponent);
+      if (verbose){
+        console.log(formatWatchPathsSortByComponent(watchPathsSortByComponent))
+      }
+      console.log(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name} (${new Date().getTime()})...\n`))
     },
-    onChange: (filePath, buildResults, verbose) => {
+    onChange: (filePath, buildResults, verbose, duration) => {
       console.log(`The file ${filePath} has been changed.\n\n`);
-      console.log(formatCompileResults(buildResults, verbose))
+      console.log(formatCompileResults(buildResults, verbose));
+      console.log(`Finished. (${duration}ms)`);
+      console.log(`Watching for component changes (${new Date().getTime()})...`);
     },
     // onAdd: 'onAdd',
     onAdd: (p) => {
