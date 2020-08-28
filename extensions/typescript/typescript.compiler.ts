@@ -140,6 +140,7 @@ export class TypescriptCompiler implements Compiler {
     capsules: CapsuleList,
     componentsErrors: ComponentError[]
   ): ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram> {
+    const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     const formatHost = {
       getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
@@ -163,12 +164,16 @@ export class TypescriptCompiler implements Compiler {
     // it prints useful info, such as, every time it starts compiling a new capsule
     const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
       const msg = diag.messageText as string;
-      this.logger.console(msg);
+      this.logger.debug(msg);
       const capsulePath = this.getCapsulePathFromBuilderStatus(msg);
       if (!capsulePath) return;
       currentComponentFromBuilderStatus = capsules.getIdByPathInCapsule(capsulePath);
+      longProcessLogger.logProgress(currentComponentFromBuilderStatus);
     };
-    const errorCounter = (errorCount: number) => this.logger.console(`total error found: ${errorCount}`);
+    const errorCounter = (errorCount: number) => {
+      this.logger.info(`total error found: ${errorCount}`);
+      longProcessLogger.end();
+    };
     return ts.createSolutionBuilderHost(
       undefined,
       undefined,
@@ -184,12 +189,14 @@ export class TypescriptCompiler implements Compiler {
         const contents = await fs.readFile(typePath, 'utf8');
         const filename = path.basename(typePath);
 
-        await Promise.all(dirs.map(async (dir) => {
-          const filePath = path.join(dir, 'types', filename);
-          if (!(await fs.pathExists(filePath))) {
-            await fs.outputFile(filePath, contents);
-          }
-        }));
+        await Promise.all(
+          dirs.map(async (dir) => {
+            const filePath = path.join(dir, 'types', filename);
+            if (!(await fs.pathExists(filePath))) {
+              await fs.outputFile(filePath, contents);
+            }
+          })
+        );
       })
     );
   }
