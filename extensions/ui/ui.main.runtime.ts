@@ -162,7 +162,8 @@ export class UiMain {
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
-    await this.openBrowser(`http://${this.config.host}:${targetPort}`);
+    // TODO: need to wait until compilation done, then open browser
+    // await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 
@@ -239,6 +240,7 @@ export class UiMain {
 
   private async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
+    aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
     const hash = aspects.map((aspect) => {
       return [aspect.aspectPath, aspect.runtimePath].join('');
     });
@@ -262,7 +264,7 @@ export class UiMain {
   }
 
   static defaultConfig = {
-    portRange: [3000, 3200],
+    portRange: [3000, 3100],
     host: 'localhost',
   };
 
