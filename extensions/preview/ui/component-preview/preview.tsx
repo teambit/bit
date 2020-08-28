@@ -1,5 +1,4 @@
 import { ComponentModel } from '@teambit/component';
-import { queryString } from '@teambit/toolbox.query-string';
 import React, { CSSProperties } from 'react';
 
 export type ComponentPreviewProps = {

@@ -61,8 +61,7 @@ export class OpenBrowser {
     child.on('close', (code) => {
       if (code !== 0) {
         this.logger.info(chalk.red('The script specified as BROWSER environment variable failed.'));
-        this.logger.info(chalk.cyan(scriptPath) + ' exited with code ' + code + '.');
-        return;
+        this.logger.info(`${chalk.cyan(scriptPath)  } exited with code ${  code  }.`);
       }
     });
     return true;
@@ -87,12 +86,12 @@ export class OpenBrowser {
         'Chromium',
       ];
 
-      for (let chromiumBrowser of supportedChromiumBrowsers) {
+      for (const chromiumBrowser of supportedChromiumBrowsers) {
         try {
           // Try our best to reuse existing tab
           // on OSX Chromium-based browser with AppleScript
-          execSync('ps cax | grep "' + chromiumBrowser + '"');
-          execSync('osascript openChrome.applescript "' + encodeURI(url) + '" "' + chromiumBrowser + '"', {
+          execSync(`ps cax | grep "${  chromiumBrowser  }"`);
+          execSync(`osascript openChrome.applescript "${  encodeURI(url)  }" "${  chromiumBrowser  }"`, {
             cwd: __dirname,
             stdio: 'ignore',
           });
@@ -119,7 +118,7 @@ export class OpenBrowser {
     // Fallback to open
     // (It will always open new tab)
     try {
-      var options = { app: browser, wait: false, url: true };
+      const options = { app: browser, wait: false, url: true };
       open(url, options).catch(() => {}); // Prevent `unhandledRejection` error.
       return true;
     } catch (err) {
