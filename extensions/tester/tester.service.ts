@@ -1,3 +1,4 @@
+import { Logger } from '@teambit/logger';
 import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
 import { join } from 'path';
@@ -7,7 +8,6 @@ import { NoTestFilesFound } from './exceptions';
 import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
-import { Logger } from '@teambit/logger';
 
 export class TesterService implements EnvService<TestResults> {
   constructor(
