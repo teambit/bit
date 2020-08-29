@@ -71,7 +71,6 @@ export class TypescriptCompiler implements Compiler {
     const componentsErrors: ComponentError[] = [];
 
     await this.runTscBuild(componentsErrors, context.capsuleGraph);
-    await this.deleteTsBuildInfoFiles(capsuleDirs);
 
     const components = capsules.map((capsule) => {
       const id = capsule.id;
@@ -104,6 +103,12 @@ export class TypescriptCompiler implements Compiler {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
+  getNpmIgnoreEntries() {
+    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+    // needed for the package.
+    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
+  }
+
   /**
    * we have two options here:
    * 1. pass all capsules-dir at the second parameter of createSolutionBuilder and then no
@@ -124,16 +129,6 @@ export class TypescriptCompiler implements Compiler {
     if (result > 0 && !componentsErrors.length) {
       throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
     }
-  }
-
-  /**
-   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-   * needed for the package.
-   */
-  private async deleteTsBuildInfoFiles(capsuleDirs: string[]) {
-    await Promise.all(
-      capsuleDirs.map((capsuleDir) => fs.remove(path.join(capsuleDir, this.getDistDir(), 'tsconfig.tsbuildinfo')))
-    );
   }
 
   private createTsSolutionBuilderHost(

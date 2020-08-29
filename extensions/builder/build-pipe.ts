@@ -24,13 +24,14 @@ export class BuildPipe {
       if (!task) {
         throw new InvalidTask(task);
       }
-      longProcessLogger.logProgress(`${task.extensionId} ${task.description || ''}`);
+      const taskName = `${task.extensionId} ${task.description || ''}`;
+      longProcessLogger.logProgress(taskName);
       const startTask = process.hrtime();
       const taskResult = await task.execute(buildContext);
       const taskProcess = new TaskProcess(task, taskResult, buildContext, this.logger);
       taskProcess.throwIfErrorsFound();
       const duration = prettyTime(process.hrtime(startTask));
-      this.logger.consoleSuccess(`task "${task.extensionId}" has completed successfully in ${duration}`);
+      this.logger.consoleSuccess(`task "${taskName}" has completed successfully in ${duration}`);
       await taskProcess.saveTaskResults();
       return taskResult;
     });
