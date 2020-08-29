@@ -14,14 +14,12 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
    * execution errors.
    */
   get errors(): Error[] {
-    return flatten(
-      this.results.map((envResult) => this.getErrorsOfEnv(envResult))
-    );
+    return flatten(this.results.map((envResult) => this.getErrorsOfEnv(envResult)));
   }
 
   getErrorsOfEnv(envResult: EnvResult<T>): Error[] {
     const execError = envResult.error;
-    const errors = envResult.data && envResult.data ? envResult.data.errors || [] : [];
+    const errors = envResult.data ? envResult.data.errors || [] : [];
     if (execError) errors.push(execError);
     return errors;
   }
@@ -33,7 +31,7 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
   throwErrorsIfExist() {
     if (!this.errors.length) return;
     if (this.errors.length === 1 && this.errors[0] instanceof Error) throw this.errors[0];
-    const errorsPerEnvs = this.results.map(envResult => this.getEnvErrorsAsString(envResult));
+    const errorsPerEnvs = this.results.map((envResult) => this.getEnvErrorsAsString(envResult));
     const errorOutput = errorsPerEnvs.join('\n\n');
     throw new Error(errorOutput);
   }
@@ -42,7 +40,7 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
     const errors = this.getErrorsOfEnv(envResult);
     if (!errors.length) return '';
     const title = `found ${errors.length} error(s) for ${envResult.env.id}`;
-    const errorsStr = errors.map(error => error.message).join('\n');
+    const errorsStr = errors.map((error) => error.message).join('\n');
     return `${title}\n${errorsStr}`;
   }
 }

@@ -5,6 +5,7 @@ import { Logger } from '@teambit/logger';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import fs from 'fs-extra';
 import path from 'path';
+import { ArtifactProps } from '@teambit/builder/types';
 
 const NPM_IGNORE_FILE = '.npmignore';
 
@@ -16,12 +17,12 @@ export class PreparePackagesTask implements BuildTask {
   constructor(readonly extensionId: string, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
+    const artifacts = await this.executeNpmIgnoreTask(context);
+
     const result = {
       components: [],
-      artifacts: [],
+      artifacts,
     };
-
-    await this.executeNpmIgnoreTask(context);
 
     return result;
   }
@@ -30,14 +31,15 @@ export class PreparePackagesTask implements BuildTask {
    * add .npmignore file in the capsule root with entries received from the compilers to avoid
    * adding them into the package.
    */
-  private async executeNpmIgnoreTask(context: BuildContext) {
-    if (!context.env.getCompiler) return;
+  private async executeNpmIgnoreTask(context: BuildContext): Promise<ArtifactProps[]> {
+    if (!context.env.getCompiler) return [];
     const compilerInstance: Compiler = context.env.getCompiler();
-    if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return;
+    if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return [];
     const npmIgnoreEntries = compilerInstance.getNpmIgnoreEntries();
-    if (!npmIgnoreEntries || !npmIgnoreEntries.length) return;
+    if (!npmIgnoreEntries || !npmIgnoreEntries.length) return [];
     const capsules = context.capsuleGraph.seedersCapsules;
     await Promise.all(capsules.map((capsule) => this.appendNpmIgnoreEntriesToCapsule(capsule, npmIgnoreEntries)));
+    return [{ fileName: NPM_IGNORE_FILE }];
   }
 
   private async appendNpmIgnoreEntriesToCapsule(capsule: Capsule, npmIgnoreEntries: string[]) {

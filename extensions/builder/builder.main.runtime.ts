@@ -39,13 +39,13 @@ export class BuilderMain {
     private taskSlot: TaskSlot
   ) {}
 
-  async tagListener(ids: BitId[]): Promise<Component[]> {
+  async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     // @todo: some processes needs dependencies/dependents of the given ids
     const componentIds = ids.map(ComponentID.fromLegacy);
     const components = await this.workspace.getMany(componentIds);
     const envsExecutionResults = await this.build(components);
     envsExecutionResults.throwErrorsIfExist();
-    return components;
+    return envsExecutionResults;
   }
 
   /**
