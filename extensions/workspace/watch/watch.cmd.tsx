@@ -1,28 +1,9 @@
-/**
- Watching for component changes in workspace ${workspace}.
-        Compiling all {num-components} components:
-        
-        STATUS           COMPONENT ID
-        ? {status}      {full-component-id}
-        X FAIL           teambit.bit/aspect-loader
-        V PASSING        teambit.bit/pkg
-        
-        V 56 components passed
-        X 2 components failed:
-          - <comp 1>
-          - <comp 2>
-        
-        Finished. (2 minutes)
-        
-        Watching for component changes (${timestamp})...
- */
-//(${new Date().toISOString()}).\n
-// console.log(`Watching for component changes (${process.hrtime()})...`)
-
 import { Command, CommandOptions } from '@teambit/cli';
 
 import { Watcher } from './watcher';
 import chalk from 'chalk';
+import moment from 'moment';
+import logger from 'bit-bin/dist/logger/logger';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 
 export class WatchCommand implements Command {
@@ -32,29 +13,28 @@ export class WatchCommand implements Command {
     onStart: (workspace) => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
       if (verbose){
-        console.log(formatWatchPathsSortByComponent(watchPathsSortByComponent))
+        logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent))
       }
-      console.log(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name} (${new Date().getTime()})...\n`))
+      logger.console(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:MM:SS')})...\n`))
     },
     onChange: (filePath, buildResults, verbose, duration) => {
-      console.log(`The file ${filePath} has been changed.\n\n`);
-      console.log(formatCompileResults(buildResults, verbose));
-      console.log(`Finished. (${duration}ms)`);
-      console.log(`Watching for component changes (${new Date().getTime()})...`);
+      logger.console(`The file ${filePath} has been changed.\n\n`);
+      logger.console(formatCompileResults(buildResults, verbose));
+      logger.console(`Finished. (${duration}ms)`);
+      logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
     },
     // onAdd: 'onAdd',
     onAdd: (p) => {
-      console.log(`The file ${p} has been added`);
+      logger.console(`The file ${p} has been added`);
     },
     // onUnlink: 'onUnlink',
     onUnlink: (p) => {
-      console.log(`file ${p} has been removed`);
+      logger.console(`file ${p} has been removed`);
     },
     onError: (err) => {
-      console.log(`Watcher error ${err}`);
+      logger.console(`Watcher error ${err}`);
     }
   }
-
 
   name = 'watch';
   description = 'watch a set of components';
@@ -71,24 +51,6 @@ export class WatchCommand implements Command {
   ) {}
 
   async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
-    // console.log(`
-    // Watching for component changes in workspace {workspace}.
-    // Compiling all {num-components} components:
-    
-    // STATUS           COMPONENT ID
-    // ? {status}      {full-component-id}
-    // X FAIL           teambit.bit/aspect-loader
-    // V PASSING        teambit.bit/pkg
-    
-    // V 56 components passed
-    // X 2 components failed:
-    //   - <comp 1>
-    //   - <comp 2>
-    
-    // Finished. (2 minutes)
-    
-    // Watching for component changes ({timestamp})...
-    // `)
     await this.watcher.watch({ msgs: this.msgs, verbose });
     return 'watcher terminated';
   }
