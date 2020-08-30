@@ -826,8 +826,7 @@ export class Workspace implements ComponentFactory {
       } else {
         // TODO: implement
       }
-
-      console.log(resolvedPackagesWithType);
+      await this.dependencyResolver.persistConfig(this.path);
     }
     this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();

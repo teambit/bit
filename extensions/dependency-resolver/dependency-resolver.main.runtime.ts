@@ -1,10 +1,11 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
+import type { Config } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
-import type { ConfigMain } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
@@ -12,6 +13,7 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
@@ -84,6 +86,8 @@ export class DependencyResolverMain {
     private envs: EnvsMain,
 
     private logger: Logger,
+
+    private configAspect: Config,
 
     private packageManagerSlot: PackageManagerSlot
   ) {}
@@ -190,6 +194,10 @@ export class DependencyResolverMain {
     const rootPolicy = this.config.policy ?? {};
     this.config.policy = rootPolicy;
     this.updatePolicy(this.config.policy, newDeps, options);
+    this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
+      overrideExisting: true,
+      ignoreVersion: true,
+    });
     return this.config.policy;
   }
 
@@ -235,10 +243,15 @@ export class DependencyResolverMain {
     return result;
   }
 
+  async persistConfig(workspaceDir?: string) {
+    return this.configAspect.workspaceConfig?.write({ dir: workspaceDir });
+  }
+
   private addDepToPolicy(policy: DependenciesPolicy, dep: PolicyDep): void {
     const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycleType];
     policy[keyName] = policy[keyName] || {};
     policy[keyName][dep.packageName] = dep.version;
+    policy[keyName] = sortObject(policy[keyName]);
   }
 
   findInPolicy(policy: DependenciesPolicy, packageName: string): PolicyDep | undefined {
@@ -310,13 +323,20 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configAsp]: [EnvsMain, LoggerMain, ConfigMain],
+    [envs, loggerExt, configMain]: [EnvsMain, LoggerMain, Config],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
-    const dependencyResolver = new DependencyResolverMain(config, policiesRegistry, envs, logger, packageManagerSlot);
+    const dependencyResolver = new DependencyResolverMain(
+      config,
+      policiesRegistry,
+      envs,
+      logger,
+      configMain,
+      packageManagerSlot
+    );
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {

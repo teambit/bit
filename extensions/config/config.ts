@@ -11,6 +11,11 @@ import { LegacyInitProps, WorkspaceConfig, WorkspaceConfigFileProps } from './wo
 //   scopeConfig: WorkspaceConfig;
 // };
 
+export type SetExtensionOptions = {
+  overrideExisting: boolean;
+  ignoreVersion: boolean;
+};
+
 export class Config {
   constructor(public workspaceConfig?: WorkspaceConfig, public scopeConfig?: WorkspaceConfig) {}
   // constructor(private props: ConfigProps) {}
@@ -70,6 +75,10 @@ export class Config {
 
   extension(extensionId: string, ignoreVersion: boolean): ExtensionDataEntry | undefined {
     return this.config?.extension(extensionId, ignoreVersion);
+  }
+
+  setExtension(extensionId: string, config: Record<string, any>, options: SetExtensionOptions) {
+    this.config?.setExtension(extensionId, config, options);
   }
 
   getHarmonyConfigObject(): GlobalConfig {
