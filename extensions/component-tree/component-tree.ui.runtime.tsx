@@ -23,7 +23,7 @@ export class ComponentTreeUI {
   static dependencies = [SidebarAspect];
 
   static async provider([sidebar]: [SidebarUI], config, [treeNodeSlot]: [ComponentTreeSlot]) {
-    sidebar.registerDrawer(new ComponentTreeDrawer(treeNodeSlot));
+    // sidebar.registerDrawer(new ComponentTreeDrawer(treeNodeSlot));
     return new ComponentTreeUI(treeNodeSlot);
   }
 }
