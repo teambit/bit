@@ -1,7 +1,6 @@
 import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config';
-import { PathOsBased } from 'bit-bin/dist/utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 
-import { PathOsBasedAbsolute } from '../../src/utils/path';
 import { SetExtensionOptions } from './config';
 
 export type WriteOptions = {
