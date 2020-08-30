@@ -23,11 +23,9 @@ export class WatchCommand implements Command {
       logger.console(`Finished. (${duration}ms)`);
       logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
     },
-    // onAdd: 'onAdd',
     onAdd: (p) => {
       logger.console(`The file ${p} has been added`);
     },
-    // onUnlink: 'onUnlink',
     onUnlink: (p) => {
       logger.console(`file ${p} has been removed`);
     },
