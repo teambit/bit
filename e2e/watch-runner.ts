@@ -41,7 +41,6 @@ export default class WatchRunner {
     });
   }
   async waitForWatchToRebuildComponent() {
-    // return this.waitForWatchToPrintMsg(WATCHER_COMPLETED_MSG);
     return this.waitForWatchToPrintMsg('TEMP: waitForWatchToPrintMsg');
   }
   async waitForWatchToPrintMsg(msg: string, timeoutAfter: number = WATCH_TIMEOUT_FOR_MSG) {
