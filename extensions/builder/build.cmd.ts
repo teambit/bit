@@ -25,7 +25,7 @@ export class BuilderCmd implements Command {
     const envsExecutionResults = await this.builder.build(components);
     longProcessLogger.end();
     envsExecutionResults.throwErrorsIfExist();
-    this.logger.consoleSuccess()
+    this.logger.consoleSuccess();
     return chalk.green(`the build has been completed. total: ${envsExecutionResults.results.length} environments`);
   }
 }

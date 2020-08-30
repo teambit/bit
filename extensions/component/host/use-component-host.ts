@@ -13,6 +13,9 @@ const COMPONENT_HOST = gql`
           version
           scope
         }
+        deprecation {
+          isDeprecate
+        }
         env {
           id
           icon

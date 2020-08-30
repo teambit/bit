@@ -18,6 +18,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { isEmpty, omit } from 'ramda';
 
+import { SetExtensionOptions } from './config';
+import { ExtensionAlreadyConfigured } from './exceptions';
+import { ConfigDirNotDefined } from './exceptions/config-dir-not-defined';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import { HostConfig } from './types';
 
@@ -75,8 +78,9 @@ export type WorkspaceLegacyProps = {
 export type ExtensionsDefs = WorkspaceSettingsNewProps;
 
 export class WorkspaceConfig implements HostConfig {
+  raw?: any;
   _path?: string;
-  _extensions: ExtensionsDefs;
+  _extensions: ExtensionDataList;
   _legacyProps?: WorkspaceLegacyProps;
   isLegacy: boolean;
 
@@ -86,12 +90,12 @@ export class WorkspaceConfig implements HostConfig {
     logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
     if (isHarmony) {
-      const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, data);
-      this._extensions = withoutInternalConfig;
+      this.raw = data;
+      this.loadExtensions();
     } else {
       // We know we have either data or legacy config
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._extensions = transformLegacyPropsToExtensions(legacyConfig!);
+      this._extensions = ExtensionDataList.fromConfigObject(transformLegacyPropsToExtensions(legacyConfig!));
       if (legacyConfig) {
         this._legacyProps = {
           dependenciesDirectory: legacyConfig.dependenciesDirectory,
@@ -113,13 +117,26 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   get extensions(): ExtensionDataList {
-    const res = ExtensionDataList.fromConfigObject(this._extensions);
-    return res;
+    return this._extensions;
+  }
+
+  private loadExtensions() {
+    const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, this.raw);
+    this._extensions = ExtensionDataList.fromConfigObject(withoutInternalConfig);
   }
 
   extension(extensionId: string, ignoreVersion: boolean): any {
     const existing = this.extensions.findExtension(extensionId, ignoreVersion);
     return existing?.config;
+  }
+
+  setExtension(extensionId: string, config: Record<string, any>, options: SetExtensionOptions): any {
+    const existing = this.extension(extensionId, options.ignoreVersion);
+    if (existing && !options.overrideExisting) {
+      throw new ExtensionAlreadyConfigured(extensionId);
+    }
+    this.raw[extensionId] = config;
+    this.loadExtensions();
   }
 
   /**
@@ -323,16 +340,20 @@ export class WorkspaceConfig implements HostConfig {
     }
   }
 
-  async write({ workspaceDir }: { workspaceDir: PathOsBasedAbsolute }): Promise<void> {
+  async write({ dir }: { dir?: PathOsBasedAbsolute }): Promise<void> {
+    const calculatedDir = dir || this._path;
+    if (!calculatedDir) {
+      throw new ConfigDirNotDefined();
+    }
     if (this.data) {
-      const files = await this.toVinyl(workspaceDir);
+      const files = await this.toVinyl(calculatedDir);
       const dataToPersist = new DataToPersist();
       if (files) {
         dataToPersist.addManyFiles(files);
         return dataToPersist.persistAllToFS();
       }
     }
-    await this.legacyConfig?.write({ workspaceDir });
+    await this.legacyConfig?.write({ workspaceDir: calculatedDir });
     return undefined;
   }
 
@@ -399,7 +420,7 @@ export class WorkspaceConfig implements HostConfig {
       path: this.path,
       _getEnvsByType,
       isLegacy: this.isLegacy,
-      write: this.write.bind(this),
+      write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.legacyConfig ? this.legacyConfig?.overrides : undefined,
       getComponentConfig: this.legacyConfig
