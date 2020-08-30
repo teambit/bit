@@ -61,7 +61,7 @@ export class OpenBrowser {
     child.on('close', (code) => {
       if (code !== 0) {
         this.logger.info(chalk.red('The script specified as BROWSER environment variable failed.'));
-        this.logger.info(`${chalk.cyan(scriptPath)  } exited with code ${  code  }.`);
+        this.logger.info(`${chalk.cyan(scriptPath)} exited with code ${code}.`);
       }
     });
     return true;
@@ -90,8 +90,8 @@ export class OpenBrowser {
         try {
           // Try our best to reuse existing tab
           // on OSX Chromium-based browser with AppleScript
-          execSync(`ps cax | grep "${  chromiumBrowser  }"`);
-          execSync(`osascript openChrome.applescript "${  encodeURI(url)  }" "${  chromiumBrowser  }"`, {
+          execSync(`ps cax | grep "${chromiumBrowser}"`);
+          execSync(`osascript openChrome.applescript "${encodeURI(url)}" "${chromiumBrowser}"`, {
             cwd: __dirname,
             stdio: 'ignore',
           });

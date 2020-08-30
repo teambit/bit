@@ -53,7 +53,7 @@ export class FlattenedDependencyLoader {
           const dependency = await this.loadComponentsFunc([dependencyId]);
           if (!dependency.length || !dependency[0])
             throw new Error(`unable to load ${dependencyId.toString()} using custom load function`);
-            this.cache[dependencyId.toString()] = dependency[0];
+          this.cache[dependencyId.toString()] = dependency[0];
         } else {
           this.cache[dependencyId.toString()] = await this.consumer.loadComponentForCapsule(dependencyId);
         }

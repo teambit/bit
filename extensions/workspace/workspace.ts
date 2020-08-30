@@ -18,6 +18,7 @@ import {
   DependencyLifecycleType,
   DependencyResolverMain,
   PackageManagerInstallOptions,
+  PolicyDep,
 } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
@@ -51,6 +52,7 @@ import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
+import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
 import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
 import { ExtensionData, OnComponentLoad } from './on-component-load';
@@ -79,6 +81,7 @@ export type WorkspaceInstallOptions = {
   dedupe: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
+  updateExisting: boolean;
 };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
@@ -797,7 +800,35 @@ export class Workspace implements ComponentFactory {
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions) {
     if (packages && packages.length) {
-      this.logger.debug(`installing the folloing packages: ${packages.join()}`);
+      if (!options?.variants && options?.lifecycleType === 'dev') {
+        throw new DependencyTypeNotSupportedInPolicy(options?.lifecycleType);
+      }
+      this.logger.debug(`installing the following packages: ${packages.join()}`);
+      const resolver = this.dependencyResolver.getVersionResolver();
+      const resolvedPackagesP = packages.map((packageName) =>
+        resolver.resolveRemoteVersion(packageName, {
+          rootDir: this.path,
+        })
+      );
+      const resolvedPackages = await Promise.all(resolvedPackagesP);
+      const resolvedPackagesWithType: PolicyDep[] = [];
+      resolvedPackages.forEach((resolvedPackage) => {
+        if (resolvedPackage.version) {
+          resolvedPackagesWithType.push({
+            version: resolvedPackage.version,
+            packageName: resolvedPackage.packageName,
+            lifecycleType: options?.lifecycleType || 'runtime',
+          });
+        }
+      });
+      if (!options?.variants) {
+        this.dependencyResolver.updateRootPolicy(resolvedPackagesWithType, {
+          updateExisting: options?.updateExisting ?? false,
+        });
+      } else {
+        // TODO: implement
+      }
+      await this.dependencyResolver.persistConfig(this.path);
     }
     this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();

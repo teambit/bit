@@ -6,7 +6,9 @@ import {
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
+  PackageManagerResolveRemoteVersionOptions,
 } from '@teambit/dependency-resolver';
+import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
@@ -21,6 +23,7 @@ export class PnpmPackageManager implements PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
+    // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir
@@ -43,7 +46,7 @@ export class PnpmPackageManager implements PackageManager {
     );
     const rootManifest = workspaceManifest.toJson({
       includeDir: true,
-      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
     });
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
@@ -71,5 +74,21 @@ export class PnpmPackageManager implements PackageManager {
       }
       return acc;
     }, {});
+  }
+
+  async resolveRemoteVersion(
+    packageName: string,
+    options: PackageManagerResolveRemoteVersionOptions
+  ): Promise<ResolvedPackageVersion> {
+    // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { resolveRemoteVersion } = require('./lynx');
+    return resolveRemoteVersion(
+      packageName,
+      options.rootDir,
+      options.cacheRootDir,
+      options.fetchToCache,
+      options.update
+    );
   }
 }
