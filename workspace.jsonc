@@ -82,9 +82,11 @@
             "bit-bin": "14.8.9-dev.4",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
-            "graphql": "^14.3.1"
+            "graphql": "^14.3.1",
+            "reflect-metadata": "^0.1.13"
           },
           "devDependencies": {
+            "@types-react": "^16.9.43",
             "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
             "@types/node": "^12.12.27"
