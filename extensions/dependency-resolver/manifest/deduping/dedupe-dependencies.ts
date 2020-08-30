@@ -43,7 +43,6 @@ export function dedupeDependencies(
   componentDependenciesMap: ComponentDependenciesMap
 ): DedupedDependencies {
   const indexedByDepId = indexByDepId(componentDependenciesMap);
-  indexedByDepId.delete('bit-bin');
   const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
   const result = mergeWithRootDeps(rootDependencies, dedupedDependenciesWithoutRootOriginal);
   return result;

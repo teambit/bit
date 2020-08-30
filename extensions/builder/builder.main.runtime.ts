@@ -2,6 +2,7 @@ import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsExecutionResult } from '@teambit/environments/runtime/envs-execution-result';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -12,8 +13,8 @@ import { BitId } from 'bit-bin/dist/bit-id';
 import { ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService } from './builder.service';
-import { BuilderCmd } from './run.cmd';
+import { BuilderService, BuildServiceResults } from './builder.service';
+import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './types';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
@@ -38,19 +39,26 @@ export class BuilderMain {
     private taskSlot: TaskSlot
   ) {}
 
-  async tagListener(ids: BitId[]) {
+  async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     // @todo: some processes needs dependencies/dependents of the given ids
     const componentIds = ids.map(ComponentID.fromLegacy);
     const components = await this.workspace.getMany(componentIds);
-    return this.build(components);
+    const envsExecutionResults = await this.build(components);
+    envsExecutionResults.throwErrorsIfExist();
+    return envsExecutionResults;
   }
 
   /**
    * build given components for release.
+   * for each one of the envs it runs a series of tasks.
+   * in case of an error in a task, it stops the execution of that env and continue to the next
+   * env. at the end, the results contain the data and errors per env.
    */
-  async build(components: Component[]) {
+  async build(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+    await this.workspace.createNetwork(components.map((c) => c.id.toString()));
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
+
     return buildResult;
   }
 

@@ -68,6 +68,7 @@ export type EjectConfResult = {
 };
 
 export const ComponentAdded = 'componentAdded';
+export const ComponentChanged = 'componentChanged';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -78,6 +79,8 @@ export type WorkspaceInstallOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
   dedupe: boolean;
+  copyPeerToRuntimeOnRoot?: boolean;
+  copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
 };
 
@@ -185,6 +188,10 @@ export class Workspace implements ComponentFactory {
     return tokenizedPath[tokenizedPath.length - 1];
   }
 
+  get icon() {
+    return this.config.icon;
+  }
+
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
@@ -278,12 +285,7 @@ export class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.createNetwork(
-      components.map((c) => c.id.toString()),
-      {
-        packageManager: 'npm',
-      }
-    );
+    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.capsule;
       return accum;
@@ -352,7 +354,7 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
-      this.graphql.pubsub.publish('componentChanged', component);
+      this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -365,7 +367,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      this.graphql.pubsub.publish(ComponentAdded, component);
+      this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
@@ -844,6 +846,8 @@ export class Workspace implements ComponentFactory {
     };
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
@@ -905,6 +909,14 @@ export class Workspace implements ComponentFactory {
     }
     const legacyId = this.consumer.getParsedId(stringIdWithoutScope, useVersionFromBitmap);
     return ComponentID.fromLegacy(legacyId);
+  }
+
+  async resolveMultipleComponentIds(
+    ids: Array<string | ComponentID | BitId>,
+    assumeIdWithScope = false,
+    useVersionFromBitmap = true
+  ) {
+    return Promise.all(ids.map((id) => this.resolveComponentId(id, assumeIdWithScope, useVersionFromBitmap)));
   }
 
   /**

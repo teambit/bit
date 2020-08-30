@@ -123,7 +123,7 @@ export class ScopeMain implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
-    const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), {});
+    const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), { baseDir: this.path });
 
     const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
       return RequireableComponent.fromCapsule(capsule);

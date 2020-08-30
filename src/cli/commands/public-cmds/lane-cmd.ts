@@ -20,6 +20,7 @@ export default class Lane implements LegacyCommand {
     ['', 'not-merged', 'show not merged lanes'],
   ] as CommandOptions;
   loader = true;
+  private = true;
   migration = true;
   remoteOp = true;
   skipWorkspace = true;

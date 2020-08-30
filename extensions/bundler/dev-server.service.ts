@@ -8,7 +8,7 @@ import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 import { selectPort } from './select-port';
 
-export class DevServerService implements EnvService {
+export class DevServerService implements EnvService<ComponentServer> {
   constructor(
     /**
      * browser runtime slot
@@ -25,7 +25,7 @@ export class DevServerService implements EnvService {
     this._uiRoot = value;
   }
 
-  async run(context: ExecutionContext) {
+  async run(context: ExecutionContext): Promise<ComponentServer> {
     const devServerContext = await this.buildContext(context);
     const devServer: DevServer = context.env.getDevServer(devServerContext);
     const port = await selectPort();

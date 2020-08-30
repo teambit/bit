@@ -4,10 +4,9 @@ import { UiMain } from './ui.main.runtime';
 
 export class UIBuildCmd implements Command {
   name = 'ui-build [type]';
-  description = 'build production assets for deployment.';
+  description = 'Build production assets for deployment.';
   alias = 'c';
-  private = true;
-  group = 'development';
+  group = 'component';
   shortDescription = '';
   options = [];
 

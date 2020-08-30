@@ -42,7 +42,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
-        <TopBar Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
+        <TopBar Corner={() => <Corner name={workspace.name} icon={workspace.icon} />} menu={menuSlot} />
         <TupleSplitPane max={60} min={10} ratio="264px" layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
           <div className={styles.sidebarContainer}>
             <Collapser

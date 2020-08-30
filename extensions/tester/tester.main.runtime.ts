@@ -88,7 +88,7 @@ export class TesterMain {
     const tester = new TesterMain(
       envs,
       workspace,
-      new TesterService(workspace, config.testRegex),
+      new TesterService(workspace, config.testRegex, logger),
       new TesterTask(TesterAspect.id)
     );
     if (workspace && !workspace.consumer.isLegacy) {

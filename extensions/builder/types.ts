@@ -15,7 +15,8 @@ export interface BuildContext extends ExecutionContext {
 }
 
 export type ArtifactProps = {
-  dirName: string;
+  dirName?: string;
+  fileName?: string;
 };
 
 export type ComponentResult = {

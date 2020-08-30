@@ -1,0 +1,41 @@
+{
+  "componentId": {
+    "name": "ui",
+    "version": "0.0.10"
+  },
+  "propagate": false,
+  "extensions": {
+    "teambit.bit/pkg": {
+      "packageJson": {
+        "name": "@teambit/{name}",
+        "private": false
+      },
+      "packageManagerPublishArgs": [
+        "--access public"
+      ]
+    },
+    "teambit.bit/dependency-resolver": {
+      "policy": {
+        "dependencies": {
+          "source-map-loader": "+",
+          "babel-loader": "+",
+          "babel-preset-react-app": "+",
+          "style-loader": "+",
+          "css-loader": "+",
+          "sass-loader": "+",
+          "bit-bin": "-"
+        },
+        "devDependencies": {
+          "@types/mocha": "^5.2.7",
+          "@types/node": "^12.12.27",
+          "bit-bin": "-"
+        },
+        "peerDependencies": {
+          "react": "^16.13.1",
+          "bit-bin": "14.8.9-dev.4",
+          "graphql": "^14.3.1"
+        }
+      }
+    }
+  }
+}

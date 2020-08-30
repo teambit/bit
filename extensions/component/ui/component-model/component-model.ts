@@ -1,7 +1,6 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/environments';
-import { ComponentStatus } from '@teambit/workspace';
 
 import { ComponentID } from '../../id';
 import { Tag } from '../../tag';
@@ -17,7 +16,7 @@ export type ComponentModelProps = {
   packageName: string;
   compositions: CompositionProps[];
   tags: TagProps[];
-  status: ComponentStatus;
+  status: any;
   deprecation: DeprecationInfo;
   env: Descriptor;
 };
@@ -62,7 +61,7 @@ export class ComponentModel {
     /**
      * status of component.
      */
-    readonly status?: ComponentStatus,
+    readonly status?: any,
 
     /**
      * deprecation info of the component.

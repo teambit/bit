@@ -71,7 +71,6 @@ export class TypescriptCompiler implements Compiler {
     const componentsErrors: ComponentError[] = [];
 
     await this.runTscBuild(componentsErrors, context.capsuleGraph);
-    await this.deleteTsBuildInfoFiles(capsuleDirs);
 
     const components = capsules.map((capsule) => {
       const id = capsule.id;
@@ -104,6 +103,12 @@ export class TypescriptCompiler implements Compiler {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
   }
 
+  getNpmIgnoreEntries() {
+    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+    // needed for the package.
+    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
+  }
+
   /**
    * we have two options here:
    * 1. pass all capsules-dir at the second parameter of createSolutionBuilder and then no
@@ -119,27 +124,18 @@ export class TypescriptCompiler implements Compiler {
     const host = this.createTsSolutionBuilderHost(capsules, componentsErrors);
     await this.writeProjectReferencesTsConfig(rootDir, capsuleDirs);
     const solutionBuilder = ts.createSolutionBuilder(host, [rootDir], { verbose: true });
-    solutionBuilder.clean();
+    // solutionBuilder.clean(); // probably not needed. revert otherwise.
     const result = solutionBuilder.build();
     if (result > 0 && !componentsErrors.length) {
       throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
     }
   }
 
-  /**
-   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-   * needed for the package.
-   */
-  private async deleteTsBuildInfoFiles(capsuleDirs: string[]) {
-    await Promise.all(
-      capsuleDirs.map((capsuleDir) => fs.remove(path.join(capsuleDir, this.getDistDir(), 'tsconfig.tsbuildinfo')))
-    );
-  }
-
   private createTsSolutionBuilderHost(
     capsules: CapsuleList,
     componentsErrors: ComponentError[]
   ): ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram> {
+    const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     const formatHost = {
       getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
@@ -150,7 +146,7 @@ export class TypescriptCompiler implements Compiler {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
-      this.logger.error(errorStr);
+      this.logger.consoleFailure(errorStr);
       if (!diagnostic.file) {
         // this happens for example if one of the components and is not TS
         throw new Error(errorStr);
@@ -163,12 +159,16 @@ export class TypescriptCompiler implements Compiler {
     // it prints useful info, such as, every time it starts compiling a new capsule
     const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
       const msg = diag.messageText as string;
-      this.logger.info(msg);
+      this.logger.debug(msg);
       const capsulePath = this.getCapsulePathFromBuilderStatus(msg);
       if (!capsulePath) return;
       currentComponentFromBuilderStatus = capsules.getIdByPathInCapsule(capsulePath);
+      longProcessLogger.logProgress(currentComponentFromBuilderStatus);
     };
-    const errorCounter = (errorCount: number) => this.logger.info(`total error found: ${errorCount}`);
+    const errorCounter = (errorCount: number) => {
+      this.logger.info(`total error found: ${errorCount}`);
+      longProcessLogger.end();
+    };
     return ts.createSolutionBuilderHost(
       undefined,
       undefined,
@@ -184,7 +184,14 @@ export class TypescriptCompiler implements Compiler {
         const contents = await fs.readFile(typePath, 'utf8');
         const filename = path.basename(typePath);
 
-        await Promise.all(dirs.map((dir) => fs.outputFile(path.join(dir, 'types', filename), contents)));
+        await Promise.all(
+          dirs.map(async (dir) => {
+            const filePath = path.join(dir, 'types', filename);
+            if (!(await fs.pathExists(filePath))) {
+              await fs.outputFile(filePath, contents);
+            }
+          })
+        );
       })
     );
   }

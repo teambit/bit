@@ -15,6 +15,7 @@ import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { PreviewTask } from './preview.task';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
@@ -87,7 +88,7 @@ export class PreviewMain {
     });
 
     const resolved = await Promise.all(paths);
-    return resolved.flatMap((array) => array).concat([previewRuntime]);
+    return flatten(resolved).concat([previewRuntime]);
   }
 
   async writePreviewRuntime() {
@@ -100,63 +101,6 @@ export class PreviewMain {
     );
     return filePath;
   }
-
-  // /** writes a series of link files that will load the component previews */
-  // async writeLinks(
-  //   /** previews data structure to serialize and write down */
-  //   previews: { name: string; modulePaths: ComponentMap<string[]>; templatePath?: string }[],
-  //   /** folder to write links at. (Default - os.temp) */
-  //   dir: string = makeTempDir()
-  // ) {
-  //   const linkFiles = previews.map(({ name, modulePaths, templatePath }) =>
-  //     this.writePreviewLink(dir, name, modulePaths, templatePath)
-  //   );
-
-  //   const indexFilePath = this.writeIndexFile(linkFiles, dir);
-  //   const updaterPath = this.writeUpdater(dir, indexFilePath, previewRuntime);
-
-  //   return updaterPath;
-  // }
-
-  // /** generates a index file that links to all of the preview files  */
-  // private writeIndexFile(linkFiles: [string, string][], dir: string) {
-  //   const indexFile = makeReExport(linkFiles);
-  //   const indexFilePath = resolve(join(dir, `index.js`));
-
-  //   writeFileSync(indexFilePath, indexFile);
-
-  //   return indexFilePath;
-  // }
-
-  // /** generates an index file that links to all of the files related to a specific preview */
-  // private writePreviewLink(
-  //   dir: string,
-  //   name: string,
-  //   modulePaths: ComponentMap<string[]>,
-  //   templatePath?: string
-  // ): [string, string] {
-  //   const path = resolve(join(dir, `${name}.js`));
-  //   const contents = generateLink(modulePaths, templatePath);
-  //   writeFileSync(path, contents);
-
-  //   return [name, path];
-  // }
-
-  // async getPreviewExtensions(context: ExecutionContext) {
-  //   context.env.getPreviewExtensions();
-  //   // const link = this.ui.createLink();
-
-  //   return {};
-  // }
-
-  // /** generates an 'updater' file that injects previews into preview.preview.tsx */
-  // private writeUpdater(dir: string, targetPath: string, previewMain: string) {
-  //   const content = makePreviewRegister(targetPath, previewMain);
-  //   const path = resolve(join(dir, `__registerPreview.js`));
-  //   writeFileSync(path, content);
-
-  //   return path;
-  // }
 
   /**
    * register a new preview definition.
@@ -171,6 +115,7 @@ export class PreviewMain {
   static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
 
   static async provider(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [bundler, builder, componentExtension, uiMain, envs]: [BundlerMain, BuilderMain, ComponentMain, UiMain, EnvsMain],
     config,
     [previewSlot]: [PreviewDefinitionRegistry]
@@ -183,7 +128,7 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerTask(new PreviewTask(bundler, preview));
+    // builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }

@@ -13,6 +13,7 @@ import { applyVersionReport } from './merge-cmd';
 export default class Switch implements LegacyCommand {
   name = 'switch <lane>';
   description = `switch to the specified lane`;
+  private = true;
   alias = '';
   opts = [
     ['c', 'create', 'create a new lane'],
