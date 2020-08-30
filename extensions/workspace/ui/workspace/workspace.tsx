@@ -1,12 +1,10 @@
 import 'reset-css';
 
-import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import { Pane } from '@teambit/base-ui.surfaces.split-pane.pane';
-import { SplitPane } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/staged-components.top-bar';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import React, { ReactNode, useReducer } from 'react';
@@ -47,7 +45,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
 
         <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
           <Pane className={styles.sidebar}>{sidebar}</Pane>
-          <CollapsibleSplitter className={styles.splitter}>
+          <HoverSplitter className={styles.splitter}>
             <Collapser
               id="workspaceSidebarCollapser"
               isOpen={isSidebarOpen}
@@ -55,7 +53,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
               onClick={handleSidebarToggle}
               tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
             />
-          </CollapsibleSplitter>
+          </HoverSplitter>
           <Pane>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">

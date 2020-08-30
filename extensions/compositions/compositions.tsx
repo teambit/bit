@@ -1,12 +1,10 @@
 import { useQuery } from '@apollo/react-hooks';
-import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import { Pane } from '@teambit/base-ui.surfaces.split-pane.pane';
-import { SplitPane } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { gql } from 'apollo-boost';
 import head from 'lodash.head';
 import R from 'ramda';
@@ -61,7 +59,7 @@ export function Compositions() {
       <Pane className={styles.left}>
         <CompositionContent component={component} selected={selected} />
       </Pane>
-      <CollapsibleSplitter className={styles.splitter}>
+      <HoverSplitter className={styles.splitter}>
         <Collapser
           id="compositionsCollapser"
           placement="left"
@@ -71,7 +69,7 @@ export function Compositions() {
           tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
           className={styles.collapser}
         />
-      </CollapsibleSplitter>
+      </HoverSplitter>
       <Pane className={styles.right}>
         <TabContainer>
           <TabList>

@@ -2070,16 +2070,6 @@
                 "name": "panel-ui.main.runtime.ts"
             },
             {
-                "relativePath": "ui/panel-container.tsx",
-                "test": false,
-                "name": "panel-container.tsx"
-            },
-            {
-                "relativePath": "ui/panel.module.scss",
-                "test": false,
-                "name": "panel.module.scss"
-            },
-            {
                 "relativePath": "ui/tabs.module.scss",
                 "test": false,
                 "name": "tabs.module.scss"
@@ -3241,30 +3231,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/side-bar",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/splitter": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "splitter.module.scss",
-                "test": false,
-                "name": "splitter.module.scss"
-            },
-            {
-                "relativePath": "splitter.tsx",
-                "test": false,
-                "name": "splitter.tsx"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/splitter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
