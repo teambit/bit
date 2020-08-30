@@ -146,6 +146,11 @@
                 "name": "build-pipe.ts"
             },
             {
+                "relativePath": "build.cmd.ts",
+                "test": false,
+                "name": "build.cmd.ts"
+            },
+            {
                 "relativePath": "builder.aspect.ts",
                 "test": false,
                 "name": "builder.aspect.ts"
@@ -179,11 +184,6 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "run.cmd.tsx",
-                "test": false,
-                "name": "run.cmd.tsx"
             },
             {
                 "relativePath": "task-process.ts",
@@ -282,6 +282,35 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/bundler",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "cache": {
+        "files": [
+            {
+                "relativePath": "cache.aspect.ts",
+                "test": false,
+                "name": "cache.aspect.ts"
+            },
+            {
+                "relativePath": "cache.main.runtime.ts",
+                "test": false,
+                "name": "cache.main.runtime.ts"
+            },
+            {
+                "relativePath": "cache.spec.ts",
+                "test": false,
+                "name": "cache.spec.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/cache",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -1291,6 +1320,11 @@
                 "relativePath": "runtime/env-runtime.ts",
                 "test": false,
                 "name": "env-runtime.ts"
+            },
+            {
+                "relativePath": "runtime/envs-execution-result.ts",
+                "test": false,
+                "name": "envs-execution-result.ts"
             },
             {
                 "relativePath": "runtime/index.ts",
@@ -3780,6 +3814,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "open-browser.ts",
+                "test": false,
+                "name": "open-browser.ts"
             },
             {
                 "relativePath": "start.cmd.tsx",

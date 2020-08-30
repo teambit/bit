@@ -1,3 +1,4 @@
+import prettyTime from 'pretty-time';
 import type { Logger } from './logger';
 
 /**
@@ -16,7 +17,7 @@ export class LongProcessLogger {
     private processDescription: string,
     private totalItems?: number,
     private currentItem = 0,
-    private startTime = new Date().getTime()
+    private startTime = process.hrtime()
   ) {
     this.start();
   }
@@ -29,8 +30,8 @@ export class LongProcessLogger {
   }
 
   end() {
-    const duration = new Date().getTime() - this.startTime;
-    const message = `${this.processDescription} (completed in ${duration}ms)`;
+    const duration = process.hrtime(this.startTime);
+    const message = `${this.processDescription} (completed in ${prettyTime(duration)})`;
     this.logAndConsole(message);
   }
 
