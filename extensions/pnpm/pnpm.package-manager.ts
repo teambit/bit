@@ -6,7 +6,9 @@ import {
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
+  PackageManagerResolveRemoteVersionOptions,
 } from '@teambit/dependency-resolver';
+import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
@@ -21,6 +23,7 @@ export class PnpmPackageManager implements PackageManager {
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
+    // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir
@@ -41,12 +44,16 @@ export class PnpmPackageManager implements PackageManager {
       components,
       options
     );
-    const rootManifest = workspaceManifest.toJson({ includeDir: true, copyPeerToRuntime: true });
+    const rootManifest = workspaceManifest.toJson({
+      includeDir: true,
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+    });
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap,
       // In case of not deduping we want to install peers inside the components
-      !options.dedupe
+      // !options.dedupe
+      installOptions.copyPeerToRuntimeOnComponents
     );
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
@@ -67,5 +74,21 @@ export class PnpmPackageManager implements PackageManager {
       }
       return acc;
     }, {});
+  }
+
+  async resolveRemoteVersion(
+    packageName: string,
+    options: PackageManagerResolveRemoteVersionOptions
+  ): Promise<ResolvedPackageVersion> {
+    // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { resolveRemoteVersion } = require('./lynx');
+    return resolveRemoteVersion(
+      packageName,
+      options.rootDir,
+      options.cacheRootDir,
+      options.fetchToCache,
+      options.update
+    );
   }
 }

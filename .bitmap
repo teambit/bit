@@ -146,6 +146,11 @@
                 "name": "build-pipe.ts"
             },
             {
+                "relativePath": "build.cmd.ts",
+                "test": false,
+                "name": "build.cmd.ts"
+            },
+            {
                 "relativePath": "builder.aspect.ts",
                 "test": false,
                 "name": "builder.aspect.ts"
@@ -179,11 +184,6 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "run.cmd.tsx",
-                "test": false,
-                "name": "run.cmd.tsx"
             },
             {
                 "relativePath": "task-process.ts",
@@ -282,6 +282,35 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/bundler",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "cache": {
+        "files": [
+            {
+                "relativePath": "cache.aspect.ts",
+                "test": false,
+                "name": "cache.aspect.ts"
+            },
+            {
+                "relativePath": "cache.main.runtime.ts",
+                "test": false,
+                "name": "cache.main.runtime.ts"
+            },
+            {
+                "relativePath": "cache.spec.ts",
+                "test": false,
+                "name": "cache.spec.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/cache",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -953,6 +982,21 @@
                 "name": "config.ts"
             },
             {
+                "relativePath": "exceptions/config-dir-not-defined.tsx",
+                "test": false,
+                "name": "config-dir-not-defined.tsx"
+            },
+            {
+                "relativePath": "exceptions/extension-already-configured.tsx",
+                "test": false,
+                "name": "extension-already-configured.tsx"
+            },
+            {
+                "relativePath": "exceptions/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "exceptions/invalid-config-file.tsx",
                 "test": false,
                 "name": "invalid-config-file.tsx"
@@ -1015,6 +1059,11 @@
                 "relativePath": "dependency-resolver.main.runtime.ts",
                 "test": false,
                 "name": "dependency-resolver.main.runtime.ts"
+            },
+            {
+                "relativePath": "dependency-version-resolver.ts",
+                "test": false,
+                "name": "dependency-version-resolver.ts"
             },
             {
                 "relativePath": "exceptions/index.ts",
@@ -1291,6 +1340,11 @@
                 "relativePath": "runtime/env-runtime.ts",
                 "test": false,
                 "name": "env-runtime.ts"
+            },
+            {
+                "relativePath": "runtime/envs-execution-result.ts",
+                "test": false,
+                "name": "envs-execution-result.ts"
             },
             {
                 "relativePath": "runtime/index.ts",
@@ -3782,6 +3836,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "open-browser.ts",
+                "test": false,
+                "name": "open-browser.ts"
+            },
+            {
                 "relativePath": "start.cmd.tsx",
                 "test": false,
                 "name": "start.cmd.tsx"
@@ -4118,6 +4177,16 @@
                 "relativePath": "eject-conf.cmd.tsx",
                 "test": false,
                 "name": "eject-conf.cmd.tsx"
+            },
+            {
+                "relativePath": "exceptions/dependency-type-not-supported-in-policy.ts",
+                "test": false,
+                "name": "dependency-type-not-supported-in-policy.ts"
+            },
+            {
+                "relativePath": "exceptions/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "index.ts",

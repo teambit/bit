@@ -1,8 +1,11 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
+import type { Config } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
+import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
@@ -10,22 +13,27 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
-import R from 'ramda';
+import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 
-import { ROOT_NAME } from './constants';
+import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
 import { DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
+import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
 import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
-import { PackageManager } from './package-manager';
+import { PackageManager, ResolvedPackageVersion } from './package-manager';
 import {
   DependenciesObjectDefinition,
   DependenciesPolicy,
+  DependencyLifecycleType,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
+  DepObjectKeyName,
+  PolicyDep,
   WorkspaceDependenciesPolicy,
 } from './types';
 
@@ -36,6 +44,28 @@ export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) =>
 
 export type GetInstallerOptions = {
   cacheRootDirectory?: string;
+};
+
+export type GetVersionResolverOptions = {
+  cacheRootDirectory?: string;
+};
+
+export type UpdatePolicyOptions = {
+  updateExisting: boolean;
+};
+
+export type UpdatedPackage = {
+  packageName: string;
+  newVersion: string;
+  newLifecycleType: DependencyLifecycleType;
+  oldVersion: string;
+  oldLifecycleType: DependencyLifecycleType;
+};
+
+export type UpdatePolicyResult = {
+  addedPackages: ResolvedPackageVersion[];
+  existingPackages: PolicyDep[];
+  updatedPackages: UpdatedPackage[];
 };
 
 export class DependencyResolverMain {
@@ -56,6 +86,8 @@ export class DependencyResolverMain {
     private envs: EnvsMain,
 
     private logger: Logger,
+
+    private configAspect: Config,
 
     private packageManagerSlot: PackageManagerSlot
   ) {}
@@ -138,8 +170,102 @@ export class DependencyResolverMain {
     return new DependencyInstaller(packageManager, cacheRootDir);
   }
 
+  getVersionResolver(options: GetVersionResolverOptions = {}) {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+
+    if (!packageManager) {
+      throw new PackageManagerNotFound(this.config.packageManager);
+    }
+
+    if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
+      this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
+      fs.ensureDirSync(cacheRootDir);
+    }
+    // TODO: we should somehow pass the cache root dir to the package manager constructor
+    return new DependencyVersionResolver(packageManager, cacheRootDir);
+  }
+
   get packageManagerName(): string {
     return this.config.packageManager;
+  }
+
+  updateRootPolicy(newDeps: PolicyDep[], options?: UpdatePolicyOptions): WorkspaceDependenciesPolicy {
+    const rootPolicy = this.config.policy ?? {};
+    this.config.policy = rootPolicy;
+    this.updatePolicy(this.config.policy, newDeps, options);
+    this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
+      overrideExisting: true,
+      ignoreVersion: true,
+    });
+    return this.config.policy;
+  }
+
+  updatePolicy(
+    existingPolicy: DependenciesPolicy,
+    newDeps: PolicyDep[],
+    options?: UpdatePolicyOptions
+  ): UpdatePolicyResult {
+    const defaultOptions: UpdatePolicyOptions = {
+      updateExisting: false,
+    };
+    const calculatedOpts = Object.assign({}, defaultOptions, options);
+    const addedPackages: ResolvedPackageVersion[] = [];
+    const existingPackages: PolicyDep[] = [];
+    const updatedPackages: UpdatedPackage[] = [];
+    newDeps.forEach((dep) => {
+      const policyDep = this.findInPolicy(existingPolicy, dep.packageName);
+      if (!policyDep) {
+        addedPackages.push(dep);
+        this.addDepToPolicy(existingPolicy, dep);
+      } else {
+        existingPackages.push(policyDep);
+        if (calculatedOpts?.updateExisting) {
+          const updatedPackage: UpdatedPackage = {
+            packageName: dep.packageName,
+            newVersion: dep.version,
+            newLifecycleType: dep.lifecycleType,
+            oldVersion: policyDep.version,
+            oldLifecycleType: policyDep.lifecycleType,
+          };
+          updatedPackages.push(updatedPackage);
+          const oldKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[policyDep.lifecycleType];
+          delete existingPolicy[oldKeyName][dep.packageName];
+          this.addDepToPolicy(existingPolicy, dep);
+        }
+      }
+    });
+    const result: UpdatePolicyResult = {
+      addedPackages,
+      existingPackages,
+      updatedPackages,
+    };
+    return result;
+  }
+
+  async persistConfig(workspaceDir?: string) {
+    return this.configAspect.workspaceConfig?.write({ dir: workspaceDir });
+  }
+
+  private addDepToPolicy(policy: DependenciesPolicy, dep: PolicyDep): void {
+    const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycleType];
+    policy[keyName] = policy[keyName] || {};
+    policy[keyName][dep.packageName] = dep.version;
+    policy[keyName] = sortObject(policy[keyName]);
+  }
+
+  findInPolicy(policy: DependenciesPolicy, packageName: string): PolicyDep | undefined {
+    let result;
+    forEachObjIndexed((depObject, keyName: DepObjectKeyName) => {
+      if (!result && depObject[packageName]) {
+        result = {
+          packageName,
+          version: depObject[packageName],
+          lifecycleType: LIFECYCLE_TYPE_BY_KEY_NAME[keyName],
+        };
+      }
+    }, policy);
+    return result;
   }
 
   /**
@@ -182,7 +308,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -197,13 +323,20 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt]: [EnvsMain, LoggerMain],
+    [envs, loggerExt, configMain]: [EnvsMain, LoggerMain, Config],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
-    const dependencyResolver = new DependencyResolverMain(config, policiesRegistry, envs, logger, packageManagerSlot);
+    const dependencyResolver = new DependencyResolverMain(
+      config,
+      policiesRegistry,
+      envs,
+      logger,
+      configMain,
+      packageManagerSlot
+    );
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {

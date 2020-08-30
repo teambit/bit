@@ -1,19 +1,23 @@
+import { Logger } from '@teambit/logger';
 import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
 import { join } from 'path';
+import chalk from 'chalk';
 
 import { NoTestFilesFound } from './exceptions';
 import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-export class TesterService implements EnvService {
+export class TesterService implements EnvService<TestResults> {
   constructor(
     readonly workspace: Workspace,
     /**
      * regex used to identify which files to test.
      */
-    readonly testsRegex: string
+    readonly testsRegex: string,
+
+    private logger: Logger
   ) {}
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
@@ -32,6 +36,8 @@ export class TesterService implements EnvService {
     if (!testMatch.length) {
       throw new NoTestFilesFound(this.testsRegex);
     }
+
+    this.logger.console(`testing ${context.components.length} components with environment ${chalk.cyan(context.id)}\n`);
 
     const testerContext = Object.assign(context, {
       release: false,

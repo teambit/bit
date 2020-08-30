@@ -12,7 +12,7 @@ export class PublishDryRunTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuildResults> {
     this.publisher.options.dryRun = true;
-    const capsules = context.capsuleGraph.capsules.getAllCapsules();
+    const capsules = context.capsuleGraph.seedersCapsules;
     const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.config.extensions));
     this.logger.info(`going to run publish dry-run on ${capsulesToPublish.length} out of ${capsules.length}`);
     const results = await this.publisher.publishMultipleCapsules(capsulesToPublish);

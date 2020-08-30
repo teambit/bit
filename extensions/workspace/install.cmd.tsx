@@ -9,17 +9,19 @@ type InstallCmdOptions = {
   variants: string;
   lifecycleType: DependencyLifecycleType;
   skipDedupe: boolean;
+  updateExisting: boolean;
 };
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'install dependencies';
+  description = 'Install dependencies';
   alias = 'in';
   group = 'component';
   shortDescription = '';
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
     ['t', 'type [lifecycleType]', 'runtime (default), dev or peer dependency'],
+    ['u', 'update-existing [updateExisting]', 'update existing dependencies version and types'],
     ['', 'skip-dedupe [skipDedupe]', 'do not dedupe dependencies on installation'],
   ] as CommandOptions;
 
@@ -37,15 +39,15 @@ export default class InstallCmd implements Command {
 
   async report([packages]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
-    this.logger.consoleTitle(`resolving dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
-    // const idsP = rawIds.map((rawId) => this.workspace.resolveComponentId(rawId));
-    // const ids = await Promise.all(idsP);
-    this.logger.consoleSuccess('dependencies has been resolved');
+    this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
+
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
       lifecycleType: options.lifecycleType,
       dedupe: !options.skipDedupe,
+      updateExisting: options.updateExisting,
     };
+    this.logger.off();
     const components = await this.workspace.install(packages, installOpts);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);

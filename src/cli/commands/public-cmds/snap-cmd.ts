@@ -26,6 +26,7 @@ export default class Snap implements LegacyCommand {
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
   ] as CommandOptions;
   loader = true;
+  private = true;
   migration = true;
 
   action(

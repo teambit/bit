@@ -2,6 +2,7 @@ import { AspectAspect } from '@teambit/aspect';
 import AspectLoaderAspect from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
 import { BundlerAspect } from '@teambit/bundler';
+import { CacheAspect } from '@teambit/cache';
 import { CLIAspect } from '@teambit/cli';
 import { CompilerAspect } from '@teambit/compiler';
 import { ComponentAspect } from '@teambit/component';
@@ -79,6 +80,7 @@ export const manifestsMap = {
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,
+  [CacheAspect.id]: CacheAspect,
 };
 
 export function isCoreAspect(id: string) {
