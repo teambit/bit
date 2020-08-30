@@ -4,6 +4,7 @@ import defaultReporter from '@pnpm/default-reporter';
 // import { createFetchFromRegistry } from '@pnpm/fetch';
 import { LogBase, streamParser } from '@pnpm/logger';
 // import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
 import { createNewStoreController } from '@pnpm/store-connection-manager';
 // TODO: this should be taken from - @pnpm/store-connection-manager
@@ -107,10 +108,12 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
 
 export async function resolveRemoteVersion(
   packageName: string,
-  rootDir: string,
-  storeDir: string,
-  fetchToCache = true,
-  update = true
+  _rootDir: string,
+  _storeDir: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _fetchToCache = true,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _update = true
 ): Promise<ResolvedPackageVersion> {
   // const storeController = await createStoreController(storeDir);
   // const wantedDep: WantedDependency = {
@@ -129,6 +132,8 @@ export async function resolveRemoteVersion(
   //   registry
   // };
   // const res = storeController.requestPackage(wantedDep, opts);
+
+  // TODO: change to use pnpm API. this is just a workaround
   const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
   const packageNameOnly = packageName.split('@')[0];
   return {
