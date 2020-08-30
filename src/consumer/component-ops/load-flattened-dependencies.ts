@@ -53,9 +53,12 @@ export class FlattenedDependencyLoader {
           const dependency = await this.loadComponentsFunc([dependencyId]);
           if (!dependency.length || !dependency[0])
             throw new Error(`unable to load ${dependencyId.toString()} using custom load function`);
-          return dependency[0];
+          this.cache[dependencyId.toString()] = dependency[0];
+        } else {
+          this.cache[dependencyId.toString()] = await this.consumer.loadComponentForCapsule(dependencyId);
         }
-        return this.consumer.loadComponentForCapsule(dependencyId);
+
+        return this.cache[dependencyId.toString()];
       }
       // for capsule, a dependency might have been installed as a package in the workspace, and as
       // such doesn't have a componentMap, which result in not stripping the sharedDir.
@@ -83,6 +86,9 @@ export class FlattenedDependencyLoader {
     deps.push(...flattenedFromModel);
   }
 
+  // @todo: in case of out-of-sync, when a component has versions in the objects but the .bitmap
+  // has the component without any version, this function result in "Maximum call stack size
+  // exceeded" error.
   async loadFlattenedFromFsRecursively(components: Component[]) {
     const currentIds = BitIds.fromArray(components.map((c) => c.id));
     const ids = R.flatten(components.filter((c) => c.loadedFromFileSystem).map((c) => c.getAllDependenciesIds()));

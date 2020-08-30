@@ -4,12 +4,15 @@ import defaultReporter from '@pnpm/default-reporter';
 // import { createFetchFromRegistry } from '@pnpm/fetch';
 import { LogBase, streamParser } from '@pnpm/logger';
 // import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
-import { StoreController } from '@pnpm/package-store';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
 import { createNewStoreController } from '@pnpm/store-connection-manager';
 // TODO: this should be taken from - @pnpm/store-connection-manager
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
+import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
+import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
 // import { createResolver } from './create-resolver';
@@ -101,4 +104,41 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
     streamParser,
   });
   await mutateModules(packagesToBuild, opts);
+}
+
+export async function resolveRemoteVersion(
+  packageName: string,
+  _rootDir: string,
+  _storeDir: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _fetchToCache = true,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _update = true
+): Promise<ResolvedPackageVersion> {
+  // const storeController = await createStoreController(storeDir);
+  // const wantedDep: WantedDependency = {
+  //   alias: packageName,
+  // };
+  // const preferredVersions: PreferredVersions = {
+  //   [packageName]: 'range'
+  // };
+  // const opts: RequestPackageOptions = {
+  //   skipFetch: !fetchToCache,
+  //   update,
+  //   downloadPriority: 1,
+  //   preferredVersions,
+  //   lockfileDir: rootDir,
+  //   projectDir: rootDir,
+  //   registry
+  // };
+  // const res = storeController.requestPackage(wantedDep, opts);
+
+  // TODO: change to use pnpm API. this is just a workaround
+  const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
+  const packageNameOnly = packageName.split('@')[0];
+  return {
+    packageName: packageNameOnly,
+    version: stdout,
+  };
+  // npm view ${packageName} version
 }

@@ -78,6 +78,7 @@ export class TaskProcess {
 
   private async getFilesByArtifacts(capsule: Capsule): Promise<string[]> {
     const filesP = this.taskResult.artifacts.map(async (artifact) => {
+      if (artifact.fileName) return artifact.fileName;
       return capsule.getAllFilesPaths(artifact.dirName);
     });
     return flatten(await Promise.all(filesP));

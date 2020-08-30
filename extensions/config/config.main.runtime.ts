@@ -11,6 +11,8 @@ const ConfigMain = {
   provider: configProvider,
 };
 
+export { ConfigMain };
+
 export default ConfigMain;
 
 ConfigAspect.addRuntime(ConfigMain);

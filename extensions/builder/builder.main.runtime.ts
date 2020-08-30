@@ -14,7 +14,7 @@ import { ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
-import { BuilderCmd } from './run.cmd';
+import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './types';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
@@ -39,13 +39,13 @@ export class BuilderMain {
     private taskSlot: TaskSlot
   ) {}
 
-  async tagListener(ids: BitId[]): Promise<Component[]> {
+  async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     // @todo: some processes needs dependencies/dependents of the given ids
     const componentIds = ids.map(ComponentID.fromLegacy);
     const components = await this.workspace.getMany(componentIds);
     const envsExecutionResults = await this.build(components);
     envsExecutionResults.throwErrorsIfExist();
-    return components;
+    return envsExecutionResults;
   }
 
   /**
@@ -55,6 +55,7 @@ export class BuilderMain {
    * env. at the end, the results contain the data and errors per env.
    */
   async build(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+    await this.workspace.createNetwork(components.map((c) => c.id.toString()));
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
 

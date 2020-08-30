@@ -17,11 +17,13 @@ export class CapsuleListCmd implements Command {
 
   async report() {
     const list = await this.isolator.list(this.workspace.path);
-    const rootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
+    const workspaceRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
+    const scopeRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
     // TODO: improve output
     return chalk.green(`found ${list.capsules.length} capsule(s) for workspace ${list.workspace}.
-capsules root-dir: ${rootDir}
-use --json to get the list of all capsules`);
+workspace capsules root-dir: ${workspaceRootDir}
+scope capsules root-dir: ${scopeRootDir}
+use --json to get the list of all workspace capsules`);
   }
 
   async json() {

@@ -155,7 +155,7 @@
     "@teambit/explorer.ui.component-card": "^0.0.1",
     "@teambit/explorer.ui.component-grid": "^0.0.1",
     "@teambit/gitconfig": "^2.0.6",
-    "@teambit/harmony": "0.2.4",
+    "@teambit/harmony": "0.2.5",
     "@testing-library/jest-dom": "^5.9.0",
     "@types/levelup": "^4.3.0",
     "@types/node-sass": "^4.11.1",
@@ -426,7 +426,7 @@
     "eslint-plugin-simple-import-sort": "^5.0.3",
     "eslint-plugin-unicorn": "^12.1.0",
     "gh-release": "^3.5.0",
-    "husky": "^0.14.3",
+    "husky": "^4.2.5",
     "lint-staged": "^7.3.0",
     "mocha": "^5.1.1",
     "mocha-appveyor-reporter": "^0.4.2",
@@ -454,12 +454,13 @@
   "engines": {
     "node": ">=10.14.2"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
-    "*.{ts,js,tsx}": [
-      "prettier --write",
-      "git add"
-    ],
-    "*.{css,scss}": [
+    "*.{ts,js,tsx,css,scss}": [
       "prettier --write",
       "git add"
     ]

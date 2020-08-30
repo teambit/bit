@@ -34,7 +34,13 @@ interface SimpleGroupedDependencies {
  */
 const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
   const grouped = R.groupBy((item) => {
-    if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
+    if (
+      (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) &&
+      // todo: this is a hack. we need to make sure we can distinguish between non-components and components in the same scope
+      !item.includes('node_modules/@teambit/harmony') &&
+      !item.includes('node_modules/@teambit/capsule') &&
+      !item.includes('node_modules/@teambit/any-fs')
+    ) {
       return 'bits';
     }
     return item.includes('node_modules') ? 'packages' : 'files';

@@ -337,9 +337,10 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
  * @returns
  */
 function updateComponentsByTagResult(components: Component[]) {
-  return (envsResult: any[]) => {
-    if (!envsResult || envsResult.length === 0) return;
-    envsResult.map(updateComponentsByTagEnvResultsComponents(components));
+  // we can't import types from harmony to legacy, but the type here is the type returned by tagListener()
+  return (envsResult: { results: any[] }) => {
+    if (!envsResult || !envsResult.results || envsResult.results.length === 0) return;
+    envsResult.results.map(updateComponentsByTagEnvResultsComponents(components));
   };
 }
 
@@ -350,7 +351,7 @@ function updateComponentsByTagResult(components: Component[]) {
  * @returns
  */
 function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component[]) {
-  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.res?.components);
+  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.data?.components);
 }
 
 /**
@@ -361,16 +362,13 @@ function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component
  * @returns
  */
 function updateComponentsByTagResultsComponents(componentsToUpdate: Component[], envTagResultComponents?: any[]) {
-  if (
-    !envTagResultComponents ||
-    envTagResultComponents.length === 0 ||
-    !envTagResultComponents[0] ||
-    !envTagResultComponents[0].length
-  )
+  if (!envTagResultComponents || envTagResultComponents.length === 0 || !envTagResultComponents[0]) {
     return;
+  }
+
   // Since all the services changes the same components we will only use the first service
   // This might create bugs in the future. so if you have a service which return something else, here is the place to fix it.
-  envTagResultComponents[0].map(updateComponentsByTagResultsComponent(componentsToUpdate));
+  envTagResultComponents.map(updateComponentsByTagResultsComponent(componentsToUpdate));
 }
 
 /**

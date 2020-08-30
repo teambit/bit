@@ -36,6 +36,7 @@ export class Publisher {
     }
     this.options = options;
     const capsules = await this.getComponentCapsules(componentIds);
+    // const capsules = await this.getComponentCapsulesFromScope(componentIds);
     return this.publishMultipleCapsules(capsules);
   }
 
@@ -50,7 +51,8 @@ export class Publisher {
   }
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
-    const longProcessLogger = this.logger.createLongProcessLogger('publish components', capsules.length);
+    const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
+    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.publishOneCapsule(capsule);
@@ -99,6 +101,19 @@ export class Publisher {
     this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
     const network = await this.workspace.createNetwork(idsToPublish);
     return network.seedersCapsules;
+  }
+
+  private async getComponentCapsulesFromScope(componentIdsStr: string[]): Promise<Capsule[]> {
+    const consumer = this.workspace.consumer;
+    if (consumer.isLegacy) {
+      // publish is supported on Harmony only
+      return [];
+    }
+    const idsToPublish = await this.getIdsToPublish(componentIdsStr);
+    const componentIds = await this.workspace.resolveMultipleComponentIds(idsToPublish);
+    const components = await this.workspace.scope.getMany(componentIds);
+    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.workspace.scope.path });
+    return capsules.getAllCapsules();
   }
 
   /**
