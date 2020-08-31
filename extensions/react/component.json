@@ -17,28 +17,33 @@
     "teambit.bit/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "react-app-polyfill": "+",
-          "react-refresh": "+",
-          "jest-environment-jsdom-fourteen": "+",
-          "react-native-web": "+",
-          "identity-obj-proxy": "+",
-          "jest-watch-typeahead": "+",
-          "babel-loader": "+",
-          "babel-preset-react-app": "+",
-          "style-loader": "+",
-          "css-loader": "+",
-          "sass-loader": "+",
+          "react-app-polyfill": "^1.0.6",
+          "react-refresh": "^0.8.2",
+          "jest-environment-jsdom-fourteen": "^1.0.1",
+          "react-native-web": "^0.12.2",
+          "identity-obj-proxy": "^3.0.0",
+          "url-loader": "^4.1.0",
+          "jest-watch-typeahead": "^0.6.0",
+          "babel-plugin-named-asset-import": "^0.3.6",
+          "babel-loader": "^8.1.0",
+          "babel-preset-react-app": "^9.1.2",
+          "style-loader": "^1.2.1",
+          "react-dom": "-",
+          "css-loader": "^3.6.0",
+          "sass-loader": "^8.0.2",
           "bit-bin": "-"
         },
         "devDependencies": {
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
-          "bit-bin": "-"
+          "bit-bin": "-",
+          "react-dom": "-"
         },
         "peerDependencies": {
           "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.4",
-          "graphql": "^14.3.1"
+          "bit-bin": "14.8.9-dev.7",
+          "graphql": "^14.3.1",
+          "react-dom": "^16.13.1"
         }
       }
     }
