@@ -3,19 +3,23 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Watcher } from './watcher';
 import chalk from 'chalk';
 import moment from 'moment';
+//TODO: Do not use legacy logger directly. use the logger aspect
 import logger from 'bit-bin/dist/logger/logger';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 
 export class WatchCommand implements Command {
-
   msgs = {
     onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
     onStart: (workspace) => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
-      if (verbose){
-        logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent))
+      if (verbose) {
+        logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
-      logger.console(chalk.yellow(`Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:MM:SS')})...\n`))
+      logger.console(
+        chalk.yellow(
+          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:MM:SS')})...\n`
+        )
+      );
     },
     onChange: (filePath, buildResults, verbose, duration) => {
       logger.console(`The file ${filePath} has been changed.\n\n`);
@@ -31,8 +35,8 @@ export class WatchCommand implements Command {
     },
     onError: (err) => {
       logger.console(`Watcher error ${err}`);
-    }
-  }
+    },
+  };
 
   name = 'watch';
   description = 'watch a set of components';
@@ -52,5 +56,4 @@ export class WatchCommand implements Command {
     await this.watcher.watch({ msgs: this.msgs, verbose });
     return 'watcher terminated';
   }
-  
 }

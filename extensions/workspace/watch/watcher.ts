@@ -25,7 +25,7 @@ export class Watcher {
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
 
-  async watch(opts: {msgs, verbose?: boolean}) {
+  async watch(opts: { msgs; verbose?: boolean }) {
     this.verbose = Boolean(opts.verbose);
     await this.watchAll(opts.msgs, this.verbose);
   }
@@ -46,7 +46,7 @@ export class Watcher {
         watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {
-        msgs.onReady(this.workspace, this.getWatchPathsSortByComponent(), verbose)
+        msgs.onReady(this.workspace, this.getWatchPathsSortByComponent(), verbose);
       });
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
@@ -224,6 +224,11 @@ export class Watcher {
     return [...R.flatten(paths), bitmap];
   }
 
+  /**
+   * TODO: this should be in the workspace not in the watcher
+   * there is already componentDir function that gives you the dir.
+   * you can add one more that brings all the paths.
+   */
   private getWatchPathsSortByComponent() {
     this.setTrackDirs();
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
@@ -232,7 +237,7 @@ export class Watcher {
       const trackDir = componentMap.getTrackDir();
       const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
       const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
-      return {componentId: componentId.toString(), absPaths};
+      return { componentId: componentId.toString(), absPaths };
     });
   }
 }
