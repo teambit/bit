@@ -835,15 +835,25 @@ export class Workspace implements ComponentFactory {
     const stringIds = components.map((component) => component.id.toString());
     const installer = this.dependencyResolver.getInstaller();
     const installationMap = await this.getComponentsDirectory([]);
+    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
+    const depsFromPJson = packageJson.dependencies || {};
+    const devDepsFromPJson = packageJson.devDependencies || {};
+    const peerDepsFromPJson = packageJson.peerDependencies || {};
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
     const rootDepsObject = {
       dependencies: {
+        ...depsFromPJson,
         ...workspacePolicy.dependencies,
       },
+      devDependencies: {
+        ...devDepsFromPJson,
+      },
       peerDependencies: {
+        ...peerDepsFromPJson,
         ...workspacePolicy.peerDependencies,
       },
     };
+
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
