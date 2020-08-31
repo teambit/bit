@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { ScopeMain } from './scope.main.runtime';
 
-export function scopeSchema() {
+export function scopeSchema(scopeMain: ScopeMain) {
   return {
     typeDefs: gql`
       type Scope {
@@ -38,7 +38,7 @@ export function scopeSchema() {
         },
       },
       Query: {
-        scope: () => ScopeMain,
+        scope: () => scopeMain,
       },
     },
   };
