@@ -87,12 +87,10 @@
         "apollo-link-ws": "^1.0.20",
         "apollo-utilities": "^1.3.4",
         "babel-jest": "^26.0.1",
-        "babel-loader": "^8.1.0",
         "babel-plugin-named-asset-import": "^0.3.6",
         "babel-plugin-transform-typescript-metadata": "^0.2.2",
         "babel-polyfill": "^6.26.0",
         "babel-preset-jest": "^26.3.0",
-        "babel-preset-react-app": "^9.1.2",
         "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
@@ -102,7 +100,7 @@
         "core-js": "^3.6.5",
         "cors": "^2.8.5",
         "cross-spawn": "^7.0.3",
-        "css-loader": "^3.6.0",
+
         "didyoumean": "^1.2.1",
         "express": "^4.17.1",
         "express-graphql": "^0.9.0",
@@ -116,10 +114,7 @@
         "history": "4.10.1",
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
-        "identity-obj-proxy": "^3.0.0",
         "jest": "^26.0.1",
-        "jest-environment-jsdom-fourteen": "^1.0.1",
-        "jest-watch-typeahead": "^0.6.0",
         "join-path": "^1.1.1",
         "lodash.head": "^4.0.1",
         "mime": "^2.4.6",
@@ -136,12 +131,10 @@
         "prism-react-renderer": "^1.1.1",
         "proper-lockfile": "^4.1.1",
         "react": "^16.13.1",
-        "react-app-polyfill": "^1.0.6",
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-hot-loader": "^4.12.21",
         "react-live": "^2.2.2",
-        "react-native-web": "^0.12.2",
         "react-router-dom": "^5.2.0",
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
@@ -149,12 +142,10 @@
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
-        "sass-loader": "^8.0.2",
         "semver-intersect": "^1.4.0",
         "socket.io": "^2.3.0",
         "socket.io-client": "^2.3.0",
         "string-to-color": "^2.1.3",
-        "style-loader": "^1.2.1",
         "subscriptions-transport-ws": "^0.9.16",
         "supi": "^0.41.11",
         "terser-webpack-plugin": "^4.1.0",
@@ -166,9 +157,8 @@
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
         "workbox-webpack-plugin": "^5.1.3",
-        "source-map-loader": "^1.0.0",
         "react-error-overlay": "^6.0.7",
-        "react-refresh": "^0.8.2"
+
       },
       "devDependencies": {
         "@types/cacache": "^12.0.1",
@@ -193,7 +183,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.4",
+        "bit-bin": "14.8.9-dev.5",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -223,7 +213,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.4",
+            "bit-bin": "14.8.9-dev.5",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -256,7 +246,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.4",
+            "bit-bin": "14.8.9-dev.5",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
