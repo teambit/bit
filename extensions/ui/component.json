@@ -17,22 +17,25 @@
     "teambit.bit/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "source-map-loader": "+",
-          "babel-loader": "+",
-          "babel-preset-react-app": "+",
-          "style-loader": "+",
-          "css-loader": "+",
-          "sass-loader": "+",
+          "source-map-loader": "^1.0.0",
+          "babel-loader": "^8.1.0",
+          "babel-preset-react-app": "^9.1.2",
+          "style-loader": "^1.2.1",
+          "react-dom": "-",
+          "css-loader": "^3.6.0",
+          "sass-loader": "^8.0.2",
           "bit-bin": "-"
         },
         "devDependencies": {
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
+          "react-dom": "-",
           "bit-bin": "-"
         },
         "peerDependencies": {
           "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.4",
+          "react-dom": "^16.13.1",
+          "bit-bin": "14.8.9-dev.6",
           "graphql": "^14.3.1"
         }
       }
