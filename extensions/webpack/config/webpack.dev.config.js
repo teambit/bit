@@ -77,6 +77,11 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
 
+      // quiet: true,
+
+      injectClient: false,
+
+      overlay: false,
       // Enable hot reloading
       hot: true,
 
