@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.5",
+  "version": "14.8.9-dev.6",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -185,6 +185,7 @@
     "unionfs": "^3.0.2",
     "uniqid": "^5.2.0",
     "user-home": "^2.0.0",
+    "core-js": "^3.6.5",
     "uuid": "^3.4.0",
     "v8-compile-cache": "^2.1.1",
     "validate-npm-package-name": "^3.0.0",
