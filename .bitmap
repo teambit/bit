@@ -2476,6 +2476,11 @@
                 "name": "html.js"
             },
             {
+                "relativePath": "webpack/refresh.js",
+                "test": false,
+                "name": "refresh.js"
+            },
+            {
                 "relativePath": "webpack/webpack.config.ts",
                 "test": false,
                 "name": "webpack.config.ts"
