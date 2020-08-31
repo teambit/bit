@@ -316,7 +316,7 @@ export class DependencyResolverMain {
     /**
      * default package manager.
      */
-    packageManager: 'teambit.bit/npm',
+    packageManager: 'teambit.bit/pnpm',
     policy: {},
     packageManagerArgs: [],
     strictPeerDependencies: true,

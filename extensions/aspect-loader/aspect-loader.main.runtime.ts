@@ -1,15 +1,17 @@
+import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import { ExtensionManifest, Harmony } from '@teambit/harmony';
+import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { difference } from 'ramda';
-
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { CannotLoadExtension } from './exceptions';
+import { getAspectDef } from './core-aspects';
 
 export type AspectDescriptor = {
   /**
@@ -31,10 +33,25 @@ export type ResolvedAspect = {
 };
 
 export class AspectLoaderMain {
-  constructor(private logger: Logger, private harmony: Harmony) {}
+  constructor(private logger: Logger, private envs: EnvsMain, private harmony: Harmony) {}
 
-  static runtime = MainRuntime;
-  static dependencies = [LoggerAspect];
+  private async getCompiler(component: Component) {
+    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    return env?.getCompiler();
+  }
+
+  async getRuntimePath(component: Component, modulePath: string, runtime: string): Promise<string | null> {
+    const runtimeFile = component.filesystem.files.find((file: any) => {
+      return file.relative.includes(`.${runtime}.runtime`);
+    });
+
+    // @david we should add a compiler api for this.
+    if (!runtimeFile) return null;
+    const compiler = await this.getCompiler(component);
+    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
+
+    return join(modulePath, dist);
+  }
 
   getDescriptor(id: string): AspectDescriptor {
     const instance = this.harmony.get<any>(id);
@@ -52,11 +69,6 @@ export class AspectLoaderMain {
     };
   }
 
-  static async provider([loggerExt]: [LoggerMain], config, slots, harmony: Harmony) {
-    const logger = loggerExt.createLogger(AspectLoaderAspect.id);
-    return new AspectLoaderMain(logger, harmony);
-  }
-
   getNotLoadedConfiguredExtensions() {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());
     const loadedExtensions = this.harmony.extensionsIds;
@@ -66,6 +78,40 @@ export class AspectLoaderMain {
 
   loadDefinition(props: AspectDefinitionProps): AspectDefinition {
     return AspectDefinition.from(props);
+  }
+
+  private _coreAspects: Aspect[] = [];
+
+  get coreAspects() {
+    return this._coreAspects;
+  }
+
+  setCoreAspects(aspects: Aspect[]) {
+    this._coreAspects = aspects;
+    return this;
+  }
+
+  getCoreAspectIds() {
+    return this.coreAspects.map((aspect) => aspect.id).concat(this._reserved);
+  }
+
+  private _reserved = ['teambit.bit/bit', 'teambit.bit/config'];
+
+  getUserAspects(): string[] {
+    const coreAspectIds = this.getCoreAspectIds();
+    return difference(this.harmony.extensionsIds, coreAspectIds);
+  }
+
+  async getCoreAspectDefs(runtimeName: string) {
+    const defs = await Promise.all(
+      this.coreAspects.map(async (aspect) => {
+        const id = aspect.id;
+        const rawDef = await getAspectDef(id, runtimeName);
+        return this.loadDefinition(rawDef);
+      })
+    );
+
+    return defs.filter((def) => def.runtimePath);
   }
 
   async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
@@ -150,6 +196,14 @@ export class AspectLoaderMain {
         throw e;
       }
     }
+  }
+
+  static runtime = MainRuntime;
+  static dependencies = [LoggerAspect, EnvsAspect];
+
+  static async provider([loggerExt, envs]: [LoggerMain, EnvsMain], config, slots, harmony: Harmony) {
+    const logger = loggerExt.createLogger(AspectLoaderAspect.id);
+    return new AspectLoaderMain(logger, envs, harmony);
   }
 }
 

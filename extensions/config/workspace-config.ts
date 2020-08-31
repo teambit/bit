@@ -188,6 +188,7 @@ export class WorkspaceConfig implements HostConfig {
       };
       const templateFile = await getTemplateFile();
       const templateStr = templateFile.toString();
+
       const template = parse(templateStr);
       // TODO: replace this assign with some kind of deepAssign that keeps the comments
       // right now the comments above the internal props are overrides after the assign

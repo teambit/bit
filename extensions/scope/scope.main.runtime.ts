@@ -31,7 +31,7 @@ import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
-
+import { join } from 'path';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
@@ -120,16 +120,40 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
+  async getResolvedAspects(components: Component[]) {
+    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path });
+
+    return capsules.map(({ capsule }) => {
+      return RequireableComponent.fromCapsule(capsule);
+    });
+  }
+
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
-    const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), { baseDir: this.path });
+    const resolvedAspects = await this.getResolvedAspects(await this.getMany(componentIds));
 
-    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
-      return RequireableComponent.fromCapsule(capsule);
-    });
     // Always throw an error when can't load scope extension
-    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
+  }
+
+  async resolveAspects(runtimeName: string) {
+    const userAspectsIds = this.aspectLoader.getUserAspects();
+    const componentIds = await Promise.all(userAspectsIds.map((id) => ComponentID.fromString(id)));
+    const components = await this.getMany(componentIds);
+    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path });
+    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
+      const capsule = capsules.getCapsule(component.id);
+      if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
+      const localPath = capsule.path;
+
+      return {
+        aspectPath: localPath,
+        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+      };
+    });
+
+    return aspectDefs.concat(await this.aspectLoader.getCoreAspectDefs(runtimeName));
   }
 
   /**

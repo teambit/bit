@@ -6,7 +6,7 @@ require('v8-compile-cache');
 
 import './hook-require';
 
-import { getAspectDir } from '@teambit/aspect-loader';
+import { getAspectDir, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
@@ -20,7 +20,7 @@ import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
-
+import { manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 
@@ -84,6 +84,9 @@ async function runCLI() {
   await loadLegacyConfig(config);
   const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+
+  const aspectLoader = harmony.get<AspectLoaderMain>('teambit.bit/aspect-loader');
+  aspectLoader.setCoreAspects(Object.values(manifestsMap));
 
   const cli = harmony.get<CLIMain>('teambit.bit/cli');
   await cli.run();
