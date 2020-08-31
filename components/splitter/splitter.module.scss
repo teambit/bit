@@ -1,8 +1,0 @@
-.collapsibleSplitter {
-  width: 2px;
-  transition: background-color 300ms ease-in-out;
-  &:hover {
-    transition-delay: 0.3s;
-    background-color: var(--base-color) !important;
-  }
-}

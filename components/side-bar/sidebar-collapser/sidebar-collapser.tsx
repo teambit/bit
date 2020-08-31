@@ -21,13 +21,13 @@ type CollapserProps = {
   placement?: 'right' | 'left';
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Collapser({ isOpen, id, tooltipContent, placement = 'right', onClick, ...rest }: CollapserProps) {
+export function Collapser({ isOpen, id, tooltipContent, placement = 'right', onClick, className, ...rest }: CollapserProps) {
   const icon = `${placement}-rounded-corners`;
   return (
     <div
       {...rest}
       onClick={onClick}
-      className={classNames(styles.collapser, styles[placement], { [styles.open]: isOpen })}
+      className={classNames(styles.collapser, styles[placement], isOpen && styles.open, className)}
       data-tip=""
       data-for={id}
     >
