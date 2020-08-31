@@ -266,15 +266,6 @@
           }
         }
       }
-    },
-    "extensions/webpack": {
-      "teambit.bit/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "postcss-loader": "^3.0.0"
-          }
-        }
-      }
     }
   }
 }

@@ -22,7 +22,12 @@
           "babel-preset-react-app": "^9.1.2",
           "style-loader": "^1.2.1",
           "react-dom": "-",
+          "file-loader": "^6.0.0",
+          "resolve-url-loader": "^3.1.1",
+          "babel-plugin-named-asset-import": "^0.3.6",
           "css-loader": "^3.6.0",
+          "url-loader": "^4.1.0",
+          "postcss-loader": "^3.0.0",
           "sass-loader": "^8.0.2",
           "bit-bin": "-"
         },
