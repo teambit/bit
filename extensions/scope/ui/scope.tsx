@@ -1,9 +1,8 @@
-import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/staged-components.corner';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
+import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/staged-components.top-bar';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import React, { useReducer } from 'react';
@@ -35,24 +34,26 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
   return (
     <ScopeProvider scope={scope}>
       <div className={styles.scope}>
-        <TopBar Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
-        <TupleSplitPane ratio="264px" max={60} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-          <div className={styles.sidebarContainer}>
+        <TopBar className={styles.topbar} Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
+
+        <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
+          <Pane className={styles.sidebar}>{sidebar}</Pane>
+          <HoverSplitter className={styles.splitter}>
             <Collapser
               id="scopeSidebarCollapser"
               isOpen={isSidebarOpen}
-              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
+              onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
               onClick={handleSidebarToggle}
+              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
             />
-            <div className={styles.sidebar}>{sidebar}</div>
-          </div>
-          <div className={styles.main}>
+          </HoverSplitter>
+          <Pane>
             <SlotRouter slot={routeSlot} />
             <Route exact path="/">
               <ScopeOverview />
             </Route>
-          </div>
-        </TupleSplitPane>
+          </Pane>
+        </SplitPane>
       </div>
     </ScopeProvider>
   );
