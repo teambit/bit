@@ -91,6 +91,7 @@
   "dependencies": {
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
+    "@typescript-eslint/typescript-estree": "^2.29.0",
     "babel-runtime": "^6.23.0",
     "@vuedoc/parser": "^2.3.0",
     "ajv": "^6.11.0",
@@ -225,7 +226,6 @@
     "@typescript-eslint/parser": "^2.28.0",
     "@types/node-sass": "^4.11.1",
     "@types/semver": "^7.3.1",
-    "@typescript-eslint/typescript-estree": "^2.29.0",
     "babel-eslint": "^9.0.0",
     "chai": "^4.1.2",
     "chai-arrays": "^1.0.0",
