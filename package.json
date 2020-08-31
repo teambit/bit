@@ -91,6 +91,7 @@
   "dependencies": {
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
+    "babel-runtime": "^6.23.0",
     "@vuedoc/parser": "^2.3.0",
     "ajv": "^6.11.0",
     "app-module-path": "^2.2.0",
