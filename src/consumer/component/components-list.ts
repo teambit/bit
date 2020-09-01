@@ -1,5 +1,4 @@
 import * as path from 'path';
-import semver from 'semver';
 import R from 'ramda';
 import Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';

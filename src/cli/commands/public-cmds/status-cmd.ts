@@ -4,7 +4,7 @@ import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
-import { immutableUnshift, isString } from '../../../utils';
+import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
 import { ModelComponent } from '../../../scope/models';

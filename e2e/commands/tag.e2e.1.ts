@@ -1,5 +1,4 @@
-// covers also init, create, tag, import and export commands
-
+import chalk from 'chalk';
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -8,7 +7,6 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import { NOTHING_TO_TAG_MSG } from '../../src/api/consumer/lib/tag';
-import chalk from 'chalk';
 
 const assertArrays = require('chai-arrays');
 
