@@ -62,7 +62,7 @@ export async function tagAction(tagParams: TagParams) {
 
   const idHasWildcard = hasWildcard(id);
 
-  const isAll = all || scope || idHasWildcard
+  const isAll = all || scope || idHasWildcard;
 
   const validExactVersion = _validateVersion(exactVersion);
   const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
@@ -77,6 +77,7 @@ export async function tagAction(tagParams: TagParams) {
     includeImported,
     persist,
     force,
+    isAll,
     id
   );
   if (R.isEmpty(bitIds)) return null;
@@ -118,6 +119,7 @@ async function getComponentsToTag(
   includeImported: boolean,
   persist: boolean,
   force: boolean,
+  isAll: boolean,
   id?: string,
 ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
   const warnings = [];
@@ -132,7 +134,7 @@ async function getComponentsToTag(
   }
   const componentsList = new ComponentsList(consumer);
   const softTaggedComponents = componentsList.listSoftTaggedComponents();
-  if (!id && persist) {
+  if (!isAll && persist) {
     return { bitIds: softTaggedComponents, warnings: [] };
   }
 
