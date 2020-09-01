@@ -76,7 +76,7 @@
         "@teambit/evangelist.surfaces.tooltip": "0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.1",
         "@teambit/explorer.ui.component-grid": "^0.0.1",
-        "@teambit/harmony": "0.2.5",
+        "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
