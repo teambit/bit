@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import React from 'react';
 
 import { Logger } from '@teambit/logger';
-import { UIServerConsole } from './env-console';
+import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
