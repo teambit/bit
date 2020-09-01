@@ -32,6 +32,23 @@ export type ResolvedAspect = {
   runtimesPath: string | null;
 };
 
+export type MainAspect = {
+  /**
+   * path to the main aspect.
+   */
+  path: string;
+
+  /**
+   * version of the aspect.
+   */
+  version: string | undefined;
+
+  /**
+   * reference to aspect manifest.
+   */
+  aspect: Aspect;
+};
+
 export class AspectLoaderMain {
   constructor(private logger: Logger, private envs: EnvsMain, private harmony: Harmony) {}
 
@@ -122,6 +139,17 @@ export class AspectLoaderMain {
 
     const aspectDefs = await Promise.all(promises);
     return aspectDefs.filter((def) => def.runtimePath);
+  }
+
+  private _mainAspect: MainAspect;
+
+  get mainAspect() {
+    return this._mainAspect;
+  }
+
+  setMainAspect(mainAspect: MainAspect) {
+    this._mainAspect = mainAspect;
+    return this;
   }
 
   /**

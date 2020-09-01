@@ -1,3 +1,4 @@
+/* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
 // eslint-disable-next-line no-console
 process.on('uncaughtException', (err) => console.log('uncaughtException', err));
@@ -78,6 +79,24 @@ export async function requireAspects(aspect: Extension, runtime: RuntimeDefiniti
   require(resolve(`${dirPath}/${runtimeFile}`));
 }
 
+function getMainAspect() {
+  const mainAspectDir = getAspectDir(BitAspect.id);
+  let version: string | undefined;
+
+  try {
+    // eslint-disable-next-line global-require
+    version = require(`${mainAspectDir}/package.json`);
+  } catch (err) {
+    version = undefined;
+  }
+
+  return {
+    path: mainAspectDir,
+    version,
+    aspect: manifestsMap[BitAspect.id],
+  };
+}
+
 async function runCLI() {
   const config = await getConfig();
   registerCoreExtensions();
@@ -87,6 +106,7 @@ async function runCLI() {
 
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.bit/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
+  aspectLoader.setMainAspect(getMainAspect());
 
   const cli = harmony.get<CLIMain>('teambit.bit/cli');
   await cli.run();
