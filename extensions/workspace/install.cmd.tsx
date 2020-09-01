@@ -39,6 +39,7 @@ export default class InstallCmd implements Command {
 
   async report([packages]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
+    this.logger.off();
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
 
     const installOpts: WorkspaceInstallOptions = {
@@ -47,7 +48,6 @@ export default class InstallCmd implements Command {
       dedupe: !options.skipDedupe,
       updateExisting: options.updateExisting,
     };
-    this.logger.off();
     const components = await this.workspace.install(packages, installOpts);
     const endTime = Date.now();
     const executionTime = calculateTime(startTime, endTime);

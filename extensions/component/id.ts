@@ -94,6 +94,11 @@ export class ComponentID {
     return new ComponentID(legacyId);
   }
 
+  static fromLegacyString(idStr: string) {
+    const legacyId = BitId.parse(idStr, false);
+    return new ComponentID(legacyId);
+  }
+
   static fromObject(object: any) {
     return ComponentID.fromLegacy(new BitId(object));
   }
