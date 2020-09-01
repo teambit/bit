@@ -24,6 +24,13 @@ export type ComponentMapFile = {
   test: boolean;
 };
 
+export type NextVersion = {
+  version: 'patch' | 'minor' | 'major' | string;
+  message?: string;
+  username?: string;
+  email?: string;
+}
+
 type LaneVersion = { remoteLane: RemoteLaneId; version: string };
 
 export type ComponentMapData = {
@@ -40,6 +47,7 @@ export type ComponentMapData = {
   lanes?: LaneVersion[];
   defaultVersion?: string;
   isAvailableOnCurrentLane?: boolean;
+  nextVersion?: NextVersion;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -65,6 +73,7 @@ export default class ComponentMap {
   lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
   defaultVersion?: string | null;
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
+  nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   constructor({
     id,
     files,
@@ -78,6 +87,7 @@ export default class ComponentMap {
     lanes,
     defaultVersion,
     isAvailableOnCurrentLane,
+    nextVersion,
   }: ComponentMapData) {
     this.id = id;
     this.files = files;
@@ -91,6 +101,7 @@ export default class ComponentMap {
     this.lanes = lanes || [];
     this.defaultVersion = defaultVersion;
     this.isAvailableOnCurrentLane = isAvailableOnCurrentLane;
+    this.nextVersion = nextVersion;
   }
 
   static fromJson(
@@ -120,6 +131,7 @@ export default class ComponentMap {
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
       lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
+      nextVersion: this.nextVersion,
     };
     const notNil = (val) => {
       return !R.isNil(val);
@@ -390,6 +402,15 @@ export default class ComponentMap {
     }
   }
 
+  updateNextVersion(nextVersion: NextVersion) {
+    this.nextVersion = nextVersion;
+    this.validate();
+  }
+
+  clearNextVersion() {
+    delete this.nextVersion;
+  }
+
   removeFiles(files: ComponentMapFile[]): void {
     const relativePaths = files.map((file) => file.relativePath);
     this.files = this.files.reduce((accumulator, file) => {
@@ -427,6 +448,11 @@ export default class ComponentMap {
     if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(
         `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
+      );
+    }
+    if (this.nextVersion && !this.nextVersion.version) {
+      throw new ValidationError(
+        `${errorMessage} version attribute should be set when nextVersion prop is set`
       );
     }
 

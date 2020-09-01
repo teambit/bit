@@ -8,6 +8,7 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import { NOTHING_TO_TAG_MSG } from '../../src/api/consumer/lib/tag';
+import chalk from 'chalk';
 
 const assertArrays = require('chai-arrays');
 
@@ -976,6 +977,70 @@ describe('bit tag command', function () {
     it('should not show the dependency with an older version', () => {
       const show = helper.command.showComponentParsed('comp1');
       expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
+    });
+  });
+  describe('soft tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope();
+      helper.fixtures.populateComponents();
+      helper.command.linkAndRewire();
+      helper.command.softTag('--all');
+    });
+    it('should add a property of nextVersion in .bitmap file', () => {
+      const bitMap = helper.bitMap.readComponentsMapOnly();
+      const componentsMap: any = Object.values(bitMap);
+      componentsMap.forEach(componentMap => {
+        expect(componentMap).to.have.property('nextVersion');
+        expect(componentMap.nextVersion.version).to.equal('patch');
+      });
+    });
+    it('bit status should show the new components as soft tagged', () => {
+      const status = helper.command.status();
+      expect(chalk.reset(status)).to.have.string('comp1 ... ok (soft-tagged)');
+    });
+    describe('tagging with --persist flag', () => {
+      before(() => {
+        helper.command.tagAllComponents();
+      });
+      it('should tag and remove the nextVersion property in .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap = Object.values(bitMap);
+        componentsMap.forEach(componentMap => {
+          expect(componentMap).to.not.have.property('nextVersion');
+        });
+        const ids = Object.keys(bitMap);
+        ids.forEach(id => expect(id).to.endsWith('0.0.1'));
+      });
+      it('bit status should not show as soft-tagged', () => {
+        const status = helper.command.status();
+        expect(chalk.reset(status)).to.not.have.string('soft-tagged');
+      });
+      describe('modify a component that has dependents and soft-tag it', () => {
+        before(() => {
+          helper.fs.appendFile('comp3/index.js');
+          helper.command.softTag('comp3');
+        });
+        it('should save the nextVersion data into potential auto-tag bitmap entries', () => {
+          const bitMap = helper.bitMap.readComponentsMapOnly();
+          expect(bitMap['comp2@0.0.1']).to.have.property('nextVersion');
+          expect(bitMap['comp1@0.0.1']).to.have.property('nextVersion');
+        });
+      });
+    });
+    describe('soft tag with specific version and message', () => {
+      before(() => {
+        helper.command.softTag('-a -s 2.0.0 -m "my custom message"');
+      });
+      it('should save the version and the message into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap: any[] = Object.values(bitMap);
+        componentsMap.forEach(componentMap => {
+          expect(componentMap).to.have.property('nextVersion');
+          expect(componentMap.nextVersion.version).to.equal('2.0.0');
+          expect(componentMap.nextVersion.message).to.equal('my custom message');
+        });
+      });
     });
   });
 });

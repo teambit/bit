@@ -17,7 +17,7 @@ import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment from '../../environment/environment';
-import { Log } from '../../scope/models/version';
+import Version, { Log } from '../../scope/models/version';
 import { ScopeListItem } from '../../scope/models/model-component';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
@@ -48,7 +48,6 @@ import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import Version from '../../version';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
 import { ManipulateDirItem } from '../component-ops/manipulate-dir';
@@ -181,7 +180,6 @@ export default class Component {
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _currentlyUsedVersion: BitId; // used by listScope functionality
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;

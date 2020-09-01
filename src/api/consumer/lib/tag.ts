@@ -18,6 +18,7 @@ export type TagResults = {
   autoTaggedResults: AutoTagResult[];
   warnings: string[];
   newComponents: BitIds;
+  isSoftTag: boolean;
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -34,6 +35,7 @@ export async function tagAction(args: {
   ignoreNewestVersion: boolean;
   skipTests: boolean;
   skipAutoTag: boolean;
+  persist;
 }): Promise<TagResults> {
   const {
     id,
@@ -46,6 +48,7 @@ export async function tagAction(args: {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
+    persist,
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
@@ -68,7 +71,8 @@ export async function tagAction(args: {
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests,
-    skipAutoTag
+    skipAutoTag,
+    persist
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
@@ -82,14 +86,32 @@ async function getCommitPendingComponents(
   consumer: Consumer,
   isAllScope: boolean,
   exactVersion: string,
-  includeImported: boolean
+  includeImported: boolean,
+  persist: boolean
 ): Promise<{ tagPendingComponents: BitId[]; warnings: string[] }> {
   const componentsList = new ComponentsList(consumer);
-  if (isAllScope) {
-    return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);
-  }
-  const tagPendingComponents = await componentsList.listCommitPendingComponents();
+  const tagPendingComponents = isAllScope
+    ? await componentsList.listTagPendingOfAllScope(includeImported)
+    : await componentsList.listTagPendingComponents();
+
   const warnings = [];
+  if (isAllScope) {
+    const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
+    tagPendingComponentsLatest.forEach((componentId) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (semver.gt(componentId.version!, exactVersion)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
+      }
+    });
+  }
+
+  const softTaggedComponents = componentsList.listSoftTaggedComponents();
+  // @todo: if persist, should we tag only soft-tags or all modified/new ?
+  if (persist) { // todo: make sure to remove duplications
+    tagPendingComponents.push(...softTaggedComponents);
+  }
+
   return { tagPendingComponents, warnings };
 }
 
@@ -106,6 +128,7 @@ export async function tagAllAction(args: {
   includeImported?: boolean;
   idWithWildcard?: string;
   skipAutoTag: boolean;
+  persist: boolean;
 }): Promise<TagResults> {
   const {
     message,
@@ -120,6 +143,7 @@ export async function tagAllAction(args: {
     includeImported,
     idWithWildcard,
     skipAutoTag,
+    persist
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
@@ -131,7 +155,8 @@ export async function tagAllAction(args: {
     Boolean(scope),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     exactVersion,
-    includeImported
+    includeImported,
+    persist
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(tagPendingComponents)) return null;
@@ -150,7 +175,8 @@ export async function tagAllAction(args: {
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests,
-    skipAutoTag
+    skipAutoTag,
+    persist
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
