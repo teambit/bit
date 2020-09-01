@@ -1,7 +1,12 @@
 import { Box } from 'ink';
 import React from 'react';
 
-export const CompilationErrorOutput = (workspace: string, duration: string, components: [any]) => {
+export type props = {
+  duration: string;
+  components: [any];
+};
+
+export const CompilationErrorOutput = ({ duration, components }: props) => {
   const failedComponents = components.filter((cop) => cop.status === 'FAIL');
   return (
     <Box>

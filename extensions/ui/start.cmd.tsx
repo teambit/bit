@@ -5,6 +5,17 @@ import { Logger } from '@teambit/logger';
 import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
 
+// import * as outputTemplates from './bit-start-cmd-output-templates';
+import {
+  BuildingDevServerOutput,
+  CompilationEndedSuccessfullyOutput,
+  CompilationErrorOutput,
+  ComponentsRebuildOutput,
+  DevServerRunningOutputTemplate,
+  InitializeStartOutput,
+} from './bit-start-cmd-output-templates';
+import { addSharedDirForPath } from '../../dist/consumer/component-ops/manipulate-dir';
+
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
@@ -48,6 +59,7 @@ export class StartCmd implements Command {
     // clear the user console before moving interactive.
     this.clearConsole();
 
-    return <UIServerConsole uiServer={uiServer} />;
+    // return <UIServerConsole uiServer={uiServer} />;
+    return <BuildingDevServerOutput workspaceFilePath={'sdfsdf'} />;
   }
 }

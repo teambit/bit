@@ -1,7 +1,13 @@
 import { Box } from 'ink';
 import React from 'react';
 
-export const ComponentsRebuildOutput = (workspace: string, components: [any], envs: [any]) => {
+export type props = {
+  workspace: string;
+  components: [any];
+  envs: [any];
+};
+
+export const ComponentsRebuildOutput = ({ workspace, components, envs }: props) => {
   return (
     <Box>
       Compiling ${components.length} using ${envs.length} environments in workspace ${workspace}
