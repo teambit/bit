@@ -17,6 +17,7 @@ import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
@@ -113,6 +114,8 @@ export class DependencyResolverMain {
 
     private configAspect: Config,
 
+    private aspectLoader: AspectLoaderMain,
+
     private packageManagerSlot: PackageManagerSlot
   ) {}
 
@@ -193,7 +196,7 @@ export class DependencyResolverMain {
     }
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyInstaller(packageManager, options.rootDir, cacheRootDir, linkingOptions);
+    return new DependencyInstaller(packageManager, this.aspectLoader.mainAspect, options.rootDir, cacheRootDir, linkingOptions);
   }
 
   getVersionResolver(options: GetVersionResolverOptions = {}) {
@@ -334,7 +337,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -349,7 +352,7 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain]: [EnvsMain, LoggerMain, Config],
+    [envs, loggerExt, configMain, aspectLoader]: [EnvsMain, LoggerMain, Config, AspectLoaderMain],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
@@ -361,6 +364,7 @@ export class DependencyResolverMain {
       envs,
       logger,
       configMain,
+      aspectLoader,
       packageManagerSlot
     );
     ConsumerComponent.registerOnComponentOverridesLoading(

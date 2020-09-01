@@ -5,7 +5,7 @@ export function getAspectDir(id: string): string {
   const aspectName = id.split('/')[1];
   let dirPath: string;
   try {
-    const moduleDirectory = require.resolve(`@teambit/${aspectName}`);
+    const moduleDirectory = require.resolve(getAspectPackageName(id));
     dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
   } catch (err) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
@@ -14,6 +14,11 @@ export function getAspectDir(id: string): string {
     throw new Error(`unable to find ${aspectName} in ${dirPath}`);
   }
   return dirPath;
+}
+
+export function getAspectPackageName(id: string): string {
+  const aspectName = id.split('/')[1];
+  return `@teambit/${aspectName}`;
 }
 
 export async function getAspectDef(aspectName: string, runtime: string) {
