@@ -1,12 +1,11 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
 import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { tagAction, tagAllAction } from '../../../api/consumer';
+import { tagAction } from '../../../api/consumer';
 import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
@@ -39,11 +38,11 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
     [id, version]: string[],
     {
       message = '',
-      all,
+      all = false,
       patch,
       minor,
       major,
-      force,
+      force = false,
       verbose,
       ignoreMissingDependencies = false,
       ignoreUnresolvedDependencies = false,
@@ -90,7 +89,7 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
     }
 
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-    const includeImported = scope && all;
+    const includeImported = Boolean(scope && all);
 
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
@@ -98,9 +97,9 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
-    const idHasWildcard = hasWildcard(id);
-
     const params = {
+      id,
+      all,
       message,
       exactVersion: getVersion(),
       releaseType,
@@ -111,21 +110,11 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
       skipTests,
       skipAutoTag,
       persist,
+      scope,
+      includeImported,
     };
 
-    if (all || scope || idHasWildcard) {
-      return tagAllAction({
-        ...params,
-        scope,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        includeImported,
-        idWithWildcard: id,
-      });
-    }
-    return tagAction({
-      ...params,
-      id,
-    });
+    return tagAction(params);
   }
 
   report(results: TagResults): string {
