@@ -988,7 +988,7 @@ describe('bit tag command', function () {
     it('should add a property of nextVersion in .bitmap file', () => {
       const bitMap = helper.bitMap.readComponentsMapOnly();
       const componentsMap: any = Object.values(bitMap);
-      componentsMap.forEach(componentMap => {
+      componentsMap.forEach((componentMap) => {
         expect(componentMap).to.have.property('nextVersion');
         expect(componentMap.nextVersion.version).to.equal('patch');
       });
@@ -1004,11 +1004,11 @@ describe('bit tag command', function () {
       it('should tag and remove the nextVersion property in .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
         const componentsMap = Object.values(bitMap);
-        componentsMap.forEach(componentMap => {
+        componentsMap.forEach((componentMap) => {
           expect(componentMap).to.not.have.property('nextVersion');
         });
         const ids = Object.keys(bitMap);
-        ids.forEach(id => expect(id).to.endsWith('0.0.1'));
+        ids.forEach((id) => expect(id).to.include('0.0.1'));
       });
       it('bit status should not show as soft-tagged', () => {
         const status = helper.command.status();
@@ -1033,10 +1033,10 @@ describe('bit tag command', function () {
       it('should save the version and the message into the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
         const componentsMap: any[] = Object.values(bitMap);
-        componentsMap.forEach(componentMap => {
+        componentsMap.forEach((componentMap) => {
           expect(componentMap).to.have.property('nextVersion');
           expect(componentMap.nextVersion.version).to.equal('2.0.0');
-          expect(componentMap.nextVersion.message).to.equal('my custom message');
+          expect(componentMap.nextVersion.message).to.match(/my custom message|my custom message/);
         });
       });
     });
