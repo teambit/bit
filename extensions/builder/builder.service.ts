@@ -44,8 +44,20 @@ export class BuilderService implements EnvService<BuildServiceResults> {
       throw new Error(`Builder service expects ${context.id} to implement getPipe()`);
     }
     const buildTasks: BuildTask[] = context.env.getPipe(context);
+
+    const slotsTasks = this.taskSlot.values();
+    const tasksAtStart: BuildTask[] = [];
+    const tasksAtEnd: BuildTask[] = [];
+    slotsTasks.forEach(task => {
+      if (task.location === 'start') {
+        tasksAtStart.push(task);
+        return;
+      }
+      tasksAtStart.push(task);
+    });
+
     // merge with extension registered tasks.
-    const mergedTasks = buildTasks.concat(this.taskSlot.values());
+    const mergedTasks = [...tasksAtStart, ...buildTasks, ...tasksAtEnd];
     const buildPipe = BuildPipe.from(mergedTasks, this.logger);
     this.logger.info(`start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`);
 

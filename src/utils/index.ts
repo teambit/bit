@@ -15,6 +15,7 @@ import outputJsonFile from './fs-output-json-sync';
 import rmDir from './fs-rmdir';
 import writeFile from './fs-write-file';
 import currentDirName from './fs/current-dir-name';
+import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
@@ -106,6 +107,7 @@ export {
   cleanObject,
   readDirIgnoreDsStore,
   readDirSyncIgnoreDsStore,
+  createSymlinkOrCopy,
   cleanBang,
   prependBang,
   forEach,

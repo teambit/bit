@@ -28,25 +28,27 @@ export type ListResults = {
   capsules: string[];
 };
 
-export type IsolateComponentsOptions = {
-  baseDir?: string;
+export type IsolateComponentsInstallOptions = {
   installPackages?: boolean;
-  packageManager?: string;
-  alwaysNew?: boolean;
+  // TODO: add back when depResolver.getInstaller support it
+  // packageManager?: string;
+  dedupe: boolean;
+  copyPeerToRuntimeOnComponents: boolean;
+  copyPeerToRuntimeOnRoot: boolean;
+}
+
+export type IsolateComponentsOptions = {
   name?: string;
+  baseDir?: string;
+  alwaysNew?: boolean;
+  installOptions?: IsolateComponentsInstallOptions;
 };
 
-async function createCapsulesFromComponents(
-  components: Component[],
-  baseDir: string,
-  opts: IsolateComponentsOptions
-): Promise<Capsule[]> {
-  const capsules: Capsule[] = await Promise.all(
-    map((component: Component) => {
-      return Capsule.createFromComponent(component, baseDir, opts);
-    }, components)
-  );
-  return capsules;
+const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
+  installPackages: true,
+  dedupe: true,
+  copyPeerToRuntimeOnComponents: false,
+  copyPeerToRuntimeOnRoot: true,
 }
 
 export class IsolatorMain {
@@ -82,7 +84,8 @@ export class IsolatorMain {
     const consumerComponents = components.map((c) => c.state._consumer);
     await writeComponentsToCapsules(consumerComponents, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
-    if (config.installPackages) {
+    const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
+    if (installOptions.installPackages) {
       const capsulesToInstall: Capsule[] = capsulesWithPackagesData
         .filter((capsuleWithPackageData) => {
           const packageJsonHasChanged = wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
@@ -103,9 +106,9 @@ export class IsolatorMain {
         },
       };
       const packageManagerInstallOptions = {
-        dedupe: true,
-        copyPeerToRuntimeOnComponents: false,
-        copyPeerToRuntimeOnRoot: true,
+        dedupe: installOptions.dedupe,
+        copyPeerToRuntimeOnComponents: installOptions.copyPeerToRuntimeOnComponents,
+        copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
       await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
@@ -157,6 +160,19 @@ export class IsolatorMain {
   getCapsulesRootDir(baseDir: string): PathOsBasedAbsolute {
     return path.join(CAPSULES_BASE_DIR, hash(baseDir));
   }
+}
+
+async function createCapsulesFromComponents(
+  components: Component[],
+  baseDir: string,
+  opts: IsolateComponentsOptions
+): Promise<Capsule[]> {
+  const capsules: Capsule[] = await Promise.all(
+    map((component: Component) => {
+      return Capsule.createFromComponent(component, baseDir, opts);
+    }, components)
+  );
+  return capsules;
 }
 
 type CapsulePackageJsonData = {
