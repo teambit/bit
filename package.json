@@ -39,6 +39,7 @@
     "install-harmony": "cd build-harmony && yarn",
     "link-bit-bin": "ln -sf `pwd` node_modules/bit-bin",
     "build-harmony": "rm -rf node_modules/bit-bin/bit && build-harmony/node_modules/.bin/bbit install && ln -sf `pwd` node_modules/bit-bin && build-harmony/node_modules/.bin/bbit compile",
+    "full-setup": "npm i && npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
