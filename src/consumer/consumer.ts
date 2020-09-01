@@ -517,7 +517,7 @@ export default class Consumer {
     skipTests = false,
     skipAutoTag: boolean,
     persist: boolean
-  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[], isSoftTag: boolean }> {
+  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
     if (this.isLegacy) {
       persist = true;
     }
@@ -572,30 +572,34 @@ export default class Consumer {
       this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
     }
 
-
     return { taggedComponents, autoTaggedResults, isSoftTag: !persist };
   }
 
-  updateNextVersionOnBitmap(taggedComponents: Component[], autoTaggedResults: AutoTagResult[], exactVersion, releaseType) {
-    taggedComponents.forEach(taggedComponent => {
+  updateNextVersionOnBitmap(
+    taggedComponents: Component[],
+    autoTaggedResults: AutoTagResult[],
+    exactVersion,
+    releaseType
+  ) {
+    taggedComponents.forEach((taggedComponent) => {
       const pendingVersionLog = taggedComponent.pendingVersion.log;
       if (!pendingVersionLog) throw new Error('updateNextVersionOnBitmap, unable to get endingVersion.log');
       const nextVersion = {
         version: exactVersion || releaseType,
         message: pendingVersionLog.message,
         username: pendingVersionLog.username,
-        email: pendingVersionLog.email
+        email: pendingVersionLog.email,
       };
       if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
       taggedComponent.componentMap.updateNextVersion(nextVersion);
     });
-    autoTaggedResults.forEach(autoTaggedResult => {
+    autoTaggedResults.forEach((autoTaggedResult) => {
       const versionLog = autoTaggedResult.version.log;
       const nextVersion = {
         version: exactVersion || releaseType,
         message: versionLog.message,
         username: versionLog.username,
-        email: versionLog.email
+        email: versionLog.email,
       };
       const id = autoTaggedResult.component.toBitIdWithLatestVersionAllowNull();
       const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
