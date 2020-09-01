@@ -1,4 +1,4 @@
-import { Message } from './ui/notification-context';
+import { Message } from '@teambit/organism.notifications.api';
 
 export type NotificationAction = {
   type: 'add' | 'dismiss';

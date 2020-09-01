@@ -2026,11 +2026,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "notification-api.tsx",
-                "test": false,
-                "name": "notification-api.tsx"
-            },
-            {
                 "relativePath": "notification-reducer.tsx",
                 "test": false,
                 "name": "notification-reducer.tsx"
@@ -2044,55 +2039,111 @@
                 "relativePath": "notifications.aspect.ts",
                 "test": false,
                 "name": "notifications.aspect.ts"
-            },
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "organism/notifications/api": {
+        "files": [
             {
-                "relativePath": "ui/index.ts",
+                "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-center/index.ts",
+                "relativePath": "notification-api.tsx",
+                "test": false,
+                "name": "notification-api.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/api",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "organism/notifications/notification": {
+        "files": [
+            {
+                "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-center/notification-center.module.scss",
-                "test": false,
-                "name": "notification-center.module.scss"
-            },
-            {
-                "relativePath": "ui/notification-center/notification-center.tsx",
-                "test": false,
-                "name": "notification-center.tsx"
-            },
-            {
-                "relativePath": "ui/notification-context/index.ts",
+                "relativePath": "level-icon/index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-context/notification-context.tsx",
+                "relativePath": "level-icon/level-icon.module.scss",
                 "test": false,
-                "name": "notification-context.tsx"
+                "name": "level-icon.module.scss"
             },
             {
-                "relativePath": "ui/notification/index.ts",
+                "relativePath": "level-icon/level-icon.tsx",
                 "test": false,
-                "name": "index.ts"
+                "name": "level-icon.tsx"
             },
             {
-                "relativePath": "ui/notification/notification.module.scss",
+                "relativePath": "notification.module.scss",
                 "test": false,
                 "name": "notification.module.scss"
             },
             {
-                "relativePath": "ui/notification/notification.tsx",
+                "relativePath": "notification.tsx",
                 "test": false,
                 "name": "notification.tsx"
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/notifications",
+        "rootDir": "extensions/notifications/ui/notification",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "organism/notifications/notification-center": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "notification-center.module.scss",
+                "test": false,
+                "name": "notification-center.module.scss"
+            },
+            {
+                "relativePath": "notification-center.tsx",
+                "test": false,
+                "name": "notification-center.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification-center",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "organism/notifications/notification-context": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "notification-context.tsx",
+                "test": false,
+                "name": "notification-context.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification-context",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

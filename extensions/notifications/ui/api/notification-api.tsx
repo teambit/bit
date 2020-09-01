@@ -14,3 +14,10 @@ export enum MessageLevel {
   info = 'info',
   // debug,
 }
+
+export type Message = {
+  id: MessageId;
+  message: string;
+  level: MessageLevel;
+  time: string;
+};

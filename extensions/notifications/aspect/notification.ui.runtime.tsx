@@ -2,11 +2,11 @@ import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ReactNode, useReducer } from 'react';
 import { v1 } from 'uuid';
 
-import { MessageLevel, NotificationApi } from './notification-api';
+import { NotificationContext } from '@teambit/organism.notifications.notification-context';
+import { NotificationCenter, NotificationCenterProps } from '@teambit/organism.notifications.notification-center';
+import { MessageLevel, NotificationApi } from '@teambit/organism.notifications.api';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 import { NotificationsAspect } from './notifications.aspect';
-import { NotificationCenter, NotificationCenterProps } from './ui/notification-center';
-import { NotificationContext } from './ui/notification-context';
 
 /**
  * extension
@@ -63,7 +63,13 @@ export default class NotificationUI implements NotificationApi {
 
   private render = (props: Omit<NotificationCenterProps, 'notifications'>) => {
     // this code assumes a single place of render per instance of NotificationUI
-    const [messages, dispatch] = useReducer(notificationReducer, []);
+    const [messages, dispatch] = useReducer(notificationReducer, [
+      // @DONOTCOMMIT @TEMP!
+      { id: '123120839', message: 'I am notified', level: MessageLevel.info, time: new Date().toISOString() },
+      { id: '123120840', message: 'I am errored', level: MessageLevel.error, time: new Date().toISOString() },
+      { id: '123120841', message: 'I am successful', level: MessageLevel.success, time: new Date().toISOString() },
+      { id: '123120842', message: 'I am warned, sir!', level: MessageLevel.warning, time: new Date().toISOString() },
+    ]);
     this.dispatch = dispatch;
 
     return <NotificationCenter {...props} notifications={messages} />;
