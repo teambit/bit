@@ -15,7 +15,6 @@
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
-        "@babel/preset-react": "^7.10.1",
         "@graphql-modules/core": "^0.7.17",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
         "@pnpm/config": "^11.2.3",
@@ -76,7 +75,7 @@
         "@teambit/evangelist.surfaces.tooltip": "0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.1",
         "@teambit/explorer.ui.component-grid": "^0.0.1",
-        "@teambit/harmony": "0.2.5",
+        "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -88,7 +87,6 @@
         "apollo-utilities": "^1.3.4",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
-        "babel-plugin-transform-typescript-metadata": "^0.2.2",
         "babel-polyfill": "^6.26.0",
         "babel-preset-jest": "^26.3.0",
         "cacache": "^15.0.5",
@@ -181,7 +179,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.7",
+        "bit-bin": "14.8.9-dev.9",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -211,7 +209,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.7",
+            "bit-bin": "14.8.9-dev.9",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -244,7 +242,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.7",
+            "bit-bin": "14.8.9-dev.9",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -263,15 +261,6 @@
             "browserslist": "-",
             "graphql": "-",
             "react": "-"
-          }
-        }
-      }
-    },
-    "extensions/webpack": {
-      "teambit.bit/dependency-resolver": {
-        "policy": {
-          "dependencies": {
-            "postcss-loader": "^3.0.0"
           }
         }
       }

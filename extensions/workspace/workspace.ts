@@ -672,6 +672,12 @@ export class Workspace implements ComponentFactory {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;
+      if (data.type !== 'aspect')
+        this.logger.warn(
+          `${component.id.toString()} is configured in workspace.json, but using the ${
+            data.type
+          } environment. \n please make sure to either apply the aspect environment or a composition of the aspect environment for the aspect to load.`
+        );
       return data.type === 'aspect';
     });
 
