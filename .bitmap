@@ -2638,6 +2638,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "put.route.ts",
+                "test": false,
+                "name": "put.route.ts"
+            },
+            {
                 "relativePath": "scope.aspect.ts",
                 "test": false,
                 "name": "scope.aspect.ts"

@@ -13,11 +13,17 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # path of the scope.
         path: String
 
+        # remove components from the scope.
+        # remove(ids: [String], force: Boolean, isLanes: Boolean)
+
         # list of components contained in the scope.
         components(offset: Int, limit: Int, includeCache: Boolean): [Component]
 
         # get a specific component.
         get(id: String!): Component
+
+        # get serialized legacy component. deprecated.
+        _getLegacy(id: String!): Component
       }
 
       type Query {
@@ -36,6 +42,16 @@ export function scopeSchema(scopeMain: ScopeMain) {
         get: async (scope: ScopeMain, { id }: { id: string }) => {
           return scope.get(ComponentID.fromString(id));
         },
+
+        _getLegacy: async (scope: ScopeMain, { id }: { id: string }) => {
+          const component = await scope.get(ComponentID.fromString(id));
+          if (!component) return null;
+          return component.state._consumer.toString();
+        },
+
+        // delete: async (scope: ScopeMain, props: {  }) => {
+
+        // }
       },
       Query: {
         scope: () => scopeMain,

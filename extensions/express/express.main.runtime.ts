@@ -3,7 +3,6 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { concat, flatten, lowerCase } from 'lodash';
-
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
 import { Middleware, Request, Response, Route } from './types';

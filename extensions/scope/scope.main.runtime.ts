@@ -19,6 +19,7 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
@@ -31,12 +32,12 @@ import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
-import { join } from 'path';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
+import { PutRoute } from './put.route';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
@@ -305,17 +306,19 @@ export class ScopeMain implements ComponentFactory {
     IsolatorAspect,
     AspectLoaderAspect,
     LoggerAspect,
+    ExpressAspect,
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, loggerMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, loggerMain, express]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      LoggerMain
+      LoggerMain,
+      ExpressMain
     ],
     config,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
@@ -341,6 +344,8 @@ export class ScopeMain implements ComponentFactory {
     if (scope.legacyScope.isBare) {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     }
+
+    express.register([new PutRoute(scope), new FetchRoute(scope)]);
 
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
