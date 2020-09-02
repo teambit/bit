@@ -156,6 +156,10 @@ export class DependencyInstaller {
     if (isTargetExists){
       return;
     }
+    const isAspectDirExist = await fs.pathExists(aspectDir);
+    if (!isAspectDirExist){
+      aspectDir = getAspectDir(id);
+    }
 
     return createSymlinkOrCopy(aspectDir, target);
   }
