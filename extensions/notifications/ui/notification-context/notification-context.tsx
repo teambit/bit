@@ -7,6 +7,7 @@ const defaultLoaderApi: NotificationApi = {
   log: () => '',
   error: () => '',
   dismiss: () => {},
+  clear: () => {},
 };
 
 export const NotificationContext = createContext<NotificationApi>(defaultLoaderApi);

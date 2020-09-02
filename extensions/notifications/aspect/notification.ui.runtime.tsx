@@ -61,15 +61,16 @@ export default class NotificationUI implements NotificationApi {
   /** adds a message with level "success" to the log */
   success = (message: string) => this.add(message, MessageLevel.success);
 
+  /** removes all notifications */
+  clear = () => {
+    this.dispatch?.({
+      type: 'clear',
+    });
+  };
+
   private render = (props: Omit<NotificationCenterProps, 'notifications'>) => {
     // this code assumes a single place of render per instance of NotificationUI
-    const [messages, dispatch] = useReducer(notificationReducer, [
-      // @DONOTCOMMIT @TEMP!
-      { id: '123120839', message: 'I am notified', level: MessageLevel.info, time: new Date().toISOString() },
-      { id: '123120840', message: 'I am errored', level: MessageLevel.error, time: new Date().toISOString() },
-      { id: '123120841', message: 'I am successful', level: MessageLevel.success, time: new Date().toISOString() },
-      { id: '123120842', message: 'I am warned, sir!', level: MessageLevel.warning, time: new Date().toISOString() },
-    ]);
+    const [messages, dispatch] = useReducer(notificationReducer, []);
     this.dispatch = dispatch;
 
     return <NotificationCenter {...props} notifications={messages} />;

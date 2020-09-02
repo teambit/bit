@@ -6,7 +6,13 @@ $modal-z-index: 8000;
   right: 16px;
   bottom: 8px;
 
+  font-size: 14px;
+
   z-index: $modal-z-index;
+
+  &.dismissing {
+    animation: exitRight $animationTime ease-in-out forwards;
+  }
 }
 
 .timestamp {
@@ -14,56 +20,23 @@ $modal-z-index: 8000;
   text-align: right;
 }
 
-.notification {
-  margin: 8px 0;
-  transform-origin: right bottom;
-  max-height: 100vh;
-  transition: all $animationTime, max-height $animationTime / 2 ease-out;
-
-  animation: enter $animationTime forwards;
-
-  button {
-    border: none;
-    background: inherit;
-    float: right;
-  }
-
-  &.dismissing {
-    animation: exit $animationTime forwards;
-    overflow: hidden;
-    max-height: 0px;
-    margin: 0px;
-    padding: 0px;
-  }
-}
-
-@keyframes exit {
+@keyframes exitRight {
   0% {
-    transform: scale(1) translate(0%, 0);
+    transform: translate(0%, 0);
     opacity: 1;
   }
 
   99% {
-    transform: scale(0.1) translate(200%, 0);
+    transform: translate(200%, 0);
     opacity: 0;
   }
   100% {
+    transform: translate(200%, 0);
+    opacity: 0;
     visibility: hidden;
   }
 }
 
-@keyframes enter {
-  0% {
-    transform: scale(0.1) translate(200%, 0);
-    opacity: 0;
-  }
-
-  99% {
-    transform: scale(1) translate(0%, 0);
-    opacity: 1;
-  }
-}
-
 :export {
-  dismissTime: $animationTime / 1ms;
+  animationTime: $animationTime / 1ms;
 }

@@ -2108,6 +2108,16 @@
     "organism/notifications/notification-center": {
         "files": [
             {
+                "relativePath": "dark-art/dark-art.module.scss",
+                "test": false,
+                "name": "dark-art.module.scss"
+            },
+            {
+                "relativePath": "dark-art/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"

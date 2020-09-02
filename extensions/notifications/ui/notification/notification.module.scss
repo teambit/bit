@@ -2,7 +2,6 @@ $animationTime: 300ms;
 
 .timestamp {
   font-size: 0.85em;
-  color: #878c9a; // TODO
 }
 
 .notification {
@@ -12,17 +11,13 @@ $animationTime: 300ms;
   padding: 16px;
   max-width: 330px;
   min-width: 230px;
-  font-size: 14px;
   transform-origin: right bottom;
   max-height: 100vh;
   transition: all $animationTime, max-height $animationTime / 2 ease-out;
 
   animation: enter $animationTime forwards;
   box-shadow: var(--shadow-faint);
-
-  // TODO
-  background: #2b2b2b;
-  color: #ffffff;
+  background: var(--bg-tooltip, white);
 
   &.dismissing {
     animation: exit $animationTime forwards;
@@ -62,21 +57,20 @@ $animationTime: 300ms;
   background: inherit;
   float: right;
 
-  // TODO:
-  color: #6c707c; //$battleship
+  color: var(--text-inactive);
   &:hover {
-    color: #babec9; //$silver
+    color: var(--text-muted-highlight);
   }
 }
 
 @keyframes exit {
   0% {
-    transform: scale(1) translate(0%, 0);
+    transform: translate(0%, 0) scale(1);
     opacity: 1;
   }
 
   99% {
-    transform: scale(0.1) translate(200%, 0);
+    transform: translate(200%, 0) scale(0.1);
     opacity: 0;
   }
   100% {
@@ -86,12 +80,12 @@ $animationTime: 300ms;
 
 @keyframes enter {
   0% {
-    transform: scale(0.1) translate(200%, 0);
+    transform: translate(200%, 0) scale(0.1);
     opacity: 0;
   }
 
   99% {
-    transform: scale(1) translate(0%, 0);
+    transform: translate(0%, 0) scale(1);
     opacity: 1;
   }
 }

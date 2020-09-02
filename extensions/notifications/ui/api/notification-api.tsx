@@ -5,6 +5,7 @@ export type NotificationApi = {
   log: (message: string) => MessageId;
   error: (message: string) => MessageId;
   dismiss: (id: string) => void;
+  clear: () => void;
 };
 
 export enum MessageLevel {
