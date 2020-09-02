@@ -112,80 +112,80 @@ jobs:
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
-  install_npm_deps:
-    <<: *defaults
-    # skipping the pre-built binaries to make sure we build them by the pack step
-    # testing the install script will be done in different workflow dedicated for this
-    environment:
-      SKIP_FETCH_BINARY: true
-      # SKIP_LOCAL_BUILD_BINARY: true
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        restore_cache:
-          key: bitsrc-registry6
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      # -
-      #   restore_cache:
-      #     keys:
-      #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      # -
-      #   run:
-      #     name: 'install pkg to support local build'
-      #     command: 'sudo npm install -g pkg@4.4.3'
-      -
-        run:
-          name: 'Install npm dependencies'
-          command: 'cd bit && npm install'
-      # -
-      #   run:
-      #     name: 'link bit to path'
-      #     command: 'cd bit && npm run dev-link bit'
-      -
-        run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      # -
-      #   run:
-      #     name: 'install harmony'
-      #     command: 'cd bit && npm run install-harmony'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run: which bit
-            # -
-      #   run:
-      #     name: 'npm link bit to global'
-      #     command: cd bit && npm link
-      # - run: ls -l /home/circleci/.npm-global/bin
-      # -
-      #   save_cache:
-      #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      #     paths:
-      #       - ./bit/node_modules
-      -
-        save_cache:
-          key: npm-global-bin-v2
-          paths:
-            - /home/circleci/.npm-global/bin
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            # - bit/build-harmony
-            - bit/node_modules
-            - bit/releases
+  # install_npm_deps:
+  #   <<: *defaults
+  #   # skipping the pre-built binaries to make sure we build them by the pack step
+  #   # testing the install script will be done in different workflow dedicated for this
+  #   environment:
+  #     SKIP_FETCH_BINARY: true
+  #     # SKIP_LOCAL_BUILD_BINARY: true
+  #     # change the npm config to avoid using sudo
+  #     NPM_CONFIG_PREFIX: ~/.npm-global
+  #   steps:
+  #     -
+  #       attach_workspace:
+  #         at: ./
+  #     -
+  #       restore_cache:
+  #         key: bitsrc-registry6
+  #     -
+  #       run:
+  #         name: 'save SHA to a file'
+  #         command: 'echo $CIRCLE_SHA1 > .circle-sha'
+  #     # -
+  #     #   restore_cache:
+  #     #     keys:
+  #     #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+  #     # -
+  #     #   run:
+  #     #     name: 'install pkg to support local build'
+  #     #     command: 'sudo npm install -g pkg@4.4.3'
+  #     -
+  #       run:
+  #         name: 'Install npm dependencies'
+  #         command: 'cd bit && npm install'
+  #     # -
+  #     #   run:
+  #     #     name: 'link bit to path'
+  #     #     command: 'cd bit && npm run dev-link bit'
+  #     -
+  #       run:
+  #         name: 'create npm global dir'
+  #         command: 'mkdir -p /home/circleci/.npm-global/bin'
+  #     -
+  #       run:
+  #         name: 'link bit to path'
+  #         command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+  #     # -
+  #     #   run:
+  #     #     name: 'install harmony'
+  #     #     command: 'cd bit && npm run install-harmony'
+  #     -
+  #       run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+  #     -
+  #       run: which bit
+  #           # -
+  #     #   run:
+  #     #     name: 'npm link bit to global'
+  #     #     command: cd bit && npm link
+  #     # - run: ls -l /home/circleci/.npm-global/bin
+  #     # -
+  #     #   save_cache:
+  #     #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+  #     #     paths:
+  #     #       - ./bit/node_modules
+  #     -
+  #       save_cache:
+  #         key: npm-global-bin-v2
+  #         paths:
+  #           - /home/circleci/.npm-global/bin
+  #     -
+  #       persist_to_workspace:
+  #         root: .
+  #         paths:
+  #           # - bit/build-harmony
+  #           - bit/node_modules
+  #           - bit/releases
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -985,20 +985,20 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
-      -
-        build:
-          requires:
-            - install_npm_deps
+      # -
+      #   install_npm_deps:
+      #     requires:
+      #       - checkout_code
+      #       - set_npm_registries
+      # -
+      #   build:
+      #     requires:
+      #       - install_npm_deps
       -
         setup_harmony:
           requires:
             - set_npm_registries
-            - install_npm_deps
+            # - install_npm_deps
             - build
       # -
       #   configure-bit:
@@ -1011,13 +1011,13 @@ workflows:
       -
         lint:
           requires:
-            - install_npm_deps
+            # - install_npm_deps
             - build
             - setup_harmony
       -
         generate_and_check_types:
           requires:
-            - install_npm_deps
+            # - install_npm_deps
             - build
             - setup_harmony
       -
@@ -1040,7 +1040,7 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - install_npm_deps
+            # - install_npm_deps
             - build
             - setup_harmony
             # - configure-bit
@@ -1098,16 +1098,16 @@ workflows:
           requires:
             - checkout_code
       -
-        install_npm_deps:
-          <<: *semver_tags_only_filters
-          requires:
-            - validate-git-tag-and-version
-            - checkout_code
+        # install_npm_deps:
+        #   <<: *semver_tags_only_filters
+        #   requires:
+        #     - validate-git-tag-and-version
+        #     - checkout_code
       -
         build:
           <<: *semver_tags_only_filters
-          requires:
-            - install_npm_deps
+          # requires:
+          #   - install_npm_deps
       -
         npm-publish:
           <<: *semver_tags_only_filters
@@ -1157,15 +1157,15 @@ workflows:
       - checkout_code:
           <<: *dev_tag_only_filters
       -
-        install_npm_deps:
-          <<: *dev_tag_only_filters
-          requires:
-            - checkout_code
+        # install_npm_deps:
+        #   <<: *dev_tag_only_filters
+        #   requires:
+        #     - checkout_code
       -
         build:
           <<: *dev_tag_only_filters
-          requires:
-            - install_npm_deps
+          # requires:
+          #   - install_npm_deps
       -
         pack:
           <<: *dev_tag_only_filters
@@ -1204,14 +1204,14 @@ workflows:
       - checkout_code
       - set_npm_registries
       -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
+        # install_npm_deps:
+        #   requires:
+        #     - checkout_code
+        #     - set_npm_registries
       -
-        build:
-          requires:
-            - install_npm_deps
+        # build:
+          # requires:
+          #   - install_npm_deps
       -
         performance_e2e_test:
           requires:
@@ -1229,14 +1229,14 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
+        # install_npm_deps:
+        #   requires:
+        #     - checkout_code
+        #     - set_npm_registries
       -
-        build:
-          requires:
-            - install_npm_deps
+        # build:
+        #   requires:
+        #     - install_npm_deps
       -
         bit_hub_e2e_test:
           requires:
