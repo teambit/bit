@@ -218,6 +218,8 @@ jobs:
       -
         attach_workspace:
           at: ./
+
+      - run: ls -l /home/circleci/node_modules/@teambit
       -
         run:
           name: 'save SHA to a file'
@@ -574,6 +576,7 @@ jobs:
         run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
+      - run: ls -l /home/circleci/node_modules/@teambit
       -
         save_cache:
           key: cache-pnpm-global-cache
@@ -1024,27 +1027,15 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      # -
-      #   install_npm_deps:
-      #     requires:
-      #       - checkout_code
-      #       - set_npm_registries
       -
         setup_harmony:
           requires:
             - set_npm_registries
             - checkout_code
-            # - install_npm_deps
-            # - build
       -
         build:
           requires:
             - setup_harmony
-
-      # -
-      #   configure-bit:
-      #     requires:
-      #       - build
       -
         unit_test:
           requires:
