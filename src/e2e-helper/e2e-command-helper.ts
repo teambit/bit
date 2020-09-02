@@ -205,6 +205,9 @@ export default class CommandHelper {
     return component.head;
   }
   untag(id: string) {
+    return this.runCmd(`bit untag ${id} --persisted`);
+  }
+  untagSoft(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {

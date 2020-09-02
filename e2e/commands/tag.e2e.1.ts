@@ -1036,7 +1036,20 @@ describe('bit tag command', function () {
         componentsMap.forEach((componentMap) => {
           expect(componentMap).to.have.property('nextVersion');
           expect(componentMap.nextVersion.version).to.equal('2.0.0');
-          expect(componentMap.nextVersion.message).to.match(/my custom message|my custom message/);
+          expect(componentMap.nextVersion.message).to.match(/bump dependencies versions|my custom message/);
+        });
+      });
+    });
+    describe('untag', () => {
+      before(() => {
+        helper.command.softTag('-a -s 3.0.0');
+        helper.command.untagSoft('--all');
+      });
+      it('should remove the nextVersion from the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap: any[] = Object.values(bitMap);
+        componentsMap.forEach((componentMap) => {
+          expect(componentMap).to.not.have.property('nextVersion');
         });
       });
     });

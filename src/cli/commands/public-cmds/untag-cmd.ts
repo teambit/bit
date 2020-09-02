@@ -8,11 +8,13 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
+  For Harmony, without "--persisted" flag, it removes only the soft-tags.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
   ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
+    ['', 'persisted', 'harmony - revert not only the soft-tags but also the actual tags'],
     [
       'f',
       'force',
@@ -24,7 +26,11 @@ export default class Untag implements LegacyCommand {
 
   action(
     [id, version]: string[],
-    { all, force }: { all: boolean | null | undefined; force: boolean | null | undefined }
+    {
+      all,
+      force,
+      persisted = false,
+    }: { all: boolean | null | undefined; force: boolean | null | undefined; persisted?: boolean }
   ): Promise<untagResult[]> {
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
@@ -33,10 +39,10 @@ export default class Untag implements LegacyCommand {
     if (all) {
       version = id;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return unTagAction(version, force);
+      return unTagAction(version, force, persisted);
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return unTagAction(version, force, id);
+    return unTagAction(version, force, persisted, id);
   }
 
   report(results: untagResult[]): string {
