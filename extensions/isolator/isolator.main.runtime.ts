@@ -137,7 +137,7 @@ export class IsolatorMain {
 
   private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
     const tuples = capsules.map((capsule) => {
-      return [capsule.component.id, [capsule.component, capsule.path]];
+      return [capsule.component.id.fullName, [capsule.component, capsule.path]];
     });
 
     // @ts-ignore

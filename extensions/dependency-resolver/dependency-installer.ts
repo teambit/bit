@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { ComponentMap } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinkingOptions } from './dependency-resolver.main.runtime';
@@ -67,21 +67,14 @@ export class DependencyInstaller {
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootDepsObject, componentDirectoryMap, calculatedOpts);
+    const componentIds = Array.from(componentDirectoryMap.keys());
     if (linkingOpts.bitLinkType === 'link' && !this.isBitRepoWorkspace(finalRootDir)){
-      await this.linkBit(path.join(finalRootDir, 'node_modules'));
+      await this.linkBitAspectIfNotExist(path.join(finalRootDir, 'node_modules'), componentIds);
     }
     if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(finalRootDir)){
-      await this.linkCoreAspects(path.join(finalRootDir, 'node_modules'));
+      await this.linkNonExistingCoreAspects(path.join(finalRootDir, 'node_modules'), componentIds);
     }
     return componentDirectoryMap;
-  }
-
-  private isBitRepoWorkspace(dir: string){
-    // A special condition to not link core aspects in bit workspace itself
-    if (this.aspectLoader.mainAspect.path.startsWith(dir)){
-      return true;
-    }
-    return false;
   }
 
   async linkBit(dir: string) {
@@ -89,6 +82,11 @@ export class DependencyInstaller {
       throw new MainAspectNotLinkable();
     }
     const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
+    const isTargetExists = await fs.pathExists(target);
+    // Do not override links created by other means
+    if (isTargetExists){
+      return;
+    }
     const src = this.aspectLoader.mainAspect.path;
     fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
@@ -103,17 +101,60 @@ export class DependencyInstaller {
     return Promise.all(linkCoreAspectsP);
   }
 
+  private async linkBitAspectIfNotExist(dir: string, componentIds: string[]){
+    // TODO: change to this.aspectLoader.mainAspect.id once default scope is resolved and the component dir map has the id with scope
+    const bitName = this.aspectLoader.mainAspect.name;
+    const existing = componentIds.find(id => {
+      return (id === bitName);
+    });
+    if (existing){
+      return;
+    }
+    return this.linkBit(dir);
+  }
+
+  private async linkNonExistingCoreAspects(dir: string, componentIds: string[]){
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    const filtered = coreAspectsIds.filter(id => {
+      // Remove bit aspect
+      if (id === this.aspectLoader.mainAspect.id){
+        return false;
+      }
+      // TODO: use the aspect id once default scope is resolved and the component dir map has the id with scope
+      const name = getCoreAspectName(id);
+      const existing = componentIds.find(id => {
+        return (id === name);
+      });
+      if (existing) {
+        return false;
+      }
+      return true;
+    });
+    const linkCoreAspectsP = filtered.map(id => {
+      return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id));
+    });
+    return Promise.all(linkCoreAspectsP);
+  }
+
+  private isBitRepoWorkspace(dir: string){
+    // A special condition to not link core aspects in bit workspace itself
+    if (this.aspectLoader.mainAspect.path.startsWith(dir)){
+      return true;
+    }
+    return false;
+  }
+
   private async linkCoreAspect(dir: string, id: string, name: string, packageName: string){
     if (!this.aspectLoader.mainAspect.packageName){
       throw new MainAspectNotLinkable();
     }
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, name);
-    const isExist = await fs.pathExists(aspectDir);
     const target = path.join(dir, packageName);
-    // We get here usually when running bit from the cloned repo rather then the global install of bit
-    if (!isExist){
-      aspectDir = getAspectDir(id);
+    const isTargetExists = await fs.pathExists(target);
+    // Do not override links created by other means
+    if (isTargetExists){
+      return;
     }
 
     return createSymlinkOrCopy(aspectDir, target);
