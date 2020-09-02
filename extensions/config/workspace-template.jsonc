@@ -9,6 +9,16 @@
    * main configuration of the Bit workspace.
   **/
   "teambit.bit/workspace": {
+    
+     /**
+     * the name of the component workspace. used for development purposes.
+     **/
+    "name": "my-workspace-name",
+      
+     /**
+     * set the icon to be shown on the Bit server.
+     **/
+    "icon": "https://static.bit.dev/bit-logo.svg"
 
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
