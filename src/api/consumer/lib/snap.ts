@@ -54,7 +54,7 @@ export async function snapAction(args: {
       }
       return new BitIds(bitId);
     }
-    const tagPendingComponents = await componentsList.listCommitPendingComponents();
+    const tagPendingComponents = await componentsList.listTagPendingComponents();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (R.isEmpty(tagPendingComponents)) return null;
     return idHasWildcard ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id) : tagPendingComponents;

@@ -10,6 +10,7 @@ import { Analytics } from '../../../analytics/analytics';
 import Component from '../../../consumer/component';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -18,96 +19,33 @@ export type TagResults = {
   autoTaggedResults: AutoTagResult[];
   warnings: string[];
   newComponents: BitIds;
+  isSoftTag: boolean;
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
-export async function tagAction(args: {
-  id: string;
+type TagParams = {
   message: string;
-  exactVersion: string | null | undefined;
+  exactVersion: string | undefined;
   releaseType: semver.ReleaseType;
-  force: boolean | undefined;
+  force: boolean;
   verbose?: boolean;
   ignoreUnresolvedDependencies: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
   skipAutoTag: boolean;
-}): Promise<TagResults> {
+  persist: boolean;
+  id: string;
+  all: boolean;
+  scope?: string;
+  includeImported: boolean;
+};
+
+export async function tagAction(tagParams: TagParams) {
   const {
     id,
-    message,
-    exactVersion,
-    releaseType,
-    force,
-    verbose,
-    ignoreUnresolvedDependencies = false,
-    ignoreNewestVersion,
-    skipTests,
-    skipAutoTag,
-  } = args;
-  const validExactVersion = _validateVersion(exactVersion);
-  HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
-  const consumer: Consumer = await loadConsumer();
-  const componentsList = new ComponentsList(consumer);
-  const newComponents = await componentsList.listNewComponents();
-  const bitId = consumer.getParsedId(id);
-  if (!force) {
-    const componentStatus = await consumer.getComponentStatusById(bitId);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (componentStatus.modified === false) return null;
-  }
-  const tagResults = await consumer.tag(
-    new BitIds(bitId),
-    message,
-    validExactVersion,
-    releaseType,
-    force,
-    verbose,
-    ignoreUnresolvedDependencies,
-    ignoreNewestVersion,
-    skipTests,
-    skipAutoTag
-  );
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  tagResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_HOOK, tagResults);
-  await consumer.onDestroy();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return tagResults;
-}
-
-async function getCommitPendingComponents(
-  consumer: Consumer,
-  isAllScope: boolean,
-  exactVersion: string,
-  includeImported: boolean
-): Promise<{ tagPendingComponents: BitId[]; warnings: string[] }> {
-  const componentsList = new ComponentsList(consumer);
-  if (isAllScope) {
-    return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);
-  }
-  const tagPendingComponents = await componentsList.listCommitPendingComponents();
-  const warnings = [];
-  return { tagPendingComponents, warnings };
-}
-
-export async function tagAllAction(args: {
-  message: string;
-  exactVersion?: string;
-  releaseType: semver.ReleaseType;
-  force?: boolean;
-  verbose?: boolean;
-  ignoreUnresolvedDependencies: boolean;
-  ignoreNewestVersion: boolean;
-  skipTests: boolean;
-  scope?: string;
-  includeImported?: boolean;
-  idWithWildcard?: string;
-  skipAutoTag: boolean;
-}): Promise<TagResults> {
-  const {
+    all,
     message,
     exactVersion,
     releaseType,
@@ -118,30 +56,34 @@ export async function tagAllAction(args: {
     skipTests,
     scope,
     includeImported,
-    idWithWildcard,
     skipAutoTag,
-  } = args;
+    persist,
+  } = tagParams;
+
+  const idHasWildcard = hasWildcard(id);
+
+  const isAll = Boolean(all || scope || idHasWildcard);
+
   const validExactVersion = _validateVersion(exactVersion);
-  HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
+  const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
+  HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
-  const { tagPendingComponents, warnings } = await getCommitPendingComponents(
+  const { bitIds, warnings } = await getComponentsToTag(
     consumer,
     Boolean(scope),
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     exactVersion,
-    includeImported
+    includeImported,
+    persist,
+    force,
+    isAll,
+    id
   );
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (R.isEmpty(tagPendingComponents)) return null;
-  const componentsToTag = idWithWildcard
-    ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, idWithWildcard)
-    : tagPendingComponents;
+  if (R.isEmpty(bitIds)) return null;
 
   const tagResults = await consumer.tag(
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    componentsToTag,
+    BitIds.fromArray(bitIds),
     message,
     validExactVersion,
     releaseType,
@@ -150,14 +92,16 @@ export async function tagAllAction(args: {
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests,
-    skipAutoTag
+    skipAutoTag,
+    persist
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
+  const postHook = isAll ? POST_TAG_ALL_HOOK : POST_TAG_HOOK;
+  HooksManagerInstance.triggerHook(postHook, tagResults);
   Analytics.setExtraData(
     'num_components',
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -166,6 +110,63 @@ export async function tagAllAction(args: {
   await consumer.onDestroy();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return tagResults;
+}
+
+async function getComponentsToTag(
+  consumer: Consumer,
+  isAllScope: boolean,
+  exactVersion: string | undefined,
+  includeImported: boolean,
+  persist: boolean,
+  force: boolean,
+  isAll: boolean,
+  id?: string
+): Promise<{ bitIds: BitId[]; warnings: string[] }> {
+  const warnings = [];
+  const idHasWildcard = id && hasWildcard(id);
+  if (id && !idHasWildcard) {
+    const bitId = consumer.getParsedId(id);
+    if (!force) {
+      const componentStatus = await consumer.getComponentStatusById(bitId);
+      if (componentStatus.modified === false) return { bitIds: [], warnings };
+    }
+    return { bitIds: [bitId], warnings };
+  }
+  const componentsList = new ComponentsList(consumer);
+  const softTaggedComponents = componentsList.listSoftTaggedComponents();
+  if (!isAll && persist) {
+    return { bitIds: softTaggedComponents, warnings: [] };
+  }
+
+  const tagPendingComponents = isAllScope
+    ? await componentsList.listTagPendingOfAllScope(includeImported)
+    : await componentsList.listTagPendingComponents();
+
+  if (isAllScope) {
+    const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
+    tagPendingComponentsLatest.forEach((componentId) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (semver.gt(componentId.version!, exactVersion as string)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
+      }
+    });
+  }
+
+  if (persist) {
+    softTaggedComponents.forEach((bitId) => {
+      if (!tagPendingComponents.find((t) => t.isEqual(bitId))) {
+        softTaggedComponents.push(bitId);
+      }
+    });
+  }
+
+  if (idHasWildcard) {
+    const bitIds = ComponentsList.filterComponentsByWildcard(tagPendingComponents, id as string);
+    return { bitIds, warnings };
+  }
+
+  return { bitIds: tagPendingComponents, warnings };
 }
 
 function _validateVersion(version) {

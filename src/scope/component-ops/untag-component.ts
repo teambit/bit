@@ -6,7 +6,7 @@ import GeneralError from '../../error/general-error';
 import ComponentsList from '../../consumer/component/components-list';
 import { getAllVersionsObjects } from './traverse-versions';
 
-export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
+export type untagResult = { id: BitId; versions: string[]; component?: ModelComponent };
 
 /**
  * If not specified version, remove all local versions.

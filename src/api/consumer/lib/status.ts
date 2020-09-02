@@ -16,13 +16,14 @@ export type StatusResult = {
   stagedComponents: ModelComponent[];
   componentsWithMissingDeps: Component[];
   importPendingComponents: BitId[];
-  autoTagPendingComponents: string[];
+  autoTagPendingComponents: BitId[];
   invalidComponents: InvalidComponent[];
   outdatedComponents: Component[];
   mergePendingComponents: DivergedComponent[];
   componentsDuringMergeState: BitIds;
   componentsWithIndividualFiles: Component[];
   componentsWithTrackDirs: Component[];
+  softTaggedComponents: BitId[];
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -35,7 +36,7 @@ export default (async function status(): Promise<StatusResult> {
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-  const autoTagPendingComponentsStr = autoTagPendingComponents.map((component) => component.id().toString());
+  const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.toBitIdWithLatestVersion());
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -59,6 +60,7 @@ export default (async function status(): Promise<StatusResult> {
     return Boolean(component.issues) && !R.isEmpty(component.issues);
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
+  const softTaggedComponents = componentsList.listSoftTaggedComponents();
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
@@ -72,7 +74,7 @@ export default (async function status(): Promise<StatusResult> {
     stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
     componentsWithMissingDeps, // no need to sort, we don't print it as is
     importPendingComponents, // no need to sort, we use only its length
-    autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
+    autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     invalidComponents,
     outdatedComponents,
@@ -80,5 +82,6 @@ export default (async function status(): Promise<StatusResult> {
     componentsDuringMergeState,
     componentsWithIndividualFiles: await componentsList.listComponentsWithIndividualFiles(),
     componentsWithTrackDirs: await componentsList.listComponentsWithTrackDir(),
+    softTaggedComponents
   };
 });

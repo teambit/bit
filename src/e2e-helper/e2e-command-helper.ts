@@ -138,13 +138,13 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --persist`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --persist`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options}`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --persist`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -153,7 +153,10 @@ export default class CommandHelper {
     return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --persist`);
+  }
+  softTag(options = '') {
+    return this.runCmd(`bit tag ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
@@ -202,6 +205,9 @@ export default class CommandHelper {
     return component.head;
   }
   untag(id: string) {
+    return this.runCmd(`bit untag ${id} --persisted`);
+  }
+  untagSoft(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {

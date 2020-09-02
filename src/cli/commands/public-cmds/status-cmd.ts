@@ -4,11 +4,12 @@ import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
-import { immutableUnshift, isString } from '../../../utils';
+import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
 import { ModelComponent } from '../../../scope/models';
 import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
+import { BitId } from '../../../bit-id';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -52,6 +53,7 @@ export default class Status implements LegacyCommand {
     componentsDuringMergeState,
     componentsWithIndividualFiles,
     componentsWithTrackDirs,
+    softTaggedComponents,
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -61,13 +63,14 @@ export default class Status implements LegacyCommand {
           stagedComponents: stagedComponents.map((c) => c.id()),
           componentsWithMissingDeps: componentsWithMissingDeps.map((c) => c.id.toString()),
           importPendingComponents: importPendingComponents.map((id) => id.toString()),
-          autoTagPendingComponents,
+          autoTagPendingComponents: autoTagPendingComponents.map(s => s.toString()),
           invalidComponents,
           outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
           mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
           componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
           componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
           componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
+          softTaggedComponents: softTaggedComponents.map(s => s.toString()),
         },
         null,
         2
@@ -77,17 +80,23 @@ export default class Status implements LegacyCommand {
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(component: string | Component | ModelComponent, showVersions = false, message?: string): string {
-      const missing = componentsWithMissingDeps.find((missingComp: Component) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const compId = component.id ? component.id.toString() : component;
-        return missingComp.id.toString() === compId;
-      });
-      const messageStatus = message ? chalk.yellow(message) : chalk.green('ok');
+    function format(component: BitId | Component | ModelComponent, showVersions = false, message?: string): string {
+      const getBitId = () => {
+        if (component instanceof BitId) return component;
+        if (component instanceof Component) return component.id;
+        if (component instanceof ModelComponent) return component.toBitId();
+        throw new Error(`type of component ${component} is not supported`);
+      };
+      const bitId = getBitId();
+      const missing = componentsWithMissingDeps.find((missingComp: Component) => missingComp.id.isEqual(bitId));
+      const softTagged = softTaggedComponents.find(softTaggedId => softTaggedId.isEqual(bitId));
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (isString(component)) return `${formatBitString(component)} ... ${messageStatus}`;
+      const messageStatusText = message || 'ok';
+      const messageStatusTextWithSoftTag = softTagged ? `${messageStatusText} (soft-tagged)` : messageStatusText;
+      const color = message ? 'yellow' : 'green';
+      const messageStatus = chalk[color](messageStatusTextWithSoftTag);
+
+      if (component instanceof BitId) return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -172,19 +181,19 @@ or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
 
     const invalidDesc = '\nthese components were failed to load.\n';
     const invalidComponentOutput = immutableUnshift(
-      invalidComponents.map((c) => format(c.id.toString(), true, getInvalidComponentLabel(c.error))).sort(),
+      invalidComponents.map((c) => format(c.id, true, getInvalidComponentLabel(c.error))).sort(),
       invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
     const individualFilesOutput = immutableUnshift(
-      componentsWithIndividualFiles.map((c) => format(c.id.toString(), false, 'individual files')).sort(),
+      componentsWithIndividualFiles.map((c) => format(c.id, false, 'individual files')).sort(),
       componentsWithIndividualFiles.length
         ? `${chalk.underline.white('components with individual files')}\n${individualFilesDesc}\n`
         : ''
     ).join('\n');
 
     const trackDirOutput = immutableUnshift(
-      componentsWithTrackDirs.map((c) => format(c.id.toString(), false, 'trackDir record')).sort(),
+      componentsWithTrackDirs.map((c) => format(c.id, false, 'trackDir record')).sort(),
       componentsWithTrackDirs.length
         ? `${chalk.underline.white('components with trackDir record')}\n${trackDirDesc}\n`
         : ''
