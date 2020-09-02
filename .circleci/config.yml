@@ -525,7 +525,6 @@ jobs:
         restore_cache:
           keys:
             - 'repo-{{ checksum ".circle-sha" }}'
-            - cache-pnpm-global-cache
       -
         attach_workspace:
           at: ./
@@ -543,9 +542,6 @@ jobs:
   generate_and_check_types:
     <<: *defaults
     steps:
-      -
-        restore_cache:
-          key: cache-pnpm-global-cache
       -
         attach_workspace:
           at: ./
@@ -568,6 +564,9 @@ jobs:
         restore_cache:
           key: bitsrc-registry6
       -
+        restore_cache:
+          key: cache-pnpm-global-cache
+      -
         run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
@@ -586,6 +585,7 @@ jobs:
           paths:
             - bit/build-harmony
             - bit/node_modules
+            - .pnpm-store
 
   e2e_test:
     <<: *defaults
@@ -632,10 +632,6 @@ jobs:
       -
         restore_cache:
           key: npm-global-bin-v2
-
-      -
-        restore_cache:
-          key: cache-pnpm-global-cache
 
       - run: ls -l /home/circleci/.npm-global/bin
       # -
