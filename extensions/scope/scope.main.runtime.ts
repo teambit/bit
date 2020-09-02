@@ -31,7 +31,6 @@ import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
-import { join } from 'path';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';

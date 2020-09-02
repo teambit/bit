@@ -10,7 +10,7 @@ export class Issues {
   }
 
   static fromLegacy(legacyIssues: LegacyIssues) {
-    const issues = Object.entries(legacyIssues).map(([issueName, value]) => {
+    const issues = Object.entries(legacyIssues).map(([issueName]) => {
       return new Issue(issueName);
     });
     return new Issues(issues);
