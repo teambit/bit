@@ -22,8 +22,8 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # get a specific component.
         get(id: String!): Component
 
-        # get serialized legacy component. deprecated.
-        _getLegacy(id: String!): Component
+        # get serialized legacy component. deprecated. PLEASE DO NOT USE THIS API.
+        _getLegacy(id: String!): String
       }
 
       type Query {

@@ -63,9 +63,9 @@ export class Http implements Network {
       headers: { 'Content-Type': 'text/plain' },
     });
 
-    const json = await res.json();
+    const ids = await res.json();
 
-    return json;
+    return ids;
   }
 
   async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {

@@ -1,7 +1,7 @@
 import { Route, Request, Response } from '@teambit/express';
 import { put } from 'bit-bin/dist/api/scope';
 import bodyParser from 'body-parser';
-import { ScopeMain } from './scope.main.runtime';
+import { ScopeMain } from '../scope.main.runtime';
 
 export class PutRoute implements Route {
   constructor(private scope: ScopeMain) {}

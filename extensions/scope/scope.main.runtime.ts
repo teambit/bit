@@ -37,7 +37,7 @@ import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
-import { PutRoute } from './put.route';
+import { PutRoute, FetchRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
