@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import Dists from '../../../consumer/component/sources/dists';
 
 describe('Dists', () => {

@@ -1,12 +1,13 @@
 import R from 'ramda';
-import { processPath } from './generate-tree-madge';
+
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import {
-  resolvePackagePath,
+  ResolvedPackageData,
   resolvePackageData,
   resolvePackageNameByPath,
-  ResolvedPackageData,
+  resolvePackagePath,
 } from '../../../../utils/packages';
+import { processPath } from './generate-tree-madge';
 
 type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
 export type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };

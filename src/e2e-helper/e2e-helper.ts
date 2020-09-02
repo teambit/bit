@@ -1,26 +1,26 @@
-import R from 'ramda';
 import fs from 'fs-extra';
-import { VERSION_DELIMITER } from '../constants';
-import { removeChalkCharacters } from '../utils';
-import { FileStatus } from '../consumer/versions-ops/merge-version';
+import R from 'ramda';
 
-import ScopesData, { ScopesOptions } from './e2e-scopes';
+import { VERSION_DELIMITER } from '../constants';
+import { FileStatus } from '../consumer/versions-ops/merge-version';
+import { removeChalkCharacters } from '../utils';
 import BitJsonHelper from './e2e-bit-json-helper';
-import ScopeJsonHelper from './e2e-scope-json-helper';
-import FsHelper from './e2e-fs-helper';
-import CommandHelper from './e2e-command-helper';
-import ConfigHelper from './e2e-config-helper';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
 import BitMapHelper from './e2e-bitmap-helper';
+import CommandHelper from './e2e-command-helper';
+import ComponentJsonHelper from './e2e-component-json-helper';
+import ConfigHelper from './e2e-config-helper';
 import EnvHelper from './e2e-env-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
 import FixtureHelper from './e2e-fixtures-helper';
+import FsHelper from './e2e-fs-helper';
 import GeneralHelper from './e2e-general-helper';
+import GitHelper from './e2e-git-helper';
 import NpmHelper from './e2e-npm-helper';
 import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
-import GitHelper from './e2e-git-helper';
-import BitJsoncHelper from './e2e-bit-jsonc-helper';
-import ComponentJsonHelper from './e2e-component-json-helper';
+import ScopeJsonHelper from './e2e-scope-json-helper';
+import ScopesData, { ScopesOptions } from './e2e-scopes';
 
 export type HelperOptions = {
   scopesOptions?: ScopesOptions;
@@ -57,9 +57,17 @@ export default class Helper {
     this.bitMap = new BitMapHelper(this.scopes, this.fs);
     this.config = new ConfigHelper(this.command);
     this.npm = new NpmHelper(this.scopes, this.fs, this.command);
-    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs);
+    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs, this.npm);
     this.git = new GitHelper(this.scopes, this.command, this.scopeHelper);
-    this.fixtures = new FixtureHelper(this.fs, this.command, this.npm, this.scopes, this.debugMode, this.packageJson);
+    this.fixtures = new FixtureHelper(
+      this.fs,
+      this.command,
+      this.npm,
+      this.scopes,
+      this.debugMode,
+      this.packageJson,
+      this.scopeHelper
+    );
     this.extensions = new ExtensionsHelper(
       this.scopes,
       this.command,

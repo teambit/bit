@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
+
+import { AlreadyExistsError } from '../../extensions/workspace/component-config-file/exceptions';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import { ComponentConfigFileAlreadyExistsError } from '../../src/extensions/workspace';
 
 chai.use(require('chai-fs'));
 
@@ -81,7 +82,7 @@ describe('component config', function () {
         it('should throw error if override not used', () => {
           componentJsonPath = helper.componentJson.composePath('bar');
           const ejectCmd = () => helper.command.ejectConf('bar/foo');
-          const error = new ComponentConfigFileAlreadyExistsError(componentJsonPath);
+          const error = new AlreadyExistsError(componentJsonPath);
           helper.general.expectToThrow(ejectCmd, error);
         });
         it('should success if override used', () => {
@@ -97,7 +98,7 @@ describe('component config', function () {
           helper.componentJson.deleteIfExist('bar');
           helper.fixtures.copyFixtureExtensions('dummy-extension');
           helper.command.addComponent('dummy-extension');
-          helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+          helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
           helper.command.ejectConf('bar/foo');
           componentJson = helper.componentJson.read('bar');
         });
@@ -113,7 +114,7 @@ describe('component config', function () {
         helper.componentJson.deleteIfExist('bar');
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('bar/*', 'default-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
         helper.command.tagAllComponents();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');
@@ -140,9 +141,12 @@ describe('component config', function () {
         'my-scope/ext5': { key: 'val-ws-defaults' },
       };
       helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext3', { key: 'val-variant' });
-      helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext4', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('extensions', 'teambit.bit/aspect');
+      helper.command.link();
+      helper.command.compile();
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
+      helper.extensions.addExtensionToVariant('bar', 'my-scope/ext4', { key: 'val-variant' });
       helper.command.ejectConf('bar/foo');
       helper.componentJson.setExtension('my-scope/ext4', { key: 'val-component-json' });
       helper.componentJson.setExtension('my-scope/ext5', { key: 'val-component-json' });
@@ -161,7 +165,7 @@ describe('component config', function () {
     describe('stop on variant - component.json propagate true and variant propagate false', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', false);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should not contain extension from workspace defaults', () => {
@@ -179,7 +183,7 @@ describe('component config', function () {
     describe('propagate all the way - component.json propagate true and variant propagate true', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar/foo', 'propagate', true);
+        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
       });
       it('should contain extension from all sources', () => {

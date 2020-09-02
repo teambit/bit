@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -18,9 +19,9 @@ describe('extensions config diff', function () {
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFooAsDir();
-    helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext1', { key: 'val-variant' });
-    helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext2', { key: 'val-variant' });
-    helper.extensions.addExtensionToVariant('bar/foo', 'my-scope/ext3', { key: 'val-variant' });
+    helper.extensions.addExtensionToVariant('bar', 'my-scope/ext1', { key: 'val-variant' });
+    helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
+    helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
     helper.command.tagAllComponents();
   });
   after(() => {

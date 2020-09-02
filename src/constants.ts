@@ -2,6 +2,7 @@ import cliSpinners from 'cli-spinners';
 import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
+
 import { PathOsBased } from './utils/path';
 
 const userHome = require('user-home');
@@ -74,7 +75,7 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
-export const DEFAULT_HARMONY_PACKAGE_MANAGER = '@teambit/pnpm';
+export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.bit/pnpm';
 
 export const DEFAULT_EXTENSIONS = {};
 
@@ -441,8 +442,8 @@ export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 
 export enum Extensions {
-  dependencyResolver = '@teambit/dependency-resolver',
-  pkg = '@teambit/pkg',
-  compiler = '@teambit/compiler',
-  envs = '@teambit/envs',
+  dependencyResolver = 'teambit.bit/dependency-resolver',
+  pkg = 'teambit.bit/pkg',
+  compiler = 'teambit.bit/compiler',
+  envs = 'teambit.bit/envs',
 }

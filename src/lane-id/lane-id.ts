@@ -1,5 +1,6 @@
 /* eslint max-classes-per-file: 0 */
 import R from 'ramda';
+
 import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../constants';
 import GeneralError from '../error/general-error';
 

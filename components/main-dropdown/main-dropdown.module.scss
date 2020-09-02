@@ -1,0 +1,83 @@
+.mainDropdown {
+  z-index: 2;
+  height: 100%;
+  > div {
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .menu {
+    width: 300px;
+    padding: 0;
+    right: -5px;
+    font-size: var(--p-xs);
+    border-radius: 6px;
+    z-index: 3;
+    > div {
+      margin-bottom: 8px;
+    }
+  }
+}
+.icon {
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 300ms ease-in-out;
+  [data-open='true'] & {
+    background-color: var(--bg-color);
+    color: var(--base-color);
+    &:hover {
+      background-color: var(--bg-color);
+    }
+  }
+  &:hover {
+    background-color: var(--bg-dent);
+  }
+}
+
+// TODO  @oded - @hack! this is for closing the menu when clicking an iframe for the beta. we need a better way to do this because it uses a global data-attr
+.overlay {
+  [data-open='true'] & {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+  }
+}
+
+.menuBlock {
+  padding: 16px 8px 10px 8px;
+  border-bottom: 1px solid var(--border-color);
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.title {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #878c9a;
+  margin-bottom: 8px;
+  font-weight: bold;
+  padding: 0 16px;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  > div {
+    text-transform: capitalize;
+  }
+  .key {
+    font-size: 15px;
+    color: #6c707c;
+  }
+}

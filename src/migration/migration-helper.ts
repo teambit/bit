@@ -1,4 +1,5 @@
 import semver from 'semver';
+
 import logger from '../logger/logger';
 
 export type MigrationResult = {

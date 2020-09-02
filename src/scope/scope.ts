@@ -1,58 +1,60 @@
-import * as pathLib from 'path';
-import semver from 'semver';
 import fs from 'fs-extra';
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import ComponentObjects from './component-objects';
-import { Symlink, Version, ModelComponent } from './models';
-import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore } from '../utils';
-import {
-  BIT_HIDDEN_DIR,
-  OBJECTS_DIR,
-  BITS_DIRNAME,
-  BIT_VERSION,
-  DEFAULT_BIT_VERSION,
-  SCOPE_JSON,
-  COMPONENT_ORIGINS,
-  NODE_PATH_SEPARATOR,
-  CURRENT_UPSTREAM,
-  DEFAULT_LANE,
-  LATEST,
-} from '../constants';
-import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import { ScopeNotFound, ComponentNotFound } from './exceptions';
-import { Tmp } from './repositories';
-import { BitId, BitIds } from '../bit-id';
-import ComponentVersion from './component-version';
-import { Repository, Ref, BitObject, BitRawObject } from './objects';
-import SourcesRepository, { ComponentTree } from './repositories/sources';
-import Consumer from '../consumer/consumer';
-import loader from '../cli/loader';
-import { MigrationResult } from '../migration/migration-helper';
-import migratonManifest from './migrations/scope-migrator-manifest';
-import migrate from './migrations/scope-migrator';
-import { ScopeMigrationResult } from './migrations/scope-migrator';
-import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '../cli/loader/loader-messages';
-import logger from '../logger/logger';
-import Component from '../consumer/component/consumer-component';
-import RemovedObjects from './removed-components';
-import DependencyGraph from './graph/scope-graph';
-import RemoveModelComponents from './component-ops/remove-model-components';
-import Dists from '../consumer/component/sources/dists';
-import SpecsResults from '../consumer/specs-results';
+import * as pathLib from 'path';
+import R from 'ramda';
+import semver from 'semver';
+
 import { Analytics } from '../analytics/analytics';
-import GeneralError from '../error/general-error';
-import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
-import { PathOsBasedAbsolute } from '../utils/path';
+import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
-import { IndexType, ComponentItem } from './objects/components-index';
-import Lane from './models/lane';
+import loader from '../cli/loader';
+import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '../cli/loader/loader-messages';
+import {
+  BIT_GIT_DIR,
+  BIT_HIDDEN_DIR,
+  BIT_VERSION,
+  BITS_DIRNAME,
+  COMPONENT_ORIGINS,
+  CURRENT_UPSTREAM,
+  DEFAULT_BIT_VERSION,
+  DEFAULT_LANE,
+  DOT_GIT_DIR,
+  LATEST,
+  NODE_PATH_SEPARATOR,
+  OBJECTS_DIR,
+  SCOPE_JSON,
+} from '../constants';
+import Component from '../consumer/component/consumer-component';
+import Dists from '../consumer/component/sources/dists';
+import Consumer from '../consumer/consumer';
+import SpecsResults from '../consumer/specs-results';
+import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import GeneralError from '../error/general-error';
 import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
-import CompsAndLanesObjects from './comps-and-lanes-objects';
-import { ComponentLogs } from './models/model-component';
-import Lanes from './lanes/lanes';
-import { getAllVersionHashes } from './component-ops/traverse-versions';
+import logger from '../logger/logger';
+import { MigrationResult } from '../migration/migration-helper';
+import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
+import { PathOsBasedAbsolute } from '../utils/path';
+import ComponentObjects from './component-objects';
+import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
+import { getAllVersionHashes } from './component-ops/traverse-versions';
+import ComponentVersion from './component-version';
+import CompsAndLanesObjects from './comps-and-lanes-objects';
+import { ComponentNotFound, ScopeNotFound } from './exceptions';
+import DependencyGraph from './graph/scope-graph';
+import Lanes from './lanes/lanes';
+import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
+import migratonManifest from './migrations/scope-migrator-manifest';
+import { ModelComponent, Symlink, Version } from './models';
+import Lane from './models/lane';
+import { ComponentLogs } from './models/model-component';
+import { BitObject, BitRawObject, Ref, Repository } from './objects';
+import { ComponentItem, IndexType } from './objects/components-index';
+import RemovedObjects from './removed-components';
+import { Tmp } from './repositories';
+import SourcesRepository, { ComponentTree } from './repositories/sources';
+import { getPath as getScopeJsonPath, ScopeJson } from './scope-json';
 import VersionDependencies from './version-dependencies';
 
 const removeNils = R.reject(R.isNil);
@@ -69,6 +71,7 @@ export type ScopeProps = {
   tmp?: Tmp;
   sources?: SourcesRepository;
   objects: Repository;
+  isBare?: boolean;
 };
 
 export type IsolateOptions = {
@@ -92,6 +95,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
+  isBare = false;
   scopeImporter: ScopeComponentsImporter;
   sources: SourcesRepository;
   objects: Repository;
@@ -107,6 +111,7 @@ export default class Scope {
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects;
     this.lanes = new Lanes(this.objects, this.scopeJson);
+    this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
@@ -869,9 +874,17 @@ export default class Scope {
 
   static async load(absPath: string, useCache = true): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
+    let isBare = true;
     if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
+      isBare = false;
+    }
+    if (
+      scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR)) ||
+      scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR))
+    ) {
+      isBare = false;
     }
     if (useCache && Scope.scopeCache[scopePath]) {
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
@@ -886,7 +899,7 @@ export default class Scope {
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
     const objects = await Repository.load({ scopePath, scopeJson });
-    const scope = new Scope({ path: scopePath, scopeJson, objects });
+    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;
   }

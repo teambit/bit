@@ -1,11 +1,11 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { fromBase64, unpackCommand, buildCommandMessage } from '../../../utils';
-import { fetch } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
+import { fetch } from '../../../api/scope';
 import logger from '../../../logger/logger';
-import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
-import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
+import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { buildCommandMessage, fromBase64, unpackCommand } from '../../../utils';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 export default class Fetch implements LegacyCommand {

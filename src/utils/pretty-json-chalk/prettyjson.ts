@@ -1,5 +1,6 @@
 // ### Module dependencies
 import colors from 'chalk';
+
 import Utils from './utils';
 
 type Options = {

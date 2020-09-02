@@ -1,5 +1,5 @@
-import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
+import { loadScope, Scope } from '../../../scope';
 
 export default (async function latestVersions(path: string, componentIdsStr: string[]): Promise<string[]> {
   const scope: Scope = await loadScope(path);

@@ -1,0 +1,19 @@
+.label {
+  &.latest {
+    border-color: #37b26c;
+    color: #37b26c;
+  }
+  &.checked-out {
+    border-color: #0984e3;
+    color: #0984e3;
+  }
+}
+
+.versionLabel {
+  margin-bottom: 16px;
+}
+
+.emptyLabel {
+  height: 25px;
+  margin-bottom: 16px;
+}

@@ -1,18 +1,19 @@
 import minimatch from 'minimatch';
+
+import { BitId, BitIds } from '../../../../bit-id';
 import {
   COMPONENT_ORIGINS,
-  MANUALLY_REMOVE_DEPENDENCY,
-  MANUALLY_ADD_DEPENDENCY,
-  OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
+  MANUALLY_ADD_DEPENDENCY,
+  MANUALLY_REMOVE_DEPENDENCY,
+  OVERRIDE_COMPONENT_PREFIX,
 } from '../../../../constants';
-import ComponentMap from '../../../bit-map/component-map';
-import { BitId, BitIds } from '../../../../bit-id';
-import Component from '../../../component/consumer-component';
 import Consumer from '../../../../consumer/consumer';
-import hasWildcard from '../../../../utils/string/has-wildcard';
-import { FileType, AllDependencies } from './dependencies-resolver';
 import logger from '../../../../logger/logger';
+import hasWildcard from '../../../../utils/string/has-wildcard';
+import ComponentMap from '../../../bit-map/component-map';
+import Component from '../../../component/consumer-component';
+import { AllDependencies, FileType } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[];

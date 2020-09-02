@@ -1,0 +1,89 @@
+.versionDropdown {
+  z-index: 2;
+  height: 100%;
+  > div {
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .menu {
+    width: 300px;
+    z-index: 3;
+    padding: 0;
+    right: 0;
+    top: 43px;
+    font-size: var(--p-xs);
+    border-radius: 6px;
+  }
+}
+
+// TODO  @oded - @hack! this is for closing the menu when clicking an iframe for the beta. we need a better way to do this because it uses a global data-attr
+.overlay {
+  [data-open='true'] & {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+  }
+}
+
+.title {
+  padding: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
+}
+
+.versionContainer {
+  max-height: 240px;
+  overflow-y: scroll;
+  padding: 0 8px;
+}
+.versionLine {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 24px;
+  .version {
+    margin-right: 16px;
+  }
+}
+
+.placeholder {
+  // cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 7px;
+  border-radius: 6px;
+  user-select: none;
+  transition: background-color 300ms ease-in-out;
+  background-color: var(--bg-color);
+  // &:hover {
+  //   background-color: var(--bg-dent);
+  // }
+  [data-open='true'] & {
+    transition: color 300ms, background-color 300ms ease-in-out;
+    background-color: var(--bg-color);
+    color: var(--base-color);
+    &:hover {
+      background-color: var(--bg-color);
+    }
+  }
+  // > div {
+  // margin-right: 5px;
+  // }
+  .label {
+    margin-right: 8px;
+  }
+}
+
+.noVersions {
+  padding-left: 8px;
+  .label {
+    border: 1px solid var(--base-color);
+    color: var(--base-color);
+  }
+}

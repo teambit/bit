@@ -1,8 +1,7 @@
-import Diagnosis from '../diagnosis';
-import { ExamineBareResult } from '../diagnosis';
-import { loadConsumer } from '../../consumer';
-import { Symlink, ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
+import { loadConsumer } from '../../consumer';
+import { ModelComponent, Symlink } from '../../scope/models';
+import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export const DIAGNOSIS_NAME = 'check orphan refs';
 export default class OrphanSymlinkObjects extends Diagnosis {

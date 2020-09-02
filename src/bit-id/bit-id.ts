@@ -1,14 +1,15 @@
-import * as path from 'path';
-import * as semver from 'semver';
 import decamelize from 'decamelize';
+import * as path from 'path';
 import R from 'ramda';
-import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
+import * as semver from 'semver';
+
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
+import GeneralError from '../error/general-error';
 import isValidIdChunk from '../utils/is-valid-id-chunk';
 import isValidScopeName from '../utils/is-valid-scope-name';
 import { PathOsBased } from '../utils/path';
-import GeneralError from '../error/general-error';
 import versionParser, { isHash } from '../version/version-parser';
+import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 
 export type BitIdProps = {
   scope?: string | null | undefined;
@@ -157,7 +158,8 @@ export default class BitId {
     if (!R.is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
-    if (id.includes(VERSION_DELIMITER)) {
+
+    if (id.includes(VERSION_DELIMITER) && id.lastIndexOf(VERSION_DELIMITER) > 0) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
       version = newVersion;
@@ -184,7 +186,7 @@ export default class BitId {
 
     if (!isValidIdChunk(name)) throw new InvalidName(name);
     if (scope && !isValidScopeName(scope)) {
-      throw new InvalidScopeName(scope);
+      throw new InvalidScopeName(scope, id);
     }
 
     return new BitId({

@@ -1,17 +1,18 @@
-import * as pathLib from 'path';
-import R from 'ramda';
 import chalk from 'chalk';
 import pMapSeries from 'p-map-series';
-import { ComponentNotFound } from '../exceptions';
-import IsolatedEnvironment from '../../environment';
-import { BitId } from '../../bit-id';
-import ComponentWithDependencies from '../component-dependencies';
-import logger from '../../logger/logger';
-import componentResolver from '../../component-resolver';
-import { Analytics } from '../../analytics/analytics';
+import * as pathLib from 'path';
+import R from 'ramda';
+
 import { Scope } from '..';
-import { fetchRemoteVersions } from '../scope-remotes';
+import { Analytics } from '../../analytics/analytics';
+import { BitId } from '../../bit-id';
+import componentResolver from '../../component-resolver';
+import IsolatedEnvironment from '../../environment';
 import { IsolateOptions } from '../../environment/isolator';
+import logger from '../../logger/logger';
+import ComponentWithDependencies from '../component-dependencies';
+import { ComponentNotFound } from '../exceptions';
+import { fetchRemoteVersions } from '../scope-remotes';
 
 const removeNils = R.reject(R.isNil);
 

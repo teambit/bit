@@ -1,26 +1,25 @@
-import R from 'ramda';
 import fs from 'fs-extra';
-import semver from 'semver';
 import * as path from 'path';
-import Component from '../component/consumer-component';
-import ComponentMap from '../bit-map/component-map';
-import { ComponentOrigin } from '../bit-map/component-map';
-import Consumer from '../consumer';
+import R from 'ramda';
+import semver from 'semver';
+
+import { BitIds } from '../../bit-id';
+import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TESTER_ENV_TYPE } from '../../constants';
+import ShowDoctorError from '../../error/show-doctor-error';
+import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
-import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import { PathOsBasedRelative } from '../../utils/path';
+import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
+import BitMap from '../bit-map/bit-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
+import Component from '../component/consumer-component';
+import PackageJsonFile from '../component/package-json-file';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
+import { Artifact } from '../component/sources/artifact';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
-import BitMap from '../bit-map/bit-map';
-import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
-import PackageJsonFile from '../component/package-json-file';
-import ShowDoctorError from '../../error/show-doctor-error';
-import { Artifact } from '../component/sources/artifact';
-import { BitIds } from '../../bit-id';
+import Consumer from '../consumer';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -172,13 +171,6 @@ export default class ComponentWriter {
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
-      if (!this.consumer || this.consumer.isolated) {
-        // bit-bin should not be installed in the capsule. it'll be symlinked later on.
-        // see package-manager.linkBitBinInCapsule();
-        packageJson.removeDependency('bit-bin');
-        packageJson.copyPeerDependenciesToDev();
-      }
-
       componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());

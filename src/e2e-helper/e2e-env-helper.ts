@@ -1,12 +1,13 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
+import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
+import FixtureHelper from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
-import FixtureHelper from './e2e-fixtures-helper';
 import ScopesData from './e2e-scopes';
-import { generateRandomStr } from '../utils';
 
 export default class EnvHelper {
   command: CommandHelper;

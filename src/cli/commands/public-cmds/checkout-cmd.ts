@@ -1,11 +1,11 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { checkout } from '../../../api/consumer';
-import { applyVersionReport } from './merge-cmd';
-import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
-import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { ApplyVersionResults, getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { applyVersionReport } from './merge-cmd';
 
 export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';

@@ -1,7 +1,9 @@
 import fs from 'fs-extra';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
+import * as path from 'path';
+
 import BitId from '../bit-id/bit-id';
 import ShowDoctorError from '../error/show-doctor-error';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 export default class Symlink {
   src: string; // current existing path
@@ -18,6 +20,14 @@ export default class Symlink {
     this._throwForMissingDistOutsideComponent();
     return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
+
+  async writeWithNativeFS() {
+    this._throwForMissingDistOutsideComponent();
+    await fs.remove(this.dest);
+    await fs.ensureDir(path.dirname(this.dest));
+    return fs.symlink(this.src, this.dest);
+  }
+
   static makeInstance(src: string, dest: string, componentId?: BitId) {
     return new Symlink(src, dest, componentId);
   }

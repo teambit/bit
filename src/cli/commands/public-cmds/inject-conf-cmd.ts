@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { injectConf } from '../../../api/consumer';
 import { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class InjectConf implements LegacyCommand {
   name = 'inject-conf [id]';

@@ -1,6 +1,6 @@
-import NodeModuleLinker from './node-modules-linker';
-import { linkAllToNodeModules, getLinksInDistToWrite, getAllComponentsLinks, reLinkDependents } from './linker';
 import LinkFile from './link-file';
+import { getAllComponentsLinks, getLinksInDistToWrite, linkAllToNodeModules, reLinkDependents } from './linker';
+import NodeModuleLinker from './node-modules-linker';
 
 export {
   NodeModuleLinker,

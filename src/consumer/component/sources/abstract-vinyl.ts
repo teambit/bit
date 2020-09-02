@@ -1,11 +1,12 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
 import Vinyl from 'vinyl';
-import { FileConstructor } from './vinyl-types';
+
 import logger from '../../../logger/logger';
+import Source from '../../../scope/models/source';
 import { eol } from '../../../utils';
 import { PathOsBased } from '../../../utils/path';
-import Source from '../../../scope/models/source';
+import { FileConstructor } from './vinyl-types';
 
 type AbstractVinylProps = {
   cwd: PathOsBased;

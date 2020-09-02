@@ -1,6 +1,6 @@
-import EnvExtension from './env-extension';
-import { EnvExtensionProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension-types';
 import { TESTER_ENV_TYPE } from '../constants';
+import EnvExtension from './env-extension';
+import { EnvExtensionModel, EnvExtensionOptions, EnvExtensionProps } from './env-extension-types';
 
 export type TesterExtensionOptions = EnvExtensionOptions;
 export type TesterExtensionModel = EnvExtensionModel;

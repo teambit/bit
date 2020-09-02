@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import BitIds from '../bit-id/bit-ids';
+
 import BitId from '../bit-id/bit-id';
+import BitIds from '../bit-id/bit-ids';
 import resolveLatestVersion from './resolveLatestVersion';
 
 describe('getLatestVersionNumber', () => {

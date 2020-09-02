@@ -1,5 +1,6 @@
 /* eslint no-console: 0 */
 import { expect } from 'chai';
+
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 const maxComponents = 3000;

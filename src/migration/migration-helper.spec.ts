@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import getMigrationVersions from '../migration/migration-helper';
+
 import logger from '../logger/logger';
+import getMigrationVersions from '../migration/migration-helper';
 
 describe('migration helper', () => {
   let migrationVersions;

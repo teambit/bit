@@ -1,5 +1,5 @@
-import ValidationError from '../error/validation-error';
 import GeneralError from '../error/general-error';
+import ValidationError from '../error/validation-error';
 
 type Value = 'string' | 'number' | 'array' | 'object' | 'boolean' | 'undefined';
 

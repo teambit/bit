@@ -1,13 +1,13 @@
 import R from 'ramda';
-import Component from '../../component/consumer-component';
-import Consumer from '../../consumer';
-import { sha1, pathNormalizeToLinux } from '../../../utils';
-import { SourceFile } from '../../component/sources';
-import Tmp from '../../../scope/repositories/tmp';
-import mergeFiles from '../../../utils/merge-files';
-import { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import { PathOsBased, PathLinux } from '../../../utils/path';
+
 import GeneralError from '../../../error/general-error';
+import Tmp from '../../../scope/repositories/tmp';
+import { pathNormalizeToLinux, sha1 } from '../../../utils';
+import mergeFiles, { MergeFileParams, MergeFileResult } from '../../../utils/merge-files';
+import { PathLinux, PathOsBased } from '../../../utils/path';
+import Component from '../../component/consumer-component';
+import { SourceFile } from '../../component/sources';
+import Consumer from '../../consumer';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{

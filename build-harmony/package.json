@@ -1,0 +1,15 @@
+{
+  "name": "build-harmony",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "cli link && cli compile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@teambit/bit": "^0.0.30"
+  }
+}

@@ -1,6 +1,7 @@
-import R from 'ramda';
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
+import R from 'ramda';
+
 import { Ref } from '../objects';
 
 export type UnmergedComponent = {

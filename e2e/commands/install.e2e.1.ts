@@ -1,9 +1,9 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+
+import { DEFAULT_PACKAGE_MANAGER, IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { DEFAULT_PACKAGE_MANAGER } from '../../src/constants';
-import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 

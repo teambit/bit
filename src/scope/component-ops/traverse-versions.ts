@@ -10,9 +10,9 @@
  * methods here.
  */
 
-import { Repository, Ref } from '../objects';
-import { Version, ModelComponent } from '../models';
-import { VersionNotFound, HeadNotFound, ParentNotFound } from '../exceptions';
+import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
+import { ModelComponent, Version } from '../models';
+import { Ref, Repository } from '../objects';
 
 type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
 

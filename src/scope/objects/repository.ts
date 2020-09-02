@@ -1,21 +1,22 @@
-import R from 'ramda';
 import fs from 'fs-extra';
-import * as path from 'path';
 import uniqBy from 'lodash.uniqby';
+import * as path from 'path';
+import R from 'ramda';
+
+import { OBJECTS_DIR } from '../../constants';
+import logger from '../../logger/logger';
+import { glob, resolveGroupId, writeFile } from '../../utils';
+import removeFile from '../../utils/fs-remove-file';
+import { HashNotFound, OutdatedIndexJson } from '../exceptions';
+import RemoteLanes from '../lanes/remote-lanes';
+import UnmergedComponents from '../lanes/unmerged-components';
+import ScopeMeta from '../models/scopeMeta';
+import { ScopeJson } from '../scope-json';
+import ScopeIndex, { IndexType } from './components-index';
 import BitObject from './object';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import { OBJECTS_DIR } from '../../constants';
-import { HashNotFound, OutdatedIndexJson } from '../exceptions';
-import { resolveGroupId, writeFile, glob } from '../../utils';
-import removeFile from '../../utils/fs-remove-file';
-import ScopeMeta from '../models/scopeMeta';
-import logger from '../../logger/logger';
-import ScopeIndex, { IndexType } from './components-index';
-import { ScopeJson } from '../scope-json';
-import RemoteLanes from '../lanes/remote-lanes';
-import UnmergedComponents from '../lanes/unmerged-components';
-import { onPersist, onRead, ContentTransformer } from './repository-hooks';
+import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 

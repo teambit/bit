@@ -1,12 +1,12 @@
 /**
  * this file had been forked from https://github.com/pahen/detective-typescript
  */
+import { isRelativeImport } from '../../../../../../utils';
 import {
-  getDependenciesFromMemberExpression,
   getDependenciesFromCallExpression,
+  getDependenciesFromMemberExpression,
   getSpecifierValueForImportDeclaration,
 } from '../parser-helper';
-import { isRelativeImport } from '../../../../../../utils';
 
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');

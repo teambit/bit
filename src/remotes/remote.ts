@@ -1,17 +1,17 @@
-import { isBitUrl, cleanBang } from '../utils';
-import ComponentObjects from '../scope/component-objects';
-import { connect } from '../scope/network';
-import { InvalidRemote } from './exceptions';
 import { BitId } from '../bit-id';
-import { Network } from '../scope/network/network';
-import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
-import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
-import DependencyGraph from '../scope/graph/scope-graph';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
-import { ComponentLogs } from '../scope/models/model-component';
-import { LaneData } from '../scope/lanes/lanes';
+import Component from '../consumer/component/consumer-component';
 import { RemoteLaneId } from '../lane-id/lane-id';
+import ComponentObjects from '../scope/component-objects';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
+import DependencyGraph from '../scope/graph/scope-graph';
+import { LaneData } from '../scope/lanes/lanes';
+import { ComponentLogs } from '../scope/models/model-component';
+import { connect } from '../scope/network';
+import { Network } from '../scope/network/network';
+import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
+import { cleanBang, isBitUrl } from '../utils';
+import { InvalidRemote } from './exceptions';
 
 /**
  * @ctx bit, primary, remote
@@ -55,10 +55,6 @@ export default class Remote {
     return this.connect(strategiesNames).then((network) => network.list(namespacesUsingWildcards));
   }
 
-  search(query: string, reindex: boolean): Promise<any> {
-    return this.connect().then((network) => network.search(query, reindex));
-  }
-
   show(
     bitId: BitId,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
@@ -88,7 +84,7 @@ export default class Remote {
   latestVersions(
     bitIds: BitId[],
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ComponentObjects[]> {
+  ): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect(strategiesNames).then((network) => network.latestVersions(bitIds));
   }

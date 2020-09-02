@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { LegacyCommand } from '../../legacy-command';
-import { CFG_USER_TOKEN_KEY } from '../../../constants';
+
 import * as scopeConfig from '../../../api/consumer/lib/global-config';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import { LegacyCommand } from '../../legacy-command';
 
 export default class Logout implements LegacyCommand {
   name = 'logout';

@@ -1,10 +1,11 @@
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import chai, { expect } from 'chai';
+
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { NewerVersionFound } from '../../src/consumer/exceptions';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 

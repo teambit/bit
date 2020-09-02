@@ -1,0 +1,8 @@
+.statusLine {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  .modified {
+    color: #ff8b00 !important;
+  }
+}

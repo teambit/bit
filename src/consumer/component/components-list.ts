@@ -1,22 +1,23 @@
 import * as path from 'path';
-import semver from 'semver';
 import R from 'ramda';
-import Version from '../../scope/models/version';
+import semver from 'semver';
+
+import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
+import { BitId, BitIds } from '../../bit-id';
+import { COMPONENT_ORIGINS, LATEST } from '../../constants';
+import { DivergeData } from '../../scope/component-ops/diverge-data';
+import { Lane } from '../../scope/models';
 import ModelComponent from '../../scope/models/model-component';
+import Version from '../../scope/models/version';
 import Scope from '../../scope/scope';
+import { fetchRemoteVersions } from '../../scope/scope-remotes';
+import { filterAsync } from '../../utils';
+import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
+import BitMap from '../bit-map/bit-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
-import { BitId, BitIds } from '../../bit-id';
-import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
-import { COMPONENT_ORIGINS, LATEST } from '../../constants';
-import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
-import { fetchRemoteVersions } from '../../scope/scope-remotes';
-import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
-import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
-import { Lane } from '../../scope/models';
-import { DivergeData } from '../../scope/component-ops/diverge-data';
-import { filterAsync } from '../../utils';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 

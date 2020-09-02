@@ -1,20 +1,18 @@
-import loadScope from '../../scope-loader';
-import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
-import ComponentObjects from '../../component-objects';
+import { deprecate, fetch, put, remove, undeprecate } from '../../../api/scope';
 import { BitId } from '../../../bit-id';
-import { FsScopeNotLoaded } from '../exceptions';
-import Scope, { ScopeDescriptor } from '../../scope';
-import { searchAdapter } from '../../../search';
-import { Network } from '../network';
-import ComponentsList from '../../../consumer/component/components-list';
-import { ListScopeResult } from '../../../consumer/component/components-list';
-import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
-import DependencyGraph from '../../graph/scope-graph';
-import { ComponentLogs } from '../../models/model-component';
-import { LaneData } from '../../lanes/lanes';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
+import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
+import ComponentObjects from '../../component-objects';
+import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import DependencyGraph from '../../graph/scope-graph';
+import { LaneData } from '../../lanes/lanes';
+import { ComponentLogs } from '../../models/model-component';
+import Scope, { ScopeDescriptor } from '../../scope';
+import loadScope from '../../scope-loader';
+import { FsScopeNotLoaded } from '../exceptions';
+import { Network } from '../network';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -84,10 +82,6 @@ export default class Fs implements Network {
 
   list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
-  }
-
-  search(query: string, reindex: boolean): Promise<string> {
-    return searchAdapter.scopeSearch(this.scopePath, query, reindex);
   }
 
   show(bitId: BitId): Promise<Component> {

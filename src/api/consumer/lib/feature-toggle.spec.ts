@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { ENV_VAR_FEATURE_TOGGLE, isFeatureEnabled, addFeature } from './feature-toggle';
+
+import { addFeature, ENV_VAR_FEATURE_TOGGLE, isFeatureEnabled } from './feature-toggle';
 
 describe('featureToggle', () => {
   after(() => {

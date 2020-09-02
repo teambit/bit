@@ -1,8 +1,9 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
-import ConsumerComponent from '../../consumer/component';
+
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import { CFG_CI_FUNCTION_PATH_KEY, CFG_CI_ENABLE_KEY } from '../../constants';
+import { CFG_CI_ENABLE_KEY, CFG_CI_FUNCTION_PATH_KEY } from '../../constants';
+import ConsumerComponent from '../../consumer/component';
 
 function defaultCIFunc(id: string, scopePath: string) {
   const child = spawn(process.argv[0], [path.join(__dirname, 'ci-worker.js')], {

@@ -1,14 +1,14 @@
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import RemovedObjects from '../removed-components';
-import logger from '../../logger/logger';
+import R from 'ramda';
+
 import { BitId, BitIds } from '../../bit-id';
-import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
-import { ModelComponent, Lane } from '../models';
-import { Symlink } from '../models';
+import { COMPONENT_ORIGINS, LATEST_BIT_VERSION } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import Scope from '../scope';
 import Consumer from '../../consumer/consumer';
+import logger from '../../logger/logger';
+import { Lane, ModelComponent, Symlink } from '../models';
+import RemovedObjects from '../removed-components';
+import Scope from '../scope';
 
 export default class RemoveModelComponents {
   scope: Scope;

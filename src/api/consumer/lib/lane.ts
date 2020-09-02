@@ -1,7 +1,7 @@
-import { Consumer, loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import { DEFAULT_LANE } from '../../../constants';
-import { LaneData } from '../../../scope/lanes/lanes';
+import { Consumer, loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import getRemoteByName from '../../../remotes/get-remote-by-name';
+import { LaneData } from '../../../scope/lanes/lanes';
 
 export type LaneResults = {
   lanes: LaneData[];

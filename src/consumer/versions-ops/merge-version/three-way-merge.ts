@@ -1,15 +1,15 @@
 import R from 'ramda';
-import Component from '../../component';
+
 import { Consumer } from '../..';
-import { sha1 } from '../../../utils';
-import { SourceFile } from '../../component/sources';
-import { Tmp } from '../../../scope/repositories';
-import mergeFiles from '../../../utils/merge-files';
-import { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import { PathOsBased, PathLinux, pathNormalizeToLinux } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import { Version } from '../../../scope/models';
 import { SourceFileModel } from '../../../scope/models/version';
+import { Tmp } from '../../../scope/repositories';
+import { sha1 } from '../../../utils';
+import mergeFiles, { MergeFileParams, MergeFileResult } from '../../../utils/merge-files';
+import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../../utils/path';
+import Component from '../../component';
+import { SourceFile } from '../../component/sources';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{

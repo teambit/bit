@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+
 import AbstractError from '../../../error/abstract-error';
 
 export class FailedLoadForTag extends AbstractError {

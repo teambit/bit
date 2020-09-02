@@ -1,5 +1,5 @@
+import { getConsumerComponent, getScopeComponent } from '..';
 import loader from '../../../cli/loader/loader';
-import { getScopeComponent, getConsumerComponent } from '..';
 import { BEFORE_SHOW_REMOTE } from '../../../cli/loader/loader-messages';
 
 export default (async function show({

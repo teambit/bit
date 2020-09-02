@@ -1,7 +1,8 @@
-import R from 'ramda';
 import { expect } from 'chai';
-import ModelComponent from './model-component';
+import R from 'ramda';
+
 import modelComponentFixture from '../../../fixtures/component-model-object.json';
+import ModelComponent from './model-component';
 
 const getModelComponentFixture = (): typeof modelComponentFixture => {
   return R.clone(modelComponentFixture);

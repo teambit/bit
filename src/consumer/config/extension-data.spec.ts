@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { ExtensionDataList, ExtensionDataEntry } from './extension-data';
+
 import { BitId } from '../../bit-id';
+import { ExtensionDataEntry, ExtensionDataList } from './extension-data';
 
 describe('ExtensionDataList', () => {
   describe('merge lists', () => {

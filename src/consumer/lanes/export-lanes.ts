@@ -1,12 +1,13 @@
 import R from 'ramda';
+
 import { Consumer } from '..';
-import { Lane } from '../../scope/models';
-import WorkspaceLane from '../bit-map/workspace-lane';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { BitIds } from '../../bit-id';
-import GeneralError from '../../error/general-error';
 import loader from '../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../cli/loader/loader-messages';
+import GeneralError from '../../error/general-error';
+import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import { Lane } from '../../scope/models';
+import WorkspaceLane from '../bit-map/workspace-lane';
 import ComponentsList from '../component/components-list';
 
 export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) {

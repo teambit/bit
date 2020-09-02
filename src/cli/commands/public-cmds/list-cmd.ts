@@ -1,12 +1,13 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { listScope } from '../../../api/consumer';
-import listTemplate from '../../templates/list-template';
-import bareListTemplate from '../../templates/bare-list-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import bareListTemplate from '../../templates/bare-list-template';
+import listTemplate from '../../templates/list-template';
 
 export default class List implements LegacyCommand {
   name = 'list [scope]';

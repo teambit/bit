@@ -1,17 +1,18 @@
-import fs from 'fs-extra';
-import * as path from 'path';
-import R from 'ramda';
 import detectIndent from 'detect-indent';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectNewline from 'detect-newline';
+import fs from 'fs-extra';
+import * as path from 'path';
+import R from 'ramda';
 import stringifyPackage from 'stringify-package';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
-import { PACKAGE_JSON, DEPENDENCIES_FIELDS } from '../../constants';
+
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
-import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import PackageJsonVinyl from './package-json-vinyl';
 import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
+import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
+import Component from './consumer-component';
+import PackageJsonVinyl from './package-json-vinyl';
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
@@ -100,8 +101,8 @@ export default class PackageJsonFile {
   }
 
   static loadFromCapsuleSync(capsuleRootDir: string) {
-    const filePath = composePath(capsuleRootDir);
-    const filePathAbsolute = filePath;
+    const filePath = composePath('.');
+    const filePathAbsolute = path.join(capsuleRootDir, filePath);
     const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
     if (!packageJsonStr) {
       throw new Error(`capsule ${capsuleRootDir} is missing package.json`);

@@ -1,29 +1,28 @@
-import R from 'ramda';
-import { v4 } from 'uuid';
-import { ReleaseType } from 'semver';
-import * as RA from 'ramda-adjunct';
 import pMapSeries from 'p-map-series';
+import R from 'ramda';
+import * as RA from 'ramda-adjunct';
+import { ReleaseType } from 'semver';
+import { v4 } from 'uuid';
+
 import { Scope } from '..';
-import Consumer from '../../consumer/consumer';
-import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import Component from '../../consumer/component/consumer-component';
-import loader from '../../cli/loader';
-import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
-import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
-import { pathJoinLinux } from '../../utils';
-import { BitIds, BitId } from '../../bit-id';
-import ValidationError from '../../error/validation-error';
+import { BitId, BitIds } from '../../bit-id';
+import loader from '../../cli/loader';
+import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import { COMPONENT_ORIGINS, Extensions } from '../../constants';
-import { PathLinux } from '../../utils/path';
-import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
-import { AutoTagResult } from './auto-tag';
-import { buildComponentsGraph } from '../graph/components-graph';
-import ShowDoctorError from '../../error/show-doctor-error';
-import { getAllFlattenedDependencies } from './get-flattened-dependencies';
-import { sha1 } from '../../utils';
-import GeneralError from '../../error/general-error';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
+import Component from '../../consumer/component/consumer-component';
+import Consumer from '../../consumer/consumer';
+import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
+import GeneralError from '../../error/general-error';
+import ShowDoctorError from '../../error/show-doctor-error';
+import ValidationError from '../../error/validation-error';
+import logger from '../../logger/logger';
+import { pathJoinLinux, sha1 } from '../../utils';
+import { PathLinux } from '../../utils/path';
+import { buildComponentsGraph } from '../graph/components-graph';
+import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
+import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -338,9 +337,10 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
  * @returns
  */
 function updateComponentsByTagResult(components: Component[]) {
-  return (envsResult: any[]) => {
-    if (!envsResult || envsResult.length === 0) return;
-    envsResult.map(updateComponentsByTagEnvResultsComponents(components));
+  // we can't import types from harmony to legacy, but the type here is the type returned by tagListener()
+  return (envsResult: { results: any[] }) => {
+    if (!envsResult || !envsResult.results || envsResult.results.length === 0) return;
+    envsResult.results.map(updateComponentsByTagEnvResultsComponents(components));
   };
 }
 
@@ -351,7 +351,7 @@ function updateComponentsByTagResult(components: Component[]) {
  * @returns
  */
 function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component[]) {
-  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.res?.components);
+  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.data?.components);
 }
 
 /**
@@ -362,16 +362,13 @@ function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component
  * @returns
  */
 function updateComponentsByTagResultsComponents(componentsToUpdate: Component[], envTagResultComponents?: any[]) {
-  if (
-    !envTagResultComponents ||
-    envTagResultComponents.length === 0 ||
-    !envTagResultComponents[0] ||
-    !envTagResultComponents[0].length
-  )
+  if (!envTagResultComponents || envTagResultComponents.length === 0 || !envTagResultComponents[0]) {
     return;
+  }
+
   // Since all the services changes the same components we will only use the first service
   // This might create bugs in the future. so if you have a service which return something else, here is the place to fix it.
-  envTagResultComponents[0].map(updateComponentsByTagResultsComponent(componentsToUpdate));
+  envTagResultComponents.map(updateComponentsByTagResultsComponent(componentsToUpdate));
 }
 
 /**

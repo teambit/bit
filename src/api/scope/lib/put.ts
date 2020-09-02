@@ -1,11 +1,12 @@
 import R from 'ramda';
-import { loadScope } from '../../../scope';
-import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
-import HooksManager from '../../../hooks';
-import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
+
 import BitIds from '../../../bit-id/bit-ids';
-import { isClientHasVersionBefore } from '../../../scope/network/check-version-compatibility';
+import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
+import HooksManager from '../../../hooks';
+import { loadScope } from '../../../scope';
+import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
 import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
+import { isClientHasVersionBefore } from '../../../scope/network/check-version-compatibility';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

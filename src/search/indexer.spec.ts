@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import indexer from '../search/indexer';
 

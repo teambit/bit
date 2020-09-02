@@ -1,10 +1,10 @@
-import { loadConsumer, Consumer } from '../../../consumer';
+import { Consumer, loadConsumer } from '../../../consumer';
 import {
   removeLocalVersion,
   removeLocalVersionsForAllComponents,
   removeLocalVersionsForComponentsMatchedByWildcard,
+  untagResult,
 } from '../../../scope/component-ops/untag-component';
-import { untagResult } from '../../../scope/component-ops/untag-component';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function unTagAction(version?: string, force?: boolean, id?: string): Promise<untagResult[]> {

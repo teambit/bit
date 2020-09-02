@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import Sources from '../../scope/repositories/sources';
 import Component from '../models/model-component';
 

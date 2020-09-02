@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -28,7 +29,7 @@ describe('harmony extension config', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.extensions.addExtensionToVariant('*', '@teambit/scope', config);
+        helper.extensions.addExtensionToVariant('*', 'teambit.bit/scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
@@ -39,7 +40,7 @@ describe('harmony extension config', function () {
         expect(extensionData[0].config).to.deep.equal(config);
       });
       it('should not have version for core extension in the models', () => {
-        expect(extensionData[0].name).to.equal('@teambit/scope');
+        expect(extensionData[0].name).to.equal('teambit.bit/scope');
       });
       it('should not insert core extensions into the component dev deps', () => {
         expect(devDeps).to.be.length(0);

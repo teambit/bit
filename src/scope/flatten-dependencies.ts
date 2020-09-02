@@ -1,8 +1,8 @@
-import { flatten } from '../utils';
-import VersionDependencies from './version-dependencies';
-import Repository from './objects/repository';
 import { BitIds } from '../bit-id';
+import { flatten } from '../utils';
 import ComponentWithDependencies from './component-dependencies';
+import Repository from './objects/repository';
+import VersionDependencies from './version-dependencies';
 
 export function flattenDependencies(dependencies: ComponentWithDependencies[]) {
   return Object.values(

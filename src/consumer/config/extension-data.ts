@@ -1,11 +1,12 @@
 /* eslint-disable max-classes-per-file */
 import R, { forEachObjIndexed } from 'ramda';
 import { compact } from 'ramda-adjunct';
+
 import { BitId, BitIds } from '../../bit-id';
-import { AbstractVinyl } from '../component/sources';
-import { Artifact } from '../component/sources/artifact';
 import Source from '../../scope/models/source';
 import { sortObject } from '../../utils';
+import { AbstractVinyl } from '../component/sources';
+import { Artifact } from '../component/sources/artifact';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {

@@ -1,17 +1,18 @@
-import execa from 'execa';
-import { spawn } from 'child_process';
-import pMapSeries from 'p-map-series';
-import semver from 'semver';
-import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
+import { spawn } from 'child_process';
+import execa from 'execa';
 import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
 import * as path from 'path';
-import logger from '../logger/logger';
-import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN, IS_WINDOWS } from '../constants';
-import { PathOsBased } from '../utils/path';
+import R, { is, isNil, join, map, merge, toPairs } from 'ramda';
+import semver from 'semver';
+
 import { Analytics } from '../analytics/analytics';
-import ShowDoctorError from '../error/show-doctor-error';
+import { BASE_DOCS_DOMAIN, DEFAULT_PACKAGE_MANAGER, IS_WINDOWS } from '../constants';
 import { PackageManagerClients } from '../consumer/config/legacy-workspace-config-interface';
+import ShowDoctorError from '../error/show-doctor-error';
+import logger from '../logger/logger';
+import { PathOsBased } from '../utils/path';
 
 export type PackageManagerResults = { stdout: string; stderr: string };
 

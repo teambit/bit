@@ -1,10 +1,10 @@
 import semver from 'semver';
-import Diagnosis from '../diagnosis';
-import { ExamineBareResult } from '../diagnosis';
-import npmClient from '../../npm-client';
-import { BIT_VERSION } from '../../constants';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import packageFile from '../../../package.json';
+import { BIT_VERSION } from '../../constants';
+import npmClient from '../../npm-client';
+import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateBitVersion extends Diagnosis {
   name = 'validate bit version';

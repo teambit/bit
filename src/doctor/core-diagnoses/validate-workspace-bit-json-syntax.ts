@@ -1,8 +1,8 @@
 import R from 'ramda';
-import Diagnosis from '../diagnosis';
-import { ExamineBareResult } from '../diagnosis';
+
 import { loadConsumer } from '../../consumer';
 import WorkspaceConfig from '../../consumer/config/workspace-config';
+import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   name = "validate workspace's bit config";

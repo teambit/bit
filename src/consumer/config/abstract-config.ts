@@ -1,26 +1,27 @@
+import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import fs from 'fs-extra';
+
 import { BitIds } from '../../bit-id';
-import { filterObject } from '../../utils';
-import { ExtensionOptions } from '../../legacy-extensions/extension';
-import { EnvExtensionOptions, EnvType } from '../../legacy-extensions/env-extension-types';
-import { PathOsBased, PathLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import {
   BIT_JSON,
-  NO_PLUGIN_TYPE,
   COMPILER_ENV_TYPE,
-  DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS,
+  DEFAULT_LANGUAGE,
+  NO_PLUGIN_TYPE,
   PACKAGE_JSON,
 } from '../../constants';
+import { EnvExtensionOptions, EnvType } from '../../legacy-extensions/env-extension-types';
+import { ExtensionOptions } from '../../legacy-extensions/extension';
 import logger from '../../logger/logger';
-import JSONFile from '../component/sources/json-file';
+import { filterObject } from '../../utils';
+import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import PackageJsonFile from '../component/package-json-file';
-import DataToPersist from '../component/sources/data-to-persist';
 import { AbstractVinyl } from '../component/sources';
+import DataToPersist from '../component/sources/data-to-persist';
+import JSONFile from '../component/sources/json-file';
 import { ExtensionDataList } from './extension-data';
 
 export type RegularExtensionObject = {

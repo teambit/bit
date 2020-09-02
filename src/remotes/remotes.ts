@@ -1,16 +1,17 @@
 import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
+
 import { BitId } from '../bit-id';
-import Remote from './remote';
-import { forEach, prependBang, flatten } from '../utils';
-import { PrimaryOverloaded } from './exceptions';
-import remoteResolver from './remote-resolver/remote-resolver';
 import GlobalRemotes from '../global-config/global-remotes';
-import Scope from '../scope/scope';
-import logger from '../logger/logger';
-import DependencyGraph from '../scope/graph/scope-graph';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import { RemoteLaneId } from '../lane-id/lane-id';
+import logger from '../logger/logger';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
+import DependencyGraph from '../scope/graph/scope-graph';
+import Scope from '../scope/scope';
+import { flatten, forEach, prependBang } from '../utils';
+import { PrimaryOverloaded } from './exceptions';
+import Remote from './remote';
+import remoteResolver from './remote-resolver/remote-resolver';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -47,7 +48,7 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<CompsAndLanesObjects> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
-    const groupedIds = groupArray(ids, 'scope');
+    const groupedIds = groupArray(ids, 'scope') as Record<string, BitId[]>;
     const promises = [];
     forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(
@@ -67,11 +68,11 @@ export default class Remotes extends Map<string, Remote> {
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
     const groupedIds = this._groupByScopeName(ids);
-    const promises = [];
-    forEach(groupedIds, (scopeIds, scopeName) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      promises.push(this.resolve(scopeName, thisScope).then((remote) => remote.latestVersions(scopeIds)));
-    });
+
+    const promises = Object.entries(groupedIds).map(([scopeName, scopeIds]) =>
+      this.resolve(scopeName, thisScope).then((remote) => remote.latestVersions(scopeIds))
+    );
+
     const components = await Promise.all(promises);
     const flattenComponents = flatten(components);
     return flattenComponents.map((componentId) => BitId.parse(componentId, true));
@@ -94,9 +95,9 @@ export default class Remotes extends Map<string, Remote> {
     return Promise.all(graphsP);
   }
 
-  _groupByScopeName(ids: BitId[]): { [scopeName: string]: BitId[] } {
+  _groupByScopeName(ids: BitId[]) {
     const byScope = groupBy(prop('scope'));
-    return byScope(ids);
+    return byScope(ids) as { [scopeName: string]: BitId[] };
   }
 
   toPlainObject() {

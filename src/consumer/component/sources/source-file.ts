@@ -1,11 +1,12 @@
 import R from 'ramda';
 import vinylFile from 'vinyl-file';
-import AbstractVinyl from './abstract-vinyl';
-import FileSourceNotFound from '../exceptions/file-source-not-found';
+
 import logger from '../../../logger/logger';
 import { SourceFileModel } from '../../../scope/models/version';
-import { PathOsBased } from '../../../utils/path';
 import { Repository } from '../../../scope/objects';
+import { PathOsBased } from '../../../utils/path';
+import FileSourceNotFound from '../exceptions/file-source-not-found';
+import AbstractVinyl from './abstract-vinyl';
 
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?

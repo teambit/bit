@@ -1,8 +1,13 @@
 import ora, { Ora, PersistOptions } from 'ora';
+
 import { SPINNER_TYPE } from '../../constants';
 
 export class Loader {
   private spinner: Ora | null;
+
+  get isStarted() {
+    return !!this.spinner;
+  }
 
   on(): Loader {
     if (!this.spinner) {

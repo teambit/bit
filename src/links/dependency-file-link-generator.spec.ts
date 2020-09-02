@@ -1,26 +1,27 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import * as path from 'path';
 import { expect } from 'chai';
-import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import Component from '../consumer/component/consumer-component';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import barFoo from '../../fixtures/consumer-components/plain-javascript/bar-foo.json';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import utilsIsString from '../../fixtures/consumer-components/plain-javascript/utils-is-string.json';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import barFooEs6 from '../../fixtures/consumer-components/es6/bar-foo.json';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import utilsIsStringEs6 from '../../fixtures/consumer-components/es6/utils-is-string.json';
+import * as path from 'path';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import barFooCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/bar-foo.json';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import utilsIsStringCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/utils-is-string.json';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import barFooEs6 from '../../fixtures/consumer-components/es6/bar-foo.json';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import utilsIsStringEs6 from '../../fixtures/consumer-components/es6/utils-is-string.json';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import barFoo from '../../fixtures/consumer-components/plain-javascript/bar-foo.json';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import utilsIsString from '../../fixtures/consumer-components/plain-javascript/utils-is-string.json';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import barFooSass from '../../fixtures/consumer-components/sass/bar-foo.json';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import utilsIsStringSass from '../../fixtures/consumer-components/sass/utils-is-string.json';
 import * as globalConfig from '../api/consumer/lib/global-config';
+import Component from '../consumer/component/consumer-component';
 import { ExtensionDataList } from '../consumer/config/extension-data';
+import DependencyFileLinkGenerator from './dependency-file-link-generator';
 
 const mockBitMap = () => {
   return {

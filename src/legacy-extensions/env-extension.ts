@@ -1,32 +1,31 @@
-import R from 'ramda';
 import * as path from 'path';
-import BaseExtension from './base-extension';
-import Scope from '../scope/scope';
-import {
-  EnvType,
-  EnvLoadArgsProps,
-  EnvExtensionProps,
-  EnvExtensionModel,
-  EnvExtensionSerializedModel,
-} from './env-extension-types';
-import { BaseExtensionProps, BaseExtensionModel } from './base-extension';
+import R from 'ramda';
+
 import BitId from '../bit-id/bit-id';
-import { sortObject, sha1 } from '../utils';
-import { EnvExtensionObject } from '../consumer/config/abstract-config';
-import { ComponentWithDependencies } from '../scope';
-import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
 import { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
-import ComponentConfig, { ILegacyWorkspaceConfig } from '../consumer/config';
-import logger from '../logger/logger';
-import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
-import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import AbstractConfig from '../consumer/config/abstract-config';
-import makeEnv from './env-factory';
-import GeneralError from '../error/general-error';
+import ComponentConfig, { ILegacyWorkspaceConfig } from '../consumer/config';
+import AbstractConfig, { EnvExtensionObject } from '../consumer/config/abstract-config';
 import ComponentOverrides from '../consumer/config/component-overrides';
+import GeneralError from '../error/general-error';
+import logger from '../logger/logger';
+import { ComponentWithDependencies } from '../scope';
+import installExtensions from '../scope/extensions/install-extensions';
+import Scope from '../scope/scope';
+import { sha1, sortObject } from '../utils';
+import BaseExtension, { BaseExtensionModel, BaseExtensionProps } from './base-extension';
+import {
+  EnvExtensionModel,
+  EnvExtensionProps,
+  EnvExtensionSerializedModel,
+  EnvLoadArgsProps,
+  EnvType,
+} from './env-extension-types';
+import makeEnv from './env-factory';
+import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
+import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 
 export type EnvPackages = {
   dependencies?: Record<string, any>;

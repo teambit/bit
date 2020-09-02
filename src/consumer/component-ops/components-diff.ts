@@ -1,15 +1,16 @@
 import R from 'ramda';
+
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
-import Component from '../component/consumer-component';
-import { SourceFile } from '../component/sources';
+import ShowDoctorError from '../../error/show-doctor-error';
+import { Version } from '../../scope/models';
 import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
 import { PathLinux, PathOsBased } from '../../utils/path';
-import { Version } from '../../scope/models';
+import Component from '../component/consumer-component';
+import { SourceFile } from '../component/sources';
 import { diffBetweenComponentsObjects } from './components-object-diff';
-import ShowDoctorError from '../../error/show-doctor-error';
 
 type FileDiff = { filePath: string; diffOutput: string };
 export type FieldsDiff = { fieldName: string; diffOutput: string };

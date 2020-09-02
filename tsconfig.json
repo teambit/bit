@@ -19,10 +19,12 @@
   },
   "include": [
     "src",
-    "e2e"
+    "extensions",
+    "e2e",
+    "components",
+    "toolbox"
   ],
   "exclude": [
-    "components",
     "node_modules",
     "e2e/fixtures"
   ]

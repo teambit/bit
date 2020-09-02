@@ -1,23 +1,23 @@
 import * as path from 'path';
-import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
-import { DEFAULT_INDEX_NAME, DEFAULT_DIST_DIRNAME } from '../constants';
-import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
+
 import { BitId } from '../bit-id';
-import Consumer from '../consumer/consumer';
-import logger from '../logger/logger';
+import { DEFAULT_DIST_DIRNAME, DEFAULT_INDEX_NAME } from '../constants';
+import BitMap from '../consumer/bit-map';
+import ComponentMap from '../consumer/bit-map/component-map';
+import { throwForNonLegacy } from '../consumer/component/component-schema';
 import Component from '../consumer/component/consumer-component';
 import { RelativePath } from '../consumer/component/dependencies/dependency';
-import ComponentMap from '../consumer/bit-map/component-map';
-import {
-  getLinkToPackageContent,
-  EXTENSIONS_TO_STRIP_FROM_PACKAGES,
-  EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES,
-  EXTENSIONS_NOT_SUPPORT_DIRS,
-} from './link-content';
+import Consumer from '../consumer/consumer';
+import logger from '../logger/logger';
+import { getExt, getWithoutExt, searchFilesIgnoreExt } from '../utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { pathNormalizeToLinux } from '../utils/path';
-import BitMap from '../consumer/bit-map';
-import { throwForNonLegacy } from '../consumer/component/component-schema';
+import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
+import {
+  EXTENSIONS_NOT_SUPPORT_DIRS,
+  EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES,
+  EXTENSIONS_TO_STRIP_FROM_PACKAGES,
+  getLinkToPackageContent,
+} from './link-content';
 
 export type LinkFileType = {
   linkPath: string;

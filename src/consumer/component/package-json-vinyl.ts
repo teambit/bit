@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
 import stringifyPackage from 'stringify-package';
-import AbstractVinyl from './sources/abstract-vinyl';
+
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
+import AbstractVinyl from './sources/abstract-vinyl';
 
 /**
  * When writing the `package.json`, it uses the package `stringifyPackage` from the NPM guys, which
