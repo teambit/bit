@@ -82,8 +82,8 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
         },
-        issuesCount: async (wsComponent: WorkspaceComponent) => {
-          return (await wsComponent.getIssues())?.count;
+        issuesCount: async (wsComponent: WorkspaceComponent): Promise<number> => {
+          return (await wsComponent.getIssues())?.count || 0;
         },
       },
       Workspace: {
