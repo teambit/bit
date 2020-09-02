@@ -11,9 +11,23 @@ import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import { SSHConnectionStrategyName } from '../ssh/ssh';
+import globalFlags from '../../../cli/global-flags';
+import { getSync } from '../../../api/consumer/lib/global-config';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}
+
+  private _token: string | undefined | null;
+
+  get token() {
+    if (this._token === undefined) return this._token;
+    const processToken = globalFlags.token;
+    const token = processToken || getSync(CFG_USER_TOKEN_KEY);
+    if (!token) this._token = null;
+
+    return token;
+  }
 
   get graphqlUrl() {
     return `${this.scopeUrl}/graphql`;
@@ -60,7 +74,7 @@ export class Http implements Network {
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
       body,
-      headers: { 'Content-Type': 'text/plain' },
+      headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
     });
 
     const ids = await res.json();
@@ -78,10 +92,16 @@ export class Http implements Network {
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       body,
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
 
     return CompsAndLanesObjects.fromString(res.text());
+  }
+
+  private getHeaders(headers: { [key: string]: string } = {}) {
+    return Object.assign(headers, {
+      Authorization: `Bearer ${this.token}`,
+    });
   }
 
   list(
@@ -118,7 +138,7 @@ export class Http implements Network {
   }
 
   latestVersions(bitIds: BitIds): Promise<string[]> {
-    throw new Error('Method not implemented.');
+    const LATEST_VERSIONS_QUERY = gql``;
   }
 
   graph(bitId?: BitId | undefined): Promise<DependencyGraph> {
@@ -126,7 +146,7 @@ export class Http implements Network {
   }
 
   listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
-    throw new Error('Method not implemented.');
+    const LIST_LANES = gql``;
   }
 
   private makeRequest() {}
