@@ -265,10 +265,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
-    const [username, email] = await Promise.all([
-      globalConfig.get(CFG_USER_NAME_KEY),
-      globalConfig.get(CFG_USER_EMAIL_KEY),
-    ]);
+    const nextVersion = consumerComponent.componentMap?.nextVersion;
+
+    const username = nextVersion?.username || (await globalConfig.get(CFG_USER_NAME_KEY));
+    const email = nextVersion?.email || (await globalConfig.get(CFG_USER_EMAIL_KEY));
+
+    if (nextVersion?.message) message = nextVersion.message;
 
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {

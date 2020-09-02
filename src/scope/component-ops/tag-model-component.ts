@@ -72,6 +72,12 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
+      const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+      if (nextVersion) {
+        const supportedReleaseTypes = ['patch', 'minor', 'major'];
+        if (supportedReleaseTypes.includes(nextVersion)) releaseType = nextVersion as ReleaseType;
+        else exactVersion = nextVersion;
+      }
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
       componentToTag.usedVersion = componentToTag.version;
@@ -159,6 +165,7 @@ export default async function tagModelComponent({
   skipTests = false,
   verbose = false,
   skipAutoTag,
+  persist,
   resolveUnmerged,
   isSnap = false,
 }: {
@@ -173,10 +180,12 @@ export default async function tagModelComponent({
   skipTests: boolean;
   verbose?: boolean;
   skipAutoTag: boolean;
+  persist: boolean;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
+  if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -234,13 +243,12 @@ export default async function tagModelComponent({
   const nonLegacyComps: Component[] = [];
 
   componentsToBuildAndTest.forEach((c) => {
-    // @todo: change this condition to `c.isLegacy` once harmony-beta is merged.
-    c.extensions && c.extensions.length && !consumer.isLegacy ? nonLegacyComps.push(c) : legacyComps.push(c);
+    c.isLegacy ? legacyComps.push(c) : nonLegacyComps.push(c);
   });
-  if (legacyComps.length) {
+  if (legacyComps.length && persist) {
     await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
   }
-  if (nonLegacyComps.length) {
+  if (nonLegacyComps.length && persist) {
     const ids = componentsToBuildAndTest.map((c) => c.id);
     const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
     results.map(updateComponentsByTagResult(componentsToBuildAndTest));
@@ -318,7 +326,9 @@ export default async function tagModelComponent({
   );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
-  await scope.objects.persist();
+  if (persist) {
+    await scope.objects.persist();
+  }
   return { taggedComponents, autoTaggedResults };
 }
 

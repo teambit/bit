@@ -339,8 +339,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show only the IMPORTED dependents of the modified component as auto-tag pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/c`);
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/d`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/c@0.0.1`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/d@0.0.1`);
       expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remote}/bar/b`); // it's nested
       expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remote}/bar/a`); // it's a dependent via nested
     });
@@ -411,8 +411,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit status should recognize the auto tag pending components', () => {
       const output = helper.command.statusJson();
-      expect(output.autoTagPendingComponents).to.deep.include('bar/a');
-      expect(output.autoTagPendingComponents).to.deep.include('bar/b');
+      expect(output.autoTagPendingComponents).to.deep.include('bar/a@0.0.1');
+      expect(output.autoTagPendingComponents).to.deep.include('bar/b@0.0.1');
     });
     describe('tagging the components with auto-version-bump', () => {
       let tagOutput;
@@ -548,8 +548,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show the auto-tagged pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a`);
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a@0.0.1`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b@0.0.1`);
     });
     describe('tagging the dependency', () => {
       let tagOutput;

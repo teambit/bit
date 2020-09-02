@@ -35,16 +35,13 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         isInScope: Boolean
       }
 
-      type ComponentIssues {
-        issue: String
-      }
-
       extend type Component {
         status: ComponentStatus
       }
 
       extend type Component {
-        getIssues: [ComponentIssues]
+        # the count of errors in component in workspace
+        issuesCount: Int
       }
 
       type Workspace {
@@ -85,8 +82,8 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
         },
-        issues: async (wsComponent: WorkspaceComponent) => {
-          return wsComponent.getIssues();
+        issuesCount: async (wsComponent: WorkspaceComponent): Promise<number> => {
+          return (await wsComponent.getIssues())?.count || 0;
         },
       },
       Workspace: {
