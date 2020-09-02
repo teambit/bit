@@ -34,7 +34,7 @@
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
-    "build": "run build:src",
+    "build": "npm run build:src",
     "build:types": "./scripts/build-types.bash",
     "install-harmony": "cd build-harmony && yarn",
     "link-bit-bin": "ln -sf `pwd` node_modules/bit-bin",
