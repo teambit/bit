@@ -3,6 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { concat, flatten, lowerCase } from 'lodash';
+import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
 import { Middleware, Request, Response, Route } from './types';
@@ -68,6 +69,8 @@ export class ExpressMain {
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
+    app.use(bodyParser.text({ limit: '5000mb' }));
+    app.use(bodyParser.json({ limit: '5000mb' }));
     // app.use(cors());
 
     allRoutes.forEach((routeInfo) => {

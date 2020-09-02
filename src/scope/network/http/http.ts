@@ -10,7 +10,6 @@ import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
-import { SSHConnectionStrategyName } from '../ssh/ssh';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
@@ -78,6 +77,7 @@ export class Http implements Network {
     });
 
     const ids = await res.json();
+    // TODO: handle failures here!!!
 
     return ids;
   }
@@ -91,11 +91,12 @@ export class Http implements Network {
     });
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
+      method: 'post',
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
 
-    return CompsAndLanesObjects.fromString(res.text());
+    return CompsAndLanesObjects.fromString(await res.text());
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
@@ -104,10 +105,28 @@ export class Http implements Network {
     });
   }
 
-  list(
-    namespacesUsingWildcards?: string | undefined,
-    strategiesNames?: SSHConnectionStrategyName[] | undefined
-  ): Promise<ListScopeResult[]> {}
+  async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
+    const LIST_LEGACY = gql`
+      query listLegacy($namespaces: String) {
+        scope {
+          _legacyList(namespaces: $namespaces) {
+            id
+            deprecated
+          }
+        }
+      }
+    `;
+
+    const data = await request(this.graphqlUrl, LIST_LEGACY, {
+      namespaces: namespacesUsingWildcards,
+    });
+
+    data.scope._legacyList.forEach((comp) => {
+      comp.id = BitId.parse(comp.id);
+    });
+
+    return data.scope._legacyList;
+  }
 
   async show(bitId: BitId): Promise<Component | null | undefined> {
     const SHOW_COMPONENT = gql`
@@ -133,23 +152,61 @@ export class Http implements Network {
     throw new Error('Method not implemented.');
   }
 
-  log(id: BitId): Promise<ComponentLogs> {
-    throw new Error('Method not implemented.');
+  // TODO: @david please fix this.
+  async log(id: BitId): Promise<ComponentLogs> {
+    const GET_LOG_QUERY = gql`
+      query getLogs($id: String!) {
+        scope {
+          getLogs(id: $id) {
+            message
+            hash
+            date
+          }
+        }
+      }
+    `;
+
+    const data = await request(this.graphqlUrl, GET_LOG_QUERY, {
+      id: id.toString(),
+    });
+
+    return data.scope.getLogs;
   }
 
-  latestVersions(bitIds: BitIds): Promise<string[]> {
-    const LATEST_VERSIONS_QUERY = gql``;
+  async latestVersions(bitIds: BitIds): Promise<string[]> {
+    const GET_LATEST_VERSIONS = gql`
+      query getLatestVersions($ids: [String]!) {
+        scope {
+          _legacyLatestVersions(ids: $ids)
+        }
+      }
+    `;
+
+    const data = await request(this.graphqlUrl, GET_LATEST_VERSIONS, {
+      ids: bitIds.map((id) => id.toString()),
+    });
+
+    return data.scope._legacyLatestVersions;
   }
 
   graph(bitId?: BitId | undefined): Promise<DependencyGraph> {
     throw new Error('Method not implemented.');
   }
 
+  // TODO: ran (TBD)
   listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
-    const LIST_LANES = gql``;
-  }
+    const LIST_LANES = gql`
+    query listLanes() {
+      lanes {
+        list()
+      }
+    }
+    `;
 
-  private makeRequest() {}
+    const res = request(this.graphqlUrl, LIST_LANES, {
+      mergeData,
+    });
+  }
 
   static async connect(host: string) {
     return new Http(host);

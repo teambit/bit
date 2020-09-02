@@ -4,10 +4,20 @@ import { LanesMain } from './lanes.main.runtime';
 export function lanesSchema(lanesMain: LanesMain) {
   return {
     typeDefs: gql`
-      # type Query {
+      type Lane {
+        name: String!
+        remote: String | null
+        isMerged: Boolean
+      }
 
-      # }
+      type Query {
+        
+      }
     `,
-    resolvers: {},
+    resolvers: {
+      list: () => {
+        return lanesMain.list();
+      },
+    },
   };
 }

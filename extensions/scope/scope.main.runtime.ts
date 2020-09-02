@@ -27,6 +27,7 @@ import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
 import LegacyScope from 'bit-bin/dist/scope/scope';
+import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
@@ -238,6 +239,10 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async getLogs(id: ComponentID): Promise<ComponentLogs> {
+    return this.legacyScope.loadComponentLogs(id._legacy);
+  }
+
   /**
    * resolve a component ID.
    * @param id component ID
@@ -290,6 +295,11 @@ export class ScopeMain implements ComponentFactory {
       consumerComponent
     );
     return state;
+  }
+
+  async resolveId(id: string): Promise<ComponentID> {
+    const legacyId = await this.legacyScope.getParsedId(id);
+    return ComponentID.fromLegacy(legacyId);
   }
 
   /**
