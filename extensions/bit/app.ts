@@ -98,6 +98,7 @@ function getMainAspect() {
     packageName,
     aspect: BitAspect,
     name: getCoreAspectName(BitAspect.id),
+    id: BitAspect.id,
   };
 }
 

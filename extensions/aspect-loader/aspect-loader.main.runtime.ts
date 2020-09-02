@@ -57,6 +57,11 @@ export type MainAspect = {
    * The name of the aspect (without the scope prefix)
    */
   name: string;
+
+  /**
+   * The name of the aspect
+   */
+  id: string;
 };
 
 export class AspectLoaderMain {

@@ -8,7 +8,7 @@ import { MainAspectNotInstallable, MainAspectNotLinkable, RootDirNotDefined } fr
 
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
 import { DependenciesObjectDefinition } from './types';
-import { MainAspect } from '@teambit/aspect-loader';
+import { MainAspect, AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 
 const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
@@ -31,7 +31,7 @@ export class DependencyInstaller {
      */
     private packageManager: PackageManager,
 
-    private mainAspect: MainAspect,
+    private aspectLoader: AspectLoaderMain,
 
     private rootDir?: string | PathAbsolute,
 
@@ -46,6 +46,7 @@ export class DependencyInstaller {
     componentDirectoryMap: ComponentMap<string>,
     options: PackageManagerInstallOptions = DEFAULT_INSTALL_OPTIONS
   ) {
+    const mainAspect: MainAspect = this.aspectLoader.mainAspect;
     const finalRootDir = rootDir || this.rootDir;
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {});
     if (!finalRootDir) {
@@ -54,12 +55,11 @@ export class DependencyInstaller {
     // Make sure to take other default if passed options with only one option
     const calculatedOpts = Object.assign({}, DEFAULT_INSTALL_OPTIONS, { cacheRootDir: this.cacheRootDir }, options);
     if (linkingOpts.bitLinkType === 'install'){
-      if (!this.mainAspect.version || !this.mainAspect.packageName){
+      if (!mainAspect.version || !mainAspect.packageName){
         throw new MainAspectNotInstallable();
       }
-      const globalBitFolder = this.getBitGlobalFolder();
-      const version = this.mainAspect.version;
-      const name = this.mainAspect.packageName;
+      const version = mainAspect.version;
+      const name = mainAspect.packageName;
       rootDepsObject = rootDepsObject || {};
       rootDepsObject.dependencies = rootDepsObject.dependencies || {};
       rootDepsObject.dependencies[name] = version;
@@ -70,22 +70,44 @@ export class DependencyInstaller {
     if (linkingOpts.bitLinkType === 'link'){
       this.linkBit(path.join(finalRootDir, 'node_modules'));
     }
+    if (linkingOpts.linkCoreAspects){
+      await this.linkCoreAspects(path.join(finalRootDir, 'node_modules'));
+    }
     return componentDirectoryMap;
   }
 
   async linkBit(dir: string) {
-    if (!this.mainAspect.packageName){
+    if (!this.aspectLoader.mainAspect.packageName){
       throw new MainAspectNotLinkable();
     }
-    const target = path.join(dir, this.mainAspect.packageName);
-    const src = this.mainAspect.path;
+    const target = path.join(dir, this.aspectLoader.mainAspect.packageName);
+    const src = this.aspectLoader.mainAspect.path;
     fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
   }
 
-  // TODO: take from aspect loader
-  private getBitGlobalFolder(): string {
-    const bitPath = path.resolve(__dirname, '..', '..');
-    return bitPath;
+  async linkCoreAspects(dir: string){
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
+    const coreAspectsIdsWithoutMain = coreAspectsIds.filter(id => id !== this.aspectLoader.mainAspect.id);
+    const linkCoreAspectsP = coreAspectsIdsWithoutMain.map(id => {
+      return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id));
+    });
+    return Promise.all(linkCoreAspectsP);
+  }
+
+  private async linkCoreAspect(dir: string, id: string, name: string, packageName: string){
+    if (!this.aspectLoader.mainAspect.packageName){
+      throw new MainAspectNotLinkable();
+    }
+    const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
+    let aspectDir = path.join(mainAspectPath, name);
+    const isExist = await fs.pathExists(aspectDir);
+    const target = path.join(dir, packageName);
+    // We get here usually when running bit from the cloned repo rather then the global install of bit
+    if (!isExist){
+      aspectDir = getAspectDir(id);
+    }
+
+    return createSymlinkOrCopy(aspectDir, target);
   }
 }
