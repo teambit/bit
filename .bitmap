@@ -4290,7 +4290,17 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "workspace-component/issues.ts",
+                "relativePath": "workspace-component/issues/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "workspace-component/issues/issue.ts",
+                "test": false,
+                "name": "issue.ts"
+            },
+            {
+                "relativePath": "workspace-component/issues/issues.ts",
                 "test": false,
                 "name": "issues.ts"
             },

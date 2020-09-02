@@ -31,7 +31,7 @@ import show from './lib/show';
 import { snapAction } from './lib/snap';
 import status from './lib/status';
 import switchAction from './lib/switch';
-import { tagAction, tagAllAction } from './lib/tag';
+import { tagAction } from './lib/tag';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
@@ -47,7 +47,6 @@ export {
   buildAll,
   listScope,
   tagAction,
-  tagAllAction,
   snapAction,
   status,
   build,
