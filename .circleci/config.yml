@@ -990,16 +990,16 @@ workflows:
       #     requires:
       #       - checkout_code
       #       - set_npm_registries
-      # -
-      #   build:
-      #     requires:
-      #       - install_npm_deps
+      -
+        build:
+          requires:
+            - setup_harmony
       -
         setup_harmony:
           requires:
             - set_npm_registries
             # - install_npm_deps
-            - build
+            # - build
       # -
       #   configure-bit:
       #     requires:
@@ -1012,14 +1012,14 @@ workflows:
         lint:
           requires:
             # - install_npm_deps
-            - build
             - setup_harmony
+            - build
       -
         generate_and_check_types:
           requires:
             # - install_npm_deps
-            - build
             - setup_harmony
+            - build
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1041,8 +1041,8 @@ workflows:
             - set_ssh_key
             - set_npm_registries
             # - install_npm_deps
-            - build
             - setup_harmony
+            - build
             # - configure-bit
             # - pack
       -
@@ -1106,8 +1106,8 @@ workflows:
       -
         build:
           <<: *semver_tags_only_filters
-          # requires:
-          #   - install_npm_deps
+          requires:
+            - setup_harmony
       -
         npm-publish:
           <<: *semver_tags_only_filters
@@ -1164,8 +1164,8 @@ workflows:
       -
         build:
           <<: *dev_tag_only_filters
-          # requires:
-          #   - install_npm_deps
+          requires:
+            - setup_harmony
       -
         pack:
           <<: *dev_tag_only_filters
@@ -1209,9 +1209,9 @@ workflows:
         #     - checkout_code
         #     - set_npm_registries
       -
-        # build:
-          # requires:
-          #   - install_npm_deps
+        build:
+          requires:
+            - setup_harmony
       -
         performance_e2e_test:
           requires:
@@ -1234,9 +1234,9 @@ workflows:
         #     - checkout_code
         #     - set_npm_registries
       -
-        # build:
-        #   requires:
-        #     - install_npm_deps
+        build:
+          requires:
+            - setup_harmony
       -
         bit_hub_e2e_test:
           requires:
