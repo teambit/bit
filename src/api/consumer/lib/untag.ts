@@ -15,7 +15,7 @@ export default async function unTagAction(
   force?: boolean,
   persisted?: boolean,
   id?: string
-): Promise<untagResult[]> {
+): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
   const consumer: Consumer = await loadConsumer();
   const idHasWildcard = hasWildcard(id);
   const untag = async (): Promise<untagResult[]> => {
@@ -57,7 +57,8 @@ export default async function unTagAction(
       .filter((x) => x);
   };
   let results: untagResult[];
-  if (persisted || consumer.isLegacy) {
+  const isRealUntag = persisted || consumer.isLegacy;
+  if (isRealUntag) {
     results = await untag();
     await consumer.scope.objects.persist();
     const components = results.map((result) => result.component);
@@ -69,5 +70,5 @@ export default async function unTagAction(
   }
 
   await consumer.onDestroy();
-  return results;
+  return { results, isSoftUntag: !isRealUntag };
 }

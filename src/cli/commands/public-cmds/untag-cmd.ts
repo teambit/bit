@@ -38,18 +38,21 @@ export default class Untag implements LegacyCommand {
 
     if (all) {
       version = id;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return unTagAction(version, force, persisted);
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return unTagAction(version, force, persisted, id);
   }
 
-  report(results: untagResult[]): string {
-    const title = chalk.green(`${results.length} component(s) were untagged:\n`);
+  report({ results, isSoftUntag }: { results: untagResult[]; isSoftUntag: boolean }): string {
+    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidate for tagging anymore)' : 'untagged';
+    const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
+    const softTagSuggestion = isSoftUntag
+      ? chalk.bold('\nto actually remove the local tags, use --persisted flag')
+      : '';
     const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
-    return title + components.join('\n');
+    return title + components.join('\n') + softTagSuggestion;
   }
 }

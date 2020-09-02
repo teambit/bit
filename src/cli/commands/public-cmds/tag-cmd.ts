@@ -126,10 +126,9 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
-    // @todo: how to undo soft-tag?
+(use "bit untag (--persisted)" to unstage versions)\n`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
-(use "bit untag --soft-tag" to remove soft-tags)\n`;
+(use "bit untag" to remove the soft-tags)\n`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
@@ -156,15 +155,26 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
       return `\n${chalk.underline(softTagPrefix + label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
 
-    const newDesc = results.isSoftTag ? 'set to be tagged first version for components' : 'first version for components';
-    const changedDesc = results.isSoftTag ? 'components that set to get a version bump' : 'components that got a version bump';
-
+    const newDesc = results.isSoftTag
+      ? 'set to be tagged first version for components'
+      : 'first version for components';
+    const changedDesc = results.isSoftTag
+      ? 'components that set to get a version bump'
+      : 'components that got a version bump';
+    const softTagClarification = results.isSoftTag
+      ? chalk.bold(
+          'keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
+        )
+      : '';
     return (
       warningsOutput +
-      chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`) +
+      chalk.green(
+        `${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
+      ) +
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
-      outputIfExists('changed components', changedDesc, changedComponents)
+      outputIfExists('changed components', changedDesc, changedComponents) +
+      softTagClarification
     );
   }
 }
