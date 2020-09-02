@@ -569,6 +569,18 @@ jobs:
           key: bitsrc-registry6
       -
         run:
+          name: 'temp-test'
+          command: 'cd bit && ls'
+      -
+        run:
+          name: 'temp-test2'
+          command: 'pwd'
+      -
+        run:
+          name: 'temp-test3'
+          command: 'ls ~/bit'
+      -
+        run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       -
