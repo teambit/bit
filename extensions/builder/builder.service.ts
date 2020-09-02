@@ -63,9 +63,8 @@ export class BuilderService implements EnvService<BuildServiceResults> {
 
     const componentIds = context.components.map((component) => component.id.toString());
     const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(componentIds, { installPackages: false }),
+      capsuleGraph: await this.workspace.createNetwork(componentIds,  {installOptions: {installPackages: false}}),
     });
-
     const buildResults = await buildPipe.execute(buildContext);
     longProcessLogger.end();
     this.logger.consoleSuccess();

@@ -1,6 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, LinkingOptions } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
@@ -32,9 +32,9 @@ export type IsolateComponentsInstallOptions = {
   installPackages?: boolean;
   // TODO: add back when depResolver.getInstaller support it
   // packageManager?: string;
-  dedupe: boolean;
-  copyPeerToRuntimeOnComponents: boolean;
-  copyPeerToRuntimeOnRoot: boolean;
+  dedupe?: boolean;
+  copyPeerToRuntimeOnComponents?: boolean;
+  copyPeerToRuntimeOnRoot?: boolean;
 }
 
 export type IsolateComponentsOptions = {
@@ -42,6 +42,7 @@ export type IsolateComponentsOptions = {
   baseDir?: string;
   alwaysNew?: boolean;
   installOptions?: IsolateComponentsInstallOptions;
+  linkingOptions?: LinkingOptions;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -95,7 +96,10 @@ export class IsolatorMain {
         })
         .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
-      const installer = this.dependencyResolver.getInstaller();
+      const installer = this.dependencyResolver.getInstaller({
+        rootDir: capsulesDir,
+        linkingOptions: opts.linkingOptions
+      });
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
 
