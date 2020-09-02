@@ -1243,7 +1243,7 @@ workflows:
           requires:
             - build-debian
             - build-rpm
-
+            
   performance_tests:
     triggers:
       - schedule:
@@ -1256,10 +1256,10 @@ workflows:
       - checkout_code
       - set_npm_registries
       -
-        install_npm_deps:
-         requires:
-           - checkout_code
-           - set_npm_registries
+        # install_npm_deps:
+        #   requires:
+        #     - checkout_code
+        #     - set_npm_registries
       -
         build:
           requires:
@@ -1268,7 +1268,7 @@ workflows:
         performance_e2e_test:
           requires:
             - build
-            
+  
   bit_hub_tests:
     triggers:
       - schedule:
@@ -1282,10 +1282,10 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       -
-        # install_npm_deps:
-        #   requires:
-        #     - checkout_code
-        #     - set_npm_registries
+        install_npm_deps:
+          requires:
+            - checkout_code
+            - set_npm_registries
       -
         build:
           requires:
