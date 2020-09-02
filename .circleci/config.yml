@@ -67,6 +67,7 @@ jobs:
           root: /home/circleci
           paths:
             - bit
+            
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -85,6 +86,7 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
+
   set_npm_registries:
     <<: *defaults
     steps:
@@ -186,6 +188,7 @@ jobs:
   #           # - bit/build-harmony
   #           - bit/node_modules
   #           - bit/releases
+
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -208,6 +211,7 @@ jobs:
         run:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_VERSION'
+
   build:
     <<: *defaults
     steps:
@@ -695,6 +699,7 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs
+
   performance_e2e_test:
     <<: *defaults
     resource_class: medium
@@ -744,6 +749,7 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
+
   bit_hub_e2e_test:
     <<: *defaults
     resource_class: medium
@@ -813,11 +819,13 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+
   windows_approval_job:
     <<: *windows_defaults
     steps:
       -
         run: 'echo "starting windows build"'
+
   windows_checkout_code:
     <<: *windows_defaults
     environment:
@@ -829,6 +837,7 @@ jobs:
           root: C:\Users\circleci\project
           paths:
             - bit
+
   # TODO: make it powershell if you want to use it
   windows_set_ssh_key:
     <<: *windows_defaults
@@ -848,6 +857,7 @@ jobs:
           paths:
             - id_rsa
             - id_rsa.pub
+
   windows_set_npm_registries:
     <<: *windows_defaults
     steps:
@@ -884,6 +894,7 @@ jobs:
           # key: windows_bitsrc-registry-stg-v2
           paths:
             - C:\Users\circleci\.npmrc
+
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
@@ -909,6 +920,7 @@ jobs:
           root: .
           paths:
             - bit/node_modules
+
   windows_build:
     <<: *windows_defaults
     steps:
@@ -924,6 +936,7 @@ jobs:
           root: .
           paths:
             - bit/dist
+
   windows_e2e_test:
     <<: *windows_defaults
     environment:
@@ -1011,6 +1024,8 @@ jobs:
       # -
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
+
+
 workflows:
   version: 2
   build_and_test:
@@ -1096,6 +1111,7 @@ workflows:
             - build
             - set_ssh_key
             - set_npm_registries
+
   windows_e2e:
     jobs:
       - windows_approval_job:
@@ -1121,6 +1137,7 @@ workflows:
             - windows_build
             # - windows_set_ssh_key
             - windows_set_npm_registries
+
   deploy:
     jobs:
       - checkout_code:
@@ -1185,6 +1202,7 @@ workflows:
             - publish_to_jfrog
             - github-release
             - npm-publish
+
   deploy_dev:
     jobs:
       - checkout_code:
@@ -1225,6 +1243,7 @@ workflows:
           requires:
             - build-debian
             - build-rpm
+
   performance_tests:
     triggers:
       - schedule:
@@ -1249,6 +1268,7 @@ workflows:
         performance_e2e_test:
           requires:
             - build
+            
   bit_hub_tests:
     triggers:
       - schedule:
