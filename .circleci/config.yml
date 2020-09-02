@@ -1047,15 +1047,17 @@ workflows:
       #       - checkout_code
       #       - set_npm_registries
       -
-        build:
-          requires:
-            - setup_harmony
-      -
         setup_harmony:
           requires:
             - set_npm_registries
+            - checkout_code
             # - install_npm_deps
             # - build
+      -
+        build:
+          requires:
+            - setup_harmony
+
       # -
       #   configure-bit:
       #     requires:
@@ -1068,13 +1070,13 @@ workflows:
         lint:
           requires:
             # - install_npm_deps
-            - setup_harmony
+            # - setup_harmony
             - build
       -
         generate_and_check_types:
           requires:
             # - install_npm_deps
-            - setup_harmony
+            # - setup_harmony
             - build
       -
         generate_docs:
