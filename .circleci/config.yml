@@ -227,6 +227,7 @@ jobs:
           root: .
           paths:
             - bit/dist
+  
   configure-bit:
     <<: *defaults
     environment:
@@ -310,6 +311,7 @@ jobs:
           root: .
           paths:
             - bit/releases
+  
   npm-publish:
     <<: *defaults
     steps:
@@ -323,6 +325,7 @@ jobs:
         run:
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish'
+  
   github-release:
     <<: *defaults
     steps:
@@ -334,6 +337,7 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
+  
   github-pre-release:
     <<: *defaults
     steps:
@@ -345,6 +349,7 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run pre-release:circle'
+  
   build-debian:
     <<: *defaults
     docker:
@@ -363,6 +368,7 @@ jobs:
           root: .
           paths:
             - bit/releases/deb
+  
   build-rpm:
     <<: *defaults
     docker:
@@ -381,6 +387,7 @@ jobs:
           root: .
           paths:
             - bit/releases/rpm
+  
   publish_to_jfrog:
     <<: *defaults
     steps:
@@ -408,6 +415,7 @@ jobs:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   # this should be unified with the prod version and get params for dev
+  
   publish_to_jfrog_dev:
     <<: *defaults
     steps:
@@ -434,6 +442,7 @@ jobs:
         run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+  
   generate_docs:
     <<: *defaults
     steps:
@@ -455,6 +464,7 @@ jobs:
           root: .
           paths:
             - DOC_GEN_BUILD_NUM.txt
+  
   slack_deploy_notification:
     <<: *defaults
     steps:
@@ -472,6 +482,7 @@ jobs:
         run:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
+  
   unit_test:
     <<: *defaults
     steps:
@@ -497,6 +508,7 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  
   lint:
     <<: *defaults
     resource_class: medium
@@ -510,6 +522,11 @@ jobs:
           keys:
             - 'repo-{{ checksum ".circle-sha" }}'
       -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+            - cache-pnpm-global-cache
+      -
         attach_workspace:
           at: ./
       -
@@ -522,9 +539,13 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  
   generate_and_check_types:
     <<: *defaults
     steps:
+      - 
+        restore_cache:
+          key: cache-pnpm-global-cache
       -
         attach_workspace:
           at: ./
@@ -536,6 +557,7 @@ jobs:
         run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+  
   setup_harmony:
     <<: *defaults
     steps:
@@ -554,12 +576,18 @@ jobs:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       -
+        save_cache:
+          key: cache-pnpm-global-cache
+          paths:
+            - /home/circleci/.pnpm-store # <---- TODO: @giladshoham - please fix this
+      -
         persist_to_workspace:
           root: .
           paths:
             - bit/build-harmony
             - bit/node_modules/bit-bin
             - bit/node_modules/@teambit
+  
   e2e_test:
     <<: *defaults
     environment:
@@ -605,6 +633,11 @@ jobs:
       -
         restore_cache:
           key: npm-global-bin-v2
+
+      -
+        restore_cache:
+          key: cache-pnpm-global-cache
+
       - run: ls -l /home/circleci/.npm-global/bin
       # -
       #   run:
