@@ -569,10 +569,6 @@ jobs:
           key: bitsrc-registry6
       -
         run:
-          name: 'install packages'
-          command: 'cd bit && npm install'
-      -
-        run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       -
@@ -589,8 +585,7 @@ jobs:
           root: .
           paths:
             - bit/build-harmony
-            - bit/node_modules/bit-bin
-            - bit/node_modules/@teambit
+            - bit/node_modules
 
   e2e_test:
     <<: *defaults
