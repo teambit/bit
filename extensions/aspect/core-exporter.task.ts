@@ -43,7 +43,7 @@ export class CoreExporterTask implements BuildTask {
       const newDirPath = path.join(capsuleDir, distDir, name);
       await fs.ensureDir(newDirPath);
       const barrelContent = generateBarrelFile(packageName);
-      await fs.writeFile(path.join(newDirPath, 'index.ts'), barrelContent);
+      await fs.writeFile(path.join(newDirPath, 'index.js'), barrelContent);
     });
     return Promise.all(createBarrelFilesP);
   }

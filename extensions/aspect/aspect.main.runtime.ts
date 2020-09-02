@@ -14,7 +14,7 @@ export class AspectMain {
 
   static async provider([react, envs, builder, aspectLoader]: [ReactMain, EnvsMain, BuilderMain, AspectLoaderMain]) {
     const env = envs.compose(new AspectEnv(react.reactEnv), react.reactEnv);
-    const coreExporterTask = new CoreExporterTask(aspectLoader);
+    const coreExporterTask = new CoreExporterTask(env, aspectLoader);
     builder.registerTask(coreExporterTask);
     envs.registerEnv(env);
     return new AspectMain();
