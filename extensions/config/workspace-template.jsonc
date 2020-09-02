@@ -83,8 +83,8 @@
   **/
   "teambit.bit/variants": {
     /**
-     * wildcards can be used to configure components under a specific namespace.
-     * this configuration applies the react extensions on all components the `ui` namespace.
+     * wildcards can be used to configure components under a specific directory.
+     * this configuration applies the react extensions on all components under directory `base`.
     **/
     "base": {
       /**
