@@ -67,13 +67,21 @@ export class DependencyInstaller {
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootDepsObject, componentDirectoryMap, calculatedOpts);
-    if (linkingOpts.bitLinkType === 'link'){
-      this.linkBit(path.join(finalRootDir, 'node_modules'));
+    if (linkingOpts.bitLinkType === 'link' && !this.isBitRepoWorkspace(finalRootDir)){
+      await this.linkBit(path.join(finalRootDir, 'node_modules'));
     }
-    if (linkingOpts.linkCoreAspects){
+    if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(finalRootDir)){
       await this.linkCoreAspects(path.join(finalRootDir, 'node_modules'));
     }
     return componentDirectoryMap;
+  }
+
+  private isBitRepoWorkspace(dir: string){
+    // A special condition to not link core aspects in bit workspace itself
+    if (this.aspectLoader.mainAspect.path.startsWith(dir)){
+      return true;
+    }
+    return false;
   }
 
   async linkBit(dir: string) {
