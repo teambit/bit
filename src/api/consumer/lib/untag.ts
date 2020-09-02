@@ -11,9 +11,9 @@ import { BitId } from '../../../bit-id';
 import Component from '../../../scope/models/model-component';
 
 export default async function unTagAction(
-  version?: string,
-  force?: boolean,
-  persisted?: boolean,
+  version: string | undefined,
+  force: boolean,
+  persisted: boolean,
   id?: string
 ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
   const consumer: Consumer = await loadConsumer();

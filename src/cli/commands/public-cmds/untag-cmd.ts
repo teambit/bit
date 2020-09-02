@@ -25,13 +25,9 @@ export default class Untag implements LegacyCommand {
   migration = true;
 
   action(
-    [id, version]: string[],
-    {
-      all,
-      force,
-      persisted = false,
-    }: { all: boolean | null | undefined; force: boolean | null | undefined; persisted?: boolean }
-  ): Promise<untagResult[]> {
+    [id, version]: [string, string],
+    { all = false, force = false, persisted = false }: { all?: boolean; force?: boolean; persisted?: boolean }
+  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
     }
@@ -40,7 +36,6 @@ export default class Untag implements LegacyCommand {
       version = id;
       return unTagAction(version, force, persisted);
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return unTagAction(version, force, persisted, id);
   }
 
