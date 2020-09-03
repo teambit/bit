@@ -1,7 +1,7 @@
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
-import { Icon } from '@teambit/evangelist.elements.icon';
+import { XButton } from '@teambit/evangelist.elements.x-button';
 import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';
 
@@ -39,9 +39,7 @@ export function Notification({ entry }: { entry: Message }) {
           </div>
         )}
       </div>
-      <button onClick={isDismissing ? undefined : handleDismiss} className={styles.closer}>
-        <Icon of="x-close"></Icon>
-      </button>
+      <XButton onClick={isDismissing ? undefined : handleDismiss}></XButton>
     </Card>
   );
 }

@@ -2108,12 +2108,17 @@
     "organism/notifications/notification-center": {
         "files": [
             {
-                "relativePath": "dark-art/dark-art.module.scss",
+                "relativePath": "dismiss-button/dismiss-button.module.scss",
                 "test": false,
-                "name": "dark-art.module.scss"
+                "name": "dismiss-button.module.scss"
             },
             {
-                "relativePath": "dark-art/index.ts",
+                "relativePath": "dismiss-button/dismiss-button.tsx",
+                "test": false,
+                "name": "dismiss-button.tsx"
+            },
+            {
+                "relativePath": "dismiss-button/index.ts",
                 "test": false,
                 "name": "index.ts"
             },

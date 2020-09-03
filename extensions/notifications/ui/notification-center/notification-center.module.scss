@@ -1,10 +1,20 @@
 $animationTime: 300ms;
 $modal-z-index: 8000;
+$header-height: 56px;
+$bottom-margin: 8px;
 
 .notificationCenter {
   position: fixed;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-height: calc(100vh - #{$header-height + $bottom-margin});
+
   right: 16px;
-  bottom: 8px;
+  // top: $header-height;
+  bottom: $bottom-margin;
+  // padding: 0 8px 8px; // room for shadow
 
   font-size: 14px;
 
@@ -14,6 +24,28 @@ $modal-z-index: 8000;
     animation: exitRight $animationTime ease-in-out forwards;
   }
 }
+
+.actions {
+  flex: none;
+
+  padding: 0 8px;
+}
+
+.notificationsContainer {
+  display: flex;
+  flex-direction: column-reverse;
+  margin-bottom: 4px;
+  padding: 8px 8px 4px;
+
+  overflow-y: auto;
+
+  > :not(:first-child) {
+    margin-bottom: 4px;
+  }
+}
+
+// .dismissAll {
+// }
 
 .timestamp {
   font-size: 0.85em;

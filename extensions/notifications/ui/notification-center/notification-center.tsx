@@ -4,9 +4,9 @@ import classnames from 'classnames';
 import { Message } from '@teambit/organism.notifications.api';
 import { Notification } from '@teambit/organism.notifications.notification';
 import { NotificationContext } from '@teambit/organism.notifications.notification-context';
+import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 
 import styles from './notification-center.module.scss';
-import { darkMode } from './dark-art';
 import { DismissButton } from './dismiss-button';
 
 export type NotificationCenterProps = {
@@ -29,10 +29,19 @@ export function NotificationCenter({ notifications, ...rest }: NotificationCente
 
   return (
     <div {...rest} className={classnames(styles.notificationCenter, isDismissing && styles.dismissing, darkMode)}>
-      {notifications?.map((x) => (
-        <Notification key={x.id} entry={x} />
-      ))}
-      <DismissButton visible={showDismiss} onClick={handleDismiss} />
+      <div className={styles.notificationsContainer}>
+        {notifications?.reverse().map((x) => (
+          <Notification key={x.id} entry={x} />
+        ))}
+      </div>
+      <div className={styles.actions}>
+        <DismissButton
+          visible={showDismiss}
+          importance="normal"
+          className={styles.dismissAll}
+          onClick={handleDismiss}
+        />
+      </div>
     </div>
   );
 }

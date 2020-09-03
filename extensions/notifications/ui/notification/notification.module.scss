@@ -7,7 +7,6 @@ $animationTime: 300ms;
 .notification {
   display: flex;
   align-items: start; // align to top
-  margin: 4px 0;
   padding: 16px;
   max-width: 330px;
   min-width: 230px;
@@ -48,19 +47,6 @@ $animationTime: 300ms;
   margin-right: 16px;
   font-size: 24px;
   width: 24px;
-}
-
-.closer {
-  justify-self: start;
-  padding: 0;
-  border: none;
-  background: inherit;
-  float: right;
-
-  color: var(--text-inactive);
-  &:hover {
-    color: var(--text-muted-highlight);
-  }
 }
 
 @keyframes exit {
