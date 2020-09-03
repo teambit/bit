@@ -70,20 +70,21 @@ export function Compositions() {
         />
       </HoverSplitter>
       <Pane className={styles.right}>
-        <TabContainer>
-          <TabList>
+        <TabContainer className={styles.tabsContainer}>
+          <TabList className={styles.tabs}>
             <Tab>compositions</Tab>
             <Tab>properties</Tab>
           </TabList>
-          <TabPanel>
+          <TabPanel className={styles.tabContent}>
             <CompositionsPanel
-              onSelect={selectComposition}
+              onSelectComposition={selectComposition}
               url={compositionUrl}
               compositions={component.compositions}
               active={selected}
+              className={styles.compost}
             />
           </TabPanel>
-          <TabPanel>
+          <TabPanel className={styles.tabContent}>
             {properties && properties.length > 0 ? (
               // TODO - make table look good in panel
               <PropTable rows={properties} showListView />

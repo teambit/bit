@@ -34,3 +34,26 @@ $panelBg: #fafafa;
 .collapser {
   right: 0;
 }
+
+.tabsContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabs {
+  flex: none;
+}
+
+.tabContent {
+  flex: 1 1;
+  overflow: auto;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.compositions {
+  padding: 16px 8px 0 8px;
+}
