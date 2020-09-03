@@ -226,7 +226,10 @@ export class Workspace implements ComponentFactory {
    */
   async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const ids = consumerComponents.map((component) => ComponentID.fromLegacy(component.id));
+    const idsP = consumerComponents.map((component) => {
+      return this.resolveComponentId(component.id);
+    });
+    const ids = await Promise.all(idsP);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
