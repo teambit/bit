@@ -34,7 +34,9 @@ export class WorkspaceUI {
      */
     private menuSlot: RouteSlot,
 
-    private sidebar: SidebarUI
+    private sidebar: SidebarUI,
+
+    private sidebarSlot: SidebarWidgetSlot
   ) {
     this.registerExplicitRoutes();
   }
@@ -57,6 +59,11 @@ export class WorkspaceUI {
       path: this.componentUi.routePath,
       children: this.componentUi.getMenu(WorkspaceAspect.id),
     });
+  }
+
+  registerSidebarWidget(componentTreeNode: ComponentTreeNode) {
+    this.sidebarSlot.register(componentTreeNode);
+    return this;
   }
 
   get root(): UIRoot {
@@ -82,9 +89,10 @@ export class WorkspaceUI {
     [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarWidgetSlot]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
+    sidebarSlot.register(new ComponentTreeWidget());
     sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
 
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar);
+    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
     ui.registerRoot(workspaceUI.root);
 
     return workspaceUI;
