@@ -97,7 +97,7 @@ export class AspectList extends Array<AspectEntry> {
     forEachObjIndexed((config, id) => {
       const bitId = BitId.parse(id, true);
       const componentId = ComponentID.fromLegacy(bitId)
-      let entry = AspectEntry.fromConfigEntry(componentId, config);
+      const entry = AspectEntry.fromConfigEntry(componentId, config);
       arr.push(entry);
     }, obj);
     return this.fromArray(arr);

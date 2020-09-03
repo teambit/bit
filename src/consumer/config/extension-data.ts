@@ -57,6 +57,17 @@ export class ExtensionDataEntry {
       clonedArtifacts
     );
   }
+
+  static fromConfigEntry(id: BitId, config: Record<string,any>){
+    const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
+    let entry;
+    if (!isCore) {
+      entry = new ExtensionDataEntry(undefined, id, undefined, config, undefined);
+    } else {
+      entry = new ExtensionDataEntry(undefined, undefined, id.toString(), config, undefined);
+    }
+    return entry;
+  }
 }
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
