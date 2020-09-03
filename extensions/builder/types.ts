@@ -31,18 +31,27 @@ export interface BuildResults {
   artifacts: ArtifactProps[];
 }
 
+export type TaskLocation = 'start' | 'end'
+
 export interface BuildTask {
   /**
    * extensionId hosting this task.
    * @todo: should be automatically injected by Harmony
    */
   extensionId: string;
+
   /**
    * description of what the task does.
    * if available, the logger will log it show it in the status-line.
    * it's helpful to distinguish multiple tasks of the same extension.
    */
   description?: string;
+
+  /**
+   * where to put the task, before the env pipeline or after
+   */
+  location?: TaskLocation;
+
   /**
    * execute a task in a build context
    */
