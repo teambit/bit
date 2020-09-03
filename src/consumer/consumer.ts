@@ -514,8 +514,12 @@ export default class Consumer {
     ignoreUnresolvedDependencies: boolean | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
-    skipAutoTag: boolean
-  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
+    skipAutoTag: boolean,
+    persist: boolean
+  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
+    if (this.isLegacy) {
+      persist = true;
+    }
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -556,13 +560,51 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       skipAutoTag,
+      persist,
     });
 
     const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    await this.updateComponentsVersions(allComponents);
+    if (persist) {
+      await this.updateComponentsVersions(allComponents);
+    } else {
+      this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
+    }
 
-    return { taggedComponents, autoTaggedResults };
+    return { taggedComponents, autoTaggedResults, isSoftTag: !persist };
+  }
+
+  updateNextVersionOnBitmap(
+    taggedComponents: Component[],
+    autoTaggedResults: AutoTagResult[],
+    exactVersion,
+    releaseType
+  ) {
+    taggedComponents.forEach((taggedComponent) => {
+      const pendingVersionLog = taggedComponent.pendingVersion.log;
+      if (!pendingVersionLog) throw new Error('updateNextVersionOnBitmap, unable to get endingVersion.log');
+      const nextVersion = {
+        version: exactVersion || releaseType,
+        message: pendingVersionLog.message,
+        username: pendingVersionLog.username,
+        email: pendingVersionLog.email,
+      };
+      if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
+      taggedComponent.componentMap.updateNextVersion(nextVersion);
+    });
+    autoTaggedResults.forEach((autoTaggedResult) => {
+      const versionLog = autoTaggedResult.version.log;
+      const nextVersion = {
+        version: exactVersion || releaseType,
+        message: versionLog.message,
+        username: versionLog.username,
+        email: versionLog.email,
+      };
+      const id = autoTaggedResult.component.toBitIdWithLatestVersionAllowNull();
+      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
+      componentMap.updateNextVersion(nextVersion);
+    });
+    if (taggedComponents.length) this.bitMap.markAsChanged();
   }
 
   async snap({
@@ -625,6 +667,7 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       skipAutoTag: skipAutoSnap,
+      persist: true,
       resolveUnmerged,
       isSnap: true,
     });
@@ -712,6 +755,7 @@ export default class Consumer {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
+      componentMap.clearNextVersion();
       const packageJsonDir = getPackageJsonDir(componentMap, component, id);
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
