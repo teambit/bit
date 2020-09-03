@@ -56,6 +56,11 @@ export type ProxyEntry = ProxyConfigArrayItem & {
 
 export type PostStartOptions = {
   /**
+   * Event reporting callback.
+   */
+  onEvent?: (e: any) => void;
+
+  /**
    * pattern for selecting components in the container.
    */
   pattern?: string;

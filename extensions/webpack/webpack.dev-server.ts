@@ -7,6 +7,7 @@ export class WebpackDevServer implements DevServer {
   constructor(private config: Configuration) {}
 
   private getCompiler() {
+    // console.log('---this.config--> ', this.config)
     return webpack(this.config);
   }
 

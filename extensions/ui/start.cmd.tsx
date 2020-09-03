@@ -41,14 +41,20 @@ export class StartCmd implements Command {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
+  private onEvent(e) {
+    // console.log('-new event-> ', e);
+  }
+
   async render(
     [uiRootName, userPattern]: [string, string],
     { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
   ): Promise<React.ReactElement> {
+    // console.log('--2->')
     // teambit.bit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
     const uiServer = await this.ui.createRuntime({
+      onEvent: this.onEvent,
       uiRootName,
       pattern,
       dev,
@@ -57,7 +63,7 @@ export class StartCmd implements Command {
     });
 
     // clear the user console before moving interactive.
-    this.clearConsole();
+    // this.clearConsole();
 
     // return <UIServerConsole uiServer={uiServer} />;
     return <BuildingDevServerOutput workspaceFilePath={'sdfsdf'} />;

@@ -33,12 +33,14 @@ export class ComponentServer {
     return this.context.components.find((contextComponent) => contextComponent.equals(component));
   }
 
-  async listen() {
+  async listen(onEvent?: (e: any) => void) {
     const server = this.devServer.listen(this.port);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
+
+    if (onEvent) onEvent({ event: 'serverIsRunning', server });
   }
 
   private getHostname(address: string | AddressInfo | null) {

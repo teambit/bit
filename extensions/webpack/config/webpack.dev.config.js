@@ -1,3 +1,6 @@
+// const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
+const getWebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
+
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -14,6 +17,8 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
 module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
+  // console.log('WebpackCompilerDonePlugin: ', WebpackCompilerDonePlugin)
+
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -130,6 +135,33 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
         templateContent: html('Component preview'),
         filename: 'index.html',
       }),
+
+      // new WebpackCompilerDonePlugin({
+      //   // onEvent: _onEvent,
+      //   options: true,
+      // }),
+
+      new (getWebpackCompilerDonePlugin())({
+        // onEvent: _onEvent,
+        options: true,
+      }),
     ],
   };
 };
+
+// class WebpackCompilerDonePlugin {
+//   constructor(options = {}){
+//     console.log('---options-->: ', options)
+//     // this.onEvent = options.onEvent;
+//   }
+//   apply(compiler) {
+//     compiler.hooks.done.tap('webpack-compiler-done-plugin', (
+//       stats /* stats is passed as an argument when done hook is tapped.  */
+//     ) => {
+//       // this.onEvent('Webpack Compiler Done Plugin23')
+//       console.log('Webpack Compiler Done Plugin2');
+//     });
+//   }
+// }
+
+// // module.exports = HelloWorldPlugin;

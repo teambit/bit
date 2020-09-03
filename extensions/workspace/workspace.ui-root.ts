@@ -88,7 +88,14 @@ export class WorkspaceUIRoot implements UIRoot {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async postStart(options?: PostStartOptions) {
     const devServers = await this.getServers();
-    devServers.forEach((server) => server.listen());
+
+    if (options && options.onEvent) {
+      options.onEvent({ e: 'numOfRunningServers', num: devServers.length });
+      devServers.forEach((server) => server.listen(options.onEvent));
+    } else {
+      devServers.forEach((server) => server.listen());
+    }
+
     this.workspace.watcher.watchAll();
   }
 

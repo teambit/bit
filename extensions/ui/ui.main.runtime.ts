@@ -53,6 +53,11 @@ export type UIConfig = {
 
 export type RuntimeOptions = {
   /**
+   * Event reporting callback.
+   */
+  onEvent?: (e: any) => void;
+
+  /**
    * name of the UI root to load.
    */
   uiRootName?: string;
@@ -138,7 +143,7 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
+  async createRuntime({ onEvent, uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
@@ -152,6 +157,9 @@ export class UiMain {
 
     const targetPort = await this.getPort(port);
 
+    // if(onEvent)
+    //   onEvent({event: 'targetPort', targetPort});
+
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
@@ -159,8 +167,15 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    if (uiRoot.postStart) await uiRoot.postStart({ pattern });
+    if (onEvent) onEvent({ event: 'uiServerStarted' });
+
+    if (uiRoot.postStart) {
+      await uiRoot.postStart({ onEvent, pattern });
+
+      if (onEvent) onEvent({ event: 'postStartFinished' });
+    }
     await this.invokeOnStart();
+    if (onEvent) onEvent({ event: 'invokeOnStartFinished' });
 
     // TODO: need to wait until compilation done, then open browser
     // await this.openBrowser(`http://${this.config.host}:${targetPort}`);
