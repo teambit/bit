@@ -18,7 +18,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
@@ -45,6 +45,10 @@ type PostExportRegistry = SlotRegistry<OnPostExport>;
 
 export type OnTag = (ids: BitId[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
+
+export type ScopeConfig = {
+  description: string;
+};
 
 export class ScopeMain implements ComponentFactory {
   constructor(
@@ -76,7 +80,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger
+    private config: ScopeConfig
   ) {}
 
   /**
@@ -84,6 +88,10 @@ export class ScopeMain implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get description(): string {
+    return this.config.description;
   }
 
   get path(): string {
@@ -320,17 +328,16 @@ export class ScopeMain implements ComponentFactory {
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, loggerMain, express]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      LoggerMain,
       ExpressMain
     ],
-    config,
+    config: ScopeConfig,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
     harmony: Harmony
   ) {
@@ -340,7 +347,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerMain.createLogger(ScopeAspect.id);
+    // const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(
       harmony,
       legacyScope,
@@ -349,14 +356,13 @@ export class ScopeMain implements ComponentFactory {
       postExportSlot,
       isolator,
       aspectLoader,
-      logger
+      config
     );
     if (scope.legacyScope.isBare) {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     }
 
     express.register([new PutRoute(scope), new FetchRoute(scope)]);
-
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
