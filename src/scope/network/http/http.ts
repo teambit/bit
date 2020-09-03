@@ -144,7 +144,7 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  async deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
+  async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
     const DEPRECATE_COMPONENTS = gql`
       mutation deprecate($bitIds: [String!]!) {
         deprecate(bitIds: $bitIds)
@@ -157,10 +157,7 @@ export class Http implements Network {
     return res;
   }
 
-  async undeprecateMany(
-    ids: string[],
-    context: Record<string, any> | null | undefined
-  ): Promise<Record<string, any>[]> {
+  async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
     const UNDEPRECATE_COMPONENTS = gql`
       mutation deprecate($bitIds: [String!]!) {
         undeprecate(bitIds: $bitIds)

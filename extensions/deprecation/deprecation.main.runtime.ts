@@ -1,10 +1,10 @@
+import { deprecate, undeprecate } from 'bit-bin/dist/api/scope';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
-import { deprecate, undeprecate } from 'bit-bin/dist/api/scope';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
@@ -13,7 +13,7 @@ export type DeprecationInfo = {
 export class DeprecationMain {
   constructor(private scope: ScopeMain) {}
   static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ComponentAspect, ScopeAspect];
+  static dependencies = [GraphqlAspect, ScopeAspect, ComponentAspect];
 
   getDeprecationInfo(component: Component): DeprecationInfo {
     const deprecated = component.state._consumer.deprecated;
@@ -33,7 +33,7 @@ export class DeprecationMain {
     return true;
   }
 
-  static async provider([graphql, component, scope]: [GraphqlMain, Component, ScopeMain]) {
+  static async provider([graphql, scope]: [GraphqlMain, ScopeMain, Component]) {
     const deprecation = new DeprecationMain(scope);
     graphql.register(deprecationSchema(deprecation));
   }
