@@ -115,7 +115,7 @@ export class ComponentModel {
 
   static empty() {
     return new ComponentModel(
-      ComponentID.fromObject({ name: 'root' }),
+      ComponentID.fromObject({ name: 'root', scope: 'temp' }),
       '',
       '',
       { env: '', url: '' },

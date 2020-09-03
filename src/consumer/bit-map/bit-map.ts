@@ -12,7 +12,7 @@ import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
-import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
+import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
@@ -419,7 +419,7 @@ export default class BitMap {
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
-  getExistingBitId(id: BitIdStr, shouldThrow = true): BitId | undefined {
+  getExistingBitId(id: BitIdStr, shouldThrow = true, searchWithoutScopeInProvidedId = false): BitId | undefined {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
@@ -431,7 +431,7 @@ export default class BitMap {
     });
     if (componentWithScope) return componentWithScope.id;
 
-    // continue with searching without the scope name
+    // continue with searching without the scope name (in the bitmap)
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const componentWithoutScope = this.components.find((componentMap: ComponentMap) => {
       return idHasVersion
@@ -439,6 +439,26 @@ export default class BitMap {
         : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
     });
     if (componentWithoutScope) return componentWithoutScope.id;
+
+    if (searchWithoutScopeInProvidedId){
+      // continue with searching without the scope name (in the provided id)
+      const delimiterIndex = id.indexOf('/');
+      if (delimiterIndex) {
+        const idWithoutScope = BitId.getScopeAndName(id).name;
+        const matches = this.components.filter((componentMap: ComponentMap) => {
+          return idHasVersion
+            ? componentMap.id.toStringWithoutScope() === idWithoutScope
+            : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutScope;
+        });
+        if (matches && matches.length >1){
+          throw new MultipleMatches(id);
+        }
+        if (matches && matches.length === 1){
+          return matches[0].id;
+        }
+      }
+    }
+
     if (shouldThrow) {
       throw new MissingBitMapComponent(id);
     }

@@ -39,7 +39,7 @@ export function Compositions() {
   // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.legacyComponentId.name },
+    variables: { id: component.id._legacy.name },
   });
   const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.

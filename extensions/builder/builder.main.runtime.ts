@@ -41,7 +41,7 @@ export class BuilderMain {
 
   async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     // @todo: some processes needs dependencies/dependents of the given ids
-    const componentIds = ids.map(ComponentID.fromLegacy);
+    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const components = await this.workspace.getMany(componentIds);
     const envsExecutionResults = await this.build(components);
     envsExecutionResults.throwErrorsIfExist();
