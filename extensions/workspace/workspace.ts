@@ -328,7 +328,7 @@ export class Workspace implements ComponentFactory {
     );
 
     if (!component) {
-      return this.executeLoadSlot(this.newComponentFromState(state));
+      return this.executeLoadSlot(this.newComponentFromState(id, state));
     }
 
     component.state = state;
@@ -397,8 +397,8 @@ export class Workspace implements ComponentFactory {
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
 
-  private newComponentFromState(state: State): Component {
-    return new WorkspaceComponent(ComponentID.fromLegacy(state._consumer.id), null, state, new TagMap(), this);
+  private newComponentFromState(id: ComponentID, state: State): Component {
+    return new WorkspaceComponent(id, null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -715,10 +715,10 @@ export class Workspace implements ComponentFactory {
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);
 
-    const allIds = graph.nodes().map((id) => {
-      const consumerComponent = graph.node(id);
-      return ComponentID.fromLegacy(consumerComponent.id);
+    const allIdsP = graph.nodes().map(async (id) => {
+      return this.resolveComponentId(id);
     });
+    const allIds = await Promise.all(allIdsP);
 
     const allComponents = await this.getMany(allIds);
 
