@@ -850,7 +850,9 @@ export class Workspace implements ComponentFactory {
     const components = await this.list();
     const stringIds = components.map((component) => component.id.toString());
     // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({linkingOptions: { bitLinkType: 'link', linkCoreAspects: true }});
+    const installer = this.dependencyResolver.getInstaller({
+      linkingOptions: { bitLinkType: 'link', linkCoreAspects: true },
+    });
     const installationMap = await this.getComponentsDirectory([]);
     const packageJson = this.consumer.packageJson?.packageJsonObject || {};
     const depsFromPJson = packageJson.dependencies || {};

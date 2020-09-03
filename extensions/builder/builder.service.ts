@@ -48,7 +48,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     const slotsTasks = this.taskSlot.values();
     const tasksAtStart: BuildTask[] = [];
     const tasksAtEnd: BuildTask[] = [];
-    slotsTasks.forEach(task => {
+    slotsTasks.forEach((task) => {
       if (task.location === 'start') {
         tasksAtStart.push(task);
         return;
@@ -63,7 +63,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
 
     const componentIds = context.components.map((component) => component.id.toString());
     const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(componentIds,  {installOptions: {installPackages: false}}),
+      capsuleGraph: await this.workspace.createNetwork(componentIds, { installOptions: { installPackages: false } }),
     });
     const buildResults = await buildPipe.execute(buildContext);
     longProcessLogger.end();
