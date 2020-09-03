@@ -323,8 +323,8 @@ export class ScopeMain implements ComponentFactory {
     CLIAspect,
     IsolatorAspect,
     AspectLoaderAspect,
-    LoggerAspect,
     ExpressAspect,
+    LoggerAspect,
   ];
 
   static async provider(
