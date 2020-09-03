@@ -14,8 +14,25 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
       type DeprecationInfo {
         isDeprecate: Boolean
       }
+
+      type Mutation {
+        # deprecate components
+        deprecate(bitIds: [String!]!): Boolean
+
+        # undo deprecate to components
+        undeprecate(bitIds: [String!]!): Boolean
+      }
     `,
     resolvers: {
+      Mutation: {
+        deprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+          return deprecation.deprecate(bitIds);
+        },
+
+        undeprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+          return deprecation.unDeprecate(bitIds);
+        },
+      },
       Component: {
         deprecation: (component: Component) => {
           return deprecation.getDeprecationInfo(component);
