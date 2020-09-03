@@ -74,7 +74,7 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
       return version;
     }
 
-    if (!id && !all && !scope) {
+    if (!id && !all && !scope && !persist) {
       throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
