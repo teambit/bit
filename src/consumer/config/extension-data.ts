@@ -59,6 +59,8 @@ export class ExtensionDataEntry {
   }
 
   static fromConfigEntry(id: BitId, config: Record<string, any>) {
+    // TODO: refactor the core names registry to be outside the ExtensionDataList
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
     let entry;
     if (!isCore) {
