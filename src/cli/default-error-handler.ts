@@ -161,7 +161,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     ProtocolNotSupported,
-    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`',
+    () =>
+      'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [

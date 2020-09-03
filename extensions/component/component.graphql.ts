@@ -17,8 +17,8 @@ export function componentSchema(componentExtension: ComponentMain) {
       type Tag {
         # semver assigned to the tag.
         version: String!
-        # tag snapshot.
 
+        # tag snapshot.
         snap: Snap!
       }
 
@@ -46,6 +46,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         # author of the snapper.
         email: String!
       }
+
       type Component {
         # id of the component.
         id: ComponentID!

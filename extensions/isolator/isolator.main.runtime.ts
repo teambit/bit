@@ -35,7 +35,7 @@ export type IsolateComponentsInstallOptions = {
   dedupe?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
-}
+};
 
 export type IsolateComponentsOptions = {
   name?: string;
@@ -50,7 +50,7 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   dedupe: true,
   copyPeerToRuntimeOnComponents: false,
   copyPeerToRuntimeOnRoot: true,
-}
+};
 
 export class IsolatorMain {
   static runtime = MainRuntime;
@@ -98,7 +98,7 @@ export class IsolatorMain {
       // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
       const installer = this.dependencyResolver.getInstaller({
         rootDir: capsulesDir,
-        linkingOptions: opts.linkingOptions
+        linkingOptions: opts.linkingOptions,
       });
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace

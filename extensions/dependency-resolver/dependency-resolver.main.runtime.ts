@@ -52,18 +52,18 @@ export type LinkingOptions = {
    * link - use symlink to the global installation dir
    * install - use package manager to install it
    */
-  bitLinkType?: BitExtendedLinkType,
+  bitLinkType?: BitExtendedLinkType;
   /**
    * Whether to create links in the root dir node modules to all core aspects
    */
-  linkCoreAspects?: boolean,
-}
+  linkCoreAspects?: boolean;
+};
 
 export type GetInstallerOptions = {
-  rootDir?: string,
-  packageManager?: string,
+  rootDir?: string;
+  packageManager?: string;
   cacheRootDirectory?: string;
-  linkingOptions?: LinkingOptions
+  linkingOptions?: LinkingOptions;
 };
 
 export type GetVersionResolverOptions = {
@@ -90,8 +90,8 @@ export type UpdatePolicyResult = {
 
 const defaultLinkingOptions: LinkingOptions = {
   bitLinkType: 'link',
-  linkCoreAspects: true
-}
+  linkCoreAspects: true,
+};
 
 export class DependencyResolverMain {
   constructor(
