@@ -189,12 +189,12 @@ export class Http implements Network {
     return data.scope._legacyLatestVersions;
   }
 
-  graph(bitId?: BitId | undefined): Promise<DependencyGraph> {
+  graph(): Promise<DependencyGraph> {
     throw new Error('Method not implemented.');
   }
 
   // TODO: ran (TBD)
-  listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
+  async listLanes(name?: string | undefined, mergeData?: boolean | undefined): Promise<LaneData[]> {
     const LIST_LANES = gql`
     query listLanes() {
       lanes {
@@ -203,9 +203,11 @@ export class Http implements Network {
     }
     `;
 
-    const res = request(this.graphqlUrl, LIST_LANES, {
+    const res = await request(this.graphqlUrl, LIST_LANES, {
       mergeData,
     });
+
+    return res.lanes.list;
   }
 
   static async connect(host: string) {
