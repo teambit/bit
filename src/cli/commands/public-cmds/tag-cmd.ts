@@ -1,17 +1,16 @@
 import chalk from 'chalk';
 import { ReleaseType } from 'semver';
-
-import { tagAction, tagAllAction } from '../../../api/consumer';
-import { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG, TagResults } from '../../../api/consumer/lib/tag';
-import { BASE_DOCS_DOMAIN, DEFAULT_BIT_RELEASE_TYPE, WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
+import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import { tagAction } from '../../../api/consumer';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
-import hasWildcard from '../../../utils/string/has-wildcard';
-import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
+in Harmony workspace, without "--persist" flag, it does "soft-tag", which only keeps note of the changes to be made
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
@@ -30,6 +29,7 @@ export default class Tag implements LegacyCommand {
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
+    ['', 'persist', 'Harmony only. persist the changes. (same as "bit tag" in the legacy workspace)'],
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
@@ -38,11 +38,11 @@ export default class Tag implements LegacyCommand {
     [id, version]: string[],
     {
       message = '',
-      all,
+      all = false,
       patch,
       minor,
       major,
-      force,
+      force = false,
       verbose,
       ignoreMissingDependencies = false,
       ignoreUnresolvedDependencies = false,
@@ -50,6 +50,7 @@ export default class Tag implements LegacyCommand {
       skipTests = false,
       skipAutoTag = false,
       scope,
+      persist = false,
     }: {
       message?: string;
       all?: boolean;
@@ -64,6 +65,7 @@ export default class Tag implements LegacyCommand {
       skipTests?: boolean;
       skipAutoTag?: boolean;
       scope?: string;
+      persist?: boolean;
     }
   ): Promise<any> {
     function getVersion(): string | undefined {
@@ -72,7 +74,7 @@ export default class Tag implements LegacyCommand {
       return version;
     }
 
-    if (!id && !all && !scope) {
+    if (!id && !all && !scope && !persist) {
       throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
@@ -87,7 +89,7 @@ export default class Tag implements LegacyCommand {
     }
 
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
-    const includeImported = scope && all;
+    const includeImported = Boolean(scope && all);
 
     if (major) releaseType = 'major';
     else if (minor) releaseType = 'minor';
@@ -95,9 +97,9 @@ export default class Tag implements LegacyCommand {
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
-    const idHasWildcard = hasWildcard(id);
-
     const params = {
+      id,
+      all,
       message,
       exactVersion: getVersion(),
       releaseType,
@@ -107,21 +109,12 @@ export default class Tag implements LegacyCommand {
       ignoreNewestVersion,
       skipTests,
       skipAutoTag,
+      persist,
+      scope,
+      includeImported,
     };
 
-    if (all || scope || idHasWildcard) {
-      return tagAllAction({
-        ...params,
-        scope,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        includeImported,
-        idWithWildcard: id,
-      });
-    }
-    return tagAction({
-      ...params,
-      id,
-    });
+    return tagAction(params);
   }
 
   report(results: TagResults): string {
@@ -132,8 +125,12 @@ export default class Tag implements LegacyCommand {
     const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag" to unstage versions)\n`;
+    const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
+(use "bit untag (--persisted)" to unstage versions)\n`;
+    const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
+(use "bit untag" to remove the soft-tags)\n`;
+
+    const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 
     const outputComponents = (comps) => {
       return comps
@@ -152,17 +149,32 @@ export default class Tag implements LegacyCommand {
         .join('\n');
     };
 
+    const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
     const outputIfExists = (label, explanation, components) => {
       if (!components.length) return '';
-      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+      return `\n${chalk.underline(softTagPrefix + label)}\n(${explanation})\n${outputComponents(components)}\n`;
     };
 
+    const newDesc = results.isSoftTag
+      ? 'set to be tagged first version for components'
+      : 'first version for components';
+    const changedDesc = results.isSoftTag
+      ? 'components that set to get a version bump'
+      : 'components that got a version bump';
+    const softTagClarification = results.isSoftTag
+      ? chalk.bold(
+          'keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag'
+        )
+      : '';
     return (
       warningsOutput +
-      chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
+      chalk.green(
+        `${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
+      ) +
       tagExplanation +
-      outputIfExists('new components', 'first version for components', addedComponents) +
-      outputIfExists('changed components', 'components that got a version bump', changedComponents)
+      outputIfExists('new components', newDesc, addedComponents) +
+      outputIfExists('changed components', changedDesc, changedComponents) +
+      softTagClarification
     );
   }
 }
