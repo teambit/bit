@@ -144,12 +144,33 @@ export class Http implements Network {
     return Component.fromString(data.scope._getLegacy);
   }
 
-  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
-    throw new Error('Method not implemented.');
+  async deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
+    const DEPRECATE_COMPONENTS = gql`
+      mutation deprecate($bitIds: [String!]!) {
+        deprecate(bitIds: $bitIds)
+      }
+    `;
+    const res = await request(this.graphqlUrl, DEPRECATE_COMPONENTS, {
+      ids,
+    });
+
+    return res;
   }
 
-  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
-    throw new Error('Method not implemented.');
+  async undeprecateMany(
+    ids: string[],
+    context: Record<string, any> | null | undefined
+  ): Promise<Record<string, any>[]> {
+    const UNDEPRECATE_COMPONENTS = gql`
+      mutation deprecate($bitIds: [String!]!) {
+        undeprecate(bitIds: $bitIds)
+      }
+    `;
+    const res = await request(this.graphqlUrl, UNDEPRECATE_COMPONENTS, {
+      ids,
+    });
+
+    return res;
   }
 
   // TODO: @david please fix this.
