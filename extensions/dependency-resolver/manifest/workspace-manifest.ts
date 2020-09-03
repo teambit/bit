@@ -1,4 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { DependenciesFilterFunction, Dependency } from 'bit-bin/dist/consumer/component/dependencies';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
