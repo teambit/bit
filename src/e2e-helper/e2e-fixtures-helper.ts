@@ -253,6 +253,8 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     };
     for (let i = 1; i <= numOfComponents; i += 1) {
       this.fs.outputFile(path.join(`comp${i}`, `index.ts`), getImp(i));
+    }
+    for (let i = numOfComponents; i > 0; i -= 1) {
       this.command.addComponent(`comp${i}`);
     }
     this.command.link();
