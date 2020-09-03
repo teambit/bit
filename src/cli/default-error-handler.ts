@@ -1,114 +1,115 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-import { paintSpecsResults } from './chalk-box';
-import hashErrorIfNeeded from '../error/hash-error-object';
-import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
-import {
-  ConsumerAlreadyExists,
-  NothingToImport,
-  ConsumerNotFound,
-  ComponentSpecsFailed,
-  ComponentOutOfSync,
-  MissingDependencies,
-  NewerVersionFound,
-  LoginFailed,
-} from '../consumer/exceptions';
-import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
-import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
-import PermissionDenied from '../scope/network/exceptions/permission-denied';
-import {
-  NetworkError,
-  UnexpectedNetworkError,
-  SSHInvalidResponse,
-  ProtocolNotSupported,
-  RemoteScopeNotFound,
-  AuthenticationFailed,
-} from '../scope/network/exceptions';
-import RemoteNotFound from '../remotes/exceptions/remote-not-found';
-import {
-  ScopeNotFound,
-  ScopeJsonNotFound,
-  ResolutionException,
-  ComponentNotFound,
-  DependencyNotFound,
-  CorruptedComponent,
-  VersionAlreadyExists,
-  MergeConflict,
-  InvalidIndexJson,
-  HashMismatch,
-  MergeConflictOnRemote,
-  OutdatedIndexJson,
-  VersionNotFound,
-  ParentNotFound,
-  CyclicDependencies,
-  HashNotFound,
-  HeadNotFound,
-} from '../scope/exceptions';
-import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
-import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
-import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
+
+import { Analytics, LEVEL } from '../analytics/analytics';
+import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
+import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
+import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
+import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
+import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
-import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
-import PromptCanceled from '../prompts/exceptions/prompt-canceled';
-import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
-import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
-import { MissingMainFile, MissingBitMapComponent, InvalidBitMap } from '../consumer/bit-map/exceptions';
-import logger from '../logger/logger';
-import RemoteUndefined from './commands/exceptions/remote-undefined';
-import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
-import componentIssuesTemplate from './templates/component-issues-template';
-import newerVersionTemplate from './templates/newer-version-template';
-import {
-  PathsNotExist,
-  IncorrectIdForImportedComponent,
-  DuplicateIds,
-  NoFiles,
-  EmptyDirectory,
-  MissingComponentIdForImportedComponent,
-  VersionShouldBeRemoved,
-  TestIsDirectory,
-  MainFileIsDir,
-  PathOutsideConsumer,
-  MissingMainFileMultipleComponents,
-  ExcludedMainFile,
-} from '../consumer/component-ops/add-components/exceptions';
-import { Analytics, LEVEL } from '../analytics/analytics';
-import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
-import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
-import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
-import ExtensionFileNotFound from '../legacy-extensions/exceptions/extension-file-not-found';
-import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
-import GeneralError from '../error/general-error';
-import ValidationError from '../error/validation-error';
-import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
-import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
-import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
-import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
-import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
-import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
-import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { DEBUG_LOG, BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../constants';
-import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
-import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
-import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
-import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
-import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
-import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
-import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
+import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
+import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
+import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consumer/bit-map/exceptions';
+import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
+import {
+  DuplicateIds,
+  EmptyDirectory,
+  ExcludedMainFile,
+  IncorrectIdForImportedComponent,
+  MainFileIsDir,
+  MissingComponentIdForImportedComponent,
+  MissingMainFileMultipleComponents,
+  NoFiles,
+  PathOutsideConsumer,
+  PathsNotExist,
+  TestIsDirectory,
+  VersionShouldBeRemoved,
+} from '../consumer/component-ops/add-components/exceptions';
+import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
-import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
-import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
+import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
+import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
+import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
+import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
+import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
-import FlagHarmonyOnly from '../api/consumer/lib/exceptions/flag-harmony-only';
+import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
+import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
+import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
+import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
+import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import { NoComponentDir } from '../consumer/component/exceptions/no-component-dir';
+import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
+import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
+import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
+import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
+import {
+  ComponentOutOfSync,
+  ComponentSpecsFailed,
+  ConsumerAlreadyExists,
+  ConsumerNotFound,
+  LoginFailed,
+  MissingDependencies,
+  NewerVersionFound,
+  NothingToImport,
+} from '../consumer/exceptions';
+import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 import { BitError } from '../error/bit-error';
+import GeneralError from '../error/general-error';
+import hashErrorIfNeeded from '../error/hash-error-object';
+import ValidationError from '../error/validation-error';
+import ExtensionFileNotFound from '../legacy-extensions/exceptions/extension-file-not-found';
+import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
+import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
+import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
+import ExtensionLoadError from '../legacy-extensions/exceptions/extension-load-error';
+import ExtensionNameNotValid from '../legacy-extensions/exceptions/extension-name-not-valid';
+import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
+import logger from '../logger/logger';
+import PromptCanceled from '../prompts/exceptions/prompt-canceled';
+import RemoteNotFound from '../remotes/exceptions/remote-not-found';
+import {
+  ComponentNotFound,
+  CorruptedComponent,
+  CyclicDependencies,
+  DependencyNotFound,
+  HashMismatch,
+  HashNotFound,
+  HeadNotFound,
+  InvalidIndexJson,
+  MergeConflict,
+  MergeConflictOnRemote,
+  OutdatedIndexJson,
+  ParentNotFound,
+  ResolutionException,
+  ScopeJsonNotFound,
+  ScopeNotFound,
+  VersionAlreadyExists,
+  VersionNotFound,
+} from '../scope/exceptions';
+import {
+  AuthenticationFailed,
+  NetworkError,
+  ProtocolNotSupported,
+  RemoteScopeNotFound,
+  SSHInvalidResponse,
+  UnexpectedNetworkError,
+} from '../scope/network/exceptions';
+import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
+import PermissionDenied from '../scope/network/exceptions/permission-denied';
+import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
+import GitNotFound from '../utils/git/exceptions/git-not-found';
+import { paintSpecsResults } from './chalk-box';
+import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
+import RemoteUndefined from './commands/exceptions/remote-undefined';
+import componentIssuesTemplate from './templates/component-issues-template';
+import newerVersionTemplate from './templates/newer-version-template';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -160,7 +161,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     ProtocolNotSupported,
-    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`',
+    () =>
+      'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [
@@ -350,7 +352,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     InvalidScopeName,
     (err) =>
       `error: "${chalk.bold(
-        err.scopeName
+        err.id || err.scopeName
       )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
   ],
   [

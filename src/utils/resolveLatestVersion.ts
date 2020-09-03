@@ -3,9 +3,10 @@
  * it returns the provided id if it has a version already
  * if the list contains id without version, it returns the provided id.
  */
+import { compact } from 'lodash';
 import R from 'ramda';
 import semver from 'semver';
-import { compact } from 'lodash';
+
 import { BitId, BitIds } from '../bit-id';
 
 export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): BitId {

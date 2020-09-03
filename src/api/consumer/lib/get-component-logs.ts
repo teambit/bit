@@ -1,5 +1,5 @@
-import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import { BitId } from '../../../bit-id';
+import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import getRemoteByName from '../../../remotes/get-remote-by-name';
 
 export default async function getComponentLogs(id: string, isRemote: boolean) {

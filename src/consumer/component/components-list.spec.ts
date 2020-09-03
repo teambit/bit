@@ -1,7 +1,8 @@
 import { expect } from 'chai';
-import ComponentsList from './components-list';
-import { ModelComponent } from '../../scope/models';
+
 import { BitId, BitIds } from '../../bit-id';
+import { ModelComponent } from '../../scope/models';
+import ComponentsList from './components-list';
 
 describe('ComponentList', function () {
   this.timeout(0);

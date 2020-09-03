@@ -1,18 +1,18 @@
-import rightpad from 'pad-right';
+import { expect } from 'chai';
 import chalk from 'chalk';
-import tar from 'tar';
-import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
-import { expect } from 'chai';
-import { removeChalkCharacters } from '../utils';
-import runInteractive from '../interactive/utils/run-interactive-cmd';
-import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
-import ScopesData from './e2e-scopes';
-import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
-import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
+import rightpad from 'pad-right';
+import * as path from 'path';
+import tar from 'tar';
+
 import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
+import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
+import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
+import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
+import { removeChalkCharacters } from '../utils';
+import ScopesData from './e2e-scopes';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -428,8 +428,17 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
+  install(options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit install ${parsedOpts}`);
+  }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
+  }
+
+  linkAndCompile(linkFlags?: string, compileId?: string, compileFlags?: Record<string, string>) {
+    this.link(linkFlags);
+    return this.compile(compileId, compileFlags);
   }
 
   packComponent(id: string, options: Record<string, any>, extract = false) {
@@ -473,6 +482,11 @@ export default class CommandHelper {
   ejectConf(id = 'bar/foo', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
     return this.runCmd(`bit eject-conf ${id} ${parsedOpts}`);
+  }
+
+  compile(id = '', options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit compile ${id} ${parsedOpts}`);
   }
 
   injectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {

@@ -1,4 +1,5 @@
 import * as path from 'path';
+
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
@@ -23,7 +24,7 @@ export default class NpmHelper {
    * @param {*} name
    * @param {*} version
    */
-  installNpmPackage(name: string, version: string | null | undefined, cwd: string = this.scopes.localPath) {
+  installNpmPackage(name: string, version?: string, cwd: string = this.scopes.localPath) {
     const versionWithDelimiter = version ? `@${version}` : '';
     const cmd = `npm i --save ${name}${versionWithDelimiter}`;
     return this.command.runCmd(cmd, cwd);

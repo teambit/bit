@@ -1,16 +1,18 @@
 import assert from 'assert';
-import sinon from 'sinon';
-import path from 'path';
 import mockfs from 'mock-fs';
+import path from 'path';
 import rewire from 'rewire';
-import Config from './Config';
+import sinon from 'sinon';
+
 import precinct from '../precinct';
+import Config from './Config';
 
 const expect = require('chai').expect;
 
 // needed for the lazy loading.
 require('module-definition');
 require('detective-stylus');
+require('typescript');
 require('../../../../../constants');
 require('../../../../../utils');
 require('../../../../../utils/is-relative-import');
@@ -221,7 +223,7 @@ describe('dependencyTree', function () {
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
 
-    assert(subTree.includes(require.resolve('debug')));
+    assert(subTree[0].includes('node_modules/debug/src/index.js'));
   });
 
   it('returns a list of absolutely pathed files', () => {

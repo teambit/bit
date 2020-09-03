@@ -1,13 +1,13 @@
 // This file meant to bridge the new workspace config and the legacy one
 // when loading the workspace config we actually loading the new one, and it return something that implement this interface
 
+import { BitId } from '../../bit-id';
 import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { Compilers, Testers } from './abstract-config';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { ResolveModulesConfig } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import { AbstractVinyl } from '../component/sources';
+import { Compilers, Testers } from './abstract-config';
 import ConsumerOverrides, { ConsumerOverridesOfComponent } from './consumer-overrides';
-import { BitId } from '../../bit-id';
 
 // to make sure all the legacy code can work without need to change
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;

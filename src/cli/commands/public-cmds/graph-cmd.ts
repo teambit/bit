@@ -1,9 +1,10 @@
-import * as path from 'path';
-import os from 'os';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import os from 'os';
+import * as path from 'path';
+
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Graph implements LegacyCommand {
   name = 'graph [id]';

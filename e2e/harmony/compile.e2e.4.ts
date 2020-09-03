@@ -1,9 +1,10 @@
-import path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import fs from 'fs-extra';
+import path from 'path';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -24,7 +25,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
@@ -140,7 +141,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       helper.fixtures.populateComponentsTS(1, undefined, true);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');

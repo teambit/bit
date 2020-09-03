@@ -1,0 +1,29 @@
+.overview {
+  padding: 8px 8px 0px 8px;
+  .separator {
+    margin: unset;
+  }
+  .overviewLink {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 8px;
+    text-decoration: none;
+    color: var(--highlighted-text);
+    margin-bottom: 8px;
+    .icon {
+      color: var(--text-muted);
+    }
+  }
+  .active {
+    background-color: var(--base-color);
+    color: var(--cta-button-text);
+    font-weight: unset;
+    .icon {
+      color: var(--cta-button-text);
+    }
+    &:hover {
+      background-color: var(--base-highlight);
+    }
+  }
+}

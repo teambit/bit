@@ -1,43 +1,44 @@
 /* eslint max-classes-per-file: 0 */
-import SSH2 from 'ssh2';
-import R from 'ramda';
-import * as os from 'os';
 import merge from 'lodash.merge';
-import { userpass as promptUserpass } from '../../../prompts';
-import keyGetter from './key-getter';
-import ComponentObjects from '../../component-objects';
-import {
-  RemoteScopeNotFound,
-  UnexpectedNetworkError,
-  AuthenticationFailed,
-  PermissionDenied,
-  SSHInvalidResponse,
-  OldClientVersion,
-} from '../exceptions';
-import { BitId } from '../../../bit-id';
-import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
-import ComponentNotFound from '../../../scope/exceptions/component-not-found';
-import { ScopeDescriptor } from '../../scope';
-import ConsumerComponent from '../../../consumer/component';
-import checkVersionCompatibilityFunction from '../check-version-compatibility';
-import logger from '../../../logger/logger';
-import { Network } from '../network';
-import { DEFAULT_SSH_READY_TIMEOUT, CFG_USER_TOKEN_KEY, CFG_SSH_NO_COMPRESS } from '../../../constants';
-import RemovedObjects from '../../removed-components';
-import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
+import * as os from 'os';
+import R from 'ramda';
+import SSH2 from 'ssh2';
+
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
-import GeneralError from '../../../error/general-error';
+import * as globalConfig from '../../../api/consumer/lib/global-config';
+import { BitId } from '../../../bit-id';
+import globalFlags from '../../../cli/global-flags';
+import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
+import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
-import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
-import DependencyGraph from '../../graph/scope-graph';
-import globalFlags from '../../../cli/global-flags';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
-import * as globalConfig from '../../../api/consumer/lib/global-config';
-import { ComponentLogs } from '../../models/model-component';
-import { LaneData } from '../../lanes/lanes';
+import GeneralError from '../../../error/general-error';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
+import logger from '../../../logger/logger';
+import { userpass as promptUserpass } from '../../../prompts';
+import ComponentNotFound from '../../../scope/exceptions/component-not-found';
+import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
+import ComponentObjects from '../../component-objects';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
+import DependencyGraph from '../../graph/scope-graph';
+import { LaneData } from '../../lanes/lanes';
+import { ComponentLogs } from '../../models/model-component';
+import RemovedObjects from '../../removed-components';
+import { ScopeDescriptor } from '../../scope';
+import checkVersionCompatibilityFunction from '../check-version-compatibility';
+import {
+  AuthenticationFailed,
+  OldClientVersion,
+  PermissionDenied,
+  RemoteScopeNotFound,
+  SSHInvalidResponse,
+  UnexpectedNetworkError,
+} from '../exceptions';
+import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
+import { Network } from '../network';
+import keyGetter from './key-getter';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -408,6 +409,7 @@ export default class SSH implements Network {
       return RemovedObjects.fromObjects(payload);
     });
   }
+
   deprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
     return this.exec(
       '_deprecate',
@@ -420,6 +422,7 @@ export default class SSH implements Network {
       return payload;
     });
   }
+
   undeprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
     return this.exec(
       '_undeprecate',

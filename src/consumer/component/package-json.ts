@@ -1,9 +1,10 @@
 import fs from 'fs-extra';
-import R from 'ramda';
 import parents from 'parents';
 import path from 'path';
-import { PACKAGE_JSON } from '../../constants';
+import R from 'ramda';
+
 import { BitId } from '../../bit-id';
+import { PACKAGE_JSON } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import ConsumerComponent from '.';
 

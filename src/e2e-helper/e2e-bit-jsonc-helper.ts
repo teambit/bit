@@ -1,8 +1,9 @@
-import { parse, stringify, assign } from 'comment-json';
-import * as path from 'path';
+import { assign, parse, stringify } from 'comment-json';
 import fs from 'fs-extra';
-import ScopesData from './e2e-scopes';
+import * as path from 'path';
+
 import { WORKSPACE_JSONC } from '../constants';
+import ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class BitJsoncHelper {
@@ -35,7 +36,7 @@ export default class BitJsoncHelper {
 
   addToVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, key: string, val: any) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['@teambit/variants'];
+    const variants = bitJsonc['teambit.bit/variants'];
     const newVariant = variants[variant] ?? {};
     assign(newVariant, { [key]: val });
     this.setVariant(bitJsoncDir, variant, newVariant);
@@ -50,17 +51,17 @@ export default class BitJsoncHelper {
    */
   setVariant(bitJsoncDir: string = this.scopes.localPath, variant: string, config: any) {
     const bitJsonc = this.read(bitJsoncDir);
-    const variants = bitJsonc['@teambit/variants'];
+    const variants = bitJsonc['teambit.bit/variants'];
     const newVariant = config;
     assign(variants, { [variant]: newVariant });
-    this.addKeyVal(bitJsoncDir, '@teambit/variants', variants);
+    this.addKeyVal(bitJsoncDir, 'teambit.bit/variants', variants);
   }
 
   addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
     const bitJsonc = this.read(bitJsoncDir);
-    const workspace = bitJsonc['@teambit/workspace'];
+    const workspace = bitJsonc['teambit.bit/workspace'];
     assign(workspace, { [key]: val });
-    this.addKeyVal(bitJsoncDir, '@teambit/workspace', workspace);
+    this.addKeyVal(bitJsoncDir, 'teambit.bit/workspace', workspace);
   }
 
   addDefaultScope(scope = this.scopes.remote) {

@@ -2,11 +2,12 @@
 
 import chalk from 'chalk';
 import Table from 'tty-table';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
-import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
-import { forEach, empty } from '../../../utils';
-import RemoteUndefined from '../exceptions/remote-undefined';
+
+import { remoteAdd, remoteList, remoteRm } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { empty, forEach } from '../../../utils';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import RemoteUndefined from '../exceptions/remote-undefined';
 
 class RemoteAdd implements LegacyCommand {
   name = 'add <url>';

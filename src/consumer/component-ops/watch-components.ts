@@ -1,15 +1,16 @@
 /* eslint no-console: 0 */
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+import chalk from 'chalk';
 import chokidar from 'chokidar';
 import R from 'ramda';
-import chalk from 'chalk';
-import Consumer from '../consumer';
+
 import { loadConsumer } from '..';
 import { build } from '../../api/consumer';
-import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
+import loader from '../../cli/loader';
 import { BIT_VERSION } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils';
+import Consumer from '../consumer';
 
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';

@@ -1,14 +1,16 @@
 /* eslint no-console: 0 */
 
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
+import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
+import { generateRandomStr } from '../utils';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
+import NpmHelper from './e2e-npm-helper';
 import ScopesData from './e2e-scopes';
-import { generateRandomStr } from '../utils';
-import { HARMONY_FEATURE } from '../api/consumer/lib/feature-toggle';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -18,16 +20,24 @@ export default class ScopeHelper {
   e2eDir: string;
   command: CommandHelper;
   fs: FsHelper;
+  npm: NpmHelper;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
   packageManager = 'npm';
-  constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
+  constructor(
+    debugMode: boolean,
+    scopes: ScopesData,
+    commandHelper: CommandHelper,
+    fsHelper: FsHelper,
+    npmHelper: NpmHelper
+  ) {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
     this.command = commandHelper;
     this.fs = fsHelper;
+    this.npm = npmHelper;
   }
   clean() {
     fs.emptyDirSync(this.scopes.localPath);
@@ -69,6 +79,18 @@ export default class ScopeHelper {
 
   initHarmonyWorkspace() {
     this.command.runCmd('bit init', undefined, undefined, HARMONY_FEATURE);
+  }
+
+  /**
+   * This will re init a workspace as harmony
+   * install the @teambit/harmony package
+   * link bit-bin in node_modules
+   * link the core aspect in node_modules
+   */
+  reInitLocalWorkspaceHarmonyForNewAspects() {
+    this.reInitLocalScopeHarmony();
+    this.npm.installNpmPackage('@teambit/harmony');
+    this.linkBitBin();
   }
 
   initLocalScope() {
@@ -239,5 +261,15 @@ export default class ScopeHelper {
     const localBitBinPath = path.join(__dirname, '../..');
     fs.removeSync(bitBinPath);
     createSymlinkOrCopy(localBitBinPath, bitBinPath);
+    this.linkCoreAspects();
+  }
+
+  linkCoreAspects() {
+    const aspectsRoot = path.join(this.scopes.localPath, './node_modules/@teambit');
+    const localAspectsRoot = path.join(__dirname, '../../node_modules/@teambit');
+    console.log('aspectsRoot', aspectsRoot);
+    console.log('localAspectsRoot', localAspectsRoot);
+    fs.removeSync(aspectsRoot);
+    createSymlinkOrCopy(localAspectsRoot, aspectsRoot);
   }
 }

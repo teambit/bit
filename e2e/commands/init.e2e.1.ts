@@ -1,13 +1,14 @@
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import * as path from 'path';
 import detectIndent from 'detect-indent';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON, CURRENT_UPSTREAM } from '../../src/constants';
+import fs from 'fs-extra';
+import * as path from 'path';
+
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_JSON, BIT_MAP, CURRENT_UPSTREAM } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
 import { InvalidBitJson } from '../../src/consumer/config/exceptions';
 import InvalidPackageJson from '../../src/consumer/config/exceptions/invalid-package-json';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 const assertArrays = require('chai-arrays');
 

@@ -1,7 +1,8 @@
-import * as path from 'path';
-import * as fs from 'fs-extra';
 import findUp from 'find-up';
-import { BIT_GIT_DIR, DOT_GIT_DIR, OBJECTS_DIR, BIT_HIDDEN_DIR } from '../../constants';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, DOT_GIT_DIR, OBJECTS_DIR } from '../../constants';
 
 function composePath(patternPath: string, patterns: string[]): string[] {
   return patterns.map((pattern) => {
@@ -53,13 +54,13 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
  *  // => '/usr/local/var'
  * ```
  */
-export function propogateUntil(fromPath: string): string | null | undefined {
-  if (!fromPath) return null;
-  if (!fs.existsSync(fromPath)) return null;
+export function propogateUntil(fromPath: string): string | undefined {
+  if (!fromPath) return undefined;
+  if (!fs.existsSync(fromPath)) return undefined;
   const filePath = findUp.sync(
     [OBJECTS_DIR, path.join(BIT_HIDDEN_DIR, OBJECTS_DIR), path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR)],
     { cwd: fromPath }
   );
-  if (!filePath) return null;
+  if (!filePath) return undefined;
   return path.dirname(filePath);
 }

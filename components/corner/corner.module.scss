@@ -1,0 +1,57 @@
+$topbarHeight: 56px;
+
+.corner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $topbarHeight;
+  background: var(--border-color);
+  padding: 10px;
+  user-select: none;
+  box-sizing: border-box;
+  width: 30%;
+  max-width: 264px; // for now until we have the split pane in pixels
+  @media screen and (max-width: 768px) {
+    display: none;
+  }
+
+  .link {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    text-transform: capitalize;
+    color: var(--text-highlight);
+    transition: color 300ms ease-in-out;
+    &:active {
+      color: var(--text-highlight);
+    }
+    &:hover {
+      color: var(--base-color);
+    }
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+  }
+
+  .avatar {
+    margin-right: 10px;
+    min-width: 25px;
+  }
+
+  > b {
+    font-weight: bold;
+  }
+  .icon {
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 300ms ease-in-out;
+    &:hover {
+      color: var(--text-highlight);
+    }
+  }
+}

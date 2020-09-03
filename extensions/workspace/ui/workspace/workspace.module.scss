@@ -1,0 +1,34 @@
+.emptyContainer {
+  height: 100vh;
+}
+
+.workspaceWrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // TODO
+  height: 100vh;
+}
+
+.topbar {
+  flex: none;
+}
+
+.main {
+  flex: 1 1;
+
+  height: 100%;
+  overflow: hidden;
+}
+
+.splitter {
+  position: relative;
+  border-left: 1px solid var(--border-color, #ededed);
+}
+
+.sidebar {
+  min-width: 100px;
+  max-width: 85%;
+  position: relative;
+
+  height: 100%;
+}

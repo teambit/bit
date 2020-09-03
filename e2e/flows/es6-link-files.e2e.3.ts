@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 describe('es6 components with link files', function () {
   this.timeout(0);

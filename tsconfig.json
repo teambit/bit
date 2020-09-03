@@ -7,6 +7,7 @@
     "moduleResolution": "node",
     "module": "commonjs",
     "target": "es2015",
+    "skipLibCheck": true,
     "noImplicitAny": false,
     "typeRoots": ["custom-types", "node_modules/@types"],
     "removeComments": true,
@@ -19,10 +20,12 @@
   },
   "include": [
     "src",
-    "e2e"
+    "extensions",
+    "e2e",
+    "components",
+    "toolbox"
   ],
   "exclude": [
-    "components",
     "node_modules",
     "e2e/fixtures"
   ]

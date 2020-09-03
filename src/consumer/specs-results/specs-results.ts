@@ -1,6 +1,6 @@
-import { PathLinux, PathOsBased } from '../../utils/path';
-import { pathNormalizeToLinux } from '../../utils';
 import { BitId } from '../../bit-id';
+import { pathNormalizeToLinux } from '../../utils';
+import { PathLinux, PathOsBased } from '../../utils/path';
 
 type ErrorObj = {
   message: string;

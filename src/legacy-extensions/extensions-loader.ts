@@ -1,11 +1,11 @@
+import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
-import Extension from './extension';
-import { LoadArgsProps } from './extension';
-import { loadConsumer, Consumer } from '../consumer';
+
+import { BIT_JSON, GLOBAL_CONFIG } from '../constants';
+import { Consumer, loadConsumer } from '../consumer';
 import logger from '../logger/logger';
-import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
+import Extension, { LoadArgsProps } from './extension';
 
 /**
  * Load the global bit.json file (in order to get the global extensions)

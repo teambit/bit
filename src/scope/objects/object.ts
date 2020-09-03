@@ -1,9 +1,10 @@
 import { inflateSync } from 'zlib';
-import Repository from './repository';
-import { deflate, inflate, sha1 } from '../../utils';
+
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
-import Ref from './ref';
+import { deflate, inflate, sha1 } from '../../utils';
 import { typesObj as types } from '../object-registrar';
+import Ref from './ref';
+import Repository from './repository';
 
 function parse(buffer: Buffer): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);

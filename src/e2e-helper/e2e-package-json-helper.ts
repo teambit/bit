@@ -1,5 +1,6 @@
-import * as path from 'path';
 import fs from 'fs-extra';
+import * as path from 'path';
+
 import ScopesData from './e2e-scopes';
 
 export default class PackageJsonHelper {

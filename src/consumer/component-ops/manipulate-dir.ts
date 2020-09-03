@@ -1,23 +1,23 @@
 import * as path from 'path';
 import R from 'ramda';
-import BitMap from '../bit-map/bit-map';
-import { ComponentOrigin } from '../bit-map/component-map';
+
 import { BitId } from '../../bit-id';
+import BitIds from '../../bit-id/bit-ids';
+import { COMPONENT_ORIGINS, PACKAGE_JSON, WRAPPER_DIR } from '../../constants';
+import { ComponentWithDependencies } from '../../scope';
+import ComponentVersion from '../../scope/component-version';
+import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 import { Version } from '../../scope/models';
-import { PathLinux, PathOsBased } from '../../utils/path';
+import Repository from '../../scope/objects/repository';
 import VersionDependencies from '../../scope/version-dependencies';
 import { pathNormalizeToLinux, sharedStartOfArray } from '../../utils';
-import { Dependencies } from '../component/dependencies';
-import { PACKAGE_JSON, COMPONENT_ORIGINS, WRAPPER_DIR } from '../../constants';
-import ComponentMap from '../bit-map/component-map';
-import ComponentVersion from '../../scope/component-version';
-import Consumer from '../consumer';
-import BitIds from '../../bit-id/bit-ids';
-import Repository from '../../scope/objects/repository';
-import ComponentOverrides from '../config/component-overrides';
-import CorruptedComponent from '../../scope/exceptions/corrupted-component';
+import { PathLinux, PathOsBased } from '../../utils/path';
+import BitMap from '../bit-map/bit-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
-import { ComponentWithDependencies } from '../../scope';
+import { Dependencies } from '../component/dependencies';
+import ComponentOverrides from '../config/component-overrides';
+import Consumer from '../consumer';
 
 export type ManipulateDirItem = {
   id: BitId;

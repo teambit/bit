@@ -1,20 +1,20 @@
+import { set } from 'lodash';
 import path from 'path';
 import R from 'ramda';
-import { set } from 'lodash';
-import generateTree from './generate-tree-madge';
+
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
-import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
-import { PathMapItem } from './path-map';
+import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
+import { PathOsBased } from '../../../../utils/path';
+import generateTree from './generate-tree-madge';
+import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
+import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
 import {
-  Tree,
+  DependencyTreeParams,
   FileObject,
   ImportSpecifier,
-  DependencyTreeParams,
   ResolveModulesConfig,
+  Tree,
 } from './types/dependency-tree-type';
-import { PathOsBased } from '../../../../utils/path';
-import { MissingGroupItem, MissingHandler, FoundPackages } from './missing-handler';
-import { resolvePackageData, ResolvedPackageData } from '../../../../utils/packages';
 
 export type LinkFile = {
   file: string;
@@ -34,7 +34,13 @@ interface SimpleGroupedDependencies {
  */
 const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
   const grouped = R.groupBy((item) => {
-    if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
+    if (
+      (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) &&
+      // todo: this is a hack. we need to make sure we can distinguish between non-components and components in the same scope
+      !item.includes('node_modules/@teambit/harmony') &&
+      !item.includes('node_modules/@teambit/capsule') &&
+      !item.includes('node_modules/@teambit/any-fs')
+    ) {
       return 'bits';
     }
     return item.includes('node_modules') ? 'packages' : 'files';

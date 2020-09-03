@@ -1,8 +1,9 @@
 /* eslint no-console: 0 */
+import { ChildProcess } from 'child_process';
+import execa from 'execa';
 import fs from 'fs-extra';
 import * as path from 'path';
-import execa from 'execa';
-import { ChildProcess } from 'child_process';
+
 import Helper from '../src/e2e-helper/e2e-helper';
 
 const isAppVeyor = process.env.APPVEYOR === 'True';
@@ -152,7 +153,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.bit/pkg', pkg);
   }
 
   configureCustomNameInPackageJsonHarmony(name: string) {
@@ -164,7 +165,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', '@teambit/pkg', pkg);
+    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.bit/pkg', pkg);
   }
 
   installPackage(pkgName: string) {

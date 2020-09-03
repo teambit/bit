@@ -1,5 +1,5 @@
-import { Scope, loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
+import { loadScope, Scope } from '../../../scope';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 
 export default (async function graph(path: string, id: string | null | undefined): Promise<object> {

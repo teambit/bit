@@ -1,10 +1,10 @@
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { link } from '../../../api/consumer';
-import linkTemplate from '../../templates/link-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { LinksResult } from '../../../links/node-modules-linker';
 import { CodemodResult } from '../../../consumer/component-ops/codemod-components';
+import { LinksResult } from '../../../links/node-modules-linker';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { codemodTemplate } from '../../templates/codemod-template';
+import linkTemplate from '../../templates/link-template';
 
 export default class Link implements LegacyCommand {
   name = 'link [ids...]';

@@ -1,18 +1,19 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { switchAction } from '../../../api/consumer';
-import { applyVersionReport } from './merge-cmd';
-import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
-import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
-import GeneralError from '../../../error/general-error';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { ApplyVersionResults, MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
+import GeneralError from '../../../error/general-error';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { applyVersionReport } from './merge-cmd';
 
 export default class Switch implements LegacyCommand {
   name = 'switch <lane>';
   description = `switch to the specified lane`;
+  private = true;
   alias = '';
   opts = [
     ['c', 'create', 'create a new lane'],

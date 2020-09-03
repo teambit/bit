@@ -1,0 +1,11 @@
+$topbarHeight: 56px;
+
+.topbar {
+  display: flex;
+  align-items: center;
+
+  height: $topbarHeight;
+  background: #ededed;
+  box-sizing: border-box;
+  font-size: var(--p-xs, 14px);
+}

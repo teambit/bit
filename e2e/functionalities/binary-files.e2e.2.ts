@@ -1,10 +1,11 @@
-import * as path from 'path';
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import glob from 'glob';
-import chai, { expect } from 'chai';
+import * as path from 'path';
+
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 

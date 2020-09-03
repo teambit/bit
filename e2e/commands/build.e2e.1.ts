@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { COMPONENT_DIST_PATH_TEMPLATE } from '../../src/constants';
 import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));

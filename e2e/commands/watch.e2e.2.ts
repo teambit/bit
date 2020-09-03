@@ -1,10 +1,11 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
+
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import WatchRunner from '../watch-runner';
-import { IS_WINDOWS } from '../../src/constants';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -112,7 +113,7 @@ describe('bit watch command', function () {
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;

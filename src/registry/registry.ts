@@ -1,8 +1,9 @@
 /** @flow */
 import fs from 'fs';
-import path from 'path';
 import iniBuilder from 'ini-builder';
+import path from 'path';
 import userHome from 'user-home';
+
 import { DEFAULT_BINDINGS_PREFIX } from '../constants';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 

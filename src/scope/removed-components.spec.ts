@@ -1,6 +1,7 @@
 import { expect } from 'chai';
+
+import { BitId, BitIds } from '../bit-id';
 import RemovedObjects from './removed-components';
-import { BitIds, BitId } from '../bit-id';
 
 describe('RemovedComponents', () => {
   const payload = {

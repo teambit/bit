@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import pathMapFixture from '../../../../../fixtures/path-map.json';
 import { getPathMapWithLinkFilesData } from './path-map';
 

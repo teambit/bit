@@ -1,0 +1,43 @@
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.navigation {
+  display: flex;
+  list-style: none;
+  height: 100%;
+  padding-left: 28px;
+  @media screen and (max-width: 768px) {
+    padding-left: 6px;
+  }
+
+  > li {
+    display: block;
+    margin-right: 16px;
+    height: 100%;
+  }
+}
+
+.rightSide {
+  display: flex;
+  align-items: center;
+  > * {
+    margin-right: 12px;
+    &:last-child {
+      margin-right: 16px;
+    }
+  }
+  .widget {
+    margin: 0 20px;
+  }
+}

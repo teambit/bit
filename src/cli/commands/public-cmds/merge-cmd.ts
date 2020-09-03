@@ -1,12 +1,17 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { merge } from '../../../api/consumer';
-import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
-import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
-import { WILDCARD_HELP } from '../../../constants';
-import GeneralError from '../../../error/general-error';
-import { AUTO_SNAPPED_MSG } from './snap-cmd';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { WILDCARD_HELP } from '../../../constants';
+import {
+  ApplyVersionResult,
+  ApplyVersionResults,
+  FileStatus,
+  getMergeStrategy,
+} from '../../../consumer/versions-ops/merge-version';
+import GeneralError from '../../../error/general-error';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { AUTO_SNAPPED_MSG } from './snap-cmd';
 
 export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';

@@ -1,15 +1,16 @@
-import semver from 'semver';
 import R from 'ramda';
-import { loadConsumer, Consumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
-import { BitId, BitIds } from '../../../bit-id';
-import HooksManager from '../../../hooks';
-import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
-import InvalidVersion from './exceptions/invalid-version';
+import semver from 'semver';
+
 import { Analytics } from '../../../analytics/analytics';
+import { BitId, BitIds } from '../../../bit-id';
+import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from '../../../constants';
+import { Consumer, loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
-import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import ComponentsList from '../../../consumer/component/components-list';
 import GeneralError from '../../../error/general-error';
+import HooksManager from '../../../hooks';
+import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import InvalidVersion from './exceptions/invalid-version';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 const HooksManagerInstance = HooksManager.getInstance();

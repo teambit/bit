@@ -1,17 +1,18 @@
-import R from 'ramda';
-import * as path from 'path';
 import execa from 'execa';
 import pEvent from 'p-event';
+import * as path from 'path';
+import R from 'ramda';
 import { deserializeError } from 'serialize-error';
-import { ForkLevel } from '../api/consumer/lib/test';
-import { TESTS_FORK_LEVEL } from '../constants';
+
 import { Analytics } from '../analytics/analytics';
-import logger from '../logger/logger';
-import ExternalErrors from '../error/external-errors';
+import { ForkLevel } from '../api/consumer/lib/test';
+import { BitId } from '../bit-id';
+import { TESTS_FORK_LEVEL } from '../constants';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
-import { SpecsResultsWithMetaData, Results } from '../consumer/specs-results/specs-results';
-import { BitId } from '../bit-id';
+import { Results, SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
+import ExternalErrors from '../error/external-errors';
+import logger from '../logger/logger';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>;

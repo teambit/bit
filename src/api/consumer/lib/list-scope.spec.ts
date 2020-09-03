@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+
 import { listScope } from '../../../api/consumer/lib/list-scope';
-import { ConsumerNotFound } from '../../../consumer/exceptions';
 import * as consumer from '../../../consumer';
+import { ConsumerNotFound } from '../../../consumer/exceptions';
 import { GlobalRemotes } from '../../../global-config';
 import Remotes from '../../../remotes/remotes';
 

@@ -1,9 +1,10 @@
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+
 import { unTagAction } from '../../../api/consumer';
-import { untagResult } from '../../../scope/component-ops/untag-component';
-import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import GeneralError from '../../../error/general-error';
+import { untagResult } from '../../../scope/component-ops/untag-component';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';

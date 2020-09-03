@@ -1,7 +1,7 @@
-import { LegacyCommand } from '../../legacy-command';
 import { describeScope } from '../../../api/scope';
-import { fromBase64, empty, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
+import { buildCommandMessage, empty, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
 export default class Prepare implements LegacyCommand {

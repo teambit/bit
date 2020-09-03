@@ -1,7 +1,8 @@
 import * as path from 'path';
-import Scope from './scope';
+
 import { resolveHomePath } from '../utils';
 import { ScopeNotFound } from './exceptions';
+import Scope from './scope';
 
 export default function loadScope(currentPath?: string | null | undefined, useCache = true): Promise<Scope> {
   if (!currentPath) currentPath = process.cwd();

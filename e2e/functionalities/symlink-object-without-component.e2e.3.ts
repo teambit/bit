@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+
 import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/orphan-symlink-objects';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 

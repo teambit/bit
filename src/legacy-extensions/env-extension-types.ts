@@ -1,5 +1,5 @@
-import { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
 import { PathOsBased } from '../utils/path';
+import { BaseExtensionModel, BaseExtensionOptions, BaseExtensionProps, BaseLoadArgsProps } from './base-extension';
 
 /**
  * Those types were extracted to dedicated file in order to prevent circular dependency between ./env-factory and ./env-extension

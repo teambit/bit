@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import findDuplications from './find-duplications';
 
 describe('findDuplications', () => {

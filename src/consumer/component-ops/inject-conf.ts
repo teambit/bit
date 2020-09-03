@@ -1,12 +1,13 @@
 import * as path from 'path';
 import R from 'ramda';
-import ConsumerComponent from '../component/consumer-component';
-import ComponentConfig from '../config';
-import removeEmptyDir from '../../utils/fs/remove-empty-dir';
-import GeneralError from '../../error/general-error';
-import { AbstractVinyl } from '../component/sources';
+
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
+import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
+import ConsumerComponent from '../component/consumer-component';
+import { AbstractVinyl } from '../component/sources';
+import ComponentConfig from '../config';
 
 export type InjectConfResult = { id: string };
 

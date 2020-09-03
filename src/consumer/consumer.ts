@@ -1,73 +1,72 @@
-import * as path from 'path';
-import semver from 'semver';
 import fs from 'fs-extra';
-import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import { getConsumerInfo } from './consumer-locator';
-import { ConsumerNotFound, MissingDependencies } from './exceptions';
+import * as path from 'path';
+import R from 'ramda';
+import semver from 'semver';
+
+import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
-import Component from './component';
-import {
-  BIT_HIDDEN_DIR,
-  COMPONENT_ORIGINS,
-  BIT_VERSION,
-  BIT_GIT_DIR,
-  DOT_GIT_DIR,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  LATEST,
-  DEPENDENCIES_FIELDS,
-  DEFAULT_LANE,
-} from '../constants';
-import { Scope, ComponentWithDependencies } from '../scope';
-import migratonManifest from './migrations/consumer-migrator-manifest';
-import migrate from './migrations/consumer-migrator';
-import { ConsumerMigrationResult } from './migrations/consumer-migrator';
+import { BitIdStr } from '../bit-id/bit-id';
 import loader from '../cli/loader';
 import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
-import BitMap from './bit-map/bit-map';
-import logger from '../logger/logger';
-import DirStructure from './dir-structure/dir-structure';
-import { pathNormalizeToLinux, sortObject } from '../utils';
-import { ModelComponent, Version, Lane } from '../scope/models';
-import * as packageJsonUtils from './component/package-json-utils';
-import { Dependencies } from './component/dependencies';
-import CompilerExtension from '../legacy-extensions/compiler-extension';
-import TesterExtension from '../legacy-extensions/tester-extension';
-import { PathOsBased, PathRelative, PathAbsolute, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
-import { Analytics } from '../analytics/analytics';
-import GeneralError from '../error/general-error';
-import tagModelComponent from '../scope/component-ops/tag-model-component';
-import { InvalidComponent } from './component/consumer-component';
-import { BitIdStr } from '../bit-id/bit-id';
-import { getAutoTagPending } from '../scope/component-ops/auto-tag';
-import { ComponentNotFound } from '../scope/exceptions';
-import VersionDependencies from '../scope/version-dependencies';
 import {
-  getManipulateDirWhenImportingComponents,
+  BIT_GIT_DIR,
+  BIT_HIDDEN_DIR,
+  BIT_VERSION,
+  BIT_WORKSPACE_TMP_DIRNAME,
+  COMPILER_ENV_TYPE,
+  COMPONENT_ORIGINS,
+  DEFAULT_LANE,
+  DEPENDENCIES_FIELDS,
+  DOT_GIT_DIR,
+  LATEST,
+  TESTER_ENV_TYPE,
+} from '../constants';
+import GeneralError from '../error/general-error';
+import { LocalLaneId } from '../lane-id/lane-id';
+import CompilerExtension from '../legacy-extensions/compiler-extension';
+import EnvExtension from '../legacy-extensions/env-extension';
+import { EnvType } from '../legacy-extensions/env-extension-types';
+import makeEnv from '../legacy-extensions/env-factory';
+import TesterExtension from '../legacy-extensions/tester-extension';
+import logger from '../logger/logger';
+import { Remotes } from '../remotes';
+import { ComponentWithDependencies, Scope } from '../scope';
+import { AutoTagResult, getAutoTagPending } from '../scope/component-ops/auto-tag';
+import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
+import tagModelComponent from '../scope/component-ops/tag-model-component';
+import { ComponentNotFound } from '../scope/exceptions';
+import installExtensions from '../scope/extensions/install-extensions';
+import { Lane, ModelComponent, Version } from '../scope/models';
+import { getScopeRemotes } from '../scope/scope-remotes';
+import VersionDependencies from '../scope/version-dependencies';
+import { pathNormalizeToLinux, sortObject } from '../utils';
+import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
+import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
+import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
+import { PathAbsolute, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../utils/path';
+import BitMap from './bit-map/bit-map';
+import ComponentMap from './bit-map/component-map';
+import Component from './component';
+import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
+import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
+import {
   getManipulateDirForExistingComponents,
+  getManipulateDirWhenImportingComponents,
 } from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
-import { getScopeRemotes } from '../scope/scope-remotes';
-import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
-import installExtensions from '../scope/extensions/install-extensions';
-import { Remotes } from '../remotes';
-import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
-import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import makeEnv from '../legacy-extensions/env-factory';
-import EnvExtension from '../legacy-extensions/env-extension';
-import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
-import { AutoTagResult } from '../scope/component-ops/auto-tag';
-import { LocalLaneId } from '../lane-id/lane-id';
-import { EnvType } from '../legacy-extensions/env-extension-types';
-import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
-import PackageJsonFile from './component/package-json-file';
-import ComponentMap from './bit-map/component-map';
+import { InvalidComponent } from './component/consumer-component';
+import { Dependencies } from './component/dependencies';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
-import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import PackageJsonFile from './component/package-json-file';
+import * as packageJsonUtils from './component/package-json-utils';
 import { ILegacyWorkspaceConfig } from './config';
-import { ComponentStatusLoader, ComponentStatusResult, ComponentStatus } from './component-ops/component-status-loader';
+import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
+import { getConsumerInfo } from './consumer-locator';
+import DirStructure from './dir-structure/dir-structure';
+import { ConsumerNotFound, MissingDependencies } from './exceptions';
+import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
+import migratonManifest from './migrations/consumer-migrator-manifest';
 
 type ConsumerProps = {
   projectPath: string;

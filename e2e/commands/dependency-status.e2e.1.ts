@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import * as path from 'path';
+
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit dependency status', function () {
@@ -48,14 +48,6 @@ describe('bit dependency status', function () {
       const output = helper.command.runCmd('bit dependency-status dependency-status-test-files/b.js');
       expect(output).to.have.string('The following file exist in dependency tree but are not a component');
       expect(output).to.have.string('c.js');
-    });
-  });
-  describe('large code base', () => {
-    // we use our bit-bin code as an example of large code base
-    it('should not hang indefinitely', () => {
-      const bitBinRoot = path.resolve(path.join(__dirname, '../..'));
-      const output = helper.command.runCmd('bit dependency-status src/app.ts', bitBinRoot);
-      expect(output).to.have.string('The following file exist in dependency tree but are not a component');
     });
   });
 });

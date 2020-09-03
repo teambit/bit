@@ -1,8 +1,8 @@
-import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
+import { Consumer, loadConsumer } from '../../../consumer';
+import componentsDiff from '../../../consumer/component-ops/components-diff';
 import ComponentsList from '../../../consumer/component/components-list';
 import GeneralError from '../../../error/general-error';
-import componentsDiff from '../../../consumer/component-ops/components-diff';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function diff(values: string[], verbose: boolean): Promise<any> {

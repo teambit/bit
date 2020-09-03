@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
 import { generateRandomStr } from '../../src/utils';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -35,7 +36,7 @@ describe('publish functionality', function () {
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.reInitRemoteScope();
       npmCiRegistry.setCiScopeInBitJson();
@@ -168,7 +169,7 @@ describe('publish functionality', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
-      helper.extensions.addExtensionToVariant('*', '@teambit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
 
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });

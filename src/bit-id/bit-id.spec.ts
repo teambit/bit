@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import BitId from './bit-id';
 import { InvalidName, InvalidScopeName } from './exceptions';
 

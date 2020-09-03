@@ -1,18 +1,18 @@
-import * as path from 'path';
-import fs from 'fs-extra';
-import R from 'ramda';
 import json from 'comment-json';
-import logger from '../../logger/logger';
-import { BIT_MAP, OLD_BIT_MAP, COMPONENT_ORIGINS, BIT_VERSION, VERSION_DELIMITER, DEFAULT_LANE } from '../../constants';
-import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
+import fs from 'fs-extra';
+import * as path from 'path';
+import R from 'ramda';
+
 import { BitId, BitIds } from '../../bit-id';
-import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, sortObject } from '../../utils';
-import ComponentMap from './component-map';
-import { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
-import { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import { BitIdStr } from '../../bit-id/bit-id';
+import { BIT_MAP, BIT_VERSION, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
+import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
+import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
+import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
+import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
@@ -53,8 +53,7 @@ export default class BitMap {
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
+  allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
   workspaceLane: WorkspaceLane | null;
 
   constructor(

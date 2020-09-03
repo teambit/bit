@@ -1,4 +1,4 @@
-import { Source, ModelComponent, Version, ScopeMeta, Symlink, Lane } from './models';
+import { Lane, ModelComponent, ScopeMeta, Source, Symlink, Version } from './models';
 
 export default function types() {
   return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane];

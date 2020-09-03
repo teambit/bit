@@ -1,6 +1,6 @@
-import { loadConsumer, Consumer } from '../../../consumer';
-import { movePaths, moveExistingComponentFilesToOneDir } from '../../../consumer/component-ops/move-components';
+import { Consumer, loadConsumer } from '../../../consumer';
 import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
+import { moveExistingComponentFilesToOneDir, movePaths } from '../../../consumer/component-ops/move-components';
 
 export default (async function move({
   from,

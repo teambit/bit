@@ -1,11 +1,12 @@
-import semver from 'semver';
-import chalk from 'chalk';
 import Bluebird from 'bluebird';
+import chalk from 'chalk';
 import fs from 'fs-extra';
-import HooksManager from './hooks';
-import { handleUnhandledRejection } from './cli/command-runner';
+import semver from 'semver';
+
 import { Analytics } from './analytics/analytics';
-import { GLOBAL_CONFIG, GLOBAL_LOGS, BIT_VERSION } from './constants';
+import { handleUnhandledRejection } from './cli/command-runner';
+import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
+import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
 
 const MINIMUM_NODE_VERSION = '10.13.0';

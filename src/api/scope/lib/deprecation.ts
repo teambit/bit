@@ -1,14 +1,13 @@
-import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 import {
-  PRE_DEPRECATE_REMOTE,
   POST_DEPRECATE_REMOTE,
-  PRE_UNDEPRECATE_REMOTE,
   POST_UNDEPRECATE_REMOTE,
+  PRE_DEPRECATE_REMOTE,
+  PRE_UNDEPRECATE_REMOTE,
 } from '../../../constants';
 import HooksManager from '../../../hooks';
-import { deprecateMany, undeprecateMany } from '../../../scope/component-ops/components-deprecation';
-import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
+import { loadScope } from '../../../scope';
+import { deprecateMany, DeprecationResult, undeprecateMany } from '../../../scope/component-ops/components-deprecation';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

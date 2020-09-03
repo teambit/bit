@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+
 import { getAutoTagPending } from './auto-tag';
 
 describe('AutoTag', () => {

@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+
 import Environment from '../environment';
 import { Scope } from '../scope';
 

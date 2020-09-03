@@ -1,9 +1,10 @@
-import R from 'ramda';
 import chalk from 'chalk';
-import { LegacyCommand, CommandOptions } from '../../legacy-command';
+import R from 'ramda';
+
 import { status } from '../../../api/consumer';
 import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
+import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
@@ -63,14 +64,14 @@ export default class Status implements LegacyCommand {
           stagedComponents: stagedComponents.map((c) => c.id()),
           componentsWithMissingDeps: componentsWithMissingDeps.map((c) => c.id.toString()),
           importPendingComponents: importPendingComponents.map((id) => id.toString()),
-          autoTagPendingComponents: autoTagPendingComponents.map(s => s.toString()),
+          autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
           invalidComponents,
           outdatedComponents: outdatedComponents.map((c) => c.id.toString()),
           mergePendingComponents: mergePendingComponents.map((c) => c.id.toString()),
           componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toString()),
           componentsWithIndividualFiles: componentsWithIndividualFiles.map((c) => c.id.toString()),
           componentsWithTrackDirs: componentsWithTrackDirs.map((c) => c.id.toString()),
-          softTaggedComponents: softTaggedComponents.map(s => s.toString()),
+          softTaggedComponents: softTaggedComponents.map((s) => s.toString()),
         },
         null,
         2
@@ -89,14 +90,15 @@ export default class Status implements LegacyCommand {
       };
       const bitId = getBitId();
       const missing = componentsWithMissingDeps.find((missingComp: Component) => missingComp.id.isEqual(bitId));
-      const softTagged = softTaggedComponents.find(softTaggedId => softTaggedId.isEqual(bitId));
+      const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
 
       const messageStatusText = message || 'ok';
       const messageStatusTextWithSoftTag = softTagged ? `${messageStatusText} (soft-tagged)` : messageStatusText;
       const color = message ? 'yellow' : 'green';
       const messageStatus = chalk[color](messageStatusTextWithSoftTag);
 
-      if (component instanceof BitId) return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
+      if (component instanceof BitId)
+        return `${formatBitString(component.toStringWithoutVersion())} ... ${messageStatus}`;
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

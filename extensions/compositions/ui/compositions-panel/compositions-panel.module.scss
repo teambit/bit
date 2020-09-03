@@ -1,0 +1,115 @@
+.linkWrapper {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  font-size: var(--p-xs);
+  &:hover {
+    background-color: var(--border-color, #ededed);
+    border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: var(--text-muted);
+      //TODO - fix hover effect and timing of icon
+      transition: visibility 200ms, opacity 100ms ease-in-out;
+      .icon {
+        &:hover {
+          color: var(--text-highlight);
+        }
+      }
+    }
+  }
+  &.active {
+    display: flex;
+    align-items: center;
+    background-color: var(--base-color);
+    color: var(--bg-base);
+    border-radius: 8px;
+    transition: background-color 300ms ease-in-out;
+    &:hover {
+      background-color: #5d4aec;
+    }
+    .box {
+      background-color: var(--bg-color);
+    }
+    .right {
+      visibility: unset;
+      opacity: 1;
+      color: var(--muted-color);
+      .icon {
+        &:hover {
+          color: var(--bg-color);
+        }
+      }
+    }
+  }
+  .right {
+    opacity: 0;
+    visibility: hidden;
+    font-size: 13px;
+    transition: visibility 200ms, opacity 100ms ease-in-out;
+  }
+}
+
+.box {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  background-color: var(--text-highlight);
+  margin-right: 11px;
+  border-radius: 1px;
+}
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.panelLink {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+
+  &:active {
+    color: inherit;
+  }
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  margin-bottom: 17px;
+  > div {
+    position: relative;
+    padding: 8px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    &:not(:first-child) {
+      color: #878c9a;
+    }
+
+    &:first-child {
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--base-color);
+        height: 3px;
+        border-radius: 10px;
+        transition: background-color 300ms, height 300ms;
+      }
+    }
+  }
+}

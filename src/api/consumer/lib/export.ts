@@ -1,36 +1,36 @@
-import R from 'ramda';
-import yn from 'yn';
+import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
-import fs from 'fs-extra';
-import { Consumer, loadConsumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
-import loader from '../../../cli/loader';
-import HooksManager from '../../../hooks';
-import { BEFORE_EXPORT, BEFORE_EXPORTS, BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
-import { BitId, BitIds } from '../../../bit-id';
-import IdExportedAlready from './exceptions/id-exported-already';
-import logger from '../../../logger/logger';
+import R from 'ramda';
+import yn from 'yn';
+
 import { Analytics } from '../../../analytics/analytics';
-import EjectComponents from '../../../consumer/component-ops/eject-components';
-import { EjectResults } from '../../../consumer/component-ops/eject-components';
-import hasWildcard from '../../../utils/string/has-wildcard';
-import { exportMany } from '../../../scope/component-ops/export-scope-components';
-import { NodeModuleLinker } from '../../../links';
+import { BitId, BitIds } from '../../../bit-id';
+import loader from '../../../cli/loader';
+import { BEFORE_EXPORT, BEFORE_EXPORTS, BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
+import { COMPONENT_ORIGINS, DEFAULT_BINDINGS_PREFIX, POST_EXPORT_HOOK, PRE_EXPORT_HOOK } from '../../../constants';
+import { Consumer, loadConsumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map/bit-map';
-import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_BINDINGS_PREFIX } from '../../../constants';
+import EjectComponents, { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
+import ComponentsList from '../../../consumer/component/components-list';
+import Component from '../../../consumer/component/consumer-component';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
-import { forkComponentsPrompt } from '../../../prompts';
-import { Lane } from '../../../scope/models';
 import {
-  updateLanesAfterExport,
   getLaneCompIdsToExport,
   isUserTryingToExportLanes,
+  updateLanesAfterExport,
 } from '../../../consumer/lanes/export-lanes';
+import GeneralError from '../../../error/general-error';
+import HooksManager from '../../../hooks';
+import { NodeModuleLinker } from '../../../links';
+import logger from '../../../logger/logger';
+import { forkComponentsPrompt } from '../../../prompts';
+import { exportMany } from '../../../scope/component-ops/export-scope-components';
 import { publishComponentsToRegistry } from '../../../scope/component-ops/publish-during-export';
-import Component from '../../../consumer/component/consumer-component';
+import { Lane } from '../../../scope/models';
+import hasWildcard from '../../../utils/string/has-wildcard';
+import IdExportedAlready from './exceptions/id-exported-already';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

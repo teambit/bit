@@ -1,6 +1,7 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
+import * as path from 'path';
+
 import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
@@ -39,7 +40,7 @@ describe('set default owner and scope', function () {
       const workspaceExtConfig = {
         defaultScope,
       };
-      helper.extensions.addExtensionToWorkspace('@teambit/workspace', workspaceExtConfig);
+      helper.extensions.addExtensionToWorkspace('teambit.bit/workspace', workspaceExtConfig);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.command.addComponent('utils', { i: 'utils/is-type' });
       const rawLinkOutput = helper.command.link('-j');

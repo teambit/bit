@@ -1,6 +1,7 @@
+import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { expect } from 'chai';
+
 import parser from './';
 
 const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc');

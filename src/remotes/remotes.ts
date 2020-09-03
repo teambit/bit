@@ -1,16 +1,17 @@
 import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
+
 import { BitId } from '../bit-id';
-import Remote from './remote';
-import { forEach, prependBang, flatten } from '../utils';
-import { PrimaryOverloaded } from './exceptions';
-import remoteResolver from './remote-resolver/remote-resolver';
 import GlobalRemotes from '../global-config/global-remotes';
-import Scope from '../scope/scope';
-import logger from '../logger/logger';
-import DependencyGraph from '../scope/graph/scope-graph';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import { RemoteLaneId } from '../lane-id/lane-id';
+import logger from '../logger/logger';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
+import DependencyGraph from '../scope/graph/scope-graph';
+import Scope from '../scope/scope';
+import { flatten, forEach, prependBang } from '../utils';
+import { PrimaryOverloaded } from './exceptions';
+import Remote from './remote';
+import remoteResolver from './remote-resolver/remote-resolver';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {

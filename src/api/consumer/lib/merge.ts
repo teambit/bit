@@ -1,16 +1,17 @@
 import R from 'ramda';
-import { loadConsumer, Consumer } from '../../../consumer';
-import { MergeStrategy, ApplyVersionResults, mergeVersion } from '../../../consumer/versions-ops/merge-version';
+
+import { BitId } from '../../../bit-id';
+import { Consumer, loadConsumer } from '../../../consumer';
+import ComponentsList from '../../../consumer/component/components-list';
+import { mergeLanes } from '../../../consumer/lanes/merge-lanes';
+import { ApplyVersionResults, MergeStrategy, mergeVersion } from '../../../consumer/versions-ops/merge-version';
 import {
+  abortMerge,
   mergeComponentsFromRemote,
   resolveMerge,
-  abortMerge,
 } from '../../../consumer/versions-ops/merge-version/merge-snaps';
-import { mergeLanes } from '../../../consumer/lanes/merge-lanes';
-import hasWildcard from '../../../utils/string/has-wildcard';
-import ComponentsList from '../../../consumer/component/components-list';
-import { BitId } from '../../../bit-id';
 import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default async function merge(
   values: string[],

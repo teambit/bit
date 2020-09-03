@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { checkVersionCompatibilityOnTheServer } from './check-version-compatibility';
+
 import * as constants from '../../constants';
+import { checkVersionCompatibilityOnTheServer } from './check-version-compatibility';
 import { OldClientVersion } from './exceptions';
 
 const setServerVersion = (serverVersion) => {

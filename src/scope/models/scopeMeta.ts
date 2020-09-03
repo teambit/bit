@@ -1,6 +1,6 @@
+import { getStringifyArgs } from '../../utils';
 import BitObject from '../objects/object';
 import Ref from '../objects/ref';
-import { getStringifyArgs } from '../../utils';
 
 type ScopeMetaProps = {
   name: string;

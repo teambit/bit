@@ -1,8 +1,9 @@
 import R from 'ramda';
-import { loadConsumer, Consumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
+
 import { BitIds } from '../../../bit-id';
+import { Consumer, loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
+import ComponentsList from '../../../consumer/component/components-list';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
