@@ -10,6 +10,16 @@
   **/
   "teambit.bit/workspace": {
 
+     /**
+     * the name of the component workspace. used for development purposes.
+     **/
+    "name": "my-workspace-name",
+
+     /**
+     * set the icon to be shown on the Bit server.
+     **/
+    "icon": "https://static.bit.dev/bit-logo.svg",
+
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
     **/
@@ -73,8 +83,8 @@
   **/
   "teambit.bit/variants": {
     /**
-     * wildcards can be used to configure components under a specific namespace.
-     * this configuration applies the react extensions on all components the `ui` namespace.
+     * wildcards can be used to configure components under a specific directory.
+     * this configuration applies the react extensions on all components under directory `base`.
     **/
     "base": {
       /**
