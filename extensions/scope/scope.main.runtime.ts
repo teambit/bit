@@ -18,7 +18,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
@@ -328,14 +328,13 @@ export class ScopeMain implements ComponentFactory {
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, loggerMain, express]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      LoggerMain,
       ExpressMain
     ],
     config: ScopeConfig,
