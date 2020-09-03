@@ -44,9 +44,24 @@ export type MainAspect = {
   version: string | undefined;
 
   /**
+   * package name of the aspect
+   */
+  packageName: string | undefined;
+
+  /**
    * reference to aspect manifest.
    */
   aspect: Aspect;
+
+  /**
+   * The name of the aspect (without the scope prefix)
+   */
+  name: string;
+
+  /**
+   * The name of the aspect
+   */
+  id: string;
 };
 
 export class AspectLoaderMain {

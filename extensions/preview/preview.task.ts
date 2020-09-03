@@ -57,7 +57,7 @@ export class PreviewTask implements BuildTask {
   }
 
   private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-    const previewMain = require.resolve('./preview.runtime');
+    const previewMain = await this.preview.writePreviewRuntime();
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([capsule.component]);
       const paths = this.getPathsFromMap(capsule, moduleMap, context);

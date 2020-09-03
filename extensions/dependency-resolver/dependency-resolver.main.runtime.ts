@@ -17,10 +17,11 @@ import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
+import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
-import { DependencyInstaller } from './dependency-installer';
+import { BitLinkType, DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
@@ -42,8 +43,27 @@ export type PackageManagerSlot = SlotRegistry<PackageManager>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
+export type BitExtendedLinkType = 'none' | BitLinkType;
+
+export type LinkingOptions = {
+  /**
+   * How to create the link from the root dir node modules to @teambit/bit -
+   * none - don't create it at all
+   * link - use symlink to the global installation dir
+   * install - use package manager to install it
+   */
+  bitLinkType?: BitExtendedLinkType;
+  /**
+   * Whether to create links in the root dir node modules to all core aspects
+   */
+  linkCoreAspects?: boolean;
+};
+
 export type GetInstallerOptions = {
+  rootDir?: string;
+  packageManager?: string;
   cacheRootDirectory?: string;
+  linkingOptions?: LinkingOptions;
 };
 
 export type GetVersionResolverOptions = {
@@ -68,6 +88,11 @@ export type UpdatePolicyResult = {
   updatedPackages: UpdatedPackage[];
 };
 
+const defaultLinkingOptions: LinkingOptions = {
+  bitLinkType: 'link',
+  linkCoreAspects: true,
+};
+
 export class DependencyResolverMain {
   constructor(
     /**
@@ -88,6 +113,8 @@ export class DependencyResolverMain {
     private logger: Logger,
 
     private configAspect: Config,
+
+    private aspectLoader: AspectLoaderMain,
 
     private packageManagerSlot: PackageManagerSlot
   ) {}
@@ -155,7 +182,8 @@ export class DependencyResolverMain {
    * get a component dependency installer.
    */
   getInstaller(options: GetInstallerOptions = {}) {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManagerName = options.packageManager || this.config.packageManager;
+    const packageManager = this.packageManagerSlot.get(packageManagerName);
     const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
@@ -166,8 +194,9 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
+    const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyInstaller(packageManager, cacheRootDir);
+    return new DependencyInstaller(packageManager, this.aspectLoader, options.rootDir, cacheRootDir, linkingOptions);
   }
 
   getVersionResolver(options: GetVersionResolverOptions = {}) {
@@ -308,7 +337,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -323,7 +352,7 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain]: [EnvsMain, LoggerMain, Config],
+    [envs, loggerExt, configMain, aspectLoader]: [EnvsMain, LoggerMain, Config, AspectLoaderMain],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
   ) {
@@ -335,6 +364,7 @@ export class DependencyResolverMain {
       envs,
       logger,
       configMain,
+      aspectLoader,
       packageManagerSlot
     );
     ConsumerComponent.registerOnComponentOverridesLoading(
