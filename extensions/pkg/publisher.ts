@@ -44,7 +44,7 @@ export class Publisher {
     const componentIds = ids.map((id) => id.toString());
     const components = await this.publish(componentIds, {});
     return components.map((c) => ({
-      id: c.id.legacyComponentId,
+      id: c.id._legacy,
       data: c.data,
       errors: c.errors as string[],
     }));

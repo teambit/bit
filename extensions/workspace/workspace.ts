@@ -43,7 +43,7 @@ import legacyLogger from 'bit-bin/dist/logger/logger';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
@@ -489,10 +489,18 @@ export class Workspace implements ComponentFactory {
     bitMapOptions?: GetBitMapComponentOptions,
     options = { relative: false }
   ): PathOsBased {
-    const componentMap = this.consumer.bitMap.getComponent(componentId._legacy, bitMapOptions);
+    return this.componentDirFromLegacyId(componentId._legacy, bitMapOptions, options);
+  }
+
+  private componentDirFromLegacyId(
+    bitId: BitId,
+    bitMapOptions?: GetBitMapComponentOptions,
+    options = { relative: false }
+  ): PathOsBased {
+    const componentMap = this.consumer.bitMap.getComponent(bitId, bitMapOptions);
     const relativeComponentDir = componentMap.getComponentDir();
     if (!relativeComponentDir) {
-      throw new NoComponentDir(componentId.toString());
+      throw new NoComponentDir(bitId.toString());
     }
     if (options.relative) {
       return relativeComponentDir;
@@ -501,17 +509,26 @@ export class Workspace implements ComponentFactory {
     return path.join(this.path, relativeComponentDir);
   }
 
+  componentDirToAbsolute(relativeComponentDir: PathOsBasedRelative): PathOsBasedAbsolute {
+    return path.join(this.path, relativeComponentDir);
+  }
+
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFile(componentId);
+    const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    return this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+  }
+
+  async componentDefaultScopeFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
+    const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
+    const componentConfigFile = await this.componentConfigFileFromComponentDir(absComponentDir);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDir(componentDir);
+    const variantConfig = this.variants.byRootDir(relativeComponentDir);
     if (variantConfig && variantConfig.defaultScope) {
       return variantConfig.defaultScope;
     }
-    const isVendor = this.isVendorComponent(componentId);
+    const isVendor = this.isVendorComponentByComponentDir(relativeComponentDir);
     if (!isVendor) {
       return this.config.defaultScope;
     }
@@ -545,8 +562,8 @@ export class Workspace implements ComponentFactory {
     } else {
       scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
     }
-    const componentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDir(componentDir);
+    const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    const variantConfig = this.variants.byRootDir(relativeComponentDir);
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
       // Do not merge from scope when there is specific variant (which is not *) that match the component
@@ -554,7 +571,7 @@ export class Workspace implements ComponentFactory {
         mergeFromScope = false;
       }
     }
-    const isVendor = this.isVendorComponent(componentId);
+    const isVendor = this.isVendorComponentByComponentDir(relativeComponentDir);
     if (!isVendor) {
       wsDefaultExtensions = this.getDefaultExtensions();
     }
@@ -608,6 +625,10 @@ export class Workspace implements ComponentFactory {
    */
   private isVendorComponent(componentId: ComponentID): boolean {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
+    return this.isVendorComponentByComponentDir(relativeComponentDir);
+  }
+
+  private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
     if (pathIsInside(relativeComponentDir, vendorDir)) {
       return true;
@@ -622,6 +643,10 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const componentDir = this.componentDir(id, { ignoreVersion: true });
+    return this.componentConfigFileFromComponentDir(componentDir);
+  }
+
+  private async componentConfigFileFromComponentDir(componentDir: PathOsBasedAbsolute): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (componentDir) {
       componentConfigFile = await ComponentConfigFile.load(componentDir);
@@ -667,7 +692,7 @@ export class Workspace implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const coreAspectsStringIds = getAllCoreAspectsIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
-    const componentIds = await Promise.all(idsWithoutCore.map((id) => this.resolveComponentId(id, true)));
+    const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);
 
@@ -702,7 +727,7 @@ export class Workspace implements ComponentFactory {
     const ids = this.harmony.extensionsIds;
     const coreAspectsIds = getAllCoreAspectsIds();
     const userAspectsIds: string[] = difference(ids, coreAspectsIds);
-    const componentIds = await Promise.all(userAspectsIds.map((id) => this.resolveComponentId(id, true)));
+    const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.getMany(componentIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       stringIds.push(component.id.toString());
@@ -910,39 +935,18 @@ export class Workspace implements ComponentFactory {
    * @returns {Promise<ComponentID>}
    * @memberof Workspace
    */
-  async resolveComponentId(
-    id: string | ComponentID | BitId,
-    assumeIdWithScope = false,
-    useVersionFromBitmap = true
-  ): Promise<ComponentID> {
-    if (!assumeIdWithScope && typeof id === 'string') {
-      const legacyId = this.consumer.getParsedId(id.toString(), useVersionFromBitmap);
-      return ComponentID.fromLegacy(legacyId);
-    }
-    // remove the scope before search in bitmap
-    let stringIdWithoutScope;
-    // let scope;
-    if (typeof id === 'string') {
-      const _id = BitId.parse(id, true);
-      stringIdWithoutScope = _id.toStringWithoutScope();
-      // scope = _id.scope;
-    } else if (id instanceof BitId) {
-      stringIdWithoutScope = id.toStringWithoutScope();
-      // scope = id.scope;
-    } else {
-      stringIdWithoutScope = id._legacy.toStringWithoutScope();
-      // scope = id.scope;
-    }
-    const legacyId = this.consumer.getParsedId(stringIdWithoutScope, useVersionFromBitmap);
-    return ComponentID.fromLegacy(legacyId);
+  async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    const legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
+    const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
+
   async resolveMultipleComponentIds(
-    ids: Array<string | ComponentID | BitId>,
-    assumeIdWithScope = false,
-    useVersionFromBitmap = true
+    ids: Array<string | ComponentID | BitId>
   ) {
-    return Promise.all(ids.map((id) => this.resolveComponentId(id, assumeIdWithScope, useVersionFromBitmap)));
+    return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
   /**
@@ -960,7 +964,7 @@ export class Workspace implements ComponentFactory {
         // const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, useBitmapVersion);
 
         // Assuming extensionId always has scope - do not allow extension id without scope
-        const resolvedId = await this.resolveComponentId(extensionEntry.extensionId, true, false);
+        const resolvedId = await this.resolveComponentId(extensionEntry.extensionId);
         extensionEntry.extensionId = resolvedId._legacy;
       }
     });
