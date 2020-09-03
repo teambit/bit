@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { ComponentID, ComponentMap } from '@teambit/component';
+import { MainAspect, AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
+import { ComponentMap } from '@teambit/component';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinkingOptions } from './dependency-resolver.main.runtime';
@@ -8,7 +9,6 @@ import { MainAspectNotInstallable, MainAspectNotLinkable, RootDirNotDefined } fr
 
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
 import { DependenciesObjectDefinition } from './types';
-import { MainAspect, AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 
 const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
@@ -77,7 +77,7 @@ export class DependencyInstaller {
     return componentDirectoryMap;
   }
 
-  async linkBit(dir: string) {
+  async linkBit(dir: string): Promise<void> {
     if (!this.aspectLoader.mainAspect.packageName){
       throw new MainAspectNotLinkable();
     }
@@ -101,29 +101,29 @@ export class DependencyInstaller {
     return Promise.all(linkCoreAspectsP);
   }
 
-  private async linkBitAspectIfNotExist(dir: string, componentIds: string[]){
+  private async linkBitAspectIfNotExist(dir: string, componentIds: string[]): Promise<void>{
     // TODO: change to this.aspectLoader.mainAspect.id once default scope is resolved and the component dir map has the id with scope
     const bitName = this.aspectLoader.mainAspect.name;
     const existing = componentIds.find(id => {
       return (id === bitName);
     });
     if (existing){
-      return;
+      return undefined;
     }
     return this.linkBit(dir);
   }
 
   private async linkNonExistingCoreAspects(dir: string, componentIds: string[]){
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const filtered = coreAspectsIds.filter(id => {
+    const filtered = coreAspectsIds.filter(aspectId => {
       // Remove bit aspect
-      if (id === this.aspectLoader.mainAspect.id){
+      if (aspectId === this.aspectLoader.mainAspect.id){
         return false;
       }
       // TODO: use the aspect id once default scope is resolved and the component dir map has the id with scope
-      const name = getCoreAspectName(id);
-      const existing = componentIds.find(id => {
-        return (id === name);
+      const name = getCoreAspectName(aspectId);
+      const existing = componentIds.find(componentId => {
+        return (componentId === name);
       });
       if (existing) {
         return false;
@@ -161,6 +161,6 @@ export class DependencyInstaller {
       aspectDir = getAspectDir(id);
     }
 
-    return createSymlinkOrCopy(aspectDir, target);
+    createSymlinkOrCopy(aspectDir, target);
   }
 }
