@@ -887,7 +887,7 @@ export class Workspace implements ComponentFactory {
     }
     this.logger.debug(`installing dependencies in workspace with options`, options);
     const components = await this.list();
-    const stringIds = components.map((component) => component.id.toString());
+    const legacyStringIds = components.map((component) => component.id._legacy.toString());
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({
       linkingOptions: { bitLinkType: 'link', linkCoreAspects: true },
@@ -920,7 +920,7 @@ export class Workspace implements ComponentFactory {
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
-    await link(stringIds, false);
+    await link(legacyStringIds, false);
     this.logger.consoleSuccess();
     return installationMap;
   }
