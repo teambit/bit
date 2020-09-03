@@ -46,6 +46,10 @@ type PostExportRegistry = SlotRegistry<OnPostExport>;
 export type OnTag = (ids: BitId[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
+export type ScopeConfig = {
+  description: string;
+};
+
 export class ScopeMain implements ComponentFactory {
   constructor(
     /**
@@ -76,7 +80,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger
+    private config: ScopeConfig
   ) {}
 
   /**
@@ -84,6 +88,10 @@ export class ScopeMain implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get description(): string {
+    return this.config.description;
   }
 
   get path(): string {
@@ -330,7 +338,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       ExpressMain
     ],
-    config,
+    config: ScopeConfig,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
     harmony: Harmony
   ) {
@@ -340,7 +348,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerMain.createLogger(ScopeAspect.id);
+    // const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(
       harmony,
       legacyScope,
@@ -349,14 +357,14 @@ export class ScopeMain implements ComponentFactory {
       postExportSlot,
       isolator,
       aspectLoader,
-      logger
+      config
     );
     if (scope.legacyScope.isBare) {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     }
 
     express.register([new PutRoute(scope), new FetchRoute(scope)]);
-
+    console.log(config);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

@@ -7,6 +7,7 @@ const SCOPE = gql`
   {
     scope {
       name
+      description
       components {
         id {
           name

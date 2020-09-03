@@ -12,6 +12,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
         # name of the scope.
         name: String
 
+        # description of the scope.
+        description: String
+
         # path of the scope.
         path: String
 
@@ -59,6 +62,9 @@ export function scopeSchema(scopeMain: ScopeMain) {
       Scope: {
         name: (scope: ScopeMain) => {
           return scope.name;
+        },
+        description: (scope: ScopeMain) => {
+          return scope.description;
         },
         components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
           if (!props) return scope.list();
