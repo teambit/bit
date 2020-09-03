@@ -3,12 +3,8 @@ import Source from 'bit-bin/dist/scope/models/source';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { ComponentID } from './id';
 
-
 export class AspectEntry {
-  constructor(
-    public id: ComponentID,
-    private legacyEntry: ExtensionDataEntry
-  ) {}
+  constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
 
   get legacy() {
     return this.legacyEntry;
@@ -44,16 +40,10 @@ export class AspectEntry {
   }
 
   clone(): AspectEntry {
-    return new AspectEntry(
-      this.id,
-      this.legacyEntry.clone()
-    );
+    return new AspectEntry(this.id, this.legacyEntry.clone());
   }
 
-  static fromConfigEntry(id: ComponentID, config: Record<string,any>){
-    return new AspectEntry(
-      id,
-      ExtensionDataEntry.fromConfigEntry(id._legacy, config)
-    );
+  static fromConfigEntry(id: ComponentID, config: Record<string, any>) {
+    return new AspectEntry(id, ExtensionDataEntry.fromConfigEntry(id._legacy, config));
   }
 }

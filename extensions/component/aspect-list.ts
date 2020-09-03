@@ -1,5 +1,5 @@
 import { compact } from 'ramda-adjunct';
-import R, {forEachObjIndexed} from 'ramda';
+import R, { forEachObjIndexed } from 'ramda';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { sortObject } from 'bit-bin/dist/utils';
@@ -23,14 +23,12 @@ export class AspectList extends Array<AspectEntry> {
 
   findExtension(id: ComponentID, ignoreVersion = false): AspectEntry | undefined {
     return this.find((aspectEntry) => {
-      return id.isEqual(aspectEntry.id, {ignoreVersion});
+      return id.isEqual(aspectEntry.id, { ignoreVersion });
     });
   }
 
   remove(id: ComponentID) {
-    return AspectList.fromArray(
-      this.filter((entry) => !entry.id.isEqual(id))
-    );
+    return AspectList.fromArray(this.filter((entry) => !entry.id.isEqual(id)));
   }
 
   toConfigObject() {
@@ -73,16 +71,16 @@ export class AspectList extends Array<AspectEntry> {
   }
 
   toLegacy(): ExtensionDataList {
-    const legacyEntries = this.map(entry => entry.legacy);
+    const legacyEntries = this.map((entry) => entry.legacy);
     return ExtensionDataList.fromArray(legacyEntries);
   }
 
   stringIds(): string[] {
-    const ids = this.map(entry => entry.id.toString());
+    const ids = this.map((entry) => entry.id.toString());
     return ids;
   }
 
-  static async fromLegacy(legacyList: ExtensionDataList, idResolver: idResolveFunc){
+  static async fromLegacy(legacyList: ExtensionDataList, idResolver: idResolveFunc) {
     const entriesP = legacyList.map(async (legacyEntry) => {
       const componentId = await idResolver(legacyEntry.id);
       const newEntry = new AspectEntry(componentId, legacyEntry);
@@ -96,7 +94,7 @@ export class AspectList extends Array<AspectEntry> {
     const arr: AspectEntry[] = [];
     forEachObjIndexed((config, id) => {
       const bitId = BitId.parse(id, true);
-      const componentId = ComponentID.fromLegacy(bitId)
+      const componentId = ComponentID.fromLegacy(bitId);
       const entry = AspectEntry.fromConfigEntry(componentId, config);
       arr.push(entry);
     }, obj);
@@ -136,5 +134,5 @@ export class AspectList extends Array<AspectEntry> {
 }
 
 function ignoreVersionPredicate(aspectEntry1: AspectEntry, aspectEntry2: AspectEntry) {
-  return aspectEntry1.id.isEqual(aspectEntry2.id, {ignoreVersion: true});
+  return aspectEntry1.id.isEqual(aspectEntry2.id, { ignoreVersion: true });
 }

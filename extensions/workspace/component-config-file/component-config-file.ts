@@ -39,7 +39,10 @@ export class ComponentConfigFile {
   ) {}
 
   // TODO: remove consumer from here
-  static async load(componentDir: PathOsBasedAbsolute, outsideDefaultScope?: string): Promise<ComponentConfigFile | undefined> {
+  static async load(
+    componentDir: PathOsBasedAbsolute,
+    outsideDefaultScope?: string
+  ): Promise<ComponentConfigFile | undefined> {
     const filePath = ComponentConfigFile.composePath(componentDir);
     const isExist = await fs.pathExists(filePath);
     if (!isExist) {

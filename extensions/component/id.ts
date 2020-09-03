@@ -72,7 +72,7 @@ export class ComponentID {
     return ComponentID.fromLegacy(legacyId);
   }
 
-  isEqual(id: ComponentID, opts: {ignoreVersion?: boolean} = {}): boolean {
+  isEqual(id: ComponentID, opts: { ignoreVersion?: boolean } = {}): boolean {
     const result = id.scope === this.scope && id.fullName === this.fullName;
     if (!opts.ignoreVersion) {
       return result && this.version === id.version;
@@ -83,7 +83,7 @@ export class ComponentID {
   /**
    * serialize the component ID.
    */
-  toString(opts: {ignoreVersion?: boolean} = {}) {
+  toString(opts: { ignoreVersion?: boolean } = {}) {
     let id = this._legacy;
     if (this._scope && !this._legacy.scope) {
       id = id.changeScope(this._scope);

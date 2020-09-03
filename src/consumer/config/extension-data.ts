@@ -58,7 +58,7 @@ export class ExtensionDataEntry {
     );
   }
 
-  static fromConfigEntry(id: BitId, config: Record<string,any>){
+  static fromConfigEntry(id: BitId, config: Record<string, any>) {
     const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
     let entry;
     if (!isCore) {

@@ -440,7 +440,7 @@ export default class BitMap {
     });
     if (componentWithoutScope) return componentWithoutScope.id;
 
-    if (searchWithoutScopeInProvidedId){
+    if (searchWithoutScopeInProvidedId) {
       // continue with searching without the scope name (in the provided id)
       const delimiterIndex = id.indexOf('/');
       if (delimiterIndex) {
@@ -450,10 +450,10 @@ export default class BitMap {
             ? componentMap.id.toStringWithoutScope() === idWithoutScope
             : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutScope;
         });
-        if (matches && matches.length >1){
+        if (matches && matches.length > 1) {
           throw new MultipleMatches(id);
         }
-        if (matches && matches.length === 1){
+        if (matches && matches.length === 1) {
           return matches[0].id;
         }
       }
