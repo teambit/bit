@@ -39,7 +39,7 @@ export class ComponentConfigFile {
   ) {}
 
   // TODO: remove consumer from here
-  static async load(componentDir: PathOsBasedAbsolute): Promise<ComponentConfigFile | undefined> {
+  static async load(componentDir: PathOsBasedAbsolute, outsideDefaultScope?: string): Promise<ComponentConfigFile | undefined> {
     const filePath = ComponentConfigFile.composePath(componentDir);
     const isExist = await fs.pathExists(filePath);
     if (!isExist) {
@@ -49,7 +49,7 @@ export class ComponentConfigFile {
     const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
-    const componentId = ComponentID.fromObject(parsed.componentId);
+    const componentId = ComponentID.fromObject(parsed.componentId, parsed.defaultScope || outsideDefaultScope);
     const extensions = ExtensionDataList.fromConfigObject(parsed.extensions);
 
     return new ComponentConfigFile(

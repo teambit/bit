@@ -519,11 +519,14 @@ export class Workspace implements ComponentFactory {
   }
 
   async componentDefaultScopeFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
-    const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(absComponentDir);
+    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
+    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir);
+  }
+
+  private async componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
     const variantConfig = this.variants.byRootDir(relativeComponentDir);
     if (variantConfig && variantConfig.defaultScope) {
       return variantConfig.defaultScope;
@@ -642,14 +645,16 @@ export class Workspace implements ComponentFactory {
    * @param componentId
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
-    const componentDir = this.componentDir(id, { ignoreVersion: true });
-    return this.componentConfigFileFromComponentDir(componentDir);
+    const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, {relative: true});
+    return this.componentConfigFileFromComponentDir(relativeComponentDir);
   }
 
-  private async componentConfigFileFromComponentDir(componentDir: PathOsBasedAbsolute): Promise<ComponentConfigFile | undefined> {
+  private async componentConfigFileFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
-    if (componentDir) {
-      componentConfigFile = await ComponentConfigFile.load(componentDir);
+    if (relativeComponentDir) {
+      const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
+      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir)
+      componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
     }
 
     return componentConfigFile;
