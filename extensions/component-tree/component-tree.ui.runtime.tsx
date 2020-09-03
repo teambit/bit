@@ -4,7 +4,6 @@ import { UIRuntime } from '@teambit/ui';
 
 import { ComponentTreeNode } from './component-tree-node';
 import { ComponentTreeAspect } from './component-tree.aspect';
-import { ComponentTreeDrawer } from './component-tree.drawer';
 
 export type ComponentTreeSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -23,7 +22,6 @@ export class ComponentTreeUI {
   static dependencies = [SidebarAspect];
 
   static async provider([sidebar]: [SidebarUI], config, [treeNodeSlot]: [ComponentTreeSlot]) {
-    // sidebar.registerDrawer(new ComponentTreeDrawer(treeNodeSlot));
     return new ComponentTreeUI(treeNodeSlot);
   }
 }
