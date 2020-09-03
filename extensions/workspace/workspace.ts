@@ -260,12 +260,17 @@ export class Workspace implements ComponentFactory {
     return bitIds.map((id) => new ComponentID(id));
   }
 
+  // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const seedersIds = seeders.map((seeder) => this.consumer.getParsedId(seeder));
-    const graph = await buildOneGraphForComponents(seedersIds, this.consumer);
-    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(seedersIds, graph);
+    const legacySeedersIdsP = seeders.map(async (seeder) => {
+      const componentId = await this.resolveComponentId(seeder);
+      return componentId._legacy;
+    });
+    const legacySeedersIds = await Promise.all(legacySeedersIdsP);
+    const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
+    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
     const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
     const consumerComponents = compsAndDeps.filter((c) =>
