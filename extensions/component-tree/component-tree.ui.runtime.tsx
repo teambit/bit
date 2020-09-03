@@ -1,5 +1,4 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIRuntime } from '@teambit/ui';
 
 import { ComponentTreeNode } from './component-tree-node';
@@ -19,9 +18,9 @@ export class ComponentTreeUI {
 
   static slots = [Slot.withType<ComponentTreeNode>()];
 
-  static dependencies = [SidebarAspect];
+  static dependencies = [];
 
-  static async provider([sidebar]: [SidebarUI], config, [treeNodeSlot]: [ComponentTreeSlot]) {
+  static async provider(deps, config, [treeNodeSlot]: [ComponentTreeSlot]) {
     return new ComponentTreeUI(treeNodeSlot);
   }
 }
