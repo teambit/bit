@@ -61,6 +61,9 @@ module.exports = function () {
         },
       ],
     },
+
+    plugins: [new HelloWorldPlugin({})],
+
     resolve: {
       // this is for resolving react from env and not from consuming project
       alias: {
@@ -70,3 +73,13 @@ module.exports = function () {
     },
   };
 };
+
+class HelloWorldPlugin {
+  apply(compiler) {
+    compiler.hooks.done.tap('Hello World Plugin', (
+      stats /* stats is passed as an argument when done hook is tapped.  */
+    ) => {
+      console.log('Hello World!');
+    });
+  }
+}

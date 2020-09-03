@@ -22,6 +22,7 @@ export type UIServerProps = {
   uiRoot: UIRoot;
   uiRootExtension: string;
   logger: Logger;
+  onEvent?: (event: any) => void;
 };
 
 export type StartOptions = {
@@ -38,7 +39,8 @@ export class UIServer {
     private ui: UiMain,
     private uiRoot: UIRoot,
     private uiRootExtension: string,
-    private logger: Logger
+    private logger: Logger,
+    private onEvent?: (event: any) => void
   ) {}
 
   private _port = 0;
@@ -58,7 +60,8 @@ export class UIServer {
       this.uiRoot.path,
       [await this.ui.generateRoot(aspects, this.uiRootExtension)],
       this.uiRoot.name,
-      aspectsPaths
+      aspectsPaths,
+      this.onEvent
     );
   }
 
@@ -148,6 +151,14 @@ export class UIServer {
   }
 
   static create(props: UIServerProps) {
-    return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension, props.logger);
+    return new UIServer(
+      props.graphql,
+      props.express,
+      props.ui,
+      props.uiRoot,
+      props.uiRootExtension,
+      props.logger,
+      props.onEvent
+    );
   }
 }

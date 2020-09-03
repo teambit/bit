@@ -4111,6 +4111,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "plugins/webpack-compiler-done-plugin.ts",
+                "test": false,
+                "name": "webpack-compiler-done-plugin.ts"
+            },
+            {
                 "relativePath": "webpack.aspect.ts",
                 "test": false,
                 "name": "webpack.aspect.ts"

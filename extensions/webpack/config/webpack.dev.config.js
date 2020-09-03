@@ -16,7 +16,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
+module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, onEvent) {
   // console.log('WebpackCompilerDonePlugin: ', WebpackCompilerDonePlugin)
 
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
@@ -137,12 +137,12 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       }),
 
       // new WebpackCompilerDonePlugin({
-      //   // onEvent: _onEvent,
+      //   // onEvent,
       //   options: true,
       // }),
 
       new (getWebpackCompilerDonePlugin())({
-        // onEvent: _onEvent,
+        onEvent,
         options: true,
       }),
     ],

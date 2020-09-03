@@ -153,6 +153,7 @@ export class UiMain {
       uiRootExtension: name,
       ui: this,
       logger: this.logger,
+      onEvent,
     });
 
     const targetPort = await this.getPort(port);
