@@ -2361,21 +2361,6 @@
                 "name": "index.tsx"
             },
             {
-                "relativePath": "docs/playground/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "docs/playground/playground.module.scss",
-                "test": false,
-                "name": "playground.module.scss"
-            },
-            {
-                "relativePath": "docs/playground/playground.tsx",
-                "test": false,
-                "name": "playground.tsx"
-            },
-            {
                 "relativePath": "docs/properties/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2636,6 +2621,21 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "routes/fetch.route.ts",
+                "test": false,
+                "name": "fetch.route.ts"
+            },
+            {
+                "relativePath": "routes/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "routes/put.route.ts",
+                "test": false,
+                "name": "put.route.ts"
             },
             {
                 "relativePath": "scope.aspect.ts",

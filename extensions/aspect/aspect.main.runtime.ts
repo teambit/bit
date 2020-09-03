@@ -1,4 +1,4 @@
-import {AspectLoaderAspect, AspectLoaderMain} from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
@@ -6,7 +6,7 @@ import { ReactAspect, ReactMain } from '@teambit/react';
 
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
-import {CoreExporterTask} from './core-exporter.task';
+import { CoreExporterTask } from './core-exporter.task';
 
 export class AspectMain {
   static runtime = MainRuntime;

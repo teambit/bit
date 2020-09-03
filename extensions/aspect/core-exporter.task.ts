@@ -6,10 +6,7 @@ import { Capsule } from '@teambit/isolator';
 import { Environment } from '@teambit/environments';
 
 export class CoreExporterTask implements BuildTask {
-  constructor(
-    private env: Environment,
-    private aspectLoader: AspectLoaderMain
-  ) {}
+  constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
 
   location: TaskLocation = 'start';
   readonly extensionId = 'teambit.bit/aspect';
@@ -26,20 +23,20 @@ export class CoreExporterTask implements BuildTask {
 
     return {
       components: [],
-      artifacts: []
+      artifacts: [],
     };
   }
 
-  private addFolderForAllCoreAspects(mainAspectCapsule: Capsule, distDir: string){
+  private addFolderForAllCoreAspects(mainAspectCapsule: Capsule, distDir: string) {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsNamesPackages = coreAspectsIds.map(id => {
+    const coreAspectsNamesPackages = coreAspectsIds.map((id) => {
       return {
         name: getCoreAspectName(id),
-        packageName: getCoreAspectPackageName(id)
+        packageName: getCoreAspectPackageName(id),
       };
     });
     const capsuleDir = mainAspectCapsule.path;
-    const createBarrelFilesP = coreAspectsNamesPackages.map(async ({name, packageName}) => {
+    const createBarrelFilesP = coreAspectsNamesPackages.map(async ({ name, packageName }) => {
       const newDirPath = path.join(capsuleDir, distDir, name);
       await fs.ensureDir(newDirPath);
       const barrelContent = generateBarrelFile(packageName);
@@ -49,12 +46,10 @@ export class CoreExporterTask implements BuildTask {
   }
 }
 
-
-
-function generateBarrelFile(packageName){
+function generateBarrelFile(packageName) {
   return `
 Object.defineProperty(exports, "__esModule", { value: true });
 const aspect = require("${packageName}");
 module.exports = aspect;
-`
+`;
 }

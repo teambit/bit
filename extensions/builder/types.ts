@@ -31,7 +31,7 @@ export interface BuildResults {
   artifacts: ArtifactProps[];
 }
 
-export type TaskLocation = 'start' | 'end'
+export type TaskLocation = 'start' | 'end';
 
 export interface BuildTask {
   /**
