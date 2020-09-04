@@ -84,16 +84,6 @@ export async function tagAction(tagParams: TagParams) {
   );
   if (R.isEmpty(bitIds)) return null;
 
-  // for legacy - there is always only one process - hard-tag (persist). never soft-tag.
-  // for harmony - there are two processes, soft-tag and hard-tag, always both happen.
-  // soft-tag writes to .bitmap the versions to tag. hard-tag does the actual tag.
-  // normally, the user runs the soft-tag (bit tag id/--all) and the CI the hard-tag (bit tag --persist).
-  const shouldPersist = Boolean(consumer.isLegacy || (persist && !all && !id));
-  if (!consumer.isLegacy && persist && (id || all)) {
-    throw new Error(
-      'tag --persist with either [id] or -all is not allowed. please soft-tag first without --persist flag and then tag with --persist'
-    );
-  }
   const consumerTagParams = {
     ids: BitIds.fromArray(bitIds),
     message,
@@ -105,7 +95,7 @@ export async function tagAction(tagParams: TagParams) {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
-    persist: shouldPersist,
+    persist,
   };
   const tagResults = await consumer.tag(consumerTagParams);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -167,6 +157,7 @@ async function getComponentsToTag(
   }
 
   if (persist) {
+    // add soft-tagged into the tag-pending if not already exist
     softTaggedComponents.forEach((bitId) => {
       if (!tagPendingComponents.find((t) => t.isEqual(bitId))) {
         softTaggedComponents.push(bitId);
