@@ -14,6 +14,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
@@ -125,9 +126,19 @@ export default async function provideWorkspace(
     const extensions = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
     await workspace.loadExtensions(extensions);
+    const extensionsWithLegacyIdsP = extensions.map(async extension => {
+      const legacyEntry = extension.clone();
+      if (legacyEntry.extensionId){
+        const resolvedComponentId = await workspace.resolveComponentId(legacyEntry.extensionId);
+        legacyEntry.extensionId = resolvedComponentId._legacy;
+      }
+      return legacyEntry;
+    })
+    const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
+
     return {
       defaultScope,
-      extensions,
+      extensions: ExtensionDataList.fromArray(extensionsWithLegacyIds),
     };
   });
 
