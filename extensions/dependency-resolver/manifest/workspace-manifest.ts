@@ -1,4 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { DependenciesFilterFunction, Dependency } from 'bit-bin/dist/consumer/component/dependencies';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
@@ -124,12 +124,11 @@ async function buildComponentDependenciesMap(
       // Remove dependencies which has no version (they are new in the workspace)
       if (!dependency.id.hasVersion()) return false;
       const existingComponent = componentsToFilterOut.find((component) => {
-        const depNewId = ComponentID.fromLegacy(dependency.id);
         // For new components, the component has no version but the dependency id has version 0.0.1
         if (!component.id.hasVersion()) {
           return component.id.toString() === dependency.id.toStringWithoutVersion();
         }
-        return component.id.isEqual(depNewId);
+        return component.id._legacy.isEqual(dependency.id);
       });
       if (existingComponent) return false;
       return true;
