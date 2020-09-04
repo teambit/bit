@@ -3,11 +3,13 @@ import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { flatten } from 'lodash';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
 
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
 import { ComponentRoute } from './component.route';
+import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
@@ -31,6 +33,10 @@ export class ComponentMain {
   registerHost(host: ComponentFactory) {
     this.hostSlot.register(host);
     return this;
+  }
+
+  createAspectList(legacyExtensionDataList: ExtensionDataList) {
+    return new AspectList(legacyExtensionDataList);
   }
 
   registerRoute(routes: Route[]) {

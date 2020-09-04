@@ -68,7 +68,7 @@ export class AspectLoaderMain {
   constructor(private logger: Logger, private envs: EnvsMain, private harmony: Harmony) {}
 
   private async getCompiler(component: Component) {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
   }
 

@@ -10,10 +10,6 @@ export class AspectEntry {
     return this.legacyEntry;
   }
 
-  get stringId(): string {
-    return this.id.toString();
-  }
-
   get isLegacy(): boolean {
     if (this.legacy.config?.__legacy) return true;
     return false;

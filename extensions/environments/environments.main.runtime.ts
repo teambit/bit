@@ -29,6 +29,8 @@ export type Descriptor = {
   icon: string;
 };
 
+export const DEFAULT_ENV = 'teambit.bit/node';
+
 export class EnvsMain {
   static runtime = MainRuntime;
 
@@ -67,12 +69,40 @@ export class EnvsMain {
     return this.createRuntime(components);
   }
 
+  getDefaultEnv(): EnvDefinition {
+    const defaultEnv = this.envSlot.get(DEFAULT_ENV);
+    if (!defaultEnv) throw new Error('default env must be set.');
+
+    return {
+      id: DEFAULT_ENV,
+      env: defaultEnv,
+    };
+  }
+
+  getEnv(component: Component): EnvDefinition {
+    const env = component.state.aspects.entries.find((aspectEntry) => {
+      const id = aspectEntry.id.toString();
+      return this.envSlot.get(id);
+    });
+
+    if (!env) return this.getDefaultEnv();
+    const id = env.id.toString();
+    return {
+      id,
+      env: this.envSlot.get(id) as Environment,
+    };
+  }
+
+  /**
+   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
+   */
   getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
-    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.stringId));
+    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.newExtensionId.toString()));
     if (envInExtensionList) {
+      const id = envInExtensionList.newExtensionId.toString();
       return {
-        id: envInExtensionList.stringId,
-        env: this.envSlot.get(envInExtensionList.stringId) as Environment,
+        id,
+        env: this.envSlot.get(id) as Environment,
       };
     }
     const defaultEnvId = 'teambit.bit/node';
@@ -87,7 +117,7 @@ export class EnvsMain {
   getDescriptor(component: Component): Descriptor | null {
     const defaultIcon = `https://static.bit.dev/extensions-icons/default.svg`;
     // TODO: @guy after fix core extension then take it from core extension
-    const envDef = this.getEnvFromExtensions(component.config.extensions);
+    const envDef = this.getEnv(component);
     if (!envDef) return null;
     const instance = this.context.get<any>(envDef.id);
     const iconFn = instance.icon;
@@ -136,7 +166,7 @@ export class EnvsMain {
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
     const envsMap = {};
     components.forEach((component: Component) => {
-      const envDef = this.getEnvFromExtensions(component.config.extensions);
+      const envDef = this.getEnv(component);
       const envId = envDef.id;
       const env = envDef.env;
       // handle config as well when aggregating envs.
@@ -155,7 +185,6 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>()];
 
-  static defaultConfig = {};
   static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect];
 
   static async provider(

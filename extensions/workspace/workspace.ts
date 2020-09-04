@@ -110,7 +110,7 @@ export class Workspace implements ComponentFactory {
     /**
      * access to the `ComponentProvider` instance
      */
-    private componentFactory: ComponentMain,
+    private componentAspect: ComponentMain,
 
     readonly isolateEnv: IsolatorMain,
 
@@ -319,9 +319,11 @@ export class Workspace implements ComponentFactory {
   async get(id: ComponentID): Promise<Component> {
     const consumerComponent = await this.consumer.loadComponent(id._legacy);
     const component = await this.scope.get(id);
+    const extensionDataList = await this.componentExtensions(id, component);
 
     const state = new State(
-      new Config(consumerComponent.mainFile, await this.componentExtensions(id, component)),
+      new Config(consumerComponent.mainFile, extensionDataList),
+      this.componentAspect.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -337,7 +339,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
       const systemDescriptor = await env.__getDescriptor();
 
@@ -799,7 +801,7 @@ export class Workspace implements ComponentFactory {
   }
 
   private async getCompiler(component: Component) {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
   }
 

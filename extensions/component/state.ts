@@ -1,5 +1,6 @@
 import ComponentFS from './component-fs';
 import Config from './config';
+import { AspectList } from './aspect-list';
 
 export class State {
   constructor(
@@ -7,6 +8,11 @@ export class State {
      * component configuration which is later generated to a component `package.json` and `bit.json`.
      */
     readonly config: Config,
+
+    /**
+     * list of aspects configured on the component.
+     */
+    readonly aspects: AspectList,
 
     /**
      * in-memory representation of the component current filesystem.

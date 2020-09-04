@@ -22,7 +22,8 @@ export class ExtensionDataEntry {
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
     // TODO: rename to files and make sure it only includes abstract vinyl
-    public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = []
+    public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = [],
+    public newExtensionId: any = undefined
   ) {}
 
   get id(): string | BitId {

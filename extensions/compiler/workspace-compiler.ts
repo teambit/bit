@@ -133,7 +133,7 @@ export class WorkspaceCompiler {
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
-      const environment = this.envs.getEnvFromExtensions(c.extensions).env;
+      const environment = this.envs.getEnv(c.extensions).env;
       const compilerInstance = environment.getCompiler?.();
       // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
       // inside the component dir.
