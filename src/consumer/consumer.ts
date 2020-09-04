@@ -67,6 +67,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
+import { PublishResults, publishComponentsToRegistry } from '../scope/component-ops/publish-components';
 
 type ConsumerProps = {
   projectPath: string;
@@ -516,7 +517,12 @@ export default class Consumer {
     skipTests: boolean;
     skipAutoTag: boolean;
     persist: boolean;
-  }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
+  }): Promise<{
+    taggedComponents: Component[];
+    autoTaggedResults: AutoTagResult[];
+    publishResults: PublishResults;
+    isSoftTag: boolean;
+  }> {
     if (this.isLegacy) {
       tagParams.persist = true;
     }
@@ -563,7 +569,16 @@ export default class Consumer {
       this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
     }
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist };
+    let publishResults;
+    if (!this.isLegacy && persist) {
+      const allIds = [
+        ...taggedComponents.map((t) => t.id),
+        ...autoTaggedResults.map((a) => a.component.toBitIdWithLatestVersionAllowNull()),
+      ];
+      publishResults = await publishComponentsToRegistry(this, allIds);
+    }
+
+    return { taggedComponents, autoTaggedResults, publishResults, isSoftTag: !persist };
   }
 
   updateNextVersionOnBitmap(
@@ -904,7 +919,7 @@ export default class Consumer {
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // do not load the scope from the cache, otherwise, when re-loading consumer, it'll use the same scope
-    const scope = await Scope.load(scopePath as string, false);
+    const scope = await Scope.load(scopePath as string);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerInfo.path,

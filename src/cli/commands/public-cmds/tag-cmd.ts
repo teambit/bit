@@ -151,6 +151,32 @@ bit tag [id] --persist or bit tag --all --persist, executes the soft-tag first t
         .join('\n');
     };
 
+    const publishOutput = () => {
+      const { publishResults } = results;
+      if (!publishResults) return '';
+      if (publishResults.exception) return chalk.red(publishResults.exception.message);
+      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
+      const failedCompsStr = publishResults.failedComponents
+        .map((failed) => {
+          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
+        })
+        .join('\n\n');
+      const successCompsStr = publishResults.publishedComponents
+        .map((success) => {
+          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
+        })
+        .join('\n');
+      const failedTitle = `\n\n${chalk.red(
+        'failed publishing the following components, please run "bit publish" to re-try\n'
+      )}`;
+      const successTitle = `\n\n${chalk.green(
+        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
+      )}`;
+      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
+      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
+      return successOutput + failedOutput;
+    };
+
     const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
     const outputIfExists = (label, explanation, components) => {
       if (!components.length) return '';
@@ -176,6 +202,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the soft-tag first t
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
+      publishOutput() +
       softTagClarification
     );
   }

@@ -11,6 +11,7 @@ import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { validateVersion } from '../../../utils/semver-helper';
+import { PublishResults } from '../../../scope/component-ops/publish-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -20,6 +21,7 @@ export type TagResults = {
   warnings: string[];
   newComponents: BitIds;
   isSoftTag: boolean;
+  publishResults?: PublishResults;
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -67,7 +69,7 @@ export async function tagAction(tagParams: TagParams) {
   const validExactVersion = validateVersion(exactVersion);
   const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
-  let consumer = await loadConsumer();
+  const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   const { bitIds, warnings } = await getComponentsToTag(
@@ -86,11 +88,12 @@ export async function tagAction(tagParams: TagParams) {
   // for harmony - there are two processes, soft-tag and hard-tag, always both happen.
   // soft-tag writes to .bitmap the versions to tag. hard-tag does the actual tag.
   // normally, the user runs the soft-tag (bit tag id/--all) and the CI the hard-tag (bit tag --persist).
-  // however, in case of running bit tag id/--all --persist, both processes need to be running.
-  // this is `shouldPersistAfterSoftTag` variable below.
   const shouldPersist = Boolean(consumer.isLegacy || (persist && !all && !id));
-  const shouldPersistAfterSoftTag = !shouldPersist && persist;
-
+  if (!consumer.isLegacy && persist && (id || all)) {
+    throw new Error(
+      'tag --persist with either [id] or -all is not allowed. please soft-tag first without --persist flag and then tag with --persist'
+    );
+  }
   const consumerTagParams = {
     ids: BitIds.fromArray(bitIds),
     message,
@@ -104,13 +107,7 @@ export async function tagAction(tagParams: TagParams) {
     skipAutoTag,
     persist: shouldPersist,
   };
-  let tagResults = await consumer.tag(consumerTagParams);
-  if (shouldPersistAfterSoftTag) {
-    await consumer.onDestroy();
-    consumer = await loadConsumer(undefined, true);
-    consumerTagParams.persist = true;
-    tagResults = await consumer.tag(consumerTagParams);
-  }
+  const tagResults = await consumer.tag(consumerTagParams);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
 

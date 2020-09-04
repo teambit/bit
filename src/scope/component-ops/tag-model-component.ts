@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import bluebird from 'bluebird';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
@@ -322,7 +322,7 @@ export default async function tagModelComponent({
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-  const taggedComponents = await pMapSeries(componentsToTag, (consumerComponent) =>
+  const taggedComponents = await bluebird.mapSeries(componentsToTag, (consumerComponent) =>
     persistComponent(consumerComponent)
   );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
