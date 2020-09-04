@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import TesterAspect from '../tester.aspect';
+import { TesterAspect } from '../tester.aspect';
 
 /**
  * detect test files in components

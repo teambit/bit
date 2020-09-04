@@ -5,7 +5,7 @@ import semver from 'semver';
 
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS, Extensions } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import { ExtensionDataEntry } from '../../../../consumer/config';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';

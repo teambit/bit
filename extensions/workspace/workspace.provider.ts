@@ -129,8 +129,8 @@ export default async function provideWorkspace(
     const extensionsWithLegacyIdsP = extensions.map(async extension => {
       const legacyEntry = extension.clone();
       if (legacyEntry.extensionId){
-        const componentId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = componentId._legacy;
+        const resolvedComponentId = await workspace.resolveComponentId(legacyEntry.extensionId);
+        legacyEntry.extensionId = resolvedComponentId._legacy;
       }
       return legacyEntry;
     })
