@@ -128,7 +128,7 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerTask(new PreviewTask(bundler, preview));
+    // builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }

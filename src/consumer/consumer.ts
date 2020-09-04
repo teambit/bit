@@ -67,6 +67,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
+import { PublishResults, publishComponentsToRegistry } from '../scope/component-ops/publish-components';
 
 type ConsumerProps = {
   projectPath: string;
@@ -504,22 +505,28 @@ export default class Consumer {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
-  async tag(
-    ids: BitIds,
-    message: string,
-    exactVersion: string | undefined,
-    releaseType: semver.ReleaseType,
-    force: boolean | undefined,
-    verbose: boolean | undefined,
-    ignoreUnresolvedDependencies: boolean | undefined,
-    ignoreNewestVersion: boolean,
-    skipTests = false,
-    skipAutoTag: boolean,
-    persist: boolean
-  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
+  async tag(tagParams: {
+    ids: BitIds;
+    message: string;
+    exactVersion: string | undefined;
+    releaseType: semver.ReleaseType;
+    force: boolean | undefined;
+    verbose: boolean | undefined;
+    ignoreUnresolvedDependencies: boolean | undefined;
+    ignoreNewestVersion: boolean;
+    skipTests: boolean;
+    skipAutoTag: boolean;
+    persist: boolean;
+  }): Promise<{
+    taggedComponents: Component[];
+    autoTaggedResults: AutoTagResult[];
+    publishResults: PublishResults;
+    isSoftTag: boolean;
+  }> {
     if (this.isLegacy) {
-      persist = true;
+      tagParams.persist = true;
     }
+    const { ids, persist, exactVersion, releaseType } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -531,7 +538,7 @@ export default class Consumer {
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
-    if (!ignoreUnresolvedDependencies) {
+    if (!tagParams.ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
       const componentsWithOtherIssues = components.filter((component) => {
         const issues = component.issues;
@@ -550,17 +557,8 @@ export default class Consumer {
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
-      message,
-      exactVersion,
-      releaseType,
-      force,
       consumer: this,
-      ignoreNewestVersion,
-      skipTests,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      verbose,
-      skipAutoTag,
-      persist,
+      ...tagParams,
     });
 
     const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
@@ -571,7 +569,16 @@ export default class Consumer {
       this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
     }
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist };
+    let publishResults;
+    if (!this.isLegacy && persist) {
+      const allIds = [
+        ...taggedComponents.map((t) => t.id),
+        ...autoTaggedResults.map((a) => a.component.toBitIdWithLatestVersionAllowNull()),
+      ];
+      publishResults = await publishComponentsToRegistry(this, allIds);
+    }
+
+    return { taggedComponents, autoTaggedResults, publishResults, isSoftTag: !persist };
   }
 
   updateNextVersionOnBitmap(
@@ -911,8 +918,7 @@ export default class Consumer {
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scope = await Scope.load(scopePath);
+    const scope = await Scope.load(scopePath as string);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerInfo.path,

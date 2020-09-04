@@ -5,7 +5,7 @@
 3. allows an env to add new properties to the component's package.json
 4. exposes a pack command to pack a component into a tar suitable for an npm registry
 5. exposes a publish command to publish components to a private registry
-6. utilizes PostExport hook to auto publish components during export
+6. utilizes PostTag hook to auto publish components after tag
 
 ## Usage
 

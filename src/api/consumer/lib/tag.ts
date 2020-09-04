@@ -7,11 +7,11 @@ import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from
 import { Consumer, loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import ComponentsList from '../../../consumer/component/components-list';
-import GeneralError from '../../../error/general-error';
 import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
-import InvalidVersion from './exceptions/invalid-version';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { validateVersion } from '../../../utils/semver-helper';
+import { PublishResults } from '../../../scope/component-ops/publish-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -21,6 +21,7 @@ export type TagResults = {
   warnings: string[];
   newComponents: BitIds;
   isSoftTag: boolean;
+  publishResults?: PublishResults;
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -65,7 +66,7 @@ export async function tagAction(tagParams: TagParams) {
 
   const isAll = Boolean(all || scope || idHasWildcard);
 
-  const validExactVersion = _validateVersion(exactVersion);
+  const validExactVersion = validateVersion(exactVersion);
   const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
@@ -83,10 +84,10 @@ export async function tagAction(tagParams: TagParams) {
   );
   if (R.isEmpty(bitIds)) return null;
 
-  const tagResults = await consumer.tag(
-    BitIds.fromArray(bitIds),
+  const consumerTagParams = {
+    ids: BitIds.fromArray(bitIds),
     message,
-    validExactVersion,
+    exactVersion: validExactVersion,
     releaseType,
     force,
     verbose,
@@ -94,8 +95,9 @@ export async function tagAction(tagParams: TagParams) {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
-    persist
-  );
+    persist,
+  };
+  const tagResults = await consumer.tag(consumerTagParams);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
 
@@ -155,6 +157,7 @@ async function getComponentsToTag(
   }
 
   if (persist) {
+    // add soft-tagged into the tag-pending if not already exist
     softTaggedComponents.forEach((bitId) => {
       if (!tagPendingComponents.find((t) => t.isEqual(bitId))) {
         softTaggedComponents.push(bitId);
@@ -168,14 +171,4 @@ async function getComponentsToTag(
   }
 
   return { bitIds: tagPendingComponents, warnings };
-}
-
-function _validateVersion(version) {
-  if (version) {
-    const validVersion = semver.valid(version);
-    if (!validVersion) throw new InvalidVersion(version);
-    if (semver.prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
-    return validVersion;
-  }
-  return undefined;
 }

@@ -213,21 +213,21 @@ async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<Caps
 
 function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
   capsules.forEach((capsule) => {
-    const component: ConsumerComponent = capsule.component.state._consumer;
-    const packageJson = getCurrentPackageJson(component, capsule);
+    const packageJson = getCurrentPackageJson(capsule.component, capsule);
     const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
     if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
     found.currentPackageJson = packageJson.packageJsonObject;
   });
 }
 
-function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): PackageJsonFile {
+function getCurrentPackageJson(component: Component, capsule: Capsule): PackageJsonFile {
+  const consumerComponent: ConsumerComponent = component.state._consumer;
   const newVersion = '0.0.1-new';
   const getBitDependencies = (dependencies: BitIds) => {
     return dependencies.reduce((acc, depId: BitId) => {
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
       const packageName = componentIdToPackageName({
-        ...component,
+        ...consumerComponent,
         id: depId,
         isDependency: true,
       });
@@ -235,9 +235,9 @@ function getCurrentPackageJson(component: ConsumerComponent, capsule: Capsule): 
       return acc;
     }, {});
   };
-  const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
-  const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
-  const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
+  const bitDependencies = getBitDependencies(consumerComponent.dependencies.getAllIds());
+  const bitDevDependencies = getBitDependencies(consumerComponent.devDependencies.getAllIds());
+  const bitExtensionDependencies = getBitDependencies(consumerComponent.extensions.extensionsBitIds);
 
   // unfortunately, component.packageJsonFile is not available here.
   // the reason is that `writeComponentsToCapsules` clones the component before writing them
