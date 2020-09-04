@@ -252,23 +252,8 @@ function getCurrentPackageJson(component: Component, capsule: Capsule): PackageJ
       ...bitExtensionDependencies,
     });
   };
-  const getVersion = () => {
-    if (!consumerComponent.componentMap) {
-      if (!consumerComponent.id.hasVersion()) {
-        throw new Error(`${consumerComponent.id.toString()} has no version nor componentMap, it's not possible`);
-      }
-      return consumerComponent.id.version;
-    }
-    const nextVersion = consumerComponent.componentMap.nextVersion?.version;
-    if (!nextVersion) {
-      return consumerComponent.id.version || newVersion;
-    }
-    // this is important when creating the capsules during tag. this way, the package.json writes
-    // the future version and not the current version. (a must for the publish task).
-    return component.tags.getNext(nextVersion);
-  };
   addDependencies(packageJson);
-  packageJson.addOrUpdateProperty('version', getVersion());
+  packageJson.addOrUpdateProperty('version', component.id.hasVersion() ? component.id.version : newVersion);
   return packageJson;
 }
 

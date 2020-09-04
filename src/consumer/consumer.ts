@@ -918,7 +918,6 @@ export default class Consumer {
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    // do not load the scope from the cache, otherwise, when re-loading consumer, it'll use the same scope
     const scope = await Scope.load(scopePath as string);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
