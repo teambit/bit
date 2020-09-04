@@ -1,12 +1,12 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import { MissingScope } from './exceptions';
 
 export class ComponentID {
   constructor(
     /**
      * legacy bit component id
      */
-    // private legacyComponentId: BitId
-    public legacyComponentId: BitId,
+    private legacyComponentId: BitId,
 
     readonly _scope?: string
   ) {}
@@ -59,8 +59,9 @@ export class ComponentID {
    * return the scope if included in the ID.
    */
   get scope() {
-    if (this._scope) return this._scope;
-    return this._legacy.scope;
+    const scope = this._legacy.scope;
+    if (scope) return scope;
+    return this._scope;
   }
 
   /**
@@ -71,42 +72,58 @@ export class ComponentID {
     return ComponentID.fromLegacy(legacyId);
   }
 
-  isEqual(id: ComponentID): boolean {
-    return this._legacy.isEqual(id._legacy);
+  isEqual(id: ComponentID, opts: { ignoreVersion?: boolean } = {}): boolean {
+    const result = id.scope === this.scope && id.fullName === this.fullName;
+    if (!opts.ignoreVersion) {
+      return result && this.version === id.version;
+    }
+    return result;
   }
 
   /**
    * serialize the component ID.
    */
-  toString() {
-    return this.legacyComponentId.toString();
+  toString(opts: { ignoreVersion?: boolean } = {}) {
+    let id = this._legacy;
+    if (this._scope && !this._legacy.scope) {
+      id = id.changeScope(this._scope);
+    }
+    return id.toString(false, opts.ignoreVersion);
   }
 
   toObject() {
-    return this.legacyComponentId.serialize();
+    const object = this.legacyComponentId.serialize();
+    if (!object.scope) {
+      object.scope = this.scope;
+    }
+
+    return object;
   }
 
   /**
    * generate a component ID from a string.
    */
-  static fromString(idStr: string) {
+  static fromString(idStr: string, scope?: string) {
     const legacyId = BitId.parse(idStr, true);
-    return new ComponentID(legacyId);
+    if (!scope && !legacyId.scope) throw new MissingScope(idStr);
+    return new ComponentID(legacyId, scope);
   }
 
-  static fromLegacyString(idStr: string) {
+  static fromLegacyString(idStr: string, scope?: string) {
     const legacyId = BitId.parse(idStr, false);
-    return new ComponentID(legacyId);
+    if (!scope) throw new MissingScope(idStr);
+    return new ComponentID(legacyId, scope);
   }
 
-  static fromObject(object: any) {
-    return ComponentID.fromLegacy(new BitId(object));
+  static fromObject(object: any, scope?: string) {
+    return ComponentID.fromLegacy(new BitId(object), scope);
   }
 
   /**
    * create a `ComponentID` instance from the legacy `BitId`.
    */
-  static fromLegacy(legacyId: BitId) {
-    return new ComponentID(legacyId);
+  static fromLegacy(legacyId: BitId, scope?: string) {
+    if (!scope && !legacyId.scope) throw new MissingScope(legacyId);
+    return new ComponentID(legacyId, scope);
   }
 }

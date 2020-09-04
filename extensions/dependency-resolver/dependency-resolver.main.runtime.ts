@@ -367,6 +367,7 @@ export class DependencyResolverMain {
       aspectLoader,
       packageManagerSlot
     );
+    DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {
