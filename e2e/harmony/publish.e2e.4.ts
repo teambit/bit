@@ -128,8 +128,7 @@ describe('publish functionality', function () {
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
 
-      helper.command.tagAllComponents();
-      publishOutput = helper.command.publish('ui/button', '--allow-staged');
+      publishOutput = helper.command.tagAllComponents();
       pkgName = `react.${randomStr}.ui.button`;
     });
     after(() => {

@@ -12,7 +12,7 @@ export default class Tag implements LegacyCommand {
   description = `record component changes and lock versions.
 in Harmony workspace, without "--persist" flag, it does "soft-tag", which only keeps note of the changes to be made
 bit tag --persist, tags all the changes recorded by the previous soft-tag, this normally executed by the CI.
-bit tag [id] --persist or bit tag --all --persist, executes the soft-tag first then the hard-tag.
+bit tag [id] --persist or bit tag --all --persist, executes the persist on the given id or all.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
