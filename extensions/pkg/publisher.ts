@@ -10,6 +10,7 @@ import { PublishPostExportResult } from 'bit-bin/dist/scope/component-ops/publis
 import Bluebird from 'bluebird';
 import execa from 'execa';
 import R from 'ramda';
+import { PkgAspect } from './pkg.aspect';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -44,7 +45,7 @@ export class Publisher {
     const componentIds = ids.map((id) => id.toString());
     const components = await this.publish(componentIds, {});
     return components.map((c) => ({
-      id: c.id.legacyComponentId,
+      id: c.id._legacy,
       data: c.data,
       errors: c.errors as string[],
     }));
@@ -131,13 +132,13 @@ export class Publisher {
   }
 
   public shouldPublish(extensions: ExtensionDataList): boolean {
-    const pkgExt = extensions.findExtension('teambit.bit/pkg');
+    const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;
     return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
   }
 
   private getExtraArgsFromConfig(component: Component): string | undefined {
-    const pkgExt = component.config.extensions.findExtension('teambit.bit/pkg');
+    const pkgExt = component.config.extensions.findExtension(PkgAspect.id);
     return pkgExt?.config?.packageManagerPublishArgs;
   }
 
