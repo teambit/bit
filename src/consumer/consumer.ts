@@ -504,22 +504,23 @@ export default class Consumer {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
-  async tag(
-    ids: BitIds,
-    message: string,
-    exactVersion: string | undefined,
-    releaseType: semver.ReleaseType,
-    force: boolean | undefined,
-    verbose: boolean | undefined,
-    ignoreUnresolvedDependencies: boolean | undefined,
-    ignoreNewestVersion: boolean,
-    skipTests = false,
-    skipAutoTag: boolean,
-    persist: boolean
-  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
+  async tag(tagParams: {
+    ids: BitIds;
+    message: string;
+    exactVersion: string | undefined;
+    releaseType: semver.ReleaseType;
+    force: boolean | undefined;
+    verbose: boolean | undefined;
+    ignoreUnresolvedDependencies: boolean | undefined;
+    ignoreNewestVersion: boolean;
+    skipTests: boolean;
+    skipAutoTag: boolean;
+    persist: boolean;
+  }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; isSoftTag: boolean }> {
     if (this.isLegacy) {
-      persist = true;
+      tagParams.persist = true;
     }
+    const { ids, persist, exactVersion, releaseType } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -531,7 +532,7 @@ export default class Consumer {
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
-    if (!ignoreUnresolvedDependencies) {
+    if (!tagParams.ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
       const componentsWithOtherIssues = components.filter((component) => {
         const issues = component.issues;
@@ -550,17 +551,8 @@ export default class Consumer {
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
-      message,
-      exactVersion,
-      releaseType,
-      force,
       consumer: this,
-      ignoreNewestVersion,
-      skipTests,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      verbose,
-      skipAutoTag,
-      persist,
+      ...tagParams,
     });
 
     const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
@@ -911,8 +903,8 @@ export default class Consumer {
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scope = await Scope.load(scopePath);
+    // do not load the scope from the cache, otherwise, when re-loading consumer, it'll use the same scope
+    const scope = await Scope.load(scopePath as string, false);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerInfo.path,

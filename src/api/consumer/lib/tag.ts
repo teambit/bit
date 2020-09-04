@@ -7,11 +7,10 @@ import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from
 import { Consumer, loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import ComponentsList from '../../../consumer/component/components-list';
-import GeneralError from '../../../error/general-error';
 import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
-import InvalidVersion from './exceptions/invalid-version';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { validateVersion } from '../../../utils/semver-helper';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -65,10 +64,10 @@ export async function tagAction(tagParams: TagParams) {
 
   const isAll = Boolean(all || scope || idHasWildcard);
 
-  const validExactVersion = _validateVersion(exactVersion);
+  const validExactVersion = validateVersion(exactVersion);
   const preHook = isAll ? PRE_TAG_ALL_HOOK : PRE_TAG_HOOK;
   HooksManagerInstance.triggerHook(preHook, tagParams);
-  const consumer = await loadConsumer();
+  let consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   const { bitIds, warnings } = await getComponentsToTag(
@@ -83,10 +82,19 @@ export async function tagAction(tagParams: TagParams) {
   );
   if (R.isEmpty(bitIds)) return null;
 
-  const tagResults = await consumer.tag(
-    BitIds.fromArray(bitIds),
+  // for legacy - there is always only one process - hard-tag (persist). never soft-tag.
+  // for harmony - there are two processes, soft-tag and hard-tag, always both happen.
+  // soft-tag writes to .bitmap the versions to tag. hard-tag does the actual tag.
+  // normally, the user runs the soft-tag (bit tag id/--all) and the CI the hard-tag (bit tag --persist).
+  // however, in case of running bit tag id/--all --persist, both processes need to be running.
+  // this is `shouldPersistAfterSoftTag` variable below.
+  const shouldPersist = Boolean(consumer.isLegacy || (persist && !all && !id));
+  const shouldPersistAfterSoftTag = !shouldPersist && persist;
+
+  const consumerTagParams = {
+    ids: BitIds.fromArray(bitIds),
     message,
-    validExactVersion,
+    exactVersion: validExactVersion,
     releaseType,
     force,
     verbose,
@@ -94,8 +102,15 @@ export async function tagAction(tagParams: TagParams) {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
-    persist
-  );
+    persist: shouldPersist,
+  };
+  let tagResults = await consumer.tag(consumerTagParams);
+  if (shouldPersistAfterSoftTag) {
+    await consumer.onDestroy();
+    consumer = await loadConsumer(undefined, true);
+    consumerTagParams.persist = true;
+    tagResults = await consumer.tag(consumerTagParams);
+  }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
 
@@ -168,14 +183,4 @@ async function getComponentsToTag(
   }
 
   return { bitIds: tagPendingComponents, warnings };
-}
-
-function _validateVersion(version) {
-  if (version) {
-    const validVersion = semver.valid(version);
-    if (!validVersion) throw new InvalidVersion(version);
-    if (semver.prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
-    return validVersion;
-  }
-  return undefined;
 }

@@ -1,4 +1,6 @@
-import { rcompare, SemVer } from 'semver';
+import { getValidVersionOrReleaseType, getLatestVersion } from 'bit-bin/dist/utils/semver-helper';
+import { DEFAULT_BIT_VERSION, DEFAULT_BIT_RELEASE_TYPE } from 'bit-bin/dist/constants';
+import { SemVer, ReleaseType, inc } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
 import { Hash } from './hash';
@@ -19,9 +21,34 @@ export class TagMap extends Map<SemVer, Tag> {
    */
   getLatest(): string {
     const versions = this.toArray().map((tag) => tag.version.raw);
-    const sortedVersions = versions.sort((a, b) => rcompare(a, b));
-    if (!sortedVersions || !sortedVersions[0]) throw new CouldNotFindLatest(versions);
-    return sortedVersions[0];
+    if (this.isEmpty()) throw new CouldNotFindLatest(versions);
+    return getLatestVersion(versions);
+  }
+
+  /**
+   * get the next version depends on the user input.
+   * if exact-version is used, return it.
+   * otherwise, use the latest version and increment it according to the release-type.
+   * if an unsupported release-type is entered, such as "prerelease", it throws.
+   */
+  getNext(exactVersionOrReleaseType: ReleaseType | string = DEFAULT_BIT_RELEASE_TYPE): string {
+    const { exactVersion, releaseType } = getValidVersionOrReleaseType(exactVersionOrReleaseType);
+    if (exactVersion) return exactVersion;
+    if (this.isEmpty()) {
+      // this is the first tag
+      return DEFAULT_BIT_VERSION;
+    }
+    const latest = this.getLatest();
+    const next = inc(latest, releaseType as ReleaseType);
+    if (!next) {
+      // should never happen
+      throw new Error(`either ${latest} or ${releaseType} are semver invalid`);
+    }
+    return next;
+  }
+
+  isEmpty() {
+    return this.size === 0;
   }
 
   /**

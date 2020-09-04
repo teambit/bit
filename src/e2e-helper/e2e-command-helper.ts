@@ -158,6 +158,9 @@ export default class CommandHelper {
   softTag(options = '') {
     return this.runCmd(`bit tag ${options}`);
   }
+  hardTag(options = '') {
+    return this.runCmd(`bit tag --persist ${options}`);
+  }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
   }

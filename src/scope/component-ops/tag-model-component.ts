@@ -23,6 +23,7 @@ import { PathLinux } from '../../utils/path';
 import { buildComponentsGraph } from '../graph/components-graph';
 import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -74,9 +75,9 @@ async function setFutureVersions(
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
       if (nextVersion) {
-        const supportedReleaseTypes = ['patch', 'minor', 'major'];
-        if (supportedReleaseTypes.includes(nextVersion)) releaseType = nextVersion as ReleaseType;
-        else exactVersion = nextVersion;
+        const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
+        if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
+        if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
       }
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
@@ -246,12 +247,12 @@ export default async function tagModelComponent({
     c.isLegacy ? legacyComps.push(c) : nonLegacyComps.push(c);
   });
   if (legacyComps.length && persist) {
-    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+    await scope.buildMultiple(legacyComps, consumer, false, verbose);
   }
   if (nonLegacyComps.length && persist) {
-    const ids = componentsToBuildAndTest.map((c) => c.id);
+    const ids = nonLegacyComps.map((c) => c.id);
     const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
-    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
+    results.map(updateComponentsByTagResult(nonLegacyComps));
   }
 
   logger.debug('scope.putMany: sequentially test all components');
