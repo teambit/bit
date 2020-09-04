@@ -42,6 +42,7 @@ import { ChangelogAspect } from '@teambit/changelog';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
+  [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -72,7 +73,6 @@ export const manifestsMap = {
   [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
   [SchemaAspect.id]: SchemaAspect,
-  [AspectLoaderAspect.id]: AspectLoaderAspect,
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,

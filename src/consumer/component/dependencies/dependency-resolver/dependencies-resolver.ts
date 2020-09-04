@@ -106,6 +106,9 @@ export default class DependencyResolver {
     this.getWorkspacePolicy = func;
   }
 
+  static getDepResolverAspectName: () => string;
+  static getCoreAspectsPackagesAndIds: () => Record<string, string>;
+
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -235,6 +238,7 @@ export default class DependencyResolver {
       this.processPackages(file, fileType);
       this.processBits(file, fileType);
       this.processDepFiles(file, fileType);
+      this.processCoreAspects(file);
       this.processUnidentifiedPackages(file, fileType);
     });
     this.removeIgnoredPackagesByOverrides();
@@ -854,6 +858,38 @@ either, use the ignore file syntax or change the require statement to have a mod
     else this.issues.resolveErrors[originFile] = error.message;
   }
 
+  processCoreAspects(originFile: PathLinuxRelative){
+    const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
+    let usedCoreAspects: string[] = [];
+    const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
+    if (!coreAspects){
+      return;
+    }
+    const coreAspectsPackages = Object.keys(coreAspects);
+    const findMatchingCoreAspect = (packageName) => {
+      return coreAspectsPackages.find(coreAspectName => {
+        return packageName.includes(coreAspectName);
+      });
+    };
+    const filtered = unidentifiedPackages?.filter((packageName) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
+      if (matchingCoreAspectPackageName){
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+    this.tree[originFile].unidentifiedPackages = filtered;
+    usedCoreAspects = R.uniq(usedCoreAspects);
+    this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
+  }
+
+  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]){
+    if (!usedCoreAspects || !usedCoreAspects.length){
+      return;
+    }
+    this.pushToDependencyResolverExtension('coreAspects', usedCoreAspects, 'set');
+  }
+
   /**
    * currently the only unidentified packages being process are the ones coming from custom-modules-resolution.
    * assuming the author used custom-resolution, which enable using non-relative import syntax,
@@ -910,7 +946,15 @@ either, use the ignore file syntax or change the require statement to have a mod
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
     this.pushToDependenciesArray(dependency, fileType);
-    this.pushToDependencyResolverExtension(dependency.id, fileType, packageName);
+    if (!packageName) return;
+    // aims to handle legacy workspaces when there is no default scope so the package name is wrong
+    if (!dependency.id.hasScope() && !this.consumer.config.defaultScope) return;
+    const depData = {
+      componentId: dependency.id,
+      packageName,
+      type: fileType.isTestFile ? 'dev' : 'prod',
+    };
+    this.pushToDependencyResolverExtension('dependencies', depData);
   }
 
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
@@ -921,24 +965,25 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  pushToDependencyResolverExtension(id: BitId, fileType: FileType, packageName?: string) {
-    if (!packageName) return;
-    // aims to handle legacy workspaces when there is no default scope so the package name is wrong
-    if (!id.hasScope() && !this.consumer.config.defaultScope) return;
+  pushToDependencyResolverExtension(dataFiled: string, data: any, operation: 'add' | 'set' = 'add') {
+    const depResolverAspectName = DependencyResolver.getDepResolverAspectName();
+    if (!depResolverAspectName) return;
+
     let extExistOnComponent = true;
-    let ext = this.component.extensions.findCoreExtension(Extensions.dependencyResolver);
+    let ext = this.component.extensions.findCoreExtension(depResolverAspectName);
     if (!ext) {
       extExistOnComponent = false;
       // Create new deps resolver extension entry to add to the component with data only
-      ext = new ExtensionDataEntry(undefined, undefined, Extensions.dependencyResolver, undefined, {});
+      ext = new ExtensionDataEntry(undefined, undefined, depResolverAspectName, undefined, {});
     }
-    const depData = {
-      componentId: id,
-      packageName,
-      type: fileType.isTestFile ? 'dev' : 'prod',
-    };
-    if (!ext.data.dependencies) ext.data.dependencies = [];
-    ext.data.dependencies.push(depData);
+
+    if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
+    if (operation === 'add'){
+      ext.data[dataFiled].push(data);
+    }
+    if (operation === 'set'){
+      ext.data[dataFiled] = data;
+    }
     if (!extExistOnComponent) {
       this.component.extensions.push(ext);
     }
