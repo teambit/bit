@@ -1058,7 +1058,24 @@ jobs:
 
 workflows:
   version: 2
-  # build_and_test:
+  build_and_test:
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      -
+        setup_harmony:
+          requires:
+            - set_npm_registries
+            - checkout_code
+      -
+        build:
+          requires:
+            - setup_harmony
+      -
+        tag:
+          requires:
+            - build
   #   jobs:
   #     - checkout_code
   #     - set_ssh_key
@@ -1318,11 +1335,6 @@ workflows:
             - build
 
 tag_and_publish:
-  filters:
-    branches:
-      ignore:
-        - performance-tests
-        - bit-hub-tests
   jobs:
     - checkout_code
     - set_ssh_key
