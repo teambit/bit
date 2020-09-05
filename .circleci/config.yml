@@ -624,8 +624,6 @@ jobs:
         run:
           name: 'bit tag'
           command: 'cd bit && bit tag --persist'
-          # command which support only - for debug purpose
-          # command: cd bit && npm run e2e-test-circle --debug
 
 
   e2e_test:
@@ -1058,79 +1056,83 @@ jobs:
 
 workflows:
   version: 2
-  # build_and_test:
-  #   jobs:
-  #     - checkout_code
-  #     - set_ssh_key
-  #     - set_npm_registries
-  #     -
-  #       setup_harmony:
-  #         requires:
-  #           - set_npm_registries
-  #           - checkout_code
-  #     -
-  #       build:
-  #         requires:
-  #           - setup_harmony
-  #     -
-  #       unit_test:
-  #         requires:
-  #           - build
-  #     -
-  #       lint:
-  #         requires:
-  #           # - install_npm_deps
-  #           # - setup_harmony
-  #           - build
-  #     -
-  #       generate_and_check_types:
-  #         requires:
-  #           # - install_npm_deps
-  #           # - setup_harmony
-  #           - build
-  #     -
-  #       generate_docs:
-  #         <<: *semver_tags_only_filters
-  #         requires:
-  #           - build
-  #     # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
-  #     # -
-  #     #   pack:
-  #     #     requires:
-  #     #       - build
-  #     -
-  #       e2e_test:
-  #         filters:
-  #           branches:
-  #             ignore:
-  #               - performance-tests
-  #               - bit-hub-tests
-  #         requires:
-  #           - set_ssh_key
-  #           - set_npm_registries
-  #           # - install_npm_deps
-  #           - setup_harmony
-  #           - build
-  #           # - configure-bit
-  #           # - pack
-  #     -
-  #       performance_e2e_test:
-  #         filters:
-  #           branches:
-  #             only:
-  #               - performance-tests
-  #         requires:
-  #           - build
-  #     -
-  #       bit_hub_e2e_test:
-  #         filters:
-  #           branches:
-  #             only:
-  #               - bit-hub-tests
-  #         requires:
-  #           - build
-  #           - set_ssh_key
-  #           - set_npm_registries
+  build_and_test:
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      -
+        setup_harmony:
+          requires:
+            - set_npm_registries
+            - checkout_code
+      -
+        build:
+          requires:
+            - setup_harmony
+      -
+        unit_test:
+          requires:
+            - build
+      -
+        lint:
+          requires:
+            # - install_npm_deps
+            # - setup_harmony
+            - build
+      -
+        generate_and_check_types:
+          requires:
+            # - install_npm_deps
+            # - setup_harmony
+            - build
+      -
+        generate_docs:
+          <<: *semver_tags_only_filters
+          requires:
+            - build
+      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
+      # -
+      #   pack:
+      #     requires:
+      #       - build
+      -
+        e2e_test:
+          filters:
+            branches:
+              ignore:
+                - performance-tests
+                - bit-hub-tests
+          requires:
+            - set_ssh_key
+            - set_npm_registries
+            # - install_npm_deps
+            - setup_harmony
+            - build
+            # - configure-bit
+            # - pack
+      -
+        tag:
+          requires:
+            - e2e_test
+      -
+        performance_e2e_test:
+          filters:
+            branches:
+              only:
+                - performance-tests
+          requires:
+            - build
+      -
+        bit_hub_e2e_test:
+          filters:
+            branches:
+              only:
+                - bit-hub-tests
+          requires:
+            - build
+            - set_ssh_key
+            - set_npm_registries
 
   # windows_e2e:
   #   jobs:
@@ -1315,23 +1317,4 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - build
-
-  tag_and_publish:
-    jobs:
-      - checkout_code
-      - set_ssh_key
-      - set_npm_registries
-      -
-        setup_harmony:
-          requires:
-            - set_npm_registries
-            - checkout_code
-      -
-        build:
-          requires:
-            - setup_harmony
-      -
-        tag:
-          requires:
             - build
