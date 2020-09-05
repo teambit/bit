@@ -1318,6 +1318,11 @@ workflows:
             - build
 
 tag_and_publish:
+  filters:
+    branches:
+      ignore:
+        - performance-tests
+        - bit-hub-tests
   jobs:
     - checkout_code
     - set_ssh_key
