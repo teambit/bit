@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect } from '@teambit/component';
+import { Component, ComponentAspect, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -97,12 +97,11 @@ export class EnvsMain {
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
    */
   getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
-    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.newExtensionId.toString()));
+    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.stringId));
     if (envInExtensionList) {
-      const id = envInExtensionList.newExtensionId.toString();
       return {
-        id,
-        env: this.envSlot.get(id) as Environment,
+        id: envInExtensionList.stringId,
+        env: this.envSlot.get(envInExtensionList.stringId) as Environment,
       };
     }
     const defaultEnvId = 'teambit.bit/node';

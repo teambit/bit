@@ -59,18 +59,18 @@ export class ExtensionDataEntry {
     );
   }
 
-  static fromConfigEntry(id: BitId, config: Record<string, any>) {
-    // TODO: refactor the core names registry to be outside the ExtensionDataList
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
-    let entry;
-    if (!isCore) {
-      entry = new ExtensionDataEntry(undefined, id, undefined, config, undefined);
-    } else {
-      entry = new ExtensionDataEntry(undefined, undefined, id.toString(), config, undefined);
-    }
-    return entry;
-  }
+  // static fromConfigEntry(id: BitId, config: Record<string, any>) {
+  //   // TODO: refactor the core names registry to be outside the ExtensionDataList
+  //   // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  //   const isCore = ExtensionDataList.coreExtensionsNames.has(id.toString());
+  //   let entry;
+  //   if (!isCore) {
+  //     entry = new ExtensionDataEntry(undefined, id, undefined, config, undefined);
+  //   } else {
+  //     entry = new ExtensionDataEntry(undefined, undefined, id.toString(), config, undefined);
+  //   }
+  //   return entry;
+  // }
 }
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {

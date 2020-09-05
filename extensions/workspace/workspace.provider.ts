@@ -133,10 +133,6 @@ export default async function provideWorkspace(
         legacyEntry.extensionId = compId._legacy;
         legacyEntry.newExtensionId = compId;
       }
-      if (legacyEntry.name) {
-        const compId = ComponentID.fromString(legacyEntry.name);
-        legacyEntry.newExtensionId = compId;
-      }
 
       return legacyEntry;
     });

@@ -6,6 +6,7 @@ export class State {
   constructor(
     /**
      * component configuration which is later generated to a component `package.json` and `bit.json`.
+     * @deprecated
      */
     readonly config: Config,
 

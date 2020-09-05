@@ -3,11 +3,11 @@ import { join, resolve } from 'path';
 
 export function getAspectDir(id: string): string {
   const aspectName = getCoreAspectName(id);
-  const packageName = getCoreAspectPackageName(aspectName);
+  const packageName = getCoreAspectPackageName(id);
   let dirPath: string;
   try {
     const moduleDirectory = require.resolve(packageName);
-    dirPath = join(moduleDirectory, '..'); // to remove the "index.js" at the end
+    dirPath = join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   } catch (err) {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
@@ -17,18 +17,23 @@ export function getAspectDir(id: string): string {
   return dirPath;
 }
 
+export function getAspectDistDir(id: string) {
+  return resolve(`${getAspectDir(id)}/dist`);
+}
+
 export function getCoreAspectName(id: string): string {
   const aspectName = id.split('/')[1];
   return aspectName;
 }
 
 export function getCoreAspectPackageName(id: string): string {
-  const aspectName = id.split('/')[1];
+  const aspectName = getCoreAspectName(id);
   return `@teambit/${aspectName}`;
 }
 
 export async function getAspectDef(aspectName: string, runtime: string) {
   const dirPath = getAspectDir(aspectName);
+
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;
 

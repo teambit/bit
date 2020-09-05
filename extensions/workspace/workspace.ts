@@ -357,7 +357,7 @@ export class Workspace implements ComponentFactory {
       const data = await onLoad(component);
       const existingExtension = component.state.config.extensions.findExtension(extension);
       if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(this.getDataEntry(extension, data));
+      component.state.config.extensions.push(await this.getDataEntry(extension, data));
     });
 
     await Promise.all(promises);
@@ -394,7 +394,7 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {
+  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }

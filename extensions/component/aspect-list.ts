@@ -1,7 +1,7 @@
 import { compact } from 'ramda-adjunct';
 import R from 'ramda';
 import { BitId } from 'bit-bin/dist/bit-id';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 
 import { ComponentID } from './id';
 import { AspectEntry } from './aspect-entry';
@@ -22,15 +22,25 @@ export class AspectList {
   get entries(): AspectEntry[] {
     if (this._entries.length) return this._entries;
     const newEntries = this.legacyDataList.map((entry) => {
-      return new AspectEntry(entry.newExtensionId, entry);
+      return new AspectEntry(this.getAspectId(entry), entry);
     });
 
     this._entries = newEntries;
     return newEntries;
   }
 
+  isCoreAspect(entry: ExtensionDataEntry) {
+    return !entry.extensionId && entry.name;
+  }
+
+  private getAspectId(entry: ExtensionDataEntry) {
+    if (this.isCoreAspect(entry) && entry.name) return ComponentID.fromString(entry.name);
+    if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId);
+    throw new Error('aspect cannot be loaded without setting an ID');
+  }
+
   get ids(): string[] {
-    const list = this.entries.map((entry) => entry.stringId);
+    const list = this.entries.map((entry) => entry.id.toString());
     return list;
   }
 
