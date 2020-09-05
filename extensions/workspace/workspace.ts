@@ -580,9 +580,9 @@ export class Workspace implements ComponentFactory {
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
       // Do not merge from scope when there is specific variant (which is not *) that match the component
-      if (variantConfig.maxSpecificity > 0) {
-        mergeFromScope = false;
-      }
+      // if (variantConfig.maxSpecificity > 0) {
+      //   mergeFromScope = false;
+      // }
     }
     const isVendor = this.isVendorComponentByComponentDir(relativeComponentDir);
     if (!isVendor) {
