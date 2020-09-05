@@ -60,6 +60,8 @@ export class ReactMain {
     readonly reactEnv: ReactEnv
   ) {}
 
+  readonly env = this.reactEnv;
+
   /**
    *  return extiontion icon
    */
