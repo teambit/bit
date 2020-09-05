@@ -3,7 +3,7 @@
     "name": "ui",
     "version": "0.0.10"
   },
-  "propagate": false,
+  "propagate": true,
   "extensions": {
     "teambit.bit/pkg": {
       "packageJson": {

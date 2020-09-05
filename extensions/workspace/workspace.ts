@@ -564,16 +564,14 @@ export class Workspace implements ComponentFactory {
     let configFileExtensions;
     let variantsExtensions;
     let wsDefaultExtensions;
-    let scopeExtensions;
-    let mergeFromScope = true;
+    const mergeFromScope = true;
+    const scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
       configFileExtensions = componentConfigFile.extensions;
       // do not merge from scope data when there is component config file
-      mergeFromScope = false;
-    } else {
-      scopeExtensions = componentFromScope?.config?.extensions || new ExtensionDataList();
+      // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     const variantConfig = this.variants.byRootDir(relativeComponentDir);
