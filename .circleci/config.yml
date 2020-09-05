@@ -588,6 +588,46 @@ jobs:
             - bit/node_modules
             - .pnpm-store
 
+  tag:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        restore_cache:
+          key: bit-global-config-v1
+      -
+        restore_cache:
+          key: bitsrc-ssh-key3
+      -
+        restore_cache:
+          key: bitsrc-registry6
+      -
+        restore_cache:
+          key: npm-global-bin-v2
+      -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run:
+          name: 'bit status'
+          command: 'cd bit && bit status'
+      -
+        run:
+          name: 'bit tag'
+          command: 'cd bit && bit tag --persist'
+          # command which support only - for debug purpose
+          # command: cd bit && npm run e2e-test-circle --debug
+
+
   e2e_test:
     <<: *defaults
     environment:
@@ -599,8 +639,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run: 'sudo npm i -g yarn'
       -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
@@ -622,7 +660,7 @@ jobs:
       #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
-          key: bit-global-config-v1
+          key: bit-global-config-v3
       -
         restore_cache:
           key: bitsrc-ssh-key3
@@ -1020,105 +1058,105 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
-    jobs:
-      - checkout_code
-      - set_ssh_key
-      - set_npm_registries
-      -
-        setup_harmony:
-          requires:
-            - set_npm_registries
-            - checkout_code
-      -
-        build:
-          requires:
-            - setup_harmony
-      -
-        unit_test:
-          requires:
-            - build
-      -
-        lint:
-          requires:
-            # - install_npm_deps
-            # - setup_harmony
-            - build
-      -
-        generate_and_check_types:
-          requires:
-            # - install_npm_deps
-            # - setup_harmony
-            - build
-      -
-        generate_docs:
-          <<: *semver_tags_only_filters
-          requires:
-            - build
-      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
-      # -
-      #   pack:
-      #     requires:
-      #       - build
-      -
-        e2e_test:
-          filters:
-            branches:
-              ignore:
-                - performance-tests
-                - bit-hub-tests
-          requires:
-            - set_ssh_key
-            - set_npm_registries
-            # - install_npm_deps
-            - setup_harmony
-            - build
-            # - configure-bit
-            # - pack
-      -
-        performance_e2e_test:
-          filters:
-            branches:
-              only:
-                - performance-tests
-          requires:
-            - build
-      -
-        bit_hub_e2e_test:
-          filters:
-            branches:
-              only:
-                - bit-hub-tests
-          requires:
-            - build
-            - set_ssh_key
-            - set_npm_registries
+  # build_and_test:
+  #   jobs:
+  #     - checkout_code
+  #     - set_ssh_key
+  #     - set_npm_registries
+  #     -
+  #       setup_harmony:
+  #         requires:
+  #           - set_npm_registries
+  #           - checkout_code
+  #     -
+  #       build:
+  #         requires:
+  #           - setup_harmony
+  #     -
+  #       unit_test:
+  #         requires:
+  #           - build
+  #     -
+  #       lint:
+  #         requires:
+  #           # - install_npm_deps
+  #           # - setup_harmony
+  #           - build
+  #     -
+  #       generate_and_check_types:
+  #         requires:
+  #           # - install_npm_deps
+  #           # - setup_harmony
+  #           - build
+  #     -
+  #       generate_docs:
+  #         <<: *semver_tags_only_filters
+  #         requires:
+  #           - build
+  #     # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
+  #     # -
+  #     #   pack:
+  #     #     requires:
+  #     #       - build
+  #     -
+  #       e2e_test:
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - performance-tests
+  #               - bit-hub-tests
+  #         requires:
+  #           - set_ssh_key
+  #           - set_npm_registries
+  #           # - install_npm_deps
+  #           - setup_harmony
+  #           - build
+  #           # - configure-bit
+  #           # - pack
+  #     -
+  #       performance_e2e_test:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - performance-tests
+  #         requires:
+  #           - build
+  #     -
+  #       bit_hub_e2e_test:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - bit-hub-tests
+  #         requires:
+  #           - build
+  #           - set_ssh_key
+  #           - set_npm_registries
 
-  windows_e2e:
-    jobs:
-      - windows_approval_job:
-          type: approval
-      - windows_checkout_code:
-          requires:
-            - windows_approval_job
-      # - windows_set_ssh_key:
-      #     requires:
-      #       - windows_approval_job
-      - windows_set_npm_registries:
-          requires:
-            - windows_approval_job
-      - windows_install_npm_deps:
-          requires:
-            - windows_checkout_code
-            - windows_set_npm_registries
-      - windows_build:
-          requires:
-            - windows_install_npm_deps
-      - windows_e2e_test:
-          requires:
-            - windows_build
-            # - windows_set_ssh_key
-            - windows_set_npm_registries
+  # windows_e2e:
+  #   jobs:
+  #     - windows_approval_job:
+  #         type: approval
+  #     - windows_checkout_code:
+  #         requires:
+  #           - windows_approval_job
+  #     # - windows_set_ssh_key:
+  #     #     requires:
+  #     #       - windows_approval_job
+  #     - windows_set_npm_registries:
+  #         requires:
+  #           - windows_approval_job
+  #     - windows_install_npm_deps:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_npm_registries
+  #     - windows_build:
+  #         requires:
+  #           - windows_install_npm_deps
+  #     - windows_e2e_test:
+  #         requires:
+  #           - windows_build
+  #           # - windows_set_ssh_key
+  #           - windows_set_npm_registries
 
   deploy:
     jobs:
@@ -1278,3 +1316,22 @@ workflows:
             - set_ssh_key
             - set_npm_registries
             - build
+
+tag_and_publish:
+  jobs:
+    - checkout_code
+    - set_ssh_key
+    - set_npm_registries
+    -
+      setup_harmony:
+        requires:
+          - set_npm_registries
+          - checkout_code
+    -
+      build:
+        requires:
+          - setup_harmony
+    -
+      tag:
+        requires:
+          - build
