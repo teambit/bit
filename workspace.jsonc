@@ -13,6 +13,7 @@
     "extraArgs": [],
     "policy": {
       "dependencies": {
+        "": "0.0.5",
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
         "@graphql-modules/core": "^0.7.17",
@@ -65,6 +66,7 @@
         "@teambit/documenter.ui.property-table": "^0.0.4",
         "@teambit/documenter.ui.section": "^0.0.4",
         "@teambit/documenter.ui.separator": "^0.0.4",
+        "@teambit/documenter.ui.paragraph": "^0.0.3",
         "@teambit/documenter.ui.sub-title": "^0.0.4",
         "@teambit/evangelist.elements.button": "^0.0.3",
         "@teambit/evangelist.elements.heading": "^0.0.3",

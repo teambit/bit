@@ -1061,6 +1061,11 @@
                 "name": "dependency-resolver.main.runtime.ts"
             },
             {
+                "relativePath": "dependency-version-resolver.docs.tsx",
+                "test": false,
+                "name": "dependency-version-resolver.docs.tsx"
+            },
+            {
                 "relativePath": "dependency-version-resolver.ts",
                 "test": false,
                 "name": "dependency-version-resolver.ts"
@@ -2359,21 +2364,6 @@
                 "relativePath": "docs/index.tsx",
                 "test": false,
                 "name": "index.tsx"
-            },
-            {
-                "relativePath": "docs/playground/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "docs/playground/playground.module.scss",
-                "test": false,
-                "name": "playground.module.scss"
-            },
-            {
-                "relativePath": "docs/playground/playground.tsx",
-                "test": false,
-                "name": "playground.tsx"
             },
             {
                 "relativePath": "docs/properties/index.ts",
