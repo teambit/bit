@@ -859,6 +859,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processCoreAspects(originFile: PathLinuxRelative) {
+    // TODO: return in case of processing a core aspect.
     const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     let usedCoreAspects: string[] = [];
