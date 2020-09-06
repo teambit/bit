@@ -3,6 +3,7 @@ import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import React from 'react';
 import classNames from 'classnames';
 import { ComponentStatus } from '../component-status/component-status';
+import { getOverrideColor } from './color-override';
 import { StatusTooltip } from '../component-tooltip';
 import styles from './component-status-resolver.module.scss';
 
@@ -15,8 +16,7 @@ export type ComponentStatusResolverProps = {
 export function ComponentStatusResolver({ status, id, issuesCount = 0 }: ComponentStatusResolverProps) {
   const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
-  const colorOverride = issuesCount > 0 ? 'error' : isModified ? 'modified' : '';
-  console.log('id', id);
+  const colorOverride = getOverrideColor(issuesCount, isModified);
   return (
     <div className={styles.statusLine} data-tip="" data-for={id?.name}>
       {issuesCount > 0 && (
