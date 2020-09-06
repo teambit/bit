@@ -171,9 +171,10 @@ export class ScopeMain implements ComponentFactory {
    * @param id component id
    */
   async get(id: ComponentID): Promise<Component | undefined> {
+    const legacyId = id._legacy;
     let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     // Search with scope name for bare scopes
-    if (!modelComponent && !id.scope) {
+    if (!modelComponent && !legacyId.scope) {
       id = id.changeScope(this.name);
       modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     }
@@ -257,6 +258,7 @@ export class ScopeMain implements ComponentFactory {
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id.toString());
+    if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);
   }
 
