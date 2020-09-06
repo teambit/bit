@@ -2862,6 +2862,30 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/empty-box": {
+        "files": [
+            {
+                "relativePath": "empty-box.module.scss",
+                "test": false,
+                "name": "empty-box.module.scss"
+            },
+            {
+                "relativePath": "empty-box.tsx",
+                "test": false,
+                "name": "empty-box.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/empty-box",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/full-loader": {
         "files": [
             {
