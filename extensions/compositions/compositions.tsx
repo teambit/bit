@@ -14,7 +14,7 @@ import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
+import { EmptyBox } from '@teambit/staged-components.empty-box';
 
 const GET_COMPONENT = gql`
   query($id: String!) {
@@ -104,6 +104,13 @@ type CompositionContentProps = {
 };
 
 function CompositionContent({ component, selected }: CompositionContentProps) {
-  if (component.compositions.length === 0) return <EmptyCompositions />;
+  if (component.compositions.length === 0)
+    return (
+      <EmptyBox
+        title="There are no compositions for this component."
+        linkText="Learn how to create compositions"
+        link="https://bit-new-docs.netlify.app/docs/compositions/develop-in-isolation"
+      />
+    );
   return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
 }
