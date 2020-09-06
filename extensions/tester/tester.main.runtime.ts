@@ -62,6 +62,11 @@ export class TesterMain {
     return results;
   }
 
+  getTestsResults(component: Component) {
+    const entry = component.state.aspects.get(TesterAspect.id);
+    return entry?.data;
+  }
+
   private getOptions(options?: TesterOptions): TesterOptions {
     const defaults = {
       watch: false,

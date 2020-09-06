@@ -34,6 +34,12 @@ export class AspectList {
     return list;
   }
 
+  get(id: string): AspectEntry | undefined {
+    return this.entries.find((entry) => {
+      return entry.legacy.stringId === id;
+    });
+  }
+
   find(id: ComponentID, ignoreVersion = false): AspectEntry | undefined {
     return this.entries.find((aspectEntry) => {
       return id.isEqual(aspectEntry.id, { ignoreVersion });
