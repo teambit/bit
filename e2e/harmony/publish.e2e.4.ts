@@ -73,11 +73,10 @@ describe('publish functionality', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      describe('automatically by PostExport hook', () => {
+      describe('automatically by onPostPersistTag hook', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-          helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.tagAndPersistAllHarmony();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScopeHarmony();
@@ -129,8 +128,7 @@ describe('publish functionality', function () {
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
 
-      helper.command.tagAllComponents();
-      publishOutput = helper.command.publish('ui/button', '--allow-staged');
+      publishOutput = helper.command.tagAllComponents();
       pkgName = `react.${randomStr}.ui.button`;
     });
     after(() => {

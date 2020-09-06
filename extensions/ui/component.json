@@ -3,7 +3,7 @@
     "name": "ui",
     "version": "0.0.10"
   },
-  "propagate": false,
+  "propagate": true,
   "extensions": {
     "teambit.bit/pkg": {
       "packageJson": {
@@ -40,7 +40,7 @@
         "peerDependencies": {
           "react": "^16.13.1",
           "react-dom": "^16.13.1",
-          "bit-bin": "14.8.9-dev.9",
+          "bit-bin": "14.8.9-dev.10",
           "graphql": "^14.3.1"
         }
       }

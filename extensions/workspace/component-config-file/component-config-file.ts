@@ -50,7 +50,7 @@ export class ComponentConfigFile {
     }
     const content = await fs.readFile(filePath, 'utf-8');
     const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
-    const indent = detectIndent(content).indent;
+    const indent = detectIndent(content).amount;
     const newLine = detectNewline(content);
     const componentId = ComponentID.fromObject(parsed.componentId, parsed.defaultScope || outsideDefaultScope);
     const extensions = ExtensionDataList.fromConfigObject(parsed.extensions);

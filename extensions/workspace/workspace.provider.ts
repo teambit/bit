@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
-import { ComponentMain, ComponentID } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
