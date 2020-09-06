@@ -114,7 +114,7 @@ export class Watcher {
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
     logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
     let buildResults;
-    const componentId = new ComponentID(bitId);
+    const componentId = await this.workspace.resolveComponentId(bitId);
     try {
       buildResults = isChange
         ? await this.workspace.triggerOnComponentChange(componentId)
