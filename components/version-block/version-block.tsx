@@ -31,9 +31,10 @@ export function VersionBlock({ version, isLatest, className, timestamp, author, 
           Tests
           <StatusDot status="new" />
         </NavLink> */}
-        <NavLink className={styles.link} href="~compositions">
+        {/* <NavLink className={styles.link} href="~compositions">
           Compositions
-        </NavLink>
+        </NavLink> */}
+        <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
         <H3 className={styles.versionTitle}>v{version}</H3>
