@@ -118,6 +118,11 @@ export class AspectLoaderMain {
     return this._coreAspects;
   }
 
+  isCoreAspect(id: string) {
+    const ids = this.getCoreAspectIds();
+    return ids.includes(id);
+  }
+
   setCoreAspects(aspects: Aspect[]) {
     this._coreAspects = aspects;
     return this;

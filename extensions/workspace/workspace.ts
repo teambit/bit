@@ -1,6 +1,5 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
-import { getAllCoreAspectsIds, isCoreAspect } from '@teambit/bit';
 import { MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import {
@@ -680,7 +679,7 @@ export class Workspace implements ComponentFactory {
       return loadedComps.map((c) => c.state._consumer);
     };
     const ids = components.map((component) => component.id._legacy);
-    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
     return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
@@ -692,7 +691,7 @@ export class Workspace implements ComponentFactory {
     if (!scope) throw new Error('default scope not defined');
     // const newId = id.changeScope(scope);
     // TODO: fix properly ASAP after resolving default scope issue.
-    return isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
+    return this.aspectLoader.isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
   }
 
   private async filterCoreAspects(components: Component[]) {
@@ -709,7 +708,7 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
@@ -744,7 +743,7 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const coreAspectsIds = getAllCoreAspectsIds();
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(ids, coreAspectsIds);
     const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.getMany(componentIds);

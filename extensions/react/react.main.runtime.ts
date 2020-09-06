@@ -16,7 +16,6 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -69,20 +68,25 @@ export class ReactMain {
     return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
+  getComposer() {}
+
   /**
-   * override the TS config of the extension.
+   * override the TS config of the React environment.
    */
   overrideTsConfig(tsconfig: any, env: Environment = {}) {
     env.getCompiler = () => this.reactEnv.getCompiler(tsconfig);
     return env;
   }
 
+  overrideWebpackConfig() {}
+
   createDevServer() {}
 
   /**
    * override the jest configuration.
+   * @param jestConfigPath absolute path to jest.config.json.
    */
-  overrideJestConfig() {}
+  overrideJestConfig(jestConfigPath: string) {}
 
   /**
    * returns doc adjusted specifically for react components.
