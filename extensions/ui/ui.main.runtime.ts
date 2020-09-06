@@ -158,9 +158,6 @@ export class UiMain {
 
     const targetPort = await this.getPort(port);
 
-    // if(onEvent)
-    //   onEvent({event: 'targetPort', targetPort});
-
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {

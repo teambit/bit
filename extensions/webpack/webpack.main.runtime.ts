@@ -11,6 +11,8 @@ import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
 
 export class WebpackMain {
+  onEvent: (event: any) => void;
+
   constructor(
     /**
      * workspace extension.
@@ -29,6 +31,7 @@ export class WebpackMain {
   ) {}
 
   /**
+   * ---> 52
    * create an instance of bit-compliant webpack dev server for a set of components
    * @param components array of components to launch.
    * @param config webpack config. will be merged to the base webpack config as seen at './config'
@@ -50,8 +53,12 @@ export class WebpackMain {
     return new WebpackBundler(context.targets, envConfig, this.logger);
   }
 
+  setOnEvent(onEvent: (event: any) => void) {
+    this.onEvent = onEvent;
+  }
+
   private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
-    return configFactory(rootPath, entry, publicRoot, publicPath);
+    return configFactory(rootPath, entry, publicRoot, publicPath, this.onEvent);
   }
 
   static slots = [];

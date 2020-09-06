@@ -393,6 +393,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
       ],
     },
     plugins: [
+      new HelloWorldPlugin({}),
       new HtmlWebpackPlugin(
         Object.assign(
           {},
@@ -487,3 +488,13 @@ module.exports = function (workspaceDir, entryFiles, title) {
     performance: false,
   };
 };
+
+class HelloWorldPlugin {
+  apply(compiler) {
+    compiler.hooks.done.tap('Hello World Plugin', (
+      stats /* stats is passed as an argument when done hook is tapped.  */
+    ) => {
+      console.log('Hello 44World!');
+    });
+  }
+}

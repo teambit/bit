@@ -42,7 +42,7 @@ export class StartCmd implements Command {
   }
 
   private onEvent(e) {
-    // console.log('-new event-> ', e);
+    console.log('-new event-> ', e.event);
   }
 
   async render(
