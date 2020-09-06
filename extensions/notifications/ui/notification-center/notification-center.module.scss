@@ -39,13 +39,14 @@ $bottom-margin: 8px;
 
   overflow-y: auto;
 
+  > * {
+    flex: none;
+  }
+
   > :not(:first-child) {
     margin-bottom: 4px;
   }
 }
-
-// .dismissAll {
-// }
 
 .timestamp {
   font-size: 0.85em;
