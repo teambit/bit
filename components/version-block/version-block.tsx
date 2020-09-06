@@ -1,6 +1,6 @@
 import { Author, Snap } from '@teambit/component';
 import { H3 } from '@teambit/documenter.ui.heading';
-import { NavLink } from '@teambit/react-router';
+// import { NavLink } from '@teambit/react-router';
 // import { StatusDot } from '@teambit/staged-components.side-bar/component-tree/status-dot';
 import { Contributors } from '@teambit/staged-components.workspace-sections.contributors';
 import { Labels } from '@teambit/staged-components.workspace-sections.version-label';

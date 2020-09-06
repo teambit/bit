@@ -5,6 +5,7 @@ import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
+import { EmptyBox } from '@teambit/staged-components.empty-box';
 import { gql } from 'apollo-boost';
 import head from 'lodash.head';
 import R from 'ramda';
@@ -14,7 +15,6 @@ import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import { EmptyBox } from '@teambit/staged-components.empty-box';
 
 const GET_COMPONENT = gql`
   query($id: String!) {
