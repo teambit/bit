@@ -35,6 +35,11 @@ export class ReactRouterUI {
     return this;
   }
 
+  // TODO!
+  push = (path: string) => {
+    throw new Error('not implemented');
+  };
+
   static slots = [Slot.withType<RouteProps>()];
 
   static runtime = UIRuntime;

@@ -1,0 +1,27 @@
+.commandBar {
+  display: none;
+  flex-direction: column;
+
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, 0);
+
+  width: 521px;
+  max-width: 90%;
+
+  &.visible {
+    display: flex;
+  }
+}
+
+.commandBar {
+  padding: 8px;
+  z-index: 8000;
+}
+
+.input {
+  &:not(:last-child) {
+    margin-bottom: 8px;
+  }
+}

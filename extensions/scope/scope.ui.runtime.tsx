@@ -42,6 +42,11 @@ export class ScopeUI {
     return this;
   }
 
+  listComponents() {
+    throw new Error('not implemented!');
+    return undefined;
+  }
+
   private registerExplicitRoutes() {
     this.routeSlot.register({
       path: this.componentUi.routePath,

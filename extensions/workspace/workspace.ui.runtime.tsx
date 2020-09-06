@@ -66,6 +66,12 @@ export class WorkspaceUI {
     return this;
   }
 
+  // @TODO
+  listComponents() {
+    throw new Error('not implemented!');
+    return [];
+  }
+
   get root(): UIRoot {
     return {
       routes: [

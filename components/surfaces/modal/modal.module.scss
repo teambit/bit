@@ -1,0 +1,6 @@
+$modalZIndex: 8000;
+
+.modal {
+  position: fixed;
+  z-index: $modalZIndex;
+}

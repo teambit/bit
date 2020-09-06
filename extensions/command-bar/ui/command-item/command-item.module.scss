@@ -1,0 +1,22 @@
+.commandBarOption {
+  padding: 8px;
+  transition: all 180ms;
+
+  &:hover {
+    background-color: var(--bg-topping-highlight);
+  }
+
+  &.active,
+  &.active:hover {
+    background-color: var(--muted-color);
+  }
+}
+
+.commandKeys {
+  float: right;
+  font-size: 0.76em;
+}
+
+.commandDescription {
+  font-size: 0.85em;
+}

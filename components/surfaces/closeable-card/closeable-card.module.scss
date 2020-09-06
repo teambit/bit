@@ -1,0 +1,17 @@
+.closable {
+  display: none;
+
+  &.visible {
+    display: block;
+  }
+}
+
+.closer {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+
+  background: none;
+  border: none;
+  padding: 4px;
+}

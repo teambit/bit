@@ -364,6 +364,35 @@
         "exported": false,
         "lanes": []
     },
+    "cheat-sheet": {
+        "files": [
+            {
+                "relativePath": "cheat-sheet.aspect.ts",
+                "test": false,
+                "name": "cheat-sheet.aspect.ts"
+            },
+            {
+                "relativePath": "cheat-sheet.commands.tsx",
+                "test": false,
+                "name": "cheat-sheet.commands.tsx"
+            },
+            {
+                "relativePath": "cheat-sheet.ui.tsx",
+                "test": false,
+                "name": "cheat-sheet.ui.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/cheat-sheet/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "cli": {
         "files": [
             {
@@ -424,6 +453,59 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/cli",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar": {
+        "files": [
+            {
+                "relativePath": "command-bar.aspect.ts",
+                "test": false,
+                "name": "command-bar.aspect.ts"
+            },
+            {
+                "relativePath": "command-bar.commands.ts",
+                "test": false,
+                "name": "command-bar.commands.ts"
+            },
+            {
+                "relativePath": "command-bar.ui.runtime.tsx",
+                "test": false,
+                "name": "command-bar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "commands": {
+        "files": [
+            {
+                "relativePath": "commands.aspect.ts",
+                "test": false,
+                "name": "commands.aspect.ts"
+            },
+            {
+                "relativePath": "commands.ui.runtime.ts",
+                "test": false,
+                "name": "commands.ui.runtime.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/commands/aspect",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -1314,6 +1396,35 @@
         "exported": false,
         "lanes": []
     },
+    "elements/keycap": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "key-characters.ts",
+                "test": false,
+                "name": "key-characters.ts"
+            },
+            {
+                "relativePath": "key.module.scss",
+                "test": false,
+                "name": "key.module.scss"
+            },
+            {
+                "relativePath": "keycap.tsx",
+                "test": false,
+                "name": "keycap.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/keycap",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "environments": {
         "files": [
             {
@@ -1758,6 +1869,25 @@
         "exported": false,
         "lanes": []
     },
+    "hooks/input/use-bind-key": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "use-bind-key.tsx",
+                "test": false,
+                "name": "use-bind-key.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-bind-key",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "insights": {
         "files": [
             {
@@ -1936,6 +2066,35 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/jest",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "keyboard-shortcuts": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "keyboard-shortcuts.aspect.ts",
+                "test": false,
+                "name": "keyboard-shortcuts.aspect.ts"
+            },
+            {
+                "relativePath": "keyboard-shortcuts.ui.ts",
+                "test": false,
+                "name": "keyboard-shortcuts.ui.ts"
+            },
+            {
+                "relativePath": "shortcuts-presets.ts",
+                "test": false,
+                "name": "shortcuts-presets.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/keyboard-shortcuts/aspect",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3634,6 +3793,49 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/stencil",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "surfaces/closeable-card": {
+        "files": [
+            {
+                "relativePath": "closeable-card.module.scss",
+                "test": false,
+                "name": "closeable-card.module.scss"
+            },
+            {
+                "relativePath": "closeable-card.tsx",
+                "test": false,
+                "name": "closeable-card.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/surfaces/closeable-card",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "surfaces/modal": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "modal.module.scss",
+                "test": false,
+                "name": "modal.module.scss"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/surfaces/modal",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

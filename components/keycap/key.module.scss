@@ -1,0 +1,19 @@
+.hotkeys {
+  white-space: nowrap;
+  > :not(:last-child) {
+    margin-right: 0.38em;
+  }
+}
+
+.kbd {
+  display: inline-block;
+  min-width: 1em;
+  line-height: 1;
+  padding: 0.38em 0.38em;
+  border-radius: 0.23em;
+  text-align: center;
+  vertical-align: middle;
+
+  background: var(--bg-topping-highlight);
+  box-shadow: var(--shadow-raised-low);
+}
