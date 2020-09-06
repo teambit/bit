@@ -1,7 +1,7 @@
 .statusLine {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
+  align-items: baseline;
   font-size: var(--p-xxs, 12px);
   .modified {
     color: #ff8b00 !important;
@@ -12,6 +12,8 @@
 }
 
 .errorBlock {
-  font-size: var(--p-xxs, 12px);
   margin-right: 2px;
+  > span {
+    font-size: 13px;
+  }
 }

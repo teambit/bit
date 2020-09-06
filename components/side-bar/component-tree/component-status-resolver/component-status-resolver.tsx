@@ -16,14 +16,19 @@ export function ComponentStatusResolver({ status, id, issuesCount = 0 }: Compone
   const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
   const colorOverride = issuesCount > 0 ? 'error' : isModified ? 'modified' : '';
+  console.log('id', id);
   return (
-    <div className={styles.statusLine}>
-      {issuesCount > 0 && <div className={classNames(styles.errorBlock, styles.error)}>{issuesCount},</div>}
+    <div className={styles.statusLine} data-tip="" data-for={id?.name}>
+      {issuesCount > 0 && (
+        <div className={classNames(styles.errorBlock, styles.error)}>
+          <span>{issuesCount}</span>,
+        </div>
+      )}
       {status.isNew && <ComponentStatus className={styles[colorOverride]} status="new" />}
       {isModified && <ComponentStatus className={styles[colorOverride]} status="modified" />}
       {isModified && status.isStaged && <span className={styles[colorOverride]}>,</span>}
       {status.isStaged && <ComponentStatus className={styles[colorOverride]} status="staged" />}
-      <StatusTooltip status={status} name={id?.name} />
+      <StatusTooltip status={status} name={id?.name} issuesCount={issuesCount} />
     </div>
   );
 }
