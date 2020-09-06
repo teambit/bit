@@ -86,7 +86,7 @@ export class ReactMain {
    * override the jest configuration.
    * @param jestConfigPath absolute path to jest.config.json.
    */
-  overrideJestConfig(jestConfigPath: string) {}
+  // overrideJestConfig(jestConfigPath: string) {}
 
   /**
    * returns doc adjusted specifically for react components.
