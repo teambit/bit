@@ -32,6 +32,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.path;
   }
 
+  get configFile() {
+    return 'workspace.json';
+  }
+
   async resolveAspects(runtimeName: string) {
     return this.workspace.resolveAspects(runtimeName);
   }

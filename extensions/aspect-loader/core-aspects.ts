@@ -32,7 +32,7 @@ export function getCoreAspectPackageName(id: string): string {
 }
 
 export async function getAspectDef(aspectName: string, runtime: string) {
-  const dirPath = getAspectDir(aspectName);
+  const dirPath = getAspectDistDir(aspectName);
 
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;

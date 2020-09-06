@@ -63,7 +63,7 @@ export class ReactMain {
   readonly env = this.reactEnv;
 
   /**
-   *  return extiontion icon
+   *  return aspect icon
    */
   icon() {
     return 'https://static.bit.dev/extensions-icons/react.svg';
