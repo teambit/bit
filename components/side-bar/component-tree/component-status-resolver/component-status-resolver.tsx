@@ -24,6 +24,8 @@ export function ComponentStatusResolver({ status, id, issuesCount = 0 }: Compone
           <span>{issuesCount}</span>,
         </div>
       )}
+      //TODO: @odedre need to change Component Status to get status object and then render the ComponentStatus to avoid
+      a lot ifs
       {status.isNew && <ComponentStatus className={styles[colorOverride]} status="new" />}
       {isModified && <ComponentStatus className={styles[colorOverride]} status="modified" />}
       {isModified && status.isStaged && <span className={styles[colorOverride]}>,</span>}
