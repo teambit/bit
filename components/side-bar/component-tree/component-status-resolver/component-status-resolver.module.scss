@@ -2,7 +2,16 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  font-size: var(--p-xxs, 12px);
   .modified {
     color: #ff8b00 !important;
   }
+  .error {
+    color: #df083e !important;
+  }
+}
+
+.errorBlock {
+  font-size: var(--p-xxs, 12px);
+  margin-right: 2px;
 }
