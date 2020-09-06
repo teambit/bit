@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentID } from '@teambit/component';
+import { Component, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';

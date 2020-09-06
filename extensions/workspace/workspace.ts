@@ -770,13 +770,16 @@ export class Workspace implements ComponentFactory {
       })
     );
 
-    const coreAspectsInRuntime = coreAspectDefs.filter((coreAspect) => coreAspect.runtimePath);
+    // due to lack of workspace and scope runtimes. TODO: fix after adding them.
+    const workspaceAspects = coreAspectDefs.filter((coreAspect) => {
+      return coreAspect.runtimePath;
+    });
 
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(coreAspectsInRuntime);
+    return aspectDefs.concat(workspaceAspects);
   }
 
   /**

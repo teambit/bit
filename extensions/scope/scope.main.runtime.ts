@@ -163,7 +163,9 @@ export class ScopeMain implements ComponentFactory {
       };
     });
 
-    return aspectDefs.concat(await this.aspectLoader.getCoreAspectDefs(runtimeName));
+    const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
+
+    return aspectDefs.concat(coreAspects);
   }
 
   /**

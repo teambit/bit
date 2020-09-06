@@ -1,4 +1,3 @@
-import { ComponentID } from '@teambit/component';
 import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';

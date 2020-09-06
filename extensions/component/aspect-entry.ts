@@ -38,8 +38,4 @@ export class AspectEntry {
   clone(): AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
   }
-
-  static fromConfigEntry(id: ComponentID, config: Record<string, any>) {
-    return new AspectEntry(id, ExtensionDataEntry.fromConfigEntry(id._legacy, config));
-  }
 }

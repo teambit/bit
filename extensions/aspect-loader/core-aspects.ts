@@ -38,6 +38,7 @@ export async function getAspectDef(aspectName: string, runtime: string) {
   const runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;
 
   return {
+    id: aspectName,
     aspectPath: join(dirPath, '..'),
     runtimePath: runtimeFile ? resolve(`${dirPath}/${runtimeFile}`) : null,
   };

@@ -859,6 +859,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processCoreAspects(originFile: PathLinuxRelative) {
+    const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     let usedCoreAspects: string[] = [];
     const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
@@ -878,7 +879,18 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
       return !matchingCoreAspectPackageName;
     });
+
+    const filteredAspects = bits?.filter((packageName) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName.name);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+
     this.tree[originFile].unidentifiedPackages = filtered;
+    // TODO: @david we need to understand how to make sure core aspects are ignored here.
+    this.tree[originFile].bits = filteredAspects;
     usedCoreAspects = R.uniq(usedCoreAspects);
     this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
   }

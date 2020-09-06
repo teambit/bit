@@ -32,7 +32,9 @@ export class ScopeUI {
      * menu slot
      */
     private menuSlot: RouteSlot,
-    private sidebar: SidebarUI
+    private sidebar: SidebarUI,
+
+    private sidebarSlot: SidebarSlot
   ) {
     this.registerExplicitRoutes();
   }
@@ -57,7 +59,9 @@ export class ScopeUI {
     });
   }
 
-  get root(): UIRoot {
+  uiRoot(): UIRoot {
+    this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
+
     return {
       routes: [
         {
@@ -79,9 +83,8 @@ export class ScopeUI {
     config,
     [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarSlot]
   ) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
-    sidebar.registerDrawer(new ComponentsDrawer(sidebarSlot));
-    ui.registerRoot(scopeUi.root);
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
+    ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
 
     return scopeUi;
   }

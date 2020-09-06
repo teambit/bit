@@ -66,7 +66,9 @@ export class WorkspaceUI {
     return this;
   }
 
-  get root(): UIRoot {
+  uiRoot(): UIRoot {
+    this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
+
     return {
       routes: [
         {
@@ -90,10 +92,9 @@ export class WorkspaceUI {
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
-    // sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
 
     const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
-    ui.registerRoot(workspaceUI.root);
+    ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
 
     return workspaceUI;
   }
