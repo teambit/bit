@@ -2,14 +2,24 @@ import React from 'react';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section } from '@teambit/documenter.ui.section';
+import { List } from '@teambit/documenter.ui.list';
+import { Paragraph } from '@teambit/documenter.ui.paragraph';
+import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
+import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
+import { Subtitle } from '@teambit/documenter.ui.sub-title';
 
 export const abstract = 'A dependency manager for components.';
-
+const listItems = ['sdf', 'asdfa'];
 export default () => {
   return (
     <ThemeContext>
       <>
         <Section>
+          <CodeSnippet>kajshdfkjhasdkf</CodeSnippet>
+          <Paragraph>sdhgfjhsgdjfhs</Paragraph>
+          <HighlightedText>jadshfkjad</HighlightedText>
+          <Subtitle>jkasdhfkjhaksdf</Subtitle>
+          <List>{listItems}</List>
           <LinkedHeading link="introduction">Introduction</LinkedHeading>
           <p>The Dependency Resolver determines the dependency graph of each component tracked by Bit.</p>
           <ol>
