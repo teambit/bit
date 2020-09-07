@@ -2,7 +2,6 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import semver from 'semver';
-import { isCoreAspect } from '@teambit/bit';
 
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -866,23 +865,27 @@ either, use the ignore file syntax or change the require statement to have a mod
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   processCoreAspects(originFile: PathLinuxRelative) {
-    // @todo: remove this hack once extensions are exported
-    const idWithHardCodedTeamBitScope = this.component.id.hasScope()
-      ? this.component.id.toStringWithoutVersion()
-      : `teambit.bit/${this.component.id.toStringWithoutScopeAndVersion()}`;
-    if (isCoreAspect(idWithHardCodedTeamBitScope)) {
-      return;
-    }
-    const bits = this.tree[originFile].bits;
-    const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    const missingBits = this.tree[originFile]?.missing?.bits;
-
-    let usedCoreAspects: string[] = [];
     const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
     if (!coreAspects) {
       return;
     }
     const coreAspectsPackages = Object.keys(coreAspects);
+    const coreAspectsComponentsStr = Object.values(coreAspects);
+    const isCoreAspect = (idStr: string) => coreAspectsComponentsStr.includes(idStr);
+
+    // @todo: remove this hack once extensions are exported
+    const idWithHardCodedTeamBitScope = this.component.id.hasScope()
+    ? this.component.id.toStringWithoutVersion()
+    : `teambit.bit/${this.component.id.toStringWithoutScopeAndVersion()}`;
+    if (isCoreAspect(idWithHardCodedTeamBitScope)) {
+      return;
+    }
+
+    const bits = this.tree[originFile].bits;
+    const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
+    const missingBits = this.tree[originFile]?.missing?.bits;
+    let usedCoreAspects: string[] = [];
+
     const findMatchingCoreAspect = (packageName: string) => {
       return coreAspectsPackages.find((coreAspectName) => {
         return packageName.includes(coreAspectName);
