@@ -16,6 +16,10 @@ export class ScopeUIRoot implements UIRoot {
     return this.scope.path;
   }
 
+  get configFile(): string {
+    return 'scope.json';
+  }
+
   resolveAspects(runtime: string) {
     return this.scope.resolveAspects(runtime);
   }

@@ -18,6 +18,11 @@ export interface UIRoot extends ComponentDir {
   path: string;
 
   /**
+   * name of the UI root config file.
+   */
+  configFile: string;
+
+  /**
    * resolve all aspects in the UI root.
    */
   resolveAspects(runtimeName: string): Promise<AspectDefinition[]>;

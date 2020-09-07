@@ -64,8 +64,9 @@ export class ReactEnv implements Environment {
   /**
    * returns a component tester.
    */
-  getTester(): Tester {
-    return this.jest.createTester(require.resolve('./jest/jest.config'));
+  getTester(jestConfigPath: string): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.jest.createTester(config);
   }
 
   /**

@@ -4,7 +4,6 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
@@ -18,6 +17,8 @@ export type EnvsConfig = {
 };
 
 export type EnvOptions = {};
+
+export type EnvTransformer = (env: Environment) => Environment;
 
 export type EnvDefinition = {
   id: string;
@@ -79,6 +80,29 @@ export class EnvsMain {
     };
   }
 
+  /**
+   * compose a new environment from a list of environment transformers.
+   */
+  compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
+    envTransformers.forEach((transformer) => {
+      transformer(targetEnv);
+    });
+
+    return targetEnv;
+  }
+
+  /**
+   * override members of an environment and return an env transformer.
+   */
+  override(targetEnv: Environment = {}): EnvTransformer {
+    return (env: Environment) => {
+      return this.merge(env, targetEnv);
+    };
+  }
+
+  /**
+   * get the env of the given component.
+   */
   getEnv(component: Component): EnvDefinition {
     const env = component.state.aspects.entries.find((aspectEntry) => {
       const id = aspectEntry.id.toString();
@@ -121,7 +145,7 @@ export class EnvsMain {
     const instance = this.context.get<any>(envDef.id);
     const iconFn = instance.icon;
 
-    const icon = iconFn ? iconFn() : defaultIcon;
+    const icon = iconFn ? iconFn.apply(instance) : defaultIcon;
     return {
       id: envDef.id,
       icon,
@@ -139,7 +163,7 @@ export class EnvsMain {
   /**
    * compose two environments into one.
    */
-  compose(targetEnv: Environment, sourceEnv: Environment): Environment {
+  merge(targetEnv: Environment, sourceEnv: Environment): Environment {
     const allNames = new Set<string>();
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {

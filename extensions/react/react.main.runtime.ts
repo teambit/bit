@@ -1,8 +1,10 @@
+import { Configuration } from 'webpack';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
+import { BuildTask } from '@teambit/builder';
 import { Component } from '@teambit/component';
-import { Environment, EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/environments';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';
@@ -16,6 +18,8 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { DevServerContext } from '@teambit/bundler';
+import { TsConfigSourceFile } from 'typescript';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -56,7 +60,9 @@ export class ReactMain {
     /**
      * an instance of the React env.
      */
-    readonly reactEnv: ReactEnv
+    readonly reactEnv: ReactEnv,
+
+    private envs: EnvsMain
   ) {}
 
   readonly env = this.reactEnv;
@@ -68,25 +74,62 @@ export class ReactMain {
     return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
-  getComposer() {}
-
   /**
    * override the TS config of the React environment.
    */
-  overrideTsConfig(tsconfig: any, env: Environment = {}) {
-    env.getCompiler = () => this.reactEnv.getCompiler(tsconfig);
-    return env;
+  overrideTsConfig(tsconfig: TsConfigSourceFile) {
+    return this.envs.override({
+      getCompiler: () => this.reactEnv.getCompiler(tsconfig),
+    });
   }
 
-  overrideWebpackConfig() {}
+  /**
+   * override the dev server webpack config.
+   */
+  overrideDevServerConfig(config: Configuration) {
+    return this.envs.override({
+      getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, config),
+    });
+  }
 
-  createDevServer() {}
+  /**
+   * create a new composition of the react environment.
+   */
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.reactEnv), transformers);
+  }
+
+  /**
+   * override the preview webpack config.
+   */
+  overridePreviewConfig() {
+    return this.envs.override({
+      getBundler: () => this.reactEnv.getBundler(context),
+    });
+  }
 
   /**
    * override the jest configuration.
    * @param jestConfigPath absolute path to jest.config.json.
    */
-  // overrideJestConfig(jestConfigPath: string) {}
+  overrideJestConfig(jestConfigPath: string) {
+    return this.envs.override({
+      getTester: () => this.reactEnv.getTester(jestConfigPath),
+    });
+  }
+
+  /**
+   * override the build pipeline of the component environment.
+   */
+  overrideBuildPipe(tasks: BuildTask[]) {
+    return this.envs.override({
+      getPipe: () => tasks,
+    });
+  }
+
+  overrideDependencies() {}
+
+  overridePackageJsonProps() {}
 
   /**
    * returns doc adjusted specifically for react components.
@@ -124,7 +167,7 @@ export class ReactMain {
     config: ReactMainConfig
   ) {
     const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
-    const react = new ReactMain(reactEnv);
+    const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     return react;
