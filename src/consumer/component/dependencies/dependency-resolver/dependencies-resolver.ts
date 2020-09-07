@@ -875,6 +875,8 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
+    const missingBits = this.tree[originFile]?.missing?.bits;
+
     let usedCoreAspects: string[] = [];
     const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
     if (!coreAspects) {
@@ -886,7 +888,21 @@ either, use the ignore file syntax or change the require statement to have a mod
         return packageName.includes(coreAspectName);
       });
     };
-    const filtered = unidentifiedPackages?.filter((packageName) => {
+    const unidentifiedPackagesFiltered = unidentifiedPackages?.filter((packageName) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+    const bitsFiltered = bits?.filter((packageInfo) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageInfo.name);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+    const missingBitsFiltered = missingBits?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
       if (matchingCoreAspectPackageName) {
         usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
@@ -894,22 +910,13 @@ either, use the ignore file syntax or change the require statement to have a mod
       return !matchingCoreAspectPackageName;
     });
 
-    const filteredAspects = bits?.filter((packageName) => {
-      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName.name);
-      if (matchingCoreAspectPackageName) {
-        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
-      }
-      return !matchingCoreAspectPackageName;
-    });
-
-    if (this.tree[originFile]?.missing?.bits) {
+    if (missingBits) {
       // @ts-ignore not clear why this error happens, it is verified that missing.bits exist
-      this.tree[originFile].missing.bits = R.difference(this.tree[originFile]?.missing?.bits, coreAspectsPackages);
+      this.tree[originFile].missing.bits = missingBitsFiltered;
     }
 
-    this.tree[originFile].unidentifiedPackages = filtered;
-
-    this.tree[originFile].bits = filteredAspects;
+    this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
+    this.tree[originFile].bits = bitsFiltered;
     usedCoreAspects = R.uniq(usedCoreAspects);
     this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
   }
