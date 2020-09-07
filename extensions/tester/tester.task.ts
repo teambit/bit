@@ -1,12 +1,8 @@
 import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
-import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import { join } from 'path';
 
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
-
-// move else where!!!
-const CAPSULES_BASE_DIR = join(CACHE_ROOT, 'capsules');
 
 /**
  * tester build task. Allows to test components during component build.
@@ -33,10 +29,10 @@ export class TesterTask implements BuildTask {
     const testerContext = Object.assign(context, {
       release: true,
       specFiles: testMatch,
-      rootPath: CAPSULES_BASE_DIR,
+      rootPath: context.capsuleGraph.capsulesRootDir,
     });
 
-    // @todo: Ran to fix.
+    // @todo: @guy to fix. handle components without tests, define tests results and implement from jest.
     // @ts-ignore
     return tester.test(testerContext);
   }

@@ -9,20 +9,20 @@ import React from 'react';
 import styles from './scope-details.module.scss';
 
 type ScopeDetailsProps = {
-  org: string;
+  owner: string;
   scopeName: string;
   visibility: string;
   license: string;
-  subtitle: string;
+  description: string;
   contributors: AccountObj[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ScopeDetails({
-  org,
+  owner,
   scopeName,
   visibility,
   license,
-  subtitle,
+  description,
   contributors,
   className,
   ...rest
@@ -30,10 +30,10 @@ export function ScopeDetails({
   return (
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
-        <ScopeTitle org={org} scopeName={scopeName} />
+        <ScopeTitle owner={owner} scopeName={scopeName} />
         <ScopeLabels visibility={visibility} license={license} />
       </div>
-      <Subtitle>{subtitle}</Subtitle>
+      <Subtitle>{description}</Subtitle>
       <div className={styles.contributors}>
         {contributors.map((user, index) => {
           return <UserAvatar key={index} size={32} account={user} className={styles.avatar} />;
@@ -41,7 +41,7 @@ export function ScopeDetails({
       </div>
       <ConsumableLink
         title="Export to this scope"
-        link={`bit export ${org}.${scopeName}`}
+        link={`bit export ${owner}.${scopeName}`}
         className={styles.copyLink}
       />
     </div>

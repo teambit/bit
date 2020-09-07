@@ -167,14 +167,7 @@ export default class BitId {
 
     const getScopeAndName = () => {
       if (hasScope) {
-        const delimiterIndex = id.indexOf('/');
-        if (delimiterIndex < 0) throw new InvalidBitId(id);
-        const scope = id.substring(0, delimiterIndex);
-        const name = id.substring(delimiterIndex + 1);
-        return {
-          scope,
-          name,
-        };
+        return BitId.getScopeAndName(id);
       }
 
       return {
@@ -194,6 +187,17 @@ export default class BitId {
       name,
       version,
     });
+  }
+
+  static getScopeAndName(id: string) {
+    const delimiterIndex = id.indexOf('/');
+    if (delimiterIndex < 0) throw new InvalidBitId(id);
+    const scope = id.substring(0, delimiterIndex);
+    const name = id.substring(delimiterIndex + 1);
+    return {
+      scope,
+      name,
+    };
   }
 
   static parseObsolete(id: BitIdStr, version: string = LATEST_BIT_VERSION): BitId {

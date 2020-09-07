@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import bluebird from 'bluebird';
 import R from 'ramda';
 
 import { Consumer } from '..';
@@ -41,7 +41,7 @@ export class FlattenedDependencyLoader {
     });
   }
   async loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
-    return pMapSeries(dependenciesIds, (dep: BitId) => this.loadDependency(dep));
+    return bluebird.mapSeries(dependenciesIds, (dep: BitId) => this.loadDependency(dep));
   }
 
   async loadDependency(dependencyId: BitId): Promise<Component> {

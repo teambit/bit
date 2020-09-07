@@ -5,6 +5,7 @@ import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
+import { EmptyBox } from '@teambit/staged-components.empty-box';
 import { gql } from 'apollo-boost';
 import head from 'lodash.head';
 import R from 'ramda';
@@ -14,7 +15,6 @@ import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import { EmptyCompositions } from './ui/empty-compositions/empty-compositions';
 
 const GET_COMPONENT = gql`
   query($id: String!) {
@@ -39,7 +39,7 @@ export function Compositions() {
   // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.legacyComponentId.name },
+    variables: { id: component.id._legacy.name },
   });
   const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
@@ -104,6 +104,13 @@ type CompositionContentProps = {
 };
 
 function CompositionContent({ component, selected }: CompositionContentProps) {
-  if (component.compositions.length === 0) return <EmptyCompositions />;
+  if (component.compositions.length === 0)
+    return (
+      <EmptyBox
+        title="There are no compositions for this component."
+        linkText="Learn how to create compositions"
+        link="https://bit-new-docs.netlify.app/docs/compositions/develop-in-isolation"
+      />
+    );
   return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
 }

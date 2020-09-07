@@ -158,6 +158,16 @@ export default class CommandHelper {
   softTag(options = '') {
     return this.runCmd(`bit tag ${options}`);
   }
+  tagAndPersistAllHarmony(options = '', version = '', assertTagged = true) {
+    let result = this.runCmd(`bit tag -a ${version} ${options}`);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    result = this.runCmd('bit tag --persist');
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  hardTag(options = '') {
+    return this.runCmd(`bit tag --persist ${options}`);
+  }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
   }
@@ -427,6 +437,10 @@ export default class CommandHelper {
   }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
+  }
+  install(options?: Record<string, any>) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit install ${parsedOpts}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);

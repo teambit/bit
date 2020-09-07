@@ -7,7 +7,13 @@ require('v8-compile-cache');
 
 import './hook-require';
 
-import { getAspectDir, AspectLoaderMain } from '@teambit/aspect-loader';
+import {
+  getAspectDir,
+  getAspectDistDir,
+  AspectLoaderMain,
+  getCoreAspectPackageName,
+  getCoreAspectName,
+} from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
@@ -71,7 +77,7 @@ async function getConfig() {
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   if (!id) throw new Error('could not retrieve aspect id');
-  const dirPath = getAspectDir(id);
+  const dirPath = getAspectDistDir(id);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
@@ -82,10 +88,12 @@ export async function requireAspects(aspect: Extension, runtime: RuntimeDefiniti
 function getMainAspect() {
   const mainAspectDir = getAspectDir(BitAspect.id);
   let version: string | undefined;
+  const packageName = getCoreAspectPackageName(BitAspect.id);
 
   try {
     // eslint-disable-next-line global-require
-    version = require(`${mainAspectDir}/package.json`);
+    const packageJson = require(`${mainAspectDir}/package.json`);
+    version = packageJson.version;
   } catch (err) {
     version = undefined;
   }
@@ -93,7 +101,10 @@ function getMainAspect() {
   return {
     path: mainAspectDir,
     version,
-    aspect: manifestsMap[BitAspect.id],
+    packageName,
+    aspect: BitAspect,
+    name: getCoreAspectName(BitAspect.id),
+    id: BitAspect.id,
   };
 }
 

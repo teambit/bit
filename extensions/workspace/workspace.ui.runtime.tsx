@@ -1,12 +1,12 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
-import { ComponentTreeAspect, ComponentTreeUI } from '@teambit/component-tree';
-import { Slot } from '@teambit/harmony';
+import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/react-router';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-
+import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
@@ -14,6 +14,8 @@ import { WorkspaceAspect } from './workspace.aspect';
 export type MenuItem = {
   label: JSX.Element | string | null;
 };
+
+export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
 export class WorkspaceUI {
   constructor(
@@ -32,7 +34,9 @@ export class WorkspaceUI {
      */
     private menuSlot: RouteSlot,
 
-    private sidebar: SidebarUI
+    private sidebar: SidebarUI,
+
+    private sidebarSlot: SidebarWidgetSlot
   ) {
     this.registerExplicitRoutes();
   }
@@ -57,7 +61,14 @@ export class WorkspaceUI {
     });
   }
 
-  get root(): UIRoot {
+  registerSidebarWidget(componentTreeNode: ComponentTreeNode) {
+    this.sidebarSlot.register(componentTreeNode);
+    return this;
+  }
+
+  uiRoot(): UIRoot {
+    this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
+
     return {
       routes: [
         {
@@ -72,16 +83,18 @@ export class WorkspaceUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>(), Slot.withType<ComponentTreeNode>()];
 
   static async provider(
     [ui, componentUi, sidebar, componentTree]: [UiUI, ComponentUI, SidebarUI, ComponentTreeUI],
     config,
-    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+    [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarWidgetSlot]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar);
-    ui.registerRoot(workspaceUI.root);
+    sidebarSlot.register(new ComponentTreeWidget());
+
+    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
+    ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
 
     return workspaceUI;
   }

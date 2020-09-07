@@ -11,6 +11,8 @@ export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
 in Harmony workspace, without "--persist" flag, it does "soft-tag", which only keeps note of the changes to be made
+bit tag --persist, tags all the changes recorded by the previous soft-tag, this normally executed by the CI.
+bit tag [id] --persist or bit tag --all --persist, executes the persist on the given id or all.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
@@ -149,6 +151,32 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
         .join('\n');
     };
 
+    const publishOutput = () => {
+      const { publishResults } = results;
+      if (!publishResults) return '';
+      if (publishResults.exception) return chalk.red(publishResults.exception.message);
+      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
+      const failedCompsStr = publishResults.failedComponents
+        .map((failed) => {
+          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
+        })
+        .join('\n\n');
+      const successCompsStr = publishResults.publishedComponents
+        .map((success) => {
+          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
+        })
+        .join('\n');
+      const failedTitle = `\n\n${chalk.red(
+        'failed publishing the following components, please run "bit publish" to re-try\n'
+      )}`;
+      const successTitle = `\n\n${chalk.green(
+        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
+      )}`;
+      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
+      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
+      return successOutput + failedOutput;
+    };
+
     const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
     const outputIfExists = (label, explanation, components) => {
       if (!components.length) return '';
@@ -174,6 +202,7 @@ in Harmony workspace, without "--persist" flag, it does "soft-tag", which only k
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
+      publishOutput() +
       softTagClarification
     );
   }

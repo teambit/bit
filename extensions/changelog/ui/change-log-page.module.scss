@@ -1,6 +1,12 @@
 .changeLogPage {
-  padding: 80px;
+  padding: 50px 40px 0 40px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
   overflow-y: scroll;
+  @media screen and (max-width: 768px) {
+    width: unset;
+  }
   .title {
     margin-bottom: 25px;
     font-size: var(--h-xs);
