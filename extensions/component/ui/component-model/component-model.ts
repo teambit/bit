@@ -65,7 +65,7 @@ export class ComponentModel {
     /**
      * issues of component.
      */
-    readonly IssuesCount?: number,
+    readonly issuesCount?: number,
     /**
      * status of component.
      */
