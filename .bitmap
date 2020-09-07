@@ -122,6 +122,16 @@
                 "name": "hook-require.ts"
             },
             {
+                "relativePath": "hooks/hook.ts",
+                "test": false,
+                "name": "hook.ts"
+            },
+            {
+                "relativePath": "hooks/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2637,6 +2647,11 @@
     },
     "scope": {
         "files": [
+            {
+                "relativePath": "components.drawer.tsx",
+                "test": false,
+                "name": "components.drawer.tsx"
+            },
             {
                 "relativePath": "exceptions/component-not-found.ts",
                 "test": false,

@@ -20,6 +20,7 @@ export class JestTester implements Tester {
     const withEnv = Object.assign(jestConfigWithSpecs, config);
     // :TODO he we should match results to components and format them accordingly. (e.g. const results = runCLI(...))
     await runCLI(withEnv, [this.jestConfig]);
+
     return {
       total: 50,
     };

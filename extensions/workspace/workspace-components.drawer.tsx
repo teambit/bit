@@ -10,7 +10,7 @@ export class WorkspaceComponentsDrawer implements Drawer {
   // TODO - check if this is still used @oded/@uri
   name = 'COMPONENTS';
 
-  component = () => {
+  render = () => {
     const workspace = useWorkspace();
 
     if (!workspace) return <FullLoader />;

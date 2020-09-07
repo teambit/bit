@@ -122,6 +122,7 @@
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
+        "parse-package-name": "0.1.0",
         "postcss": "7.0.32",
         "postcss-flexbugs-fixes": "^4.2.1",
         "postcss-loader": "^3.0.0",

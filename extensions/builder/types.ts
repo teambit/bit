@@ -21,6 +21,7 @@ export type ArtifactProps = {
 
 export type ComponentResult = {
   id: ComponentID;
+  // TODO: change to type serializable
   data?: any;
   errors: Array<Error | string>;
   warning?: string[];

@@ -10,10 +10,6 @@ export class AspectEntry {
     return this.legacyEntry;
   }
 
-  get stringId(): string {
-    return this.id.toString();
-  }
-
   get isLegacy(): boolean {
     if (this.legacy.config?.__legacy) return true;
     return false;
@@ -41,9 +37,5 @@ export class AspectEntry {
 
   clone(): AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
-  }
-
-  static fromConfigEntry(id: ComponentID, config: Record<string, any>) {
-    return new AspectEntry(id, ExtensionDataEntry.fromConfigEntry(id._legacy, config));
   }
 }

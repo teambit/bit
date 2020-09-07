@@ -14,5 +14,5 @@ export type Drawer = {
   /**
    * component to render within the drawer.
    */
-  component: ComponentType;
+  render: ComponentType;
 };
