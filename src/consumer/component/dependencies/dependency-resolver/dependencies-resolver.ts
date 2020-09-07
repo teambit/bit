@@ -815,6 +815,12 @@ either, use the ignore file syntax or change the require statement to have a mod
     };
     const processMissingComponents = () => {
       if (RA.isNilOrEmpty(missing.bits)) return;
+      const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
+      if (coreAspects) {
+        const coreAspectsPackages = Object.keys(coreAspects);
+        missing.bits = R.difference(missing.bits, coreAspectsPackages);
+        if (R.isEmpty(missing.bits)) return;
+      }
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();
