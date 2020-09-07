@@ -31,7 +31,6 @@ export class WebpackMain {
   ) {}
 
   /**
-   * ---> 52
    * create an instance of bit-compliant webpack dev server for a set of components
    * @param components array of components to launch.
    * @param config webpack config. will be merged to the base webpack config as seen at './config'
