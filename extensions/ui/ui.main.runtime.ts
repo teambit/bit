@@ -9,6 +9,8 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { PubsubAspect } from '@teambit/pubsub';
+
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
@@ -85,6 +87,8 @@ export type RuntimeOptions = {
 
 export class UiMain {
   constructor(
+    private pubsub: any,
+
     private config: UIConfig,
 
     /**
@@ -293,7 +297,7 @@ export class UiMain {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
 
-    const ui = new UiMain(config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
+    const ui = new UiMain(pubsub, config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
     cli.register(new StartCmd(ui, logger));
     cli.register(new UIBuildCmd(ui));
     return ui;

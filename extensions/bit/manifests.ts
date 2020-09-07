@@ -83,6 +83,7 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  // [PubsubAspect.id]: PubsubAspect,
 };
 
 export function isCoreAspect(id: string) {
@@ -95,3 +96,5 @@ export function getAllCoreAspectsIds(): string[] {
   const _reserved = [BitAspect.id, ConfigAspect.id];
   return [...Object.keys(manifestsMap), ..._reserved];
 }
+
+// console.log('PubsubAspect--> ', PubsubAspect)
