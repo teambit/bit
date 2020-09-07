@@ -958,21 +958,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/empty-compositions/empty-compositions.module.scss",
-                "test": false,
-                "name": "empty-compositions.module.scss"
-            },
-            {
-                "relativePath": "ui/empty-compositions/empty-compositions.tsx",
-                "test": false,
-                "name": "empty-compositions.tsx"
-            },
-            {
-                "relativePath": "ui/empty-compositions/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
                 "relativePath": "ui/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -1040,6 +1025,11 @@
                 "relativePath": "readme.md",
                 "test": false,
                 "name": "readme.md"
+            },
+            {
+                "relativePath": "schema.json",
+                "test": false,
+                "name": "schema.json"
             },
             {
                 "relativePath": "types.ts",
@@ -2047,7 +2037,7 @@
         "exported": false,
         "lanes": []
     },
-    "organism/notifications/api": {
+    "notifications/api": {
         "files": [
             {
                 "relativePath": "index.ts",
@@ -2066,7 +2056,7 @@
         "exported": false,
         "lanes": []
     },
-    "organism/notifications/notification": {
+    "notifications/notification": {
         "files": [
             {
                 "relativePath": "index.ts",
@@ -2105,7 +2095,7 @@
         "exported": false,
         "lanes": []
     },
-    "organism/notifications/notification-center": {
+    "notifications/notification-center": {
         "files": [
             {
                 "relativePath": "dismiss-button/dismiss-button.module.scss",
@@ -2144,7 +2134,7 @@
         "exported": false,
         "lanes": []
     },
-    "organism/notifications/notification-context": {
+    "notifications/notification-context": {
         "files": [
             {
                 "relativePath": "index.ts",

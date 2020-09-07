@@ -1,4 +1,4 @@
-import { Message } from '@teambit/organism.notifications.api';
+import { Message } from '@teambit/notifications.api';
 
 export type NotificationAction = {
   type: 'add' | 'dismiss' | 'clear';

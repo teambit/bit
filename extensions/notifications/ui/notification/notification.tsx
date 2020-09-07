@@ -5,8 +5,8 @@ import { XButton } from '@teambit/evangelist.elements.x-button';
 import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';
 
-import { NotificationContext } from '@teambit/organism.notifications.notification-context';
-import { Message } from '@teambit/organism.notifications.api';
+import { NotificationContext } from '@teambit/notifications.notification-context';
+import { Message } from '@teambit/notifications.api';
 import styles from './notification.module.scss';
 import { LevelIcon } from './level-icon';
 

@@ -1,9 +1,9 @@
 import React, { useState, useContext, useCallback } from 'react';
 import classnames from 'classnames';
 
-import { Message } from '@teambit/organism.notifications.api';
-import { Notification } from '@teambit/organism.notifications.notification';
-import { NotificationContext } from '@teambit/organism.notifications.notification-context';
+import { Message } from '@teambit/notifications.api';
+import { Notification } from '@teambit/notifications.notification';
+import { NotificationContext } from '@teambit/notifications.notification-context';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
 
 import styles from './notification-center.module.scss';

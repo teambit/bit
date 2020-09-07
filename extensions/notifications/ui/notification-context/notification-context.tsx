@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import { NotificationApi } from '@teambit/organism.notifications.api';
+import { NotificationApi } from '@teambit/notifications.api';
 
 const defaultLoaderApi: NotificationApi = {
   add: () => '',
