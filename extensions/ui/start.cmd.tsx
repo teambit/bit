@@ -1,7 +1,10 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import React from 'react';
-
+import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
+
+import React from 'react';
+import open from 'open';
+
 import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
 
@@ -17,6 +20,7 @@ import {
 import { addSharedDirForPath } from '../../dist/consumer/component-ops/manipulate-dir';
 
 export class StartCmd implements Command {
+  devServerCounter = 0;
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
@@ -34,8 +38,35 @@ export class StartCmd implements Command {
      */
     private ui: UiMain,
 
-    private logger: Logger
-  ) {}
+    private logger: Logger,
+
+    private pubsub: PubsubMain
+  ) {
+    pubsub.createOrGetTopic('webpack-pubsub-topic');
+    pubsub.subscribeToTopic('webpack-pubsub-topic', this.eventsListeners);
+
+    this.pubsub.createOrGetTopic('ui-main');
+    pubsub.subscribeToTopic('ui-main', this.eventsListeners);
+  }
+
+  private eventsListeners = (event) => {
+    console.log('event: ', event);
+    switch (event.event) {
+      case 'webpack-compilation-done':
+        this.devServerCounter--;
+        break;
+      case 'ui-server-started':
+        this.devServerCounter++;
+        break;
+      default:
+    }
+
+    console.log('devServerCounter: ', this.devServerCounter);
+
+    if (this.devServerCounter === 0) {
+      open('http://localhost:3000/');
+    }
+  };
 
   private clearConsole() {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');

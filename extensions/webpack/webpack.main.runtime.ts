@@ -64,8 +64,6 @@ export class WebpackMain {
   }
 
   private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
-    // console.log('---34---> ', this.pubsub);
-
     return configFactory(rootPath, entry, publicRoot, publicPath, this.pubsub);
   }
 

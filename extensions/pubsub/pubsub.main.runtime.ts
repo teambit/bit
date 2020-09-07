@@ -11,19 +11,19 @@ export class PubsubMain {
   createOrGetTopic = (topicUUID) => {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
 
-    console.log('--createOrGetTopic--> ', topicUUID);
+    // console.log('--createOrGetTopic--> topicMap: ', this.topicMap);
   };
 
   subscribeToTopic = (topicUUID, callback) => {
     this.topicMap[topicUUID].push(callback);
 
-    console.log('--subscribeToTopic--> ', topicUUID);
+    // console.log('--subscribeToTopic--> topicMap: ', this.topicMap);
   };
 
   publishToTopic = (topicUUID, event) => {
     this.topicMap[topicUUID].forEach((callback) => callback(event));
 
-    console.log('--publishToTopic--> ', topicUUID);
+    // console.log('--publishToTopic--> topicMap: ', this.topicMap);
   };
 
   static async provider() {
