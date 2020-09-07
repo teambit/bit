@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import classNames from 'classnames';
 
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import { useKeyBind } from '../../hooks/use-bind-key';
+import { useKeyBind } from '@teambit/hooks.input.use-bind-key';
 import styles from './closeable-card.module.scss';
 
 export const CLOSE_KEY = 'escape';

@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
-import { CommandBarItem, CommandBarItemProps } from '../command-bar-item';
-import { ComponentModel } from '../../../component/ui';
+import { CommandBarItem, CommandBarItemProps } from '@teambit/command-bar.command-bar-item';
+import { ComponentModel } from '@teambit/component/ui';
 import styles from './component-item.module.scss';
 
 export type CommandItemProps = {

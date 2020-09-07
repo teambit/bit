@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useMemo } from 'react';
 
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
-import { CommandsAspect, CommandRegistryUI } from '../../commands/aspect';
-import { KeyboardShortcutAspect, KeyboardShortcutsUi } from '../../keyboard-shortcuts/aspect';
-import { CheatSheet } from '../ui/cheat-sheet';
-import { ShortcutProps } from '../ui/shortcut/shortcut';
+import { CommandRegistryAspect, CommandRegistryUI } from '@teambit/commands';
+import { KeyboardShortcutAspect, KeyboardShortcutsUi } from '@teambit/keyboard-shortcuts';
+import { CheatSheetModal } from '@teambit/cheat-sheet.cheat-sheet-modal';
+import { ShortcutProps } from '@teambit/cheat-sheet.cheat-sheet-modal/shortcut/shortcut';
 import { cheatSheetCommands } from './cheat-sheet.commands';
+import { CheatSheetAspect } from './cheat-sheet.aspect';
 
 /** overlay showing with all the available keyboard bindings from keybinding extension */
 export class CheatSheetUI {
@@ -49,12 +50,12 @@ export class CheatSheetUI {
 
     const shortcuts = useMemo(() => (isOpen ? this.calcShortcuts() : []), [isOpen]);
 
-    return <CheatSheet visible={isOpen} onVisibilityChange={handleChange} shortcuts={shortcuts} />;
+    return <CheatSheetModal visible={isOpen} onVisibilityChange={handleChange} shortcuts={shortcuts} />;
   };
 
   constructor(private keyboardShortcuts: KeyboardShortcutsUi, private commandRegistryUi: CommandRegistryUI) {}
 
-  static dependencies = [KeyboardShortcutAspect, CommandsAspect, UIAspect];
+  static dependencies = [KeyboardShortcutAspect, CommandRegistryAspect, UIAspect];
   static slots = [];
   static runtime = UIRuntime;
   static async provider(
@@ -68,7 +69,10 @@ export class CheatSheetUI {
       name: 'help',
       description: 'open this cheat sheet',
     });
+    keyboardShortcuts.set('?', cheatSheetCommands.open);
 
     return instance;
   }
 }
+
+CheatSheetAspect.addRuntime(CheatSheetUI);

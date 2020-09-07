@@ -1,6 +1,6 @@
 import React from 'react';
-import { KeySequence } from '../../../../components/keycap';
-import { Keybinding } from '../../../keyboard-shortcuts/aspect';
+import { KeySequence } from '@teambit/elements.keycap';
+import { Keybinding } from '@teambit/keyboard-shortcuts';
 import styles from './shortcut.module.scss';
 
 export type ShortcutProps = {

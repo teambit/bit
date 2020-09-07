@@ -2,9 +2,10 @@ import React, { useState, useMemo, ReactElement } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
-import { CommandBar, ChildProps } from '../ui/command-bar';
+import { CommandBar, ChildProps } from '@teambit/command-bar.command-bar';
+import { CommandRegistryUI, CommandRegistryAspect } from '@teambit/commands';
+import KeyboardShortcutAspect, { KeyboardShortcutsUi } from '@teambit/keyboard-shortcuts';
 import { CommandBarAspect } from './command-bar.aspect';
-import { CommandRegistryUI } from '../../commands/aspect/commands.ui.runtime';
 import { commandBarCommands } from './command-bar.commands';
 
 export interface SearchProvider {
@@ -58,10 +59,14 @@ export class CommandBarUI {
     );
   };
 
-  static dependencies = [UIAspect, CommandRegistryUI];
+  static dependencies = [UIAspect, CommandRegistryAspect, KeyboardShortcutAspect];
   static slots = [Slot.withType<SearchProvider>()];
   static runtime = UIRuntime;
-  static async provider([uiUi, commandRegistryUi]: [UiUI, CommandRegistryUI], config, [searcherSlot]: [SearcherSlot]) {
+  static async provider(
+    [uiUi, commandRegistryUi, keyboardShortcutsUi]: [UiUI, CommandRegistryUI, KeyboardShortcutsUi],
+    config,
+    [searcherSlot]: [SearcherSlot]
+  ) {
     const commandBar = new CommandBarUI(searcherSlot);
 
     commandRegistryUi.set(commandBarCommands.open, {
@@ -69,6 +74,7 @@ export class CommandBarUI {
       name: 'open command bar',
     });
     commandRegistryUi.set(commandBarCommands.close, { handler: commandBar.close, name: 'close command bar' });
+    keyboardShortcutsUi.set('mod+k', commandBarCommands.open);
     uiUi.registerHudItem(<commandBar.Render key="CommandBarUI" />);
 
     return commandBar;

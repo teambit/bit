@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card } from '@teambit/base-ui.surfaces.card';
-import { Keybinding } from '../../keyboard-shortcuts/aspect';
-import { AutoCompleteInput } from './autocomplete-input';
+import { Keybinding } from '@teambit/keyboard-shortcuts';
+import { AutoCompleteInput } from '@teambit/command-bar.autocomplete-input';
 import styles from './command-bar.module.scss';
 
 export type CommandObj = {

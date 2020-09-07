@@ -1,8 +1,8 @@
 import React from 'react';
-import { Keybinding } from '../../../keyboard-shortcuts/aspect/keyboard-shortcuts.ui';
-import { CommandObj } from '../../../commands/aspect';
-import { CommandBarItem, CommandBarItemProps } from '../command-bar-item';
-import { KeySequence } from '../../../../components/keycap';
+import { Keybinding } from '@teambit/keyboard-shortcuts/keyboard-shortcuts.ui';
+import { CommandObj } from '@teambit/commands';
+import { CommandBarItem, CommandBarItemProps } from '@teambit/command-bar.command-bar-item';
+import { KeySequence } from '@teambit/elements.keycap';
 import styles from './command-item.module.scss';
 
 export type CommandItemProps = {

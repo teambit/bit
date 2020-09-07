@@ -1,5 +1,5 @@
 import { UIRuntime } from '@teambit/ui';
-import { CommandsAspect } from './commands.aspect';
+import { CommandRegistryAspect } from './commands.aspect';
 
 export type CommandHandler = (...arg: any[]) => any;
 export type CommandEntry = {
@@ -21,6 +21,7 @@ export type CommandObj = CommandEntry & { id: CommandId };
  * const optionalParams = 'ui/list';
  * commandRegistryUI.run('screenshots.takeScreenshot', optionalParameters);
  */
+
 export class CommandRegistryUI extends Map<CommandId, CommandEntry> {
   /** executes command. Returns undefined if command is missing */
   run<R = any>(
@@ -71,9 +72,9 @@ export class CommandRegistryUI extends Map<CommandId, CommandEntry> {
   static dependencies = [];
   static slots = [];
   static runtime = UIRuntime;
-  static async provider(/* deps: []] config, slots: [] */) {
+  static async provider(/* deps: [] config, slots: [] */) {
     return new CommandRegistryUI();
   }
 }
 
-CommandsAspect.addRuntime(CommandRegistryUI);
+CommandRegistryAspect.addRuntime(CommandRegistryUI);

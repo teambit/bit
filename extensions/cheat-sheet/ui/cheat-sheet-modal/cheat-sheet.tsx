@@ -2,15 +2,15 @@ import React from 'react';
 import classnames from 'classnames';
 import { H3 } from '@teambit/documenter.ui.heading';
 import { PossibleSizes } from '@teambit/base-ui.theme.sizes';
-import { modalClass } from '../../../components/surfaces/modal';
-import { CloseableCardProps, ClosableCard } from '../../../components/surfaces/closeable-card';
+import { modalClass } from '@teambit/surfaces.modal';
+import { CloseableCardProps, ClosableCard } from '@teambit/surfaces.closeable-card';
 
 import styles from './cheat-sheet.module.scss';
 import { ShortcutProps, Shortcut } from './shortcut';
 
-export type CheatSheetProps = { shortcuts: ShortcutProps[] } & CloseableCardProps;
+export type CheatSheetModalProps = { shortcuts: ShortcutProps[] } & CloseableCardProps;
 
-export function CheatSheet({ className, shortcuts, ...rest }: CheatSheetProps) {
+export function CheatSheetModal({ className, shortcuts, ...rest }: CheatSheetModalProps) {
   return (
     <ClosableCard {...rest} className={classnames(modalClass, styles.cheatSheet, className)}>
       <H3 size={PossibleSizes.sm}>Hotkeys:</H3>

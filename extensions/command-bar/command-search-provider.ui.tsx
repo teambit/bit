@@ -2,7 +2,7 @@ import React from 'react';
 import Fuse from 'fuse.js';
 import { KeyboardShortcutAspect, KeyboardShortcutsUi } from '../keyboard-shortcuts/aspect';
 import { CommandBarAspect, CommandBarUI, SearchProvider } from '../command-bar/aspect';
-import { CommandsAspect, CommandRegistryUI, CommandId, CommandObj } from '../commands/aspect';
+import { CommandRegistryAspect, CommandRegistryUI, CommandId, CommandObj } from '../commands/aspect';
 
 import { CommandItem } from './ui/command-item';
 
@@ -51,7 +51,7 @@ export default class CommandSearchProvider implements SearchProvider {
   }
 
   constructor(private commandRegistryUi: CommandRegistryUI, private keyboardShortcuts: KeyboardShortcutsUi) {}
-  static dependencies = [CommandsAspect, CommandBarAspect, KeyboardShortcutAspect];
+  static dependencies = [CommandRegistryAspect, CommandBarAspect, KeyboardShortcutAspect];
   static slots = [];
   static async provider(
     [commandRegistryUi, commandBarUI, keyboardShortcuts]: [

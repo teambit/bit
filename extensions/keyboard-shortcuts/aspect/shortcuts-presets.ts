@@ -1,4 +1,4 @@
-import { SerializedKeybinding } from './keyboard-shortcuts.ui';
+import { SerializedKeybinding } from './keyboard-shortcuts.ui.runtime';
 // import { cheatSheetCommands } from '../cheat-sheet/cheat-sheet.ui';
 // import { commandBarCommands } from '../command-bar/command-bar.ui';
 

@@ -393,6 +393,45 @@
         "exported": false,
         "lanes": []
     },
+    "cheat-sheet/cheat-sheet-modal": {
+        "files": [
+            {
+                "relativePath": "cheat-sheet.module.scss",
+                "test": false,
+                "name": "cheat-sheet.module.scss"
+            },
+            {
+                "relativePath": "cheat-sheet.tsx",
+                "test": false,
+                "name": "cheat-sheet.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "shortcut/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "shortcut/shortcut.module.scss",
+                "test": false,
+                "name": "shortcut.module.scss"
+            },
+            {
+                "relativePath": "shortcut/shortcut.tsx",
+                "test": false,
+                "name": "shortcut.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/cheat-sheet/ui/cheat-sheet-modal",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "cli": {
         "files": [
             {
@@ -482,6 +521,126 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/command-bar/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar/autocomplete-input": {
+        "files": [
+            {
+                "relativePath": "autocomplete-input.module.scss",
+                "test": false,
+                "name": "autocomplete-input.module.scss"
+            },
+            {
+                "relativePath": "autocomplete-input.tsx",
+                "test": false,
+                "name": "autocomplete-input.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/autocomplete-input",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar/command-bar": {
+        "files": [
+            {
+                "relativePath": "command-bar.module.scss",
+                "test": false,
+                "name": "command-bar.module.scss"
+            },
+            {
+                "relativePath": "command-bar.tsx",
+                "test": false,
+                "name": "command-bar.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/command-bar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar/command-bar-item": {
+        "files": [
+            {
+                "relativePath": "command-bar-item.module.scss",
+                "test": false,
+                "name": "command-bar-item.module.scss"
+            },
+            {
+                "relativePath": "command-bar-item.tsx",
+                "test": false,
+                "name": "command-bar-item.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/command-bar-item",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar/command-item": {
+        "files": [
+            {
+                "relativePath": "command-item.module.scss",
+                "test": false,
+                "name": "command-item.module.scss"
+            },
+            {
+                "relativePath": "command-item.tsx",
+                "test": false,
+                "name": "command-item.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/command-item",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "command-bar/component-item": {
+        "files": [
+            {
+                "relativePath": "component-item.module.scss",
+                "test": false,
+                "name": "component-item.module.scss"
+            },
+            {
+                "relativePath": "component-item.tsx",
+                "test": false,
+                "name": "component-item.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/component-item",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

@@ -1,6 +1,8 @@
 import Mousetrap from 'mousetrap';
-import { CommandsAspect, CommandId, CommandRegistryUI } from '../../commands/aspect';
+import { CommandRegistryAspect, CommandId, CommandRegistryUI } from '@teambit/commands';
+import { UIRuntime } from '@teambit/ui';
 import { hotkeys } from './shortcuts-presets';
+import { KeyboardShortcutAspect } from './keyboard-shortcuts.aspect';
 
 // consider expanding this to be `string | string[]`
 export type Keybinding = string;
@@ -115,11 +117,14 @@ export class KeyboardShortcutsUi extends Map<Keybinding, CommandId> {
     super();
   }
 
-  static dependencies = [CommandsAspect];
+  static dependencies = [CommandRegistryAspect];
   static slots = [];
+  static runtime = UIRuntime;
   static async provider([commandRegistryUi]: [CommandRegistryUI] /* config, slots: [] */) {
     const keyboardShortcuts = new KeyboardShortcutsUi(commandRegistryUi);
     keyboardShortcuts.load(hotkeys);
     return keyboardShortcuts;
   }
 }
+
+KeyboardShortcutAspect.addRuntime(KeyboardShortcutsUi);
