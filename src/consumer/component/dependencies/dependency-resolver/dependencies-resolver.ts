@@ -869,17 +869,12 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!coreAspects) {
       return;
     }
-    const coreAspectsPackages = Object.keys(coreAspects);
-    const coreAspectsComponentsStr = Object.values(coreAspects);
-    const isCoreAspect = (idStr: string) => coreAspectsComponentsStr.includes(idStr);
-
-    // @todo: remove this hack once extensions are exported
-    const idWithHardCodedTeamBitScope = this.component.id.hasScope()
-    ? this.component.id.toStringWithoutVersion()
-    : `teambit.bit/${this.component.id.toStringWithoutScopeAndVersion()}`;
-    if (isCoreAspect(idWithHardCodedTeamBitScope)) {
+    // @todo: remove this hack, once we have a better idea how to recognize core components
+    if (this.component.defaultScope === 'teambit.bit' || this.component.defaultScope === 'teambit3.bit') {
+      // this component itself is a core-extension/core-aspect/core-component, do not filter.
       return;
     }
+    const coreAspectsPackages = Object.keys(coreAspects);
 
     const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
