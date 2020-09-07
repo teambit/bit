@@ -601,7 +601,7 @@ jobs:
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
         restore_cache:
-          key: bit-global-config-v1
+          key: bit-global-config-v3
       -
         restore_cache:
           key: bitsrc-ssh-key3
