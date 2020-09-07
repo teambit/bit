@@ -2303,6 +2303,30 @@
         "exported": false,
         "lanes": []
     },
+    "pubsub": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "pubsub.aspect.ts",
+                "test": false,
+                "name": "pubsub.aspect.ts"
+            },
+            {
+                "relativePath": "pubsub.main.runtime.ts",
+                "test": false,
+                "name": "pubsub.main.runtime.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/pubsub",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "react": {
         "files": [
             {
