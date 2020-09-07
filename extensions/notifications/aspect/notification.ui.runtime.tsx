@@ -2,11 +2,11 @@ import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ReactNode, useReducer } from 'react';
 import { v1 } from 'uuid';
 
-import { MessageLevel, NotificationApi } from './notification-api';
+import { NotificationContext } from '@teambit/notifications.notification-context';
+import { NotificationCenter, NotificationCenterProps } from '@teambit/notifications.notification-center';
+import { MessageLevel, NotificationApi } from '@teambit/notifications.api';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 import { NotificationsAspect } from './notifications.aspect';
-import { NotificationCenter, NotificationCenterProps } from './ui/notification-center';
-import { NotificationContext } from './ui/notification-context';
 
 /**
  * extension
@@ -60,6 +60,13 @@ export default class NotificationUI implements NotificationApi {
   error = (message: string) => this.add(message, MessageLevel.error);
   /** adds a message with level "success" to the log */
   success = (message: string) => this.add(message, MessageLevel.success);
+
+  /** removes all notifications */
+  clear = () => {
+    this.dispatch?.({
+      type: 'clear',
+    });
+  };
 
   private render = (props: Omit<NotificationCenterProps, 'notifications'>) => {
     // this code assumes a single place of render per instance of NotificationUI
