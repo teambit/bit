@@ -64,9 +64,9 @@ export class WebpackMain {
   }
 
   private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
-    console.log('---34---> ', this.pubsub);
+    // console.log('---34---> ', this.pubsub);
 
-    return configFactory(rootPath, entry, publicRoot, publicPath, this.onEvent);
+    return configFactory(rootPath, entry, publicRoot, publicPath, this.pubsub);
   }
 
   static slots = [];
