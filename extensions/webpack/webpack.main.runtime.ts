@@ -17,7 +17,7 @@ export class WebpackMain {
 
   constructor(
     /**
-     * workspace extension.
+     * Pubsub extension.
      */
     private pubsub: PubsubMain,
 
