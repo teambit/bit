@@ -1,5 +1,5 @@
 import React from 'react';
-import { Keybinding } from '@teambit/keyboard-shortcuts/keyboard-shortcuts.ui';
+import { Keybinding } from '@teambit/keyboard-shortcuts';
 import { CommandObj } from '@teambit/commands';
 import { CommandBarItem, CommandBarItemProps } from '@teambit/command-bar.command-bar-item';
 import { KeySequence } from '@teambit/elements.keycap';

@@ -377,9 +377,9 @@
                 "name": "cheat-sheet.commands.tsx"
             },
             {
-                "relativePath": "cheat-sheet.ui.tsx",
+                "relativePath": "cheat-sheet.ui.runtime.tsx",
                 "test": false,
-                "name": "cheat-sheet.ui.tsx"
+                "name": "cheat-sheet.ui.runtime.tsx"
             },
             {
                 "relativePath": "index.ts",
@@ -2242,9 +2242,9 @@
                 "name": "keyboard-shortcuts.aspect.ts"
             },
             {
-                "relativePath": "keyboard-shortcuts.ui.ts",
+                "relativePath": "keyboard-shortcuts.ui.runtime.ts",
                 "test": false,
-                "name": "keyboard-shortcuts.ui.ts"
+                "name": "keyboard-shortcuts.ui.runtime.ts"
             },
             {
                 "relativePath": "shortcuts-presets.ts",
