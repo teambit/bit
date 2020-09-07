@@ -2853,6 +2853,83 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/component-status": {
+        "files": [
+            {
+                "relativePath": "component-status.module.scss",
+                "test": false,
+                "name": "component-status.module.scss"
+            },
+            {
+                "relativePath": "component-status.tsx",
+                "test": false,
+                "name": "component-status.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-status-resolver": {
+        "files": [
+            {
+                "relativePath": "color-override.ts",
+                "test": false,
+                "name": "color-override.ts"
+            },
+            {
+                "relativePath": "component-status-resolver.module.scss",
+                "test": false,
+                "name": "component-status-resolver.module.scss"
+            },
+            {
+                "relativePath": "component-status-resolver.tsx",
+                "test": false,
+                "name": "component-status-resolver.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status-resolver",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-tooltip": {
+        "files": [
+            {
+                "relativePath": "component-tooltip.module.scss",
+                "test": false,
+                "name": "component-tooltip.module.scss"
+            },
+            {
+                "relativePath": "component-tooltip.tsx",
+                "test": false,
+                "name": "component-tooltip.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-tooltip",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/corner": {
         "files": [
             {
@@ -3059,51 +3136,6 @@
             },
             {
                 "relativePath": "component-tree/component-nodes/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/component-status-resolver.module.scss",
-                "test": false,
-                "name": "component-status-resolver.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/component-status-resolver.tsx",
-                "test": false,
-                "name": "component-status-resolver.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-status/component-status.module.scss",
-                "test": false,
-                "name": "component-status.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-status/component-status.tsx",
-                "test": false,
-                "name": "component-status.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-status/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/component-tooltip.module.scss",
-                "test": false,
-                "name": "component-tooltip.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/component-tooltip.tsx",
-                "test": false,
-                "name": "component-tooltip.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/index.ts",
                 "test": false,
                 "name": "index.ts"
             },

@@ -1,10 +1,16 @@
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-
+import { ComponentStatus } from '@teambit/workspace';
 import styles from './component-tooltip.module.scss';
 
+export type StatusTooltipProps = {
+  status?: ComponentStatus;
+  name: string;
+  issuesCount?: number;
+};
+
 // TODO - how do I get the status type without tying this to workspace?
-export function StatusTooltip({ status, name }: any) {
+export function StatusTooltip({ status, name, issuesCount }: any) {
   if (!status) return null;
   const { isNew, isStaged, modifyInfo = {} } = status;
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
@@ -16,6 +22,7 @@ export function StatusTooltip({ status, name }: any) {
         {isStaged && <li>Staged component</li>}
         {hasModifiedFiles && <li>Modified files</li>}
         {hasModifiedDependencies && <li>Modified dependencies</li>}
+        {issuesCount > 0 && <li>{`${issuesCount} issue${issuesCount > 1 ? `s` : ''} found`}</li>}
       </ul>
     </ReactTooltip>
   );
