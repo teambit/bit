@@ -233,12 +233,12 @@ export default class DependencyResolver {
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
         return;
       }
+      this.processCoreAspects(file);
       this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
       this.processBits(file, fileType);
       this.processDepFiles(file, fileType);
-      this.processCoreAspects(file);
       this.processUnidentifiedPackages(file, fileType);
     });
     this.removeIgnoredPackagesByOverrides();
@@ -858,33 +858,69 @@ either, use the ignore file syntax or change the require statement to have a mod
     else this.issues.resolveErrors[originFile] = error.message;
   }
 
-  processCoreAspects(originFile: PathLinuxRelative){
-    const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    let usedCoreAspects: string[] = [];
+  /**
+   * when a user uses core-extensions these core-extensions should not be dependencies.
+   * here, we filter them out from all places they could entered as dependencies.
+   * an exception is when running this method on bit-core-extensions themselves (dogfooding), in
+   * which case we recognizes that the current originFile is a core-extension and avoid filtering.
+   */
+  processCoreAspects(originFile: PathLinuxRelative) {
     const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
-    if (!coreAspects){
+    if (!coreAspects) {
+      return;
+    }
+    // @todo: remove this hack, once we have a better idea how to recognize core components
+    if (this.component.defaultScope === 'teambit.bit' || this.component.defaultScope === 'teambit3.bit') {
+      // this component itself is a core-extension/core-aspect/core-component, do not filter.
       return;
     }
     const coreAspectsPackages = Object.keys(coreAspects);
-    const findMatchingCoreAspect = (packageName) => {
-      return coreAspectsPackages.find(coreAspectName => {
+
+    const bits = this.tree[originFile].bits;
+    const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
+    const missingBits = this.tree[originFile]?.missing?.bits;
+    let usedCoreAspects: string[] = [];
+
+    const findMatchingCoreAspect = (packageName: string) => {
+      return coreAspectsPackages.find((coreAspectName) => {
         return packageName.includes(coreAspectName);
       });
     };
-    const filtered = unidentifiedPackages?.filter((packageName) => {
+    const unidentifiedPackagesFiltered = unidentifiedPackages?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
-      if (matchingCoreAspectPackageName){
+      if (matchingCoreAspectPackageName) {
         usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
       }
       return !matchingCoreAspectPackageName;
     });
-    this.tree[originFile].unidentifiedPackages = filtered;
+    const bitsFiltered = bits?.filter((packageInfo) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageInfo.name);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+    const missingBitsFiltered = missingBits?.filter((packageName) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+
+    if (missingBits) {
+      // @ts-ignore not clear why this error happens, it is verified that missing.bits exist
+      this.tree[originFile].missing.bits = missingBitsFiltered;
+    }
+
+    this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
+    this.tree[originFile].bits = bitsFiltered;
     usedCoreAspects = R.uniq(usedCoreAspects);
     this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
   }
 
-  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]){
-    if (!usedCoreAspects || !usedCoreAspects.length){
+  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]) {
+    if (!usedCoreAspects || !usedCoreAspects.length) {
       return;
     }
     this.pushToDependencyResolverExtension('coreAspects', usedCoreAspects, 'set');
@@ -978,10 +1014,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
 
     if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
-    if (operation === 'add'){
+    if (operation === 'add') {
       ext.data[dataFiled].push(data);
     }
-    if (operation === 'set'){
+    if (operation === 'set') {
       ext.data[dataFiled] = data;
     }
     if (!extExistOnComponent) {

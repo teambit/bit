@@ -7,13 +7,13 @@ import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
 import { Compose } from './compose';
-import { UIRootUI as UIRoot } from './ui-root.ui';
+import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
-export type UIRootRegistry = SlotRegistry<UIRoot>;
+export type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
 
@@ -50,9 +50,10 @@ export class UiUI {
 
   render(rootExtension: string) {
     const GraphqlProvider = this.graphql.getProvider;
-    const root = this.getRoot(rootExtension);
-    if (!root) throw new Error(`root: ${root} was not found`);
-    const routes = this.router.renderRoutes(root.routes);
+    const rootFactory = this.getRoot(rootExtension);
+    if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
+    const uiRoot = rootFactory();
+    const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
@@ -79,7 +80,7 @@ export class UiUI {
     this.contextSlot.register(context);
   }
 
-  registerRoot(uiRoot: UIRoot) {
+  registerRoot(uiRoot: UIRootFactory) {
     return this.uiRootSlot.register(uiRoot);
   }
 
@@ -87,7 +88,7 @@ export class UiUI {
     return this.uiRootSlot.get(rootExtension);
   }
 
-  static slots = [Slot.withType<UIRoot>(), Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
+  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
 
   static dependencies = [GraphqlAspect, ReactRouterAspect];
 

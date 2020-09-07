@@ -1,7 +1,7 @@
-import { Message } from './ui/notification-context';
+import { Message } from '@teambit/notifications.api';
 
 export type NotificationAction = {
-  type: 'add' | 'dismiss';
+  type: 'add' | 'dismiss' | 'clear';
   content?: Message;
   id?: string;
 };
@@ -13,6 +13,8 @@ export function notificationReducer(state: Message[], action: NotificationAction
     case 'add':
       if (!action.content) return state;
       return state.concat(action.content);
+    case 'clear':
+      return [];
     default:
       return state;
   }

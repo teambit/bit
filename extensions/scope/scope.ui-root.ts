@@ -20,14 +20,6 @@ export class ScopeUIRoot implements UIRoot {
     return this.scope.resolveAspects(runtime);
   }
 
-  get extensionsPaths() {
-    return [];
-  }
-
-  get aspectPaths() {
-    return [];
-  }
-
   async resolvePattern() {
     return [];
   }
