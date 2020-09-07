@@ -1,6 +1,5 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
-import { getAllCoreAspectsIds, isCoreAspect } from '@teambit/bit';
 import { MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import {
@@ -110,7 +109,7 @@ export class Workspace implements ComponentFactory {
     /**
      * access to the `ComponentProvider` instance
      */
-    private componentFactory: ComponentMain,
+    private componentAspect: ComponentMain,
 
     readonly isolateEnv: IsolatorMain,
 
@@ -319,9 +318,11 @@ export class Workspace implements ComponentFactory {
   async get(id: ComponentID): Promise<Component> {
     const consumerComponent = await this.consumer.loadComponent(id._legacy);
     const component = await this.scope.get(id);
+    const extensionDataList = await this.componentExtensions(id, component);
 
     const state = new State(
-      new Config(consumerComponent.mainFile, await this.componentExtensions(id, component)),
+      new Config(consumerComponent.mainFile, extensionDataList),
+      this.componentAspect.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -337,7 +338,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
       const systemDescriptor = await env.__getDescriptor();
 
@@ -355,7 +356,7 @@ export class Workspace implements ComponentFactory {
       const data = await onLoad(component);
       const existingExtension = component.state.config.extensions.findExtension(extension);
       if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(this.getDataEntry(extension, data));
+      component.state.config.extensions.push(await this.getDataEntry(extension, data));
     });
 
     await Promise.all(promises);
@@ -392,7 +393,7 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {
+  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
@@ -678,7 +679,7 @@ export class Workspace implements ComponentFactory {
       return loadedComps.map((c) => c.state._consumer);
     };
     const ids = components.map((component) => component.id._legacy);
-    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
     return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
@@ -690,7 +691,7 @@ export class Workspace implements ComponentFactory {
     if (!scope) throw new Error('default scope not defined');
     // const newId = id.changeScope(scope);
     // TODO: fix properly ASAP after resolving default scope issue.
-    return isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
+    return this.aspectLoader.isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
   }
 
   private async filterCoreAspects(components: Component[]) {
@@ -707,7 +708,7 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
@@ -742,7 +743,7 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const coreAspectsIds = getAllCoreAspectsIds();
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(ids, coreAspectsIds);
     const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.getMany(componentIds);
@@ -768,13 +769,16 @@ export class Workspace implements ComponentFactory {
       })
     );
 
-    const coreAspectsInRuntime = coreAspectDefs.filter((coreAspect) => coreAspect.runtimePath);
+    // due to lack of workspace and scope runtimes. TODO: fix after adding them.
+    const workspaceAspects = coreAspectDefs.filter((coreAspect) => {
+      return coreAspect.runtimePath;
+    });
 
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(coreAspectsInRuntime);
+    return aspectDefs.concat(workspaceAspects);
   }
 
   /**
@@ -797,7 +801,7 @@ export class Workspace implements ComponentFactory {
   }
 
   private async getCompiler(component: Component) {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
   }
 

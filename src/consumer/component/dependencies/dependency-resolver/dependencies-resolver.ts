@@ -858,33 +858,46 @@ either, use the ignore file syntax or change the require statement to have a mod
     else this.issues.resolveErrors[originFile] = error.message;
   }
 
-  processCoreAspects(originFile: PathLinuxRelative){
+  processCoreAspects(originFile: PathLinuxRelative) {
+    // TODO: return in case of processing a core aspect.
+    const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     let usedCoreAspects: string[] = [];
     const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
-    if (!coreAspects){
+    if (!coreAspects) {
       return;
     }
     const coreAspectsPackages = Object.keys(coreAspects);
     const findMatchingCoreAspect = (packageName) => {
-      return coreAspectsPackages.find(coreAspectName => {
+      return coreAspectsPackages.find((coreAspectName) => {
         return packageName.includes(coreAspectName);
       });
     };
     const filtered = unidentifiedPackages?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
-      if (matchingCoreAspectPackageName){
+      if (matchingCoreAspectPackageName) {
         usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
       }
       return !matchingCoreAspectPackageName;
     });
+
+    const filteredAspects = bits?.filter((packageName) => {
+      const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName.name);
+      if (matchingCoreAspectPackageName) {
+        usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
+      }
+      return !matchingCoreAspectPackageName;
+    });
+
     this.tree[originFile].unidentifiedPackages = filtered;
+    // TODO: @david we need to understand how to make sure core aspects are ignored here.
+    this.tree[originFile].bits = filteredAspects;
     usedCoreAspects = R.uniq(usedCoreAspects);
     this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
   }
 
-  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]){
-    if (!usedCoreAspects || !usedCoreAspects.length){
+  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]) {
+    if (!usedCoreAspects || !usedCoreAspects.length) {
       return;
     }
     this.pushToDependencyResolverExtension('coreAspects', usedCoreAspects, 'set');
@@ -978,10 +991,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
 
     if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
-    if (operation === 'add'){
+    if (operation === 'add') {
       ext.data[dataFiled].push(data);
     }
-    if (operation === 'set'){
+    if (operation === 'set') {
       ext.data[dataFiled] = data;
     }
     if (!extExistOnComponent) {

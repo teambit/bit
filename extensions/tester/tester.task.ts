@@ -32,7 +32,7 @@ export class TesterTask implements BuildTask {
       rootPath: context.capsuleGraph.capsulesRootDir,
     });
 
-    // @todo: Ran to fix.
+    // @todo: @guy to fix. handle components without tests, define tests results and implement from jest.
     // @ts-ignore
     return tester.test(testerContext);
   }

@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
@@ -126,14 +126,16 @@ export default async function provideWorkspace(
     const extensions = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
     await workspace.loadExtensions(extensions);
-    const extensionsWithLegacyIdsP = extensions.map(async extension => {
+    const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
-      if (legacyEntry.extensionId){
-        const resolvedComponentId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = resolvedComponentId._legacy;
+      if (legacyEntry.extensionId) {
+        const compId = await workspace.resolveComponentId(legacyEntry.extensionId);
+        legacyEntry.extensionId = compId._legacy;
+        legacyEntry.newExtensionId = compId;
       }
+
       return legacyEntry;
-    })
+    });
     const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 
     return {

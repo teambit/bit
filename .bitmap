@@ -122,6 +122,16 @@
                 "name": "hook-require.ts"
             },
             {
+                "relativePath": "hooks/hook.ts",
+                "test": false,
+                "name": "hook.ts"
+            },
+            {
+                "relativePath": "hooks/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2638,6 +2648,11 @@
     "scope": {
         "files": [
             {
+                "relativePath": "components.drawer.tsx",
+                "test": false,
+                "name": "components.drawer.tsx"
+            },
+            {
                 "relativePath": "exceptions/component-not-found.ts",
                 "test": false,
                 "name": "component-not-found.ts"
@@ -2935,6 +2950,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/corner",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/empty-box": {
+        "files": [
+            {
+                "relativePath": "empty-box.module.scss",
+                "test": false,
+                "name": "empty-box.module.scss"
+            },
+            {
+                "relativePath": "empty-box.tsx",
+                "test": false,
+                "name": "empty-box.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/empty-box",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
