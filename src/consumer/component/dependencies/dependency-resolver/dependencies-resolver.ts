@@ -233,12 +233,12 @@ export default class DependencyResolver {
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
         return;
       }
+      this.processCoreAspects(file);
       this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
       this.processBits(file, fileType);
       this.processDepFiles(file, fileType);
-      this.processCoreAspects(file);
       this.processUnidentifiedPackages(file, fileType);
     });
     this.removeIgnoredPackagesByOverrides();
@@ -815,12 +815,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     };
     const processMissingComponents = () => {
       if (RA.isNilOrEmpty(missing.bits)) return;
-      const coreAspects = DependencyResolver.getCoreAspectsPackagesAndIds();
-      if (coreAspects) {
-        const coreAspectsPackages = Object.keys(coreAspects);
-        missing.bits = R.difference(missing.bits, coreAspectsPackages);
-        if (R.isEmpty(missing.bits)) return;
-      }
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();
@@ -894,6 +888,11 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
       return !matchingCoreAspectPackageName;
     });
+
+    if (this.tree[originFile]?.missing?.bits) {
+      // @ts-ignore not clear why this error happens, it is verified that missing.bits exist
+      this.tree[originFile].missing.bits = R.difference(this.tree[originFile]?.missing?.bits, coreAspectsPackages);
+    }
 
     this.tree[originFile].unidentifiedPackages = filtered;
     // TODO: @david we need to understand how to make sure core aspects are ignored here.
