@@ -1,6 +1,5 @@
 import * as path from 'path';
 import R from 'ramda';
-import semver from 'semver';
 
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { BitId, BitIds } from '../../bit-id';
@@ -177,6 +176,10 @@ export default class ComponentsList {
     return BitIds.fromArray(unresolvedComponents.map((u) => new BitId(u.id)));
   }
 
+  listSoftTaggedComponents(): BitId[] {
+    return this.bitMap.components.filter((c) => c.nextVersion).map((c) => c.id);
+  }
+
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(true),
@@ -226,29 +229,14 @@ export default class ComponentsList {
     return components;
   }
 
-  // @todo: rename the method name. it's confusing. seems like it fetches all components
-  // regardless the "tag-pending" and warns about version greater than specified.
-  // I'd extract the warning part and put it in tag.ts file.
-  async listCommitPendingOfAllScope(
-    version: string,
-    includeImported = false
-  ): Promise<{ tagPendingComponents: BitId[]; warnings: string[] }> {
-    let tagPendingComponents;
-    tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
+  async listTagPendingOfAllScope(includeImported = false): Promise<BitId[]> {
+    const tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
       const importedComponents = this.idsFromBitMap(COMPONENT_ORIGINS.IMPORTED);
-      tagPendingComponents = tagPendingComponents.concat(importedComponents);
+      tagPendingComponents.push(...importedComponents);
     }
-    const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
-    const warnings = [];
-    tagPendingComponentsLatest.forEach((componentId) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (semver.gt(componentId.version!, version)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
-      }
-    });
-    return { tagPendingComponents, warnings };
+
+    return tagPendingComponents;
   }
 
   /**
@@ -256,7 +244,7 @@ export default class ComponentsList {
    *
    * @return {Promise<string[]>}
    */
-  async listCommitPendingComponents(): Promise<BitIds> {
+  async listTagPendingComponents(): Promise<BitIds> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(),
       this.listModifiedComponents(),
@@ -465,12 +453,13 @@ export default class ComponentsList {
     }));
   }
 
-  // components can be one of the following: Component[] | ModelComponent[] | string[]
+  // components can be one of the following: Component[] | ModelComponent[] | string[] | BitId[]
   static sortComponentsByName<T>(components: T): T {
     const getName = (component) => {
       let name;
       if (R.is(ModelComponent, component)) name = component.id();
       else if (R.is(Component, component)) name = component.id.toString();
+      else if (R.is(BitId, component)) name = component.toString();
       else name = component;
       return name.toUpperCase(); // ignore upper and lowercase
     };

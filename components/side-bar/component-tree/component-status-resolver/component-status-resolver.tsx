@@ -22,7 +22,7 @@ export function ComponentStatusResolver({ status, id }: ComponentStatusResolverP
       {isModified && status.isStaged && ','}
       {status.isStaged && <ComponentStatus className={styles[colorOverride]} status="staged" />}
       {/* {status.isError && <ComponentStatus status="error" />} */}
-      <StatusTooltip status={status} name={id?.legacyComponentId?.name} />
+      <StatusTooltip status={status} name={id?.name} />
     </div>
   );
 }

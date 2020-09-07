@@ -62,8 +62,8 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
-    const postExportFunc = publisher.postExportListener.bind(publisher);
-    if (scope) scope.onPostExport(postExportFunc);
+    const postPersistTagFn = publisher.postTagPersistListener.bind(publisher);
+    if (scope) scope.legacyScope.onPostPersistTag.push(postPersistTagFn);
 
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgAspect.id, pkg.mergePackageJsonProps.bind(pkg));

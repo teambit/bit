@@ -67,6 +67,7 @@ jobs:
           root: /home/circleci
           paths:
             - bit
+
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -85,6 +86,7 @@ jobs:
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
+
   set_npm_registries:
     <<: *defaults
     steps:
@@ -112,80 +114,81 @@ jobs:
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
-  install_npm_deps:
-    <<: *defaults
-    # skipping the pre-built binaries to make sure we build them by the pack step
-    # testing the install script will be done in different workflow dedicated for this
-    environment:
-      SKIP_FETCH_BINARY: true
-      # SKIP_LOCAL_BUILD_BINARY: true
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        restore_cache:
-          key: bitsrc-registry6
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      # -
-      #   restore_cache:
-      #     keys:
-      #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      # -
-      #   run:
-      #     name: 'install pkg to support local build'
-      #     command: 'sudo npm install -g pkg@4.4.3'
-      -
-        run:
-          name: 'Install npm dependencies'
-          command: 'cd bit && npm install'
-      # -
-      #   run:
-      #     name: 'link bit to path'
-      #     command: 'cd bit && npm run dev-link bit'
-      -
-        run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      # -
-      #   run:
-      #     name: 'install harmony'
-      #     command: 'cd bit && npm run install-harmony'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run: which bit
-            # -
-      #   run:
-      #     name: 'npm link bit to global'
-      #     command: cd bit && npm link
-      # - run: ls -l /home/circleci/.npm-global/bin
-      # -
-      #   save_cache:
-      #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      #     paths:
-      #       - ./bit/node_modules
-      -
-        save_cache:
-          key: npm-global-bin-v2
-          paths:
-            - /home/circleci/.npm-global/bin
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            # - bit/build-harmony
-            - bit/node_modules
-            - bit/releases
+  # install_npm_deps:
+  #   <<: *defaults
+  #   # skipping the pre-built binaries to make sure we build them by the pack step
+  #   # testing the install script will be done in different workflow dedicated for this
+  #   environment:
+  #     SKIP_FETCH_BINARY: true
+  #     # SKIP_LOCAL_BUILD_BINARY: true
+  #     # change the npm config to avoid using sudo
+  #     NPM_CONFIG_PREFIX: ~/.npm-global
+  #   steps:
+  #     -
+  #       attach_workspace:
+  #         at: ./
+  #     -
+  #       restore_cache:
+  #         key: bitsrc-registry6
+  #     -
+  #       run:
+  #         name: 'save SHA to a file'
+  #         command: 'echo $CIRCLE_SHA1 > .circle-sha'
+  #     # -
+  #     #   restore_cache:
+  #     #     keys:
+  #     #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+  #     # -
+  #     #   run:
+  #     #     name: 'install pkg to support local build'
+  #     #     command: 'sudo npm install -g pkg@4.4.3'
+  #     -
+  #       run:
+  #         name: 'Install npm dependencies'
+  #         command: 'cd bit && npm install'
+  #     # -
+  #     #   run:
+  #     #     name: 'link bit to path'
+  #     #     command: 'cd bit && npm run dev-link bit'
+  #     -
+  #       run:
+  #         name: 'create npm global dir'
+  #         command: 'mkdir -p /home/circleci/.npm-global/bin'
+  #     -
+  #       run:
+  #         name: 'link bit to path'
+  #         command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+  #     # -
+  #     #   run:
+  #     #     name: 'install harmony'
+  #     #     command: 'cd bit && npm run install-harmony'
+  #     -
+  #       run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+  #     -
+  #       run: which bit
+  #           # -
+  #     #   run:
+  #     #     name: 'npm link bit to global'
+  #     #     command: cd bit && npm link
+  #     # - run: ls -l /home/circleci/.npm-global/bin
+  #     # -
+  #     #   save_cache:
+  #     #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+  #     #     paths:
+  #     #       - ./bit/node_modules
+  #     -
+  #       save_cache:
+  #         key: npm-global-bin-v2
+  #         paths:
+  #           - /home/circleci/.npm-global/bin
+  #     -
+  #       persist_to_workspace:
+  #         root: .
+  #         paths:
+  #           # - bit/build-harmony
+  #           - bit/node_modules
+  #           - bit/releases
+
   validate-git-tag-and-version:
     <<: *defaults
     steps:
@@ -208,12 +211,14 @@ jobs:
         run:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_VERSION'
+
   build:
     <<: *defaults
     steps:
       -
         attach_workspace:
           at: ./
+
       -
         run:
           name: 'save SHA to a file'
@@ -227,6 +232,7 @@ jobs:
           root: .
           paths:
             - bit/dist
+
   configure-bit:
     <<: *defaults
     environment:
@@ -310,6 +316,7 @@ jobs:
           root: .
           paths:
             - bit/releases
+
   npm-publish:
     <<: *defaults
     steps:
@@ -323,6 +330,7 @@ jobs:
         run:
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish'
+
   github-release:
     <<: *defaults
     steps:
@@ -334,6 +342,7 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
+
   github-pre-release:
     <<: *defaults
     steps:
@@ -345,6 +354,7 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run pre-release:circle'
+
   build-debian:
     <<: *defaults
     docker:
@@ -363,6 +373,7 @@ jobs:
           root: .
           paths:
             - bit/releases/deb
+
   build-rpm:
     <<: *defaults
     docker:
@@ -381,6 +392,7 @@ jobs:
           root: .
           paths:
             - bit/releases/rpm
+
   publish_to_jfrog:
     <<: *defaults
     steps:
@@ -408,6 +420,7 @@ jobs:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   # this should be unified with the prod version and get params for dev
+
   publish_to_jfrog_dev:
     <<: *defaults
     steps:
@@ -434,6 +447,7 @@ jobs:
         run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+
   generate_docs:
     <<: *defaults
     steps:
@@ -455,6 +469,7 @@ jobs:
           root: .
           paths:
             - DOC_GEN_BUILD_NUM.txt
+
   slack_deploy_notification:
     <<: *defaults
     steps:
@@ -472,6 +487,7 @@ jobs:
         run:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
+
   unit_test:
     <<: *defaults
     steps:
@@ -497,6 +513,7 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+
   lint:
     <<: *defaults
     resource_class: medium
@@ -522,6 +539,7 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+
   generate_and_check_types:
     <<: *defaults
     steps:
@@ -536,6 +554,7 @@ jobs:
         run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+
   setup_harmony:
     <<: *defaults
     steps:
@@ -546,6 +565,9 @@ jobs:
         restore_cache:
           key: bitsrc-registry6
       -
+        restore_cache:
+          key: cache-pnpm-global-cache
+      -
         run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
@@ -554,12 +576,18 @@ jobs:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       -
+        save_cache:
+          key: cache-pnpm-global-cache
+          paths:
+            - /home/circleci/.pnpm-store # <---- TODO: @giladshoham - please fix this
+      -
         persist_to_workspace:
           root: .
           paths:
             - bit/build-harmony
-            - bit/node_modules/bit-bin
-            - bit/node_modules/@teambit
+            - bit/node_modules
+            - .pnpm-store
+
   e2e_test:
     <<: *defaults
     environment:
@@ -605,6 +633,7 @@ jobs:
       -
         restore_cache:
           key: npm-global-bin-v2
+
       - run: ls -l /home/circleci/.npm-global/bin
       # -
       #   run:
@@ -662,6 +691,7 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs
+
   performance_e2e_test:
     <<: *defaults
     resource_class: medium
@@ -711,6 +741,7 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
+
   bit_hub_e2e_test:
     <<: *defaults
     resource_class: medium
@@ -780,11 +811,13 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+
   windows_approval_job:
     <<: *windows_defaults
     steps:
       -
         run: 'echo "starting windows build"'
+
   windows_checkout_code:
     <<: *windows_defaults
     environment:
@@ -796,6 +829,7 @@ jobs:
           root: C:\Users\circleci\project
           paths:
             - bit
+
   # TODO: make it powershell if you want to use it
   windows_set_ssh_key:
     <<: *windows_defaults
@@ -815,6 +849,7 @@ jobs:
           paths:
             - id_rsa
             - id_rsa.pub
+
   windows_set_npm_registries:
     <<: *windows_defaults
     steps:
@@ -851,6 +886,7 @@ jobs:
           # key: windows_bitsrc-registry-stg-v2
           paths:
             - C:\Users\circleci\.npmrc
+
   windows_install_npm_deps:
     <<: *windows_defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
@@ -876,6 +912,7 @@ jobs:
           root: .
           paths:
             - bit/node_modules
+
   windows_build:
     <<: *windows_defaults
     steps:
@@ -891,6 +928,7 @@ jobs:
           root: .
           paths:
             - bit/dist
+
   windows_e2e_test:
     <<: *windows_defaults
     environment:
@@ -978,6 +1016,8 @@ jobs:
       # -
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
+
+
 workflows:
   version: 2
   build_and_test:
@@ -986,24 +1026,14 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
-      -
-        build:
-          requires:
-            - install_npm_deps
-      -
         setup_harmony:
           requires:
             - set_npm_registries
-            - install_npm_deps
-            - build
-      # -
-      #   configure-bit:
-      #     requires:
-      #       - build
+            - checkout_code
+      -
+        build:
+          requires:
+            - setup_harmony
       -
         unit_test:
           requires:
@@ -1011,15 +1041,15 @@ workflows:
       -
         lint:
           requires:
-            - install_npm_deps
+            # - install_npm_deps
+            # - setup_harmony
             - build
-            - setup_harmony
       -
         generate_and_check_types:
           requires:
-            - install_npm_deps
+            # - install_npm_deps
+            # - setup_harmony
             - build
-            - setup_harmony
       -
         generate_docs:
           <<: *semver_tags_only_filters
@@ -1040,9 +1070,9 @@ workflows:
           requires:
             - set_ssh_key
             - set_npm_registries
-            - install_npm_deps
-            - build
+            # - install_npm_deps
             - setup_harmony
+            - build
             # - configure-bit
             # - pack
       -
@@ -1063,6 +1093,7 @@ workflows:
             - build
             - set_ssh_key
             - set_npm_registries
+
   windows_e2e:
     jobs:
       - windows_approval_job:
@@ -1088,6 +1119,7 @@ workflows:
             - windows_build
             # - windows_set_ssh_key
             - windows_set_npm_registries
+
   deploy:
     jobs:
       - checkout_code:
@@ -1097,17 +1129,17 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - checkout_code
-      -
-        install_npm_deps:
-          <<: *semver_tags_only_filters
-          requires:
-            - validate-git-tag-and-version
-            - checkout_code
+      #-
+        # install_npm_deps:
+        #   <<: *semver_tags_only_filters
+        #   requires:
+        #     - validate-git-tag-and-version
+        #     - checkout_code
       -
         build:
           <<: *semver_tags_only_filters
-          requires:
-            - install_npm_deps
+        #  requires:
+        #    - setup_harmony
       -
         npm-publish:
           <<: *semver_tags_only_filters
@@ -1152,20 +1184,21 @@ workflows:
             - publish_to_jfrog
             - github-release
             - npm-publish
+
   deploy_dev:
     jobs:
       - checkout_code:
           <<: *dev_tag_only_filters
-      -
-        install_npm_deps:
-          <<: *dev_tag_only_filters
-          requires:
-            - checkout_code
+      #-
+        # install_npm_deps:
+        #   <<: *dev_tag_only_filters
+        #   requires:
+        #     - checkout_code
       -
         build:
           <<: *dev_tag_only_filters
-          requires:
-            - install_npm_deps
+        #  requires:
+        #    - setup_harmony
       -
         pack:
           <<: *dev_tag_only_filters
@@ -1192,6 +1225,7 @@ workflows:
           requires:
             - build-debian
             - build-rpm
+
   performance_tests:
     triggers:
       - schedule:
@@ -1203,19 +1237,20 @@ workflows:
     jobs:
       - checkout_code
       - set_npm_registries
+      #-
+        # install_npm_deps:
+        #   requires:
+        #     - checkout_code
+        #     - set_npm_registries
       -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
-      -
-        build:
-          requires:
-            - install_npm_deps
+        build
+        #  requires:
+        #    - setup_harmony
       -
         performance_e2e_test:
           requires:
             - build
+
   bit_hub_tests:
     triggers:
       - schedule:
@@ -1228,15 +1263,15 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
+      #-
+      #  install_npm_deps:
+      #    requires:
+      #      - checkout_code
+      #      - set_npm_registries
       -
-        install_npm_deps:
-          requires:
-            - checkout_code
-            - set_npm_registries
-      -
-        build:
-          requires:
-            - install_npm_deps
+        build
+      #    requires:
+      #      - setup_harmony
       -
         bit_hub_e2e_test:
           requires:

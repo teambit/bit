@@ -25,9 +25,8 @@ const GET_COMPONENT = gql`
           description
           required
           type
-          defaultValue {
+          default: defaultValue {
             value
-            computed
           }
         }
       }
@@ -40,7 +39,7 @@ export function Compositions() {
   // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.legacyComponentId.name },
+    variables: { id: component.id._legacy.name },
   });
   const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
@@ -71,20 +70,21 @@ export function Compositions() {
         />
       </HoverSplitter>
       <Pane className={styles.right}>
-        <TabContainer>
-          <TabList>
+        <TabContainer className={styles.tabsContainer}>
+          <TabList className={styles.tabs}>
             <Tab>compositions</Tab>
             <Tab>properties</Tab>
           </TabList>
-          <TabPanel>
+          <TabPanel className={styles.tabContent}>
             <CompositionsPanel
-              onSelect={selectComposition}
+              onSelectComposition={selectComposition}
               url={compositionUrl}
               compositions={component.compositions}
               active={selected}
+              className={styles.compost}
             />
           </TabPanel>
-          <TabPanel>
+          <TabPanel className={styles.tabContent}>
             {properties && properties.length > 0 ? (
               // TODO - make table look good in panel
               <PropTable rows={properties} showListView />

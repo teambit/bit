@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import bluebird from 'bluebird';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
@@ -23,6 +23,7 @@ import { PathLinux } from '../../utils/path';
 import { buildComponentsGraph } from '../graph/components-graph';
 import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -72,6 +73,12 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
+      const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+      if (nextVersion) {
+        const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
+        if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
+        if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
+      }
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
       componentToTag.usedVersion = componentToTag.version;
@@ -159,6 +166,7 @@ export default async function tagModelComponent({
   skipTests = false,
   verbose = false,
   skipAutoTag,
+  persist,
   resolveUnmerged,
   isSnap = false,
 }: {
@@ -173,10 +181,12 @@ export default async function tagModelComponent({
   skipTests: boolean;
   verbose?: boolean;
   skipAutoTag: boolean;
+  persist: boolean;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
+  if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -234,16 +244,15 @@ export default async function tagModelComponent({
   const nonLegacyComps: Component[] = [];
 
   componentsToBuildAndTest.forEach((c) => {
-    // @todo: change this condition to `c.isLegacy` once harmony-beta is merged.
-    c.extensions && c.extensions.length && !consumer.isLegacy ? nonLegacyComps.push(c) : legacyComps.push(c);
+    c.isLegacy ? legacyComps.push(c) : nonLegacyComps.push(c);
   });
-  if (legacyComps.length) {
-    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+  if (legacyComps.length && persist) {
+    await scope.buildMultiple(legacyComps, consumer, false, verbose);
   }
-  if (nonLegacyComps.length) {
-    const ids = componentsToBuildAndTest.map((c) => c.id);
+  if (nonLegacyComps.length && persist) {
+    const ids = nonLegacyComps.map((c) => c.id);
     const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
-    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
+    results.map(updateComponentsByTagResult(nonLegacyComps));
   }
 
   logger.debug('scope.putMany: sequentially test all components');
@@ -313,12 +322,14 @@ export default async function tagModelComponent({
 
   // Run the persistence one by one not in parallel!
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-  const taggedComponents = await pMapSeries(componentsToTag, (consumerComponent) =>
+  const taggedComponents = await bluebird.mapSeries(componentsToTag, (consumerComponent) =>
     persistComponent(consumerComponent)
   );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
-  await scope.objects.persist();
+  if (persist) {
+    await scope.objects.persist();
+  }
   return { taggedComponents, autoTaggedResults };
 }
 

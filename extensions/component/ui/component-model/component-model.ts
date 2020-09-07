@@ -8,17 +8,20 @@ import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 
+// ADDING MORE PROPERTIES HERE IS NOT ALLOWED!!! IF YOU NEED DATA PLEASE ADD A NEW
+// HOOK FROM YOUR ASPECT!!!
+// TODO: remove all properties from here to their rightful place in their aspects.
 export type ComponentModelProps = {
   id: string;
   version: string;
   server: ComponentServer;
   displayName: string;
-  packageName: string;
+  packageName: string; // pkg aspect
   compositions: CompositionProps[];
   tags: TagProps[];
-  status: any;
-  deprecation: DeprecationInfo;
-  env: Descriptor;
+  status: any; // workspace aspect.
+  deprecation: DeprecationInfo; // deprecation aspect
+  env: Descriptor; // env aspect.
 };
 
 export type ComponentServer = {
@@ -115,7 +118,7 @@ export class ComponentModel {
 
   static empty() {
     return new ComponentModel(
-      ComponentID.fromObject({ name: 'root' }),
+      ComponentID.fromObject({ name: 'root', scope: 'temp' }),
       '',
       '',
       { env: '', url: '' },
