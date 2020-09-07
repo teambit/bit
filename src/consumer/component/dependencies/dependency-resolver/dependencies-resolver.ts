@@ -2,6 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import semver from 'semver';
+import { isCoreAspect } from '@teambit/bit';
 
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -858,8 +859,20 @@ either, use the ignore file syntax or change the require statement to have a mod
     else this.issues.resolveErrors[originFile] = error.message;
   }
 
+  /**
+   * when a user uses core-extensions these core-extensions should not be dependencies.
+   * here, we filter them out from all places they could entered as dependencies.
+   * an exception is when running this method on bit-core-extensions themselves (dogfooding), in
+   * which case we recognizes that the current originFile is a core-extension and avoid filtering.
+   */
   processCoreAspects(originFile: PathLinuxRelative) {
-    // TODO: return in case of processing a core aspect.
+    // @todo: remove this hack once extensions are exported
+    const idWithHardCodedTeamBitScope = this.component.id.hasScope()
+      ? this.component.id.toStringWithoutVersion()
+      : `teambit.bit/${this.component.id.toStringWithoutScopeAndVersion()}`;
+    if (isCoreAspect(idWithHardCodedTeamBitScope)) {
+      return;
+    }
     const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     let usedCoreAspects: string[] = [];
@@ -868,7 +881,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       return;
     }
     const coreAspectsPackages = Object.keys(coreAspects);
-    const findMatchingCoreAspect = (packageName) => {
+    const findMatchingCoreAspect = (packageName: string) => {
       return coreAspectsPackages.find((coreAspectName) => {
         return packageName.includes(coreAspectName);
       });
@@ -895,7 +908,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
 
     this.tree[originFile].unidentifiedPackages = filtered;
-    // TODO: @david we need to understand how to make sure core aspects are ignored here.
+
     this.tree[originFile].bits = filteredAspects;
     usedCoreAspects = R.uniq(usedCoreAspects);
     this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
