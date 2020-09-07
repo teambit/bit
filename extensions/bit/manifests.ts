@@ -39,8 +39,9 @@ import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { ChangelogAspect } from '@teambit/changelog';
+import PubsubAspect from '@teambit/pubsub';
+
 import { BitAspect } from './bit.aspect';
-import { PubsubAspect } from '@teambit/pubsub';
 
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
@@ -83,7 +84,7 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
-  // [PubsubAspect.id]: PubsubAspect,
+  [PubsubAspect.id]: PubsubAspect,
 };
 
 export function isCoreAspect(id: string) {
@@ -96,5 +97,3 @@ export function getAllCoreAspectsIds(): string[] {
   const _reserved = [BitAspect.id, ConfigAspect.id];
   return [...Object.keys(manifestsMap), ..._reserved];
 }
-
-// console.log('PubsubAspect--> ', PubsubAspect)
