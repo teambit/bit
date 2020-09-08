@@ -85,6 +85,10 @@ export class AspectLoaderMain {
     return join(modulePath, dist);
   }
 
+  isAspectLoaded(id: string) {
+    return !!this.harmony.get(id);
+  }
+
   getDescriptor(id: string): AspectDescriptor {
     const instance = this.harmony.get<any>(id);
     const iconFn = instance.icon;

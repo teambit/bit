@@ -3,7 +3,7 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import classNames from 'classnames';
 import React from 'react';
-
+import jsxToString from 'jsx-to-string';
 import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
 
@@ -32,7 +32,7 @@ function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
       {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
       {example.description && <div>{example.description}</div>}
-      <Playground code={example.code} scope={example.scope} />
+      <Playground code={jsxToString(example.code)} scope={example.scope} />
     </Section>
   );
 }

@@ -27,6 +27,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "typescript/tsconfig.json",
+                "test": false,
+                "name": "tsconfig.json"
             }
         ],
         "mainFile": "index.ts",
@@ -3890,6 +3895,11 @@
     "typescript": {
         "files": [
             {
+                "relativePath": "cmds/init.cmd.ts",
+                "test": false,
+                "name": "init.cmd.ts"
+            },
+            {
                 "relativePath": "compiler-options.ts",
                 "test": false,
                 "name": "compiler-options.ts"
@@ -4518,5 +4528,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.10"
+    "version": "14.8.9-dev.12"
 }

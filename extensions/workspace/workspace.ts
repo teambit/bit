@@ -708,8 +708,10 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);

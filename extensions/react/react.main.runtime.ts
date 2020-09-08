@@ -1,4 +1,5 @@
 import { Configuration } from 'webpack';
+import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
@@ -9,7 +10,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';
 import { JestAspect } from '@teambit/jest';
-import type { PkgMain } from '@teambit/pkg';
+import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
@@ -19,6 +20,7 @@ import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
+import { DependenciesPolicy } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
@@ -67,6 +69,8 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
+  private tsConfigOverride: TsConfigSourceFile | undefined;
+
   /**
    *  return aspect icon
    */
@@ -78,6 +82,7 @@ export class ReactMain {
    * override the TS config of the React environment.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
+    this.tsConfigOverride = tsconfig;
     return this.envs.override({
       getCompiler: () => {
         return this.reactEnv.getCompiler(tsconfig);
@@ -121,6 +126,13 @@ export class ReactMain {
   }
 
   /**
+   * return the computed tsconfig.
+   */
+  getTsConfig() {
+    return this.reactEnv.getTsConfig(this.tsConfigOverride);
+  }
+
+  /**
    * override the build pipeline of the component environment.
    */
   overrideBuildPipe(tasks: BuildTask[]) {
@@ -129,9 +141,28 @@ export class ReactMain {
     });
   }
 
-  overrideDependencies() {}
+  /**
+   * override the dependency configuration of the component environment.
+   */
+  overrideDependencies(dependencyPolicy: DependenciesPolicy) {
+    return this.envs.override({
+      getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+    });
+  }
 
-  overridePackageJsonProps() {}
+  /**
+   * override the package json props of the component environment.
+   */
+  overridePackageJsonProps(props: PackageJsonProps) {
+    return this.envs.override({
+      getPackageJsonProps: () => {
+        return {
+          ...props,
+          ...this.reactEnv.getPackageJsonProps(),
+        };
+      },
+    });
+  }
 
   /**
    * returns doc adjusted specifically for react components.

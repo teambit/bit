@@ -1,3 +1,4 @@
+import { TsConfigSourceFile } from 'typescript';
 import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -63,6 +64,10 @@ export class ReactEnv implements Environment {
     private config: ReactMainConfig
   ) {}
 
+  getTsConfig(targetTsConfig?: TsConfigSourceFile) {
+    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
+  }
+
   /**
    * returns a component tester.
    */
@@ -76,7 +81,7 @@ export class ReactEnv implements Environment {
    */
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = targetConfig ? merge(defaultTsConfig, targetConfig) : defaultTsConfig;
+    const tsconfig = this.getTsConfig(targetConfig);
 
     return this.ts.createCompiler({
       tsconfig,
