@@ -7,11 +7,11 @@ import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
+import { ComponentSearcher } from '@teambit/component-searcher';
 import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
-import { ComponentSearcher } from './component-searcher';
 
 export type MenuItem = {
   label: JSX.Element | string | null;

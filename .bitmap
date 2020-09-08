@@ -1056,6 +1056,25 @@
         "exported": false,
         "lanes": []
     },
+    "component-searcher": {
+        "files": [
+            {
+                "relativePath": "component-searcher.tsx",
+                "test": false,
+                "name": "component-searcher.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-searcher",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "component-tree": {
         "files": [
             {
