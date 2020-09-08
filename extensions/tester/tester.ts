@@ -10,7 +10,7 @@ export type TestResults = {
     tests: TestResult[];
     file: string;
   }[];
-  error?: string;
+  errors?: string;
 };
 
 export interface TesterContext extends ExecutionContext {
@@ -23,11 +23,6 @@ export interface TesterContext extends ExecutionContext {
    * component workspace.
    */
   //workspace: Workspace;
-
-  /**
-   * graph of capsules ready to be built.
-   */
-  capsuleGraph: Network;
 
   /**
    * defines whether tester is expected to run in quite mode.

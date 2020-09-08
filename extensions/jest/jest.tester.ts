@@ -2,37 +2,29 @@ import { flatten } from 'lodash';
 import { Tester, TesterContext, TestResults, TestResult } from '@teambit/tester';
 import { runCLI } from 'jest';
 import { TestResult as JestTestResult } from '@jest/test-result';
-import { Network } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
 
-  private attachToComponentId(
-    capsuleGraph: Network,
-    testResults: JestTestResult[],
-    components: Component[]
-  ): TestResults[] {
+  private attachToComponentId(testResults: JestTestResult[], components: Component[]): TestResults[] {
     const tests = components.map((component) => {
       return {
         componentId: component.id,
-        testSuites: this.buildTestsBySpecFiles(capsuleGraph, testResults, component),
+        testSuites: this.buildTestsBySpecFiles(testResults, component),
       };
     });
 
     return flatten(tests.filter((test) => test.testSuites.length != 0));
   }
 
-  private buildTestsBySpecFiles(capsuleGraph: Network, testResults: JestTestResult[], component: Component) {
+  private buildTestsBySpecFiles(testResults: JestTestResult[], component: Component) {
     //@ts-ignore
-    return component.specs.map((specFile: string) => {
-      const capsule = capsuleGraph.capsules.getCapsule(component.id);
-      if (!capsule) throw new Error('capsule not found');
-      const testPath = `${capsule.wrkDir}/${specFile}`;
-      const jestTestResult = testResults.find((testResult) => testResult.testFilePath === testPath);
+    return component.relativeSpecs.map((spec: { path: string; file: string; fullPath: string }) => {
+      const jestTestResult = testResults.find((testResult) => testResult.testFilePath === spec.fullPath);
       if (!jestTestResult) return;
       return {
-        file: specFile,
+        file: spec.file,
         tests: this.buildTests(jestTestResult),
         error: jestTestResult.testExecError?.message,
       };
@@ -63,7 +55,7 @@ export class JestTester implements Tester {
 
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
-    const componentTestResults = this.attachToComponentId(context.capsuleGraph, testResults, context.components);
+    const componentTestResults = this.attachToComponentId(testResults, context.components);
     return componentTestResults;
   }
 }

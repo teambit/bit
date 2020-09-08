@@ -1,5 +1,6 @@
 import { Logger } from '@teambit/logger';
 import { EnvService, ExecutionContext } from '@teambit/environments';
+import { Component } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import { join } from 'path';
 import chalk from 'chalk';
@@ -9,7 +10,7 @@ import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-export class TesterService implements EnvService<TestResults> {
+export class TesterService implements EnvService<TestResults[]> {
   constructor(
     readonly workspace: Workspace,
     /**
@@ -20,10 +21,10 @@ export class TesterService implements EnvService<TestResults> {
     private logger: Logger
   ) {}
 
-  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
+  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults[]> {
     const tester: Tester = context.env.getTester();
     const components = detectTestFiles(context.components);
-
+    this.attachCapsulePath(context.components);
     const testMatch = components.reduce((acc: string[], component: any) => {
       const specs = component.specs.map((specFile) =>
         join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: false }), specFile)
@@ -49,5 +50,22 @@ export class TesterService implements EnvService<TestResults> {
     });
 
     return tester.test(testerContext);
+  }
+
+  private attachCapsulePath(components: Component[] & { specs: string[] }) {
+    type ComponentWith = Event & { specs: string[] };
+
+    return components.map((component) => {
+      const specsFiles = component.specs.map((specFile: string) => {
+        const file = component.filesystem.files.find((file) => file.relative === specFile);
+        if (!file) throw new Error('file not found');
+        return { path: file.path, file: specFile, fullPath: file.path };
+      });
+
+      const componentWithSpecs = Object.assign(component, {
+        relativeSpecs: specsFiles,
+      });
+      return componentWithSpecs;
+    });
   }
 }
