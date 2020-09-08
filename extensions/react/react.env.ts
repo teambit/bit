@@ -1,3 +1,4 @@
+import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
@@ -11,12 +12,13 @@ import { Workspace } from '@teambit/workspace';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
-
+import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 
 export const AspectEnvType = 'react';
+const defaultTsConfig = require('./typescript/tsconfig.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -74,7 +76,8 @@ export class ReactEnv implements Environment {
    */
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = targetConfig || require('./typescript/tsconfig.json');
+    const tsconfig = targetConfig ? merge(defaultTsConfig, targetConfig) : defaultTsConfig;
+
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -103,16 +106,20 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext, config?: Configuration): DevServer {
+  getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
+    const defaultConfig = this.getWebpackConfig(context);
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
 
-    return this.webpack.createDevServer(withDocs, config || this.getWebpackConfig(context));
+    return this.webpack.createDevServer(withDocs, config);
   }
 
-  async getBundler(context: BundlerContext): Promise<Bundler> {
-    return this.webpack.createBundler(context, previewConfigFactory());
+  async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
+    const defaultConfig = previewConfigFactory();
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
+    return this.webpack.createBundler(context, config);
   }
 
   /**

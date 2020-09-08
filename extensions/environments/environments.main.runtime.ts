@@ -84,19 +84,20 @@ export class EnvsMain {
    * compose a new environment from a list of environment transformers.
    */
   compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
-    envTransformers.forEach((transformer) => {
-      transformer(targetEnv);
-    });
+    const a = envTransformers.reduce((acc, transformer) => {
+      acc = transformer(acc);
+      return acc;
+    }, targetEnv);
 
-    return targetEnv;
+    return a;
   }
 
   /**
    * override members of an environment and return an env transformer.
    */
-  override(targetEnv: Environment = {}): EnvTransformer {
+  override(propsToOverride: Environment): EnvTransformer {
     return (env: Environment) => {
-      return this.merge(env, targetEnv);
+      return this.merge(propsToOverride, env);
     };
   }
 
@@ -173,7 +174,11 @@ export class EnvsMain {
 
     allNames.forEach((key: string) => {
       const fn = sourceEnv[key];
-      if (!fn || !fn.bind || targetEnv[key]) return;
+      if (targetEnv[key]) return;
+      if (!fn || !fn.bind) {
+        targetEnv[key] = fn;
+        return;
+      }
       targetEnv[key] = fn.bind(sourceEnv);
     });
 

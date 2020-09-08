@@ -18,7 +18,7 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { DevServerContext } from '@teambit/bundler';
+import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
@@ -79,7 +79,9 @@ export class ReactMain {
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
     return this.envs.override({
-      getCompiler: () => this.reactEnv.getCompiler(tsconfig),
+      getCompiler: () => {
+        return this.reactEnv.getCompiler(tsconfig);
+      },
     });
   }
 
@@ -104,7 +106,7 @@ export class ReactMain {
    */
   overridePreviewConfig() {
     return this.envs.override({
-      // getBundler: () => this.reactEnv.getBundler(context),
+      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context),
     });
   }
 
