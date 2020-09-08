@@ -5,12 +5,19 @@ import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { CommandBar } from '@teambit/command-bar.command-bar';
-import { CommandId, CommandEntry, CommandObj } from '@teambit/commands';
+import { CommandId, CommandEntry, CommandHandler } from '@teambit/commands';
 import { CommandSearcher } from '@teambit/command-bar.command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 
-export type CommanderSearchResult = CommandObj; // TODO
+export type CommanderSearchResult = {
+  id: string;
+  name: string;
+  description?: string;
+  handler: CommandHandler;
+  icon?: string;
+  iconAlt?: string;
+};
 
 export interface SearchProvider {
   /** provide completions for this search term */
@@ -135,6 +142,6 @@ export class CommandBarUI {
 
 CommandBarAspect.addRuntime(CommandBarUI);
 
-function commandsToArray(commands: Map<CommandId, CommandEntry>): CommandObj[] {
+function commandsToArray(commands: Map<CommandId, CommandEntry>): CommanderSearchResult[] {
   return Array.from(commands.entries()).map(([id, obj]) => ({ ...obj, id }));
 }

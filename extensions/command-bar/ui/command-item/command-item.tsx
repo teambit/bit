@@ -7,19 +7,21 @@ import styles from './command-item.module.scss';
 
 export type CommandItemProps = {
   entry: CommanderSearchResult;
-  // hotkey?: Keybinding;
 } & CommandBarItemProps;
 
 // TODO highlight match from Fuse
 
 export function CommandItem({ entry, ...rest }: CommandItemProps) {
-  const { handler, name, description } = entry;
+  const { handler, name, description, icon, iconAlt } = entry;
 
   return (
     <CommandBarItem {...rest} onMouseDown={handler}>
       {/* TODO */}
       {/* <KeySequence className={styles.commandKeys}>{hotkey}</KeySequence> */}
-      <div>{name}</div>
+      <div className={styles.main}>
+        {icon && <img src={icon} alt={iconAlt} className={styles.icon} />}
+        <div>{name}</div>
+      </div>
       <div className={styles.commandDescription}>{description}</div>
     </CommandBarItem>
   );

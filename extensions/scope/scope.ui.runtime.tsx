@@ -1,12 +1,13 @@
-import type { ComponentUI } from '@teambit/component';
+import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
-import { RouteSlot } from '@teambit/react-router';
+import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
 import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-
+import { ComponentSearcher } from '@teambit/component-searcher';
+import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 
@@ -29,9 +30,11 @@ export class ScopeUI {
      * menu slot
      */
     private menuSlot: RouteSlot,
-    private sidebar: SidebarUI
+    private sidebar: SidebarUI,
+    reactRouterUI: ReactRouterUI
   ) {
     this.registerExplicitRoutes();
+    this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
   }
 
   /**
@@ -40,11 +43,6 @@ export class ScopeUI {
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
     return this;
-  }
-
-  listComponents() {
-    throw new Error('not implemented!');
-    return undefined;
   }
 
   private registerExplicitRoutes() {
@@ -64,25 +62,44 @@ export class ScopeUI {
       routes: [
         {
           path: '/',
-          children: <Scope routeSlot={this.routeSlot} menuSlot={this.menuSlot} sidebar={<this.sidebar.render />} />,
+          children: (
+            <Scope
+              routeSlot={this.routeSlot}
+              menuSlot={this.menuSlot}
+              sidebar={<this.sidebar.render />}
+              scopeUi={this}
+            />
+          ),
         },
       ],
     };
   }
 
-  static dependencies = [UIAspect, ComponentAspect, SidebarAspect];
+  /** registers available components */
+  setComponents = (components: ComponentModel[]) => {
+    this.componentSearcher.update(components);
+  };
 
+  componentSearcher: ComponentSearcher;
+
+  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
   static runtime = UIRuntime;
-
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
 
   static async provider(
-    [ui, componentUi, sidebar]: [UiUI, ComponentUI, SidebarUI],
+    [ui, componentUi, sidebar, commandBarUI, reactRouterUI]: [
+      UiUI,
+      ComponentUI,
+      SidebarUI,
+      CommandBarUI,
+      ReactRouterUI
+    ],
     config,
     [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
   ) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar);
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar, reactRouterUI);
     ui.registerRoot(scopeUi.root);
+    commandBarUI.addSearcher(scopeUi.componentSearcher);
 
     return scopeUi;
   }

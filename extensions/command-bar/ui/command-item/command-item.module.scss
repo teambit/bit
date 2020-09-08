@@ -12,6 +12,10 @@
   }
 }
 
+.main {
+  display: flex;
+}
+
 .commandKeys {
   float: right;
   font-size: 0.76em;
@@ -19,4 +23,10 @@
 
 .commandDescription {
   font-size: 0.85em;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
 }

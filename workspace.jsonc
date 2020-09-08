@@ -118,6 +118,7 @@
         "jest": "^26.0.1",
         "join-path": "^1.1.1",
         "lodash.head": "^4.0.1",
+        "memoize-one": "5.1.1",
         "mime": "^2.4.6",
         "mini-css-extract-plugin": "^0.9.0",
         "mousetrap": "^1.6.5",

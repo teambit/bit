@@ -40,10 +40,10 @@ export class WorkspaceUI {
 
     private sidebarSlot: SidebarWidgetSlot,
 
-    private reactRouterUI: ReactRouterUI
+    reactRouterUI: ReactRouterUI
   ) {
     this.registerExplicitRoutes();
-    this.componentSearcher = new ComponentSearcher([], reactRouterUI.navigateTo);
+    this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
   }
 
   /**
