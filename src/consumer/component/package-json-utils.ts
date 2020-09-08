@@ -99,7 +99,7 @@ export function preparePackageJsonToWrite(
   ignoreBitDependencies: BitIds | boolean = true,
   excludeRegistryPrefix?: boolean,
   packageManager?: string,
-  isIsolated: boolean
+  isIsolated?: boolean
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
