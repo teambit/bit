@@ -27,43 +27,44 @@ export class Watcher {
 
   async watch(opts: { msgs; verbose?: boolean }) {
     this.verbose = Boolean(opts.verbose);
-    await this.watchAll(opts.msgs, this.verbose);
+    await this.watchAll({ msgs: opts.msgs, verbose: this.verbose });
   }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
   }
 
-  async watchAll(msgs, verbose) {
+  async watchAll(opts?: { msgs; verbose?: boolean }) {
     // TODO: run build in the beginning of process (it's work like this in other envs)
+    const _verbose = opts?.verbose || false;
     this.createWatcher();
     const watcher = this.fsWatcher;
-    msgs.onStart(this.workspace);
+    opts?.msgs?.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
-        watcher.on('all', msgs.onAll);
+        watcher.on('all', opts?.msgs?.onAll);
       }
       watcher.on('ready', () => {
-        msgs.onReady(this.workspace, this.getWatchPathsSortByComponent(), verbose);
+        opts?.msgs?.onReady(this.workspace, this.getWatchPathsSortByComponent(), _verbose);
       });
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
         const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
         const duration = new Date().getTime() - startTime;
-        msgs.onChange(filePath, buildResults, verbose, duration);
+        opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
       watcher.on('add', (p) => {
-        msgs.onAdd(p);
+        opts?.msgs?.onAdd(p);
         this.handleChange(p, true).catch((err) => reject(err));
       });
       watcher.on('unlink', (p) => {
-        msgs.onUnlink(p);
+        opts?.msgs?.onUnlink(p);
         this.handleChange(p).catch((err) => reject(err));
       });
       watcher.on('error', (err) => {
-        msgs.onError(err);
+        opts?.msgs?.onError(err);
         reject(err);
       });
     });
