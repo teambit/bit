@@ -10,6 +10,8 @@ import { Tester, TestResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
+type ComponentWithSpecs = Component & { specs: string[] };
+
 export class TesterService implements EnvService<TestResults[]> {
   constructor(
     readonly workspace: Workspace,
@@ -23,9 +25,9 @@ export class TesterService implements EnvService<TestResults[]> {
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults[]> {
     const tester: Tester = context.env.getTester();
-    const components = detectTestFiles(context.components);
-    this.attachCapsulePath(context.components);
-    const testMatch = components.reduce((acc: string[], component: any) => {
+    const components: ComponentWithSpecs[] = detectTestFiles(context.components);
+    this.attachCapsulePath(components);
+    const testMatch = components.reduce((acc: string[], component) => {
       const specs = component.specs.map((specFile) =>
         join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: false }), specFile)
       );
@@ -52,9 +54,7 @@ export class TesterService implements EnvService<TestResults[]> {
     return tester.test(testerContext);
   }
 
-  private attachCapsulePath(components: Component[] & { specs: string[] }) {
-    type ComponentWith = Event & { specs: string[] };
-
+  private attachCapsulePath(components: ComponentWithSpecs[]) {
     return components.map((component) => {
       const specsFiles = component.specs.map((specFile: string) => {
         const file = component.filesystem.files.find((file) => file.relative === specFile);

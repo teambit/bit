@@ -4,14 +4,15 @@ import { Workspace } from '@teambit/workspace';
 import { Network } from '@teambit/isolator';
 import { TestResult } from './test-results';
 
-export type TestResults = {
+export type a = {
   componentId: ComponentID;
   testSuites: {
     tests: TestResult[];
     file: string;
   }[];
-  errors?: string;
 };
+
+export type TestResults = {};
 
 export interface TesterContext extends ExecutionContext {
   /**
