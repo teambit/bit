@@ -127,7 +127,7 @@ export class UiMain {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      name
+      uiRoot.name
     );
 
     const compiler = webpack(config);
