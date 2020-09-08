@@ -115,13 +115,15 @@ export default class PackageJsonFile {
     componentDir: PathRelative,
     component: Component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    excludeRegistryPrefix? = false
+    excludeRegistryPrefix? = false,
+    addDefaultScopeToCompId? = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
     const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
-    const componentIdWithDefaultScope = component.id.hasScope()
-      ? component.id
-      : component.id.changeScope(component.defaultScope);
+    const componentIdWithDefaultScope =
+      component.id.hasScope() || !addDefaultScopeToCompId
+        ? component.id
+        : component.id.changeScope(component.defaultScope);
     const packageJsonObject = {
       name,
       version: component.version,

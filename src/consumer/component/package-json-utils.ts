@@ -98,7 +98,8 @@ export function preparePackageJsonToWrite(
   override = true,
   ignoreBitDependencies: BitIds | boolean = true,
   excludeRegistryPrefix?: boolean,
-  packageManager?: string
+  packageManager?: string,
+  isIsolated: boolean
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
@@ -134,7 +135,7 @@ export function preparePackageJsonToWrite(
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
-    distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
+    distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix, isIsolated);
     const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
     distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
     addDependencies(distPackageJson);
