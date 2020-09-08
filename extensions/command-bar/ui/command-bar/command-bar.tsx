@@ -2,13 +2,12 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { AutoCompleteInput } from '@teambit/command-bar.autocomplete-input';
-import { CommandBarUI } from '@teambit/command-bar/command-bar.ui.runtime';
+import { CommandBarUI, CommanderSearchResult } from '@teambit/command-bar/command-bar.ui.runtime';
 import { CommandItem } from '@teambit/command-bar.command-item';
-import { CommandObj } from '@teambit/commands';
 import styles from './command-bar.module.scss';
 
 export type CommandBarProps = {
-  search: (term: string, limit?: number) => CommandObj[];
+  search: (term: string, limit?: number) => CommanderSearchResult[];
   commander: CommandBarUI;
 } & CardProps;
 
@@ -47,7 +46,7 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
         onUp={decrement}
         onEnter={handleEnter}
         onEscape={() => setVisibility(false)}
-        onBlur={() => setVisibility(false)}
+        // onBlur={() => setVisibility(false)}
       />
       {options.map((x, idx) => (
         <CommandItem

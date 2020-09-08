@@ -12,6 +12,13 @@
   }
 }
 
+.name {
+  flex: 1 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .main {
   display: flex;
 }

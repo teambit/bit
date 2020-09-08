@@ -5,7 +5,7 @@ import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { CommandBar } from '@teambit/command-bar.command-bar';
-import { CommandId, CommandEntry, CommandHandler } from '@teambit/commands';
+import { CommandId, CommandHandler } from '@teambit/commands';
 import { CommandSearcher } from '@teambit/command-bar.command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
@@ -17,6 +17,7 @@ export type CommanderSearchResult = {
   handler: CommandHandler;
   icon?: string;
   iconAlt?: string;
+  keybinding?: Keybinding;
 };
 
 export interface SearchProvider {
@@ -34,9 +35,16 @@ const RESULT_LIMIT = 5;
 type AddCommandArgs = {
   commandId: string;
   handler: () => any;
-  key?: Keybinding;
+  keybinding?: Keybinding;
   displayName: string;
   description?: string;
+};
+
+export type CommandEntry = {
+  name: string;
+  description?: string;
+  handler: CommandHandler;
+  keybinding?: Keybinding;
 };
 
 /** Quick launch actions. Use the `addSearcher` slot to extend the available actions */
@@ -62,17 +70,18 @@ export class CommandBarUI {
   }
 
   // TODO - make multiple
-  addCommand({ commandId, handler, displayName, key, description }: AddCommandArgs) {
+  addCommand({ commandId, handler, displayName, keybinding, description }: AddCommandArgs) {
     if (this.commandRegistry.has(commandId)) throw new Error(`command already exists: "${commandId}"`);
 
     this.commandRegistry.set(commandId, {
       handler,
       name: displayName,
       description,
+      keybinding,
     });
 
-    if (key) {
-      this.addKeybinding(key, commandId);
+    if (keybinding) {
+      this.addKeybinding(keybinding, commandId);
     }
 
     this.commandSearcher.update(commandsToArray(this.commandRegistry));
@@ -103,7 +112,7 @@ export class CommandBarUI {
   setVisibility?: (visible: boolean) => void;
 
   getCommandBar = () => {
-    return <CommandBar key="CommandBarUI" search={this.search} onClose={this.close} commander={this} />;
+    return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
   };
 
   constructor(private searcherSlot: SearcherSlot) {
@@ -120,7 +129,7 @@ export class CommandBarUI {
       commandId: commandBarCommands.open,
       handler: commandBar.open,
       displayName: 'open command bar',
-      key: 'mod+k',
+      keybinding: 'mod+k',
     });
     commandBar.addCommand({
       commandId: commandBarCommands.close,
@@ -132,6 +141,7 @@ export class CommandBarUI {
       commandId: 'bararara',
       handler: () => alert('bara'),
       displayName: 'bararara',
+      keybinding: ['mod+y', 'alt+b alt+k'],
     });
 
     uiUi.registerHudItem(commandBar.getCommandBar());

@@ -1,1 +1,1 @@
-export { KeySequence, Keycap, KeySequenceProps, KeycapProps } from './keycap';
+export { KeyShortcut, Keycap, KeyShortcutProps, KeycapProps } from './keycap';

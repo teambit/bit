@@ -1,11 +1,26 @@
-.hotkeys {
+.keyShortcut {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+
+  > :not(:last-child) {
+    margin-right: 0.38em;
+  }
+}
+
+.keySequences {
+  display: flex;
+  align-items: center;
+}
+
+.keySequence {
   white-space: nowrap;
   > :not(:last-child) {
     margin-right: 0.38em;
   }
 }
 
-.kbd {
+.keycap {
   display: inline-block;
   min-width: 1em;
   line-height: 1;
@@ -13,6 +28,7 @@
   border-radius: 0.23em;
   text-align: center;
   vertical-align: middle;
+  text-transform: uppercase;
 
   background: var(--bg-topping-highlight);
   box-shadow: var(--shadow-raised-low);
