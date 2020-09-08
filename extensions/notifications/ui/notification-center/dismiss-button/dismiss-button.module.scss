@@ -1,0 +1,55 @@
+$animationTime: 300ms;
+
+.dismissButton {
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 40px;
+
+  &:global(-entering) {
+    display: flex;
+    animation: enter $animationTime forwards;
+  }
+
+  &:global(-entered) {
+    display: flex;
+  }
+
+  &:global(-exiting) {
+    display: flex;
+    animation: exit $animationTime forwards;
+  }
+}
+
+@keyframes exit {
+  0% {
+    transform: translate(0%, 0) scale(1);
+    opacity: 1;
+  }
+
+  99% {
+    transform: translate(200%, 0) scale(0.1);
+    opacity: 0;
+  }
+  100% {
+    visibility: hidden;
+  }
+}
+
+@keyframes enter {
+  0% {
+    transform: translate(200%, 0) scale(0.1);
+    opacity: 0;
+  }
+
+  99% {
+    transform: translate(0%, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+:export {
+  animationTime: $animationTime / 1ms;
+}

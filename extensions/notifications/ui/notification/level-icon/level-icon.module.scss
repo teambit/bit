@@ -1,0 +1,11 @@
+.notificationIcon {
+  font-weight: bold;
+  text-align: center;
+
+  color: var(--base-color);
+
+  &:before {
+    // color for transparent content
+    background: radial-gradient(circle at center, white 0%, white 50%, transparent 51%);
+  }
+}

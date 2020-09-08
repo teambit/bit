@@ -1,4 +1,5 @@
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
+import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
 import React, { ReactNode } from 'react';
 
 import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
@@ -9,7 +10,7 @@ export function ClientContext({ children }: { children: ReactNode }) {
   return (
     <React.StrictMode>
       <LoaderContext.Provider value={loaderApi}>
-        <link rel="stylesheet" href="https://i.icomoon.io/public/9dc81da9ad/Bit/style.css"></link>
+        <EvaIconFont query="av92bs" />
         <Theme>
           <LoaderRibbon active={isLoading} />
           {children}

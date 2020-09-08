@@ -748,7 +748,7 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.getMany(componentIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
-      stringIds.push(component.id.toString());
+      stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
       const isExist = await fs.pathExists(localPath);
@@ -822,7 +822,7 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const resolveP = components.map(async (component) => {
-      stringIds.push(component.id.toString());
+      stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
       const isExist = await fs.pathExists(localPath);
