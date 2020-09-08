@@ -32,12 +32,11 @@ import TesterExtension from '../../legacy-extensions/tester-extension';
 import logger from '../../logger/logger';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { ScopeListItem } from '../../scope/models/model-component';
-import { Log } from '../../scope/models/version';
+import Version, { Log } from '../../scope/models/version';
 import Scope from '../../scope/scope';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import Version from '../../version';
 import BitMap from '../bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import buildComponent from '../component-ops/build-component';
@@ -180,7 +179,6 @@ export default class Component {
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _currentlyUsedVersion: BitId; // used by listScope functionality
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;

@@ -409,6 +409,7 @@ export default class SSH implements Network {
       return RemovedObjects.fromObjects(payload);
     });
   }
+
   deprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
     return this.exec(
       '_deprecate',
@@ -421,6 +422,7 @@ export default class SSH implements Network {
       return payload;
     });
   }
+
   undeprecateMany(ids: string[], context?: Record<string, any>): Promise<ComponentObjects[]> {
     return this.exec(
       '_undeprecate',

@@ -63,7 +63,6 @@ export class ReactMain {
   /**
    *  return extiontion icon
    */
-
   icon() {
     return 'https://static.bit.dev/extensions-icons/react.svg';
   }

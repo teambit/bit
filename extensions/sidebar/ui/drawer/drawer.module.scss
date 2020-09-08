@@ -2,10 +2,14 @@
   max-height: 100%;
   overflow: hidden;
   min-height: 32px;
+
+  display: flex;
+  flex-direction: column;
 }
 .drawerName {
   font-size: var(--p-xxs);
   height: 32px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,6 +17,7 @@
   user-select: none;
   font-weight: bold;
   padding: 0 8px;
+
   border-width: 1px;
   border-style: solid;
   border-color: var(--bg-color);
@@ -67,11 +72,13 @@
 }
 
 .drawerContent {
-  max-height: 0;
+  flex: 1 1;
   transition: max-height 300ms ease-in-out;
   overflow-x: hidden;
   overflow-y: scroll;
+
+  max-height: 0;
   &.open {
-    max-height: calc(100% - 36px);
+    max-height: 100%;
   }
 }

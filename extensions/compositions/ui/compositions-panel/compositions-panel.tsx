@@ -7,12 +7,19 @@ import styles from './compositions-panel.module.scss';
 
 export type CompositionsPanelProps = {
   compositions: Composition[];
-  onSelect: (composition: Composition) => void;
+  onSelectComposition: (composition: Composition) => void;
   active?: Composition;
   url: string;
-};
+} & React.HTMLAttributes<HTMLUListElement>;
 
-export function CompositionsPanel({ url, compositions, onSelect, active }: CompositionsPanelProps) {
+export function CompositionsPanel({
+  url,
+  compositions,
+  onSelectComposition: onSelect,
+  active,
+  className,
+  ...rest
+}: CompositionsPanelProps) {
   const handleSelect = useCallback(
     (selected: Composition) => {
       onSelect && onSelect(selected);
@@ -21,7 +28,7 @@ export function CompositionsPanel({ url, compositions, onSelect, active }: Compo
   );
 
   return (
-    <ul className={styles.composition}>
+    <ul {...rest} className={classNames(className)}>
       {compositions.map((composition, key) => {
         // TODO - move to composition panel node
         return (

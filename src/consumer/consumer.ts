@@ -67,6 +67,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
+import { PublishResults, publishComponentsToRegistry } from '../scope/component-ops/publish-components';
 
 type ConsumerProps = {
   projectPath: string;
@@ -242,9 +243,9 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getParsedId(id: BitIdStr, useVersionFromBitmap = false): BitId {
+  getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): BitId {
     // @ts-ignore (we know it will never be undefined since it pass throw=true)
-    const bitId: BitId = this.bitMap.getExistingBitId(id, true);
+    const bitId: BitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId);
     if (!useVersionFromBitmap) {
       const version = BitId.getVersionOnlyFromString(id);
       return bitId.changeVersion(version || LATEST);
@@ -252,8 +253,8 @@ export default class Consumer {
     return bitId;
   }
 
-  getParsedIdIfExist(id: BitIdStr): BitId | undefined {
-    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false);
+  getParsedIdIfExist(id: BitIdStr, searchWithoutScopeInProvidedId = false): BitId | undefined {
+    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
@@ -504,18 +505,28 @@ export default class Consumer {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
-  async tag(
-    ids: BitIds,
-    message: string,
-    exactVersion: string | undefined,
-    releaseType: semver.ReleaseType,
-    force: boolean | undefined,
-    verbose: boolean | undefined,
-    ignoreUnresolvedDependencies: boolean | undefined,
-    ignoreNewestVersion: boolean,
-    skipTests = false,
-    skipAutoTag: boolean
-  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
+  async tag(tagParams: {
+    ids: BitIds;
+    message: string;
+    exactVersion: string | undefined;
+    releaseType: semver.ReleaseType;
+    force: boolean | undefined;
+    verbose: boolean | undefined;
+    ignoreUnresolvedDependencies: boolean | undefined;
+    ignoreNewestVersion: boolean;
+    skipTests: boolean;
+    skipAutoTag: boolean;
+    persist: boolean;
+  }): Promise<{
+    taggedComponents: Component[];
+    autoTaggedResults: AutoTagResult[];
+    publishResults: PublishResults;
+    isSoftTag: boolean;
+  }> {
+    if (this.isLegacy) {
+      tagParams.persist = true;
+    }
+    const { ids, persist, exactVersion, releaseType } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -527,7 +538,7 @@ export default class Consumer {
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
-    if (!ignoreUnresolvedDependencies) {
+    if (!tagParams.ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
       const componentsWithOtherIssues = components.filter((component) => {
         const issues = component.issues;
@@ -546,23 +557,61 @@ export default class Consumer {
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
-      message,
-      exactVersion,
-      releaseType,
-      force,
       consumer: this,
-      ignoreNewestVersion,
-      skipTests,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      verbose,
-      skipAutoTag,
+      ...tagParams,
     });
 
     const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    await this.updateComponentsVersions(allComponents);
+    if (persist) {
+      await this.updateComponentsVersions(allComponents);
+    } else {
+      this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
+    }
 
-    return { taggedComponents, autoTaggedResults };
+    let publishResults;
+    if (!this.isLegacy && persist) {
+      const allIds = [
+        ...taggedComponents.map((t) => t.id),
+        ...autoTaggedResults.map((a) => a.component.toBitIdWithLatestVersionAllowNull()),
+      ];
+      publishResults = await publishComponentsToRegistry(this, allIds);
+    }
+
+    return { taggedComponents, autoTaggedResults, publishResults, isSoftTag: !persist };
+  }
+
+  updateNextVersionOnBitmap(
+    taggedComponents: Component[],
+    autoTaggedResults: AutoTagResult[],
+    exactVersion,
+    releaseType
+  ) {
+    taggedComponents.forEach((taggedComponent) => {
+      const pendingVersionLog = taggedComponent.pendingVersion.log;
+      if (!pendingVersionLog) throw new Error('updateNextVersionOnBitmap, unable to get endingVersion.log');
+      const nextVersion = {
+        version: exactVersion || releaseType,
+        message: pendingVersionLog.message,
+        username: pendingVersionLog.username,
+        email: pendingVersionLog.email,
+      };
+      if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
+      taggedComponent.componentMap.updateNextVersion(nextVersion);
+    });
+    autoTaggedResults.forEach((autoTaggedResult) => {
+      const versionLog = autoTaggedResult.version.log;
+      const nextVersion = {
+        version: exactVersion || releaseType,
+        message: versionLog.message,
+        username: versionLog.username,
+        email: versionLog.email,
+      };
+      const id = autoTaggedResult.component.toBitIdWithLatestVersionAllowNull();
+      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
+      componentMap.updateNextVersion(nextVersion);
+    });
+    if (taggedComponents.length) this.bitMap.markAsChanged();
   }
 
   async snap({
@@ -625,6 +674,7 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       skipAutoTag: skipAutoSnap,
+      persist: true,
       resolveUnmerged,
       isSnap: true,
     });
@@ -712,6 +762,7 @@ export default class Consumer {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
+      componentMap.clearNextVersion();
       const packageJsonDir = getPackageJsonDir(componentMap, component, id);
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
@@ -867,8 +918,7 @@ export default class Consumer {
     }
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scope = await Scope.load(scopePath);
+    const scope = await Scope.load(scopePath as string);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerInfo.path,

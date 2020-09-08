@@ -1,25 +1,34 @@
-$topbarHeight: 64px;
-
 .emptyContainer {
   height: 100vh;
 }
 
-.main {
-  width: 100%;
+.workspaceWrapper {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // TODO
   height: 100vh;
 }
 
-.workspaceWrapper {
-  height: 100vh;
+.topbar {
+  flex: none;
+}
+
+.main {
+  flex: 1 1;
+
+  height: 100%;
   overflow: hidden;
 }
 
-.sidebarContainer {
+.splitter {
   position: relative;
-  width: 100%;
-  border-right: 1px solid #ededed;
+  border-left: 1px solid var(--border-color, #ededed);
 }
 
-.sideBar {
+.sidebar {
+  min-width: 100px;
+  max-width: 85%;
   position: relative;
+
+  height: 100%;
 }

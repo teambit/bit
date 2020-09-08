@@ -4,7 +4,7 @@ import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import classNames from 'classnames';
 import React from 'react';
 
-import { Playground } from '../playground';
+import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
 
 export type ExamplesOverviewProps = {

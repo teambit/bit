@@ -2,10 +2,7 @@ $topbarHeight: 56px;
 
 .topbar {
   display: flex;
-  flex: none;
   align-items: center;
-
-  // padding-left: 16px;
 
   height: $topbarHeight;
   background: #ededed;

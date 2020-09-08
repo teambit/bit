@@ -6,10 +6,11 @@ import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import GeneralError from 'bit-bin/dist/error/general-error';
 import { Scope } from 'bit-bin/dist/scope';
-import { PublishPostExportResult } from 'bit-bin/dist/scope/component-ops/publish-during-export';
+import { PublishPostTagResult } from 'bit-bin/dist/scope/component-ops/publish-components';
 import Bluebird from 'bluebird';
 import execa from 'execa';
 import R from 'ramda';
+import { PkgAspect } from './pkg.aspect';
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -40,11 +41,11 @@ export class Publisher {
     return this.publishMultipleCapsules(capsules);
   }
 
-  async postExportListener(ids: BitId[]): Promise<PublishPostExportResult[]> {
+  async postTagPersistListener(ids: BitId[]): Promise<PublishPostTagResult[]> {
     const componentIds = ids.map((id) => id.toString());
-    const components = await this.publish(componentIds, {});
+    const components = await this.publish(componentIds, { allowStaged: true });
     return components.map((c) => ({
-      id: c.id.legacyComponentId,
+      id: c.id._legacy,
       data: c.data,
       errors: c.errors as string[],
     }));
@@ -131,13 +132,13 @@ export class Publisher {
   }
 
   public shouldPublish(extensions: ExtensionDataList): boolean {
-    const pkgExt = extensions.findExtension('teambit.bit/pkg');
+    const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;
     return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
   }
 
   private getExtraArgsFromConfig(component: Component): string | undefined {
-    const pkgExt = component.config.extensions.findExtension('teambit.bit/pkg');
+    const pkgExt = component.config.extensions.findExtension(PkgAspect.id);
     return pkgExt?.config?.packageManagerPublishArgs;
   }
 

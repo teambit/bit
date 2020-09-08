@@ -1,8 +1,7 @@
 .sidebar {
-  width: 100%;
-  height: calc(100vh - 56px);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  flex: 1 1 100%;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }

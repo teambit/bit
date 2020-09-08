@@ -39,6 +39,7 @@ import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
+import { getLatestVersion } from '../../utils/semver-helper';
 
 type State = {
   versions?: {
@@ -283,8 +284,7 @@ export default class Component extends BitObject {
 
   latestVersion(): string {
     if (empty(this.versions)) return VERSION_ZERO;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return semver.maxSatisfying(this.listVersions(), '*')!;
+    return getLatestVersion(this.listVersions());
   }
 
   // @todo: make it readable, it's a mess

@@ -38,10 +38,11 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
-
+import { ChangelogAspect } from '@teambit/changelog';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
+  [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -72,7 +73,6 @@ export const manifestsMap = {
   [AspectAspect.id]: AspectAspect,
   [WebpackAspect.id]: WebpackAspect,
   [SchemaAspect.id]: SchemaAspect,
-  [AspectLoaderAspect.id]: AspectLoaderAspect,
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
@@ -81,6 +81,7 @@ export const manifestsMap = {
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
+  [ChangelogAspect.id]: ChangelogAspect,
 };
 
 export function isCoreAspect(id: string) {

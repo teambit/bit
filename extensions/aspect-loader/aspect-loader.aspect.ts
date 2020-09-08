@@ -1,4 +1,4 @@
-import { Aspect } from '@teambit/harmony/dist/aspect';
+import { Aspect } from '@teambit/harmony';
 
 export const AspectLoaderAspect = Aspect.create({
   id: 'teambit.bit/aspect-loader',

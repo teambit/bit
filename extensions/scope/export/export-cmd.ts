@@ -6,7 +6,6 @@ import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
 import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
 import { EjectResults } from 'bit-bin/dist/consumer/component-ops/eject-components';
 import GeneralError from 'bit-bin/dist/error/general-error';
-import { PublishResults } from 'bit-bin/dist/scope/component-ops/publish-during-export';
 import { Lane } from 'bit-bin/dist/scope/models';
 import chalk from 'chalk';
 import R from 'ramda';
@@ -17,7 +16,6 @@ type ExportResults = {
   missingScope: BitId[];
   exportedLanes: Lane[];
   ejectResults: EjectResults | null | undefined;
-  publishResults: PublishResults;
 };
 
 export class ExportCmd implements Command {
@@ -81,14 +79,7 @@ export class ExportCmd implements Command {
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
       );
     }
-    const {
-      componentsIds,
-      nonExistOnBitMap,
-      missingScope,
-      exportedLanes,
-      ejectResults,
-      publishResults,
-    } = await exportAction({
+    const { componentsIds, nonExistOnBitMap, missingScope, exportedLanes, ejectResults } = await exportAction({
       ids,
       remote,
       eject,
@@ -140,31 +131,6 @@ ${exportedLanes.map((l) => `${chalk.bold(l.name)} (${l.components.length} compon
       );
     };
 
-    const publishOutput = () => {
-      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
-      const failedCompsStr = publishResults.failedComponents
-        .map((failed) => {
-          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
-        })
-        .join('\n\n');
-      const successCompsStr = publishResults.publishedComponents
-        .map((success) => {
-          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
-        })
-        .join('\n');
-      const failedTitle = `\n\n${chalk.red(
-        'failed publishing the following components, please run "bit publish" to re-try\n'
-      )}`;
-      const successTitle = `\n\n${chalk.green(
-        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
-      )}`;
-      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
-      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
-      return successOutput + failedOutput;
-    };
-
-    return (
-      nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + publishOutput() + ejectOutput()
-    );
+    return nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + ejectOutput();
   }
 }

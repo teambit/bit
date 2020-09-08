@@ -19,6 +19,11 @@
                 "name": "aspect.main.runtime.ts"
             },
             {
+                "relativePath": "core-exporter.task.ts",
+                "test": false,
+                "name": "core-exporter.task.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -480,6 +485,16 @@
     "component": {
         "files": [
             {
+                "relativePath": "aspect-entry.ts",
+                "test": false,
+                "name": "aspect-entry.ts"
+            },
+            {
+                "relativePath": "aspect-list.ts",
+                "test": false,
+                "name": "aspect-list.ts"
+            },
+            {
                 "relativePath": "component-factory.ts",
                 "test": false,
                 "name": "component-factory.ts"
@@ -563,6 +578,11 @@
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "exceptions/missing-scope.ts",
+                "test": false,
+                "name": "missing-scope.ts"
             },
             {
                 "relativePath": "exceptions/nothing-to-snap.ts",
@@ -1071,9 +1091,24 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "exceptions/main-aspect-not-installable.ts",
+                "test": false,
+                "name": "main-aspect-not-installable.ts"
+            },
+            {
+                "relativePath": "exceptions/main-aspect-not-linkable.ts",
+                "test": false,
+                "name": "main-aspect-not-linkable.ts"
+            },
+            {
                 "relativePath": "exceptions/package-manager-not-found.ts",
                 "test": false,
                 "name": "package-manager-not-found.ts"
+            },
+            {
+                "relativePath": "exceptions/root-dir-not-defined.ts",
+                "test": false,
+                "name": "root-dir-not-defined.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -2070,16 +2105,6 @@
                 "name": "panel-ui.main.runtime.ts"
             },
             {
-                "relativePath": "ui/panel-container.tsx",
-                "test": false,
-                "name": "panel-container.tsx"
-            },
-            {
-                "relativePath": "ui/panel.module.scss",
-                "test": false,
-                "name": "panel.module.scss"
-            },
-            {
                 "relativePath": "ui/tabs.module.scss",
                 "test": false,
                 "name": "tabs.module.scss"
@@ -2371,21 +2396,6 @@
                 "name": "index.tsx"
             },
             {
-                "relativePath": "docs/playground/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "docs/playground/playground.module.scss",
-                "test": false,
-                "name": "playground.module.scss"
-            },
-            {
-                "relativePath": "docs/playground/playground.tsx",
-                "test": false,
-                "name": "playground.tsx"
-            },
-            {
                 "relativePath": "docs/properties/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2474,6 +2484,11 @@
                 "relativePath": "webpack/html.js",
                 "test": false,
                 "name": "html.js"
+            },
+            {
+                "relativePath": "webpack/refresh.js",
+                "test": false,
+                "name": "refresh.js"
             },
             {
                 "relativePath": "webpack/webpack.config.ts",
@@ -2641,6 +2656,21 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "routes/fetch.route.ts",
+                "test": false,
+                "name": "fetch.route.ts"
+            },
+            {
+                "relativePath": "routes/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "routes/put.route.ts",
+                "test": false,
+                "name": "put.route.ts"
             },
             {
                 "relativePath": "scope.aspect.ts",
@@ -3241,30 +3271,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/side-bar",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/splitter": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "splitter.module.scss",
-                "test": false,
-                "name": "splitter.module.scss"
-            },
-            {
-                "relativePath": "splitter.tsx",
-                "test": false,
-                "name": "splitter.tsx"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/splitter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4319,7 +4325,17 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "workspace-component/issues.ts",
+                "relativePath": "workspace-component/issues/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "workspace-component/issues/issue.ts",
+                "test": false,
+                "name": "issue.ts"
+            },
+            {
+                "relativePath": "workspace-component/issues/issues.ts",
                 "test": false,
                 "name": "issues.ts"
             },
@@ -4327,6 +4343,11 @@
                 "relativePath": "workspace-component/workspace-component.ts",
                 "test": false,
                 "name": "workspace-component.ts"
+            },
+            {
+                "relativePath": "workspace-components.drawer.tsx",
+                "test": false,
+                "name": "workspace-components.drawer.tsx"
             },
             {
                 "relativePath": "workspace-section.ts",
@@ -4375,5 +4396,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.4"
+    "version": "14.8.9-dev.10"
 }

@@ -1,2 +1,5 @@
-export { ChangelogAspect } from './changelog.aspect';
+import { ChangelogAspect } from './changelog.aspect';
+
 export type { ChangeLogUI } from './changelog.ui.runtime';
+export { ChangelogAspect };
+export default ChangelogAspect;

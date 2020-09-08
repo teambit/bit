@@ -7,14 +7,13 @@ import { ChangelogSection } from './changelog.section';
 import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangeLogUI {
-  static id = 'teambit.bit/changelog';
-  static dependencies = [ComponentAspect];
-
-  static runtime = UIRuntime;
-
   ChangeLog = () => {
     return <ChangeLogPage />;
   };
+
+  static dependencies = [ComponentAspect];
+
+  static runtime = UIRuntime;
 
   static async provider([component]: [ComponentUI]) {
     const ui = new ChangeLogUI();
@@ -26,7 +25,5 @@ export class ChangeLogUI {
     return ui;
   }
 }
-
-export default ChangeLogUI;
 
 ChangelogAspect.addRuntime(ChangeLogUI);

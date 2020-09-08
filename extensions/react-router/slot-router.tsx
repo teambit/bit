@@ -1,4 +1,4 @@
-import { SlotRegistry } from 'bit-bin/dist/api';
+import { SlotRegistry } from '@teambit/harmony';
 import React from 'react';
 import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
 

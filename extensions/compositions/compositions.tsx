@@ -1,11 +1,10 @@
 import { useQuery } from '@apollo/react-hooks';
-import { Layout } from '@teambit/base-ui.surfaces.split-pane.layout';
-import { TupleSplitPane } from '@teambit/base-ui.surfaces.split-pane.tuple-split-pane';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
-import { Panel, PanelContainer, Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
+import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
-import { CollapsibleSplitter } from '@teambit/staged-components.splitter';
 import { gql } from 'apollo-boost';
 import head from 'lodash.head';
 import R from 'ramda';
@@ -26,9 +25,8 @@ const GET_COMPONENT = gql`
           description
           required
           type
-          defaultValue {
+          default: defaultValue {
             value
-            computed
           }
         }
       }
@@ -41,7 +39,7 @@ export function Compositions() {
   // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
   const { data } = useQuery(GET_COMPONENT, {
-    variables: { id: component.id.legacyComponentId.name },
+    variables: { id: component.id._legacy.name },
   });
   const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
@@ -56,47 +54,47 @@ export function Compositions() {
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
 
   return (
-    <PanelContainer className={styles.compositionsPage}>
-      <TupleSplitPane max={100} min={10} layout={sidebarOpenness} Splitter={CollapsibleSplitter}>
-        <div className={styles.left}>
-          <CompositionContent component={component} selected={selected} />
-        </div>
-        <div className={styles.right}>
-          <Collapser
-            id="compositionsCollapser"
-            placement="left"
-            isOpen={isSidebarOpen}
-            onClick={handleSidebarToggle}
-            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
-            className={styles.collapser}
-          />
-          <Panel>
-            <TabContainer>
-              <TabList>
-                <Tab>compositions</Tab>
-                <Tab>properties</Tab>
-              </TabList>
-              <TabPanel>
-                <CompositionsPanel
-                  onSelect={selectComposition}
-                  url={compositionUrl}
-                  compositions={component.compositions}
-                  active={selected}
-                />
-              </TabPanel>
-              <TabPanel>
-                {properties && properties.length > 0 ? (
-                  // TODO - make table look good in panel
-                  <PropTable rows={properties} showListView />
-                ) : (
-                  <div />
-                )}
-              </TabPanel>
-            </TabContainer>
-          </Panel>
-        </div>
-      </TupleSplitPane>
-    </PanelContainer>
+    <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
+      <Pane className={styles.left}>
+        <CompositionContent component={component} selected={selected} />
+      </Pane>
+      <HoverSplitter className={styles.splitter}>
+        <Collapser
+          id="compositionsCollapser"
+          placement="left"
+          isOpen={isSidebarOpen}
+          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+          onClick={handleSidebarToggle}
+          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
+          className={styles.collapser}
+        />
+      </HoverSplitter>
+      <Pane className={styles.right}>
+        <TabContainer className={styles.tabsContainer}>
+          <TabList className={styles.tabs}>
+            <Tab>compositions</Tab>
+            <Tab>properties</Tab>
+          </TabList>
+          <TabPanel className={styles.tabContent}>
+            <CompositionsPanel
+              onSelectComposition={selectComposition}
+              url={compositionUrl}
+              compositions={component.compositions}
+              active={selected}
+              className={styles.compost}
+            />
+          </TabPanel>
+          <TabPanel className={styles.tabContent}>
+            {properties && properties.length > 0 ? (
+              // TODO - make table look good in panel
+              <PropTable rows={properties} showListView />
+            ) : (
+              <div />
+            )}
+          </TabPanel>
+        </TabContainer>
+      </Pane>
+    </SplitPane>
   );
 }
 

@@ -27,7 +27,6 @@ import { NodeModuleLinker } from '../../../links';
 import logger from '../../../logger/logger';
 import { forkComponentsPrompt } from '../../../prompts';
 import { exportMany } from '../../../scope/component-ops/export-scope-components';
-import { publishComponentsToRegistry } from '../../../scope/component-ops/publish-during-export';
 import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
@@ -47,15 +46,7 @@ export default (async function exportAction(params: {
   lanes: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-  const {
-    updatedIds,
-    nonExistOnBitMap,
-    missingScope,
-    exported,
-    newIdsOnRemote,
-    exportedLanes,
-  } = await exportComponents(params);
-  const publishResults = await publishComponentsToRegistry({ newIdsOnRemote, updatedIds });
+  const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await exportComponents(params);
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
   const exportResults = {
@@ -63,7 +54,6 @@ export default (async function exportAction(params: {
     nonExistOnBitMap,
     missingScope,
     ejectResults,
-    publishResults,
     exportedLanes,
   };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);

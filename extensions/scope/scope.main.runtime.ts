@@ -18,7 +18,8 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
@@ -26,23 +27,28 @@ import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
 import LegacyScope from 'bit-bin/dist/scope/scope';
+import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
-
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
+import { PutRoute, FetchRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
 
 export type OnTag = (ids: BitId[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
+
+export type ScopeConfig = {
+  description: string;
+};
 
 export class ScopeMain implements ComponentFactory {
   constructor(
@@ -74,7 +80,7 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private logger: Logger
+    private config: ScopeConfig
   ) {}
 
   /**
@@ -82,6 +88,10 @@ export class ScopeMain implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get description(): string {
+    return this.config.description;
   }
 
   get path(): string {
@@ -120,16 +130,40 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
+  async getResolvedAspects(components: Component[]) {
+    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path });
+
+    return capsules.map(({ capsule }) => {
+      return RequireableComponent.fromCapsule(capsule);
+    });
+  }
+
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
-    const capsules = await this.isolator.isolateComponents(await this.getMany(componentIds), { baseDir: this.path });
+    const resolvedAspects = await this.getResolvedAspects(await this.getMany(componentIds));
 
-    const requireableExtensions: RequireableComponent[] = await capsules.map(({ capsule }) => {
-      return RequireableComponent.fromCapsule(capsule);
-    });
     // Always throw an error when can't load scope extension
-    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
+  }
+
+  async resolveAspects(runtimeName: string) {
+    const userAspectsIds = this.aspectLoader.getUserAspects();
+    const componentIds = await Promise.all(userAspectsIds.map((id) => ComponentID.fromString(id)));
+    const components = await this.getMany(componentIds);
+    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path });
+    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
+      const capsule = capsules.getCapsule(component.id);
+      if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
+      const localPath = capsule.path;
+
+      return {
+        aspectPath: localPath,
+        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+      };
+    });
+
+    return aspectDefs.concat(await this.aspectLoader.getCoreAspectDefs(runtimeName));
   }
 
   /**
@@ -213,6 +247,10 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async getLogs(id: ComponentID): Promise<ComponentLogs> {
+    return this.legacyScope.loadComponentLogs(id._legacy);
+  }
+
   /**
    * resolve a component ID.
    * @param id component ID
@@ -267,6 +305,11 @@ export class ScopeMain implements ComponentFactory {
     return state;
   }
 
+  async resolveId(id: string): Promise<ComponentID> {
+    const legacyId = await this.legacyScope.getParsedId(id);
+    return ComponentID.fromLegacy(legacyId);
+  }
+
   /**
    * declare the slots of scope extension.
    */
@@ -280,20 +323,21 @@ export class ScopeMain implements ComponentFactory {
     CLIAspect,
     IsolatorAspect,
     AspectLoaderAspect,
+    ExpressAspect,
     LoggerAspect,
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, loggerMain]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      LoggerMain
+      ExpressMain
     ],
-    config,
+    config: ScopeConfig,
     [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
     harmony: Harmony
   ) {
@@ -303,7 +347,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    const logger = loggerMain.createLogger(ScopeAspect.id);
+    // const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(
       harmony,
       legacyScope,
@@ -312,15 +356,16 @@ export class ScopeMain implements ComponentFactory {
       postExportSlot,
       isolator,
       aspectLoader,
-      logger
+      config
     );
     if (scope.legacyScope.isBare) {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     }
 
+    express.register([new PutRoute(scope), new FetchRoute(scope)]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
-    graphql.register(scopeSchema());
+    graphql.register(scopeSchema(scope));
     componentExt.registerHost(scope);
 
     return scope;

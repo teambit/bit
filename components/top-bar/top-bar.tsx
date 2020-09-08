@@ -1,9 +1,10 @@
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
+import cn from 'classnames';
 import React from 'react';
 
 import styles from './top-bar.module.scss';
 
-export type TopBarProps = {
+export interface TopBarProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * top left corner of the top bar.
    */
@@ -13,14 +14,14 @@ export type TopBarProps = {
    * slot for registering menus to the top-bar.
    */
   menu: RouteSlot;
-};
+}
 
 /**
  * Top bar with corner and contextual menu.
  */
-export function TopBar({ Corner, menu }: TopBarProps) {
+export function TopBar({ Corner, menu, className, ...rest }: TopBarProps) {
   return (
-    <div className={styles.topbar}>
+    <div {...rest} className={cn(styles.topbar, className)}>
       <Corner />
       <SlotRouter slot={menu} />
     </div>
