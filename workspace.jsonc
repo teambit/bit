@@ -72,7 +72,7 @@
         "@teambit/evangelist.elements.heading": "^0.0.3",
         "@teambit/evangelist.elements.icon": "^0.0.3",
         "@teambit/evangelist.elements.image": "^0.0.3",
-        "@teambit/evangelist.elements.x-button": "0.0.1",
+        "@teambit/evangelist.elements.x-button": "0.0.2",
         "@teambit/evangelist.input.input": "^0.0.3",
         "@teambit/evangelist.surfaces.dropdown": "0.0.3",
         "@teambit/evangelist.surfaces.tooltip": "0.0.3",
