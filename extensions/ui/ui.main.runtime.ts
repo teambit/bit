@@ -14,6 +14,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 
+import type { uiServerStartedEvent } from './events';
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
@@ -176,8 +177,7 @@ export class UiMain {
     }
 
     // if (onEvent) onEvent({ event: 'uiServerStarted' });
-    this.pubsub.createOrGetTopic('ui-main');
-    this.pubsub.publishToTopic('ui-main', { event: 'ui-server-started' });
+    this.pubsub.publishToTopic('ui-main', this.createUiServerStartedEvent());
 
     if (uiRoot.postStart) {
       await uiRoot.postStart({ onEvent, pattern });
@@ -204,6 +204,17 @@ export class UiMain {
     this.onStartSlot.register(onStartFn);
     return this;
   }
+
+  private createUiServerStartedEvent: () => uiServerStartedEvent = () => {
+    return {
+      type: 'ui-server-started',
+      version: '0.0.0.1',
+      timestamp: new Date().getTime().toString(),
+      body: {
+        props: 'whatever',
+      },
+    };
+  };
 
   private async invokeOnStart(): Promise<void> {
     const promises = this.onStartSlot.values().map((fn) => fn());
