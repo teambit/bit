@@ -104,7 +104,7 @@ export class ReactMain {
    */
   overridePreviewConfig() {
     return this.envs.override({
-      getBundler: () => this.reactEnv.getBundler(context),
+      // getBundler: () => this.reactEnv.getBundler(context),
     });
   }
 
