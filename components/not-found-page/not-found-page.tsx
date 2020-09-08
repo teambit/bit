@@ -9,7 +9,7 @@ type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
 /**
  * A component that shows a 404 error page
  */
-export function NotFoundPage({ className, ...rest }: NotFoundPageProps) {
+export function NotFoundPage({ ...rest }: NotFoundPageProps) {
   return (
     <ErrorPage {...rest} code={404} title="Page not found">
       <div className={styles.iconLine}>
