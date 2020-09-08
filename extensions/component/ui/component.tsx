@@ -14,9 +14,9 @@ export type ComponentProps = {
  * main UI component of the Component extension.
  */
 export function Component({ routeSlot, host }: ComponentProps) {
-  const componentData = useComponent(host);
-  const component = componentData.componentModel;
-  if (componentData.componentError) return componentData.componentError.renderError();
+  const { component, error } = useComponent(host);
+  if (error) return error.renderError();
+  if (!component) return <div></div>;
 
   return (
     <ComponentProvider component={component}>

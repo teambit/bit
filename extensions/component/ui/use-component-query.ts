@@ -42,13 +42,11 @@ export function useComponentQuery(componentId: string, host: string) {
   });
 
   const rawComponent = data?.getHost?.get;
-  let noRawComponent: ComponentError | undefined;
-  if (!rawComponent) noRawComponent = new ComponentError(500);
 
   return useMemo(() => {
     return {
-      componentModel: rawComponent ? ComponentModel.from(rawComponent) : undefined,
-      componentError: error ? new ComponentError(500, error.message) : noRawComponent,
+      component: rawComponent ? ComponentModel.from(rawComponent) : undefined,
+      error: error ? new ComponentError(500, error.message) : undefined,
     };
   }, [rawComponent, error]);
 }

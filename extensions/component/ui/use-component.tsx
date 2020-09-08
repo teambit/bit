@@ -6,8 +6,8 @@ import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
 
 export type Component = {
-  componentModel?: ComponentModel;
-  componentError?: ComponentError;
+  component?: ComponentModel;
+  error?: ComponentError;
 };
 
 export function useComponent(host: string, id?: ComponentID): Component {

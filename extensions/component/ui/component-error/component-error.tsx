@@ -8,7 +8,7 @@ export class ComponentError {
     public readonly code: number,
 
     /**
-     * http status code of error
+     * error message of the error
      */
     public readonly message?: string
   ) {}
