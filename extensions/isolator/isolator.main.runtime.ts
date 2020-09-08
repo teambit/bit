@@ -29,7 +29,7 @@ export type ListResults = {
 };
 
 export type IsolateComponentsInstallOptions = {
-  installPackages?: boolean;
+  installPackages?: boolean; // default: true
   // TODO: add back when depResolver.getInstaller support it
   // packageManager?: string;
   dedupe?: boolean;
@@ -40,9 +40,12 @@ export type IsolateComponentsInstallOptions = {
 export type IsolateComponentsOptions = {
   name?: string;
   baseDir?: string;
-  alwaysNew?: boolean;
+  alwaysNew?: boolean; // create a new capsule with a random string attached to the path suffix
   installOptions?: IsolateComponentsInstallOptions;
   linkingOptions?: LinkingOptions;
+  versionOrReleaseType?: string; // exact version or release-type (e.g. 'patch') to be calculated. written in the package.json
+  emptyExisting?: boolean; // remove the capsule content first (if exist)
+  getExistingAsIs?: boolean; // get existing capsule without doing any changes, no writes, no installations.
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -66,12 +69,7 @@ export class IsolatorMain {
   constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger) {}
 
   public async isolateComponents(components: Component[], opts: IsolateComponentsOptions): Promise<CapsuleList> {
-    const config = Object.assign(
-      {
-        installPackages: true,
-      },
-      opts
-    );
+    const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
     const capsuleList = new CapsuleList(
@@ -80,6 +78,12 @@ export class IsolatorMain {
         return { id, capsule: c };
       })
     );
+    if (opts.getExistingAsIs) {
+      return capsuleList;
+    }
+    if (opts.emptyExisting) {
+      await Promise.all(capsuleList.getAllCapsuleDirs().map((dir) => fs.emptyDir(dir)));
+    }
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
     const consumerComponents = components.map((c) => c.state._consumer);
@@ -213,14 +217,15 @@ async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<Caps
 
 function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
   capsules.forEach((capsule) => {
-    const packageJson = getCurrentPackageJson(capsule.component, capsule);
+    const packageJson = getCurrentPackageJson(capsule);
     const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
     if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
     found.currentPackageJson = packageJson.packageJsonObject;
   });
 }
 
-function getCurrentPackageJson(component: Component, capsule: Capsule): PackageJsonFile {
+function getCurrentPackageJson(capsule: Capsule): PackageJsonFile {
+  const component: Component = capsule.component;
   const consumerComponent: ConsumerComponent = component.state._consumer;
   const newVersion = '0.0.1-new';
   const getBitDependencies = (dependencies: BitIds) => {

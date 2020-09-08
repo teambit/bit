@@ -249,11 +249,6 @@ export default async function tagModelComponent({
   if (legacyComps.length && persist) {
     await scope.buildMultiple(legacyComps, consumer, false, verbose);
   }
-  if (nonLegacyComps.length && persist) {
-    const ids = nonLegacyComps.map((c) => c.id);
-    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
-    results.map(updateComponentsByTagResult(nonLegacyComps));
-  }
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
@@ -327,6 +322,22 @@ export default async function tagModelComponent({
   );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
+
+  const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
+  const allComponents = [...taggedComponents, ...autoTaggedComponents];
+  if (persist) {
+    await consumer.updateComponentsVersions(allComponents);
+  } else {
+    consumer.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
+  }
+
+  if (nonLegacyComps.length && persist) {
+    const ids = nonLegacyComps.map((c) => c.id);
+    // const versionOrReleaseType = exactVersion || releaseType;
+    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
+    results.map(updateComponentsByTagResult(nonLegacyComps));
+  }
+
   if (persist) {
     await scope.objects.persist();
   }

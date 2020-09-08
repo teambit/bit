@@ -119,6 +119,9 @@ export default class PackageJsonFile {
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
     const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
+    const componentIdWithDefaultScope = component.id.hasScope()
+      ? component.id
+      : component.id.changeScope(component.defaultScope);
     const packageJsonObject = {
       name,
       version: component.version,
@@ -128,7 +131,7 @@ export default class PackageJsonFile {
       // Used when resolve dependencies to identify that some package should be treated as component
       // TODO: replace by better way to identify that something is a component for sure
       // TODO: Maybe need to add the binding prefix here
-      componentId: component.id.serialize(),
+      componentId: componentIdWithDefaultScope.serialize(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -6,7 +6,6 @@ import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import GeneralError from 'bit-bin/dist/error/general-error';
 import { Scope } from 'bit-bin/dist/scope';
-import { PublishPostTagResult } from 'bit-bin/dist/scope/component-ops/publish-components';
 import Bluebird from 'bluebird';
 import execa from 'execa';
 import R from 'ramda';
@@ -39,16 +38,6 @@ export class Publisher {
     const capsules = await this.getComponentCapsules(componentIds);
     // const capsules = await this.getComponentCapsulesFromScope(componentIds);
     return this.publishMultipleCapsules(capsules);
-  }
-
-  async postTagPersistListener(ids: BitId[]): Promise<PublishPostTagResult[]> {
-    const componentIds = ids.map((id) => id.toString());
-    const components = await this.publish(componentIds, { allowStaged: true });
-    return components.map((c) => ({
-      id: c.id._legacy,
-      data: c.data,
-      errors: c.errors as string[],
-    }));
   }
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
