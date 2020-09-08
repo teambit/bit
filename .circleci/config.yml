@@ -599,9 +599,9 @@ jobs:
           at: ./
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        restore_cache:
-          key: bit-global-config-v3
+      # -
+      #   restore_cache:
+      #     key: bit-global-config-v3
       -
         restore_cache:
           key: bitsrc-ssh-key3
@@ -616,6 +616,23 @@ jobs:
         run: 'chmod 400 ~/.ssh/id_rsa'
       -
         run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      # -
+      #   run: 'bit config set hub_domain hub.bit.dev'
+        # uncomment to configure circle to run against stg environment
+      -
+        run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         run:
           name: 'bit status'
@@ -1114,7 +1131,7 @@ workflows:
       -
         tag:
           requires:
-            - e2e_test
+            - build
       -
         performance_e2e_test:
           filters:
