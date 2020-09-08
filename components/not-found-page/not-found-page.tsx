@@ -14,7 +14,7 @@ export function NotFoundPage({ ...rest }: NotFoundPageProps) {
     <ErrorPage {...rest} code={404} title="Page not found">
       <div className={styles.iconLine}>
         <ExternalLink href="https://join.slack.com/t/bit-dev-community/shared_invite/enQtNzM2NzQ3MTQzMTg3LWI2YmFmZjQwMTkxNmFmNTVkYzU2MGI2YjgwMmJlZDdkNWVhOGIzZDFlYjg4MGRmOTM4ODAxNTIxMTMwNWVhMzg">
-          <Icon of="slack" className={styles.slack} />
+          <img alt="bit-logo" className={styles.logo} src="https://static.bit.dev/harmony/slack-round-icon.svg" />
         </ExternalLink>
         <ExternalLink href="https://github.com/teambit/bit">
           <Icon of="github-logo" className={styles.github} />
