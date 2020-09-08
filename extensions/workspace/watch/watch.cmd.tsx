@@ -1,10 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
 
 import { Watcher } from './watcher';
 import chalk from 'chalk';
 import moment from 'moment';
-//TODO: Do not use legacy logger directly. use the logger aspect
-import logger from 'bit-bin/dist/logger/logger';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 
 export class WatchCommand implements Command {
@@ -13,28 +12,28 @@ export class WatchCommand implements Command {
     onStart: (workspace) => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
       if (verbose) {
-        logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
+        this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
-      logger.console(
+      this.logger.console(
         chalk.yellow(
           `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:MM:SS')})...\n`
         )
       );
     },
     onChange: (filePath, buildResults, verbose, duration) => {
-      logger.console(`The file ${filePath} has been changed.\n\n`);
-      logger.console(formatCompileResults(buildResults, verbose));
-      logger.console(`Finished. (${duration}ms)`);
-      logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
+      this.logger.console(`The file ${filePath} has been changed.\n\n`);
+      this.logger.console(formatCompileResults(buildResults, verbose));
+      this.logger.console(`Finished. (${duration}ms)`);
+      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
     },
     onAdd: (p) => {
-      logger.console(`The file ${p} has been added`);
+      this.logger.console(`The file ${p} has been added`);
     },
     onUnlink: (p) => {
-      logger.console(`file ${p} has been removed`);
+      this.logger.console(`file ${p} has been removed`);
     },
     onError: (err) => {
-      logger.console(`Watcher error ${err}`);
+      this.logger.console(`Watcher error ${err}`);
     },
   };
 
@@ -46,6 +45,11 @@ export class WatchCommand implements Command {
   options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
 
   constructor(
+    /**
+     * logger extension.
+     */
+    private logger: Logger,
+
     /**
      * watcher extension.
      */

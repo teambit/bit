@@ -1,5 +1,6 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
+import { LoggerAspect, Logger } from '@teambit/logger';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { RouteSlot } from '@teambit/react-router';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
@@ -19,6 +20,11 @@ export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
 export class WorkspaceUI {
   constructor(
+    /**
+     * logger extension.
+     */
+    private logger: Logger,
+
     /**
      * route slot.
      */
@@ -77,13 +83,14 @@ export class WorkspaceUI {
     };
   }
 
-  static dependencies = [UIAspect, ComponentAspect, SidebarAspect, ComponentTreeAspect];
+  static dependencies = [LoggerAspect, UIAspect, ComponentAspect, SidebarAspect, ComponentTreeAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>(), Slot.withType<ComponentTreeNode>()];
 
   static async provider(
+    loader: Logger,
     [ui, componentUi, sidebar, componentTree]: [UiUI, ComponentUI, SidebarUI, ComponentTreeUI],
     config,
     [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarWidgetSlot]
@@ -92,7 +99,7 @@ export class WorkspaceUI {
     sidebarSlot.register(new ComponentTreeWidget());
     sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
 
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
+    const workspaceUI = new WorkspaceUI(loader, routeSlot, componentUi, menuSlot, sidebar, sidebarSlot);
     ui.registerRoot(workspaceUI.root);
 
     return workspaceUI;
