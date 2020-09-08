@@ -60,7 +60,7 @@ describe('compile extension', function () {
         helper.command.tagAllComponents();
       });
       it('should write dists files inside the capsule as it is needed for release', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.1');
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/index.js')).to.be.a.file();
       });
