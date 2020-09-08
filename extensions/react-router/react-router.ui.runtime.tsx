@@ -1,10 +1,12 @@
+import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import React from 'react';
-import { BrowserRouter, RouteProps } from 'react-router-dom';
+import { BrowserRouter, RouteProps, useHistory } from 'react-router-dom';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteSlot, SlotRouter } from './slot-router';
+
+type History = ReturnType<typeof useHistory>;
 
 export class ReactRouterUI {
   constructor(
@@ -14,18 +16,21 @@ export class ReactRouterUI {
     private routeSlot: RouteSlot
   ) {}
 
+  private routerHistory?: History;
+
   link() {}
 
   /**
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
-    return (
-      <BrowserRouter>
-        <SlotRouter slot={this.routeSlot} rootRoutes={routes} />
-      </BrowserRouter>
-    );
+    return <RoutesRoot routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} />;
   }
+
+  /** sets the routing engine for navigation methods (internal method) */
+  setRouter = (routerHistory: History) => {
+    this.routerHistory = routerHistory;
+  };
 
   /**
    * register a new route.
@@ -35,9 +40,14 @@ export class ReactRouterUI {
     return this;
   }
 
-  // TODO!
-  push = (path: string) => {
-    throw new Error('not implemented');
+  /**
+   * change browser location
+   */
+  navigateTo = (
+    /** destination */
+    path: string
+  ) => {
+    this.routerHistory?.push(path);
   };
 
   static slots = [Slot.withType<RouteProps>()];
@@ -50,3 +60,27 @@ export class ReactRouterUI {
 }
 
 ReactRouterAspect.addRuntime(ReactRouterUI);
+
+function RoutesRoot({
+  rootRoutes,
+  routeSlot,
+  reactRouterUi,
+}: {
+  rootRoutes: RouteProps[];
+  routeSlot: RouteSlot;
+  reactRouterUi: ReactRouterUI;
+}) {
+  return (
+    <BrowserRouter>
+      <RouterGetter onRouter={reactRouterUi.setRouter} />
+      <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />
+    </BrowserRouter>
+  );
+}
+
+function RouterGetter({ onRouter: onHistory }: { onRouter: (routerHistory: History) => void }) {
+  const history = useHistory();
+  onHistory(history);
+
+  return null;
+}

@@ -7,11 +7,6 @@ import { CommandItem } from '@teambit/command-bar.command-item';
 import { CommandObj } from '@teambit/commands';
 import styles from './command-bar.module.scss';
 
-export interface ChildProps {
-  execute: () => void;
-  active: boolean;
-}
-
 export type CommandBarProps = {
   search: (term: string, limit?: number) => CommandObj[];
   commander: CommandBarUI;

@@ -1,1 +1,1 @@
-export { CommandBar, CommandBarProps, CommandObj, ChildProps } from './command-bar';
+export { CommandBar, CommandBarProps } from './command-bar';
