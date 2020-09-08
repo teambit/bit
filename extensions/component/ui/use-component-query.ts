@@ -46,7 +46,8 @@ export function useComponentQuery(componentId: string, host: string) {
   return useMemo(() => {
     return {
       component: rawComponent ? ComponentModel.from(rawComponent) : undefined,
-      error: error ? new ComponentError(404, error.message) : undefined,
+      // eslint-disable-next-line
+      error: error ? new ComponentError(500, error.message) : !rawComponent ? new ComponentError(404) : undefined,
     };
   }, [rawComponent, error]);
 }
