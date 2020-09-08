@@ -963,7 +963,17 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    const legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    let legacyId;
+    try {
+      legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    } catch (err) {
+      if (err.name === 'MissingBitMapComponent') {
+        // if a component is coming from the scope, it doesn't have .bitmap entry
+        legacyId = BitId.parse(id.toString(), true);
+        return ComponentID.fromLegacy(legacyId);
+      }
+      throw err;
+    }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
     const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
     return ComponentID.fromLegacy(legacyId, defaultScope);
