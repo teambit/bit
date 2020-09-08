@@ -28,11 +28,13 @@ export type ExampleSectionProps = {
 } & SectionProps;
 
 function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
+  const code = example.jsx ? jsxToString(example.jsx) : example.code;
+
   return (
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
       {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
       {example.description && <div>{example.description}</div>}
-      <Playground code={jsxToString(example.code)} scope={example.scope} />
+      <Playground code={code} scope={example.scope} />
     </Section>
   );
 }

@@ -8,7 +8,7 @@ import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import React, { HTMLAttributes } from 'react';
-import jsxToString from 'jsx-to-string';
+
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';

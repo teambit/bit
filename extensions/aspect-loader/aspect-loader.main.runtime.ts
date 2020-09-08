@@ -86,7 +86,11 @@ export class AspectLoaderMain {
   }
 
   isAspectLoaded(id: string) {
-    return !!this.harmony.get(id);
+    try {
+      return this.harmony.get(id);
+    } catch (err) {
+      return false;
+    }
   }
 
   getDescriptor(id: string): AspectDescriptor {

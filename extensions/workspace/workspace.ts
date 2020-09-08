@@ -311,13 +311,26 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
+  private async getConsumerComponent(id: ComponentID) {
+    try {
+      return await this.consumer.loadComponent(id._legacy);
+    } catch (err) {
+      return undefined;
+    }
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
    */
   async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.consumer.loadComponent(id._legacy);
+    const consumerComponent = await this.getConsumerComponent(id);
     const component = await this.scope.get(id);
+    if (!consumerComponent) {
+      if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
+      return component;
+    }
+
     const extensionDataList = await this.componentExtensions(id, component);
 
     const state = new State(
@@ -729,7 +742,7 @@ export class Workspace implements ComponentFactory {
 
       if (!data) return false;
       if (data.type !== 'aspect')
-        this.logger.warn(
+        this.logger.debug(
           `${component.id.toString()} is configured in workspace.json, but using the ${
             data.type
           } environment. \n please make sure to either apply the aspect environment or a composition of the aspect environment for the aspect to load.`
