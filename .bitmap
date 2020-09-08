@@ -621,6 +621,25 @@
         "exported": false,
         "lanes": []
     },
+    "command-bar/command-searcher": {
+        "files": [
+            {
+                "relativePath": "command-searcher.tsx",
+                "test": false,
+                "name": "command-searcher.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar/ui/command-searcher",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "command-bar/component-item": {
         "files": [
             {

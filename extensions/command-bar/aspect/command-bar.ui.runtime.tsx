@@ -1,26 +1,42 @@
-import React, { useState, useMemo, ReactElement } from 'react';
+// eslint-disable-next-line max-classes-per-file
+import React from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
-import { CommandBar, ChildProps } from '@teambit/command-bar.command-bar';
-import { CommandRegistryUI, CommandRegistryAspect } from '@teambit/commands';
-import KeyboardShortcutAspect, { KeyboardShortcutsUi } from '@teambit/keyboard-shortcuts';
+import { CommandBar } from '@teambit/command-bar.command-bar';
+import { CommandId, CommandEntry, CommandObj } from '@teambit/commands';
+import { CommandSearcher } from '@teambit/command-bar.command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 
+export type CommanderSearchResult = CommandObj; // TODO
+
 export interface SearchProvider {
   /** provide completions for this search term */
-  search(term: string, limit: number): ReactElement<ChildProps>[];
+  search(term: string, limit: number): CommanderSearchResult[];
   /** determines what terms are handled by this searcher. */
   test(term: string): boolean;
 }
 
+export type Keybinding = string | string[];
+
 type SearcherSlot = SlotRegistry<SearchProvider>;
 const RESULT_LIMIT = 5;
 
+type AddCommandArgs = {
+  commandId: string;
+  handler: () => any;
+  key?: Keybinding;
+  displayName: string;
+  description?: string;
+};
+
 /** Quick launch actions. Use the `addSearcher` slot to extend the available actions */
 export class CommandBarUI {
-  constructor(private searcherSlot: SearcherSlot) {}
+  private mousetrap = new Mousetrap();
+  private commandRegistry = new Map<CommandId, CommandEntry>();
+  private commandSearcher = new CommandSearcher(commandsToArray(this.commandRegistry));
 
   /** Opens the command bar */
   open = () => {
@@ -38,47 +54,87 @@ export class CommandBarUI {
     return this;
   }
 
-  private setVisibility?: (visible: boolean) => void;
+  // TODO - make multiple
+  addCommand({ commandId, handler, displayName, key, description }: AddCommandArgs) {
+    if (this.commandRegistry.has(commandId)) throw new Error(`command already exists: "${commandId}"`);
 
-  Render = () => {
-    const [term, setTerm] = useState('');
-    const [visible, setVisibility] = useState(false);
-    this.setVisibility = setVisibility;
+    this.commandRegistry.set(commandId, {
+      handler,
+      name: displayName,
+      description,
+    });
 
-    const options = useMemo(() => {
-      const searchers = this.searcherSlot.values();
+    if (key) {
+      this.addKeybinding(key, commandId);
+    }
 
-      const searcher = searchers.find((x) => x.test(term));
-      return searcher?.search(term, RESULT_LIMIT) || [];
-    }, [term]);
+    this.commandSearcher.update(commandsToArray(this.commandRegistry));
+  }
 
-    return (
-      <CommandBar visible={visible} term={term} onClose={this.close} onChange={setTerm}>
-        {options}
-      </CommandBar>
-    );
+  run(command: CommandId) {
+    const commandEntry = this.commandRegistry.get(command);
+    if (!commandEntry) return;
+
+    commandEntry.handler();
+  }
+
+  trigger = (key: string) => {
+    this.mousetrap.trigger(key);
   };
 
-  static dependencies = [UIAspect, CommandRegistryAspect, KeyboardShortcutAspect];
+  search = (term: string, limit: number = RESULT_LIMIT) => {
+    const searchers = this.searcherSlot.values();
+
+    const searcher = searchers.find((x) => x.test(term));
+    return searcher?.search(term, limit) || [];
+  };
+
+  private addKeybinding(key: Keybinding, command: CommandId) {
+    this.mousetrap.bind(key, this.run.bind(this, command));
+  }
+
+  setVisibility?: (visible: boolean) => void;
+
+  getCommandBar = () => {
+    return <CommandBar key="CommandBarUI" search={this.search} onClose={this.close} commander={this} />;
+  };
+
+  constructor(private searcherSlot: SearcherSlot) {
+    this.addSearcher(this.commandSearcher);
+  }
+
+  static dependencies = [UIAspect];
   static slots = [Slot.withType<SearchProvider>()];
   static runtime = UIRuntime;
-  static async provider(
-    [uiUi, commandRegistryUi, keyboardShortcutsUi]: [UiUI, CommandRegistryUI, KeyboardShortcutsUi],
-    config,
-    [searcherSlot]: [SearcherSlot]
-  ) {
+  static async provider([uiUi]: [UiUI], config, [searcherSlot]: [SearcherSlot]) {
     const commandBar = new CommandBarUI(searcherSlot);
 
-    commandRegistryUi.set(commandBarCommands.open, {
+    commandBar.addCommand({
+      commandId: commandBarCommands.open,
       handler: commandBar.open,
-      name: 'open command bar',
+      displayName: 'open command bar',
+      key: 'mod+k',
     });
-    commandRegistryUi.set(commandBarCommands.close, { handler: commandBar.close, name: 'close command bar' });
-    keyboardShortcutsUi.set('mod+k', commandBarCommands.open);
-    uiUi.registerHudItem(<commandBar.Render key="CommandBarUI" />);
+    commandBar.addCommand({
+      commandId: commandBarCommands.close,
+      handler: commandBar.close,
+      displayName: 'close command bar',
+    });
+    // TEMP COMMAND, DO NOT COMMIT
+    commandBar.addCommand({
+      commandId: 'bararara',
+      handler: () => alert('bara'),
+      displayName: 'bararara',
+    });
+
+    uiUi.registerHudItem(commandBar.getCommandBar());
 
     return commandBar;
   }
 }
 
 CommandBarAspect.addRuntime(CommandBarUI);
+
+function commandsToArray(commands: Map<CommandId, CommandEntry>): CommandObj[] {
+  return Array.from(commands.entries()).map(([id, obj]) => ({ ...obj, id }));
+}

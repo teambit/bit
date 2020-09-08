@@ -5,7 +5,7 @@ import { hotkeys } from './shortcuts-presets';
 import { KeyboardShortcutAspect } from './keyboard-shortcuts.aspect';
 
 // consider expanding this to be `string | string[]`
-export type Keybinding = string;
+export type Keybinding = string | string[];
 
 export type SerializedKeybinding = {
   key: Keybinding;
