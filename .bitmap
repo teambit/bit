@@ -695,6 +695,16 @@
                 "name": "tag.ts"
             },
             {
+                "relativePath": "ui/component-error/component-error.tsx",
+                "test": false,
+                "name": "component-error.tsx"
+            },
+            {
+                "relativePath": "ui/component-error/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-model/component-model.ts",
                 "test": false,
                 "name": "component-model.ts"
@@ -4518,5 +4528,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.10"
+    "version": "14.8.9-dev.12"
 }

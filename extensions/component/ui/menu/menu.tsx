@@ -26,7 +26,8 @@ export type MenuProps = {
  * top bar menu.
  */
 export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps) {
-  const component = useComponent(host);
+  const componentData = useComponent(host);
+  const component = componentData.componentModel;
   if (!component) return <FullLoader />;
 
   const widgetLinks = widgetSlot?.toArray();
