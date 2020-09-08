@@ -27,13 +27,21 @@ export class TesterTask implements BuildTask {
     }, []);
 
     const testerContext = Object.assign(context, {
+      //workspace: context.env.workspace,
       release: true,
       specFiles: testMatch,
       rootPath: context.capsuleGraph.capsulesRootDir,
     });
 
-    // @todo: @guy to fix. handle components without tests, define tests results and implement from jest.
-    // @ts-ignore
-    return tester.test(testerContext);
+    // todo: @guy to fix. handle components without tests, define tests results and implement from jest.
+    const testsResults = await tester.test(testerContext);
+    return {
+      artifacts: [],
+      components: testsResults.map((componentTests) => ({
+        id: componentTests.componentId,
+        data: { testSuites: componentTests.testSuites },
+        errors: componentTests.error ? [] : [],
+      })),
+    };
   }
 }

@@ -1,10 +1,16 @@
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { ConcreteService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
+import { Network } from '@teambit/isolator';
+import { TestResult } from './test-results';
 
 export type TestResults = {
-  errors?: Error[];
-  total: number;
+  componentId: ComponentID;
+  testSuites: {
+    tests: TestResult[];
+    file: string;
+  }[];
+  error?: string;
 };
 
 export interface TesterContext extends ExecutionContext {
@@ -16,7 +22,12 @@ export interface TesterContext extends ExecutionContext {
   /**
    * component workspace.
    */
-  workspace: Workspace;
+  //workspace: Workspace;
+
+  /**
+   * graph of capsules ready to be built.
+   */
+  capsuleGraph: Network;
 
   /**
    * defines whether tester is expected to run in quite mode.
@@ -51,5 +62,5 @@ export interface Tester extends ConcreteService {
   /**
    * execute tests on all components in the given execution context.
    */
-  test(context: TesterContext): Promise<TestResults>;
+  test(context: TesterContext): Promise<TestResults[]>;
 }

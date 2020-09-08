@@ -958,21 +958,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/empty-compositions/empty-compositions.module.scss",
-                "test": false,
-                "name": "empty-compositions.module.scss"
-            },
-            {
-                "relativePath": "ui/empty-compositions/empty-compositions.tsx",
-                "test": false,
-                "name": "empty-compositions.tsx"
-            },
-            {
-                "relativePath": "ui/empty-compositions/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
                 "relativePath": "ui/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -1040,6 +1025,11 @@
                 "relativePath": "readme.md",
                 "test": false,
                 "name": "readme.md"
+            },
+            {
+                "relativePath": "schema.json",
+                "test": false,
+                "name": "schema.json"
             },
             {
                 "relativePath": "types.ts",
@@ -3693,6 +3683,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "test-results.ts",
+                "test": false,
+                "name": "test-results.ts"
             },
             {
                 "relativePath": "test.cmd.tsx",
