@@ -8,3 +8,20 @@
 .limitLength {
   max-width: 70%;
 }
+
+.previewPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #c7c7c7;
+  pointer-events: auto;
+  > span {
+    font-size: 45px;
+    margin-bottom: 10px;
+  }
+  > div {
+    font-size: 13px;
+  }
+}
