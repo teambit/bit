@@ -41,7 +41,11 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
   return (
     <WorkspaceProvider workspace={workspace}>
       <div className={styles.workspaceWrapper}>
-        <TopBar className={styles.topbar} Corner={() => <Corner name={workspace.name} />} menu={menuSlot} />
+        <TopBar
+          className={styles.topbar}
+          Corner={() => <Corner name={workspace.name} icon={workspace.icon} />}
+          menu={menuSlot}
+        />
 
         <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
           <Pane className={styles.sidebar}>{sidebar}</Pane>
