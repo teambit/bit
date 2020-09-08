@@ -22,9 +22,7 @@ export default () => {
           <List spacing="lg">
             {[
               `It performs static-code analysis to locate and parse all ‘import’/’require’ statements in the component’s files.`,
-              <>
-                {`It determines whether a dependency is a “devDependency” or a [runtime] “dependency”.This is done by inspecting whether the type of file requiring the module is used for runtime or just for development (for example, component.test.js).`}
-              </>,
+              `It determines whether a dependency is a “devDependency” or a [runtime] “dependency”.This is done by inspecting whether the type of file requiring the module is used for runtime or just for development (for example, component.test.js).`,
               `It reviews the workspace configuration to check if a specific version was set for this dependency.`,
             ]}
           </List>
@@ -102,12 +100,6 @@ export default () => {
     }                            
 `}
           </CodeSnippet>
-        </Section>
-        <Section>
-          <LinkedHeading link="slots">Slots</LinkedHeading>
-        </Section>
-        <Section>
-          <LinkedHeading link="extend">Extending and Customizing</LinkedHeading>
         </Section>
       </>
     </ThemeContext>
