@@ -42,12 +42,12 @@ export class StartCmd implements Command {
 
     private pubsub: PubsubMain
   ) {
-    pubsub.subscribeToTopic('webpack-pubsub-topic', this.eventsListeners);
-    pubsub.subscribeToTopic('ui-main', this.eventsListeners);
+    pubsub.subscribeToTopic('teambit.bit/ui', this.eventsListeners);
+    pubsub.subscribeToTopic('teambit.bit/webpack', this.eventsListeners);
   }
 
   private eventsListeners = (event) => {
-    console.log('---event-->: ', event);
+    // console.log('---event-->: ', event);
     switch (event.type) {
       case 'webpack-compilation-done':
         this.devServerCounter--;

@@ -177,7 +177,7 @@ export class UiMain {
     }
 
     // if (onEvent) onEvent({ event: 'uiServerStarted' });
-    this.pubsub.publishToTopic('ui-main', this.createUiServerStartedEvent());
+    this.pubsub.publishToTopic(UIAspect.id, this.createUiServerStartedEvent());
 
     if (uiRoot.postStart) {
       await uiRoot.postStart({ onEvent, pattern });

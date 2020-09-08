@@ -1,4 +1,6 @@
 import type { webpackCompilationDoneEvent } from '../events';
+import { WebpackAspect } from '../webpack.aspect';
+
 class WebpackCompilerDonePlugin {
   pubsub: any;
 
@@ -21,7 +23,7 @@ class WebpackCompilerDonePlugin {
     compiler.hooks.done.tap('webpack-compiler-done-plugin', (
       stats /* stats is passed as an argument when done hook is tapped.  */
     ) => {
-      this.pubsub.publishToTopic('webpack-pubsub-topic', this.createEvent());
+      this.pubsub.publishToTopic(WebpackAspect.id, this.createEvent());
     });
   }
 }
