@@ -1,4 +1,6 @@
 import React from 'react';
+import { NotFoundPage } from '@teambit/pages.not-found';
+import { ServerErrorPage } from '@teambit/pages.server-error';
 
 export class ComponentError {
   constructor(
@@ -14,6 +16,7 @@ export class ComponentError {
   ) {}
 
   renderError() {
-    return <div>{this.code}</div>;
+    if (this.code === 404) return <NotFoundPage />;
+    return <ServerErrorPage />;
   }
 }
