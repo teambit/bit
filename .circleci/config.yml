@@ -181,10 +181,11 @@ jobs:
         run: ls /home/circleci/.npm-global/bin
       -
         persist_to_workspace:
-          root: .
+          root: /home/circleci/
           paths:
             - Library/Caches/Bit/config/config.json
-            - .npm-global/bin
+            - .npm-global
+            - .npm-global/bin/bit
   pack:
     <<: *defaults
     steps:
@@ -545,6 +546,8 @@ jobs:
       -
         attach_workspace:
           at: ./
+      -
+        run: ls /home/circleci/Library/Caches/Bit/config/config.json
       -
         run: ls /home/circleci/.npm-global/bin
       -
