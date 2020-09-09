@@ -1294,6 +1294,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "overview/overview.module.scss",
+                "test": false,
+                "name": "overview.module.scss"
+            },
+            {
                 "relativePath": "overview/overview.tsx",
                 "test": false,
                 "name": "overview.tsx"
@@ -2475,6 +2480,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/component-preview/preview.module.scss",
+                "test": false,
+                "name": "preview.module.scss"
+            },
+            {
                 "relativePath": "ui/component-preview/preview.tsx",
                 "test": false,
                 "name": "preview.tsx"
@@ -2527,6 +2537,11 @@
                 "relativePath": "docs/docs-app.tsx",
                 "test": false,
                 "name": "docs-app.tsx"
+            },
+            {
+                "relativePath": "docs/examples-overview/example.ts",
+                "test": false,
+                "name": "example.ts"
             },
             {
                 "relativePath": "docs/examples-overview/examples-overview.module.scss",

@@ -27,7 +27,7 @@ export function ComponentComposition({ component, composition, hotReload }: Comp
       component={component}
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"
-      queryParams={`${(composition && composition.identifier) || ''}`}
+      queryParams={composition?.identifier}
       hotReload={hotReload}
     />
   );

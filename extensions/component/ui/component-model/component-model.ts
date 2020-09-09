@@ -27,7 +27,7 @@ export type ComponentModelProps = {
 
 export type ComponentServer = {
   env: string;
-  url: string;
+  url?: string;
 };
 
 export class ComponentModel {
@@ -50,7 +50,7 @@ export class ComponentModel {
     /**
      * the component server.
      */
-    readonly server: ComponentServer,
+    readonly server: ComponentServer | undefined,
 
     /**
      * array of compositions

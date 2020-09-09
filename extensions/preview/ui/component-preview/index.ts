@@ -1,1 +1,1 @@
-export { ComponentPreview } from './preview';
+export { ComponentPreview, toPreviewServer, toPreviewHash } from './preview';

@@ -1,5 +1,8 @@
+import React, { CSSProperties, useEffect, createRef } from 'react';
 import { ComponentModel } from '@teambit/component';
-import React, { CSSProperties } from 'react';
+import queryString from 'query-string';
+
+import styles from './preview.module.scss';
 
 export type ComponentPreviewProps = {
   /**
@@ -32,15 +35,60 @@ export type ComponentPreviewProps = {
  * renders a preview of a component.
  */
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
-  const serverUrl = `/api/${component.id.fullName}/@/preview`;
+  const serverPath = toPreviewServer(component);
+  const hash = toPreviewHash(component, previewName, queryParams);
 
-  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.fullName}${
-    `?preview=${previewName}&${queryParams && queryParams}` || ''
-  }`;
-
-  return <iframe style={style} src={url} />;
+  return <iframe style={style} src={`${serverPath}/#${hash}`} />;
 }
 
 ComponentPreview.defaultProps = {
   hotReload: true,
 };
+
+/**
+ * create a string segment
+ * append a prefix and a suffix to a string, only if defined
+ */
+function optional(prefix = '', str?: string, suffix = '') {
+  if (!str) return '';
+
+  return `${prefix}${str}${suffix}`;
+}
+
+/**
+ * generates preview server path from component data
+ */
+export function toPreviewServer(component: ComponentModel) {
+  // TODO  - check if this is needed
+  const defaultServerUrl = `/api/${component.id.fullName}/@/preview`;
+
+  return component.server?.url || defaultServerUrl;
+}
+
+/**
+ * creates component preview arguments
+ */
+export function toPreviewHash(
+  /**
+   * component to preview
+   */
+  component: ComponentModel,
+  /**
+   * current preview (docs, compositions, etc)
+   */
+  previewName?: string,
+  /**
+   * extra data to append to query
+   */
+  queryParams = ''
+) {
+  const queryItems = [optional(`preview=`, previewName)]
+    .concat(queryParams)
+    // also removes empty strings
+    .filter((x) => !!x);
+
+  const hashQuery = queryItems.join('&');
+  const hash = `${component.id.fullName}${optional('?', hashQuery)}`;
+
+  return hash;
+}
