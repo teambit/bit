@@ -10,7 +10,8 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "esModuleInterop": true
   },
   "exclude": [
     "dist"
