@@ -379,6 +379,9 @@ describe('bit remove command', function () {
       const output = helper.command.importComponent('utils/is-string2');
       expect(output.includes('successfully imported one component')).to.be.true;
     });
+
+    //TODO: check if this is necessary
+    /*
     it('should remove imported component and its files', () => {
       const importedComponentDir = path.join(helper.scopes.localPath, 'components', 'utils');
       const importedDependeceDir = path.join(
@@ -396,6 +399,7 @@ describe('bit remove command', function () {
       expect(importedComponentDir).to.not.be.a.path();
       expect(importedDependeceDir).to.not.be.a.path();
     });
+    */
     it('bitmap should not contain component and dependences', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-string2`);
