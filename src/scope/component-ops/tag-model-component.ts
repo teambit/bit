@@ -336,6 +336,7 @@ export default async function tagModelComponent({
     // const versionOrReleaseType = exactVersion || releaseType;
     const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
     results.map(updateComponentsByTagResult(nonLegacyComps));
+    await bluebird.mapSeries(componentsToTag, (consumerComponent) => persistComponent(consumerComponent));
   }
 
   if (persist) {
