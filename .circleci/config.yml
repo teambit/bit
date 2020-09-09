@@ -174,7 +174,7 @@ jobs:
       -
         run: 'bit config set user.email ci@bit.dev'
       -
-        run: 'bit config set hub_domain hub.bit.dev'
+        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
@@ -182,7 +182,6 @@ jobs:
           key: bit-global-config-v5
           paths:
             - ~/Library/Caches/Bit/config/config.json
-            - .npm-global/bin
 
   pack:
     <<: *defaults
@@ -519,9 +518,6 @@ jobs:
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      # -
-      #   restore_cache:
-      #     key: bit-global-config-v3
       -
         restore_cache:
           key: bitsrc-ssh-key3
