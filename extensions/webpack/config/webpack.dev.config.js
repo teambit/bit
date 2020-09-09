@@ -79,7 +79,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
 
       // quiet: true,
 
-      injectClient: false,
+      // injectClient: false,
 
       overlay: false,
       // Enable hot reloading
