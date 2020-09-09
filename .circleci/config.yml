@@ -56,6 +56,7 @@ orbs:
 jobs:
   checkout_code:
     <<: *defaults
+    resource_class: large
     steps:
       - checkout
       -
@@ -194,11 +195,13 @@ jobs:
       -
         run: 'bit config set hub_domain hub.bit.dev'
       -
+        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      -
         persist_to_workspace:
-          root: .
+          root: /home/circleci
           paths:
-            - ~/Library/Caches/Bit/config/config.json
-            - ~/.npm-global/bin
+            - Library/Caches/Bit/config/config.json
+            - .npm-global/bin
   pack:
     <<: *defaults
     steps:
@@ -483,6 +486,7 @@ jobs:
           command: 'cd bit && npm run check-types'
 
   setup_harmony:
+    resource_class: large
     <<: *defaults
     steps:
       -
@@ -527,9 +531,6 @@ jobs:
       -
         restore_cache:
           key: bitsrc-registry6
-      -
-        restore_cache:
-          key: npm-global-bin-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -583,19 +584,10 @@ jobs:
           command: 'sudo apt-get install expect'
       -
         restore_cache:
-          key: bit-global-config-v3
-      -
-        restore_cache:
           key: bitsrc-ssh-key3
       -
         restore_cache:
           key: bitsrc-registry6
-          # key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          key: npm-global-bin-v2
-
-      - run: ls -l /home/circleci/.npm-global/bin
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -604,25 +596,7 @@ jobs:
       -
         run: 'cd bit && mkdir junit'
       -
-        run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-
-      -
-        save_cache:
-          key: bit-global-config-v3
-          paths:
-            - ~/Library/Caches/Bit/config/config.json
       -
         run:
           name: 'Run e2e tests'
