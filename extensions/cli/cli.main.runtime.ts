@@ -128,6 +128,7 @@ export class CLIMain {
         Object.keys(this.commands).filter((c) => !this.commands[c].private)
       );
       const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
+      // @ts-ignore
       throw new CommandNotFound(commandName, suggestion);
     }
   }

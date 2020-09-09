@@ -90,7 +90,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
-        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+        // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
     },
 
@@ -100,8 +100,8 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           sockPath: `_hmr/${envId}`,
           // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
           // errors
-          // entry: require.resolve('react-dev-utils/webpackHotDevClient'),
-          // module: require.resolve('./refresh'),
+          entry: require.resolve('./react-hot-dev-client'),
+          module: require.resolve('./refresh'),
         },
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
