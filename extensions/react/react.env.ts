@@ -1,3 +1,5 @@
+import { TsConfigSourceFile } from 'typescript';
+import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
@@ -11,12 +13,13 @@ import { Workspace } from '@teambit/workspace';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
-
+import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 
 export const AspectEnvType = 'react';
+const defaultTsConfig = require('./typescript/tsconfig.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -61,11 +64,16 @@ export class ReactEnv implements Environment {
     private config: ReactMainConfig
   ) {}
 
+  getTsConfig(targetTsConfig?: TsConfigSourceFile) {
+    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
+  }
+
   /**
    * returns a component tester.
    */
-  getTester(): Tester {
-    return this.jest.createTester(require.resolve('./jest/jest.config'));
+  getTester(jestConfigPath: string): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.jest.createTester(config);
   }
 
   /**
@@ -73,7 +81,8 @@ export class ReactEnv implements Environment {
    */
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
-    const tsconfig = targetConfig || require('./typescript/tsconfig.json');
+    const tsconfig = this.getTsConfig(targetConfig);
+
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -102,16 +111,20 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext, config?: Configuration): DevServer {
+  getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
+    const defaultConfig = this.getWebpackConfig(context);
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
 
-    return this.webpack.createDevServer(withDocs, config || this.getWebpackConfig(context));
+    return this.webpack.createDevServer(withDocs, config);
   }
 
-  async getBundler(context: BundlerContext): Promise<Bundler> {
-    return this.webpack.createBundler(context, previewConfigFactory());
+  async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
+    const defaultConfig = previewConfigFactory();
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
+    return this.webpack.createBundler(context, config);
   }
 
   /**
@@ -160,9 +173,6 @@ export class ReactEnv implements Environment {
    * returns the component build pipeline.
    */
   getPipe(): BuildTask[] {
-    // return BuildPipe.from([this.compiler.task, this.tester.task]);
-    // return BuildPipe.from([this.tester.task]);
-    // return [this.compiler.task, this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
     return [this.compiler.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
   }
 

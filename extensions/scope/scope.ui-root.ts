@@ -10,10 +10,16 @@ export class ScopeUIRoot implements UIRoot {
     private scope: ScopeMain
   ) {}
 
-  readonly name = 'scope';
+  get name() {
+    return this.scope.name;
+  }
 
   get path(): string {
     return this.scope.path;
+  }
+
+  get configFile(): string {
+    return 'scope.json';
   }
 
   resolveAspects(runtime: string) {
