@@ -657,7 +657,7 @@ workflows:
       -
         build:
           requires:
-            - checkout_code
+            - setup_harmony
       -
         unit_test:
           requires:
@@ -680,7 +680,6 @@ workflows:
         configure-bit:
           requires:
             - set_ssh_key
-            - build
             - setup_harmony
       -
         e2e_test:
