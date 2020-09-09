@@ -28,6 +28,7 @@ export type ExampleSectionProps = {
 } & SectionProps;
 
 function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
+  // @ts-ignore
   const code = example.jsx ? jsxToString(example.jsx) : example.code;
 
   return (
