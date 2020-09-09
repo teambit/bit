@@ -2,7 +2,7 @@ import { ComponentID } from '@teambit/component';
 import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
-import { BIT_MAP, BIT_VERSION, STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from 'bit-bin/dist/constants';
+import { BIT_MAP } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
@@ -74,16 +74,16 @@ export class Watcher {
     const start = new Date().getTime();
     if (filePath.endsWith(BIT_MAP)) {
       await this.handleBitmapChanges();
-      return this.completeWatch(start);
+      return this.completeWatch();
     }
     const componentId = await this.getBitIdByPathAndReloadConsumer(filePath, isNew);
     if (!componentId) {
       logger.console(`file ${filePath} is not part of any component, ignoring it`);
-      return this.completeWatch(start);
+      return this.completeWatch();
     }
 
     const buildResults = await this.executeWatchOperationsOnComponent(componentId);
-    this.completeWatch(start);
+    this.completeWatch();
     return buildResults;
   }
 
@@ -104,13 +104,13 @@ export class Watcher {
     if (this.isComponentWatchedExternally(bitId)) {
       // update capsule, once done, it automatically triggers the external watcher
       await this.workspace.load([bitId]);
-      return;
+      return [];
     }
     const component = await this.workspace.consumer.loadComponent(bitId);
     const idStr = bitId.toString();
     if (component.isLegacy) {
       await this.buildLegacy(idStr);
-      return;
+      return [];
     }
     let buildResults;
     const componentId = new ComponentID(bitId);
@@ -121,7 +121,7 @@ export class Watcher {
     } catch (err) {
       // do not exist the watch process on errors, just print them
       logger.console(err.message || err);
-      return;
+      return [];
     }
     if (buildResults && buildResults.length) {
       return buildResults;
@@ -129,7 +129,7 @@ export class Watcher {
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
   }
 
-  private completeWatch(start: number) {
+  private completeWatch() {
     loader.stop();
   }
 

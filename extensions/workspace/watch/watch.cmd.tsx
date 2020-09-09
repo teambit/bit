@@ -1,15 +1,16 @@
+import chalk from 'chalk';
+import moment from 'moment';
+
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 
 import { Watcher } from './watcher';
-import chalk from 'chalk';
-import moment from 'moment';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 
 export class WatchCommand implements Command {
   msgs = {
-    onAll: (event, path) => console.log(`Event: "${event}". Path: ${path}`),
-    onStart: (workspace) => {},
+    onAll: (event, path) => this.logger.console(`Event: "${event}". Path: ${path}`),
+    onStart: () => {},
     onReady: (workspace, watchPathsSortByComponent, verbose) => {
       if (verbose) {
         this.logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));

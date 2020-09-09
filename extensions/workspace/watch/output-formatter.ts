@@ -1,16 +1,14 @@
 import chalk from 'chalk';
 
-export const formatWatchPathsSortByComponent = (watchPathsSortByComponent) => {
-  return watchPathsSortByComponent.reduce(
-    (outputString, watchPath) =>
+const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
+  return resultsForExtension.reduce(
+    (outputString, resultForExtension) =>
       `${outputString}
-    ${chalk.green('√')} SUCCESS\t${watchPath.componentId}\n
-    \t - ${watchPath.absPaths?.join('\n')}\n\n`,
-    ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}\n`
+    ${chalk.green('√')} SUCCESS\t${resultForExtension.component}\n
+     ${verbose ? resultForExtension.componentFilesAsString : ''}\n`,
+    '\n'
   );
 };
-
-export const formatCompileResults = (compileResults, verbose) => output(compileResults, verbose);
 
 const output = (compileResults, verbose) => {
   return compileResults
@@ -23,21 +21,24 @@ const output = (compileResults, verbose) => {
     }))
     .reduce(
       (outputString, compileResult) =>
-        outputString + `${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
+        `${outputString}
+    ${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
       ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}`
     );
-};
-
-const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
-  return resultsForExtension.reduce(
-    (outputString, resultForExtension) =>
-      outputString +
-      `${chalk.green('√')} SUCCESS\t${resultForExtension.component}\n` +
-      `${verbose ? resultForExtension.componentFilesAsString : ''}\n`,
-    '\n'
-  );
 };
 
 const verboseComponentFilesArrayToString = (componentFiles) => {
   return componentFiles.reduce((outputString, filePath) => outputString + `\t - ${filePath}\n`, ``);
 };
+
+export const formatWatchPathsSortByComponent = (watchPathsSortByComponent) => {
+  return watchPathsSortByComponent.reduce(
+    (outputString, watchPath) =>
+      `${outputString}
+    ${chalk.green('√')} SUCCESS\t${watchPath.componentId}\n
+    \t - ${watchPath.absPaths?.join('\n')}\n\n`,
+    ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}\n`
+  );
+};
+
+export const formatCompileResults = (compileResults, verbose) => output(compileResults, verbose);
