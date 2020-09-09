@@ -588,7 +588,7 @@ jobs:
             - bit/node_modules
             - .pnpm-store
 
-  tag:
+  bit_build:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -639,8 +639,8 @@ jobs:
           command: 'cd bit && bit status'
       -
         run:
-          name: 'bit tag'
-          command: 'cd bit && bit tag --persist'
+          name: 'bit build'
+          command: 'cd bit && bit build'
 
 
   e2e_test:
@@ -1129,7 +1129,7 @@ workflows:
             # - configure-bit
             # - pack
       -
-        tag:
+        bit_build:
           requires:
             - build
       -
