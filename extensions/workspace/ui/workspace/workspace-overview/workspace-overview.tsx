@@ -36,7 +36,7 @@ function PreviewPlaceholder({ name }: { name?: string }) {
     <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
       <Icon of="image" />
       <div>No preview available</div>
-      <ReactTooltip place="bottom" id={name} effect="solid">
+      <ReactTooltip className={styles.tooltip} place="bottom" id={name} effect="solid">
         Preview is generated from compositions during CI
       </ReactTooltip>
     </div>
