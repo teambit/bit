@@ -9,6 +9,7 @@
     "composite": true,
     "declaration": true,
     "sourceMap": true,
+    "skipLibCheck": true,
     "outDir": "dist",
     "moduleResolution": "node",
     "esModuleInterop": true

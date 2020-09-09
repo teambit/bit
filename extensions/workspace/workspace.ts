@@ -727,7 +727,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
-    const graph = await this.getGraphWithoutCore(components);
+    const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
@@ -735,7 +735,7 @@ export class Workspace implements ComponentFactory {
 
     const allIds = await Promise.all(allIdsP);
 
-    const allComponents = await this.getMany(allIds);
+    const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
