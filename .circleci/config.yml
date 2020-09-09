@@ -178,14 +178,12 @@ jobs:
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
-        run: ls /home/circleci/.npm-global/bin
-      -
-        persist_to_workspace:
-          root: /home/circleci/
+        save_cache:
+          key: bit-global-config-v5
           paths:
-            - Library/Caches/Bit/config/config.json
-            - .npm-global
-            - .npm-global/bin/bit
+            - ~/Library/Caches/Bit/config/config.json
+            - .npm-global/bin
+
   pack:
     <<: *defaults
     steps:
@@ -509,6 +507,17 @@ jobs:
         attach_workspace:
           at: ./
       -
+        restore_cache:
+          key: bit-global-config-v5
+      # -
+      #   run:
+      #     name: 'create npm global dir'
+      #     command: 'mkdir -p /home/circleci/.npm-global/bin'
+      # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       # -
       #   restore_cache:
@@ -546,22 +555,23 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: ls /home/circleci/Library/Caches/Bit/config/config.json
-      -
-        run: ls /home/circleci/.npm-global/bin
-      -
-        run: echo $PATH
+        restore_cache:
+          key: bit-global-config-v5
       -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
+      # -
+      #   run:
+      #     name: 'create npm global dir'
+      #     command: 'mkdir -p /home/circleci/.npm-global/bin'
+      # -
+      #   run:
+      #     name: 'link bit to path'
+      #     command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run: ls /home/circleci/.npm-global/bin
-      -
-        run: echo $PATH
       -
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
