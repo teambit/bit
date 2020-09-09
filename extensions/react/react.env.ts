@@ -65,7 +65,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
+    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
   }
 
   /**
