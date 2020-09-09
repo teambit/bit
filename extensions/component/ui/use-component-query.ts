@@ -37,7 +37,7 @@ const GET_COMPONENT = gql`
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
 export function useComponentQuery(componentId: string, host: string) {
-  const { data, error } = useDataQuery(GET_COMPONENT, {
+  const { data, error, loading } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host },
   });
 
@@ -47,7 +47,11 @@ export function useComponentQuery(componentId: string, host: string) {
     return {
       component: rawComponent ? ComponentModel.from(rawComponent) : undefined,
       // eslint-disable-next-line
-      error: error ? new ComponentError(500, error.message) : !rawComponent ? new ComponentError(404) : undefined,
+      error: error
+        ? new ComponentError(500, error.message)
+        : !rawComponent && !loading
+        ? new ComponentError(404)
+        : undefined,
     };
   }, [rawComponent, error]);
 }
