@@ -496,7 +496,6 @@ jobs:
           root: .
           paths:
             - bit/dist
-            - bit/build-harmony
             - bit/node_modules
             - .pnpm-store
 
