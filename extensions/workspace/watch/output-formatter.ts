@@ -1,5 +1,9 @@
 import chalk from 'chalk';
 
+const verboseComponentFilesArrayToString = (componentFiles) => {
+  return componentFiles.reduce((outputString, filePath) => outputString + `\t - ${filePath}\n`, ``);
+};
+
 const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
   return resultsForExtension.reduce(
     (outputString, resultForExtension) =>
@@ -25,10 +29,6 @@ const output = (compileResults, verbose) => {
     ${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
       ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}`
     );
-};
-
-const verboseComponentFilesArrayToString = (componentFiles) => {
-  return componentFiles.reduce((outputString, filePath) => outputString + `\t - ${filePath}\n`, ``);
 };
 
 export const formatWatchPathsSortByComponent = (watchPathsSortByComponent) => {

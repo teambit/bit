@@ -71,7 +71,6 @@ export class Watcher {
   }
 
   private async handleChange(filePath: string, isNew = false) {
-    const start = new Date().getTime();
     if (filePath.endsWith(BIT_MAP)) {
       await this.handleBitmapChanges();
       return this.completeWatch();
@@ -127,6 +126,7 @@ export class Watcher {
       return buildResults;
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
+    return [];
   }
 
   private completeWatch() {
