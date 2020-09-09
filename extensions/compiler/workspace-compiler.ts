@@ -2,7 +2,7 @@
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/environments';
 import { OnComponentChangeResult, Workspace } from '@teambit/workspace';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
@@ -128,20 +128,24 @@ export class WorkspaceCompiler {
     options: LegacyCompilerOptions
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    const bitIds = await this.getBitIds(componentsIds);
-    const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
+    const componentIds = await this.resolveIds(componentsIds);
+    // const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
+    const components = await this.workspace.getMany(componentIds);
+
     const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
-      const environment = this.envs.getEnvFromExtensions(c.extensions).env;
+      const environment = this.envs.getEnv(c).env;
       const compilerInstance = environment.getCompiler?.();
       // if there is no componentDir (e.g. author that added files, not dir), then we can't write the dists
       // inside the component dir.
-      if (compilerInstance && c.componentMap?.getComponentDir()) {
+      if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
-        componentsAndNewCompilers.push(new ComponentCompiler(this.workspace, c, compilerInstance, compilerName));
+        componentsAndNewCompilers.push(
+          new ComponentCompiler(this.workspace, c.state._consumer, compilerInstance, compilerName)
+        );
       } else {
-        componentsWithLegacyCompilers.push(c);
+        componentsWithLegacyCompilers.push(c.state._consumer);
       }
     });
     let newCompilersResultOnWorkspace: BuildResult[] = [];
@@ -184,10 +188,11 @@ export class WorkspaceCompiler {
     return buildResults;
   }
 
-  private async getBitIds(componentsIds: Array<string | BitId>): Promise<BitId[]> {
+  private async resolveIds(componentsIds: Array<string | BitId>): Promise<ComponentID[]> {
     const ids: ComponentID[] = componentsIds.length
       ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
       : this.workspace.getAllComponentIds();
-    return ids.map((id) => id._legacy);
+
+    return ids;
   }
 }

@@ -29,15 +29,18 @@ export class FlattenedDependencyLoader {
       return comps.filter((dep) => !this.ignoreIds.has(dep.id));
     };
 
-    await this.loadFlattened(filterIgnoreIds(dependencies));
-    await this.loadFlattened(filterIgnoreIds(devDependencies));
-    await this.loadFlattened(filterIgnoreIds(extensionDependencies));
+    const filteredDeps = filterIgnoreIds(dependencies);
+    const filteredDevDeps = filterIgnoreIds(devDependencies);
+    const filteredExtDeps = filterIgnoreIds(extensionDependencies);
+    await this.loadFlattened(filteredDeps);
+    await this.loadFlattened(filteredDevDeps);
+    await this.loadFlattened(filteredExtDeps);
 
     return new ComponentWithDependencies({
       component,
-      dependencies,
-      devDependencies,
-      extensionDependencies,
+      dependencies: filteredDeps,
+      devDependencies: filteredDevDeps,
+      extensionDependencies: filteredExtDeps,
     });
   }
   async loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {

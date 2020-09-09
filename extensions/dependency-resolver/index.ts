@@ -18,4 +18,4 @@ export {
 } from './package-manager';
 export type { DependencyResolverMain, LinkingOptions } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
-export { DependencyLifecycleType } from './types';
+export { DependencyLifecycleType, DependenciesPolicy } from './types';

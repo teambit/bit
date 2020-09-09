@@ -110,9 +110,13 @@ export function componentSchema(componentExtension: ComponentMain) {
       },
       ComponentHost: {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
-          const componentId = await host.resolveComponentId(id);
-          const comp = await host.get(componentId);
-          return comp;
+          try {
+            const componentId = await host.resolveComponentId(id);
+            const component = await host.get(componentId);
+            return component;
+          } catch (error) {
+            return null;
+          }
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);

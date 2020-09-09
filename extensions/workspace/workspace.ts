@@ -311,13 +311,26 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
+  private async getConsumerComponent(id: ComponentID) {
+    try {
+      return await this.consumer.loadComponent(id._legacy);
+    } catch (err) {
+      return undefined;
+    }
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
    */
   async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.consumer.loadComponent(id._legacy);
+    const consumerComponent = await this.getConsumerComponent(id);
     const component = await this.scope.get(id);
+    if (!consumerComponent) {
+      if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
+      return component;
+    }
+
     const extensionDataList = await this.componentExtensions(id, component);
 
     const state = new State(
@@ -708,8 +721,10 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph = await this.getGraphWithoutCore(components);
@@ -717,6 +732,7 @@ export class Workspace implements ComponentFactory {
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
+
     const allIds = await Promise.all(allIdsP);
 
     const allComponents = await this.getMany(allIds);
@@ -726,7 +742,7 @@ export class Workspace implements ComponentFactory {
 
       if (!data) return false;
       if (data.type !== 'aspect')
-        this.logger.warn(
+        this.logger.debug(
           `${component.id.toString()} is configured in workspace.json, but using the ${
             data.type
           } environment. \n please make sure to either apply the aspect environment or a composition of the aspect environment for the aspect to load.`
@@ -960,7 +976,17 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    const legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    let legacyId;
+    try {
+      legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    } catch (err) {
+      if (err.name === 'MissingBitMapComponent') {
+        // if a component is coming from the scope, it doesn't have .bitmap entry
+        legacyId = BitId.parse(id.toString(), true);
+        return ComponentID.fromLegacy(legacyId);
+      }
+      throw err;
+    }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
     const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
     return ComponentID.fromLegacy(legacyId, defaultScope);

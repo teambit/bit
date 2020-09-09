@@ -27,6 +27,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "typescript/tsconfig.json",
+                "test": false,
+                "name": "tsconfig.json"
             }
         ],
         "mainFile": "index.ts",
@@ -693,6 +698,16 @@
                 "relativePath": "tag/tag.ts",
                 "test": false,
                 "name": "tag.ts"
+            },
+            {
+                "relativePath": "ui/component-error/component-error.tsx",
+                "test": false,
+                "name": "component-error.tsx"
+            },
+            {
+                "relativePath": "ui/component-error/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "ui/component-model/component-model.ts",
@@ -2153,6 +2168,78 @@
         "exported": false,
         "lanes": []
     },
+    "pages/error": {
+        "files": [
+            {
+                "relativePath": "error-page.module.scss",
+                "test": false,
+                "name": "error-page.module.scss"
+            },
+            {
+                "relativePath": "error-page.tsx",
+                "test": false,
+                "name": "error-page.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/error-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/not-found": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "not-found-page.module.scss",
+                "test": false,
+                "name": "not-found-page.module.scss"
+            },
+            {
+                "relativePath": "not-found-page.tsx",
+                "test": false,
+                "name": "not-found-page.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/not-found-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/server-error": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "server-error-page.module.scss",
+                "test": false,
+                "name": "server-error-page.module.scss"
+            },
+            {
+                "relativePath": "server-error-page.tsx",
+                "test": false,
+                "name": "server-error-page.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/server-error-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "panels": {
         "files": [
             {
@@ -2643,6 +2730,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/react-router",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "routing/external-link": {
+        "files": [
+            {
+                "relativePath": "external-link.module.scss",
+                "test": false,
+                "name": "external-link.module.scss"
+            },
+            {
+                "relativePath": "external-link.tsx",
+                "test": false,
+                "name": "external-link.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/external-link",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3895,6 +4006,11 @@
     "typescript": {
         "files": [
             {
+                "relativePath": "cmds/init.cmd.ts",
+                "test": false,
+                "name": "init.cmd.ts"
+            },
+            {
                 "relativePath": "compiler-options.ts",
                 "test": false,
                 "name": "compiler-options.ts"
@@ -4523,5 +4639,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.10"
+    "version": "14.8.9-dev.12"
 }
