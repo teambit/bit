@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 const verboseComponentFilesArrayToString = (componentFiles) => {
-  return componentFiles.reduce((outputString, filePath) => outputString + `\t - ${filePath}\n`, ``);
+  return componentFiles.reduce((outputString, filePath) => `${outputString} \t - ${filePath}\n`, ``);
 };
 
 const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
