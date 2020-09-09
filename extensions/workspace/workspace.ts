@@ -446,7 +446,7 @@ export class Workspace implements ComponentFactory {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
     if (!pattern) return this.list();
-    return all.filter((c) => c.id.toString() === pattern);
+    return all.filter((c) => c.id.toString({ ignoreVersion: true }) === pattern);
   }
 
   /**
