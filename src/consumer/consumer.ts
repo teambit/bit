@@ -520,6 +520,7 @@ export default class Consumer {
     taggedComponents: Component[];
     autoTaggedResults: AutoTagResult[];
     isSoftTag: boolean;
+    publishedPackages: string[];
   }> {
     if (this.isLegacy) {
       tagParams.persist = true;
@@ -552,14 +553,14 @@ export default class Consumer {
       throw new ComponentsPendingImport();
     }
 
-    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       consumer: this,
       ...tagParams,
     });
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist };
+    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
   }
 
   updateNextVersionOnBitmap(

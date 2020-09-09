@@ -20,6 +20,7 @@ export type TagResults = {
   warnings: string[];
   newComponents: BitIds;
   isSoftTag: boolean;
+  publishedPackages: string[];
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';

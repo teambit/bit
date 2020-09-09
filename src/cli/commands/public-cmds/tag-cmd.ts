@@ -151,6 +151,17 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
         .join('\n');
     };
 
+    const publishOutput = () => {
+      const { publishedPackages } = results;
+      if (!publishedPackages || !publishedPackages.length) return '';
+      const successTitle = `\n\n${chalk.green(
+        `published the following ${publishedPackages.length} component(s) successfully\n`
+      )}`;
+      const successCompsStr = publishedPackages.join('\n');
+      const successOutput = successCompsStr ? successTitle + successCompsStr : '';
+      return successOutput;
+    };
+
     const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
     const outputIfExists = (label, explanation, components) => {
       if (!components.length) return '';
@@ -176,6 +187,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       tagExplanation +
       outputIfExists('new components', newDesc, addedComponents) +
       outputIfExists('changed components', changedDesc, changedComponents) +
+      publishOutput() +
       softTagClarification
     );
   }

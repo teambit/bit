@@ -184,7 +184,7 @@ export default async function tagModelComponent({
   persist: boolean;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
-}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
+}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; publishedPackages: string[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
@@ -330,19 +330,23 @@ export default async function tagModelComponent({
   } else {
     consumer.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
   }
-
+  const publishedPackages: string[] = [];
   if (nonLegacyComps.length && persist) {
     const ids = nonLegacyComps.map((c) => c.id);
-    // const versionOrReleaseType = exactVersion || releaseType;
     const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
     results.map(updateComponentsByTagResult(nonLegacyComps));
+    nonLegacyComps.forEach((comp) => {
+      const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
+      const publishedPackage = pkgExt?.data?.publishedPackage;
+      if (publishedPackage) publishedPackages.push(publishedPackage);
+    });
     await bluebird.mapSeries(componentsToTag, (consumerComponent) => persistComponent(consumerComponent));
   }
 
   if (persist) {
     await scope.objects.persist();
   }
-  return { taggedComponents, autoTaggedResults };
+  return { taggedComponents, autoTaggedResults, publishedPackages };
 }
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {
