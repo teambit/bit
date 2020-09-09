@@ -6,9 +6,9 @@ import rightpad from 'pad-right';
 
 // @todo: move this file to the watch extension and then move the following constants to the extension
 // import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/constants';
-const STARTED_WATCHING_MSG = 'Watching for component changes in workspace';
 import Helper from '../src/e2e-helper/e2e-helper';
 
+const STARTED_WATCHING_MSG = 'Watching for component changes in workspace';
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
 
 export default class WatchRunner {

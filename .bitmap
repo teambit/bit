@@ -2529,6 +2529,11 @@
                 "name": "docs-app.tsx"
             },
             {
+                "relativePath": "docs/examples-overview/example.ts",
+                "test": false,
+                "name": "example.ts"
+            },
+            {
                 "relativePath": "docs/examples-overview/examples-overview.module.scss",
                 "test": false,
                 "name": "examples-overview.module.scss"

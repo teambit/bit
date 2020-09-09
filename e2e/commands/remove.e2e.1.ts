@@ -380,7 +380,8 @@ describe('bit remove command', function () {
       expect(output.includes('successfully imported one component')).to.be.true;
     });
 
-    //TODO: check if this is necessary
+    // TODO: check if this is necessary
+
     /*
     it('should remove imported component and its files', () => {
       const importedComponentDir = path.join(helper.scopes.localPath, 'components', 'utils');
