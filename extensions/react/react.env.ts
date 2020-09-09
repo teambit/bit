@@ -160,6 +160,7 @@ export class ReactEnv implements Environment {
       devDependencies: {
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
+        '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
       },
       // TODO: take version from config
