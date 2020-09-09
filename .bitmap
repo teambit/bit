@@ -2529,6 +2529,11 @@
                 "name": "docs-app.tsx"
             },
             {
+                "relativePath": "docs/examples-overview/example.ts",
+                "test": false,
+                "name": "example.ts"
+            },
+            {
                 "relativePath": "docs/examples-overview/examples-overview.module.scss",
                 "test": false,
                 "name": "examples-overview.module.scss"
@@ -2634,9 +2639,24 @@
                 "name": "tsconfig.json"
             },
             {
+                "relativePath": "webpack/format-webpack-messages.js",
+                "test": false,
+                "name": "format-webpack-messages.js"
+            },
+            {
                 "relativePath": "webpack/html.js",
                 "test": false,
                 "name": "html.js"
+            },
+            {
+                "relativePath": "webpack/launch-editor-endpoint.js",
+                "test": false,
+                "name": "launch-editor-endpoint.js"
+            },
+            {
+                "relativePath": "webpack/react-hot-dev-client.js",
+                "test": false,
+                "name": "react-hot-dev-client.js"
             },
             {
                 "relativePath": "webpack/refresh.js",
