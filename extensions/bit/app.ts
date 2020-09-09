@@ -1,7 +1,7 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
-// eslint-disable-next-line no-console
 process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
   console.error('uncaughtException', err);
   process.exit(1);
 });

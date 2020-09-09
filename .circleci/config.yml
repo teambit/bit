@@ -178,8 +178,10 @@ jobs:
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
+        run: ls /home/circleci/.npm-global/bin
+      -
         persist_to_workspace:
-          root: /home/circleci
+          root: .
           paths:
             - Library/Caches/Bit/config/config.json
             - .npm-global/bin
@@ -522,20 +524,6 @@ jobs:
         run: 'chmod 400 ~/.ssh/id_rsa'
       -
         run: 'ssh-add ~/.ssh/id_rsa'
-      -
-        run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         run:
           name: 'bit status'
