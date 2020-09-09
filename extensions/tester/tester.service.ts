@@ -25,25 +25,15 @@ export class TesterService implements EnvService<TestResults> {
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
     const tester: Tester = context.env.getTester();
-    const components: ComponentWithSpecs[] = detectTestFiles(context.components);
-    const testMatch = components.reduce((acc: string[], component) => {
-      const specs = component.specs.map((specFile) =>
-        join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: false }), specFile)
-      );
-
-      acc = acc.concat(specs);
-      return acc;
-    }, []);
-
-    if (!testMatch.length) {
-      throw new NoTestFilesFound(this.testsRegex);
-    }
+    const specFiles = ComponentMap.as(context.components, detectTestFiles);
+    const testCount = specFiles.toArray().reduce((acc, [component, specs]) => acc + specs.length, 0);
+    if (testCount === 0) throw new NoTestFilesFound(this.testsRegex);
 
     this.logger.console(`testing ${context.components.length} components with environment ${chalk.cyan(context.id)}\n`);
 
     const testerContext = Object.assign(context, {
       release: false,
-      specFiles: ComponentMap.as(context.components, this.getSpecFiles),
+      specFiles,
       rootPath: this.workspace.path,
       workspace: this.workspace,
       watch: options.watch,

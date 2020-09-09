@@ -43,11 +43,15 @@ export class JestTester implements Tester {
       watch: context.watch,
       // runInBand: context.debug,
     };
-
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
+    const testFiles = context.specFiles.toArray().reduce((acc: string[], [component, specs]) => {
+      specs.forEach((spec) => acc.push(spec.path));
+      return acc;
+    }, []);
+
     const jestConfigWithSpecs = Object.assign(jestConfig, {
-      testMatch: context.specFiles,
+      testMatch: testFiles,
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
