@@ -4,7 +4,6 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
@@ -19,6 +18,8 @@ export type EnvsConfig = {
 
 export type EnvOptions = {};
 
+export type EnvTransformer = (env: Environment) => Environment;
+
 export type EnvDefinition = {
   id: string;
   env: Environment;
@@ -28,6 +29,8 @@ export type Descriptor = {
   id: string;
   icon: string;
 };
+
+export const DEFAULT_ENV = 'teambit.bit/node';
 
 export class EnvsMain {
   static runtime = MainRuntime;
@@ -67,6 +70,57 @@ export class EnvsMain {
     return this.createRuntime(components);
   }
 
+  getDefaultEnv(): EnvDefinition {
+    const defaultEnv = this.envSlot.get(DEFAULT_ENV);
+    if (!defaultEnv) throw new Error('default env must be set.');
+
+    return {
+      id: DEFAULT_ENV,
+      env: defaultEnv,
+    };
+  }
+
+  /**
+   * compose a new environment from a list of environment transformers.
+   */
+  compose(targetEnv: Environment, envTransformers: EnvTransformer[]) {
+    const a = envTransformers.reduce((acc, transformer) => {
+      acc = transformer(acc);
+      return acc;
+    }, targetEnv);
+
+    return a;
+  }
+
+  /**
+   * override members of an environment and return an env transformer.
+   */
+  override(propsToOverride: Environment): EnvTransformer {
+    return (env: Environment) => {
+      return this.merge(propsToOverride, env);
+    };
+  }
+
+  /**
+   * get the env of the given component.
+   */
+  getEnv(component: Component): EnvDefinition {
+    const env = component.state.aspects.entries.find((aspectEntry) => {
+      const id = aspectEntry.id.toString();
+      return this.envSlot.get(id);
+    });
+
+    if (!env) return this.getDefaultEnv();
+    const id = env.id.toString();
+    return {
+      id,
+      env: this.envSlot.get(id) as Environment,
+    };
+  }
+
+  /**
+   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
+   */
   getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
     const envInExtensionList = extensions.find((e) => this.envSlot.get(e.stringId));
     if (envInExtensionList) {
@@ -87,12 +141,12 @@ export class EnvsMain {
   getDescriptor(component: Component): Descriptor | null {
     const defaultIcon = `https://static.bit.dev/extensions-icons/default.svg`;
     // TODO: @guy after fix core extension then take it from core extension
-    const envDef = this.getEnvFromExtensions(component.config.extensions);
+    const envDef = this.getEnv(component);
     if (!envDef) return null;
     const instance = this.context.get<any>(envDef.id);
     const iconFn = instance.icon;
 
-    const icon = iconFn ? iconFn() : defaultIcon;
+    const icon = iconFn ? iconFn.apply(instance) : defaultIcon;
     return {
       id: envDef.id,
       icon,
@@ -110,7 +164,7 @@ export class EnvsMain {
   /**
    * compose two environments into one.
    */
-  compose(targetEnv: Environment, sourceEnv: Environment): Environment {
+  merge(targetEnv: Environment, sourceEnv: Environment): Environment {
     const allNames = new Set<string>();
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
@@ -120,7 +174,11 @@ export class EnvsMain {
 
     allNames.forEach((key: string) => {
       const fn = sourceEnv[key];
-      if (!fn || !fn.bind || targetEnv[key]) return;
+      if (targetEnv[key]) return;
+      if (!fn || !fn.bind) {
+        targetEnv[key] = fn;
+        return;
+      }
       targetEnv[key] = fn.bind(sourceEnv);
     });
 
@@ -136,7 +194,7 @@ export class EnvsMain {
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
     const envsMap = {};
     components.forEach((component: Component) => {
-      const envDef = this.getEnvFromExtensions(component.config.extensions);
+      const envDef = this.getEnv(component);
       const envId = envDef.id;
       const env = envDef.env;
       // handle config as well when aggregating envs.
@@ -155,7 +213,6 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>()];
 
-  static defaultConfig = {};
   static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect];
 
   static async provider(

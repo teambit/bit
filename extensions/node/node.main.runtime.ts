@@ -15,7 +15,7 @@ export class NodeMain {
   static dependencies = [EnvsAspect, ReactAspect];
 
   static async provider([envs, react]: [EnvsMain, ReactMain]) {
-    const nodeEnv = envs.compose(new NodeEnv(), react.reactEnv);
+    const nodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
     return new NodeMain();
   }

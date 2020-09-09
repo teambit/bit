@@ -11,7 +11,7 @@ export class ComponentTreeDrawer implements Drawer {
   // TODO - check if this is still used @oded/@uri
   name = 'COMPONENTS';
 
-  component = () => {
+  render = () => {
     const { host } = useComponentHost();
 
     if (!host) return <FullLoader />;

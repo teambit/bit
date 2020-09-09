@@ -1,11 +1,11 @@
-import { Example } from '@teambit/documenter.types.docs-file';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Section, SectionProps } from '@teambit/documenter.ui.section';
 import classNames from 'classnames';
 import React from 'react';
-
+import jsxToString from 'jsx-to-string';
 import { Playground } from '@teambit/documenter.code.react-playground';
 import styles from './examples-overview.module.scss';
+import { Example } from './example';
 
 export type ExamplesOverviewProps = {
   examples: Example[];
@@ -28,11 +28,14 @@ export type ExampleSectionProps = {
 } & SectionProps;
 
 function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
+  // @ts-ignore
+  const code = example.jsx ? jsxToString(example.jsx) : example.code;
+
   return (
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
       {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
       {example.description && <div>{example.description}</div>}
-      <Playground code={example.code} scope={example.scope} />
+      <Playground code={code} scope={example.scope} />
     </Section>
   );
 }

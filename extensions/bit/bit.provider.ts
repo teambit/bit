@@ -13,6 +13,7 @@ export async function provideBit() {
     const packageName = getCoreAspectPackageName(id);
     coreAspectsPackagesAndIds[packageName] = id;
   });
+  // @ts-ignore @gilad what have you been thinking???
   DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
   return {
     manifestsMap,

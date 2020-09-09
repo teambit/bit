@@ -1,4 +1,5 @@
 import getConfig from '@pnpm/config';
+import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 // import createClient from '@pnpm/client'
 // import { createFetchFromRegistry } from '@pnpm/fetch';
@@ -135,9 +136,10 @@ export async function resolveRemoteVersion(
 
   // TODO: change to use pnpm API. this is just a workaround
   const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
-  const packageNameOnly = packageName.split('@')[0];
+  const parsedPackage = parsePackageName(packageName);
+
   return {
-    packageName: packageNameOnly,
+    packageName: parsedPackage.name,
     version: stdout,
   };
   // npm view ${packageName} version

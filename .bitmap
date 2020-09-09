@@ -27,6 +27,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "typescript/tsconfig.json",
+                "test": false,
+                "name": "tsconfig.json"
             }
         ],
         "mainFile": "index.ts",
@@ -120,6 +125,16 @@
                 "relativePath": "hook-require.ts",
                 "test": false,
                 "name": "hook-require.ts"
+            },
+            {
+                "relativePath": "hooks/hook.ts",
+                "test": false,
+                "name": "hook.ts"
+            },
+            {
+                "relativePath": "hooks/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -685,6 +700,16 @@
                 "name": "tag.ts"
             },
             {
+                "relativePath": "ui/component-error/component-error.tsx",
+                "test": false,
+                "name": "component-error.tsx"
+            },
+            {
+                "relativePath": "ui/component-error/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-model/component-model.ts",
                 "test": false,
                 "name": "component-model.ts"
@@ -948,21 +973,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/empty-compositions/empty-compositions.module.scss",
-                "test": false,
-                "name": "empty-compositions.module.scss"
-            },
-            {
-                "relativePath": "ui/empty-compositions/empty-compositions.tsx",
-                "test": false,
-                "name": "empty-compositions.tsx"
-            },
-            {
-                "relativePath": "ui/empty-compositions/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
                 "relativePath": "ui/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -1030,6 +1040,11 @@
                 "relativePath": "readme.md",
                 "test": false,
                 "name": "readme.md"
+            },
+            {
+                "relativePath": "schema.json",
+                "test": false,
+                "name": "schema.json"
             },
             {
                 "relativePath": "types.ts",
@@ -2016,11 +2031,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "notification-api.tsx",
-                "test": false,
-                "name": "notification-api.tsx"
-            },
-            {
                 "relativePath": "notification-reducer.tsx",
                 "test": false,
                 "name": "notification-reducer.tsx"
@@ -2034,55 +2044,198 @@
                 "relativePath": "notifications.aspect.ts",
                 "test": false,
                 "name": "notifications.aspect.ts"
-            },
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "notifications/api": {
+        "files": [
             {
-                "relativePath": "ui/index.ts",
+                "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-center/index.ts",
+                "relativePath": "notification-api.tsx",
+                "test": false,
+                "name": "notification-api.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/api",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "notifications/notification": {
+        "files": [
+            {
+                "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-center/notification-center.module.scss",
-                "test": false,
-                "name": "notification-center.module.scss"
-            },
-            {
-                "relativePath": "ui/notification-center/notification-center.tsx",
-                "test": false,
-                "name": "notification-center.tsx"
-            },
-            {
-                "relativePath": "ui/notification-context/index.ts",
+                "relativePath": "level-icon/index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/notification-context/notification-context.tsx",
+                "relativePath": "level-icon/level-icon.module.scss",
                 "test": false,
-                "name": "notification-context.tsx"
+                "name": "level-icon.module.scss"
             },
             {
-                "relativePath": "ui/notification/index.ts",
+                "relativePath": "level-icon/level-icon.tsx",
                 "test": false,
-                "name": "index.ts"
+                "name": "level-icon.tsx"
             },
             {
-                "relativePath": "ui/notification/notification.module.scss",
+                "relativePath": "notification.module.scss",
                 "test": false,
                 "name": "notification.module.scss"
             },
             {
-                "relativePath": "ui/notification/notification.tsx",
+                "relativePath": "notification.tsx",
                 "test": false,
                 "name": "notification.tsx"
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/notifications",
+        "rootDir": "extensions/notifications/ui/notification",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "notifications/notification-center": {
+        "files": [
+            {
+                "relativePath": "dismiss-button/dismiss-button.module.scss",
+                "test": false,
+                "name": "dismiss-button.module.scss"
+            },
+            {
+                "relativePath": "dismiss-button/dismiss-button.tsx",
+                "test": false,
+                "name": "dismiss-button.tsx"
+            },
+            {
+                "relativePath": "dismiss-button/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "notification-center.module.scss",
+                "test": false,
+                "name": "notification-center.module.scss"
+            },
+            {
+                "relativePath": "notification-center.tsx",
+                "test": false,
+                "name": "notification-center.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification-center",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "notifications/notification-context": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "notification-context.tsx",
+                "test": false,
+                "name": "notification-context.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification-context",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/error": {
+        "files": [
+            {
+                "relativePath": "error-page.module.scss",
+                "test": false,
+                "name": "error-page.module.scss"
+            },
+            {
+                "relativePath": "error-page.tsx",
+                "test": false,
+                "name": "error-page.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/error-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/not-found": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "not-found-page.module.scss",
+                "test": false,
+                "name": "not-found-page.module.scss"
+            },
+            {
+                "relativePath": "not-found-page.tsx",
+                "test": false,
+                "name": "not-found-page.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/not-found-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/server-error": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "server-error-page.module.scss",
+                "test": false,
+                "name": "server-error-page.module.scss"
+            },
+            {
+                "relativePath": "server-error-page.tsx",
+                "test": false,
+                "name": "server-error-page.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/server-error-page",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2581,6 +2734,30 @@
         "exported": false,
         "lanes": []
     },
+    "routing/external-link": {
+        "files": [
+            {
+                "relativePath": "external-link.module.scss",
+                "test": false,
+                "name": "external-link.module.scss"
+            },
+            {
+                "relativePath": "external-link.tsx",
+                "test": false,
+                "name": "external-link.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/external-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "schema": {
         "files": [
             {
@@ -2637,6 +2814,11 @@
     },
     "scope": {
         "files": [
+            {
+                "relativePath": "components.drawer.tsx",
+                "test": false,
+                "name": "components.drawer.tsx"
+            },
             {
                 "relativePath": "exceptions/component-not-found.ts",
                 "test": false,
@@ -2838,6 +3020,83 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/component-status": {
+        "files": [
+            {
+                "relativePath": "component-status.module.scss",
+                "test": false,
+                "name": "component-status.module.scss"
+            },
+            {
+                "relativePath": "component-status.tsx",
+                "test": false,
+                "name": "component-status.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-status-resolver": {
+        "files": [
+            {
+                "relativePath": "color-override.ts",
+                "test": false,
+                "name": "color-override.ts"
+            },
+            {
+                "relativePath": "component-status-resolver.module.scss",
+                "test": false,
+                "name": "component-status-resolver.module.scss"
+            },
+            {
+                "relativePath": "component-status-resolver.tsx",
+                "test": false,
+                "name": "component-status-resolver.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status-resolver",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-tooltip": {
+        "files": [
+            {
+                "relativePath": "component-tooltip.module.scss",
+                "test": false,
+                "name": "component-tooltip.module.scss"
+            },
+            {
+                "relativePath": "component-tooltip.tsx",
+                "test": false,
+                "name": "component-tooltip.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-tooltip",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/corner": {
         "files": [
             {
@@ -2858,6 +3117,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/corner",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/empty-box": {
+        "files": [
+            {
+                "relativePath": "empty-box.module.scss",
+                "test": false,
+                "name": "empty-box.module.scss"
+            },
+            {
+                "relativePath": "empty-box.tsx",
+                "test": false,
+                "name": "empty-box.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/empty-box",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3020,51 +3303,6 @@
             },
             {
                 "relativePath": "component-tree/component-nodes/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/component-status-resolver.module.scss",
-                "test": false,
-                "name": "component-status-resolver.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/component-status-resolver.tsx",
-                "test": false,
-                "name": "component-status-resolver.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-status-resolver/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-status/component-status.module.scss",
-                "test": false,
-                "name": "component-status.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-status/component-status.tsx",
-                "test": false,
-                "name": "component-status.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-status/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/component-tooltip.module.scss",
-                "test": false,
-                "name": "component-tooltip.module.scss"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/component-tooltip.tsx",
-                "test": false,
-                "name": "component-tooltip.tsx"
-            },
-            {
-                "relativePath": "component-tree/component-tooltip/index.ts",
                 "test": false,
                 "name": "index.ts"
             },
@@ -3763,6 +4001,11 @@
     "typescript": {
         "files": [
             {
+                "relativePath": "cmds/init.cmd.ts",
+                "test": false,
+                "name": "init.cmd.ts"
+            },
+            {
                 "relativePath": "compiler-options.ts",
                 "test": false,
                 "name": "compiler-options.ts"
@@ -4396,5 +4639,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.10"
+    "version": "14.8.9-dev.12"
 }

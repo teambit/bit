@@ -1,4 +1,3 @@
-import { ComponentID } from '@teambit/component';
 import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
@@ -112,7 +111,7 @@ export class Watcher {
       return [];
     }
     let buildResults;
-    const componentId = new ComponentID(bitId);
+    const componentId = await this.workspace.resolveComponentId(bitId);
     try {
       buildResults = isChange
         ? await this.workspace.triggerOnComponentChange(componentId)
