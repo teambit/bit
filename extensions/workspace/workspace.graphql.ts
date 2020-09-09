@@ -96,10 +96,10 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
           try {
             const componentID = await ws.resolveComponentId(id);
-            return ws.get(componentID);
+            const component = await ws.get(componentID);
+            return component;
           } catch (error) {
-            if (error.name === 'MissingBitMapComponent') return null;
-            throw new Error(error);
+            return null;
           }
         },
       },
