@@ -1,6 +1,7 @@
 import { Environment } from '@teambit/environments';
 import { ReactEnv } from '@teambit/react';
-import tsconfig from './typescript/tsconfig.json';
+
+const tsconfig = require('./typescript/tsconfig.json');
 
 export const AspectEnvType = 'aspect';
 
