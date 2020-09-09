@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": [
-      "es2019", "DOM", "ES6" ,"DOM.Iterable", "ScriptHost"
+      "es2019", "DOM", "ES6" ,"DOM.Iterable"
     ],
     "target": "es2015",
     "module": "commonjs",
@@ -11,17 +11,8 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": ".",
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false,
-    "strict": true,
     "moduleResolution": "node",
-    "noImplicitAny": false,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "resolveJsonModule": true
+    "esModuleInterop": true
   },
   "exclude": [
     "dist"

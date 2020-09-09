@@ -224,6 +224,7 @@ export class TypescriptCompiler implements Compiler {
    * fetch the capsule path from this message.
    */
   private getCapsulePathFromBuilderStatus(msg: string): string | null {
+    // @ts-ignore
     if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return null;
     const msgTextSplit = msg.split("'");
     if (msgTextSplit.length < 2) return null;
