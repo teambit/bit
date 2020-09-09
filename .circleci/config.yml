@@ -179,7 +179,7 @@ jobs:
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         save_cache:
-          key: bit-global-config-v5
+          key: bit-global-config-v6
           paths:
             - ~/Library/Caches/Bit/config/config.json
 
@@ -507,7 +507,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bit-global-config-v5
+          key: bit-global-config-v6
       -
         run:
           name: 'create npm global dir'
@@ -552,7 +552,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bit-global-config-v5
+          key: bit-global-config-v6
       -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
