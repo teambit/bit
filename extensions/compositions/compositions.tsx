@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/react-hooks';
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { ComponentContext, ComponentModel } from '@teambit/component';
@@ -70,29 +71,26 @@ export function Compositions() {
         />
       </HoverSplitter>
       <Pane className={styles.right}>
-        <TabContainer className={styles.tabsContainer}>
-          <TabList className={styles.tabs}>
-            <Tab>compositions</Tab>
-            <Tab>properties</Tab>
-          </TabList>
-          <TabPanel className={styles.tabContent}>
-            <CompositionsPanel
-              onSelectComposition={selectComposition}
-              url={compositionUrl}
-              compositions={component.compositions}
-              active={selected}
-              className={styles.compost}
-            />
-          </TabPanel>
-          <TabPanel className={styles.tabContent}>
-            {properties && properties.length > 0 ? (
-              // TODO - make table look good in panel
-              <PropTable rows={properties} showListView />
-            ) : (
-              <div />
-            )}
-          </TabPanel>
-        </TabContainer>
+        <ThemeContext>
+          <TabContainer className={styles.tabsContainer}>
+            <TabList className={styles.tabs}>
+              <Tab>compositions</Tab>
+              <Tab>properties</Tab>
+            </TabList>
+            <TabPanel className={styles.tabContent}>
+              <CompositionsPanel
+                onSelectComposition={selectComposition}
+                url={compositionUrl}
+                compositions={component.compositions}
+                active={selected}
+                className={styles.compost}
+              />
+            </TabPanel>
+            <TabPanel className={styles.tabContent}>
+              {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
+            </TabPanel>
+          </TabContainer>
+        </ThemeContext>
       </Pane>
     </SplitPane>
   );

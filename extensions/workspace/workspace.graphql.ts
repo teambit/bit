@@ -94,8 +94,13 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
           return ws.list({ offset, limit });
         },
         getComponent: async (ws: Workspace, { id }: { id: string }) => {
-          const componentID = await ws.resolveComponentId(id);
-          return ws.get(componentID);
+          try {
+            const componentID = await ws.resolveComponentId(id);
+            return ws.get(componentID);
+          } catch (error) {
+            if (error.name === 'MissingBitMapComponent') return null;
+            throw new Error(error);
+          }
         },
       },
       Query: {
