@@ -141,6 +141,7 @@ jobs:
 
   configure-bit:
     <<: *defaults
+    resource_class: large
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -557,12 +558,20 @@ jobs:
         attach_workspace:
           at: ./
       -
+        run: ls /home/circleci/.npm-global/bin
+      -
+        run: echo $PATH
+      -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run: ls /home/circleci/.npm-global/bin
+      -
+        run: echo $PATH
       -
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'

@@ -1,7 +1,10 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
 // eslint-disable-next-line no-console
-process.on('uncaughtException', (err) => console.log('uncaughtException', err));
+process.on('uncaughtException', (err) => {
+  console.error('uncaughtException', err);
+  process.exit(1);
+});
 
 require('v8-compile-cache');
 
