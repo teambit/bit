@@ -1,6 +1,6 @@
 import { Logger } from '@teambit/logger';
 import { EnvService, ExecutionContext } from '@teambit/environments';
-import { Component } from '@teambit/component';
+import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import { join } from 'path';
 import chalk from 'chalk';
@@ -12,7 +12,7 @@ import { detectTestFiles } from './utils';
 
 type ComponentWithSpecs = Component & { specs: string[] };
 
-export class TesterService implements EnvService<TestResults[]> {
+export class TesterService implements EnvService<TestResults> {
   constructor(
     readonly workspace: Workspace,
     /**
@@ -23,10 +23,9 @@ export class TesterService implements EnvService<TestResults[]> {
     private logger: Logger
   ) {}
 
-  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults[]> {
+  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
     const tester: Tester = context.env.getTester();
     const components: ComponentWithSpecs[] = detectTestFiles(context.components);
-    this.attachCapsulePath(components);
     const testMatch = components.reduce((acc: string[], component) => {
       const specs = component.specs.map((specFile) =>
         join(this.workspace.componentDir(component.id, { ignoreVersion: true }, { relative: false }), specFile)
@@ -44,7 +43,7 @@ export class TesterService implements EnvService<TestResults[]> {
 
     const testerContext = Object.assign(context, {
       release: false,
-      specFiles: testMatch,
+      specFiles: ComponentMap.as(context.components, this.getSpecFiles),
       rootPath: this.workspace.path,
       workspace: this.workspace,
       watch: options.watch,
@@ -54,18 +53,12 @@ export class TesterService implements EnvService<TestResults[]> {
     return tester.test(testerContext);
   }
 
-  private attachCapsulePath(components: ComponentWithSpecs[]) {
-    return components.map((component) => {
-      const specsFiles = component.specs.map((specFile: string) => {
-        const file = component.filesystem.files.find((file) => file.relative === specFile);
-        if (!file) throw new Error('file not found');
-        return { path: file.path, file: specFile, fullPath: file.path };
-      });
-
-      const componentWithSpecs = Object.assign(component, {
-        relativeSpecs: specsFiles,
-      });
-      return componentWithSpecs;
+  private getSpecFiles(component: Component) {
+    //@ts-ignore
+    return component.specs.map((specFile: string) => {
+      const file = component.filesystem.files.find((file) => file.relative === specFile);
+      if (!file) throw new Error('file not found');
+      return file;
     });
   }
 }

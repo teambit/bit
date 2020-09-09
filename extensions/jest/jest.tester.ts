@@ -7,7 +7,7 @@ import { Component } from '@teambit/component';
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
 
-  private attachToComponentId(testResults: JestTestResult[], components: Component[]): TestResults[] {
+  private attachToComponentId(testResults: JestTestResult[], components: Component[]) {
     const tests = components.map((component) => {
       return {
         componentId: component.id,
@@ -37,7 +37,7 @@ export class JestTester implements Tester {
     );
   }
 
-  async test(context: TesterContext): Promise<TestResults[]> {
+  async test(context: TesterContext): Promise<TestResults> {
     const config: any = {
       rootDir: context.rootPath,
       watch: context.watch,

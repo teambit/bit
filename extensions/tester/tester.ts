@@ -1,18 +1,20 @@
-import { Component, ComponentID } from '@teambit/component';
+import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ConcreteService, ExecutionContext } from '@teambit/environments';
 import { Workspace } from '@teambit/workspace';
 import { Network } from '@teambit/isolator';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { TestResult } from './test-results';
 
-export type a = {
-  componentId: ComponentID;
-  testSuites: {
-    tests: TestResult[];
-    file: string;
+export type TestResults = {
+  components: {
+    componentId: ComponentID;
+    testSuites: {
+      tests: TestResult[];
+      file: string;
+    };
   }[];
+  errors: Error[];
 };
-
-export type TestResults = {};
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -26,6 +28,11 @@ export interface TesterContext extends ExecutionContext {
   //workspace: Workspace;
 
   /**
+   * list of components to test with With Relative Specs paths.
+   */
+  //relativeTestFile: ComponentWithRelativeSpecs;
+
+  /**
    * defines whether tester is expected to run in quite mode.
    */
   quite?: boolean;
@@ -33,7 +40,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * list of spec files to test.
    */
-  specFiles: string[];
+  specFiles: ComponentMap<AbstractVinyl[]>;
 
   /**
    * rootPath of the component workspace.
@@ -58,5 +65,5 @@ export interface Tester extends ConcreteService {
   /**
    * execute tests on all components in the given execution context.
    */
-  test(context: TesterContext): Promise<TestResults[]>;
+  test(context: TesterContext): Promise<TestResults>;
 }
