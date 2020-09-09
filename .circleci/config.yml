@@ -139,26 +139,6 @@ jobs:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_VERSION'
 
-  build:
-    <<: *defaults
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        run:
-          name: 'Build bit source code'
-          command: 'cd bit && npm run build'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - bit/dist
-
   configure-bit:
     <<: *defaults
     environment:
@@ -504,9 +484,14 @@ jobs:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       -
+        run:
+          name: 'Build bit source code'
+          command: 'cd bit && npm run build'
+      -
         persist_to_workspace:
           root: .
           paths:
+            - bit/dist
             - bit/build-harmony
             - bit/node_modules
             - .pnpm-store
@@ -629,26 +614,22 @@ workflows:
             - set_npm_registries
             - checkout_code
       -
-        build:
+        unit_test:
           requires:
             - setup_harmony
       -
-        unit_test:
-          requires:
-            - build
-      -
         lint:
           requires:
-            - build
+            - setup_harmony
       -
         generate_and_check_types:
           requires:
-            - build
+            - setup_harmony
       -
         generate_docs:
           <<: *semver_tags_only_filters
           requires:
-            - build
+            - setup_harmony
 
       -
         configure-bit:
