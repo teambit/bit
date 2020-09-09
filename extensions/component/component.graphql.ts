@@ -112,10 +112,10 @@ export function componentSchema(componentExtension: ComponentMain) {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
           try {
             const componentId = await host.resolveComponentId(id);
-            return host.get(componentId);
+            const component = await host.get(componentId);
+            return component;
           } catch (error) {
-            if (error.name === 'MissingBitMapComponent') return null;
-            throw new Error(error);
+            return null;
           }
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {

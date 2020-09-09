@@ -122,11 +122,16 @@ export class EnvsMain {
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
    */
   getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
-    const envInExtensionList = extensions.find((e) => this.envSlot.get(e.stringId));
+    const envInExtensionList = extensions.find((e) =>
+      this.envSlot.get(e.newExtensionId ? e.newExtensionId.toString() : e.stringId)
+    );
     if (envInExtensionList) {
+      const id = envInExtensionList.newExtensionId
+        ? envInExtensionList.newExtensionId.toString()
+        : envInExtensionList.stringId;
       return {
-        id: envInExtensionList.stringId,
-        env: this.envSlot.get(envInExtensionList.stringId) as Environment,
+        id,
+        env: this.envSlot.get(id) as Environment,
       };
     }
     const defaultEnvId = 'teambit.bit/node';
@@ -176,7 +181,6 @@ export class EnvsMain {
       const fn = sourceEnv[key];
       if (targetEnv[key]) return;
       if (!fn || !fn.bind) {
-        targetEnv[key] = fn;
         return;
       }
       targetEnv[key] = fn.bind(sourceEnv);

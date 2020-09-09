@@ -65,7 +65,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
+    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
   }
 
   /**
@@ -160,6 +160,7 @@ export class ReactEnv implements Environment {
       devDependencies: {
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
+        '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
       },
       // TODO: take version from config
