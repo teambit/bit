@@ -1,4 +1,5 @@
 import Bluebird from 'bluebird';
+import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
@@ -65,8 +66,30 @@ function warnIfRunningAsRoot() {
 function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
-      console.log(BIT_VERSION); // eslint-disable-line no-console
+      const harmonyVersion = getHarmonyVersion();
+      if (harmonyVersion) {
+        console.log(`${harmonyVersion} (bit-bin: ${BIT_VERSION})`); // eslint-disable-line no-console
+      } else {
+        console.log(BIT_VERSION); // eslint-disable-line no-console
+      }
       process.exit();
     }
+  }
+}
+
+// @todo: improve.
+function getHarmonyVersion() {
+  try {
+    const teambitBit = require.resolve('@teambit/bit');
+    // eslint-disable-next-line
+    const packageJson = require(path.join(teambitBit, '../..', 'package.json'));
+    if (packageJson.version) return packageJson.version;
+    // this is running locally
+    if (packageJson.componentId && packageJson.componentId.version) {
+      return `last-tag ${packageJson.componentId.version}`;
+    }
+    return null;
+  } catch (err) {
+    return null;
   }
 }
