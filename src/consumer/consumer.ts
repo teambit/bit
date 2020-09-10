@@ -67,7 +67,6 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
-import { PublishResults, publishComponentsToRegistry } from '../scope/component-ops/publish-components';
 
 type ConsumerProps = {
   projectPath: string;
@@ -520,13 +519,13 @@ export default class Consumer {
   }): Promise<{
     taggedComponents: Component[];
     autoTaggedResults: AutoTagResult[];
-    publishResults: PublishResults;
     isSoftTag: boolean;
+    publishedPackages: string[];
   }> {
     if (this.isLegacy) {
       tagParams.persist = true;
     }
-    const { ids, persist, exactVersion, releaseType } = tagParams;
+    const { ids, persist } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -554,31 +553,14 @@ export default class Consumer {
       throw new ComponentsPendingImport();
     }
 
-    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       consumer: this,
       ...tagParams,
     });
 
-    const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
-    const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    if (persist) {
-      await this.updateComponentsVersions(allComponents);
-    } else {
-      this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
-    }
-
-    let publishResults;
-    if (!this.isLegacy && persist) {
-      const allIds = [
-        ...taggedComponents.map((t) => t.id),
-        ...autoTaggedResults.map((a) => a.component.toBitIdWithLatestVersionAllowNull()),
-      ];
-      publishResults = await publishComponentsToRegistry(this, allIds);
-    }
-
-    return { taggedComponents, autoTaggedResults, publishResults, isSoftTag: !persist };
+    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
   }
 
   updateNextVersionOnBitmap(

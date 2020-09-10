@@ -152,29 +152,14 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
     };
 
     const publishOutput = () => {
-      const { publishResults } = results;
-      if (!publishResults) return '';
-      if (publishResults.exception) return chalk.red(publishResults.exception.message);
-      if (!publishResults.failedComponents.length && !publishResults.publishedComponents.length) return '';
-      const failedCompsStr = publishResults.failedComponents
-        .map((failed) => {
-          return `${chalk.red.bold(failed.id.toString())}\n${chalk.red(failed.errors.join('\n\n'))}`;
-        })
-        .join('\n\n');
-      const successCompsStr = publishResults.publishedComponents
-        .map((success) => {
-          return `${chalk.white(success.id.toString())} ${chalk.white.bold(success.package)}`;
-        })
-        .join('\n');
-      const failedTitle = `\n\n${chalk.red(
-        'failed publishing the following components, please run "bit publish" to re-try\n'
-      )}`;
+      const { publishedPackages } = results;
+      if (!publishedPackages || !publishedPackages.length) return '';
       const successTitle = `\n\n${chalk.green(
-        `published the following ${publishResults.publishedComponents.length} component(s) successfully\n`
+        `published the following ${publishedPackages.length} component(s) successfully\n`
       )}`;
-      const failedOutput = failedCompsStr ? failedTitle + failedCompsStr : '';
+      const successCompsStr = publishedPackages.join('\n');
       const successOutput = successCompsStr ? successTitle + successCompsStr : '';
-      return successOutput + failedOutput;
+      return successOutput;
     };
 
     const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
