@@ -8,13 +8,13 @@ import { TestResult } from './test-results';
 export type TestResults = {
   components: {
     componentId: ComponentID;
-    testSuites: {
-      tests: TestResult[];
-      file: string;
-    };
+    tests: TestResult[];
+    error?: string;
   }[];
-  errors: Error[];
+  errors?: Error[];
 };
+
+export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -40,7 +40,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * list of spec files to test.
    */
-  specFiles: ComponentMap<AbstractVinyl[]>;
+  specFiles: SpecFiles;
 
   /**
    * rootPath of the component workspace.

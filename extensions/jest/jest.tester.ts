@@ -1,40 +1,58 @@
 import { flatten } from 'lodash';
-import { Tester, TesterContext, TestResults, TestResult } from '@teambit/tester';
+import { Tester, TesterContext, TestResults, TestResult, SpecFiles } from '@teambit/tester';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { runCLI } from 'jest';
 import { TestResult as JestTestResult } from '@jest/test-result';
-import { Component } from '@teambit/component';
+import { Component, ComponentMap } from '@teambit/component';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
 
-  private attachToComponentId(testResults: JestTestResult[], components: Component[]) {
-    const tests = components.map((component) => {
-      return {
-        componentId: component.id,
-        testSuites: this.buildTestsBySpecFiles(testResults, component),
-      };
-    });
-
-    return flatten(tests.filter((test) => test.testSuites.length != 0));
-  }
-
-  private buildTestsBySpecFiles(testResults: JestTestResult[], component: Component) {
-    //@ts-ignore
-    return component.relativeSpecs.map((spec: { path: string; file: string; fullPath: string }) => {
-      const jestTestResult = testResults.find((testResult) => testResult.testFilePath === spec.fullPath);
-      if (!jestTestResult) return;
-      return {
-        file: spec.file,
-        tests: this.buildTests(jestTestResult),
-        error: jestTestResult.testExecError?.message,
-      };
+  private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
+    return ComponentMap.as(testerContext.components, (component) => {
+      const componentSpecFiles = testerContext.specFiles.get(component.id.fullName);
+      if (!componentSpecFiles) return null;
+      const [c, specs] = componentSpecFiles;
+      return testResult.filter((test) => {
+        return specs.filter((spec) => spec.path === test.testFilePath).length > 0;
+      });
     });
   }
 
-  private buildTests(jestTestResult: JestTestResult) {
-    return jestTestResult.testResults.map(
-      (test) => new TestResult(test.ancestorTitles, test.title, test.status, test.duration)
-    );
+  private buildTestsObj(components: ComponentMap<JestTestResult[] | null>) {
+    return components
+      .toArray()
+      .map(([component, testsFiles]) => {
+        if (!testsFiles) return;
+        if (testsFiles?.length === 0) return;
+        const tests = testsFiles.reduce((acc: TestResult[], test) => {
+          test.testResults.forEach((testResult) => {
+            acc.push(
+              new TestResult(
+                testResult.ancestorTitles,
+                testResult.title,
+                testResult.status,
+                test.testFilePath,
+                testResult.duration
+              )
+            );
+          });
+          return acc;
+        }, []);
+
+        return {
+          componentId: component.id,
+          tests,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  private getErrors(testResult: JestTestResult[]) {
+    return testResult.reduce((errors: any[], test) => {
+      errors.push(test.testExecError);
+      return errors;
+    }, []);
   }
 
   async test(context: TesterContext): Promise<TestResults> {
@@ -59,7 +77,10 @@ export class JestTester implements Tester {
 
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
-    const componentTestResults = this.attachToComponentId(testResults, context.components);
-    return componentTestResults;
+    const componentsWithTests = this.attachTestsToComponent(context, testResults);
+    const componentTestResults = this.buildTestsObj(componentsWithTests);
+    const errors = this.getErrors(testResults);
+    // @ts-ignore
+    return { components: componentTestResults, errors: errors };
   }
 }

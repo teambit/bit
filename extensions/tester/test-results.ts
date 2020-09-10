@@ -9,6 +9,9 @@ export class TestResult {
     /*  the status of test (passing, skipped) */
     public status: string,
 
+    /*  the file of test */
+    public file: string,
+
     /** test object data  */
     public duration?: number | null
   ) {}
