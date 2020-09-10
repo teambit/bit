@@ -168,7 +168,7 @@ describe('compile extension', function () {
         helper.command.tagAllComponents();
       });
       it('should copy unsupported files inside the capsule', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.1');
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/style.css')).to.be.a.file();
       });
