@@ -3,12 +3,16 @@
   flex-direction: column;
 
   position: fixed;
-  top: 16px;
+  top: 130px;
   left: 50%;
   transform: translate(-50%, 0);
-
-  width: 521px;
+  width: 643px;
+  border: 1px solid var(--border-color);
   max-width: 90%;
+
+  overflow: hidden; // enforce border-radius
+
+  color: var(--text-highlight, #2b2b2b);
 
   &.visible {
     display: flex;
@@ -16,12 +20,22 @@
 }
 
 .commandBar {
-  padding: 8px;
-  z-index: 8000;
+  padding: 0px;
+  z-index: 8001;
 }
 
 .input {
+  padding: 24px 18px;
+  font-size: 20px;
   &:not(:last-child) {
+    border: solid 1px var(--border-color);
+  }
+}
+
+.results {
+  font-size: 14px;
+
+  &:not(:empty) {
     margin-bottom: 8px;
   }
 }

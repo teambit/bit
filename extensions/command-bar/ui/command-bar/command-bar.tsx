@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { AutoCompleteInput } from '@teambit/command-bar.autocomplete-input';
-import { CommandBarUI, CommanderSearchResult } from '@teambit/command-bar/command-bar.ui.runtime';
-import { CommandItem } from '@teambit/command-bar.command-item';
+import { CommandBarUI, CommanderSearchResult } from '@teambit/command-bar';
+import { CommandBarItem } from '@teambit/command-bar.command-bar-item';
 import styles from './command-bar.module.scss';
 
 export type CommandBarProps = {
@@ -41,6 +41,7 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
         value={term}
         focus={visible}
         className={styles.input}
+        placeholder="Search anything or type > to only search commands"
         onChange={(e) => setTerm(e.target.value)}
         onDown={increment}
         onUp={decrement}
@@ -48,15 +49,17 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
         onEscape={() => setVisibility(false)}
         // onBlur={() => setVisibility(false)}
       />
-      {options.map((x, idx) => (
-        <CommandItem
-          key={x.id}
-          entry={x}
-          active={idx === activeIdx}
-          // mouseDown happens before blur, which closes the command bar
-          onMouseDown={x.handler}
-        />
-      ))}
+      <div className={styles.results}>
+        {options.map((x, idx) => (
+          <CommandBarItem
+            key={x.id}
+            entry={x}
+            active={idx === activeIdx}
+            // mouseDown happens before blur, which closes the command bar
+            onMouseDown={x.handler}
+          />
+        ))}
+      </div>
     </Card>
   );
 }

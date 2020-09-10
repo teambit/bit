@@ -1,1 +1,1 @@
-export * from './command-bar-item';
+export { CommandBarItem, CommandItemProps } from './command-bar-item';

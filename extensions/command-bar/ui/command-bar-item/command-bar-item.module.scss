@@ -1,5 +1,9 @@
 .commandBarOption {
-  padding: 8px;
+  display: flex;
+  align-items: center;
+
+  height: 40px;
+  padding: 0 24px;
   transition: all 180ms;
 
   user-select: none;
@@ -13,4 +17,22 @@
   &.active:hover {
     background-color: var(--muted-color);
   }
+}
+
+.name {
+  flex: 1 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.commandKeys {
+  float: right;
+  font-size: 0.76em;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
 }
