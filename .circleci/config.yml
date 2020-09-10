@@ -633,6 +633,48 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
 
+  bit_tag:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        restore_cache:
+          key: bit-global-config-v6
+      -
+        run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        restore_cache:
+          key: bitsrc-ssh-key3
+      -
+        restore_cache:
+          key: bitsrc-registry6
+      -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run:
+          name: 'bit status'
+          command: 'cd bit && bit status'
+      -
+        run:
+          name: 'bit tag'
+          command: 'cd bit && bit tag --persist'
+
   e2e_test:
     <<: *defaults
     environment:
@@ -1068,6 +1110,14 @@ workflows:
         bit_build:
           requires:
             - configure-bit
+      -
+        bit_tag:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - e2e_test
 
   # windows_e2e:
   #   jobs:
