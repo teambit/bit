@@ -8,8 +8,12 @@ import { loadConsumer } from '..';
 import { build } from '../../api/consumer';
 import { BitId } from '../../bit-id';
 import loader from '../../cli/loader';
+import { BIT_VERSION } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils';
 import Consumer from '../consumer';
+
+export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
+export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export default class WatchComponents {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -25,6 +29,8 @@ export default class WatchComponents {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     this.consumer = await loadConsumer();
     const watcher = this._getWatcher();
+    console.log(chalk.yellow(`bit binary version: ${BIT_VERSION}`));
+    console.log(chalk.yellow(`node version: ${process.version}`));
     const log = console.log.bind(console);
 
     return new Promise((resolve, reject) => {
@@ -34,7 +40,9 @@ export default class WatchComponents {
           log(event, path);
         });
       }
-      watcher.on('ready', () => {});
+      watcher.on('ready', () => {
+        log(chalk.yellow(STARTED_WATCHING_MSG));
+      });
       watcher.on('change', (p) => {
         log(`file ${p} has been changed`);
         this._handleChange(p).catch((err) => reject(err));
@@ -71,6 +79,7 @@ export default class WatchComponents {
     }
 
     loader.stop();
+    console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
   async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {
