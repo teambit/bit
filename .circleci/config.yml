@@ -674,6 +674,17 @@ jobs:
         run:
           name: 'bit tag'
           command: 'cd bit && bit tag --persist'
+      -
+        run:
+          name: 'git commit'
+          command: 'cd bit && git commit -am "update .bitmap file"'
+      -
+        run:
+          name: 'git push'
+          command: 'cd bit && git push origin master"'
+      -
+        store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   e2e_test:
     <<: *defaults
@@ -1102,22 +1113,23 @@ workflows:
           requires:
             - set_ssh_key
             - setup_harmony
-      -
-        e2e_test:
-          requires:
-            - configure-bit
-      -
-        bit_build:
-          requires:
-            - configure-bit
+      # -
+      #   e2e_test:
+      #     requires:
+      #       - configure-bit
+      # -
+      #   bit_build:
+      #     requires:
+      #       - configure-bit
       -
         bit_tag:
           filters:
             branches:
               only:
                 - master
+                - fix-tag-on-circle
           requires:
-            - e2e_test
+            - configure-bit
 
   # windows_e2e:
   #   jobs:
