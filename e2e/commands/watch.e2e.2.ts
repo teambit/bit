@@ -56,8 +56,6 @@ describe('bit watch command', function () {
           it('should update the dist again', async () => {
             await watchRunner.waitForWatchToRebuildComponent();
             const distContent = helper.fs.readFile('dist/utils/is-string.js');
-            debugger;
-            console.log('distContent: ', distContent);
             expect(distContent).to.equal(fixtures.isStringV3);
           });
         });
@@ -120,7 +118,7 @@ describe('bit watch command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
     });
-    describe('run bit watch', () => {
+    describe.only('run bit watch', () => {
       let watchRunner: WatchRunner;
       before(async () => {
         watchRunner = new WatchRunner(helper);
