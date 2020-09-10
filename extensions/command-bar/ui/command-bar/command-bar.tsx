@@ -47,7 +47,7 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
         onUp={decrement}
         onEnter={handleEnter}
         onEscape={() => setVisibility(false)}
-        // onBlur={() => setVisibility(false)}
+        onBlur={() => setVisibility(false)}
       />
       <div className={styles.results}>
         {options.map((x, idx) => (

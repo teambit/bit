@@ -5,34 +5,15 @@ import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { CommandBar } from '@teambit/command-bar.command-bar';
-import { CommandId, CommandHandler } from '@teambit/commands';
 import { CommandSearcher } from '@teambit/command-bar.command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
+import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 
-export type CommanderSearchResult = {
-  id: string;
-  name: string;
-  description?: string;
-  handler: CommandHandler;
-  icon?: string;
-  iconAlt?: string;
-  keybinding?: Keybinding;
-};
-
-export interface SearchProvider {
-  /** provide completions for this search term */
-  search(term: string, limit: number): CommanderSearchResult[];
-  /** determines what terms are handled by this searcher. */
-  test(term: string): boolean;
-}
-
-export type Keybinding = string | string[];
-
-type SearcherSlot = SlotRegistry<SearchProvider>;
 const RESULT_LIMIT = 5;
+type SearcherSlot = SlotRegistry<SearchProvider>;
 
-type AddCommandArgs = {
+export type AddCommandArgs = {
   commandId: string;
   handler: () => any;
   keybinding?: Keybinding;
@@ -40,7 +21,7 @@ type AddCommandArgs = {
   description?: string;
 };
 
-export type CommandEntry = {
+type CommandEntry = {
   name: string;
   description?: string;
   handler: CommandHandler;
@@ -51,7 +32,7 @@ export type CommandEntry = {
 export class CommandBarUI {
   private mousetrap = new Mousetrap();
   private commandRegistry = new Map<CommandId, CommandEntry>();
-  private commandSearcher = new CommandSearcher(commandsToArray(this.commandRegistry));
+  private commandSearcher = new CommandSearcher([]);
 
   /** Opens the command bar */
   open = () => {
@@ -84,7 +65,9 @@ export class CommandBarUI {
       this.addKeybinding(keybinding, commandId);
     }
 
-    this.commandSearcher.update(commandsToArray(this.commandRegistry));
+    const searchResults = Array.from(this.commandRegistry.entries()).map(([id, obj]) => ({ ...obj, id }));
+
+    this.commandSearcher.update(searchResults);
   }
 
   run(command: CommandId) {
@@ -136,13 +119,6 @@ export class CommandBarUI {
       handler: commandBar.close,
       displayName: 'close command bar',
     });
-    // TEMP COMMAND, DO NOT COMMIT
-    commandBar.addCommand({
-      commandId: 'bararara',
-      handler: () => alert('bara'),
-      displayName: 'bararara',
-      keybinding: ['mod+y', 'alt+b alt+k'],
-    });
 
     uiUi.registerHudItem(commandBar.getCommandBar());
 
@@ -151,7 +127,3 @@ export class CommandBarUI {
 }
 
 CommandBarAspect.addRuntime(CommandBarUI);
-
-function commandsToArray(commands: Map<CommandId, CommandEntry>): CommanderSearchResult[] {
-  return Array.from(commands.entries()).map(([id, obj]) => ({ ...obj, id }));
-}
