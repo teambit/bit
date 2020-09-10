@@ -8,7 +8,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 chai.use(require('chai-fs'));
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('create extension', function () {
+describe('create extension', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {

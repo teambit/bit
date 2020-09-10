@@ -12,7 +12,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('component config', function () {
+describe('component config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
