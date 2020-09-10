@@ -101,8 +101,8 @@ jobs:
         run: npm config set @bit:registry https://node.bit.dev
       -
         run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
-      -
-        run: echo "always-auth=true" >> ~/.npmrc
+      # -
+      #   run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
         # run: 'npm config set @bit:registry https://node-stg.bit.dev'
@@ -110,7 +110,7 @@ jobs:
         # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -129,7 +129,7 @@ jobs:
   #         at: ./
   #     -
   #       restore_cache:
-  #         key: bitsrc-registry6
+  #         key: bitsrc-registry7
   #     -
   #       run:
   #         name: 'save SHA to a file'
@@ -246,7 +246,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -569,7 +569,7 @@ jobs:
           at: ./
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
       -
         run:
           name: 'install harmony'
@@ -618,7 +618,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -660,7 +660,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -724,7 +724,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -834,7 +834,7 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry7
           # key: bitsrc-registry-stg-v2
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
