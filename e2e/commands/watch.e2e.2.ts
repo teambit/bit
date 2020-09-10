@@ -42,11 +42,8 @@ describe('bit watch command', function () {
           helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
         });
         it.skip('should update the dist', async () => {
-          console.log('distContent--->:12 ');
           await watchRunner.waitForWatchToRebuildComponent();
-          console.log('distContent--->:13 ');
           const distContent = helper.fs.readFile('dist/utils/is-string.js');
-          console.log('distContent--->: ', distContent);
           expect(distContent).to.equal(fixtures.isStringV2);
         });
         describe('changing it again', () => {
