@@ -5,7 +5,6 @@ import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 
 import { Scope } from '..';
-import { Analytics } from '../../analytics/analytics';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
