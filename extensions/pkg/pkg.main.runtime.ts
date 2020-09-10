@@ -73,7 +73,7 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
-    builder.registerTaskOnTag(new PublishTask(PkgAspect.id, publisher, logPublisher));
+    builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
 
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgAspect.id, pkg.mergePackageJsonProps.bind(pkg));

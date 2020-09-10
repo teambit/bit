@@ -43,7 +43,6 @@ export type IsolateComponentsOptions = {
   alwaysNew?: boolean; // create a new capsule with a random string attached to the path suffix
   installOptions?: IsolateComponentsInstallOptions;
   linkingOptions?: LinkingOptions;
-  versionOrReleaseType?: string; // exact version or release-type (e.g. 'patch') to be calculated. written in the package.json
   emptyExisting?: boolean; // remove the capsule content first (if exist)
   getExistingAsIs?: boolean; // get existing capsule without doing any changes, no writes, no installations.
 };

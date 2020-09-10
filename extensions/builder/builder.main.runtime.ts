@@ -71,13 +71,17 @@ export class BuilderMain {
 
   /**
    * register a build task to apply on all component build pipelines.
+   * build happens on `bit build` and as part of `bit tag --persist`.
    */
   registerTask(task: BuildTask) {
     this.taskSlot.register(task);
     return this;
   }
 
-  registerTaskOnTag(task: BuildTask) {
+  /**
+   * build task that doesn't get executed on `bit build`, only on `bit tag --persist'
+   */
+  registerTaskOnTagOnly(task: BuildTask) {
     this.tagTasks.push(task);
   }
 
