@@ -3,7 +3,7 @@ default_image: &default_image
     - image: circleci/node:10.14.2
 
 default_resource_class: &default_resource_class
-  resource_class: small
+  resource_class: medium
 
 windows_default_resource_size: &windows_default_resource_size
   size: medium
@@ -235,6 +235,7 @@ jobs:
 
   configure-bit:
     <<: *defaults
+    resource_class: large
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -250,8 +251,12 @@ jobs:
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
         run:
-          name: 'npm link bit to global'
-          command: cd bit && npm link
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
       -
         run: which bit
       -
@@ -263,15 +268,15 @@ jobs:
       -
         run: 'bit config set user.email ci@bit.dev'
       -
-        run: 'bit config set hub_domain hub.bit.dev'
-        # uncomment to configure circle to run against stg environment
-        # -
-          # run: 'bit config set hub_domain hub-stg.bit.dev'
+        run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       -
         save_cache:
-          key: bit-global-config-v1
+          key: bit-global-config-v6
           paths:
             - ~/Library/Caches/Bit/config/config.json
+
   pack:
     <<: *defaults
     steps:
@@ -556,6 +561,7 @@ jobs:
           command: 'cd bit && npm run check-types'
 
   setup_harmony:
+    resource_class: large
     <<: *defaults
     steps:
       -
@@ -565,9 +571,6 @@ jobs:
         restore_cache:
           key: bitsrc-registry6
       -
-        restore_cache:
-          key: cache-pnpm-global-cache
-      -
         run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
@@ -576,17 +579,59 @@ jobs:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       -
-        save_cache:
-          key: cache-pnpm-global-cache
-          paths:
-            - /home/circleci/.pnpm-store # <---- TODO: @giladshoham - please fix this
+        run:
+          name: 'Build bit source code'
+          command: 'cd bit && npm run build'
       -
         persist_to_workspace:
           root: .
           paths:
-            - bit/build-harmony
+            - bit/dist
             - bit/node_modules
             - .pnpm-store
+
+
+  bit_build:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        restore_cache:
+          key: bit-global-config-v6
+      -
+        run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        restore_cache:
+          key: bitsrc-ssh-key3
+      -
+        restore_cache:
+          key: bitsrc-registry6
+      -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run:
+          name: 'bit status'
+          command: 'cd bit && bit status'
+      -
+        run:
+          name: 'bit build'
+          command: 'cd bit && bit build'
 
   e2e_test:
     <<: *defaults
@@ -599,46 +644,34 @@ jobs:
       -
         attach_workspace:
           at: ./
-      # -
-      #   run: 'sudo npm i -g yarn'
+      -
+        restore_cache:
+          key: bit-global-config-v6
       -
         run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
       -
+        run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      -
+        run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      # -
-      #   run:
-      #     name: 'save SHA to a file'
-      #     command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
-      # -
-      #   run:
-      #     name: 'create global npm directory (to avoid using sudo for npm link)'
-      #     command: 'mkdir ~/.npm-global'
-      -
-        restore_cache:
-          key: bit-global-config-v1
       -
         restore_cache:
           key: bitsrc-ssh-key3
       -
         restore_cache:
           key: bitsrc-registry6
-          # key: bitsrc-registry-stg-v2
-      -
-        restore_cache:
-          key: npm-global-bin-v2
-
-      - run: ls -l /home/circleci/.npm-global/bin
-      # -
-      #   run:
-      #     name: 'link bit to path'
-      #     command: 'cd bit && npm run dev-link bit'
       -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -646,33 +679,8 @@ jobs:
         run: 'ssh-add ~/.ssh/id_rsa'
       -
         run: 'cd bit && mkdir junit'
-      # -
-      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
-      # -
-      #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      -
-        run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      # -
-      #   run: 'bit config set hub_domain hub.bit.dev'
-        # uncomment to configure circle to run against stg environment
-      -
-        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-
-      -
-        save_cache:
-          key: bit-global-config-v3
-          paths:
-            - ~/Library/Caches/Bit/config/config.json
       -
         run:
           name: 'Run e2e tests'
@@ -1031,94 +1039,61 @@ workflows:
             - set_npm_registries
             - checkout_code
       -
-        build:
+        unit_test:
           requires:
             - setup_harmony
       -
-        unit_test:
-          requires:
-            - build
-      -
         lint:
           requires:
-            # - install_npm_deps
-            # - setup_harmony
-            - build
+            - setup_harmony
       -
         generate_and_check_types:
           requires:
-            # - install_npm_deps
-            # - setup_harmony
-            - build
+            - setup_harmony
       -
         generate_docs:
           <<: *semver_tags_only_filters
           requires:
-            - build
-      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
-      # -
-      #   pack:
-      #     requires:
-      #       - build
+            - setup_harmony
+      -
+        configure-bit:
+          requires:
+            - set_ssh_key
+            - setup_harmony
       -
         e2e_test:
-          filters:
-            branches:
-              ignore:
-                - performance-tests
-                - bit-hub-tests
           requires:
-            - set_ssh_key
-            - set_npm_registries
-            # - install_npm_deps
-            - setup_harmony
-            - build
-            # - configure-bit
-            # - pack
+            - configure-bit
       -
-        performance_e2e_test:
-          filters:
-            branches:
-              only:
-                - performance-tests
+        bit_build:
           requires:
-            - build
-      -
-        bit_hub_e2e_test:
-          filters:
-            branches:
-              only:
-                - bit-hub-tests
-          requires:
-            - build
-            - set_ssh_key
-            - set_npm_registries
+            - configure-bit
 
-  windows_e2e:
-    jobs:
-      - windows_approval_job:
-          type: approval
-      - windows_checkout_code:
-          requires:
-            - windows_approval_job
-      # - windows_set_ssh_key:
-      #     requires:
-      #       - windows_approval_job
-      - windows_set_npm_registries:
-          requires:
-            - windows_approval_job
-      - windows_install_npm_deps:
-          requires:
-            - windows_checkout_code
-            - windows_set_npm_registries
-      - windows_build:
-          requires:
-            - windows_install_npm_deps
-      - windows_e2e_test:
-          requires:
-            - windows_build
-            # - windows_set_ssh_key
-            - windows_set_npm_registries
+  # windows_e2e:
+  #   jobs:
+  #     - windows_approval_job:
+  #         type: approval
+  #     - windows_checkout_code:
+  #         requires:
+  #           - windows_approval_job
+  #     # - windows_set_ssh_key:
+  #     #     requires:
+  #     #       - windows_approval_job
+  #     - windows_set_npm_registries:
+  #         requires:
+  #           - windows_approval_job
+  #     - windows_install_npm_deps:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_npm_registries
+  #     - windows_build:
+  #         requires:
+  #           - windows_install_npm_deps
+  #     - windows_e2e_test:
+  #         requires:
+  #           - windows_build
+  #           # - windows_set_ssh_key
+  #           - windows_set_npm_registries
 
   deploy:
     jobs:
