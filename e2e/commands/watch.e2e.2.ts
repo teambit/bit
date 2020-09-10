@@ -37,7 +37,7 @@ describe('bit watch command', function () {
       after(() => {
         watchRunner.killWatcher();
       });
-      describe('changing a file', () => {
+      describe.skip('changing a file', () => {
         before(() => {
           helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
         });
