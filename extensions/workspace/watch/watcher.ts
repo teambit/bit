@@ -104,12 +104,7 @@ export class Watcher {
       await this.workspace.load([bitId]);
       return;
     }
-    const component = await this.workspace.consumer.loadComponent(bitId);
     const idStr = bitId.toString();
-    if (component.isLegacy) {
-      await this.buildLegacy(idStr);
-      return;
-    }
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
     logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
     let buildResults;
@@ -138,16 +133,6 @@ export class Watcher {
     loader.stop();
     logger.console(`took ${duration}ms`);
     logger.console(chalk.yellow(WATCHER_COMPLETED_MSG));
-  }
-
-  private async buildLegacy(idStr: string) {
-    logger.console(`running build for ${chalk.bold(idStr)}`);
-    const buildResults = await build(idStr, false, this.verbose, this.workspace.path);
-    if (buildResults) {
-      logger.console(`\t${chalk.cyan(buildResults.join('\n\t'))}`);
-    } else {
-      logger.console(`${idStr} doesn't have a compiler, nothing to build`);
-    }
   }
 
   private isComponentWatchedExternally(componentId: BitId) {

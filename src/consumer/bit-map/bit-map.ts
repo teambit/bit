@@ -753,11 +753,12 @@ export default class BitMap {
    * may result in a damaged file
    */
   async write(): Promise<any> {
-    if (!this.hasChanged) return undefined;
+    if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
     const bitMapContent = this.getContent();
-    return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+    await outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+    this.hasChanged = false;
   }
 
   getContent(): Record<string, any> {
