@@ -7,9 +7,8 @@ import {
   resolvePackageNameByPath,
   resolvePackagePath,
 } from '../../../../utils/packages';
-import { processPath } from './generate-tree-madge';
+import { processPath, Missing } from './generate-tree-madge';
 
-type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
 export type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
 export type FoundPackages = {
   packages: { [packageName: string]: string };
@@ -21,7 +20,8 @@ export class MissingHandler {
     private missing: Missing,
     private componentDir: string,
     private workspacePath: string,
-    private bindingPrefix: string
+    private bindingPrefix: string,
+    private isLegacyProject: boolean
   ) {}
 
   /**
@@ -82,14 +82,16 @@ export class MissingHandler {
    */
   private groupMissingByType(): MissingGroupItem[] {
     const byPathType = R.groupBy((item) => {
-      if (item.startsWith(`${this.bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
+      if (
+        this.isLegacyProject &&
+        (item.startsWith(`${this.bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`))
+      ) {
+        return 'bits';
+      }
       return item.startsWith('.') ? 'files' : 'packages';
     });
     return Object.keys(this.missing).map((key) =>
-      Object.assign(
-        { originFile: processPath(key, {}, this.componentDir) },
-        byPathType(this.missing[key], this.bindingPrefix)
-      )
+      Object.assign({ originFile: processPath(key, {}, this.componentDir) }, byPathType(this.missing[key]))
     );
   }
 }

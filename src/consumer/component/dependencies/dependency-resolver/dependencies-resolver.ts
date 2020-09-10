@@ -183,6 +183,7 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
+      isLegacyProject: this.consumer.isLegacy,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
@@ -552,7 +553,8 @@ export default class DependencyResolver {
     if (!componentId) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.tree[depFile] && this.tree[depFile].missing && this.tree[depFile].missing.bits) {
-        // this depFile is a dependency link and this dependency is missing
+        // this depFile is a dependency link and this dependency is missing.
+        // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
         return false;
@@ -823,6 +825,11 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
+    if (!this.consumer.isLegacy) {
+      // on Harmony we don't guess whether a path is a component or a package based on the path only,
+      // see missing-handler.groupMissingByType() for more info.
+      throw new Error(`Harmony should not have any missingBits. got ${missingComponents.join(',')}`);
+    }
     missingComponents.forEach((missingBit) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
         missingBit,
