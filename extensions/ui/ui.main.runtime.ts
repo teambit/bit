@@ -156,7 +156,7 @@ export class UiMain {
       await uiServer.dev({ port: targetPort });
     } else {
       await this.buildIfChanged(name, uiRoot, rebuild);
-      await this.buildIfNoPublic(name, uiRoot, rebuild);
+      await this.buildIfNoPublic(name, uiRoot);
       await uiServer.start({ port: targetPort });
     }
 
@@ -259,7 +259,7 @@ export class UiMain {
     await this.cache.set(uiRoot.path, hash);
   }
 
-  private async buildIfNoPublic(name: string, uiRoot: UIRoot, force: boolean | undefined) {
+  private async buildIfNoPublic(name: string, uiRoot: UIRoot) {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
