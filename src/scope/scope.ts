@@ -116,7 +116,6 @@ export default class Scope {
   }
 
   public onTag: Function[] = []; // enable extensions to hook during the tag process
-  public onPostPersistTag: Function[] = []; // enable extensions to hook after persisting (hard-tag)
   public onPostExport: Function[] = []; // enable extensions to hook after the export process
 
   /**

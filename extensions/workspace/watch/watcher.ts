@@ -1,4 +1,3 @@
-import { build } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { BIT_MAP } from 'bit-bin/dist/constants';
@@ -104,12 +103,9 @@ export class Watcher {
       await this.workspace.load([bitId]);
       return [];
     }
-    const component = await this.workspace.consumer.loadComponent(bitId);
     const idStr = bitId.toString();
-    if (component.isLegacy) {
-      await this.buildLegacy(idStr);
-      return [];
-    }
+    const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
+    logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
     let buildResults;
     const componentId = await this.workspace.resolveComponentId(bitId);
     try {
@@ -130,16 +126,6 @@ export class Watcher {
 
   private completeWatch() {
     loader.stop();
-  }
-
-  private async buildLegacy(idStr: string) {
-    logger.console(`running build for ${chalk.bold(idStr)}`);
-    const buildResults = await build(idStr, false, this.verbose, this.workspace.path);
-    if (buildResults) {
-      logger.console(`\t${chalk.cyan(buildResults.join('\n\t'))}`);
-    } else {
-      logger.console(`${idStr} doesn't have a compiler, nothing to build`);
-    }
   }
 
   private isComponentWatchedExternally(componentId: BitId) {

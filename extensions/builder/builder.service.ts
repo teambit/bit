@@ -48,9 +48,15 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     const slotsTasks = this.taskSlot.values();
     const tasksAtStart: BuildTask[] = [];
     const tasksAtEnd: BuildTask[] = [];
+    // @todo: develop a better mechanism. e.g. I want "preview" and "publish" to be in the end
+    // but preview before publish. in Drupal for example this is resolved by a numeric "weight" field
     slotsTasks.forEach((task) => {
       if (task.location === 'start') {
         tasksAtStart.push(task);
+        return;
+      }
+      if (task.location === 'end') {
+        tasksAtEnd.push(task);
         return;
       }
       tasksAtStart.push(task);
@@ -63,7 +69,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
 
     const componentIds = context.components.map((component) => component.id.toString());
     const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(componentIds, { installOptions: { installPackages: false } }),
+      capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
     });
     const buildResults = await buildPipe.execute(buildContext);
     longProcessLogger.end();
