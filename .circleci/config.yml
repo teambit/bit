@@ -677,10 +677,11 @@ jobs:
       - run:
           name: 'set GitHub token'
           command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
       -
         run:
           name: 'git commit'
-          command: 'cd bit && git commit -am "update .bitmap file"'
+          command: 'cd bit && git commit -am "update .bitmap file [ci-skip]"'
       -
         run:
           name: 'git push'
