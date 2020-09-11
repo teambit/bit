@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
@@ -711,7 +712,7 @@ export default class Consumer {
     return reloadedComponents;
   }
 
-  updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
+  async updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
     const getPackageJsonDir = (
       componentMap: ComponentMap,
       component: Component,
@@ -731,7 +732,7 @@ export default class Consumer {
       return modelComponent.hasHead();
     };
 
-    const updateVersionsP = components.map(async (unknownComponent) => {
+    const updateVersions = async (unknownComponent) => {
       const id: BitId =
         unknownComponent instanceof ModelComponent
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
@@ -749,8 +750,11 @@ export default class Consumer {
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
         : Promise.resolve();
-    });
-    return Promise.all(updateVersionsP);
+    };
+    // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
+    // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
+    // trying to get the dependencies of comp1 using its package.json.
+    return Bluebird.mapSeries(components, updateVersions);
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {

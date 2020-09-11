@@ -5,7 +5,7 @@ import R from 'ramda';
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
 import { PathOsBased } from '../../../../utils/path';
-import generateTree from './generate-tree-madge';
+import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
 import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
 import {
@@ -27,27 +27,6 @@ interface SimpleGroupedDependencies {
   files: string[];
 }
 
-/**
- * Group dependencies by types (files, bits, packages)
- * @param {any} dependencies list of dependencies paths to group
- * @returns {Function} function which group the dependencies
- */
-const byType = (list, bindingPrefix: string): SimpleGroupedDependencies => {
-  const grouped = R.groupBy((item) => {
-    if (
-      (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) &&
-      // todo: this is a hack. we need to make sure we can distinguish between non-components and components in the same scope
-      !item.includes('node_modules/@teambit/harmony') &&
-      !item.includes('node_modules/@teambit/capsule') &&
-      !item.includes('node_modules/@teambit/any-fs')
-    ) {
-      return 'bits';
-    }
-    return item.includes('node_modules') ? 'packages' : 'files';
-  });
-  return grouped(list);
-};
-
 interface GroupedDependenciesResolved {
   bits: Array<ResolvedPackageData>;
   packages: PackageDependency;
@@ -60,74 +39,79 @@ interface GroupedDependenciesResolved {
  * It's also transform the node package dependencies from array of paths to object in this format:
  * {dependencyName: version} (like in package.json)
  *
- * @param {any} list of dependencies paths
- * @param {any} componentDir root of working directory (used for node packages version calculation)
- * @returns {Object} object with the dependencies groups
+ * componentDir is the root of working directory (used for node packages version calculation)
  */
-function groupDependencyList(list, componentDir: string, bindingPrefix: string): GroupedDependenciesResolved {
-  const groups = byType(list, bindingPrefix);
+function groupDependencyList(
+  dependenciesPaths: string[],
+  componentDir: string,
+  bindingPrefix: string,
+  isLegacyProject: boolean
+): GroupedDependenciesResolved {
   const resultGroups: GroupedDependenciesResolved = {
     bits: [],
     packages: {},
-    files: groups.files,
+    files: [],
     unidentifiedPackages: [],
   };
-  const unidentifiedPackages: string[] = [];
-  if (groups.packages) {
-    const packages = {};
-    groups.packages.forEach((packagePath) => {
-      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
-      // If the package is actually a component add it to the components (bits) list
-      if (resolvedPackage) {
-        const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
-        // @todo: currently, for author, the package.json doesn't have any version.
-        // we might change this decision later. see https://github.com/teambit/bit/pull/2924
-        // if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
-        if (resolvedPackage.componentId) {
-          resultGroups.bits.push(resolvedPackage);
-        } else {
-          const packageWithVersion = {
-            [resolvedPackage.name]: version,
-          };
-          Object.assign(packages, packageWithVersion);
-        }
-      } else unidentifiedPackages.push(packagePath);
-    });
-    resultGroups.packages = packages;
-  }
-  if (groups.bits) {
-    groups.bits.forEach((packagePath) => {
-      const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, packagePath));
-      // If the package is actually a component add it to the components (bits) list
-      if (resolvedPackage) {
-        resultGroups.bits.push(resolvedPackage);
-      } else {
-        unidentifiedPackages.push(packagePath);
-      }
-    });
-  }
-  if (!R.isEmpty(unidentifiedPackages)) {
-    resultGroups.unidentifiedPackages = unidentifiedPackages;
-  }
+  const isPackage = (str: string) => str.includes('node_modules/');
+  const isBitLegacyComponent = (str: string) =>
+    isLegacyProject &&
+    (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
+  dependenciesPaths.forEach((dependencyPath) => {
+    if (!isPackage(dependencyPath)) {
+      resultGroups.files.push(dependencyPath);
+      return;
+    }
+    const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, dependencyPath));
+    if (!resolvedPackage) {
+      // package doesn't have package.json, probably it's a custom-resolve-module dep file
+      resultGroups.unidentifiedPackages.push(dependencyPath);
+      return;
+    }
+    const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
+    // If the package is a component add it to the components (bits) list
+    // @todo: currently, for author, the package.json doesn't have any version.
+    // we might change this decision later. see https://github.com/teambit/bit/pull/2924
+    // if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
+    if (resolvedPackage.componentId) {
+      resultGroups.bits.push(resolvedPackage);
+      return;
+    }
+    if (isBitLegacyComponent(dependencyPath)) {
+      resultGroups.bits.push(resolvedPackage);
+      return;
+    }
+    const packageWithVersion = {
+      [resolvedPackage.name]: version,
+    };
+    Object.assign(resultGroups.packages, packageWithVersion);
+  });
+
   return resultGroups;
 }
 
 interface GroupedDependenciesTree {
   [filePath: string]: GroupedDependenciesResolved;
 }
+
 /**
  * Run over each entry in the tree and transform the dependencies from list of paths
  * to object with dependencies types
  *
  * @returns new tree with grouped dependencies
  */
-function groupDependencyTree(tree: any, componentDir: string, bindingPrefix: string): GroupedDependenciesTree {
+function groupDependencyTree(
+  tree: MadgeTree,
+  componentDir: string,
+  bindingPrefix: string,
+  isLegacyProject: boolean
+): GroupedDependenciesTree {
   const result = {};
-  Object.keys(tree).forEach((key) => {
-    if (tree[key] && !R.isEmpty(tree[key])) {
-      result[key] = groupDependencyList(tree[key], componentDir, bindingPrefix);
+  Object.keys(tree).forEach((filePath) => {
+    if (tree[filePath] && !R.isEmpty(tree[filePath])) {
+      result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix, isLegacyProject);
     } else {
-      result[key] = {};
+      result[filePath] = {};
     }
   });
 
@@ -274,6 +258,7 @@ export async function getDependencyTree({
   workspacePath,
   filePaths,
   bindingPrefix,
+  isLegacyProject,
   resolveModulesConfig,
   visited = {},
   cacheProjectAst,
@@ -300,12 +285,13 @@ export async function getDependencyTree({
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
   // @ts-ignore
-  const tree: Tree = groupDependencyTree(madgeTree, componentDir, bindingPrefix);
+  const tree: Tree = groupDependencyTree(madgeTree, componentDir, bindingPrefix, isLegacyProject);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
     workspacePath,
-    bindingPrefix
+    bindingPrefix,
+    isLegacyProject
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
