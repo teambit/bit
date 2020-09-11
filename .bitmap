@@ -3914,6 +3914,11 @@
                 "name": "tester.aspect.ts"
             },
             {
+                "relativePath": "tester.graphql.ts",
+                "test": false,
+                "name": "tester.graphql.ts"
+            },
+            {
                 "relativePath": "tester.main.runtime.ts",
                 "test": false,
                 "name": "tester.main.runtime.ts"
@@ -3937,6 +3942,11 @@
                 "relativePath": "tester.ui.runtime.tsx",
                 "test": false,
                 "name": "tester.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "tests-results.ts",
+                "test": false,
+                "name": "tests-results.ts"
             },
             {
                 "relativePath": "ui/tests-page.tsx",

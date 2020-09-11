@@ -6,13 +6,11 @@ import { join } from 'path';
 import chalk from 'chalk';
 
 import { NoTestFilesFound } from './exceptions';
-import { Tester, TestResults } from './tester';
+import { Tester, Tests } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-type ComponentWithSpecs = Component & { specs: string[] };
-
-export class TesterService implements EnvService<TestResults> {
+export class TesterService implements EnvService<Tests> {
   constructor(
     readonly workspace: Workspace,
     /**
@@ -23,7 +21,7 @@ export class TesterService implements EnvService<TestResults> {
     private logger: Logger
   ) {}
 
-  async run(context: ExecutionContext, options: TesterOptions): Promise<TestResults> {
+  async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
     const testCount = specFiles.toArray().reduce((acc, [component, specs]) => acc + specs.length, 0);
@@ -41,14 +39,5 @@ export class TesterService implements EnvService<TestResults> {
     });
 
     return tester.test(testerContext);
-  }
-
-  private getSpecFiles(component: Component) {
-    //@ts-ignore
-    return component.specs.map((specFile: string) => {
-      const file = component.filesystem.files.find((file) => file.relative === specFile);
-      if (!file) throw new Error('file not found');
-      return file;
-    });
   }
 }

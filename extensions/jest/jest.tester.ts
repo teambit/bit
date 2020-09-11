@@ -1,9 +1,9 @@
-import { flatten } from 'lodash';
-import { Tester, TesterContext, TestResults, TestResult, SpecFiles } from '@teambit/tester';
+import { compact } from 'lodash';
+import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/tester';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { runCLI } from 'jest';
 import { TestResult as JestTestResult } from '@jest/test-result';
-import { Component, ComponentMap } from '@teambit/component';
+import { ComponentMap, ComponentID } from '@teambit/component';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
@@ -20,32 +20,36 @@ export class JestTester implements Tester {
   }
 
   private buildTestsObj(components: ComponentMap<JestTestResult[] | null>) {
-    return components
-      .toArray()
-      .map(([component, testsFiles]) => {
-        if (!testsFiles) return;
-        if (testsFiles?.length === 0) return;
-        const tests = testsFiles.reduce((acc: TestResult[], test) => {
-          test.testResults.forEach((testResult) => {
-            acc.push(
-              new TestResult(
-                testResult.ancestorTitles,
-                testResult.title,
-                testResult.status,
-                test.testFilePath,
-                testResult.duration
-              )
-            );
+    const tests = components.toArray().map(([component, testsFiles]) => {
+      if (!testsFiles) return;
+      if (testsFiles?.length === 0) return;
+      const errors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
+        if (test.failureMessage)
+          errors.push({
+            failureMessage: test.failureMessage,
+            file: test.testFilePath,
           });
-          return acc;
-        }, []);
+        return errors;
+      }, []);
 
-        return {
-          componentId: component.id,
-          tests,
-        };
-      })
-      .filter(Boolean);
+      const tests = testsFiles.reduce((acc: TestResult[], test) => {
+        test.testResults.forEach((testResult) => {
+          acc.push(
+            new TestResult(
+              testResult.ancestorTitles,
+              testResult.title,
+              testResult.status,
+              test.testFilePath,
+              testResult.duration
+            )
+          );
+        });
+        return acc;
+      }, []);
+      return { componentId: component.id, results: new TestsResult(tests, errors) };
+    });
+    // TODO: fix type
+    return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
   }
 
   private getErrors(testResult: JestTestResult[]) {
@@ -55,7 +59,7 @@ export class JestTester implements Tester {
     }, []);
   }
 
-  async test(context: TesterContext): Promise<TestResults> {
+  async test(context: TesterContext): Promise<Tests> {
     const config: any = {
       rootDir: context.rootPath,
       watch: context.watch,
@@ -73,14 +77,11 @@ export class JestTester implements Tester {
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
-    // :TODO he we should match results to components and format them accordingly. (e.g. const results = runCLI(...))
-
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
     const componentsWithTests = this.attachTestsToComponent(context, testResults);
     const componentTestResults = this.buildTestsObj(componentsWithTests);
-    const errors = this.getErrors(testResults);
-    // @ts-ignore
-    return { components: componentTestResults, errors: errors };
+    const globalErrors = this.getErrors(testResults);
+    return { components: componentTestResults, errors: globalErrors };
   }
 }
