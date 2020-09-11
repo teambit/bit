@@ -689,7 +689,7 @@ jobs:
       -
         run:
           name: 'git push'
-          command: 'cd bit && git push origin $CIRCLE_BRANCH"'
+          command: 'cd bit && git push origin ${CIRCLE_BRANCH}"'
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs
