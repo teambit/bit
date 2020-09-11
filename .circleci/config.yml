@@ -677,15 +677,19 @@ jobs:
       - run:
           name: 'set GitHub token'
           command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev"
+
       - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
       -
         run:
           name: 'git commit'
-          command: 'cd bit && git commit -am "update .bitmap file [ci-skip]"'
+          command: 'cd bit && git commit .bitmap -m "update .bitmap file [ci-skip]"'
       -
         run:
           name: 'git push'
-          command: 'cd bit && git push origin master"'
+          command: 'cd bit && git push origin $CIRCLE_BRANCH"'
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs
