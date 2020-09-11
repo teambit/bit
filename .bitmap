@@ -5054,6 +5054,11 @@
                 "name": "REFACTOR_GUIDE.md"
             },
             {
+                "relativePath": "watch/output-formatter.ts",
+                "test": false,
+                "name": "output-formatter.ts"
+            },
+            {
                 "relativePath": "watch/watch.cmd.tsx",
                 "test": false,
                 "name": "watch.cmd.tsx"

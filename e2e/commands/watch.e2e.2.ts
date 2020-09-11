@@ -19,7 +19,7 @@ describe('bit watch command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('watch', () => {
+  describe('legacy watch', () => {
     let scopeAfterBuild;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -31,7 +31,7 @@ describe('bit watch command', function () {
     describe('as author', () => {
       let watchRunner;
       before(async () => {
-        watchRunner = new WatchRunner(helper);
+        watchRunner = new WatchRunner(helper, false);
         await watchRunner.watch();
       });
       after(() => {
@@ -74,7 +74,7 @@ describe('bit watch command', function () {
           helper.scopeHelper.addRemoteEnvironment();
           helper.command.importManyComponents(['bar/foo', 'utils/is-string', 'utils/is-type']);
           helper.command.build('--no-cache'); // it'll also install the compiler
-          watchRunner = new WatchRunner(helper);
+          watchRunner = new WatchRunner(helper, false);
           await watchRunner.watch();
         });
         after(() => {
@@ -118,7 +118,7 @@ describe('bit watch command', function () {
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
       before(async () => {
-        watchRunner = new WatchRunner(helper);
+        watchRunner = new WatchRunner(helper, true);
         await watchRunner.watch();
       });
       after(() => {
