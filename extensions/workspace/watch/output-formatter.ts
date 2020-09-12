@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { OnComponentEventResult } from '../on-component-events';
 
 const verboseComponentFilesArrayToString = (componentFiles) => {
   return componentFiles.reduce((outputString, filePath) => `${outputString} \t - ${filePath}\n`, ``);
@@ -14,7 +15,18 @@ const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
   );
 };
 
-const output = (compileResults, verbose) => {
+export const formatWatchPathsSortByComponent = (trackDirs) => {
+  return Object.keys(trackDirs).reduce(
+    (outputString, watchPath) =>
+      `${outputString}
+    ${chalk.green('√')} SUCCESS\t${trackDirs[watchPath]}\n
+    \t - ${watchPath}\n\n`,
+    ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}\n`
+  );
+};
+
+export function formatCompileResults(compileResults: OnComponentEventResult[], verbose: boolean) {
+  if (!compileResults.length) return '';
   return compileResults
     .map((compileResult) => ({
       extensionId: compileResult.extensionId,
@@ -26,19 +38,7 @@ const output = (compileResults, verbose) => {
     .reduce(
       (outputString, compileResult) =>
         `${outputString}
-    ${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
+  ${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
       ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}`
     );
-};
-
-export const formatWatchPathsSortByComponent = (watchPathsSortByComponent) => {
-  return watchPathsSortByComponent.reduce(
-    (outputString, watchPath) =>
-      `${outputString}
-    ${chalk.green('√')} SUCCESS\t${watchPath.componentId}\n
-    \t - ${watchPath.absPaths?.join('\n')}\n\n`,
-    ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}\n`
-  );
-};
-
-export const formatCompileResults = (compileResults, verbose) => output(compileResults, verbose);
+}

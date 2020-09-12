@@ -13,9 +13,7 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 
 import { EXT_NAME } from './constants';
-import { OnComponentAdd } from './on-component-add';
-import { OnComponentChange } from './on-component-change';
-import { OnComponentLoad } from './on-component-load';
+import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
 import { WorkspaceAspect } from './workspace.aspect';
 import workspaceProvider from './workspace.provider';
 
@@ -36,7 +34,12 @@ export const WorkspaceMain = {
     AspectLoaderAspect,
     EnvsAspect,
   ],
-  slots: [Slot.withType<OnComponentLoad>(), Slot.withType<OnComponentChange>(), Slot.withType<OnComponentAdd>()],
+  slots: [
+    Slot.withType<OnComponentLoad>(),
+    Slot.withType<OnComponentChange>(),
+    Slot.withType<OnComponentAdd>(),
+    Slot.withType<OnComponentRemove>(),
+  ],
   provider: workspaceProvider,
   defineRuntime: 'browser',
 };

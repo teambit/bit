@@ -1,6 +1,7 @@
+import { ComponentID } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
-import { BIT_MAP } from 'bit-bin/dist/constants';
+import { BIT_MAP, COMPONENT_ORIGINS } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
@@ -9,8 +10,9 @@ import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
-
+import ComponentMap from 'bit-bin/dist/consumer/bit-map/component-map';
 import { Workspace } from '../workspace';
+import { OnComponentEventResult } from '../on-component-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: BitId; componentIds: BitId[] };
 
@@ -18,7 +20,7 @@ export class Watcher {
   private fsWatcher: FSWatcher;
   constructor(
     private workspace: Workspace,
-    private trackDirs: { [dir: string]: BitId } = {},
+    private trackDirs: { [dir: string]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
   ) {}
@@ -35,7 +37,7 @@ export class Watcher {
   async watchAll(opts?: { msgs; verbose?: boolean }) {
     // TODO: run build in the beginning of process (it's work like this in other envs)
     const _verbose = opts?.verbose || false;
-    this.createWatcher();
+    await this.createWatcher();
     const watcher = this.fsWatcher;
     opts?.msgs?.onStart(this.workspace);
 
@@ -45,7 +47,7 @@ export class Watcher {
         watcher.on('all', opts?.msgs?.onAll);
       }
       watcher.on('ready', () => {
-        opts?.msgs?.onReady(this.workspace, this.getWatchPathsSortByComponent(), _verbose);
+        opts?.msgs?.onReady(this.workspace, this.trackDirs, _verbose);
       });
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
@@ -53,9 +55,11 @@ export class Watcher {
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
-      watcher.on('add', (p) => {
-        opts?.msgs?.onAdd(p);
-        this.handleChange(p, true).catch((err) => reject(err));
+      watcher.on('add', async (filePath) => {
+        const startTime = new Date().getTime();
+        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        const duration = new Date().getTime() - startTime;
+        opts?.msgs?.onAdd(filePath, buildResults, _verbose, duration);
       });
       watcher.on('unlink', (p) => {
         opts?.msgs?.onUnlink(p);
@@ -68,12 +72,13 @@ export class Watcher {
     });
   }
 
-  private async handleChange(filePath: string, isNew = false) {
+  private async handleChange(filePath: string): Promise<OnComponentEventResult[]> {
     if (filePath.endsWith(BIT_MAP)) {
-      await this.handleBitmapChanges();
-      return this.completeWatch();
+      const buildResults = await this.handleBitmapChanges();
+      this.completeWatch();
+      return buildResults;
     }
-    const componentId = await this.getBitIdByPathAndReloadConsumer(filePath, isNew);
+    const componentId = await this.getBitIdByPathAndReloadConsumer(filePath);
     if (!componentId) {
       logger.console(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch();
@@ -87,27 +92,45 @@ export class Watcher {
   /**
    * if .bitmap has change, it's possible that a new component has added. trigger onComponentAdd.
    */
-  private async handleBitmapChanges() {
+  private async handleBitmapChanges(): Promise<OnComponentEventResult[]> {
     const previewsTrackDirs = { ...this.trackDirs };
     await this.workspace._reloadConsumer();
-    this.setTrackDirs();
+    await this.setTrackDirs();
     const newDirs: string[] = R.difference(Object.keys(this.trackDirs), Object.keys(previewsTrackDirs));
-    if (!newDirs.length) return;
-    this.fsWatcher.add(newDirs);
-    await Bluebird.mapSeries(newDirs, (dir) => this.executeWatchOperationsOnComponent(this.trackDirs[dir], false));
+    const removedDirs: string[] = R.difference(Object.keys(previewsTrackDirs), Object.keys(this.trackDirs));
+    const results: OnComponentEventResult[] = [];
+    if (newDirs.length) {
+      this.fsWatcher.add(newDirs);
+      const addResults = await Bluebird.mapSeries(newDirs, (dir) =>
+        this.executeWatchOperationsOnComponent(this.trackDirs[dir], false)
+      );
+      results.push(...R.flatten(addResults));
+    }
+    if (removedDirs.length) {
+      await this.fsWatcher.unwatch(removedDirs);
+      await Bluebird.mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
+    }
+    return results;
   }
 
-  private async executeWatchOperationsOnComponent(bitId: BitId, isChange = true) {
-    if (this.isComponentWatchedExternally(bitId)) {
+  private async executeWatchOperationsOnRemove(componentId: ComponentID) {
+    logger.console(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
+    await this.workspace.triggerOnComponentRemove(componentId);
+  }
+
+  private async executeWatchOperationsOnComponent(
+    componentId: ComponentID,
+    isChange = true
+  ): Promise<OnComponentEventResult[]> {
+    if (this.isComponentWatchedExternally(componentId)) {
       // update capsule, once done, it automatically triggers the external watcher
-      await this.workspace.load([bitId]);
+      await this.workspace.get(componentId);
       return [];
     }
-    const idStr = bitId.toString();
+    const idStr = componentId.toString();
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
     logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
-    let buildResults;
-    const componentId = await this.workspace.resolveComponentId(bitId);
+    let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
         ? await this.workspace.triggerOnComponentChange(componentId)
@@ -126,10 +149,11 @@ export class Watcher {
 
   private completeWatch() {
     loader.stop();
+    return [];
   }
 
-  private isComponentWatchedExternally(componentId: BitId) {
-    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId)));
+  private isComponentWatchedExternally(componentId: ComponentID) {
+    const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
     if (watcherData) {
       logger.console(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
@@ -137,34 +161,29 @@ export class Watcher {
     return false;
   }
 
-  private async getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {
+  private async getBitIdByPathAndReloadConsumer(filePath: string): Promise<ComponentID | null> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
-    let componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
-    if (!isNew && !componentId) {
+    const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
+    if (!trackDir) {
+      // the file is not part of any component. If it was a new component, then, .bitmap changes
+      // should have added the path to the trackDir.
       return null;
     }
     // @todo: improve performance. probably only bit-map and the component itself need to be updated
     await this.workspace._reloadConsumer();
-
-    if (!componentId) {
-      componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
+    const componentId = this.trackDirs[trackDir];
+    // loading the component causes the bitMap to be updated with the new paths if needed
+    const component = await this.workspace.get(componentId);
+    const componentMap: ComponentMap = component.state._consumer.componentMap;
+    if (componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile)) {
+      return componentId;
     }
-
-    if (isNew && !componentId) {
-      const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
-      if (trackDir) {
-        const bitId = this.trackDirs[trackDir];
-        // loading the component causes the bitMap to be updated with the new path
-        await this.consumer.loadComponent(bitId);
-        componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
-      }
-    }
-
-    return componentId;
+    // the file is inside the component dir but it's ignored. (e.g. it's in IGNORE_LIST)
+    return null;
   }
 
-  private createWatcher() {
-    const pathsToWatch = this.getPathsToWatch();
+  private async createWatcher() {
+    const pathsToWatch = await this.getPathsToWatch();
     this.fsWatcher = chokidar.watch(pathsToWatch, {
       ignoreInitial: true,
       // Using the function way since the regular way not working as expected
@@ -185,45 +204,27 @@ export class Watcher {
     });
   }
 
-  setTrackDirs() {
+  async setTrackDirs() {
     this.trackDirs = {};
-    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    componentsFromBitMap.forEach((componentMap) => {
-      const componentId = componentMap.id;
-      const trackDir = componentMap.getTrackDir();
-      if (trackDir) {
+    const componentsFromBitMap = this.consumer.bitMap.getAllComponents([
+      COMPONENT_ORIGINS.AUTHORED,
+      COMPONENT_ORIGINS.IMPORTED,
+    ]);
+    await Promise.all(
+      componentsFromBitMap.map(async (componentMap) => {
+        const bitId = componentMap.id;
+        const trackDir = componentMap.getTrackDir();
+        if (!trackDir) throw new Error(`${bitId.toString()} has no rootDir, which is invalid in Harmony`);
+        const componentId = await this.workspace.resolveComponentId(bitId);
         this.trackDirs[trackDir] = componentId;
-      }
-    });
+      })
+    );
   }
 
-  private getPathsToWatch(): string[] {
-    this.setTrackDirs();
-    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    const paths = componentsFromBitMap.map((componentMap) => {
-      const trackDir = componentMap.getTrackDir();
-      const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
-      const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
-      return absPaths;
-    });
-    const bitmap = this.consumer.toAbsolutePath(BIT_MAP);
-    return [...R.flatten(paths), bitmap];
-  }
-
-  /**
-   * TODO: this should be in the workspace not in the watcher
-   * there is already componentDir function that gives you the dir.
-   * you can add one more that brings all the paths.
-   */
-  private getWatchPathsSortByComponent() {
-    this.setTrackDirs();
-    const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    return componentsFromBitMap.map((componentMap) => {
-      const componentId = componentMap.id;
-      const trackDir = componentMap.getTrackDir();
-      const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
-      const absPaths = relativePaths.map((relativePath) => this.consumer.toAbsolutePath(relativePath));
-      return { componentId: componentId.toString(), absPaths };
-    });
+  private async getPathsToWatch(): Promise<string[]> {
+    await this.setTrackDirs();
+    const paths = [...Object.keys(this.trackDirs), BIT_MAP];
+    const pathsAbsolute = paths.map((dir) => this.consumer.toAbsolutePath(dir));
+    return pathsAbsolute;
   }
 }
