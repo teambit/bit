@@ -174,9 +174,29 @@
     "builder": {
         "files": [
             {
-                "relativePath": "artifact.ts",
+                "relativePath": "artifact/artifact-definition.ts",
+                "test": false,
+                "name": "artifact-definition.ts"
+            },
+            {
+                "relativePath": "artifact/artifact.ts",
                 "test": false,
                 "name": "artifact.ts"
+            },
+            {
+                "relativePath": "artifact/extension-artifact.ts",
+                "test": false,
+                "name": "extension-artifact.ts"
+            },
+            {
+                "relativePath": "artifact/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "artifact/ref.ts",
+                "test": false,
+                "name": "ref.ts"
             },
             {
                 "relativePath": "build-pipe.ts",
@@ -222,6 +242,16 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/storage-resolver.ts",
+                "test": false,
+                "name": "storage-resolver.ts"
             },
             {
                 "relativePath": "task-process.ts",
@@ -2629,6 +2659,11 @@
                 "name": "bundling-strategy.ts"
             },
             {
+                "relativePath": "exceptions/bundling-strategy-not-found.ts",
+                "test": false,
+                "name": "bundling-strategy-not-found.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2714,9 +2749,19 @@
                 "name": "preview.task.ts"
             },
             {
+                "relativePath": "strategies/component-strategy.ts",
+                "test": false,
+                "name": "component-strategy.ts"
+            },
+            {
                 "relativePath": "strategies/env-strategy.ts",
                 "test": false,
                 "name": "env-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "ui/component-preview/index.ts",
@@ -3177,6 +3222,11 @@
                 "relativePath": "scope.ui.runtime.tsx",
                 "test": false,
                 "name": "scope.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "types.ts",
+                "test": false,
+                "name": "types.ts"
             },
             {
                 "relativePath": "ui/scope-context.ts",
@@ -4974,19 +5024,9 @@
                 "name": "list.cmd.tsx"
             },
             {
-                "relativePath": "on-component-add.ts",
+                "relativePath": "on-component-events.ts",
                 "test": false,
-                "name": "on-component-add.ts"
-            },
-            {
-                "relativePath": "on-component-change.ts",
-                "test": false,
-                "name": "on-component-change.ts"
-            },
-            {
-                "relativePath": "on-component-load.ts",
-                "test": false,
-                "name": "on-component-load.ts"
+                "name": "on-component-events.ts"
             },
             {
                 "relativePath": "types.ts",

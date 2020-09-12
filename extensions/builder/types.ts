@@ -1,4 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
 import { Network } from '@teambit/isolator';
 
@@ -14,33 +14,10 @@ export interface BuildContext extends ExecutionContext {
   capsuleGraph: Network;
 }
 
-export type ArtifactDefinition = {
-  /**
-   *
-   */
-  name: string;
-
-  /**
-   *
-   */
-  description?: string;
-
-  /**
-   *
-   */
-  globPatterns: string[];
-
-  storageResolver?: string[];
-};
-
 export type Artifact = {
   paths: string[];
   name: string;
   description: string;
-};
-
-export type StorageResolver = {
-  store(artifacts: Artifact[]): Promise<ArtifactRef[]>;
 };
 
 export type ArtifactRef = {
@@ -66,11 +43,6 @@ export type ComponentResult = {
    * metadata generated during component build.
    */
   metadata?: { [key: string]: Serializable };
-
-  /**
-   * artifacts generated through component build.
-   */
-  artifacts?: ArtifactDefinition[];
 
   /**
    * returning errors from build tasks will cause a pipeline failure and logs all returned errors.

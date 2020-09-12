@@ -83,6 +83,7 @@ export class ReactMain {
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
     this.tsConfigOverride = tsconfig;
+
     return this.envs.override({
       getCompiler: () => {
         return this.reactEnv.getCompiler(tsconfig);

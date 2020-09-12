@@ -8,7 +8,6 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { BitId } from 'bit-bin/dist/bit-id';
 import { IsolateComponentsOptions } from '@teambit/isolator';
 
 import { ExtensionArtifact } from './artifact';
