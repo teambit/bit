@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/environments';
-import { OnComponentChangeResult, Workspace } from '@teambit/workspace';
+import { SerializableResults, Workspace } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
@@ -113,7 +113,7 @@ export class WorkspaceCompiler {
     }
   }
 
-  async onComponentChange(component: Component): Promise<OnComponentChangeResult> {
+  async onComponentChange(component: Component): Promise<SerializableResults> {
     const buildResults = await this.compileComponents([component.id.toString()], {});
     return {
       results: buildResults,

@@ -6,6 +6,7 @@ import type { Logger } from '@teambit/logger';
 
 import { Watcher } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
+import { OnComponentEventResult } from '../on-component-events';
 
 export class WatchCommand implements Command {
   msgs = {
@@ -21,14 +22,21 @@ export class WatchCommand implements Command {
         )
       );
     },
-    onChange: (filePath, buildResults, verbose, duration) => {
+    onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      if (!buildResults.length) {
+        this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
+        return;
+      }
       this.logger.console(`The file ${filePath} has been changed.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
       this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
     },
-    onAdd: (p) => {
-      this.logger.console(`The file ${p} has been added`);
+    onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      this.logger.console(`The file ${filePath} has been added.\n\n`);
+      this.logger.console(formatCompileResults(buildResults, verbose));
+      this.logger.console(`Finished. (${duration}ms)`);
+      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
     },
     onUnlink: (p) => {
       this.logger.console(`file ${p} has been removed`);

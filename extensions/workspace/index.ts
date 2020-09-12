@@ -7,8 +7,7 @@ export type { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from
 export type { WorkspaceMain } from './workspace.main.runtime';
 
 export type { WorkspaceUI } from './workspace.ui.runtime';
-export type { OnComponentChangeResult } from './on-component-change';
-export type { ExtensionData } from './on-component-load';
+export type { SerializableResults, OnComponentEventResult, ExtensionData } from './on-component-events';
 export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
 export type { WorkspaceComponent } from './workspace-component';
