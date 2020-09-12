@@ -23,6 +23,10 @@ export class WatchCommand implements Command {
       );
     },
     onChange: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
+      if (!buildResults.length) {
+        this.logger.console(`The file ${filePath} has been changed, but nothing to compile.\n\n`);
+        return;
+      }
       this.logger.console(`The file ${filePath} has been changed.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
