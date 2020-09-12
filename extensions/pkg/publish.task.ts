@@ -9,7 +9,7 @@ import { Publisher } from './publisher';
 export class PublishTask implements BuildTask {
   readonly description = 'publish components';
   readonly location: TaskLocation = 'end';
-  constructor(readonly extensionId: string, private publisher: Publisher, private logger: Logger) {}
+  constructor(readonly id: string, private publisher: Publisher, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
     this.publisher.options.dryRun = false;

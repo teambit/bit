@@ -43,7 +43,7 @@ import { PutRoute, FetchRoute } from './routes';
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
 
-export type OnTag = (ids: BitId[]) => Promise<any>;
+export type OnTag = (components: Component[]) => Promise<any>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export type ScopeConfig = {
@@ -102,7 +102,13 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    this.legacyScope.onTag.push(tagFn);
+    this.legacyScope.onTag.push(async (legacyIds: BitId[]) => {
+      const host = this.componentExtension.getHost();
+      const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
+      const components = await host.getMany(ids);
+      // TODO: fix what legacy tag accepts to just extension name and files.
+      return tagFn(components);
+    });
     this.tagRegistry.register(tagFn);
   }
 

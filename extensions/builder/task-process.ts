@@ -19,14 +19,14 @@ export class TaskProcess {
   public throwIfErrorsFound() {
     const compsWithErrors = this.taskResult.components.filter((c) => c.errors.length);
     if (compsWithErrors.length) {
-      this.logger.consoleFailure(`task "${this.task.extensionId}" has failed`);
-      const title = `Builder found the following errors while running "${this.task.extensionId}" task\n`;
+      this.logger.consoleFailure(`task "${this.task.id}" has failed`);
+      const title = `Builder found the following errors while running "${this.task.id}" task\n`;
       let totalErrors = 0;
       const errorsStr = compsWithErrors
         .map((c) => {
           const errors = c.errors.map((e) => (typeof e === 'string' ? e : e.toString()));
           totalErrors += errors.length;
-          return `${c.id.toString()}\n${errors.join('\n')}`;
+          return `${c.component.id.toString()}\n${errors.join('\n')}`;
         })
         .join('\n\n');
       const summery = `\n\nFound ${totalErrors} errors in ${compsWithErrors.length} components`;
@@ -47,8 +47,10 @@ export class TaskProcess {
   private saveDataToComponent(component: Component) {
     // @todo: fix to use isEqual of ComponentId, not the legacy. currently it's not working
     // due to defaultScope discrepancies.
-    const componentResult = this.taskResult.components.find((c) => c.id._legacy.isEqual(component.id._legacy));
-    const data = componentResult && componentResult.data;
+    const componentResult = this.taskResult.components.find((c) =>
+      c.component.id._legacy.isEqual(component.id._legacy)
+    );
+    const data = componentResult && componentResult.metadata;
     if (data) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
       extensionDataEntry.data = this.mergeDataIfPossible(data, extensionDataEntry.data);
@@ -60,7 +62,7 @@ export class TaskProcess {
     if (!currentData || isEmpty(currentData)) return existingData;
     // both exist
     if (typeof currentData !== 'object') {
-      throw new Error(`task data must be "object", get ${typeof currentData} for ${this.task.extensionId}`);
+      throw new Error(`task data must be "object", get ${typeof currentData} for ${this.task.id}`);
     }
     if (Array.isArray(currentData)) {
       throw new Error(`task data must be "object", get ${typeof currentData} for an array`);
@@ -83,10 +85,10 @@ export class TaskProcess {
 
   private getExtensionDataEntry(component: Component): ExtensionDataEntry {
     const existingExtensionDataEntry =
-      component.config.extensions.findCoreExtension(this.task.extensionId) ||
-      component.config.extensions.findExtension(this.task.extensionId);
+      component.config.extensions.findCoreExtension(this.task.id) ||
+      component.config.extensions.findExtension(this.task.id);
     if (existingExtensionDataEntry) return existingExtensionDataEntry;
-    const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, this.task.extensionId);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, this.task.id);
     component.config.extensions.push(extensionDataEntry);
     return extensionDataEntry;
   }

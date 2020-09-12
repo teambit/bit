@@ -9,7 +9,7 @@ export class CoreExporterTask implements BuildTask {
   constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
 
   location: TaskLocation = 'start';
-  readonly extensionId = 'teambit.bit/aspect';
+  readonly id = 'teambit.bit/aspect';
   readonly description = 'export all core aspects via the main aspects';
 
   async execute(context: BuildContext): Promise<BuildResults> {

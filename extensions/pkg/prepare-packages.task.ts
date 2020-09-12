@@ -14,7 +14,7 @@ const NPM_IGNORE_FILE = '.npmignore';
  */
 export class PreparePackagesTask implements BuildTask {
   readonly description = 'prepare packages';
-  constructor(readonly extensionId: string, private logger: Logger) {}
+  constructor(readonly id: string, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const artifacts = await this.executeNpmIgnoreTask(context);

@@ -10,7 +10,7 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly extensionId: string) {}
+  constructor(readonly id: string) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const compilerInstance: Compiler = context.env.getCompiler();

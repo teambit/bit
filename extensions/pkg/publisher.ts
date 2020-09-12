@@ -16,7 +16,7 @@ export type PublisherOptions = {
   allowStaged?: boolean;
 };
 
-export type PublishResult = { id: ComponentID; data?: string; errors: string[] };
+export type PublishResult = { component: Component; data?: string; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
@@ -78,8 +78,8 @@ export class Publisher {
       if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
-    const id = capsule.component.id;
-    return { id, data, errors };
+    const component = capsule.component;
+    return { component, data, errors };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {

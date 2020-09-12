@@ -24,7 +24,7 @@ export class BuildPipe {
       if (!task) {
         throw new InvalidTask(task);
       }
-      const taskName = `${task.extensionId} ${task.description || ''}`;
+      const taskName = `${task.id} ${task.description || ''}`;
       longProcessLogger.logProgress(taskName);
       const startTask = process.hrtime();
       const taskResult = await task.execute(buildContext);

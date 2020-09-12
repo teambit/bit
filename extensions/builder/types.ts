@@ -14,16 +14,72 @@ export interface BuildContext extends ExecutionContext {
   capsuleGraph: Network;
 }
 
+export type ArtifactDefinition = {
+  /**
+   *
+   */
+  name: string;
+
+  /**
+   *
+   */
+  description?: string;
+
+  /**
+   *
+   */
+  globPatterns: string[];
+
+  storageResolver?: string[];
+};
+
+export type Artifact = {
+  paths: string[];
+  name: string;
+  description: string;
+};
+
+export type StorageResolver = {
+  store(artifacts: Artifact[]): Promise<ArtifactRef[]>;
+};
+
+export type ArtifactRef = {
+  // get(): Promise<>;
+};
+
 export type ArtifactProps = {
   dirName?: string;
   fileName?: string;
 };
 
+export type Serializable = {
+  toString(): string;
+};
+
 export type ComponentResult = {
-  id: ComponentID;
-  // TODO: change to type serializable
-  data?: any;
+  /**
+   * instance of the component
+   */
+  component: Component;
+
+  /**
+   * metadata generated during component build.
+   */
+  metadata?: { [key: string]: Serializable };
+
+  /**
+   * artifacts generated through component build.
+   */
+  artifacts?: ArtifactDefinition[];
+
+  /**
+   * returning errors from build tasks will cause a pipeline failure and logs all returned errors.
+   */
   errors: Array<Error | string>;
+
+  /**
+   * warnings generated throughout the build task.
+   */
   warning?: string[];
 };
 
@@ -36,10 +92,9 @@ export type TaskLocation = 'start' | 'end';
 
 export interface BuildTask {
   /**
-   * extensionId hosting this task.
-   * @todo: should be automatically injected by Harmony
+   * id of the task.
    */
-  extensionId: string;
+  id: string;
 
   /**
    * description of what the task does.

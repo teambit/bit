@@ -9,7 +9,7 @@ import { detectTestFiles } from './utils';
  */
 export class TesterTask implements BuildTask {
   readonly description = 'test components';
-  constructor(readonly extensionId: string) {}
+  constructor(readonly id: string) {}
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const tester: Tester = context.env.getTester();

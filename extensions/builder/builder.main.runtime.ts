@@ -41,11 +41,9 @@ export class BuilderMain {
     private taskSlot: TaskSlot
   ) {}
 
-  async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+  async tagListener(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
-    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
-    const components = await this.workspace.getMany(componentIds);
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
     return envsExecutionResults;
