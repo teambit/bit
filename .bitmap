@@ -134,6 +134,16 @@
                 "name": "bit.provider.ts"
             },
             {
+                "relativePath": "extension/extension.ts",
+                "test": false,
+                "name": "extension.ts"
+            },
+            {
+                "relativePath": "extension/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "hook-require.ts",
                 "test": false,
                 "name": "hook-require.ts"

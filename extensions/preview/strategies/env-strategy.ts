@@ -1,4 +1,5 @@
 import { join, resolve } from 'path';
+import { existsSync, mkdirpSync } from 'fs-extra';
 import { flatten } from 'lodash';
 import { ComponentMap } from '@teambit/component';
 import { Compiler } from '@teambit/compiler';
@@ -19,7 +20,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   constructor(private preview: PreviewMain) {}
 
   async computeTargets(context: BuildContext, previewDefs: PreviewDefinition[]) {
-    const outputPath = resolve(`${context.capsuleGraph.capsulesRootDir}/${context.id}-preview`);
+    const outputPath = this.getOutputPath(context);
+    if (!existsSync(outputPath)) mkdirpSync(outputPath);
 
     return [
       {
@@ -53,7 +55,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getOutputPath(context: BuildContext) {
-    return resolve(`${context.capsuleGraph.capsulesRootDir}/${context.id}-preview`);
+    const envName = context.id.replace('/', '__');
+    return resolve(`${context.capsuleGraph.capsulesRootDir}/${envName}-preview`);
   }
 
   private getPaths(context: BuildContext, files: AbstractVinyl[], capsule: Capsule) {

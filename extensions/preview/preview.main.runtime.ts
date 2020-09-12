@@ -154,7 +154,7 @@ export class PreviewMain {
   static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
 
   static defaultConfig = {
-    bundlingStrategy: 'component',
+    bundlingStrategy: 'env',
   };
 
   static async provider(
