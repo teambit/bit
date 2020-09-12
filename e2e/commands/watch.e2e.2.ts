@@ -134,6 +134,44 @@ describe('bit watch command', function () {
           expect(distContent).to.have.string('hello');
         });
       });
+      describe('adding a new file to an existing component', () => {
+        before(async () => {
+          helper.fs.outputFile('comp1/index2.ts', 'console.log("hello")');
+          await watchRunner.waitForWatchToRebuildComponent();
+        });
+        it('should write the dists on node_modules correctly', () => {
+          const distContent = helper.fs.readFile('node_modules/@my-scope/comp1/dist/index2.js');
+          expect(distContent).to.have.string('hello');
+        });
+        it('should update the .bitmap file with the newly added file', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.files).to.have.lengthOf(2);
+          const files = bitMap.comp1.files.map((f) => f.relativePath);
+          expect(files).to.include('index2.ts');
+        });
+      });
+      describe('adding a new component', () => {
+        before(async () => {
+          helper.fs.outputFile('comp4/index.ts', 'console.log("hello")');
+          helper.command.addComponent('comp4');
+          await watchRunner.waitForWatchToRebuildComponent();
+        });
+        it('should recognize the .bitmap changes and compile the newly added component', () => {
+          const distContent = helper.fs.readFile('node_modules/@my-scope/comp4/dist/index.js');
+          expect(distContent).to.have.string('hello');
+        });
+        describe('changing this new component', () => {
+          before(async () => {
+            helper.fs.outputFile('comp4/index.ts', 'console.log("hello!")');
+            helper.command.addComponent('comp4');
+            await watchRunner.waitForWatchToRebuildComponent();
+          });
+          it('should watch this newly added component for changes', () => {
+            const distContent = helper.fs.readFile('node_modules/@my-scope/comp4/dist/index.js');
+            expect(distContent).to.have.string('hello!');
+          });
+        });
+      });
     });
   });
 });
