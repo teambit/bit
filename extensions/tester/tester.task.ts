@@ -1,11 +1,8 @@
-import { flatten } from 'lodash';
 import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
 import { join } from 'path';
-import { Component, ComponentMap } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { detectTestFiles } from './utils';
-import { Network } from '@teambit/isolator';
 
 /**
  * tester build task. Allows to test components during component build.
@@ -21,6 +18,7 @@ export class TesterTask implements BuildTask {
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
       const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
       if (!componentSpecFiles) throw new Error('capsule not found');
+      // eslint-disable-next-line
       const [c, specs] = componentSpecFiles;
       return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);

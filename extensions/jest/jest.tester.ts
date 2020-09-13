@@ -1,7 +1,6 @@
 import { compact } from 'lodash';
-import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/tester';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { runCLI } from 'jest';
+import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/tester';
 import { TestResult as JestTestResult } from '@jest/test-result';
 import { ComponentMap, ComponentID } from '@teambit/component';
 
@@ -12,6 +11,7 @@ export class JestTester implements Tester {
     return ComponentMap.as(testerContext.components, (component) => {
       const componentSpecFiles = testerContext.specFiles.get(component.id.fullName);
       if (!componentSpecFiles) return null;
+      // eslint-disable-next-line
       const [c, specs] = componentSpecFiles;
       return testResult.filter((test) => {
         return specs.filter((spec) => spec.path === test.testFilePath).length > 0;
@@ -23,7 +23,7 @@ export class JestTester implements Tester {
     const tests = components.toArray().map(([component, testsFiles]) => {
       if (!testsFiles) return;
       if (testsFiles?.length === 0) return;
-      const errors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
+      const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
         if (test.failureMessage)
           errors.push({
             failureMessage: test.failureMessage,
@@ -32,7 +32,7 @@ export class JestTester implements Tester {
         return errors;
       }, []);
 
-      const tests = testsFiles.reduce((acc: TestResult[], test) => {
+      const testsResults = testsFiles.reduce((acc: TestResult[], test) => {
         test.testResults.forEach((testResult) => {
           acc.push(
             new TestResult(
@@ -46,7 +46,7 @@ export class JestTester implements Tester {
         });
         return acc;
       }, []);
-      return { componentId: component.id, results: new TestsResult(tests, errors) };
+      return { componentId: component.id, results: new TestsResult(testsResults, suiteErrors) };
     });
     // TODO: fix type
     return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
@@ -67,6 +67,7 @@ export class JestTester implements Tester {
     };
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
+    // eslint-disable-next-line
     const testFiles = context.specFiles.toArray().reduce((acc: string[], [component, specs]) => {
       specs.forEach((spec) => acc.push(spec.path));
       return acc;
