@@ -13,8 +13,6 @@ import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
 
 export class WebpackMain {
-  onEvent: (event: any) => void;
-
   constructor(
     /**
      * Pubsub extension.
@@ -57,10 +55,6 @@ export class WebpackMain {
 
   createBundler(context: BundlerContext, envConfig: Configuration) {
     return new WebpackBundler(context.targets, envConfig, this.logger);
-  }
-
-  setOnEvent(onEvent: (event: any) => void) {
-    this.onEvent = onEvent;
   }
 
   private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {

@@ -366,7 +366,7 @@ export default function (): Configuration {
       ],
     },
     plugins: [
-      new HelloWorldPlugin({}),
+      // new HelloWorldPlugin({}),
       new EnvironmentPlugin({ NODE_ENV: 'production' }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
@@ -438,13 +438,13 @@ export default function (): Configuration {
   };
 }
 
-class HelloWorldPlugin {
-  apply(compiler) {
-    compiler.hooks.done.tap('Hello World Plugin', (
-      stats /* stats is passed as an argument when done hook is tapped.  */
-    ) => {
-      throw new Error('909090');
-      console.log('Hello World4!');
-    });
-  }
-}
+// class HelloWorldPlugin {
+//   apply(compiler) {
+//     compiler.hooks.done.tap('Hello World Plugin', (
+//       stats /* stats is passed as an argument when done hook is tapped.  */
+//     ) => {
+//       throw new Error('909090');
+//       console.log('Hello World4!');
+//     });
+//   }
+// }

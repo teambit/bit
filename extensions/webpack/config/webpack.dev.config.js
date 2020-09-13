@@ -134,7 +134,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       }),
 
       new WebpackCompilerDonePlugin({
-        options: { pubsub },
+        options: { pubsub, devServer },
       }),
     ],
   };

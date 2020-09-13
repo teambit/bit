@@ -14,13 +14,13 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 
-import type { UiServerStartedEvent, PostStartFinishedEvent, StartFinishedEvent } from './events';
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
+import type { UiServerStartedEvent, PostStartFinishedEvent, StartFinishedEvent } from './events';
 
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
@@ -58,10 +58,10 @@ export type UIConfig = {
 };
 
 export type RuntimeOptions = {
-  /**
-   * Event reporting callback.
-   */
-  onEvent?: (e: any) => void;
+  // /**
+  //  * Event reporting callback.
+  //  */
+  // onEvent?: (e: any) => void;
 
   /**
    * name of the UI root to load.

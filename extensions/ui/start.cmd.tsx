@@ -1,24 +1,24 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
-import * as events from './events';
+// import * as events from './events';
 
 import React from 'react';
 import open from 'open';
 
-import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
+// import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
 
 // import * as outputTemplates from './bit-start-cmd-output-templates';
 import {
   BuildingDevServerOutput,
   CompilationEndedSuccessfullyOutput,
-  CompilationErrorOutput,
-  ComponentsRebuildOutput,
-  DevServerRunningOutputTemplate,
-  InitializeStartOutput,
+  // CompilationErrorOutput,
+  // ComponentsRebuildOutput,
+  // DevServerRunningOutputTemplate,
+  // InitializeStartOutput,
 } from './bit-start-cmd-output-templates';
-import { addSharedDirForPath } from '../../dist/consumer/component-ops/manipulate-dir';
+// import { addSharedDirForPath } from '../`../dist/consumer/component-ops/manipulate-dir';
 
 export class StartCmd implements Command {
   devServerCounter = 0;
@@ -50,10 +50,17 @@ export class StartCmd implements Command {
   private eventsListeners = (event) => {
     switch (event.type) {
       case 'webpack-compilation-done':
-        this.devServerCounter--;
+        this.devServerCounter -= 1;
+        CompilationEndedSuccessfullyOutput({
+          uiServer: event.body.uiServer,
+          workspace: 'WORKSPACE',
+          duration: 'DURATION',
+          envs: ['ENVS'],
+          timestamp: 'TIMESTAMP',
+        });
         break;
       case 'ui-server-started':
-        this.devServerCounter++;
+        this.devServerCounter += 1;
         break;
       default:
     }
@@ -74,7 +81,14 @@ export class StartCmd implements Command {
     // teambit.bit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
-    const uiServer = await this.ui.createRuntime({
+    // const uiServer = await this.ui.createRuntime({
+    //   uiRootName,
+    //   pattern,
+    //   dev,
+    //   port: port ? parseInt(port) : undefined,
+    //   rebuild,
+    // });
+    await this.ui.createRuntime({
       uiRootName,
       pattern,
       dev,

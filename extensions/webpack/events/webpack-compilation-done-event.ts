@@ -1,10 +1,10 @@
-import { bitBaseEvent } from '../../../custom-types';
+import { BitBaseEvent } from '../../../custom-types';
 
-export type webpackCompilationDoneEvent = bitBaseEvent & {
+export type webpackCompilationDoneEvent = BitBaseEvent & {
   readonly type: 'webpack-compilation-done';
-  readonly version: '0.0.0.1';
+  readonly version: '0.0.1';
   readonly timestamp: string;
   readonly body: {
-    webpackCompilerVersion: string;
+    uiServer: any;
   };
 };
