@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
+import type { CommandBarUI } from '../../command-bar.ui.runtime';
+import { CommanderSearchResult } from '../../types';
 import { AutoCompleteInput } from '../autocomplete-input';
-import { CommandBarUI, CommanderSearchResult } from '../../aspect';
 import { CommandBarItem } from '../command-bar-item';
 import styles from './command-bar.module.scss';
 
@@ -42,13 +43,15 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
         focus={visible}
         className={styles.input}
         placeholder="Search anything or type > to only search commands"
+        // placeholder="Search anything"
         onChange={(e) => setTerm(e.target.value)}
         onDown={increment}
         onUp={decrement}
         onEnter={handleEnter}
         onEscape={() => setVisibility(false)}
-        onBlur={() => setVisibility(false)}
+        // onBlur={() => setVisibility(false)}
       />
+      {/* {options.length === 0 && <div>type '>' to search commands</div>} */}
       <div className={styles.results}>
         {options.map((x, idx) => (
           <CommandBarItem

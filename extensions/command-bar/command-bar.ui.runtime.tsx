@@ -3,8 +3,8 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
-import { CommandBar } from '../ui/command-bar';
-import { CommandSearcher } from '../ui/command-searcher';
+import { CommandBar } from './ui/command-bar';
+import { CommandSearcher } from './ui/command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
