@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 import { CommanderSearchResult } from '@teambit/command-bar';
-import { KeyShortcut } from '@teambit/elements.keycap';
+import { KeySequence } from '@teambit/elements.keycap';
 import styles from './command-bar-item.module.scss';
 
 export type CommandItemProps = {
@@ -11,6 +11,7 @@ export type CommandItemProps = {
 
 export function CommandBarItem({ entry, className, active, ...rest }: CommandItemProps) {
   const { handler, name, icon, iconAlt, keybinding } = entry;
+  const selectedKeybinding = Array.isArray(keybinding) ? keybinding[0] : keybinding;
 
   return (
     <div
@@ -20,8 +21,7 @@ export function CommandBarItem({ entry, className, active, ...rest }: CommandIte
     >
       {icon && <img src={icon} alt={iconAlt} className={styles.icon} />}
       <div className={styles.name}>{name}</div>
-      <KeyShortcut className={styles.commandKeys}>{Array.isArray(keybinding) ? keybinding[0] : keybinding}</KeyShortcut>
-      {/* <div className={styles.commandDescription}>{description}</div> */}
+      <KeySequence className={styles.commandKeys}>{selectedKeybinding}</KeySequence>
     </div>
   );
 }

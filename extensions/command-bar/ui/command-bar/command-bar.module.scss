@@ -27,9 +27,6 @@
 .input {
   padding: 24px 18px;
   font-size: 20px;
-  &:not(:last-child) {
-    border: solid 1px var(--border-color);
-  }
 }
 
 .results {
@@ -37,5 +34,6 @@
 
   &:not(:empty) {
     margin-bottom: 8px;
+    border-top: solid 1px var(--border-color);
   }
 }

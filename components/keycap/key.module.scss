@@ -1,35 +1,42 @@
-.keyShortcut {
+.keyCombo {
   display: flex;
   align-items: center;
   white-space: nowrap;
-
-  > :not(:last-child) {
-    margin-right: 0.38em;
-  }
-}
-
-.keySequences {
-  display: flex;
-  align-items: center;
 }
 
 .keySequence {
+  display: flex;
   white-space: nowrap;
-  > :not(:last-child) {
-    margin-right: 0.38em;
-  }
+  align-items: center;
+
+  color: var(--text-muted);
 }
 
 .keycap {
   display: inline-block;
-  min-width: 1em;
-  line-height: 1;
-  padding: 0.38em 0.38em;
-  border-radius: 0.23em;
-  text-align: center;
-  vertical-align: middle;
-  text-transform: uppercase;
 
-  background: var(--bg-topping-highlight);
-  box-shadow: var(--shadow-raised-low);
+  color: var(--text-muted);
+
+  text-align: center;
+  text-transform: uppercase;
 }
+
+.thenSep {
+  font-size: 0.8em;
+  margin: 0 4px;
+}
+
+// // design similar to a physical key
+// .keycap {
+//   display: inline-block;
+//   min-width: 1em;
+//   line-height: 1;
+//   padding: 0.38em 0.38em;
+//   border-radius: 0.23em;
+//   text-align: center;
+//   vertical-align: middle;
+//   text-transform: uppercase;
+
+//   background: var(--bg-topping-highlight);
+//   box-shadow: var(--shadow-raised-low);
+// }

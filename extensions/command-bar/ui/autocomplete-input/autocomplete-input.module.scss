@@ -3,7 +3,7 @@
   font-family: inherit;
   border: none;
 
-  // command bar is open iff input is focused
+  // command bar is open iff input is focused, so outline is not needed
   outline: none;
 
   &::placeholder {
