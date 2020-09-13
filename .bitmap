@@ -2499,6 +2499,11 @@
     "pubsub": {
         "files": [
             {
+                "relativePath": "bitBaseEvent.ts",
+                "test": false,
+                "name": "bitBaseEvent.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"

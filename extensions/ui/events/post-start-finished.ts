@@ -1,4 +1,4 @@
-import { BitBaseEvent } from '../../../custom-types';
+import { BitBaseEvent } from '@teambit/pubsub';
 
 export type PostStartFinishedEvent = BitBaseEvent & {
   readonly type: 'post-start-finished';

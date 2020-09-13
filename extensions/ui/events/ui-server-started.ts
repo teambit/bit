@@ -1,4 +1,4 @@
-import { BitBaseEvent } from '../../../custom-types';
+import { BitBaseEvent } from '@teambit/pubsub';
 
 export type UiServerStartedEvent = BitBaseEvent & {
   readonly type: 'ui-server-started';

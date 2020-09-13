@@ -1,6 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 
-import { BitBaseEvent } from '../../custom-types';
+import { BitBaseEvent } from './bitBaseEvent';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubMain {
