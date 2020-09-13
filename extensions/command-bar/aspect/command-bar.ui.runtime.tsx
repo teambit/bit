@@ -13,19 +13,11 @@ import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
 
-export type AddCommandArgs = {
+export type CommandEntry = {
   commandId: string;
-  handler: () => any;
-  keybinding?: Keybinding;
-  displayName: string;
-  description?: string;
-};
-
-type CommandEntry = {
-  name: string;
-  description?: string;
   handler: CommandHandler;
   keybinding?: Keybinding;
+  displayName: string;
 };
 
 /** Quick launch actions. Use the `addSearcher` slot to extend the available actions */
@@ -50,24 +42,22 @@ export class CommandBarUI {
     return this;
   }
 
-  // TODO - make multiple
-  addCommand({ commandId, handler, displayName, keybinding, description }: AddCommandArgs) {
-    if (this.commandRegistry.has(commandId)) throw new Error(`command already exists: "${commandId}"`);
+  addCommand(commands: CommandEntry | CommandEntry[]) {
+    const commandsArr = Array.isArray(commands) ? commands : [commands];
 
-    this.commandRegistry.set(commandId, {
-      handler,
-      name: displayName,
-      description,
-      keybinding,
+    commandsArr.forEach(({ commandId }) => {
+      if (this.commandRegistry.has(commandId)) throw new Error(`command already exists: "${commandId}"`);
     });
 
-    if (keybinding) {
-      this.addKeybinding(keybinding, commandId);
-    }
+    commandsArr.forEach((command) => {
+      this.commandRegistry.set(command.commandId, command);
 
-    const searchResults = Array.from(this.commandRegistry.entries()).map(([id, obj]) => ({ ...obj, id }));
+      if (command.keybinding) {
+        this.addKeybinding(command.keybinding, command.commandId);
+      }
+    });
 
-    this.commandSearcher.update(searchResults);
+    this.updateCommandsSearcher();
   }
 
   run(command: CommandId) {
@@ -87,6 +77,14 @@ export class CommandBarUI {
     const searcher = searchers.find((x) => x.test(term));
     return searcher?.search(term, limit) || [];
   };
+
+  private updateCommandsSearcher() {
+    const { commandRegistry } = this;
+
+    const searchResults = Array.from(commandRegistry.entries()).map(([id, obj]) => ({ ...obj, id }));
+
+    this.commandSearcher.update(searchResults);
+  }
 
   private addKeybinding(key: Keybinding, command: CommandId) {
     this.mousetrap.bind(key, this.run.bind(this, command));
@@ -114,10 +112,13 @@ export class CommandBarUI {
       displayName: 'open command bar',
       keybinding: 'mod+k',
     });
+
+    // TEMP! DO NOT COMMIT
     commandBar.addCommand({
-      commandId: commandBarCommands.close,
-      handler: commandBar.close,
-      displayName: 'close command bar',
+      commandId: 'babrarar',
+      displayName: 'bararar',
+      handler: () => alert('command called bararar'),
+      keybinding: 'mod+d alt+d',
     });
 
     uiUi.registerHudItem(commandBar.getCommandBar());

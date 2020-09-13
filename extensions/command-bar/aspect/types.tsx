@@ -3,8 +3,7 @@ export type CommandHandler = (...arg: any[]) => any;
 
 export type CommanderSearchResult = {
   id: string;
-  name: string;
-  description?: string;
+  displayName: string;
   handler: CommandHandler;
   icon?: string;
   iconAlt?: string;

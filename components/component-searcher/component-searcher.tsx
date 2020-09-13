@@ -3,13 +3,15 @@ import memoizeOne from 'memoize-one';
 import { ComponentModel } from '@teambit/component';
 import { SearchProvider, CommanderSearchResult } from '@teambit/command-bar';
 
+const searchedKeys: (keyof CommanderSearchResult)[] = ['displayName'];
+
 export class ComponentSearcher implements SearchProvider {
   // TODO @Ran - workaround - searcher is constructed once from workspace and once from scope
   private active = false;
   private fuseCommands = new Fuse<CommanderSearchResult>([], {
     // weight can be included here.
     // fields loses weight the longer it gets, so it seems ok for now.
-    keys: ['name', 'description'],
+    keys: searchedKeys,
   });
 
   constructor(private navigate: (path: string) => void) {}
@@ -20,7 +22,7 @@ export class ComponentSearcher implements SearchProvider {
 
     const searchResults = components.map((c) => ({
       id: c.id.fullName,
-      name: c.id.fullName,
+      displayName: c.id.fullName,
       handler: () => navigate(`/${c.id.fullName}`),
       icon: c.environment?.icon,
       iconAlt: c.environment?.id,

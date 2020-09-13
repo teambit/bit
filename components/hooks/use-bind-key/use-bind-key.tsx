@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Mousetrap, { ExtendedKeyboardEvent } from 'mousetrap';
+import Mousetrap from 'mousetrap';
 
 /** binds a global key to a handler */
 export function useKeyBind(

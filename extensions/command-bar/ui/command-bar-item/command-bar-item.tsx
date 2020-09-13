@@ -10,7 +10,7 @@ export type CommandItemProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function CommandBarItem({ entry, className, active, ...rest }: CommandItemProps) {
-  const { handler, name, icon, iconAlt, keybinding } = entry;
+  const { handler, displayName: name, icon, iconAlt, keybinding } = entry;
   const selectedKeybinding = Array.isArray(keybinding) ? keybinding[0] : keybinding;
 
   return (
