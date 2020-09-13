@@ -13,8 +13,15 @@ export class TesterTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuildResults> {
     const tester: Tester = context.env.getTester();
-
     const componentsSpecFiles = ComponentMap.as(context.components, detectTestFiles);
+
+    const testCount = componentsSpecFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    if (testCount === 0)
+      return {
+        artifacts: [],
+        components: [],
+      };
+
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
       const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
       if (!componentSpecFiles) throw new Error('capsule not found');
