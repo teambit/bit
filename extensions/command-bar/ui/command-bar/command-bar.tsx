@@ -52,7 +52,7 @@ export function CommandBar({ search, commander, elevation = 'high', className, .
       <div className={styles.results}>
         {options.map((x, idx) => (
           <CommandBarItem
-            key={x.id}
+            key={idx} // use index instead of id to avoid duplicate keys
             entry={x}
             active={idx === activeIdx}
             // mouseDown happens before blur, which closes the command bar
