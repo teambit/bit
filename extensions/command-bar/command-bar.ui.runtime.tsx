@@ -112,14 +112,6 @@ export class CommandBarUI {
       keybinding: 'mod+k',
     });
 
-    // TEMP! DO NOT COMMIT
-    commandBar.addCommand({
-      commandId: 'babrarar',
-      displayName: 'bararar',
-      handler: () => alert('command called bararar'),
-      keybinding: 'mod+d alt+d',
-    });
-
     uiUi.registerHudItem(commandBar.getCommandBar());
 
     return commandBar;

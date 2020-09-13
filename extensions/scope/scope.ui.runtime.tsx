@@ -1,14 +1,13 @@
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { Slot } from '@teambit/harmony';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
 import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-import { ComponentSearcher } from '@teambit/component-searcher';
-import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, ComponentSearcher } from '@teambit/command-bar';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ComponentsDrawer } from './components.drawer';

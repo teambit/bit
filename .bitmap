@@ -970,25 +970,6 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "component-searcher": {
-        "files": [
-            {
-                "relativePath": "component-searcher.tsx",
-                "test": false,
-                "name": "component-searcher.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/component-searcher",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "component-tree": {
         "files": [
             {
@@ -4470,49 +4451,6 @@
             "username": "David First",
             "email": "davidnet@gmail.com"
         }
-    },
-    "surfaces/closeable-card": {
-        "files": [
-            {
-                "relativePath": "closeable-card.module.scss",
-                "test": false,
-                "name": "closeable-card.module.scss"
-            },
-            {
-                "relativePath": "closeable-card.tsx",
-                "test": false,
-                "name": "closeable-card.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/surfaces/closeable-card",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "surfaces/modal": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "modal.module.scss",
-                "test": false,
-                "name": "modal.module.scss"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/surfaces/modal",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
     },
     "tester": {
         "files": [
