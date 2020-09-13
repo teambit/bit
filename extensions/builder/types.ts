@@ -14,20 +14,10 @@ export interface BuildContext extends ExecutionContext {
   capsuleGraph: Network;
 }
 
-export type Artifact = {
-  paths: string[];
-  name: string;
-  description: string;
-};
-
-export type ArtifactRef = {
-  // get(): Promise<>;
-};
-
-export type ArtifactProps = {
-  dirName?: string;
-  fileName?: string;
-};
+// export type ArtifactProps = {
+//   dirName?: string;
+//   fileName?: string;
+// };
 
 export type Serializable = {
   toString(): string;
@@ -47,7 +37,7 @@ export type ComponentResult = {
   /**
    * returning errors from build tasks will cause a pipeline failure and logs all returned errors.
    */
-  errors: Array<Error | string>;
+  errors?: Array<Error | string>;
 
   /**
    * warnings generated throughout the build task.
@@ -55,9 +45,31 @@ export type ComponentResult = {
   warning?: string[];
 };
 
+export type ArtifactProps = {
+  /**
+   * name of the artifact.
+   */
+  name: string;
+
+  /**
+   * description of the artifact.
+   */
+  description?: string;
+
+  /**
+   * glob patterns of files to include upon artifact creation.
+   */
+  globPatterns: string[];
+
+  /**
+   * storage resolver. can be used to replace where artifacts are stored.
+   */
+  storageResolver: string;
+};
+
 export interface BuildResults {
   components: ComponentResult[];
-  artifacts: ArtifactProps[];
+  artifacts?: ArtifactProps[];
 }
 
 export type TaskLocation = 'start' | 'end';

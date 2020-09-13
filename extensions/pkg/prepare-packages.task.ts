@@ -5,7 +5,6 @@ import { Logger } from '@teambit/logger';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import fs from 'fs-extra';
 import path from 'path';
-import { ArtifactProps } from '@teambit/builder/types';
 
 const NPM_IGNORE_FILE = '.npmignore';
 
@@ -31,7 +30,7 @@ export class PreparePackagesTask implements BuildTask {
    * add .npmignore file in the capsule root with entries received from the compilers to avoid
    * adding them into the package.
    */
-  private async executeNpmIgnoreTask(context: BuildContext): Promise<ArtifactProps[]> {
+  private async executeNpmIgnoreTask(context: BuildContext): Promise<any[]> {
     if (!context.env.getCompiler) return [];
     const compilerInstance: Compiler = context.env.getCompiler();
     if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return [];

@@ -28,7 +28,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
           warning: result.warnings,
         };
       }),
-      artifacts: [{ dirName: previewTask.getPreviewDirectory(context) }],
+      artifacts: [
+        {
+          flo: previewTask.getPreviewDirectory(context),
+        },
+      ],
     };
   }
 }

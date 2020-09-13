@@ -9,15 +9,17 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
-
 import { ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './types';
+import { StorageResolver } from './storage';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
+
+export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
 /**
  * extension config type.
@@ -37,7 +39,8 @@ export class BuilderMain {
     private service: BuilderService,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private taskSlot: TaskSlot
+    private taskSlot: TaskSlot,
+    private storageResolversSlot: StorageResolverSlot
   ) {}
 
   async tagListener(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
@@ -46,6 +49,23 @@ export class BuilderMain {
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
     return envsExecutionResults;
+  }
+
+  /**
+   * register a new storage resolver.
+   */
+  registerStorageResolver(storageResolver: StorageResolver) {
+    this.storageResolversSlot.register(storageResolver);
+    return this;
+  }
+
+  /**
+   * get storage resolver by name. otherwise, returns default.
+   */
+  getStorageResolver(name: string): StorageResolver | undefined {
+    const resolver = this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
+
+    return resolver;
   }
 
   /**
@@ -99,7 +119,7 @@ export class BuilderMain {
     return extensionArtifacts;
   }
 
-  static slots = [Slot.withType<BuildTask>()];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -124,11 +144,20 @@ export class BuilderMain {
       GraphqlMain
     ],
     config,
-    [taskSlot]: [TaskSlot]
+    [taskSlot, storageResolversSlot]: [TaskSlot, StorageResolverSlot]
   ) {
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const builderService = new BuilderService(workspace, logger, taskSlot);
-    const builder = new BuilderMain(envs, workspace, builderService, scope, aspectLoader, taskSlot);
+    const builderService = new BuilderService(workspace, logger, taskSlot, storageResolversSlot);
+    const builder = new BuilderMain(
+      envs,
+      workspace,
+      builderService,
+      scope,
+      aspectLoader,
+      taskSlot,
+      storageResolversSlot
+    );
+
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);

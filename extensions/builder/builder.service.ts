@@ -4,7 +4,7 @@ import { Workspace } from '@teambit/workspace';
 import { Component } from '@teambit/component';
 
 import { BuildPipe } from './build-pipe';
-import { TaskSlot } from './builder.main.runtime';
+import { StorageResolverSlot, TaskSlot } from './builder.main.runtime';
 import { BuildResults, BuildTask } from './types';
 
 export type BuildServiceResults = {
@@ -29,7 +29,9 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     /**
      * task slot (e.g tasks registered by other extensions.).
      */
-    private taskSlot: TaskSlot
+    private taskSlot: TaskSlot,
+
+    private storageResolverSlot: StorageResolverSlot
   ) {}
 
   /**
@@ -64,7 +66,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
 
     // merge with extension registered tasks.
     const mergedTasks = [...tasksAtStart, ...buildTasks, ...tasksAtEnd];
-    const buildPipe = BuildPipe.from(mergedTasks, this.logger);
+    const buildPipe = BuildPipe.from(mergedTasks, this.logger, this.storageResolverSlot);
     this.logger.info(`start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`);
 
     const componentIds = context.components.map((component) => component.id.toString());

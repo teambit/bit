@@ -19,7 +19,7 @@ export type ArtifactProps = {
   /**
    * storage resolver. can be used to replace where artifacts are stored.
    */
-  storageResolver?: StorageResolver;
+  storageResolver: StorageResolver;
 };
 
 export class Artifact {
@@ -27,11 +27,14 @@ export class Artifact {
     readonly name: string,
     readonly description: string | undefined,
     readonly globPatterns: string[],
-    readonly storageResolver: StorageResolver | undefined
+    readonly storageResolver: StorageResolver
   ) {}
 
-  persist() {
-    // this.storageResolver.store();
+  /**
+   * store the artifact in the configured storage.
+   */
+  store() {
+    this.storageResolver.store([this]);
   }
 
   static create(props: ArtifactProps) {

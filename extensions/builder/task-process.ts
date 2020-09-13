@@ -17,14 +17,15 @@ export class TaskProcess {
   ) {}
 
   public throwIfErrorsFound() {
-    const compsWithErrors = this.taskResult.components.filter((c) => c.errors.length);
+    const compsWithErrors = this.taskResult.components.filter((c) => c.errors?.length);
     if (compsWithErrors.length) {
       this.logger.consoleFailure(`task "${this.task.id}" has failed`);
       const title = `Builder found the following errors while running "${this.task.id}" task\n`;
       let totalErrors = 0;
       const errorsStr = compsWithErrors
         .map((c) => {
-          const errors = c.errors.map((e) => (typeof e === 'string' ? e : e.toString()));
+          const rawErrors = c.errors || [];
+          const errors = rawErrors.map((e) => (typeof e === 'string' ? e : e.toString()));
           totalErrors += errors.length;
           return `${c.component.id.toString()}\n${errors.join('\n')}`;
         })
@@ -34,11 +35,12 @@ export class TaskProcess {
     }
   }
 
-  public async saveTaskResults(): Promise<Component[]> {
+  // rename artifact here to files.
+  public async saveTaskResults(files: Artifact[]): Promise<Component[]> {
     const { components } = this.buildContext;
     const resultsP = components.map(async (component) => {
       this.saveDataToComponent(component);
-      await this.saveArtifactsToComponent(component);
+      await this.saveArtifactsToComponent(component, files);
     });
     await Promise.all(resultsP);
     return components;
@@ -70,13 +72,13 @@ export class TaskProcess {
     return { ...currentData, ...existingData };
   }
 
-  private async saveArtifactsToComponent(component: Component) {
-    const { artifacts } = this.taskResult;
+  private async saveArtifactsToComponent(component: Component, artifacts: Artifact[]) {
+    // const { artifacts } = this.taskResult;
     if (artifacts.length) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
       const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
-      const files = await this.getFilesByArtifacts(capsule);
+      const files = await this.getFilesByArtifacts(capsule, artifacts);
 
       const artifactsVinyl = files.map((file) => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));
       extensionDataEntry.artifacts = artifactsVinyl;
@@ -93,8 +95,8 @@ export class TaskProcess {
     return extensionDataEntry;
   }
 
-  private async getFilesByArtifacts(capsule: Capsule): Promise<string[]> {
-    const filesP = this.taskResult.artifacts.map(async (artifact) => {
+  private async getFilesByArtifacts(capsule: Capsule, artifacts: Artifact[]): Promise<string[]> {
+    const filesP = artifacts.map(async (artifact) => {
       if (artifact.fileName) return artifact.fileName;
       return capsule.getAllFilesPaths(artifact.dirName);
     });

@@ -189,6 +189,11 @@
                 "name": "artifact-definition.ts"
             },
             {
+                "relativePath": "artifact/artifact-list.ts",
+                "test": false,
+                "name": "artifact-list.ts"
+            },
+            {
                 "relativePath": "artifact/artifact.ts",
                 "test": false,
                 "name": "artifact.ts"
@@ -252,6 +257,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/default-resolver.ts",
+                "test": false,
+                "name": "default-resolver.ts"
             },
             {
                 "relativePath": "storage/index.ts",
