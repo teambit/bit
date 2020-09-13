@@ -7,6 +7,7 @@ import { BitId } from '../../bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import ConsumerComponent from '.';
+import logger from '../../logger/logger';
 
 function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
@@ -74,8 +75,13 @@ export default class PackageJson {
   static loadSync(componentRootFolder: string): PackageJson | null {
     const composedPath = composePath(componentRootFolder);
     if (!PackageJson.hasExisting(componentRootFolder)) return null;
-    const componentJsonObject = fs.readJsonSync(composedPath);
-    return new PackageJson(componentRootFolder, componentJsonObject);
+    try {
+      const componentJsonObject = fs.readJsonSync(composedPath);
+      return new PackageJson(componentRootFolder, componentJsonObject);
+    } catch (err) {
+      logger.error(`failed parsing ${composedPath}, the file content is ${fs.readFileSync(composedPath)}`);
+      throw err;
+    }
   }
 
   static hasExisting(componentRootFolder: string): boolean {

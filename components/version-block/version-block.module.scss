@@ -10,6 +10,9 @@
     padding-left: 10px;
     padding-top: 35px;
     text-align: right;
+    @media screen and (max-width: 768px) {
+      display: none;
+    }
   }
 }
 .emptyLabel {
@@ -36,6 +39,9 @@
     font-weight: unset;
     margin-bottom: 10px;
   }
+  @media screen and (max-width: 768px) {
+    padding-left: 0;
+  }
 }
 
 .commitMessage {
@@ -45,4 +51,8 @@
   font-size: 15px;
   font-style: italic;
   color: var(--text-muted);
+}
+
+.placeholder {
+  width: 57px;
 }

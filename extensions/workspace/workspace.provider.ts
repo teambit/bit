@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
@@ -21,9 +21,7 @@ import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
-import { OnComponentAdd } from './on-component-add';
-import { OnComponentChange } from './on-component-change';
-import { OnComponentLoad } from './on-component-load';
+import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
@@ -51,6 +49,8 @@ export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
 export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
+
+export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
 export type WorkspaceCoreConfig = {
   /**
@@ -83,10 +83,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
-    OnComponentAddSlot
+    OnComponentAddSlot,
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -110,6 +111,7 @@ export default async function provideWorkspace(
     onComponentChangeSlot,
     envs,
     onComponentAddSlot,
+    onComponentRemoveSlot,
     graphql
   );
 
@@ -126,14 +128,16 @@ export default async function provideWorkspace(
     const extensions = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
     await workspace.loadExtensions(extensions);
-    const extensionsWithLegacyIdsP = extensions.map(async extension => {
+    const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
-      if (legacyEntry.extensionId){
-        const resolvedComponentId = await workspace.resolveComponentId(legacyEntry.extensionId);
-        legacyEntry.extensionId = resolvedComponentId._legacy;
+      if (legacyEntry.extensionId) {
+        const compId = await workspace.resolveComponentId(legacyEntry.extensionId);
+        legacyEntry.extensionId = compId._legacy;
+        legacyEntry.newExtensionId = compId;
       }
+
       return legacyEntry;
-    })
+    });
     const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 
     return {
@@ -157,7 +161,7 @@ export default async function provideWorkspace(
   const watcher = new Watcher(workspace);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(watcher));
+    cli.register(new WatchCommand(logger, watcher));
   }
   component.registerHost(workspace);
 

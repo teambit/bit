@@ -1,6 +1,5 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
-import { getAllCoreAspectsIds, isCoreAspect } from '@teambit/bit';
 import { MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import {
@@ -53,15 +52,26 @@ import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
-import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
-import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
-import { ExtensionData, OnComponentLoad } from './on-component-load';
+import {
+  ExtensionData,
+  OnComponentAdd,
+  OnComponentChange,
+  OnComponentEventResult,
+  OnComponentLoad,
+  OnComponentRemove,
+  SerializableResults,
+} from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
+import {
+  OnComponentAddSlot,
+  OnComponentChangeSlot,
+  OnComponentLoadSlot,
+  OnComponentRemoveSlot,
+} from './workspace.provider';
 import { Issues } from './workspace-component/issues';
 
 export type EjectConfResult = {
@@ -110,7 +120,7 @@ export class Workspace implements ComponentFactory {
     /**
      * access to the `ComponentProvider` instance
      */
-    private componentFactory: ComponentMain,
+    private componentAspect: ComponentMain,
 
     readonly isolateEnv: IsolatorMain,
 
@@ -146,6 +156,8 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentAddSlot: OnComponentAddSlot,
 
+    private onComponentRemoveSlot: OnComponentRemoveSlot,
+
     private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
@@ -176,6 +188,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
     this.onComponentAddSlot.register(onComponentAddFunc);
+    return this;
+  }
+
+  registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
+    this.onComponentRemoveSlot.register(onComponentRemoveFunc);
     return this;
   }
 
@@ -297,7 +314,6 @@ export class Workspace implements ComponentFactory {
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
-   * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
@@ -312,16 +328,31 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
+  private async getConsumerComponent(id: ComponentID) {
+    try {
+      return await this.consumer.loadComponent(id._legacy);
+    } catch (err) {
+      return undefined;
+    }
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
    */
   async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.consumer.loadComponent(id._legacy);
+    const consumerComponent = await this.getConsumerComponent(id);
     const component = await this.scope.get(id);
+    if (!consumerComponent) {
+      if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
+      return component;
+    }
+
+    const extensionDataList = await this.componentExtensions(id, component);
 
     const state = new State(
-      new Config(consumerComponent.mainFile, await this.componentExtensions(id, component)),
+      new Config(consumerComponent.mainFile, extensionDataList),
+      this.componentAspect.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -337,7 +368,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
       const systemDescriptor = await env.__getDescriptor();
 
@@ -355,7 +386,7 @@ export class Workspace implements ComponentFactory {
       const data = await onLoad(component);
       const existingExtension = component.state.config.extensions.findExtension(extension);
       if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(this.getDataEntry(extension, data));
+      component.state.config.extensions.push(await this.getDataEntry(extension, data));
     });
 
     await Promise.all(promises);
@@ -363,12 +394,14 @@ export class Workspace implements ComponentFactory {
     return component;
   }
 
-  async triggerOnComponentChange(
-    id: ComponentID
-  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
+  async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
+    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
+    // new file. write these changes to the .bitmap file so then other processes have access to
+    // this new file. If the .bitmap wasn't change, it won't do anything.
+    await this.consumer.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
@@ -379,10 +412,10 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+  async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
       this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
@@ -392,7 +425,17 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  private getDataEntry(extension: string, data: { [key: string]: any }): ExtensionDataEntry {
+  async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
+    const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
+    await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
+      const onRemoveResult = await onRemoveFunc(id);
+      results.push({ extensionId: extension, results: onRemoveResult });
+    });
+    return results;
+  }
+
+  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
     // TODO: @gilad we need to refactor the extension data entry api.
     return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
   }
@@ -432,7 +475,7 @@ export class Workspace implements ComponentFactory {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
     if (!pattern) return this.list();
-    return all.filter((c) => c.id.toString() === pattern);
+    return all.filter((c) => c.id.toString({ ignoreVersion: true }) === pattern);
   }
 
   /**
@@ -678,7 +721,7 @@ export class Workspace implements ComponentFactory {
       return loadedComps.map((c) => c.state._consumer);
     };
     const ids = components.map((component) => component.id._legacy);
-    const coreAspectsStringIds = getAllCoreAspectsIds();
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
     return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
@@ -690,7 +733,7 @@ export class Workspace implements ComponentFactory {
     if (!scope) throw new Error('default scope not defined');
     // const newId = id.changeScope(scope);
     // TODO: fix properly ASAP after resolving default scope issue.
-    return isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
+    return this.aspectLoader.isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
   }
 
   private async filterCoreAspects(components: Component[]) {
@@ -707,25 +750,28 @@ export class Workspace implements ComponentFactory {
 
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const coreAspectsStringIds = getAllCoreAspectsIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return;
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
+    const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
-    const graph = await this.getGraphWithoutCore(components);
+    const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
+
     const allIds = await Promise.all(allIdsP);
 
-    const allComponents = await this.getMany(allIds);
+    const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
 
       if (!data) return false;
       if (data.type !== 'aspect')
-        this.logger.warn(
+        this.logger.debug(
           `${component.id.toString()} is configured in workspace.json, but using the ${
             data.type
           } environment. \n please make sure to either apply the aspect environment or a composition of the aspect environment for the aspect to load.`
@@ -742,12 +788,12 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const ids = this.harmony.extensionsIds;
-    const coreAspectsIds = getAllCoreAspectsIds();
+    const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(ids, coreAspectsIds);
     const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
     const components = await this.getMany(componentIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
-      stringIds.push(component.id.toString());
+      stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
       const isExist = await fs.pathExists(localPath);
@@ -768,13 +814,16 @@ export class Workspace implements ComponentFactory {
       })
     );
 
-    const coreAspectsInRuntime = coreAspectDefs.filter((coreAspect) => coreAspect.runtimePath);
+    // due to lack of workspace and scope runtimes. TODO: fix after adding them.
+    const workspaceAspects = coreAspectDefs.filter((coreAspect) => {
+      return coreAspect.runtimePath;
+    });
 
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(coreAspectsInRuntime);
+    return aspectDefs.concat(workspaceAspects);
   }
 
   /**
@@ -797,7 +846,7 @@ export class Workspace implements ComponentFactory {
   }
 
   private async getCompiler(component: Component) {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
   }
 
@@ -818,7 +867,7 @@ export class Workspace implements ComponentFactory {
     let missingPaths = false;
     const stringIds: string[] = [];
     const resolveP = components.map(async (component) => {
-      stringIds.push(component.id.toString());
+      stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
       const isExist = await fs.pathExists(localPath);
@@ -956,7 +1005,17 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    const legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    let legacyId;
+    try {
+      legacyId = this.consumer.getParsedId(id.toString(), true, true);
+    } catch (err) {
+      if (err.name === 'MissingBitMapComponent') {
+        // if a component is coming from the scope, it doesn't have .bitmap entry
+        legacyId = BitId.parse(id.toString(), true);
+        return ComponentID.fromLegacy(legacyId);
+      }
+      throw err;
+    }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
     const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
     return ComponentID.fromLegacy(legacyId, defaultScope);

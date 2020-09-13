@@ -20,7 +20,7 @@ export default function connect(host: string, strategiesNames?: SSHConnectionStr
     return new Fs(host.replace('file://', '')).connect();
   }
 
-  if (host.startsWith('http://')) {
+  if (host.startsWith('http://') || host.startsWith('https://')) {
     return Http.connect(host);
   }
 

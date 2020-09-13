@@ -159,7 +159,8 @@ export default class ComponentWriter {
         this.override,
         this.ignoreBitDependencies,
         this.excludeRegistryPrefix,
-        packageManager
+        packageManager,
+        Boolean(this.isolated)
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);

@@ -11,7 +11,6 @@ import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { validateVersion } from '../../../utils/semver-helper';
-import { PublishResults } from '../../../scope/component-ops/publish-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -21,7 +20,7 @@ export type TagResults = {
   warnings: string[];
   newComponents: BitIds;
   isSoftTag: boolean;
-  publishResults?: PublishResults;
+  publishedPackages: string[];
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';

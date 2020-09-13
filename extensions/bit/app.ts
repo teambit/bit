@@ -1,13 +1,22 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
-// eslint-disable-next-line no-console
-process.on('uncaughtException', (err) => console.log('uncaughtException', err));
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('uncaughtException', err);
+  process.exit(1);
+});
 
 require('v8-compile-cache');
 
 import './hook-require';
 
-import { getAspectDir, AspectLoaderMain, getCoreAspectPackageName, getCoreAspectName } from '@teambit/aspect-loader';
+import {
+  getAspectDir,
+  getAspectDistDir,
+  AspectLoaderMain,
+  getCoreAspectPackageName,
+  getCoreAspectName,
+} from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
@@ -71,7 +80,7 @@ async function getConfig() {
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   if (!id) throw new Error('could not retrieve aspect id');
-  const dirPath = getAspectDir(id);
+  const dirPath = getAspectDistDir(id);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;

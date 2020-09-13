@@ -68,7 +68,7 @@ export class AspectLoaderMain {
   constructor(private logger: Logger, private envs: EnvsMain, private harmony: Harmony) {}
 
   private async getCompiler(component: Component) {
-    const env = this.envs.getEnvFromExtensions(component.config.extensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
   }
 
@@ -83,6 +83,15 @@ export class AspectLoaderMain {
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
+  }
+
+  isAspectLoaded(id: string) {
+    if (this.failedAspects.includes(id)) return true;
+    try {
+      return this.harmony.get(id);
+    } catch (err) {
+      return false;
+    }
   }
 
   getDescriptor(id: string): AspectDescriptor {
@@ -116,6 +125,11 @@ export class AspectLoaderMain {
 
   get coreAspects() {
     return this._coreAspects;
+  }
+
+  isCoreAspect(id: string) {
+    const ids = this.getCoreAspectIds();
+    return ids.includes(id);
   }
 
   setCoreAspects(aspects: Aspect[]) {
@@ -167,6 +181,12 @@ export class AspectLoaderMain {
     return this;
   }
 
+  private failedLoadAspect: string[] = [];
+
+  get failedAspects() {
+    return this.failedLoadAspect;
+  }
+
   /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
@@ -195,9 +215,10 @@ export class AspectLoaderMain {
         // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
         const aspect = await requireableExtension.require();
         const manifest = aspect.default || aspect;
-        // manifest.id = id;
+        manifest.id = id;
         return manifest;
       } catch (e) {
+        this.failedLoadAspect.push(id);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
         if (this.logger.isLoaderStarted) {
           this.logger.consoleFailure(errorMsg);
@@ -221,10 +242,27 @@ export class AspectLoaderMain {
     return this.loadExtensionsByManifests(filteredManifests, throwOnError);
   }
 
+  isAspect(manifest: any) {
+    return manifest.addRuntime && manifest.getRuntime;
+  }
+
+  private prepareManifests(manifests: ExtensionManifest[]) {
+    return manifests.map((manifest: any) => {
+      if (this.isAspect(manifest)) return manifest;
+      manifest.runtime = MainRuntime;
+      if (!manifest.id) throw new Error();
+      const aspect = Aspect.create({
+        id: manifest.id,
+      });
+      aspect.addRuntime(manifest);
+      return aspect;
+    });
+  }
+
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   async loadExtensionsByManifests(extensionsManifests: ExtensionManifest[], throwOnError = true) {
     try {
-      await this.harmony.load(extensionsManifests);
+      await this.harmony.load(this.prepareManifests(extensionsManifests));
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts

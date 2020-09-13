@@ -4,7 +4,7 @@ import { Logger } from '@teambit/logger';
 import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import GeneralError from 'bit-bin/dist/error/general-error';
-import { flatten } from 'ramda';
+import { flatten, isEmpty } from 'ramda';
 
 import { BuildContext, BuildResults, BuildTask } from './types';
 
@@ -45,12 +45,27 @@ export class TaskProcess {
   }
 
   private saveDataToComponent(component: Component) {
-    const componentResult = this.taskResult.components.find((c) => c.id.isEqual(component.id));
+    // @todo: fix to use isEqual of ComponentId, not the legacy. currently it's not working
+    // due to defaultScope discrepancies.
+    const componentResult = this.taskResult.components.find((c) => c.id._legacy.isEqual(component.id._legacy));
     const data = componentResult && componentResult.data;
     if (data) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
-      extensionDataEntry.data = data;
+      extensionDataEntry.data = this.mergeDataIfPossible(data, extensionDataEntry.data);
     }
+  }
+
+  private mergeDataIfPossible(currentData, existingData) {
+    if (!existingData || isEmpty(existingData)) return currentData;
+    if (!currentData || isEmpty(currentData)) return existingData;
+    // both exist
+    if (typeof currentData !== 'object') {
+      throw new Error(`task data must be "object", get ${typeof currentData} for ${this.task.extensionId}`);
+    }
+    if (Array.isArray(currentData)) {
+      throw new Error(`task data must be "object", get ${typeof currentData} for an array`);
+    }
+    return { ...currentData, ...existingData };
   }
 
   private async saveArtifactsToComponent(component: Component) {

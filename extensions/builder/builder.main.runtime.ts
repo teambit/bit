@@ -9,6 +9,7 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
+import { IsolateComponentsOptions } from '@teambit/isolator';
 
 import { ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
@@ -30,6 +31,7 @@ export type BuilderConfig = {
 };
 
 export class BuilderMain {
+  tagTasks: BuildTask[] = [];
   constructor(
     private envs: EnvsMain,
     private workspace: Workspace,
@@ -40,10 +42,11 @@ export class BuilderMain {
   ) {}
 
   async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+    this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
     const components = await this.workspace.getMany(componentIds);
-    const envsExecutionResults = await this.build(components);
+    const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
     return envsExecutionResults;
   }
@@ -54,8 +57,12 @@ export class BuilderMain {
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
-    await this.workspace.createNetwork(components.map((c) => c.id.toString()));
+  async build(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions
+  ): Promise<EnvsExecutionResult<BuildServiceResults>> {
+    const idsStr = components.map((c) => c.id.toString());
+    await this.workspace.createNetwork(idsStr, isolateOptions);
     const envs = await this.envs.createEnvironment(components);
     const buildResult = await envs.run(this.service);
 
@@ -64,10 +71,18 @@ export class BuilderMain {
 
   /**
    * register a build task to apply on all component build pipelines.
+   * build happens on `bit build` and as part of `bit tag --persist`.
    */
   registerTask(task: BuildTask) {
     this.taskSlot.register(task);
     return this;
+  }
+
+  /**
+   * build task that doesn't get executed on `bit build`, only on `bit tag --persist'
+   */
+  registerTaskOnTagOnly(task: BuildTask) {
+    this.tagTasks.push(task);
   }
 
   /**

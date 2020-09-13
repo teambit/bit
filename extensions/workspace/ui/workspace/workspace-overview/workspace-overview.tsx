@@ -1,6 +1,8 @@
-import { ComponentComposition } from '@teambit/compositions';
+// import { ComponentComposition } from '@teambit/compositions';
+import ReactTooltip from 'react-tooltip';
 import { ComponentCard } from '@teambit/explorer.ui.component-card';
 import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useContext } from 'react';
 
 import { WorkspaceContext } from '../workspace-context';
@@ -19,12 +21,24 @@ export function WorkspaceOverview() {
               <ComponentCard
                 id={component.id.fullName}
                 envIcon={component.environment?.icon}
-                preview={<ComponentComposition component={component} hotReload={false} />}
+                preview={<PreviewPlaceholder name={component.id.toString()} />}
               />
             </div>
           );
         })}
       </ComponentGrid>
+    </div>
+  );
+}
+
+function PreviewPlaceholder({ name }: { name?: string }) {
+  return (
+    <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
+      <Icon of="image" />
+      <div>No preview available</div>
+      <ReactTooltip className={styles.tooltip} place="bottom" id={name} effect="solid">
+        Preview is generated from compositions during CI
+      </ReactTooltip>
     </div>
   );
 }

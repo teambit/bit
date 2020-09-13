@@ -1,28 +1,27 @@
 /**
  * this is the main configuration file of your bit workspace.
  * for full documentation, please see: https://docs.bit.dev/configuration
-**/
+ **/
 {
-  "$schema": "",
+  "$schema": "https://static.bit.dev/teambit/schemas/schema.json",
 
   /**
    * main configuration of the Bit workspace.
-  **/
+   **/
   "teambit.bit/workspace": {
-
-     /**
+    /**
      * the name of the component workspace. used for development purposes.
      **/
     "name": "my-workspace-name",
 
-     /**
+    /**
      * set the icon to be shown on the Bit server.
      **/
     "icon": "https://static.bit.dev/bit-logo.svg",
 
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
-    **/
+     **/
     // "defaultOwner": "teambit",
 
     /**
@@ -40,86 +39,86 @@
 
   /**
    * main configuration for component dependency resolution.
-  **/
+   **/
   "teambit.bit/dependency-resolver": {
     /**
      * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
-    */
+     */
     "packageManager": "teambit.bit/pnpm",
 
     /**
-    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-    * an invalid state that can cause build failures or incompatible dependency versions.
-    * (For historical reasons, JavaScript package managers generally do not treat this invalid
-    * state as an error.)
-    *
-    * The default value is false to avoid legacy compatibility issues.
-    * It is strongly recommended to set strictPeerDependencies=true.
-    */
+     * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
+     * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
+     * an invalid state that can cause build failures or incompatible dependency versions.
+     * (For historical reasons, JavaScript package managers generally do not treat this invalid
+     * state as an error.)
+     *
+     * The default value is false to avoid legacy compatibility issues.
+     * It is strongly recommended to set strictPeerDependencies=true.
+     */
     "strictPeerDependencies": true,
 
     /**
      * map of extra arguments to pass to the configured package manager upon the installation
      * of dependencies.
-    */
+     */
     "extraArgs": []
   },
 
   /**
    * automate Bit workflow with Git.
-  */
+   */
   // "teambit.bit/git": {
-    /**
-     * fetch dependency and component updates on `git pull`.
-    **/
-    // "dependencyUpdateOnPull": true
+  /**
+   * fetch dependency and component updates on `git pull`.
+   **/
+  // "dependencyUpdateOnPull": true
   // },
 
   /**
    * workspace variants allow to set different subsets of configuration for components in your workspace.
    * this is extremely useful for upgrading, aligning and building components with a
    * new set of dependencies.
-  **/
+   **/
   "teambit.bit/variants": {
     /**
      * wildcards can be used to configure components under a specific directory.
      * this configuration applies the react extensions on all components under directory `base`.
-    **/
+     **/
     "base": {
       /**
-      * apply the react environment on all ui components.
-        **/
+       * apply the react environment on all ui components.
+       **/
       "teambit.bit/react": {
         /**
-        * turn on typescript compiler.
-        **/
+         * turn on typescript compiler.
+         **/
         "typescript": true,
 
         /**
-        * root component is the one to be deployed and served.
-        **/
+         * root component is the one to be deployed and served.
+         **/
         "root": "ui/homepage",
 
         /**
-        * sets react version to be bigger or equal to 16.0.0.
-        * this will add react and @types/react (in case typescript is turned on) as peer dependencies
-        * with this SemVer.
-        **/
+         * sets react version to be bigger or equal to 16.0.0.
+         * this will add react and @types/react (in case typescript is turned on) as peer dependencies
+         * with this SemVer.
+         **/
         "version": ">=16.0.0"
       }
     },
 
     "base/fragments": {
       /**
-      * main configuration file for handling the build process of components.
-      */
+       * main configuration file for handling the build process of components.
+       */
       "teambit.bit/flows": {
         /**
-        * configure build tasks. configuration of build tasks is basically a map of `task name`
-        * pointed to an array of tasks. each task can be either a bash command or an extension
-        * which exposes a task. reserved task names: build, test, runs on pre-tag.
-        */
+         * configure build tasks. configuration of build tasks is basically a map of `task name`
+         * pointed to an array of tasks. each task can be either a bash command or an extension
+         * which exposes a task. reserved task names: build, test, runs on pre-tag.
+         */
         "tasks": {
           "build": ["teambit.bit/react:build", "mv dist dist-copy"],
           "test": ["mocha ."],
@@ -132,7 +131,7 @@
      * variants can be applied to a component in any namespace level.
      * the configuration below sets all components under `base` to be compatible with all versions of
      * react 15 as well.
-    **/
+     **/
     "ui/base": {
       "teambit.bit/component": {
         "peerDependencies": {

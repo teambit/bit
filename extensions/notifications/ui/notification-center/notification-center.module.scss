@@ -1,12 +1,52 @@
 $animationTime: 300ms;
 $modal-z-index: 8000;
+$header-height: 56px;
+$bottom-margin: 8px;
 
 .notificationCenter {
   position: fixed;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-height: calc(100vh - #{$header-height + $bottom-margin});
+
   right: 16px;
-  bottom: 8px;
+  // top: $header-height;
+  bottom: $bottom-margin;
+  // padding: 0 8px 8px; // room for shadow
+
+  font-size: 14px;
 
   z-index: $modal-z-index;
+
+  &.dismissing {
+    animation: exitRight $animationTime ease-in-out forwards;
+  }
+}
+
+.actions {
+  flex: none;
+
+  padding: 0 8px;
+}
+
+.notificationsContainer {
+  display: flex;
+  flex-direction: column-reverse;
+  margin-bottom: 4px;
+  padding: 8px 8px 4px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  > * {
+    flex: none;
+  }
+
+  > :not(:first-child) {
+    margin-bottom: 4px;
+  }
 }
 
 .timestamp {
@@ -14,56 +54,23 @@ $modal-z-index: 8000;
   text-align: right;
 }
 
-.notification {
-  margin: 8px 0;
-  transform-origin: right bottom;
-  max-height: 100vh;
-  transition: all $animationTime, max-height $animationTime / 2 ease-out;
-
-  animation: enter $animationTime forwards;
-
-  button {
-    border: none;
-    background: inherit;
-    float: right;
-  }
-
-  &.dismissing {
-    animation: exit $animationTime forwards;
-    overflow: hidden;
-    max-height: 0px;
-    margin: 0px;
-    padding: 0px;
-  }
-}
-
-@keyframes exit {
+@keyframes exitRight {
   0% {
-    transform: scale(1) translate(0%, 0);
+    transform: translate(0%, 0);
     opacity: 1;
   }
 
   99% {
-    transform: scale(0.1) translate(200%, 0);
+    transform: translate(200%, 0);
     opacity: 0;
   }
   100% {
+    transform: translate(200%, 0);
+    opacity: 0;
     visibility: hidden;
   }
 }
 
-@keyframes enter {
-  0% {
-    transform: scale(0.1) translate(200%, 0);
-    opacity: 0;
-  }
-
-  99% {
-    transform: scale(1) translate(0%, 0);
-    opacity: 1;
-  }
-}
-
 :export {
-  dismissTime: $animationTime / 1ms;
+  animationTime: $animationTime / 1ms;
 }

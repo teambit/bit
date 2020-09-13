@@ -1,0 +1,19 @@
+.statusLine {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  font-size: var(--p-xxs, 12px);
+  .modified {
+    color: #ff8b00 !important;
+  }
+  .error {
+    color: #df083e !important;
+  }
+}
+
+.errorBlock {
+  margin-right: 2px;
+  > span {
+    font-size: 13px;
+  }
+}

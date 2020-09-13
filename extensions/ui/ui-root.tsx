@@ -18,19 +18,14 @@ export interface UIRoot extends ComponentDir {
   path: string;
 
   /**
-   * paths for all extensions to load.
+   * name of the UI root config file.
    */
-  extensionsPaths: string[];
+  configFile: string;
 
   /**
    * resolve all aspects in the UI root.
    */
   resolveAspects(runtimeName: string): Promise<AspectDefinition[]>;
-
-  /**
-   * paths for all extensions to load.
-   */
-  aspectPaths: string[];
 
   /**
    * resolve components from a given pattern.

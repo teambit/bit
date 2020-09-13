@@ -46,7 +46,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
         <span>{getName(node.id)}</span>
       </div>
 
-      <div className={styles.right} data-tip="" data-for={node.id}>
+      <div className={styles.right}>
         {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
         {props.treeNodeSlot.toArray().map(([id, treeNode]) => {
