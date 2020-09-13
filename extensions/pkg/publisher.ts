@@ -6,7 +6,6 @@ import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import GeneralError from 'bit-bin/dist/error/general-error';
 import { Scope } from 'bit-bin/dist/scope';
-import { PublishPostTagResult } from 'bit-bin/dist/scope/component-ops/publish-components';
 import Bluebird from 'bluebird';
 import execa from 'execa';
 import R from 'ramda';
@@ -41,16 +40,6 @@ export class Publisher {
     return this.publishMultipleCapsules(capsules);
   }
 
-  async postTagPersistListener(ids: BitId[]): Promise<PublishPostTagResult[]> {
-    const componentIds = ids.map((id) => id.toString());
-    const components = await this.publish(componentIds, { allowStaged: true });
-    return components.map((c) => ({
-      id: c.id._legacy,
-      data: c.data,
-      errors: c.errors as string[],
-    }));
-  }
-
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
@@ -81,7 +70,8 @@ export class Publisher {
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
       this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
-      data = stdout;
+      const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
+      data = { publishedPackage };
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);

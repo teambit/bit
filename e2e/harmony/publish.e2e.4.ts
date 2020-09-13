@@ -51,21 +51,6 @@ describe('publish functionality', function () {
         );
       });
     });
-    describe('publishing before export', () => {
-      before(() => {
-        helper.command.tagAllComponents();
-      });
-      it('should throw an error when --allow-staged flag is not used', () => {
-        const output = helper.general.runWithTryCatch('bit publish comp1');
-        expect(output).to.have.string(
-          'unable to publish the following component(s), please make sure they are exported: comp1'
-        );
-      });
-      it('should allow when --dry-run is specified', () => {
-        const output = helper.command.publish('comp1', '--dry-run');
-        expect(output).to.have.string(`+ @${defaultOwner}/${scopeWithoutOwner}.comp1@0.0.1`);
-      });
-    });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {
       before(async () => {
         await npmCiRegistry.init();

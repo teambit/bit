@@ -52,15 +52,26 @@ import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
-import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
-import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
-import { ExtensionData, OnComponentLoad } from './on-component-load';
+import {
+  ExtensionData,
+  OnComponentAdd,
+  OnComponentChange,
+  OnComponentEventResult,
+  OnComponentLoad,
+  OnComponentRemove,
+  SerializableResults,
+} from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
+import {
+  OnComponentAddSlot,
+  OnComponentChangeSlot,
+  OnComponentLoadSlot,
+  OnComponentRemoveSlot,
+} from './workspace.provider';
 import { Issues } from './workspace-component/issues';
 
 export type EjectConfResult = {
@@ -145,6 +156,8 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentAddSlot: OnComponentAddSlot,
 
+    private onComponentRemoveSlot: OnComponentRemoveSlot,
+
     private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
@@ -175,6 +188,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
     this.onComponentAddSlot.register(onComponentAddFunc);
+    return this;
+  }
+
+  registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
+    this.onComponentRemoveSlot.register(onComponentRemoveFunc);
     return this;
   }
 
@@ -296,7 +314,6 @@ export class Workspace implements ComponentFactory {
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
-   * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
@@ -377,12 +394,14 @@ export class Workspace implements ComponentFactory {
     return component;
   }
 
-  async triggerOnComponentChange(
-    id: ComponentID
-  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
+  async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
+    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
+    // new file. write these changes to the .bitmap file so then other processes have access to
+    // this new file. If the .bitmap wasn't change, it won't do anything.
+    await this.consumer.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
@@ -393,16 +412,26 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+  async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
       this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
+    return results;
+  }
+
+  async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
+    const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
+    await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
+      const onRemoveResult = await onRemoveFunc(id);
+      results.push({ extensionId: extension, results: onRemoveResult });
+    });
     return results;
   }
 
@@ -446,7 +475,7 @@ export class Workspace implements ComponentFactory {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
     if (!pattern) return this.list();
-    return all.filter((c) => c.id.toString() === pattern);
+    return all.filter((c) => c.id.toString({ ignoreVersion: true }) === pattern);
   }
 
   /**
@@ -727,7 +756,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
-    const graph = await this.getGraphWithoutCore(components);
+    const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
@@ -735,7 +764,7 @@ export class Workspace implements ComponentFactory {
 
     const allIds = await Promise.all(allIdsP);
 
-    const allComponents = await this.getMany(allIds);
+    const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
