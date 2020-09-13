@@ -70,7 +70,7 @@ export class TaskProcess {
 
   private async saveArtifactsToComponent(component: Component) {
     const { artifacts } = this.taskResult;
-    if (artifacts.length) {
+    if (artifacts && artifacts.length) {
       const extensionDataEntry = this.getExtensionDataEntry(component);
       const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);

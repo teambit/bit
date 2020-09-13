@@ -10,6 +10,7 @@ import { PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import cors from 'cors';
 
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -67,6 +68,7 @@ export class GraphqlMain {
     // app.use(cors());
     app.use(
       '/graphql',
+      cors(),
       graphqlHTTP({
         schema: schema.schema,
         graphiql,
