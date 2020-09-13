@@ -10,7 +10,7 @@ export class JestTester implements Tester {
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
       const componentSpecFiles = testerContext.specFiles.get(component.id.fullName);
-      if (!componentSpecFiles) return null;
+      if (!componentSpecFiles) return undefined;
       const [, specs] = componentSpecFiles;
       return testResult.filter((test) => {
         return specs.filter((spec) => spec.path === test.testFilePath).length > 0;
@@ -18,10 +18,10 @@ export class JestTester implements Tester {
     });
   }
 
-  private buildTestsObj(components: ComponentMap<JestTestResult[] | null>) {
+  private buildTestsObj(components: ComponentMap<JestTestResult[] | undefined>) {
     const tests = components.toArray().map(([component, testsFiles]) => {
-      if (!testsFiles) return null;
-      if (testsFiles?.length === 0) return null;
+      if (!testsFiles) return undefined;
+      if (testsFiles?.length === 0) return undefined;
       const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
         if (test.failureMessage)
           errors.push({
