@@ -14,7 +14,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 
-import type { uiServerStartedEvent } from './events';
+import type { UiServerStartedEvent, PostStartFinishedEvent, StartFinishedEvent } from './events';
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
@@ -154,7 +154,7 @@ export class UiMain {
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ onEvent, uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
@@ -164,7 +164,7 @@ export class UiMain {
       uiRootExtension: name,
       ui: this,
       logger: this.logger,
-      onEvent,
+      // onEvent,
     });
 
     const targetPort = await this.getPort(port);
@@ -176,19 +176,15 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    // if (onEvent) onEvent({ event: 'uiServerStarted' });
     this.pubsub.publishToTopic(UIAspect.id, this.createUiServerStartedEvent());
 
     if (uiRoot.postStart) {
-      await uiRoot.postStart({ onEvent, pattern });
-
-      if (onEvent) onEvent({ event: 'postStartFinished' });
+      await uiRoot.postStart({ pattern });
+      this.pubsub.publishToTopic(UIAspect.id, this.createPostStartFinishedEvent());
     }
     await this.invokeOnStart();
-    if (onEvent) onEvent({ event: 'invokeOnStartFinished' });
+    this.pubsub.publishToTopic(UIAspect.id, this.createStartFinishedEvent());
 
-    // TODO: need to wait until compilation done, then open browser
-    // await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 
@@ -205,10 +201,33 @@ export class UiMain {
     return this;
   }
 
-  private createUiServerStartedEvent: () => uiServerStartedEvent = () => {
+  // Events:
+  private createUiServerStartedEvent: () => UiServerStartedEvent = () => {
     return {
       type: 'ui-server-started',
-      version: '0.0.0.1',
+      version: '0.0.1',
+      timestamp: new Date().getTime().toString(),
+      body: {
+        props: 'whatever',
+      },
+    };
+  };
+
+  private createPostStartFinishedEvent: () => PostStartFinishedEvent = () => {
+    return {
+      type: 'post-start-finished',
+      version: '0.0.1',
+      timestamp: new Date().getTime().toString(),
+      body: {
+        props: 'whatever',
+      },
+    };
+  };
+
+  private createStartFinishedEvent: () => StartFinishedEvent = () => {
+    return {
+      type: 'start-finished',
+      version: '0.0.1',
       timestamp: new Date().getTime().toString(),
       body: {
         props: 'whatever',

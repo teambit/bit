@@ -1,4 +1,4 @@
-export type bitBaseEvent = {
+export type BitBaseEvent = {
   readonly type: string;
   readonly version: string;
   readonly timestamp: string;

@@ -1,5 +1,7 @@
 import { UIAspect, UIRuntime } from './ui.aspect';
+import * as events from './events';
 
+export type { events };
 export { useDataQuery } from './ui/data/use-data-query';
 export { UIRoot } from './ui-root';
 export type { UiMain } from './ui.main.runtime';

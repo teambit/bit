@@ -203,23 +203,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         chunks: ['main'],
         filename: 'index.html',
       }),
-
-      // new HelloWorldPlugin({}),
-      // new HtmlWebpackPlugin({
-      //   templateContent: html('Component preview'),
-      //   chunks: ['preview'],
-      //   filename: 'preview.html'
-      // })
     ],
   };
 }
-
-// class HelloWorldPlugin {
-//     apply(compiler) {
-//       compiler.hooks.done.tap('Hello World Plugin', (
-//         stats /* stats is passed as an argument when done hook is tapped.  */
-//       ) => {
-//         console.log('Hello Worl33d!');
-//       });
-//     }
-// }

@@ -53,7 +53,7 @@ export type PostStartOptions = {
   /**
    * Event reporting callback.
    */
-  onEvent?: (e: any) => void;
+  // onEvent?: (e: any) => void;
 
   /**
    * pattern for selecting components in the container.
