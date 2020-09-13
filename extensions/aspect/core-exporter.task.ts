@@ -22,7 +22,7 @@ export class CoreExporterTask implements BuildTask {
     }
 
     return {
-      components: [],
+      componentsResults: [],
       artifacts: [],
     };
   }

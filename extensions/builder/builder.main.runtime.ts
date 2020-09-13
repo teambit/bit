@@ -9,12 +9,12 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
-import { ExtensionArtifact } from './artifact';
+import { ArtifactFactory, ExtensionArtifact } from './artifact';
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
-import { BuildTask } from './types';
+import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
@@ -40,14 +40,18 @@ export class BuilderMain {
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private taskSlot: TaskSlot,
-    private storageResolversSlot: StorageResolverSlot
+    private storageResolversSlot: StorageResolverSlot,
+    private artifactFactory: ArtifactFactory
   ) {}
 
   async tagListener(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
+    // envsExecutionResults.results.map(res => res.data?.buildResults.map(a => a.artifacts))
     envsExecutionResults.throwErrorsIfExist();
+
+    // TODO: make sure to replace this value returned to the legacy with a more simple and standard one.
     return envsExecutionResults;
   }
 
@@ -63,9 +67,7 @@ export class BuilderMain {
    * get storage resolver by name. otherwise, returns default.
    */
   getStorageResolver(name: string): StorageResolver | undefined {
-    const resolver = this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
-
-    return resolver;
+    return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
   /**
@@ -146,8 +148,9 @@ export class BuilderMain {
     config,
     [taskSlot, storageResolversSlot]: [TaskSlot, StorageResolverSlot]
   ) {
+    const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const builderService = new BuilderService(workspace, logger, taskSlot, storageResolversSlot);
+    const builderService = new BuilderService(workspace, logger, taskSlot, artifactFactory);
     const builder = new BuilderMain(
       envs,
       workspace,
@@ -155,7 +158,8 @@ export class BuilderMain {
       scope,
       aspectLoader,
       taskSlot,
-      storageResolversSlot
+      storageResolversSlot,
+      artifactFactory
     );
 
     graphql.register(builderSchema(builder));

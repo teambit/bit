@@ -29,7 +29,7 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
    * output
    */
   throwErrorsIfExist() {
-    if (!this.errors.length) return;
+    if (!this.errors || !this.errors.length) return;
     if (this.errors.length === 1 && this.errors[0] instanceof Error) throw this.errors[0];
     const errorsPerEnvs = this.results.map((envResult) => this.getEnvErrorsAsString(envResult));
     const errorOutput = errorsPerEnvs.join('\n\n');
@@ -40,7 +40,7 @@ export class EnvsExecutionResult<T extends ServiceExecutionResult> {
     const errors = this.getErrorsOfEnv(envResult);
     if (!errors.length) return '';
     const title = `found ${errors.length} error(s) for ${envResult.env.id}`;
-    const errorsStr = errors.map((error) => error.message).join('\n');
+    const errorsStr = errors.map((error) => `${error.message}\n${error.stack}`).join('\n');
     return `${title}\n${errorsStr}`;
   }
 }

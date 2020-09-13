@@ -72,13 +72,25 @@ export class TypescriptCompiler implements Compiler {
 
     await this.runTscBuild(componentsErrors, context.capsuleGraph);
 
-    const components = capsules.map((capsule) => {
+    const componentsResults = capsules.map((capsule) => {
       const component = capsule.capsule.component;
       const errors = componentsErrors.filter((c) => c.componentId.isEqual(component.id)).map((c) => c.error);
       return { component, errors };
     });
 
-    return { artifacts: [{ dirName: this.getDistDir() }], components };
+    return {
+      artifacts: this.getArtifactDefinition(),
+      componentsResults,
+    };
+  }
+
+  getArtifactDefinition() {
+    return [
+      {
+        name: 'dist',
+        globPatterns: [this.getDistDir()],
+      },
+    ];
   }
 
   /**

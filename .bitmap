@@ -189,6 +189,11 @@
                 "name": "artifact-definition.ts"
             },
             {
+                "relativePath": "artifact/artifact-factory.ts",
+                "test": false,
+                "name": "artifact-factory.ts"
+            },
+            {
                 "relativePath": "artifact/artifact-list.ts",
                 "test": false,
                 "name": "artifact-list.ts"
@@ -217,6 +222,11 @@
                 "relativePath": "build-pipe.ts",
                 "test": false,
                 "name": "build-pipe.ts"
+            },
+            {
+                "relativePath": "build-task.ts",
+                "test": false,
+                "name": "build-task.ts"
             },
             {
                 "relativePath": "build.cmd.ts",

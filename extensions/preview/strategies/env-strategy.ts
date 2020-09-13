@@ -34,24 +34,28 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   async computeResults(context: BundlerContext, results: BundlerResult[]) {
     const result = results[0];
-    const artifactDef = {
-      name: 'preview',
-      globPatterns: [this.getOutputPath(context)],
-    };
 
-    const componentResults: ComponentResult[] = result.components.map((component) => {
+    const componentsResults: ComponentResult[] = result.components.map((component) => {
       return {
         component,
         errors: result.errors,
         warning: result.warnings,
-        artifacts: [artifactDef],
       };
     });
 
     return {
-      components: componentResults,
-      artifacts: [],
+      componentsResults,
+      artifacts: this.getArtifactDef(context),
     };
+  }
+
+  private getArtifactDef(context: BuildContext) {
+    return [
+      {
+        name: 'preview',
+        globPatterns: [this.getOutputPath(context)],
+      },
+    ];
   }
 
   private getOutputPath(context: BuildContext) {

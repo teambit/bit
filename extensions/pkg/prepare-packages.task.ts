@@ -19,7 +19,7 @@ export class PreparePackagesTask implements BuildTask {
     const artifacts = await this.executeNpmIgnoreTask(context);
 
     const result = {
-      components: [],
+      componentsResults: [],
       artifacts,
     };
 

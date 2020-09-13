@@ -21,18 +21,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   async computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask) {
     return {
-      components: results.map((result) => {
+      componentsResults: results.map((result) => {
         return {
           errors: result.errors,
           component: result.components[0],
           warning: result.warnings,
         };
       }),
-      artifacts: [
-        {
-          flo: previewTask.getPreviewDirectory(context),
-        },
-      ],
+      artifacts: [{ name: 'preview', globPatterns: [previewTask.getPreviewDirectory(context)] }],
     };
   }
 }

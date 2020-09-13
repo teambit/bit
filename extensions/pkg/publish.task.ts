@@ -18,7 +18,7 @@ export class PublishTask implements BuildTask {
     this.logger.info(`going to run publish on ${capsulesToPublish.length} out of ${capsules.length}`);
     const results = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     return {
-      components: results,
+      componentsResults: results,
       artifacts: [],
     };
   }

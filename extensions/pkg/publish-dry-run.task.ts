@@ -17,7 +17,7 @@ export class PublishDryRunTask implements BuildTask {
     this.logger.info(`going to run publish dry-run on ${capsulesToPublish.length} out of ${capsules.length}`);
     const results = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     return {
-      components: results,
+      componentsResults: results,
       artifacts: [],
     };
   }

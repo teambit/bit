@@ -3,10 +3,8 @@ import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-import GeneralError from 'bit-bin/dist/error/general-error';
 import { flatten, isEmpty } from 'ramda';
-
-import { BuildContext, BuildResults, BuildTask } from './types';
+import { BuildContext, BuildResults, BuildTask } from './build-task';
 
 export class TaskProcess {
   constructor(
@@ -15,25 +13,6 @@ export class TaskProcess {
     private buildContext: BuildContext,
     private logger: Logger
   ) {}
-
-  public throwIfErrorsFound() {
-    const compsWithErrors = this.taskResult.components.filter((c) => c.errors?.length);
-    if (compsWithErrors.length) {
-      this.logger.consoleFailure(`task "${this.task.id}" has failed`);
-      const title = `Builder found the following errors while running "${this.task.id}" task\n`;
-      let totalErrors = 0;
-      const errorsStr = compsWithErrors
-        .map((c) => {
-          const rawErrors = c.errors || [];
-          const errors = rawErrors.map((e) => (typeof e === 'string' ? e : e.toString()));
-          totalErrors += errors.length;
-          return `${c.component.id.toString()}\n${errors.join('\n')}`;
-        })
-        .join('\n\n');
-      const summery = `\n\nFound ${totalErrors} errors in ${compsWithErrors.length} components`;
-      throw new GeneralError(title + errorsStr + summery);
-    }
-  }
 
   // rename artifact here to files.
   public async saveTaskResults(files: Artifact[]): Promise<Component[]> {

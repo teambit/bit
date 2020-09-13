@@ -1,6 +1,4 @@
-import { DefaultResolver, StorageResolver } from '../storage';
 import { Artifact } from './artifact';
-import { ArtifactProps } from '../types';
 
 export type ResolverMap = { [key: string]: Artifact[] };
 
@@ -48,21 +46,4 @@ export class ArtifactList {
 
     return Promise.all(promises);
   }
-
-  static create(artifactsProps: ArtifactProps[], storageResolvers: StorageResolver[] = []) {
-    const artifacts = artifactsProps.map((artifactProps) => {
-      storageResolvers.find((resolver) => resolver.name);
-      const props = Object.assign(artifactProps, {
-        storageResolver: getResolver(storageResolvers, artifactProps.storageResolver),
-      });
-      return Artifact.create(props);
-    });
-    return new ArtifactList(artifacts);
-  }
-}
-
-function getResolver(resolvers: StorageResolver[], name?: string) {
-  const defaultResolver = new DefaultResolver();
-  const userResolver = resolvers.find((resolver) => resolver.name === name);
-  return userResolver || defaultResolver;
 }
