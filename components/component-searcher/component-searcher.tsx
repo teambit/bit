@@ -6,8 +6,6 @@ import { SearchProvider, CommanderSearchResult } from '@teambit/command-bar';
 const searchedKeys: (keyof CommanderSearchResult)[] = ['displayName'];
 
 export class ComponentSearcher implements SearchProvider {
-  // TODO @Ran - workaround - searcher is constructed once from workspace and once from scope
-  private active = false;
   private fuseCommands = new Fuse<CommanderSearchResult>([], {
     // weight can be included here.
     // fields loses weight the longer it gets, so it seems ok for now.
@@ -29,7 +27,6 @@ export class ComponentSearcher implements SearchProvider {
     }));
 
     this.fuseCommands.setCollection(searchResults);
-    this.active = true;
   });
 
   search(term: string, limit: number): CommanderSearchResult[] {
@@ -38,6 +35,6 @@ export class ComponentSearcher implements SearchProvider {
   }
 
   test(term: string): boolean {
-    return this.active && !term.startsWith('>') && term.length > 0;
+    return !term.startsWith('>') && term.length > 0;
   }
 }
