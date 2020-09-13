@@ -40,6 +40,8 @@ export class WorkspaceUI {
 
     private sidebarSlot: SidebarWidgetSlot,
 
+    private commandBarUI: CommandBarUI,
+
     reactRouterUI: ReactRouterUI
   ) {
     this.registerExplicitRoutes();
@@ -77,7 +79,10 @@ export class WorkspaceUI {
 
   componentSearcher: ComponentSearcher;
 
-  get root(): UIRoot {
+  uiRoot(): UIRoot {
+    this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
+    this.commandBarUI.addSearcher(this.componentSearcher);
+
     return {
       routes: [
         {
@@ -122,12 +127,17 @@ export class WorkspaceUI {
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
-    sidebar.registerDrawer(new WorkspaceComponentsDrawer(sidebarSlot));
 
-    const workspaceUI = new WorkspaceUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot, reactRouterUI);
-    ui.registerRoot(workspaceUI.root);
-
-    commandBarUI.addSearcher(workspaceUI.componentSearcher);
+    const workspaceUI = new WorkspaceUI(
+      routeSlot,
+      componentUi,
+      menuSlot,
+      sidebar,
+      sidebarSlot,
+      commandBarUI,
+      reactRouterUI
+    );
+    ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
 
     return workspaceUI;
   }

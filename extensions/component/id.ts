@@ -109,9 +109,13 @@ export class ComponentID {
     return new ComponentID(legacyId, scope);
   }
 
+  /**
+   * @deprecated
+   * please make sure not to use this function. it is deprecated and its usage is forbidden
+   * and could potentially cause many different bugs across the system.
+   */
   static fromLegacyString(idStr: string, scope?: string) {
     const legacyId = BitId.parse(idStr, false);
-    if (!scope) throw new MissingScope(idStr);
     return new ComponentID(legacyId, scope);
   }
 

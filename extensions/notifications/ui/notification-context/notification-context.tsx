@@ -1,19 +1,13 @@
 import { createContext } from 'react';
 
-import { MessageId, MessageLevel, NotificationApi } from '../../notification-api';
-
-export type Message = {
-  id: MessageId;
-  message: string;
-  level: MessageLevel;
-  time: string;
-};
+import { NotificationApi } from '@teambit/notifications.api';
 
 const defaultLoaderApi: NotificationApi = {
   add: () => '',
   log: () => '',
   error: () => '',
   dismiss: () => {},
+  clear: () => {},
 };
 
 export const NotificationContext = createContext<NotificationApi>(defaultLoaderApi);

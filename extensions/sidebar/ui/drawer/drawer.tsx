@@ -27,7 +27,7 @@ export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: Drawe
       </div>
 
       <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>
-        <drawer.component />
+        <drawer.render />
       </div>
     </div>
   );

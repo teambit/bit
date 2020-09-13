@@ -163,7 +163,9 @@ export class ScopeMain implements ComponentFactory {
       };
     });
 
-    return aspectDefs.concat(await this.aspectLoader.getCoreAspectDefs(runtimeName));
+    const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
+
+    return aspectDefs.concat(coreAspects);
   }
 
   /**
@@ -171,9 +173,10 @@ export class ScopeMain implements ComponentFactory {
    * @param id component id
    */
   async get(id: ComponentID): Promise<Component | undefined> {
+    const legacyId = id._legacy;
     let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     // Search with scope name for bare scopes
-    if (!modelComponent && !id.scope) {
+    if (!modelComponent && !legacyId.scope) {
       id = id.changeScope(this.name);
       modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
     }
@@ -257,6 +260,7 @@ export class ScopeMain implements ComponentFactory {
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id.toString());
+    if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);
   }
 
@@ -298,6 +302,7 @@ export class ScopeMain implements ComponentFactory {
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
       new Config(version.mainFile, consumerComponent.extensions),
+      this.componentExtension.createAspectList(consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       consumerComponent

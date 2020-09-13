@@ -1,5 +1,4 @@
 # Logs
-public/
 logs
 *.log
 npm-debug.log*
@@ -55,6 +54,7 @@ jspm_packages
 
 #output
 dist/*
+public/
 !components/*/dist/
 dist-legacy/
 flow-typed/

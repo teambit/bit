@@ -3,6 +3,7 @@ import { ComponentAspect } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
 import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
 import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
+import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
@@ -10,10 +11,13 @@ import { ComponentSearcher } from '@teambit/component-searcher';
 import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
+import { ComponentsDrawer } from './components.drawer';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
 };
+
+export type SidebarSlot = SlotRegistry<ComponentTreeNode>;
 
 export class ScopeUI {
   constructor(
@@ -30,7 +34,13 @@ export class ScopeUI {
      * menu slot
      */
     private menuSlot: RouteSlot,
+
     private sidebar: SidebarUI,
+
+    private sidebarSlot: SidebarSlot,
+
+    private commandBarUI: CommandBarUI,
+
     reactRouterUI: ReactRouterUI
   ) {
     this.registerExplicitRoutes();
@@ -57,7 +67,10 @@ export class ScopeUI {
     });
   }
 
-  get root(): UIRoot {
+  uiRoot(): UIRoot {
+    this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
+    this.commandBarUI.addSearcher(this.componentSearcher);
+
     return {
       routes: [
         {
@@ -84,7 +97,7 @@ export class ScopeUI {
 
   static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
   static runtime = UIRuntime;
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>()];
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>(), Slot.withType<ComponentTreeNode>()];
 
   static async provider(
     [ui, componentUi, sidebar, commandBarUI, reactRouterUI]: [
@@ -95,11 +108,10 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot]: [RouteSlot, RouteSlot]
+    [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarSlot]
   ) {
-    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar, reactRouterUI);
-    ui.registerRoot(scopeUi.root);
-    commandBarUI.addSearcher(scopeUi.componentSearcher);
+    const scopeUi = new ScopeUI(routeSlot, componentUi, menuSlot, sidebar, sidebarSlot, commandBarUI, reactRouterUI);
+    ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
 
     return scopeUi;
   }

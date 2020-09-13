@@ -5,6 +5,7 @@ import os from 'os';
 import path from 'path';
 
 import dependencyTree from './dependency-tree';
+import { PathLinuxRelative } from '../../../../utils/path';
 
 /**
  * Check if running on Windows.
@@ -97,13 +98,27 @@ function convertTreePaths(depTree, pathCache, baseDir) {
   return tree;
 }
 
+// e.g. { 'index.ts': ['foo.ts', '../node_modules/react/index.js'] }
+// all paths are normalized to Linux
+export type MadgeTree = { [relativePath: string]: PathLinuxRelative[] };
+
+// e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
+export type Missing = { [absolutePath: string]: string[] };
+
+type GenerateTreeResults = {
+  madgeTree: MadgeTree;
+  skipped: Missing;
+  pathMap: any;
+  errors: { [filePath: string]: Error };
+};
+
 /**
  * Generate the tree from the given files
  * @param  {Array} files
  * @param config
  * @return {Object}
  */
-export default function generateTree(files = [], config) {
+export default function generateTree(files = [], config): GenerateTreeResults {
   const depTree = {};
   const nonExistent = {};
   const npmPaths = {};
