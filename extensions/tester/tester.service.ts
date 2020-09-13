@@ -1,8 +1,7 @@
 import { Logger } from '@teambit/logger';
 import { EnvService, ExecutionContext } from '@teambit/environments';
-import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
-import { join } from 'path';
 import chalk from 'chalk';
 
 import { NoTestFilesFound } from './exceptions';
@@ -24,7 +23,7 @@ export class TesterService implements EnvService<Tests> {
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
-    const testCount = specFiles.toArray().reduce((acc, [component, specs]) => acc + specs.length, 0);
+    const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
     if (testCount === 0) throw new NoTestFilesFound(this.testsRegex);
 
     this.logger.console(`testing ${context.components.length} components with environment ${chalk.cyan(context.id)}\n`);

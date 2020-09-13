@@ -11,8 +11,7 @@ export class JestTester implements Tester {
     return ComponentMap.as(testerContext.components, (component) => {
       const componentSpecFiles = testerContext.specFiles.get(component.id.fullName);
       if (!componentSpecFiles) return null;
-      // eslint-disable-next-line
-      const [c, specs] = componentSpecFiles;
+      const [, specs] = componentSpecFiles;
       return testResult.filter((test) => {
         return specs.filter((spec) => spec.path === test.testFilePath).length > 0;
       });
@@ -67,8 +66,7 @@ export class JestTester implements Tester {
     };
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
-    // eslint-disable-next-line
-    const testFiles = context.specFiles.toArray().reduce((acc: string[], [component, specs]) => {
+    const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
       specs.forEach((spec) => acc.push(spec.path));
       return acc;
     }, []);

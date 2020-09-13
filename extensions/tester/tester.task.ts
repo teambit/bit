@@ -18,8 +18,7 @@ export class TesterTask implements BuildTask {
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
       const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
       if (!componentSpecFiles) throw new Error('capsule not found');
-      // eslint-disable-next-line
-      const [c, specs] = componentSpecFiles;
+      const [, specs] = componentSpecFiles;
       return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
