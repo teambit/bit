@@ -34,7 +34,7 @@ export class TesterTask implements BuildTask {
     });
 
     // TODO: remove after fix AbstractVinyl on capsule
-    //@ts-ignore
+    // @ts-ignore
     const testsResults = await tester.test(testerContext);
     return {
       artifacts: [],

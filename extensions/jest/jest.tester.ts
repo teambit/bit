@@ -20,8 +20,8 @@ export class JestTester implements Tester {
 
   private buildTestsObj(components: ComponentMap<JestTestResult[] | null>) {
     const tests = components.toArray().map(([component, testsFiles]) => {
-      if (!testsFiles) return;
-      if (testsFiles?.length === 0) return;
+      if (!testsFiles) return null;
+      if (testsFiles?.length === 0) return null;
       const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
         if (test.failureMessage)
           errors.push({
@@ -47,7 +47,7 @@ export class JestTester implements Tester {
       }, []);
       return { componentId: component.id, results: new TestsResult(testsResults, suiteErrors) };
     });
-    // TODO: fix type
+
     return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
   }
 

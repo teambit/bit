@@ -22,7 +22,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * component workspace.
    */
-  //workspace: Workspace;
+  // workspace: Workspace;
 
   /**
    * defines whether tester is expected to run in quite mode.
