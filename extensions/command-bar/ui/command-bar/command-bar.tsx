@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import { AutoCompleteInput } from '@teambit/command-bar.autocomplete-input';
-import { CommandBarUI, CommanderSearchResult } from '@teambit/command-bar';
-import { CommandBarItem } from '@teambit/command-bar.command-bar-item';
+import { AutoCompleteInput } from '../autocomplete-input';
+import { CommandBarUI, CommanderSearchResult } from '../../aspect';
+import { CommandBarItem } from '../command-bar-item';
 import styles from './command-bar.module.scss';
 
 export type CommandBarProps = {
