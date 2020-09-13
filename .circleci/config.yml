@@ -58,12 +58,10 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      -
-        run:
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: /home/circleci
           paths:
             - bit
@@ -72,16 +70,11 @@ jobs:
     <<: *defaults
     working_directory: ~/.ssh
     steps:
-      -
-        run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
-      -
-        run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
-      -
-        run: 'echo "-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
-      -
-        run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
-      -
-        save_cache:
+      - run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      - run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      - run: 'echo "-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      - run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      - save_cache:
           key: bitsrc-ssh-key3
           paths:
             - ~/.ssh/id_rsa
@@ -91,25 +84,20 @@ jobs:
     <<: *defaults
     steps:
       # npmjs regisry
-      -
-        run:
+      - run:
           name: setting npmjs regisry
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       # - run: npm whoami
       # prod registry
-      -
-        run: npm config set @bit:registry https://node.bit.dev
-      -
-        run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
-      -
-        run: echo "always-auth=true" >> ~/.npmrc
+      - run: npm config set @bit:registry https://node.bit.dev
+      - run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      - run: echo "always-auth=true" >> ~/.npmrc
       # stage registry
       # -
-        # run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      # run: 'npm config set @bit:registry https://node-stg.bit.dev'
       # -
-        # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
-      -
-        save_cache:
+      # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
+      - save_cache:
           key: bitsrc-registry6
           # key: bitsrc-registry-stg-v2
           paths:
@@ -192,43 +180,35 @@ jobs:
   validate-git-tag-and-version:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: Setup bit version environment variables
           command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
-      -
-        run:
+      - run:
           name: 'installing semver tool'
           command: 'sudo npm i -g semver'
-      -
-        run:
+      - run:
           name: 'validate version in package.json does not contains pre release tags'
           # This will return code 1 when the version contains pre release tags
           command: 'semver $BIT_VERSION -r x.x.x'
-      -
-        run:
+      - run:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_VERSION'
 
   build:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
 
-      -
-        run:
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        run:
+      - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/dist
@@ -241,38 +221,25 @@ jobs:
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run:
           name: 'create npm global dir'
           command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
+      - run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      -
-        run: which bit
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-      -
-        save_cache:
+      - run: which bit
+      - run: 'bit config set analytics_reporting false'
+      - run: 'bit config set error_reporting false'
+      - run: 'bit config set user.name tester'
+      - run: 'bit config set user.email ci@bit.dev'
+      - run: 'bit config set hub_domain hub-stg.bit.dev'
+      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - save_cache:
           key: bit-global-config-v6
           paths:
             - ~/Library/Caches/Bit/config/config.json
@@ -280,26 +247,21 @@ jobs:
   pack:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run: 'sudo npm i -g pkg@4.4.6'
+      - run: 'sudo npm i -g pkg@4.4.6'
       # -
       #   run:
       #     name: 'save pkg targets names'
       #     command: 'cat ./bit/package.json | jq .scripts.pkg:all | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
-      -
-        restore_cache:
+      - restore_cache:
           keys:
             # - 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v3
-      -
-        run:
+      - run:
           name: 'set pkg path'
-          command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
-      -
-        run:
+          command: "echo 'export PKG_CACHE_PATH=/home/circleci/pkg-cache' >> $BASH_ENV"
+      - run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg:all'
       # -
@@ -307,8 +269,7 @@ jobs:
       #     key: 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
       #     paths:
       #       - ~/pkg-cache
-      -
-        save_cache:
+      - save_cache:
           key: pkg-cache-v3
           paths:
             - /home/circleci/pkg-cache
@@ -316,8 +277,7 @@ jobs:
       #   run:
       #     name: 'copy unsuported files'
       #     command: 'cd bit && cp ./node_modules/open/xdg-open ./releases/xdg-open'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/releases
@@ -325,56 +285,46 @@ jobs:
   npm-publish:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
-      -
-        run:
+      - run:
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish'
 
   github-release:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       # - run:
       #     name: set GitHub token
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
-      -
-        run: 'cd bit && npm run release:circle'
+      - run: 'cd bit && npm run release:circle'
 
   github-pre-release:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       # - run:
       #     name: set GitHub token
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
-      -
-        run: 'cd bit && npm run pre-release:circle'
+      - run: 'cd bit && npm run pre-release:circle'
 
   build-debian:
     <<: *defaults
     docker:
-      -
-        image: 'bitcli/debian-artifact-builder:latest'
+      - image: 'bitcli/debian-artifact-builder:latest'
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run:
+      - run:
           name: Build debian file
           command: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/releases/deb
@@ -382,18 +332,14 @@ jobs:
   build-rpm:
     <<: *defaults
     docker:
-      -
-        image: 'bitcli/rpm-artifact-builder:latest'
+      - image: 'bitcli/rpm-artifact-builder:latest'
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run:
+      - run:
           name: Build rpm file
           command: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/releases/rpm
@@ -401,8 +347,7 @@ jobs:
   publish_to_jfrog:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: print bit version
@@ -416,12 +361,10 @@ jobs:
       - run:
           name: Configure jfrog auth
           command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
-      -
-        run:
+      - run:
           name: Upload debian file
           command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/stable/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/stable/amd64" --flat=false
-      -
-        run:
+      - run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   # this should be unified with the prod version and get params for dev
@@ -429,8 +372,7 @@ jobs:
   publish_to_jfrog_dev:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: print bit version
@@ -444,33 +386,27 @@ jobs:
       - run:
           name: Configure jfrog auth
           command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
-      -
-        run:
+      - run:
           name: Upload debian file
           command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
-      -
-        run:
+      - run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
 
   generate_docs:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run:
+      - run:
           name: 'generate docs'
           command: 'cd bit && npm run doc-gen'
       - run:
           name: Setup genereate doc build number environment variables
           command: echo "$CIRCLE_BUILD_NUM" > DOC_GEN_BUILD_NUM.txt
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/dist/cli.md
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - DOC_GEN_BUILD_NUM.txt
@@ -478,85 +414,67 @@ jobs:
   slack_deploy_notification:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
       - run:
           name: Setup genereate doc build number environment variable
           command: echo "export DOC_GEN_BUILD_NUM=$(cat DOC_GEN_BUILD_NUM.txt)" >> $BASH_ENV && source $BASH_ENV
-      -
-        run:
+      - run:
           name: 'notify slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js'
-      -
-        run:
+      - run:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
 
   unit_test:
     <<: *defaults
     steps:
-      -
-        run:
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run: 'cd bit && mkdir junit'
-      -
-        run:
+      - run: 'cd bit && mkdir junit'
+      - run:
           name: 'Run unit tests'
           command: 'cd bit && npm run test-circle'
           environment:
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
-      -
-        store_test_results:
+      - store_test_results:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/junit
 
   lint:
     <<: *defaults
     resource_class: medium
     steps:
-      -
-        run:
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        restore_cache:
+      - restore_cache:
           keys:
             - 'repo-{{ checksum ".circle-sha" }}'
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run:
+      - run:
           name: 'run ESLint'
           command: 'cd bit && npm run lint-circle'
-      -
-        store_test_results:
+      - store_test_results:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/junit
 
   generate_and_check_types:
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run:
+      - run:
           name: 'generate types'
           command: 'cd bit && npm run build:types'
-      -
-        run:
+      - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
 
@@ -564,32 +482,25 @@ jobs:
     resource_class: large
     <<: *defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
-      -
-        run:
+      - run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
-      -
-        run:
+      - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
-      -
-        run:
+      - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/dist
             - bit/node_modules
             - .pnpm-store
-
 
   bit_build:
     <<: *defaults
@@ -597,39 +508,28 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        restore_cache:
+      - restore_cache:
           key: bit-global-config-v6
-      -
-        run:
+      - run:
           name: 'create npm global dir'
           command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
+      - run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        restore_cache:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - restore_cache:
           key: bitsrc-ssh-key3
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
-      -
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
-      -
-        run: 'ssh-add ~/.ssh/id_rsa'
-      -
-        run:
+      - run: 'ssh-add ~/.ssh/id_rsa'
+      - run:
           name: 'bit status'
           command: 'cd bit && bit status'
-      -
-        run:
+      - run:
           name: 'bit build'
           command: 'cd bit && bit build'
 
@@ -639,39 +539,28 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        restore_cache:
+      - restore_cache:
           key: bit-global-config-v6
-      -
-        run:
+      - run:
           name: 'create npm global dir'
           command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
+      - run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        restore_cache:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - restore_cache:
           key: bitsrc-ssh-key3
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
-      -
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
-      -
-        run: 'ssh-add ~/.ssh/id_rsa'
-      -
-        run:
+      - run: 'ssh-add ~/.ssh/id_rsa'
+      - run:
           name: 'bit status'
           command: 'cd bit && bit status'
-      -
-        run:
+      - run:
           name: 'bit tag'
           command: 'cd bit && bit tag --persist'
 
@@ -683,48 +572,34 @@ jobs:
       BITSRC_ENV: stg
     parallelism: 25
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        restore_cache:
+      - restore_cache:
           key: bit-global-config-v6
-      -
-        run:
+      - run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
-      -
-        run:
+      - run:
           name: 'create npm global dir'
           command: 'mkdir -p /home/circleci/.npm-global/bin'
-      -
-        run:
+      - run:
           name: 'link bit to path'
           command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-ssh-key3
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
-      -
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
-      -
-        run: 'ssh-add ~/.ssh/id_rsa'
-      -
-        run: 'cd bit && mkdir junit'
-      -
-        run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-      -
-        run:
+      - run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit && mkdir junit'
+      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      - run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
@@ -732,14 +607,11 @@ jobs:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
-      -
-        store_test_results:
+      - store_test_results:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
   performance_e2e_test:
@@ -752,44 +624,31 @@ jobs:
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run: 'cd bit && mkdir junit'
-      -
-        run:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: 'cd bit && mkdir junit'
+      - run:
           name: 'npm link bit to global'
           command: 'cd bit && npm link'
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        # uncomment to configure circle to run against stg enviorment
+      - run: 'bit config set analytics_reporting false'
+      - run: 'bit config set error_reporting false'
+      - run: 'bit config set user.name tester'
+      - run: 'bit config set user.email ci@bit.dev'
+      - # uncomment to configure circle to run against stg enviorment
         run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run:
+      - run:
           name: 'Run performance tests'
           command: 'cd bit && npm run performance-test-circle'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
           no_output_timeout: '25m'
-      -
-        store_test_results:
+      - store_test_results:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
 
   bit_hub_e2e_test:
@@ -802,71 +661,51 @@ jobs:
       # NPM_CONFIG_DEBUG: true
     parallelism: 1
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: ./
-      -
-        run: 'sudo npm i -g yarn'
-      -
-        run:
+      - run: 'sudo npm i -g yarn'
+      - run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
-      -
-        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
-      -
-        run:
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-ssh-key3
-      -
-        restore_cache:
+      - restore_cache:
           key: bitsrc-registry6
           # key: bitsrc-registry-stg-v2
-      -
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
-      -
-        run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'ssh-add ~/.ssh/id_rsa'
 
-      -
-        run: 'cd bit && mkdir junit'
-      -
-        run:
+      - run: 'cd bit && mkdir junit'
+      - run:
           name: 'npm link bit to global'
           command: 'cd bit && npm link'
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        # uncomment to configure circle to run against stg enviorment
+      - run: 'bit config set analytics_reporting false'
+      - run: 'bit config set error_reporting false'
+      - run: 'bit config set user.name tester'
+      - run: 'bit config set user.email ci@bit.dev'
+      - # uncomment to configure circle to run against stg enviorment
         run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run:
+      - run:
           name: 'Run bit-hub tests'
           command: 'cd bit && npm run bit-hub-test-circle'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
-      -
-        store_test_results:
+      - store_test_results:
           path: bit/junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit/junit
 
   windows_approval_job:
     <<: *windows_defaults
     steps:
-      -
-        run: 'echo "starting windows build"'
+      - run: 'echo "starting windows build"'
 
   windows_checkout_code:
     <<: *windows_defaults
@@ -874,8 +713,7 @@ jobs:
       Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
       - checkout
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
             - bit
@@ -885,16 +723,11 @@ jobs:
     <<: *windows_defaults
     working_directory: C:\Users\circleci\.ssh
     steps:
-      -
-        run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> id_rsa'
-      -
-        run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
-      -
-        run: 'echo "-----END RSA PRIVATE KEY-----" >> id_rsa'
-      -
-        run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
-      -
-        save_cache:
+      - run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> id_rsa'
+      - run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      - run: 'echo "-----END RSA PRIVATE KEY-----" >> id_rsa'
+      - run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      - save_cache:
           key: windows_bitsrc-ssh-key-v1
           paths:
             - id_rsa
@@ -904,21 +737,18 @@ jobs:
     <<: *windows_defaults
     steps:
       # npmjs regisry
-      -
-        run:
+      - run:
           name: setting npmjs regisry
           command: Add-Content C:\Users\circleci\.npmrc ("//registry.npmjs.org/:_authToken=" + $Env:npmjsRegistryToken)
       # prod registry
       # -
-        # run: npm config set @bit:registry https://node.bit.dev
-      -
-        run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
+      # run: npm config set @bit:registry https://node.bit.dev
+      - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
       # -
       #   run: Get-Content -Path C:\Users\circleci\.npmrc
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
-      -
-        run:
+      - run:
           name: setting bit registry
           command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
       # stage registry
@@ -930,8 +760,7 @@ jobs:
       #     command: Add-Content C:\Users\circleci\.npmrc ("//node-stg.bit.dev/:_authToken=" + $Env:registryStgToken)
       # -
       #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
-      -
-        save_cache:
+      - save_cache:
           key: windows_bitsrc-registry-v5
           # key: windows_bitsrc-registry-stg-v2
           paths:
@@ -944,21 +773,17 @@ jobs:
     environment:
       SKIP_FETCH_BINARY: true
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: .
-      -
-        restore_cache:
+      - restore_cache:
           key: windows_bitsrc-registry-v5
           # key: windows_bitsrc-registry-stg-v2
       # -
       #   run: 'npm config list'
-      -
-        run:
+      - run:
           name: 'Install npm dependencies'
           command: 'cd bit; npm install'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/node_modules
@@ -966,15 +791,12 @@ jobs:
   windows_build:
     <<: *windows_defaults
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: .
-      -
-        run:
+      - run:
           name: 'Build bit source code'
           command: 'cd bit; npm run build'
-      -
-        persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - bit/dist
@@ -987,12 +809,10 @@ jobs:
       SKIP_BIT_DEV_TESTS: true
     parallelism: 25
     steps:
-      -
-        attach_workspace:
+      - attach_workspace:
           at: .
       - run: $Env:Path
-      -
-        run: 'npm i -g yarn'
+      - run: 'npm i -g yarn'
       - run: 'npm -v'
       # -
       #   run:
@@ -1002,15 +822,12 @@ jobs:
       #
       # this might be required if you try to update npm version
       # - run: setx path "C:\Users\circleci\.npm-global"
-      -
-        run:
+      - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        restore_cache:
+      - restore_cache:
           key: windows_bitsrc-ssh-key-v1
-      -
-        restore_cache:
+      - restore_cache:
           key: windows_bitsrc-registry-v1
           # key: windows_bitsrc-registry-stg-v2
       # -
@@ -1018,37 +835,27 @@ jobs:
       #     keys:
       #       - 'builded-{{ checksum ".circle-sha" }}'
       # -
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       #   run: 'chmod 400 ~/.ssh/id_rsa'
       # -
       #   run: 'ssh-add ~/.ssh/id_rsa'
-      -
-        run: 'cd bit; mkdir junit'
-      -
-        run:
+      - run: 'cd bit; mkdir junit'
+      - run:
           name: 'npm link bit to global'
           command: cd bit; npm link
-      -
-        run: 'bit config set analytics_reporting false'
-      -
-        run: 'bit config set error_reporting false'
-      -
-        run: 'bit config set user.name tester'
-      -
-        run: 'bit config set user.email ci@bit.dev'
-      -
-        # do not change this one, it's important to use the production for getting components bit use for running
+      - run: 'bit config set analytics_reporting false'
+      - run: 'bit config set error_reporting false'
+      - run: 'bit config set user.name tester'
+      - run: 'bit config set user.email ci@bit.dev'
+      - # do not change this one, it's important to use the production for getting components bit use for running
         # if you want the tests to work with stage, you should change the hub domain few lines below
         run: 'bit config set hub_domain hub.bit.dev'
-      -
-        # uncomment to configure circle to run against stg environment
+      - # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
-      -
-        run:
+      - run:
           name: 'write e2e files'
           command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
-      -
-        run:
+      - run:
           name: 'run e2e tests'
           command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
           # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
@@ -1056,17 +863,14 @@ jobs:
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
           when: always
-      -
-        store_test_results:
+      - store_test_results:
           path: bit\junit
-      -
-        store_artifacts:
+      - store_artifacts:
           path: bit\junit
       # TODO: make it work for windows
       # -
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
-
 
 workflows:
   version: 2
@@ -1075,43 +879,34 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      -
-        setup_harmony:
+      - setup_harmony:
           requires:
             - set_npm_registries
             - checkout_code
-      -
-        unit_test:
+      - unit_test:
           requires:
             - setup_harmony
-      -
-        lint:
+      - lint:
           requires:
             - setup_harmony
-      -
-        generate_and_check_types:
+      - generate_and_check_types:
           requires:
             - setup_harmony
-      -
-        generate_docs:
+      - generate_docs:
           <<: *semver_tags_only_filters
           requires:
             - setup_harmony
-      -
-        configure-bit:
+      - configure-bit:
           requires:
             - set_ssh_key
             - setup_harmony
-      -
-        e2e_test:
+      - e2e_test:
           requires:
             - configure-bit
-      -
-        bit_build:
+      - bit_build:
           requires:
             - configure-bit
-      -
-        bit_tag:
+      - bit_tag:
           filters:
             branches:
               only:
@@ -1149,60 +944,50 @@ workflows:
     jobs:
       - checkout_code:
           <<: *semver_tags_only_filters
-      -
-        validate-git-tag-and-version:
+      - validate-git-tag-and-version:
           <<: *semver_tags_only_filters
           requires:
             - checkout_code
       #-
-        # install_npm_deps:
-        #   <<: *semver_tags_only_filters
-        #   requires:
-        #     - validate-git-tag-and-version
-        #     - checkout_code
-      -
-        build:
+      # install_npm_deps:
+      #   <<: *semver_tags_only_filters
+      #   requires:
+      #     - validate-git-tag-and-version
+      #     - checkout_code
+      - build:
           <<: *semver_tags_only_filters
         #  requires:
         #    - setup_harmony
-      -
-        npm-publish:
+      - npm-publish:
           <<: *semver_tags_only_filters
           requires:
             - build
-      -
-        generate_docs:
+      - generate_docs:
           <<: *semver_tags_only_filters
           requires:
             - build
-      -
-        pack:
+      - pack:
           <<: *semver_tags_only_filters
           requires:
             - build
-      -
-        github-release:
+      - github-release:
           <<: *semver_tags_only_filters
           requires:
             - pack
-      -
-        build-rpm:
+      - build-rpm:
           <<: *semver_tags_only_filters
           requires:
             - pack
-      -
-        build-debian:
+      - build-debian:
           <<: *semver_tags_only_filters
           requires:
             - pack
-      -
-        publish_to_jfrog:
+      - publish_to_jfrog:
           <<: *semver_tags_only_filters
           requires:
             - build-debian
             - build-rpm
-      -
-        slack_deploy_notification:
+      - slack_deploy_notification:
           <<: *semver_tags_only_filters
           requires:
             - generate_docs
@@ -1215,37 +1000,31 @@ workflows:
       - checkout_code:
           <<: *dev_tag_only_filters
       #-
-        # install_npm_deps:
-        #   <<: *dev_tag_only_filters
-        #   requires:
-        #     - checkout_code
-      -
-        build:
+      # install_npm_deps:
+      #   <<: *dev_tag_only_filters
+      #   requires:
+      #     - checkout_code
+      - build:
           <<: *dev_tag_only_filters
         #  requires:
         #    - setup_harmony
-      -
-        pack:
+      - pack:
           <<: *dev_tag_only_filters
           requires:
             - build
-      -
-        github-pre-release:
+      - github-pre-release:
           <<: *dev_tag_only_filters
           requires:
             - pack
-      -
-        build-rpm:
+      - build-rpm:
           <<: *dev_tag_only_filters
           requires:
             - pack
-      -
-        build-debian:
+      - build-debian:
           <<: *dev_tag_only_filters
           requires:
             - pack
-      -
-        publish_to_jfrog_dev:
+      - publish_to_jfrog_dev:
           <<: *dev_tag_only_filters
           requires:
             - build-debian
@@ -1254,7 +1033,7 @@ workflows:
   performance_tests:
     triggers:
       - schedule:
-          cron: "0 9 * * *"
+          cron: '0 9 * * *'
           filters:
             branches:
               only:
@@ -1263,23 +1042,21 @@ workflows:
       - checkout_code
       - set_npm_registries
       #-
-        # install_npm_deps:
-        #   requires:
-        #     - checkout_code
-        #     - set_npm_registries
-      -
-        build
+      # install_npm_deps:
+      #   requires:
+      #     - checkout_code
+      #     - set_npm_registries
+      - build
         #  requires:
         #    - setup_harmony
-      -
-        performance_e2e_test:
+      - performance_e2e_test:
           requires:
             - build
 
   bit_hub_tests:
     triggers:
       - schedule:
-          cron: "0 10 * * *"
+          cron: '0 10 * * *'
           filters:
             branches:
               only:
@@ -1293,12 +1070,10 @@ workflows:
       #    requires:
       #      - checkout_code
       #      - set_npm_registries
-      -
-        build
+      - build
       #    requires:
       #      - setup_harmony
-      -
-        bit_hub_e2e_test:
+      - bit_hub_e2e_test:
           requires:
             - set_ssh_key
             - set_npm_registries
