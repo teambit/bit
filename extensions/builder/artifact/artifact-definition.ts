@@ -10,7 +10,8 @@ export type ArtifactDefinition = {
   description?: string;
 
   /**
-   * glob patterns of files to include upon artifact creation.
+   * glob patterns of files to include upon artifact creation. minimatch is used to match the patterns.
+   * e.g. ['*.ts', '!foo.ts'] matches all ts files but ignores foo.ts.
    */
   globPatterns: string[];
 
