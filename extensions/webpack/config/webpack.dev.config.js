@@ -1,3 +1,5 @@
+// const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
+const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -129,6 +131,10 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       new HtmlWebpackPlugin({
         templateContent: html('Component preview'),
         filename: 'index.html',
+      }),
+
+      new WebpackCompilerDonePlugin({
+        options: { pubsub: 'pubsub' },
       }),
     ],
   };
