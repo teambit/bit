@@ -5,9 +5,9 @@ import { Logger } from '@teambit/logger';
 import React from 'react';
 import open from 'open';
 
-import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
+// import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
-import { compilationEndedSuccessfullyOutput } from './bit-start-cmd-output-templates';
+import { Starting, ClearConsole, compilationEndedSuccessfullyOutput } from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
   devServerCounter = 0;
@@ -65,10 +65,6 @@ export class StartCmd implements Command {
     }
   }
 
-  private clearConsole() {
-    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
-  }
-
   async render(
     [uiRootName, userPattern]: [string, string],
     { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
@@ -83,9 +79,13 @@ export class StartCmd implements Command {
       rebuild,
     });
 
-    // clear the user console before moving interactive.
-    setTimeout(this.clearConsole, 0);
-
-    return <UIServerConsole uiServer={uiServer} />;
+    // return <ClearConsole />
+    // return <Starting />
+    return (
+      <>
+        <ClearConsole />
+        <Starting />
+      </>
+    );
   }
 }

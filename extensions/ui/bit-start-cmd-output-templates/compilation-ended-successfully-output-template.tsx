@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, Box, Text } from 'ink';
+import { render, Box, Color } from 'ink';
 
 // import React, {useState, useEffect} from 'react';
 // import {render, Text} from 'ink';
@@ -17,7 +17,7 @@ export type props = {
 
 export const compilationEndedSuccessfullyOutput = ({ port, workspace, duration, envs, timestamp }: props) => {
   render(
-    <Text color="green">
+    <Color green>
       Compiled successfully! ({duration}) You can now view {workspace} components in the browser. Local:
       http://localhost:{port}
       On Your Network: http://10.0.0.2:{port} # IMPORTANT, do we support this feature? There are {envs.length} running
@@ -26,6 +26,6 @@ export const compilationEndedSuccessfullyOutput = ({ port, workspace, duration, 
         (env) => `${env.name}        https://localhost:${env.port}` // teambit.bit/react   https://localhost:3001
       )}
       Waiting for component changes (${timestamp})...
-    </Text>
+    </Color>
   );
 };
