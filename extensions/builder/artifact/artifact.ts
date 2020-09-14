@@ -66,11 +66,4 @@ export class Artifact {
       },
     };
   }
-
-  /**
-   * store the artifact in the configured storage.
-   */
-  store() {
-    this.storageResolver.store([this]);
-  }
 }

@@ -6,7 +6,17 @@ import { Component } from '../component';
 export class ComponentMap<T> {
   constructor(readonly hashMap: Map<string, [Component, T]>) {}
 
+  /**
+   * @deprecated please use `get` instead
+   */
   byComponent(component: Component) {
+    return this.hashMap.get(component.id.toString());
+  }
+
+  /**
+   * get a value for a component.
+   */
+  get(component: Component) {
     return this.hashMap.get(component.id.toString());
   }
 
@@ -28,7 +38,6 @@ export class ComponentMap<T> {
 
     return new ComponentMap(new Map(tuples));
   }
-
   /**
    * flatten values of all components into a single array.
    */

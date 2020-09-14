@@ -1,3 +1,4 @@
+import { Component } from '@teambit/component';
 import { Artifact } from './artifact';
 
 export type ResolverMap = { [key: string]: Artifact[] };
@@ -39,13 +40,13 @@ export class ArtifactList {
   /**
    * store all artifacts using the configured storage resolvers.
    */
-  store() {
+  store(component: Component) {
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (key) => {
       const artifacts = byResolvers[key];
       if (!artifacts.length) return;
       const storageResolver = artifacts[0].storageResolver;
-      await storageResolver.store(artifacts);
+      await storageResolver.store(component, artifacts);
     });
 
     return Promise.all(promises);

@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
+import type { AspectList, ComponentMain, ComponentMap } from '@teambit/component';
 import {
   Component,
   ComponentAspect,
@@ -43,7 +43,7 @@ import { PutRoute, FetchRoute } from './routes';
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
 
-export type OnTag = (components: Component[]) => Promise<any>;
+export type OnTag = (components: Component[]) => Promise<ComponentMap<AspectList>>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export type ScopeConfig = {
@@ -107,7 +107,9 @@ export class ScopeMain implements ComponentFactory {
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
       // TODO: fix what legacy tag accepts to just extension name and files.
-      return tagFn(components);
+      const aspectList = await tagFn(components);
+      const extensionDataList = aspectList.map((aspectList, component) => aspectList.toLegacy());
+      const array = extensionDataList.toArray();
     });
     this.tagRegistry.register(tagFn);
   }

@@ -36,7 +36,7 @@ export class ComponentMain {
   }
 
   createAspectList(legacyExtensionDataList: ExtensionDataList) {
-    return new AspectList(legacyExtensionDataList);
+    return AspectList.fromLegacyExtensions(legacyExtensionDataList);
   }
 
   registerRoute(routes: Route[]) {

@@ -1,3 +1,4 @@
+import { Component } from '@teambit/component';
 import { Artifact } from '../artifact';
 
 export interface StorageResolver {
@@ -9,5 +10,5 @@ export interface StorageResolver {
   /**
    * store artifacts in the storage.
    */
-  store(artifacts: Artifact[]): Promise<void>;
+  store(component: Component, artifacts: Artifact[]): Promise<void>;
 }

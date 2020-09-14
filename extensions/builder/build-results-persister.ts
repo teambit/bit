@@ -4,22 +4,17 @@ import { Logger } from '@teambit/logger';
 import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import { flatten, isEmpty } from 'ramda';
-import { BuildContext, BuildResults, BuildTask } from './build-task';
+import { BuildPipeResults } from './build-pipe';
 
-export class TaskProcess {
-  constructor(
-    private task: BuildTask,
-    private taskResult: BuildResults,
-    private buildContext: BuildContext,
-    private logger: Logger
-  ) {}
+export class BuildResultsPersister {
+  constructor(private buildPipeResults: BuildPipeResults[], private logger: Logger) {}
 
   // rename artifact here to files.
-  public async saveTaskResults(files: Artifact[]): Promise<Component[]> {
-    const { components } = this.buildContext;
+  public async saveBuildResults(): Promise<Component[]> {
+    const { components } = this.buildPipeResults;
     const resultsP = components.map(async (component) => {
       this.saveDataToComponent(component);
-      await this.saveArtifactsToComponent(component, files);
+      // await this.saveArtifactsToComponent(component, files);
     });
     await Promise.all(resultsP);
     return components;
@@ -49,19 +44,6 @@ export class TaskProcess {
       throw new Error(`task data must be "object", get ${typeof currentData} for an array`);
     }
     return { ...currentData, ...existingData };
-  }
-
-  private async saveArtifactsToComponent(component: Component, artifacts: Artifact[]) {
-    // const { artifacts } = this.taskResult;
-    if (artifacts.length) {
-      const extensionDataEntry = this.getExtensionDataEntry(component);
-      const capsule = this.buildContext.capsuleGraph.capsules.getCapsule(component.id);
-      if (!capsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
-      const files = await this.getFilesByArtifacts(capsule, artifacts);
-
-      const artifactsVinyl = files.map((file) => new Artifact({ path: file, contents: capsule.fs.readFileSync(file) }));
-      extensionDataEntry.artifacts = artifactsVinyl;
-    }
   }
 
   private getExtensionDataEntry(component: Component): ExtensionDataEntry {

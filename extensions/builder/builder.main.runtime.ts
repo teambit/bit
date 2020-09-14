@@ -1,8 +1,8 @@
+import { flatten } from 'lodash';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
-import { EnvsExecutionResult } from '@teambit/environments/runtime/envs-execution-result';
+import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -16,6 +16,8 @@ import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
+import { BuildPipeResults } from './build-pipe';
+import { ArtifactStorageError } from './exceptions';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -40,19 +42,48 @@ export class BuilderMain {
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private taskSlot: TaskSlot,
-    private storageResolversSlot: StorageResolverSlot,
-    private artifactFactory: ArtifactFactory
+    private storageResolversSlot: StorageResolverSlot
   ) {}
+
+  private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
+    const artifacts = flatten(
+      buildServiceResults.map((pipeResult) => {
+        return pipeResult.results.map((val) => val.artifacts);
+      })
+    );
+
+    return artifacts.map((artifactMap) =>
+      artifactMap.toArray().forEach(([component, artifactList]) => {
+        try {
+          return artifactList.store(component);
+        } catch (err) {
+          throw new ArtifactStorageError(err, component);
+        }
+      })
+    );
+  }
+
+  private getPipelineResults(execResults: EnvsExecutionResult<BuildServiceResults>): BuildPipeResults[] {
+    const map = execResults.results.map((envRes) => envRes.data?.buildResults);
+    return map.filter((val) => !!val) as BuildPipeResults[];
+  }
 
   async tagListener(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
-    envsExecutionResults.results.map((res) => res.data?.buildResults.results.map((result) => result.artifacts));
     envsExecutionResults.throwErrorsIfExist();
+    const buildServiceResults = this.getPipelineResults(envsExecutionResults);
+    this.storeArtifacts(buildServiceResults);
 
+    const data = components.map((component) => {
+      return component.state.aspects.map((entry) => {
+        entry.data = data;
+        return entry;
+      });
+    });
     // TODO: make sure to replace this value returned to the legacy with a more simple and standard one.
-    return envsExecutionResults;
+    return data;
   }
 
   /**
@@ -158,8 +189,7 @@ export class BuilderMain {
       scope,
       aspectLoader,
       taskSlot,
-      storageResolversSlot,
-      artifactFactory
+      storageResolversSlot
     );
 
     graphql.register(builderSchema(builder));

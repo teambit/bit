@@ -219,6 +219,11 @@
                 "name": "build-pipe.ts"
             },
             {
+                "relativePath": "build-results-persister.ts",
+                "test": false,
+                "name": "build-results-persister.ts"
+            },
+            {
                 "relativePath": "build-task.ts",
                 "test": false,
                 "name": "build-task.ts"
@@ -247,6 +252,11 @@
                 "relativePath": "builder.service.ts",
                 "test": false,
                 "name": "builder.service.ts"
+            },
+            {
+                "relativePath": "exceptions/artifact-storage-error.ts",
+                "test": false,
+                "name": "artifact-storage-error.ts"
             },
             {
                 "relativePath": "exceptions/capsule-not-found.ts",
@@ -282,11 +292,6 @@
                 "relativePath": "storage/storage-resolver.ts",
                 "test": false,
                 "name": "storage-resolver.ts"
-            },
-            {
-                "relativePath": "task-process.ts",
-                "test": false,
-                "name": "task-process.ts"
             },
             {
                 "relativePath": "types.ts",

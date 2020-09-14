@@ -12,6 +12,8 @@ import { CapsuleNotFound } from '../exceptions';
 
 export const DEFAULT_CONTEXT = 'component';
 
+export type ArtifactMap = ComponentMap<ArtifactList>;
+
 export class ArtifactFactory {
   constructor(private storageResolverSlot: StorageResolverSlot) {}
 

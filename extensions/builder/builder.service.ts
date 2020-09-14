@@ -75,6 +75,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
       capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
     });
     const buildResults = await buildPipe.execute(buildContext);
+
     longProcessLogger.end();
     this.logger.consoleSuccess();
     return { id: context.id, buildResults, components: buildContext.components };

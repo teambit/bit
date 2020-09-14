@@ -16,6 +16,7 @@ export type ArtifactDefinition = {
 
   /**
    * determine the context of the artifact.
+   * default artifact context is `component`.
    */
   context?: 'component' | 'env';
 
