@@ -1,3 +1,5 @@
+version: 2.1
+
 default_image: &default_image
   docker:
     - image: circleci/node:10.14.2
@@ -49,10 +51,34 @@ dev_tag_only_filters: &dev_tag_only_filters
     tags:
       only: /^dev$/
 
-version: 2.1
+commands: # reusable commands
+  bit_config:
+    parameters:
+      env:
+        default: 'hub-stg'
+        type: string
+    steps:
+      - run: 'bit config set analytics_reporting false'
+      - run: 'bit config set error_reporting false'
+      - run: 'bit config set user.name tester'
+      - run: 'bit config set user.email ci@bit.dev'
+      - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
+      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+
+  bit_global_for_npm:
+    steps:
+      - run:
+          name: 'create npm global dir'
+          command: 'mkdir -p /home/circleci/.npm-global/bin'
+      - run:
+          name: 'link bit to path'
+          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: which bit
 
 orbs:
   win: circleci/windows@2.4.0
+
 jobs:
   checkout_code:
     <<: *defaults
@@ -138,37 +164,6 @@ jobs:
           root: .
           paths:
             - bit/dist
-
-  configure-bit:
-    <<: *defaults
-    resource_class: large
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-      BITSRC_ENV: stg
-    steps:
-      - attach_workspace:
-          at: ./
-      - restore_cache:
-          key: bitsrc-registry6
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
-      - run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      - run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      - run: which bit
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      - run: 'bit config set hub_domain hub-stg.bit.dev'
-      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-      - save_cache:
-          key: bit-global-config-v6
-          paths:
-            - ~/Library/Caches/Bit/config/config.json
 
   pack:
     <<: *defaults
@@ -436,15 +431,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - restore_cache:
-          key: bit-global-config-v6
-      - run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      - run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - bit_global_for_npm
+      - bit_config
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -467,15 +455,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - restore_cache:
-          key: bit-global-config-v6
-      - run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      - run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - bit_global_for_npm
+      - bit_config
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
@@ -500,19 +481,12 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - restore_cache:
-          key: bit-global-config-v6
       - run:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
-      - run:
-          name: 'create npm global dir'
-          command: 'mkdir -p /home/circleci/.npm-global/bin'
-      - run:
-          name: 'link bit to path'
-          command: 'ln -sf /home/circleci/bit/bit/bin/bit.js /home/circleci/.npm-global/bin/bit'
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - bit_global_for_npm
+      - bit_config
       - run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
@@ -552,17 +526,9 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'npm link bit to global'
-          command: 'cd bit && npm link'
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      - # uncomment to configure circle to run against stg enviorment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
+      - bit_global_for_npm
+      - bit_config
       - run:
           name: 'Run performance tests'
           command: 'cd bit && npm run performance-test-circle'
@@ -594,7 +560,6 @@ jobs:
           # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
           name: 'update npm to latest version'
           command: 'npm i -g npm@latest'
-      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
@@ -606,17 +571,9 @@ jobs:
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
-
       - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'npm link bit to global'
-          command: 'cd bit && npm link'
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      - # uncomment to configure circle to run against stg enviorment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
+      - bit_global_for_npm
+      - bit_config
       - run:
           name: 'Run bit-hub tests'
           command: 'cd bit && npm run bit-hub-test-circle'
@@ -769,15 +726,7 @@ jobs:
       - run:
           name: 'npm link bit to global'
           command: cd bit; npm link
-      - run: 'bit config set analytics_reporting false'
-      - run: 'bit config set error_reporting false'
-      - run: 'bit config set user.name tester'
-      - run: 'bit config set user.email ci@bit.dev'
-      - # do not change this one, it's important to use the production for getting components bit use for running
-        # if you want the tests to work with stage, you should change the hub domain few lines below
-        run: 'bit config set hub_domain hub.bit.dev'
-      - # uncomment to configure circle to run against stg environment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
+      - bit_config
       - run:
           name: 'write e2e files'
           command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
@@ -822,16 +771,12 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - setup_harmony
-      - configure-bit:
-          requires:
-            - set_ssh_key
-            - setup_harmony
       - e2e_test:
           requires:
-            - configure-bit
+            - setup_harmony
       - bit_build:
           requires:
-            - configure-bit
+            - setup_harmony
       - bit_tag:
           filters:
             branches:
