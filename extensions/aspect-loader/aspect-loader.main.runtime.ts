@@ -12,7 +12,7 @@ import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from './constants';
 import { CannotLoadExtension } from './exceptions';
-import { getAspectDef, getCoreAspectPackageName } from './core-aspects';
+import { getAspectDef } from './core-aspects';
 
 export type AspectDescriptor = {
   /**
