@@ -50,8 +50,7 @@ describe('component config', function () {
         });
         it('expect to have the component id', () => {
           expect(componentJson.componentId).to.deep.equal({
-            // TODO: once we use the scope from default scope all over the place, this might be needed
-            // scope: helper.scopes.local,
+            scope: 'my-scope',
             name: 'bar/foo',
           });
         });
@@ -115,7 +114,9 @@ describe('component config', function () {
         helper.componentJson.deleteIfExist('bar');
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config);
+        helper.command.install();
+        helper.command.compile();
         helper.command.tagAllComponents();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');

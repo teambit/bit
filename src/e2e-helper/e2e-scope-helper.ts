@@ -83,13 +83,11 @@ export default class ScopeHelper {
 
   /**
    * This will re init a workspace as harmony
-   * install the @teambit/harmony package
    * link bit-bin in node_modules
    * link the core aspect in node_modules
    */
   reInitLocalWorkspaceHarmonyForNewAspects() {
     this.reInitLocalScopeHarmony();
-    this.npm.installNpmPackage('@teambit/harmony');
     this.linkBitBin();
   }
 
