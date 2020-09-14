@@ -3,11 +3,10 @@ import { WebpackAspect } from '../webpack.aspect';
 
 class WebpackCompilerDonePlugin {
   pubsub: any;
-  devServer: any;
 
   constructor({ options }) {
+    console.log('ZZZZZZZ');
     this.pubsub = options.pubsub;
-    this.devServer = options.devServer;
   }
 
   private createEvent: () => webpackCompilationDoneEvent = () => {
@@ -15,19 +14,16 @@ class WebpackCompilerDonePlugin {
       type: 'webpack-compilation-done',
       version: '0.0.1',
       timestamp: new Date().getTime().toString(),
-      body: {
-        uiServer: this.devServer,
-      },
+      body: {},
     };
   };
 
+  /* stats is passed as an argument when done hook is tapped.  */
   apply(compiler) {
-    compiler.hooks.done.tap('webpack-compiler-done-plugin', () =>
-      // stats /* stats is passed as an argument when done hook is tapped.  */
-      {
-        this.pubsub.publishToTopic(WebpackAspect.id, this.createEvent());
-      }
-    );
+    compiler.hooks.done.tap('webpack-compiler-done-plugin', (stats) => {
+      console.log('XXXXXXXX');
+      this.pubsub.publishToTopic(WebpackAspect.id, this.createEvent());
+    });
   }
 }
 

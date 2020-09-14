@@ -52,7 +52,7 @@ export class StartCmd implements Command {
       case 'webpack-compilation-done':
         this.devServerCounter -= 1;
         CompilationEndedSuccessfullyOutput({
-          uiServer: event.body.uiServer,
+          port: '3000',
           workspace: 'WORKSPACE',
           duration: 'DURATION',
           envs: ['ENVS'],
@@ -65,6 +65,7 @@ export class StartCmd implements Command {
       default:
     }
 
+    console.log('this.devServerCounter: ', this.devServerCounter);
     if (this.devServerCounter === 0) {
       open('http://localhost:3000/');
     }
@@ -100,6 +101,6 @@ export class StartCmd implements Command {
     // this.clearConsole();
 
     // return <UIServerConsole uiServer={uiServer} />;
-    return <BuildingDevServerOutput workspaceFilePath={'sdfsdf'} />;
+    return <BuildingDevServerOutput workspaceFilePath={'WORKSPACE-FILE-PATH'} />;
   }
 }
