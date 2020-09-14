@@ -10,6 +10,8 @@ import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
   devServerCounter = 0;
+  targetHost = 'localhost';
+  targetPort = 3000;
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
@@ -33,24 +35,31 @@ export class StartCmd implements Command {
   ) {
     pubsub.subscribeToTopic('teambit.bit/ui', this.eventsListeners);
     pubsub.subscribeToTopic('teambit.bit/webpack', this.eventsListeners);
+    pubsub.subscribeToTopic('teambit.bit/bundler', this.eventsListeners);
   }
 
   private eventsListeners = (event) => {
     switch (event.type) {
+      case 'components-server-started':
+        this.devServerCounter += 1;
+        break;
       case 'webpack-compilation-done':
         this.devServerCounter -= 1;
+        this.openBrowserOn0();
         break;
       case 'ui-server-started':
-        this.devServerCounter += 1;
+        this.targetHost = event.body.targetHost;
+        this.targetPort = event.body.targetPort;
         break;
       default:
     }
-
-    console.log('this.devServerCounter: ', this.devServerCounter);
-    if (this.devServerCounter === 0) {
-      open('http://localhost:3000/');
-    }
   };
+
+  private openBrowserOn0() {
+    if (this.devServerCounter === 0) {
+      open(`http://${this.targetHost}:${this.targetPort}/`);
+    }
+  }
 
   private clearConsole() {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');

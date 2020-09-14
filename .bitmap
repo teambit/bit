@@ -299,6 +299,16 @@
                 "name": "dev-server.ts"
             },
             {
+                "relativePath": "events/components-server-started-event.ts",
+                "test": false,
+                "name": "components-server-started-event.ts"
+            },
+            {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "exceptions/bind-error.ts",
                 "test": false,
                 "name": "bind-error.ts"
