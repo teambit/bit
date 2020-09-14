@@ -804,7 +804,7 @@ workflows:
                 - master
                 - fix-tag-on-circle
           requires:
-            - configure-bit
+            - setup_harmony
 
   # windows_e2e:
   #   jobs:
