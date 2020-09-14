@@ -79,7 +79,12 @@ export class StartCmd implements Command {
     this.getDuration();
     this.devServerCounter += 1;
     render(
-      <ComponentPreviewServerStarted host={event.body.hostname} port={event.body.port} timestamp={this.getDuration()} />
+      <ComponentPreviewServerStarted
+        envName={event.body.executionContext.envRuntime.id}
+        host={event.body.hostname}
+        port={event.body.port}
+        timestamp={this.getDuration()}
+      />
     );
     console.log('');
   };
