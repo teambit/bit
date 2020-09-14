@@ -4578,9 +4578,19 @@
     "ui": {
         "files": [
             {
+                "relativePath": "bit-start-cmd-output-templates/Clear-console.ts",
+                "test": false,
+                "name": "clear-console.ts"
+            },
+            {
                 "relativePath": "bit-start-cmd-output-templates/Initialize-start-output-template.tsx",
                 "test": false,
                 "name": "Initialize-start-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/Starting.tsx",
+                "test": false,
+                "name": "Starting.tsx"
             },
             {
                 "relativePath": "bit-start-cmd-output-templates/building-dev-server-output-template.tsx",
