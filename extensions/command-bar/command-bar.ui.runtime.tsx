@@ -11,9 +11,10 @@ import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
+type CommandSlot = SlotRegistry<CommandEntry[]>;
 
 export type CommandEntry = {
-  commandId: string;
+  id: CommandId;
   handler: CommandHandler;
   keybinding?: Keybinding;
   displayName: string;
@@ -41,26 +42,24 @@ export class CommandBarUI {
     return this;
   }
 
-  addCommand(commands: CommandEntry | CommandEntry[]) {
-    const commandsArr = Array.isArray(commands) ? commands : [commands];
-
-    commandsArr.forEach(({ commandId }) => {
-      if (this.commandRegistry.has(commandId)) throw new Error(`command already exists: "${commandId}"`);
+  addCommand(...commands: CommandEntry[]) {
+    commands.forEach(({ id: commandId }) => {
+      if (this.getCommand(commandId) !== undefined) throw new Error(`command already exists: "${commandId}"`);
     });
 
-    commandsArr.forEach((command) => {
-      this.commandRegistry.set(command.commandId, command);
+    this.commandSlot.register(commands);
 
+    commands.forEach((command) => {
       if (command.keybinding) {
-        this.addKeybinding(command.keybinding, command.commandId);
+        this.addKeybinding(command.keybinding, command.id);
       }
     });
 
     this.updateCommandsSearcher();
   }
 
-  run(command: CommandId) {
-    const commandEntry = this.commandRegistry.get(command);
+  run(commandId: CommandId) {
+    const commandEntry = this.getCommand(commandId);
     if (!commandEntry) return;
 
     commandEntry.handler();
@@ -77,12 +76,18 @@ export class CommandBarUI {
     return searcher?.search(term, limit) || [];
   };
 
+  private getCommand(id: CommandId) {
+    const relevantCommands = this.commandSlot
+      .values()
+      .map((commands) => commands.find((command) => command.id === id))
+      .filter((x) => !!x);
+
+    return relevantCommands.pop();
+  }
+
   private updateCommandsSearcher() {
-    const { commandRegistry } = this;
-
-    const searchResults = Array.from(commandRegistry.entries()).map(([id, obj]) => ({ ...obj, id }));
-
-    this.commandSearcher.update(searchResults);
+    const commands = this.commandSlot.values().flat();
+    this.commandSearcher.update(commands);
   }
 
   private addKeybinding(key: Keybinding, command: CommandId) {
@@ -95,18 +100,18 @@ export class CommandBarUI {
     return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
   };
 
-  constructor(private searcherSlot: SearcherSlot) {
+  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {
     this.addSearcher(this.commandSearcher);
   }
 
   static dependencies = [UIAspect];
-  static slots = [Slot.withType<SearchProvider>()];
+  static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
-  static async provider([uiUi]: [UiUI], config, [searcherSlot]: [SearcherSlot]) {
-    const commandBar = new CommandBarUI(searcherSlot);
+  static async provider([uiUi]: [UiUI], config, [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]) {
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots);
 
     commandBar.addCommand({
-      commandId: commandBarCommands.open,
+      id: commandBarCommands.open,
       handler: commandBar.open,
       displayName: 'open command bar',
       keybinding: 'mod+k',
