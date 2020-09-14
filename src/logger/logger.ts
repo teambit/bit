@@ -31,6 +31,10 @@ export const baseFileTransportOpts = {
 
 function getMetadata(info) {
   if (!Object.keys(info.metadata).length) return '';
+  if ((info.level === 'error' || info.level === '\u001b[31merror\u001b[39m') && info.metadata.stack) {
+    // this is probably an instance of Error, show the stack nicely and not serialized.
+    return `\n${info.metadata.stack}`;
+  }
   try {
     return JSON.stringify(info.metadata, null, 2);
   } catch (err) {
@@ -289,6 +293,7 @@ export function writeLogToScreen(levelOrPrefix = '') {
       format: winston.format.combine(
         filterPrefix(),
         winston.format.metadata(),
+        winston.format.errors({ stack: true }),
         winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
       ),
     })
