@@ -1,4 +1,3 @@
-// const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
@@ -15,7 +14,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
+module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -134,7 +133,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       }),
 
       new WebpackCompilerDonePlugin({
-        options: { pubsub: 'pubsub' },
+        options: { pubsub },
       }),
     ],
   };
