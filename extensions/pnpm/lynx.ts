@@ -133,7 +133,6 @@ export async function resolveRemoteVersion(
   rootDir: string,
   storeDir: string,
 ): Promise<ResolvedPackageVersion> {
-  debugger
   const {resolve} = await generateResolverAndFetcher(storeDir);
   const resolveOpts = {
     projectDir: rootDir,
