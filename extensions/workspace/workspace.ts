@@ -414,7 +414,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
-    //TODO: put it on an other function
+    // TODO: put it on an other function
     this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
@@ -429,7 +429,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
-    //TODO: put it on an other function
+    // TODO: put it on an other function
     this.componentList = new ComponentsList(this.consumer);
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];

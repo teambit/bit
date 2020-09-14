@@ -42,7 +42,7 @@ export class JestTester implements Tester {
               testResult.status,
               test.testFilePath,
               testResult.duration,
-              error ? error : undefined
+              error || undefined
             )
           );
         });
