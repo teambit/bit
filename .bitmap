@@ -4339,6 +4339,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "test-results.ts",
+                "test": false,
+                "name": "test-results.ts"
+            },
+            {
                 "relativePath": "test.cmd.tsx",
                 "test": false,
                 "name": "test.cmd.tsx"
@@ -4347,6 +4352,11 @@
                 "relativePath": "tester.aspect.ts",
                 "test": false,
                 "name": "tester.aspect.ts"
+            },
+            {
+                "relativePath": "tester.graphql.ts",
+                "test": false,
+                "name": "tester.graphql.ts"
             },
             {
                 "relativePath": "tester.main.runtime.ts",
@@ -4372,6 +4382,11 @@
                 "relativePath": "tester.ui.runtime.tsx",
                 "test": false,
                 "name": "tester.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "tests-results.ts",
+                "test": false,
+                "name": "tests-results.ts"
             },
             {
                 "relativePath": "ui/tests-page.tsx",
@@ -5052,6 +5067,11 @@
                 "relativePath": "watch/REFACTOR_GUIDE.md",
                 "test": false,
                 "name": "REFACTOR_GUIDE.md"
+            },
+            {
+                "relativePath": "watch/output-formatter.ts",
+                "test": false,
+                "name": "output-formatter.ts"
             },
             {
                 "relativePath": "watch/watch.cmd.tsx",

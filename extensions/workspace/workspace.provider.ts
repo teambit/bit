@@ -21,9 +21,7 @@ import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
-import { OnComponentAdd } from './on-component-add';
-import { OnComponentChange } from './on-component-change';
-import { OnComponentLoad } from './on-component-load';
+import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
@@ -51,6 +49,8 @@ export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
 export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
+
+export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
 export type WorkspaceCoreConfig = {
   /**
@@ -83,10 +83,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
-    OnComponentAddSlot
+    OnComponentAddSlot,
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -110,6 +111,7 @@ export default async function provideWorkspace(
     onComponentChangeSlot,
     envs,
     onComponentAddSlot,
+    onComponentRemoveSlot,
     graphql
   );
 
@@ -159,7 +161,7 @@ export default async function provideWorkspace(
   const watcher = new Watcher(workspace);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(watcher));
+    cli.register(new WatchCommand(logger, watcher));
   }
   component.registerHost(workspace);
 

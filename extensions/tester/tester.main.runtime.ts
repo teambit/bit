@@ -3,12 +3,15 @@ import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { merge } from 'lodash';
 
+import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
+import { testerSchema } from './tester.graphql';
 
 export type TesterExtensionConfig = {
   /**
@@ -31,7 +34,7 @@ export type TesterOptions = {
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect];
 
   constructor(
     /**
@@ -62,9 +65,11 @@ export class TesterMain {
     return results;
   }
 
-  getTestsResults(component: Component) {
+  getTestsResults(component: Component): TestsResult | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);
-    return entry?.data;
+    // TODO: type is ok, talk to @david about it
+    // @ts-ignore
+    return entry?.data.tests;
   }
 
   private getOptions(options?: TesterOptions): TesterOptions {
@@ -84,7 +89,7 @@ export class TesterMain {
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect]: [CLIMain, EnvsMain, Workspace, LoggerMain],
+    [cli, envs, workspace, loggerAspect, graphql]: [CLIMain, EnvsMain, Workspace, LoggerMain, GraphqlMain],
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
@@ -100,6 +105,7 @@ export class TesterMain {
       cli.unregister('test');
       cli.register(new TestCmd(tester, workspace, logger));
     }
+    graphql.register(testerSchema(tester));
 
     return tester;
   }
