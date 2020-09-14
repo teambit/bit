@@ -572,6 +572,16 @@
                 "relativePath": "ui/command-searcher/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/component-searcher.tsx",
+                "test": false,
+                "name": "component-searcher.tsx"
+            },
+            {
+                "relativePath": "ui/component-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
             }
         ],
         "mainFile": "index.ts",
