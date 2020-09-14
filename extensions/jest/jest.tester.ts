@@ -2,6 +2,7 @@ import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/tester';
 import { TestResult as JestTestResult } from '@jest/test-result';
+import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 
 export class JestTester implements Tester {
@@ -18,7 +19,7 @@ export class JestTester implements Tester {
     });
   }
 
-  private buildTestsObj(components: ComponentMap<JestTestResult[] | undefined>) {
+  private buildTestsObj(components: ComponentMap<JestTestResult[] | undefined>, config?: any) {
     const tests = components.toArray().map(([component, testsFiles]) => {
       if (!testsFiles) return undefined;
       if (testsFiles?.length === 0) return undefined;
@@ -33,13 +34,15 @@ export class JestTester implements Tester {
 
       const testsResults = testsFiles.reduce((acc: TestResult[], test) => {
         test.testResults.forEach((testResult) => {
+          const error = formatResultsErrors([testResult], config, { noStackTrace: false });
           acc.push(
             new TestResult(
               testResult.ancestorTitles,
               testResult.title,
               testResult.status,
               test.testFilePath,
-              testResult.duration
+              testResult.duration,
+              error ? error : undefined
             )
           );
         });
@@ -79,7 +82,7 @@ export class JestTester implements Tester {
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
     const componentsWithTests = this.attachTestsToComponent(context, testResults);
-    const componentTestResults = this.buildTestsObj(componentsWithTests);
+    const componentTestResults = this.buildTestsObj(componentsWithTests, jestConfigWithSpecs);
     const globalErrors = this.getErrors(testResults);
     return { components: componentTestResults, errors: globalErrors };
   }
