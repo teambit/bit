@@ -4583,6 +4583,16 @@
                 "name": "env-console.tsx"
             },
             {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "events/ui-server-started.ts",
+                "test": false,
+                "name": "ui-server-started.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"

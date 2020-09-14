@@ -17,6 +17,7 @@ import getPort from 'get-port';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
+import type { UiServerStartedEvent } from './events';
 
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
@@ -166,6 +167,9 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
+    // TODO: is this the right place?
+    this.pubsub.publishToTopic(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
+
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
@@ -178,6 +182,21 @@ export class UiMain {
     if (port) return port;
     return this.config.port || this.selectPort();
   }
+
+  /**
+   * Events
+   */
+  private createUiServerStartedEvent: (string, number) => UiServerStartedEvent = (targetHost, targetPort) => {
+    return {
+      type: 'ui-server-started',
+      version: '0.0.1',
+      timestamp: new Date().getTime().toString(),
+      body: {
+        targetHost,
+        targetPort,
+      },
+    };
+  };
 
   /**
    * bind to ui server start event.
