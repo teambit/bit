@@ -5,6 +5,7 @@ import { Logger } from '@teambit/logger';
 import React from 'react';
 import open from 'open';
 import { render } from 'ink';
+import prettyTime from 'pretty-time';
 
 // import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
@@ -17,6 +18,7 @@ import {
 } from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
+  startingtimestamp;
   devServerCounter = 0;
   targetHost = 'localhost';
   targetPort = 3000;
@@ -74,26 +76,33 @@ export class StartCmd implements Command {
   };
 
   private onComponentsServerStarted = (event) => {
+    this.getDuration();
     this.devServerCounter += 1;
-    render(<ComponentPreviewServerStarted host={event.body.hostname} port={event.body.port} />);
+    render(
+      <ComponentPreviewServerStarted host={event.body.hostname} port={event.body.port} timestamp={this.getDuration()} />
+    );
     console.log('');
   };
 
   private openBrowserOn0() {
     if (this.devServerCounter === 0) {
       console.log('');
-      render(<UIServersAreReady host={this.targetHost} port={this.targetPort} />);
+      render(<UIServersAreReady host={this.targetHost} port={this.targetPort} timestamp={this.getDuration()} />);
 
       setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
-
-      // open(`http://${this.targetHost}:${this.targetPort}/`);
     }
+  }
+
+  private getDuration() {
+    const duration = Date.now() - this.startingtimestamp;
+    return prettyTime(duration);
   }
 
   async render(
     [uiRootName, userPattern]: [string, string],
     { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
   ): Promise<React.ReactElement> {
+    this.startingtimestamp = Date.now();
     console.log('');
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
