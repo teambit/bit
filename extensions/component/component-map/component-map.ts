@@ -3,16 +3,18 @@ import { Component } from '../component';
 /**
  * allows to index components -> values.
  */
-export class ComponentMap<T> extends Map<string, [Component, T]> {
+export class ComponentMap<T> {
+  constructor(readonly hashMap: Map<string, [Component, T]>) {}
+
   byComponent(component: Component) {
-    return super.get(component.id.fullName);
+    return this.hashMap.get(component.id.toString());
   }
 
   /**
    * returns an array.
    */
   toArray() {
-    return Array.from(this.values());
+    return Array.from(this.hashMap.values());
   }
 
   /**
@@ -24,7 +26,7 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
       return [component.id.fullName, [component, newValue]];
     });
 
-    return new ComponentMap(tuples);
+    return new ComponentMap(new Map(tuples));
   }
 
   /**
@@ -49,7 +51,14 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
       return [component.id.fullName, [component, value]];
     });
 
-    return new ComponentMap(asMap);
+    return new ComponentMap(new Map(asMap));
+  }
+
+  /**
+   * get all component ids.
+   */
+  keys() {
+    return this.hashMap.keys();
   }
 
   /**
@@ -62,6 +71,6 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
       return [component.id.fullName, [component, predicate(component)]];
     });
 
-    return new ComponentMap(tuples);
+    return new ComponentMap(new Map(tuples));
   }
 }

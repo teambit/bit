@@ -48,7 +48,7 @@ export class BuilderMain {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
-    // envsExecutionResults.results.map(res => res.data?.buildResults.map(a => a.artifacts))
+    envsExecutionResults.results.map((res) => res.data?.buildResults.results.map((result) => result.artifacts));
     envsExecutionResults.throwErrorsIfExist();
 
     // TODO: make sure to replace this value returned to the legacy with a more simple and standard one.
