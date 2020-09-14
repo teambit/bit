@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import styles from './autocomplete-input.module.scss';
 
 type AutoCompleteInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
-  onEscape: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onUp: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEscape?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   focus?: Truthy;
 };
 
@@ -36,19 +36,19 @@ export function AutoCompleteInput({
       const handlers = {
         Escape: () => {
           e.preventDefault();
-          onEscape(e);
+          onEscape?.(e);
         },
         ArrowDown: () => {
           e.preventDefault();
-          onDown(e);
+          onDown?.(e);
         },
         ArrowUp: () => {
           e.preventDefault();
-          onUp(e);
+          onUp?.(e);
         },
         Enter: () => {
           e.preventDefault();
-          onEnter(e);
+          onEnter?.(e);
         },
       };
 
