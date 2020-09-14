@@ -107,9 +107,11 @@ export class ScopeMain implements ComponentFactory {
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
       // TODO: fix what legacy tag accepts to just extension name and files.
-      const aspectList = await tagFn(components);
-      const extensionDataList = aspectList.map((aspectList, component) => aspectList.toLegacy());
-      const array = extensionDataList.toArray();
+      const aspectListComponentMap = await tagFn(components);
+      aspectListComponentMap.toArray().map(([component, aspectList]) => ({
+        id: component.id._legacy,
+        extensions: aspectList.toLegacy(),
+      }));
     });
     this.tagRegistry.register(tagFn);
   }

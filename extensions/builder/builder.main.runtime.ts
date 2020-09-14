@@ -1,7 +1,7 @@
 import { flatten } from 'lodash';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentID } from '@teambit/component';
+import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
 import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -68,7 +68,7 @@ export class BuilderMain {
     return map.filter((val) => !!val) as BuildPipeResults[];
   }
 
-  async tagListener(components: Component[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+  async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
@@ -76,14 +76,7 @@ export class BuilderMain {
     const buildServiceResults = this.getPipelineResults(envsExecutionResults);
     this.storeArtifacts(buildServiceResults);
 
-    const data = components.map((component) => {
-      return component.state.aspects.map((entry) => {
-        entry.data = data;
-        return entry;
-      });
-    });
-    // TODO: make sure to replace this value returned to the legacy with a more simple and standard one.
-    return data;
+    return ComponentMap.as<AspectList>(components, (component) => component.state.aspects);
   }
 
   /**

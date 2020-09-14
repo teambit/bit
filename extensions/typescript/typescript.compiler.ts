@@ -88,7 +88,7 @@ export class TypescriptCompiler implements Compiler {
     return [
       {
         name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`],
+        globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
       },
     ];
   }
