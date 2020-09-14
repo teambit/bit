@@ -5,4 +5,5 @@ export { ComponentsRebuildOutput } from './components-rebuild-output-template';
 export { DevServerRunningOutputTemplate } from './dev-server-running-output-template';
 export { ClearConsole } from './Clear-console';
 export { Starting } from './Starting';
-// export { InitializeStartOutput } from './initialize-start-output-template';
+export { ComponentPreviewServerStarted } from './Component-preview-server-started';
+export { UIServersAreReady } from './Ui-servers-are-ready';

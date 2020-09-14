@@ -4,10 +4,17 @@ import { Logger } from '@teambit/logger';
 
 import React from 'react';
 import open from 'open';
+import { render } from 'ink';
 
 // import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
-import { Starting, ClearConsole, compilationEndedSuccessfullyOutput } from './bit-start-cmd-output-templates';
+import {
+  Starting,
+  ClearConsole,
+  compilationEndedSuccessfullyOutput,
+  ComponentPreviewServerStarted,
+  UIServersAreReady,
+} from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
   devServerCounter = 0;
@@ -40,28 +47,46 @@ export class StartCmd implements Command {
   }
 
   private eventsListeners = (event) => {
+    // console.log('--event-->: ', event)
+
     switch (event.type) {
       case 'components-server-started':
-        this.devServerCounter += 1;
+        setTimeout(() => this.onComponentsServerStarted(event), 500);
         break;
       case 'webpack-compilation-done':
-        this.devServerCounter -= 1;
-        this.openBrowserOn0();
+        setTimeout(() => this.onWebpackCompilationDone(event), 0);
         break;
       case 'ui-server-started':
-        this.targetHost = event.body.targetHost;
-        this.targetPort = event.body.targetPort;
+        this.onUiServerStarted(event);
         break;
       default:
     }
   };
 
-  private openBrowserOn0() {
-    const props = { port: 'port', workspace: 'workspace', duration: 'duration', envs: [], timestamp: 'timestamp' };
-    compilationEndedSuccessfullyOutput(props);
+  private onUiServerStarted = (event) => {
+    this.targetHost = event.body.targetHost;
+    this.targetPort = event.body.targetPort;
+  };
 
+  private onWebpackCompilationDone = (event) => {
+    this.devServerCounter -= 1;
+    this.openBrowserOn0();
+  };
+
+  private onComponentsServerStarted = (event) => {
+    this.devServerCounter += 1;
+    render(<ComponentPreviewServerStarted host={event.body.hostname} port={event.body.port} />);
+    console.log('');
+  };
+
+  private openBrowserOn0() {
     if (this.devServerCounter === 0) {
-      open(`http://${this.targetHost}:${this.targetPort}/`);
+      console.log('');
+      render(<UIServersAreReady host={this.targetHost} port={this.targetPort} />);
+
+      setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
+
+      // open(`http://${this.targetHost}:${this.targetPort}/`);
     }
   }
 
@@ -69,6 +94,7 @@ export class StartCmd implements Command {
     [uiRootName, userPattern]: [string, string],
     { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
   ): Promise<React.ReactElement> {
+    console.log('');
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
     const uiServer = await this.ui.createRuntime({
@@ -79,8 +105,6 @@ export class StartCmd implements Command {
       rebuild,
     });
 
-    // return <ClearConsole />
-    // return <Starting />
     return (
       <>
         <ClearConsole />

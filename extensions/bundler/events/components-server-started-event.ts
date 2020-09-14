@@ -6,5 +6,8 @@ export type ComponentsServerStartedEvent = BitBaseEvent & {
   readonly timestamp: string;
   readonly body: {
     componentsServer;
+    executionContext;
+    hostname;
+    port;
   };
 };

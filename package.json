@@ -126,6 +126,7 @@
     "ignore": "^3.3.7",
     "ini-builder": "^1.1.1",
     "ink": "^2.7.1",
+    "ink-spinner": "^4.0.1",
     "inquirer": "^6.5.0",
     "inquirer-fuzzy-path": "^2.2.0",
     "is-glob": "^4.0.0",

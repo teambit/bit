@@ -4583,14 +4583,29 @@
                 "name": "clear-console.ts"
             },
             {
+                "relativePath": "bit-start-cmd-output-templates/Component-preview-server-started.tsx",
+                "test": false,
+                "name": "Component-preview-server-started.tsx"
+            },
+            {
                 "relativePath": "bit-start-cmd-output-templates/Initialize-start-output-template.tsx",
                 "test": false,
                 "name": "Initialize-start-output-template.tsx"
             },
             {
+                "relativePath": "bit-start-cmd-output-templates/Starting copy.tsx",
+                "test": false,
+                "name": "Starting copy.tsx"
+            },
+            {
                 "relativePath": "bit-start-cmd-output-templates/Starting.tsx",
                 "test": false,
                 "name": "Starting.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/Ui-servers-are-ready.tsx",
+                "test": false,
+                "name": "Ui-servers-are-ready.tsx"
             },
             {
                 "relativePath": "bit-start-cmd-output-templates/building-dev-server-output-template.tsx",

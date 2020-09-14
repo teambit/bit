@@ -49,7 +49,10 @@ export class ComponentServer {
     if (!address) throw new BindError();
     this.hostname = hostname;
 
-    this.pubsub.publishToTopic(BundlerAspect.id, this.createComponentsServerStartedEvent(server));
+    this.pubsub.publishToTopic(
+      BundlerAspect.id,
+      this.createComponentsServerStartedEvent(server, this.context, hostname, this.port)
+    );
   }
 
   private getHostname(address: string | AddressInfo | null) {
@@ -64,13 +67,21 @@ export class ComponentServer {
     return hostname;
   }
 
-  private createComponentsServerStartedEvent: (DevServer) => ComponentsServerStartedEvent = (componentsServer) => {
+  private createComponentsServerStartedEvent: (
+    DevServer,
+    ExecutionContext,
+    string,
+    number
+  ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {
     return {
       type: 'components-server-started',
       version: '0.0.1',
       timestamp: new Date().getTime().toString(),
       body: {
         componentsServer,
+        executionContext: context,
+        hostname,
+        port,
       },
     };
   };
