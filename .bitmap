@@ -4578,6 +4578,46 @@
     "ui": {
         "files": [
             {
+                "relativePath": "bit-start-cmd-output-templates/Initialize-start-output-template.tsx",
+                "test": false,
+                "name": "Initialize-start-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/building-dev-server-output-template.tsx",
+                "test": false,
+                "name": "building-dev-server-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/compilation-ended-successfully-output-template.tsx",
+                "test": false,
+                "name": "compilation-ended-successfully-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/compilation-error-output-template.tsx",
+                "test": false,
+                "name": "compilation-error-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/components-rebuild-output-template.tsx",
+                "test": false,
+                "name": "components-rebuild-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/dev-server-running-output-template.tsx",
+                "test": false,
+                "name": "dev-server-running-output-template.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/env-console.tsx",
+                "test": false,
+                "name": "env-console.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "compose.tsx",
                 "test": false,
                 "name": "compose.tsx"
@@ -4586,11 +4626,6 @@
                 "relativePath": "create-root.ts",
                 "test": false,
                 "name": "create-root.ts"
-            },
-            {
-                "relativePath": "env-console.tsx",
-                "test": false,
-                "name": "env-console.tsx"
             },
             {
                 "relativePath": "events/index.ts",

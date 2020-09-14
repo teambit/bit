@@ -1,7 +1,7 @@
 import { Box } from 'ink';
 import React from 'react';
 
-import { UIServer } from './ui-server';
+import { UIServer } from '../ui-server';
 
 export type UIServerConsoleProps = {
   uiServer: UIServer;
