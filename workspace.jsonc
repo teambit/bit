@@ -16,6 +16,7 @@
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
         "@graphql-modules/core": "^0.7.17",
+        "@jest/test-result": "26.3.0",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
         "@pnpm/client": "2.0.2",
         "@pnpm/config": "11.2.3",
