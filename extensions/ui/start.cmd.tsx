@@ -7,6 +7,7 @@ import open from 'open';
 
 import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
+import { compilationEndedSuccessfullyOutput } from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
   devServerCounter = 0;
@@ -56,6 +57,9 @@ export class StartCmd implements Command {
   };
 
   private openBrowserOn0() {
+    const props = { port: 'port', workspace: 'workspace', duration: 'duration', envs: [], timestamp: 'timestamp' };
+    compilationEndedSuccessfullyOutput(props);
+
     if (this.devServerCounter === 0) {
       open(`http://${this.targetHost}:${this.targetPort}/`);
     }
@@ -69,7 +73,6 @@ export class StartCmd implements Command {
     [uiRootName, userPattern]: [string, string],
     { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
   ): Promise<React.ReactElement> {
-    // teambit.bit/variants should be the one to take care of component patterns.
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
     const uiServer = await this.ui.createRuntime({
@@ -81,7 +84,7 @@ export class StartCmd implements Command {
     });
 
     // clear the user console before moving interactive.
-    this.clearConsole();
+    setTimeout(this.clearConsole, 0);
 
     return <UIServerConsole uiServer={uiServer} />;
   }
