@@ -50,10 +50,12 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getArtifactDef(context: BuildContext) {
+    const env: 'env' = 'env';
     return [
       {
         name: 'preview',
         globPatterns: [this.getOutputPath(context)],
+        context: env,
       },
     ];
   }

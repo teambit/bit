@@ -32,6 +32,10 @@ export class ArtifactList {
     return resolverMap;
   }
 
+  toObject() {
+    return this.artifacts.map((artifact) => artifact.toObject());
+  }
+
   /**
    * store all artifacts using the configured storage resolvers.
    */

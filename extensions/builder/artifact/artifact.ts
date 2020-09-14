@@ -1,43 +1,76 @@
+import { BuildTask } from '../build-task';
 import { StorageResolver } from '../storage';
+import { ArtifactDefinition } from './artifact-definition';
 
-export type ArtifactProps = {
+export class Artifact {
+  constructor(
+    /**
+     * definition of the artifact.
+     */
+    readonly def: ArtifactDefinition,
+
+    /**
+     * storage resolver. can be used to replace where artifacts are stored.
+     */
+    readonly storageResolver: StorageResolver,
+
+    /**
+     * paths included
+     */
+    readonly paths: string[] = [],
+
+    /**
+     * the declaring task.
+     */
+    readonly task: BuildTask,
+
+    /**
+     * timestamp of the artifact creation.
+     */
+    readonly timestamp: number = Date.now()
+  ) {}
+
+  get storage() {
+    return this.storageResolver;
+  }
+
   /**
    * name of the artifact.
    */
-  name: string;
+  get name(): string {
+    return this.def.name;
+  }
 
   /**
    * description of the artifact.
    */
-  description?: string;
+  get description() {
+    return this.def.description;
+  }
 
   /**
-   * glob patterns of files to include upon artifact creation.
+   * archive all artifact files into a tar.
    */
-  globPatterns: string[];
+  tar() {}
 
-  /**
-   * storage resolver. can be used to replace where artifacts are stored.
-   */
-  storageResolver: StorageResolver;
-};
-
-export class Artifact {
-  constructor(
-    readonly name: string,
-    readonly description: string | undefined,
-    readonly globPatterns: string[],
-    readonly storageResolver: StorageResolver
-  ) {}
+  toObject() {
+    // TODO: we have complicated relationship between components. we need a better way to handle models and store.
+    return {
+      name: this.name,
+      description: this.description,
+      def: this.def,
+      storage: this.storageResolver.name,
+      task: {
+        id: this.task.id,
+        name: this.task.name,
+      },
+    };
+  }
 
   /**
    * store the artifact in the configured storage.
    */
   store() {
     this.storageResolver.store([this]);
-  }
-
-  static create(props: ArtifactProps) {
-    return new Artifact(props.name, props.description, props.globPatterns, props.storageResolver);
   }
 }

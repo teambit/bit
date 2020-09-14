@@ -28,7 +28,7 @@ export class TaskProcess {
   private saveDataToComponent(component: Component) {
     // @todo: fix to use isEqual of ComponentId, not the legacy. currently it's not working
     // due to defaultScope discrepancies.
-    const componentResult = this.taskResult.components.find((c) =>
+    const componentResult = this.taskResult.componentsResults.find((c) =>
       c.component.id._legacy.isEqual(component.id._legacy)
     );
     const data = componentResult && componentResult.metadata;

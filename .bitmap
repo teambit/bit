@@ -214,11 +214,6 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "artifact/ref.ts",
-                "test": false,
-                "name": "ref.ts"
-            },
-            {
                 "relativePath": "build-pipe.ts",
                 "test": false,
                 "name": "build-pipe.ts"
@@ -252,6 +247,11 @@
                 "relativePath": "builder.service.ts",
                 "test": false,
                 "name": "builder.service.ts"
+            },
+            {
+                "relativePath": "exceptions/capsule-not-found.ts",
+                "test": false,
+                "name": "capsule-not-found.ts"
             },
             {
                 "relativePath": "exceptions/index.ts",

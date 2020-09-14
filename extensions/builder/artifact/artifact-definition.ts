@@ -15,6 +15,11 @@ export type ArtifactDefinition = {
   globPatterns: string[];
 
   /**
+   * determine the context of the artifact.
+   */
+  context?: 'component' | 'env';
+
+  /**
    * storage resolver. can be used to replace where artifacts are stored.
    * default resolver persists artifacts on scope. (not recommended for large files!)
    */

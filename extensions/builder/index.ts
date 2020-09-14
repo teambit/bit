@@ -4,4 +4,4 @@ export { BuildContext, BuildTask, BuildResults, TaskLocation } from './build-tas
 export type { BuilderMain } from './builder.main.runtime';
 export { BuilderAspect } from './builder.aspect';
 export { StorageResolver } from './storage';
-export { Artifact, ArtifactList, ArtifactProps, ArtifactDefinition } from './artifact';
+export { Artifact, ArtifactList, ArtifactFactory, ArtifactDefinition } from './artifact';
