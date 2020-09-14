@@ -2,7 +2,7 @@
 
 Run tasks on components and their dependents.
 
-- Provides a `bit run` command to execute tasks on components in worksapce.
+- Provides a `bit run` command to execute tasks on components in workspace.
 - Provides an API to create network of components and execute tasks.
 - Used as a low-level API for other Bit commands like `compile`, `test` and `watch`.
 
