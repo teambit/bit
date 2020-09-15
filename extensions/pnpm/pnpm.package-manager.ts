@@ -14,6 +14,9 @@ import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
 import userHome from 'user-home';
 
+
+const defaultStoreDir = join(userHome, '.pnpm-store');
+
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
@@ -28,7 +31,7 @@ export class PnpmPackageManager implements PackageManager {
     const { install } = require('./lynx');
     const storeDir = installOptions?.cacheRootDir
       ? join(installOptions?.cacheRootDir, '.pnpm-store')
-      : join(userHome, '.pnpm-store');
+      : defaultStoreDir;
 
     const components = componentDirectoryMap.toArray().map(([component]) => component);
     const options: CreateFromComponentsOptions = {
@@ -83,10 +86,13 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { resolveRemoteVersion } = require('./lynx');
+    const storeDir = options?.cacheRootDir
+      ? join(options?.cacheRootDir, '.pnpm-store')
+      : defaultStoreDir;
     return resolveRemoteVersion(
       packageName,
       options.rootDir,
-      options.cacheRootDir
+      storeDir
     );
   }
 }
