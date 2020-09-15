@@ -1,4 +1,4 @@
-import { Component } from '@teambit/component';
+import { Component, ComponentFactory } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
@@ -7,8 +7,8 @@ import { TesterMain } from './tester.main.runtime';
 export function testerSchema(tester: TesterMain): Schema {
   return {
     typeDefs: gql`
-      extend type Component {
-        testsResults: TestsResults
+      extend type ComponentHost {
+        getTests(id: String!): TestsResults
       }
 
       type TestsResults {
@@ -31,8 +31,11 @@ export function testerSchema(tester: TesterMain): Schema {
       }
     `,
     resolvers: {
-      Component: {
-        testsResults: (component: Component) => {
+      ComponentHost: {
+        getTests: async (host: ComponentFactory, { id }: { id: string }) => {
+          const componentId = await host.resolveComponentId(id);
+          const component = await host.get(componentId);
+          if (!component) return null;
           const testsResults = tester.getTestsResults(component);
           if (!testsResults) return null;
           return testsResults;
