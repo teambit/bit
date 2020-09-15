@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color } from 'ink';
+import { Box, Text } from 'ink';
 import React, { useEffect, useState } from 'react';
 
 import { EnvRuntime } from '../../runtime';
@@ -24,7 +24,7 @@ export function EnvConsole() {
 
   return (
     <Box>
-      <Color green>{counter} tests passed</Color>
+      <Text color="green">{counter} tests passed</Text>
     </Box>
   );
 }

@@ -60,7 +60,7 @@ function HelpHeader() {
   return (
     <Box key="HelpHeader" flexDirection="column">
       <Text bold>{`usage: bit [--version] [--help] <command> [<args>]`} </Text>
-      <Color grey> bit documentation: https://docs.bit.dev</Color>
+      <Text color="grey"> bit documentation: https://docs.bit.dev</Text>
     </Box>
   );
 }
@@ -69,7 +69,7 @@ function HelpFooter() {
   const footer = `please use 'bit <command> --help' for more information and guides on specific commands.`;
   return (
     <Box>
-      <Color grey>{footer}</Color>
+      <Text color="grey">{footer}</Text>
     </Box>
   );
 }
