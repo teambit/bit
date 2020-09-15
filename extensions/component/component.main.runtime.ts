@@ -43,7 +43,7 @@ export class ComponentMain {
     return AspectList.fromLegacyExtensions(legacyExtensionDataList);
   }
 
-  createEntry(aspectId: ComponentID, data: SerializableMap = {}) {
+  createAspectEntry(aspectId: ComponentID, data: SerializableMap = {}) {
     if (this.aspectLoader.isCoreAspect(aspectId.toString())) {
       const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
       return new AspectEntry(aspectId, extensionDataEntry);
