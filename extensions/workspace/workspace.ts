@@ -293,7 +293,8 @@ export class Workspace implements ComponentFactory {
     const consumerComponents = compsAndDeps.filter((c) =>
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
-    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
+    const components = await this.getMany(ids);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -301,7 +302,7 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }

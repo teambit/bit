@@ -49,7 +49,7 @@ export class AspectEntry {
     return new AspectEntry(this.id, newEntry.legacy);
   }
 
-  static create(aspectId: ComponentID, data: SerializableMap) {
+  static create(aspectId: ComponentID, data: SerializableMap = {}) {
     const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
     return new AspectEntry(aspectId, extensionDataEntry);
   }

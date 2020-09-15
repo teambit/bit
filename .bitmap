@@ -219,9 +219,9 @@
                 "name": "build-pipe.ts"
             },
             {
-                "relativePath": "build-results-persister.ts",
+                "relativePath": "build-pipeline-result-list.ts",
                 "test": false,
-                "name": "build-results-persister.ts"
+                "name": "build-pipeline-result-list.ts"
             },
             {
                 "relativePath": "build-task.ts",
@@ -277,6 +277,16 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "pipeline/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "pipeline/pipeline-results.ts",
+                "test": false,
+                "name": "pipeline-results.ts"
             },
             {
                 "relativePath": "storage/default-resolver.ts",

@@ -102,6 +102,7 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
+    // @ts-ignore
     this.legacyScope.onTag.push(async (legacyIds: BitId[]) => {
       const host = this.componentExtension.getHost();
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));

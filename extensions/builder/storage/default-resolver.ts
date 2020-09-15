@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
-import { AspectEntry, Component } from '@teambit/component';
+import { AspectEntry, Component, ComponentID } from '@teambit/component';
 import { StorageResolver } from './storage-resolver';
 import type { Artifact } from '../artifact';
 
@@ -20,7 +20,8 @@ export class DefaultResolver implements StorageResolver {
   private getAspectEntry(component: Component, aspectId: string): AspectEntry {
     const existing = component.state.aspects.get(aspectId);
     if (existing) return existing;
-    const aspectEntry = AspectEntry.create(aspectId, {});
+    const id = ComponentID.fromString(aspectId);
+    const aspectEntry = AspectEntry.create(id);
     component.state.aspects.addAspectEntry(aspectEntry);
     return aspectEntry;
   }

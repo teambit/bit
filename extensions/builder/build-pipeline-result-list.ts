@@ -1,8 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
-import { Capsule } from '@teambit/isolator';
-import { Logger } from '@teambit/logger';
-import { Artifact } from 'bit-bin/dist/consumer/component/sources/artifact';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
+import { ComponentID } from '@teambit/component';
 import { flatten, isEmpty } from 'ramda';
 import { BuildPipeResults, TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';

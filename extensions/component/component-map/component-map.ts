@@ -33,7 +33,7 @@ export class ComponentMap<T> {
   map<NewType>(predicate: (value: T, component: Component) => NewType): ComponentMap<NewType> {
     const tuples: [string, [Component, NewType]][] = this.toArray().map(([component, value]) => {
       const newValue = predicate(value, component);
-      return [component.id.fullName, [component, newValue]];
+      return [component.id.toString(), [component, newValue]];
     });
 
     return new ComponentMap(new Map(tuples));
@@ -57,7 +57,7 @@ export class ComponentMap<T> {
     });
 
     const asMap: [string, [Component, T]][] = tuples.map(([component, value]) => {
-      return [component.id.fullName, [component, value]];
+      return [component.id.toString(), [component, value]];
     });
 
     return new ComponentMap(new Map(asMap));
@@ -70,6 +70,13 @@ export class ComponentMap<T> {
     return this.hashMap.keys();
   }
 
+  static create<T>(rawMap: [Component, T][]) {
+    const newMap: [string, [Component, T]][] = rawMap.map(([component, data]) => {
+      return [component.id.toString(), [component, data]];
+    });
+    return new ComponentMap(new Map(newMap));
+  }
+
   /**
    * create a component map from components and a value predicate.
    * @param components components to zip into the map.
@@ -77,7 +84,7 @@ export class ComponentMap<T> {
    */
   static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
     const tuples: [string, [Component, T]][] = components.map((component) => {
-      return [component.id.fullName, [component, predicate(component)]];
+      return [component.id.toString(), [component, predicate(component)]];
     });
 
     return new ComponentMap(new Map(tuples));

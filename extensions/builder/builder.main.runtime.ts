@@ -17,9 +17,8 @@ import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
-import { BuildPipeResults, TaskResults } from './build-pipe';
+import { BuildPipeResults } from './build-pipe';
 import { ArtifactStorageError } from './exceptions';
-import { TaskMetadata } from './types';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
@@ -84,6 +83,7 @@ export class BuilderMain {
     const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
     await this.storeArtifacts(buildPipelineResults);
     const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
+
     return ComponentMap.as<AspectList>(components, (component) => {
       const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
       return component.state.aspects.map((aspectEntry) => {
