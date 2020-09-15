@@ -168,7 +168,7 @@ export class UiMain {
     }
 
     // TODO: is this the right place?
-    this.pubsub.publishToTopic(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
+    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();

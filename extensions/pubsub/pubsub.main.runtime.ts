@@ -13,12 +13,12 @@ export class PubsubMain {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
 
-  subscribeToTopic = (topicUUID, callback) => {
+  sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].push(callback);
   };
 
-  publishToTopic = (topicUUID, event: BitBaseEvent) => {
+  pub = (topicUUID, event: BitBaseEvent) => {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   };

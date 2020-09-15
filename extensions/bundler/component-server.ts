@@ -49,7 +49,7 @@ export class ComponentServer {
     if (!address) throw new BindError();
     this.hostname = hostname;
 
-    this.pubsub.publishToTopic(
+    this.pubsub.pub(
       BundlerAspect.id,
       this.createComponentsServerStartedEvent(server, this.context, hostname, this.port)
     );

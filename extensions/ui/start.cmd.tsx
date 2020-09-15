@@ -43,9 +43,9 @@ export class StartCmd implements Command {
 
     private pubsub: PubsubMain
   ) {
-    pubsub.subscribeToTopic('teambit.bit/ui', this.eventsListeners);
-    pubsub.subscribeToTopic('teambit.bit/webpack', this.eventsListeners);
-    pubsub.subscribeToTopic('teambit.bit/bundler', this.eventsListeners);
+    pubsub.sub('teambit.bit/ui', this.eventsListeners);
+    pubsub.sub('teambit.bit/webpack', this.eventsListeners);
+    pubsub.sub('teambit.bit/bundler', this.eventsListeners);
   }
 
   private eventsListeners = (event) => {

@@ -20,7 +20,7 @@ class WebpackCompilerDonePlugin {
   /* stats is passed as an argument when done hook is tapped.  */
   apply(compiler) {
     compiler.hooks.done.tap('webpack-compiler-done-plugin', (stats) => {
-      this.pubsub.publishToTopic(WebpackAspect.id, this.createEvent());
+      this.pubsub.pub(WebpackAspect.id, this.createEvent());
     });
   }
 }
