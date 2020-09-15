@@ -1,0 +1,25 @@
+.errorBlock {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  > div {
+    &:first-child {
+      overflow-wrap: break-word;
+      margin-bottom: 16px;
+      font-size: var(--p-xs);
+    }
+  }
+}
+.codeBlock {
+  > span {
+    display: none;
+  }
+}
+.snippet {
+  max-height: 450px;
+  background: #282c34 !important;
+  span {
+    color: white !important;
+    font-size: 11px;
+  }
+}

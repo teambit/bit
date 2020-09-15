@@ -61,6 +61,7 @@
         "@teambit/base-ui.utils.time-ago": "^0.2.10",
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "0.0.8",
+        "@teambit/documenter.ui.code-snippet": "0.0.8",
         "@teambit/documenter.theme.theme-context": "^0.0.5",
         "@teambit/documenter.types.docs-file": "0.0.7",
         "@teambit/documenter.ui.consumable-link": "^0.0.5",
