@@ -75,7 +75,7 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
 const COMPONENT_SUBSCRIPTION_REMOVED = gql`
   subscription onComponentRemoved {
     componentRemoved {
-      id
+      name
     }
   }
 `;
@@ -91,8 +91,8 @@ export function useWorkspace() {
   }
 
   if (onComponentRemoved.data && data) {
-    const id = onComponentChanged.data.componentRemoved.id;
-    data.workspace.components = data.workspace.components.filter((component) => component.id !== id);
+    const id = onComponentRemoved.data.componentRemoved.id;
+    data.workspace.components = data.workspace.components.filter((component) => component.id.name !== name);
   }
 
   if (onComponentChanged.data && data) {

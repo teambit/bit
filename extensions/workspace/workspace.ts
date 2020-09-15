@@ -432,11 +432,11 @@ export class Workspace implements ComponentFactory {
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
     // TODO: put it on an other function
     this.componentList = new ComponentsList(this.consumer);
+    this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { id: id.fullName } });
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
       const onRemoveResult = await onRemoveFunc(id);
-      this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { id } });
       results.push({ extensionId: extension, results: onRemoveResult });
     });
     return results;

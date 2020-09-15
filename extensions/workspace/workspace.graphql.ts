@@ -67,7 +67,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       }
 
       type ComponentRemoved {
-        id: String
+        name: String
       }
 
       type Query {
