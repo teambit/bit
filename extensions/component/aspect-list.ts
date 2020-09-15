@@ -1,6 +1,5 @@
 import R from 'ramda';
 import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { ComponentID } from './id';
 import { AspectEntry } from './aspect-entry';
 

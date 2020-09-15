@@ -1,4 +1,5 @@
 import { flatten } from 'lodash';
+import { AspectEntry } from '@teambit/component';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
@@ -76,7 +77,12 @@ export class BuilderMain {
     const buildServiceResults = this.getPipelineResults(envsExecutionResults);
     this.storeArtifacts(buildServiceResults);
 
-    return ComponentMap.as<AspectList>(components, (component) => component.state.aspects);
+    return ComponentMap.as<AspectList>(components, (component) => {
+      // component.state.aspects.entries.push(AspectEntry.create());
+      return component.state.aspects.map((entry) => {
+        return entry.transform({});
+      });
+    });
   }
 
   /**
