@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Command } from 'bit-bin/dist/cli/command';
-import { Box, Color, render, Text } from 'ink';
+import { Box, render, Text } from 'ink';
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
