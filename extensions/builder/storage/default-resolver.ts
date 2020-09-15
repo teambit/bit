@@ -21,8 +21,7 @@ export class DefaultResolver implements StorageResolver {
     const existing = component.state.aspects.get(aspectId);
     if (existing) return existing;
     const id = ComponentID.fromString(aspectId);
-    const aspectEntry = AspectEntry.create(id);
-    component.state.aspects.addAspectEntry(aspectEntry);
-    return aspectEntry;
+    const entry = component.state.aspects.addEntry(id);
+    return entry;
   }
 }

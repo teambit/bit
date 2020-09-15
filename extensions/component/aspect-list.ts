@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import { ComponentID } from './id';
-import { AspectEntry } from './aspect-entry';
+import { AspectEntry, SerializableMap } from './aspect-entry';
 
 /**
  * list of aspects, each may have data and artifacts saved per component.
@@ -9,13 +9,11 @@ import { AspectEntry } from './aspect-entry';
 export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
-  // addAspectEntry(aspectEntry: AspectEntry) {
-  //   this.entries.push(aspectEntry);
-  // }
-
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
     const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
-    return new AspectEntry(aspectId, extensionDataEntry);
+    const entry = new AspectEntry(aspectId, extensionDataEntry);
+    this.entries.push(entry);
+    return entry;
   }
 
   /**
