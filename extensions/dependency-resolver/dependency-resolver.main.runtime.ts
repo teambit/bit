@@ -26,7 +26,7 @@ import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
 import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
-import { PackageManager, ResolvedPackageVersion } from './package-manager';
+import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
   DependenciesPolicy,
@@ -83,7 +83,7 @@ export type UpdatedPackage = {
 };
 
 export type UpdatePolicyResult = {
-  addedPackages: ResolvedPackageVersion[];
+  addedPackages: PolicyDep[];
   existingPackages: PolicyDep[];
   updatedPackages: UpdatedPackage[];
 };
@@ -239,7 +239,7 @@ export class DependencyResolverMain {
       updateExisting: false,
     };
     const calculatedOpts = Object.assign({}, defaultOptions, options);
-    const addedPackages: ResolvedPackageVersion[] = [];
+    const addedPackages: PolicyDep[] = [];
     const existingPackages: PolicyDep[] = [];
     const updatedPackages: UpdatedPackage[] = [];
     newDeps.forEach((dep) => {
