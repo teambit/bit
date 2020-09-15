@@ -8,10 +8,9 @@ import React, { HTMLAttributes, useContext } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
 
-import styles from './tests-page.module.scss';
-
 import { TestTable } from '@teambit/staged-components.test-table';
 import { TestErrors } from '@teambit/staged-components.test-errors';
+import styles from './tests-page.module.scss';
 
 const GET_COMPONENT = gql`
   query($id: String!) {

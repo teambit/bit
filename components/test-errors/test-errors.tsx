@@ -2,8 +2,8 @@ import React from 'react';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import styles from './test-errors.module.scss';
 import { Error } from '@teambit/tester';
+import styles from './test-errors.module.scss';
 
 export function TestErrors({ errors }: { errors: Error[] }) {
   if (errors.length === 0) return null;

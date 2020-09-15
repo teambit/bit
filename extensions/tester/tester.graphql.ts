@@ -1,4 +1,4 @@
-import { Component, ComponentFactory } from '@teambit/component';
+import { ComponentFactory } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 

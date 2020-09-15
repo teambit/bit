@@ -4,8 +4,8 @@ import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import React, { useState } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import styles from './test-table.module.scss';
 import { TestResult } from '@teambit/tester';
+import styles from './test-table.module.scss';
 
 export type TestTableProps = {
   tests: TestResult[];
