@@ -3,11 +3,18 @@ import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/con
 import { ComponentID } from './id';
 import { AspectEntry } from './aspect-entry';
 
+/**
+ * list of aspects, each may have data and artifacts saved per component.
+ */
 export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   isCoreAspect(entry: ExtensionDataEntry) {
     return !entry.extensionId && entry.name;
+  }
+
+  addAspectEntry(aspectEntry: AspectEntry) {
+    this.entries.push(aspectEntry);
   }
 
   /**
@@ -64,7 +71,7 @@ export class AspectList {
     return ids;
   }
 
-  static fromLegacyExtensions(legacyDataList: ExtensionDataList) {
+  static fromLegacyExtensions(legacyDataList: ExtensionDataList): AspectList {
     const newEntries = legacyDataList.map((entry) => {
       return new AspectEntry(getAspectId(entry), entry);
     });

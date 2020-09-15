@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { Artifact } from './artifact';
+import type { Artifact } from './artifact';
 
 export type ResolverMap = { [key: string]: Artifact[] };
 

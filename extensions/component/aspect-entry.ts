@@ -50,7 +50,7 @@ export class AspectEntry {
   }
 
   static create(aspectId: ComponentID, data: SerializableMap) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, [], aspectId);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
     return new AspectEntry(aspectId, extensionDataEntry);
   }
 

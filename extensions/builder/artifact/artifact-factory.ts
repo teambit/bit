@@ -2,12 +2,12 @@ import path from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
 import { Component, ComponentMap } from '@teambit/component';
-import { StorageResolverSlot } from '../builder.main.runtime';
+import type { StorageResolverSlot } from '../builder.main.runtime';
 import { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver, StorageResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
 import { Artifact } from './artifact';
-import { BuildContext, BuildTask } from '../build-task';
+import type { BuildContext, BuildTask } from '../build-task';
 import { CapsuleNotFound } from '../exceptions';
 
 export const DEFAULT_CONTEXT = 'component';
@@ -78,7 +78,7 @@ export class ArtifactFactory {
         const artifact = new Artifact(
           def,
           this.getStorageResolver(def),
-          this.resolvePaths(context.capsuleGraph.capsulesRootDir),
+          this.resolvePaths(context.capsuleGraph.capsulesRootDir, ['.']),
           task
         );
 

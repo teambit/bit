@@ -1,5 +1,4 @@
 import { flatten } from 'lodash';
-import { AspectEntry } from '@teambit/component';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
@@ -10,15 +9,18 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
-import { ArtifactFactory, ExtensionArtifact } from './artifact';
+import { ArtifactList, ExtensionArtifact } from './artifact';
+import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
-import { BuildPipeResults } from './build-pipe';
+import { BuildPipeResults, TaskResults } from './build-pipe';
 import { ArtifactStorageError } from './exceptions';
+import { TaskMetadata } from './types';
+import { BuildPipelineResultList } from './build-pipeline-result-list';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -47,7 +49,7 @@ export class BuilderMain {
   ) {}
 
   private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
-    const artifacts = flatten(
+    const artifacts: ComponentMap<ArtifactList>[] = flatten(
       buildServiceResults.map((pipeResult) => {
         return pipeResult.results.map((val) => val.artifacts);
       })
@@ -64,9 +66,14 @@ export class BuilderMain {
     );
   }
 
+  /**
+   * transform the complex EnvsExecutionResult<BuildServiceResults> type to a simpler array of
+   * BuildPipeResults. as a reminder, the build pipeline is running per env, hence the array. each
+   * item of BuildPipeResults has the results of multiple tasks.
+   */
   private getPipelineResults(execResults: EnvsExecutionResult<BuildServiceResults>): BuildPipeResults[] {
     const map = execResults.results.map((envRes) => envRes.data?.buildResults);
-    return map.filter((val) => !!val) as BuildPipeResults[];
+    return map.filter((val) => val) as BuildPipeResults[];
   }
 
   async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
@@ -74,13 +81,14 @@ export class BuilderMain {
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
-    const buildServiceResults = this.getPipelineResults(envsExecutionResults);
-    this.storeArtifacts(buildServiceResults);
-
+    const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
+    await this.storeArtifacts(buildPipelineResults);
+    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
     return ComponentMap.as<AspectList>(components, (component) => {
-      // component.state.aspects.entries.push(AspectEntry.create());
-      return component.state.aspects.map((entry) => {
-        return entry.transform({});
+      const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
+      return component.state.aspects.map((aspectEntry) => {
+        const dataFromBuildPipeline = taskResultsOfComponent[aspectEntry.id.toString()];
+        return aspectEntry.transform(dataFromBuildPipeline);
       });
     });
   }

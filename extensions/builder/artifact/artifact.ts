@@ -1,6 +1,6 @@
-import { BuildTask } from '../build-task';
-import { StorageResolver } from '../storage';
-import { ArtifactDefinition } from './artifact-definition';
+import type { BuildTask } from '../build-task';
+import type { StorageResolver } from '../storage';
+import type { ArtifactDefinition } from './artifact-definition';
 
 export class Artifact {
   constructor(

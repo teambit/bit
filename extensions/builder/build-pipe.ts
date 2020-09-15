@@ -27,6 +27,11 @@ export type BuildPipeResults = {
 
 export type TaskResults = {
   /**
+   * task itself. useful for getting its id/description later on.
+   */
+  task: BuildTask;
+
+  /**
    * component build results.
    */
   componentsResults: ComponentResult[];
@@ -63,7 +68,7 @@ export class BuildPipe {
   async execute(buildContext: BuildContext): Promise<BuildPipeResults> {
     const startTime = Date.now();
     const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
-    const results = await Bluebird.mapSeries(this.tasks, async (task: BuildTask) => {
+    const results: TaskResults[] = await Bluebird.mapSeries(this.tasks, async (task: BuildTask) => {
       if (!task) {
         throw new InvalidTask(task);
       }
@@ -82,6 +87,7 @@ export class BuildPipe {
       const artifacts = this.artifactFactory.generate(buildContext, defs, task);
 
       return {
+        task,
         componentsResults: taskResult.componentsResults,
         artifacts,
         startTime: taskStartTime,

@@ -4,6 +4,8 @@ export type Serializable = {
   toString(): string;
 };
 
+export type TaskMetadata = { [key: string]: Serializable };
+
 export type ComponentResult = {
   /**
    * instance of the component
@@ -13,7 +15,7 @@ export type ComponentResult = {
   /**
    * metadata generated during component build.
    */
-  metadata?: { [key: string]: Serializable };
+  metadata?: TaskMetadata;
 
   /**
    * returning errors from build tasks will cause a pipeline failure and logs all returned errors.

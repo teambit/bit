@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
-import { Network } from '@teambit/isolator';
-import { ComponentResult } from './types';
-import { ArtifactDefinition } from './artifact';
+import type { Network } from '@teambit/isolator';
+import type { ComponentResult } from './types';
+import type { ArtifactDefinition } from './artifact';
 
 export type TaskLocation = 'start' | 'end';
 
