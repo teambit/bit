@@ -86,9 +86,7 @@ export class PnpmPackageManager implements PackageManager {
     return resolveRemoteVersion(
       packageName,
       options.rootDir,
-      options.cacheRootDir,
-      options.fetchToCache,
-      options.update
+      options.cacheRootDir
     );
   }
 }

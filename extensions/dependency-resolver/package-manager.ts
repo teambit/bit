@@ -17,13 +17,15 @@ export type PackageManagerInstallOptions = {
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
+  isSemver: boolean;
+  resolvedVia?: string;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
-  fetchToCache?: boolean;
-  update?: boolean;
+  // fetchToCache?: boolean;
+  // update?: boolean;
 };
 
 export interface PackageManager {
