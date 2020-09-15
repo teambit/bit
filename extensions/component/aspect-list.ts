@@ -9,8 +9,13 @@ import { AspectEntry } from './aspect-entry';
 export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
-  addAspectEntry(aspectEntry: AspectEntry) {
-    this.entries.push(aspectEntry);
+  // addAspectEntry(aspectEntry: AspectEntry) {
+  //   this.entries.push(aspectEntry);
+  // }
+
+  addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+    return new AspectEntry(aspectId, extensionDataEntry);
   }
 
   /**
