@@ -72,15 +72,29 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   ${componentFields}
 `;
 
+const COMPONENT_SUBSCRIPTION_REMOVED = gql`
+  subscription onComponentRemoved {
+    componentRemoved {
+      id
+    }
+  }
+`;
+
 export function useWorkspace() {
   const { data } = useDataQuery(WORKSPACE);
   const onComponentAdded = useSubscription(COMPONENT_SUBSCRIPTION_ADDED);
   const onComponentChanged = useSubscription(COMPONENT_SUBSCRIPTION_CHANGED);
+  const onComponentRemoved = useSubscription(COMPONENT_SUBSCRIPTION_REMOVED);
+
   if (onComponentAdded.data && data) {
     data.workspace.components.push(onComponentAdded.data.componentAdded.component);
   }
 
-  // TODO: write it more pretty
+  if (onComponentRemoved.data && data) {
+    const id = onComponentChanged.data.componentRemoved.id;
+    data.workspace.components = data.workspace.components.filter((component) => component.id !== id);
+  }
+
   if (onComponentChanged.data && data) {
     const updatedComponent = onComponentChanged.data.componentChanged.component;
     // replace the component

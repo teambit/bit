@@ -1,7 +1,7 @@
 import { GraphqlMain } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
-import { ComponentAdded, ComponentChanged, Workspace } from './workspace';
+import { ComponentAdded, ComponentRemoved, ComponentChanged, Workspace } from './workspace';
 import { WorkspaceComponent } from './workspace-component';
 
 export default (workspace: Workspace, graphql: GraphqlMain) => {
@@ -55,6 +55,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       type Subscription {
         componentAdded: ComponentAdded
         componentChanged: ComponentChanged
+        componentRemoved: ComponentRemoved
       }
 
       type ComponentAdded {
@@ -63,6 +64,10 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
 
       type ComponentChanged {
         component: Component
+      }
+
+      type ComponentRemoved {
+        id: String
       }
 
       type Query {
@@ -76,6 +81,9 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         },
         componentChanged: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentChanged),
+        },
+        componentRemoved: {
+          subscribe: () => graphql.pubsub.asyncIterator(ComponentRemoved),
         },
       },
       Component: {

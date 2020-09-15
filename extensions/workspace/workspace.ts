@@ -80,6 +80,7 @@ export type EjectConfResult = {
 
 export const ComponentAdded = 'componentAdded';
 export const ComponentChanged = 'componentChanged';
+export const ComponentRemoved = 'componentRemoved';
 
 export interface EjectConfOptions {
   propagate?: boolean;
@@ -435,6 +436,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
       const onRemoveResult = await onRemoveFunc(id);
+      this.graphql.pubsub.publish(ComponentRemoved, { componentRemoved: { id } });
       results.push({ extensionId: extension, results: onRemoveResult });
     });
     return results;
