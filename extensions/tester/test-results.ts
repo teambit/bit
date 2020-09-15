@@ -13,6 +13,9 @@ export class TestResult {
     public file: string,
 
     /** test object data  */
-    public duration?: number | null
+    public duration?: number | null,
+
+    /*  error log */
+    public error?: string
   ) {}
 }
