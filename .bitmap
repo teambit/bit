@@ -4583,6 +4583,11 @@
                 "name": "clear-console.ts"
             },
             {
+                "relativePath": "bit-start-cmd-output-templates/Component-preview-server-started-headers.tsx",
+                "test": false,
+                "name": "Component-preview-server-started-headers.tsx"
+            },
+            {
                 "relativePath": "bit-start-cmd-output-templates/Component-preview-server-started.tsx",
                 "test": false,
                 "name": "Component-preview-server-started.tsx"

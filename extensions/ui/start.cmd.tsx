@@ -1,19 +1,20 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
+import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
 import open from 'open';
 import { render } from 'ink';
 import prettyTime from 'pretty-time';
 
-// import { UIServerConsole } from './bit-start-cmd-output-templates/env-console';
 import type { UiMain } from './ui.main.runtime';
 import {
   Starting,
   ClearConsole,
   compilationEndedSuccessfullyOutput,
   ComponentPreviewServerStarted,
+  ComponentPreviewServerStartedHeaders,
   UIServersAreReady,
 } from './bit-start-cmd-output-templates';
 
@@ -78,6 +79,8 @@ export class StartCmd implements Command {
   private onComponentsServerStarted = (event) => {
     this.getDuration();
     this.devServerCounter += 1;
+    console.log(''); // TODO: New line with ink
+    console.log(''); // TODO: New line with ink
     render(
       <ComponentPreviewServerStarted
         envName={event.body.executionContext.envRuntime.id}
@@ -86,13 +89,20 @@ export class StartCmd implements Command {
         timestamp={this.getDuration()}
       />
     );
-    console.log('');
   };
 
   private openBrowserOn0() {
     if (this.devServerCounter === 0) {
-      console.log('');
-      render(<UIServersAreReady host={this.targetHost} port={this.targetPort} timestamp={this.getDuration()} />);
+      console.log(''); // TODO: New line with ink
+      console.log(''); // TODO: New line with ink
+      render(
+        <UIServersAreReady
+          host={this.targetHost}
+          port={this.targetPort}
+          timestamp={this.getDuration()}
+          workspace={WorkspaceAspect}
+        />
+      );
 
       setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
     }
@@ -122,7 +132,8 @@ export class StartCmd implements Command {
     return (
       <>
         <ClearConsole />
-        <Starting />
+        <Starting workspace={WorkspaceAspect} />
+        <ComponentPreviewServerStartedHeaders />
       </>
     );
   }

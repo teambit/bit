@@ -129,7 +129,9 @@ export class Watcher {
     }
     const idStr = componentId.toString();
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
-    logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
+    logger.console(``);
+    logger.console(`Running ${hook} hook for ${chalk.bold(idStr)}`);
+    logger.console(`Building workspace UI according to the configuration found in ./workspace.jsonc...`);
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange

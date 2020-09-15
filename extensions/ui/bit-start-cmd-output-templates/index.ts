@@ -6,4 +6,5 @@ export { DevServerRunningOutputTemplate } from './dev-server-running-output-temp
 export { ClearConsole } from './Clear-console';
 export { Starting } from './Starting';
 export { ComponentPreviewServerStarted } from './Component-preview-server-started';
+export { ComponentPreviewServerStartedHeaders } from './Component-preview-server-started-headers';
 export { UIServersAreReady } from './Ui-servers-are-ready';
