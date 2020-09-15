@@ -6,7 +6,7 @@ export function useKeyBind(
   /** the key to bind to */
   key: string | string[],
   /** key handler */
-  handler: (e: ExtendedKeyboardEvent, combo: string) => any,
+  handler: (e: KeyboardEvent, combo: string) => any,
   /** enable/disable binding */
   enable = true
 ) {
