@@ -1,5 +1,5 @@
 import path from 'path';
-import glob from 'glob';
+import globby from 'globby';
 import { flatten } from 'lodash';
 import { Component, ComponentMap } from '@teambit/component';
 import { StorageResolverSlot } from '../builder.main.runtime';
@@ -23,13 +23,9 @@ export class ArtifactFactory {
     return userResolver || defaultResolver;
   }
 
-  private resolvePaths(root: string, globPatterns = ['.'], options: { ignore?: string[] } = {}): string[] {
-    const paths = flatten(
-      globPatterns.map((pattern) => {
-        return glob.sync(pattern, { cwd: root, nodir: true, ...options });
-      })
-    );
-
+  private resolvePaths(root: string, globPatterns: string[]): string[] {
+    const patternsFlattened = flatten(globPatterns);
+    const paths = globby.sync(patternsFlattened, { cwd: root });
     return paths.map((file) => path.join(root, file));
   }
 

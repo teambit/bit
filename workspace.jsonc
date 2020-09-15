@@ -111,6 +111,7 @@
         "file-loader": "^6.0.0",
         "filenamify": "^4.1.0",
         "get-port": "^5.1.1",
+        "globby": "11.0.1",
         "graphql": "^15.1.0",
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
