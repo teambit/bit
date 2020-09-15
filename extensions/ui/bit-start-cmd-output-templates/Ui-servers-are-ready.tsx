@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, Color, Box } from 'ink';
+import moment from 'moment';
 
 export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
   <>
@@ -14,7 +15,9 @@ export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
     <Box>{`\n`}</Box>
     <Box>
       <Text>
-        {`Waiting for component changes (${timestamp})... `} <Color yellow>{Date.now().toString()}</Color>
+        <Color yellow>
+          {`Waiting for component changes (${timestamp})... `} {`(${moment().format('HH:MM:SS')})`}
+        </Color>
       </Text>
     </Box>
   </>

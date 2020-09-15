@@ -4,19 +4,13 @@ import { Box, Text } from 'ink';
 export const ComponentPreviewServerStartedHeaders = () => (
   <Box>
     <Box width="30%">
-      <Text bold underline>
-        Environment Name
-      </Text>
+      <Text underline>ENVIRONMENT NAME</Text>
     </Box>
     <Box width="50%">
-      <Text bold underline>
-        Status
-      </Text>
+      <Text underline>STATUS</Text>
     </Box>
     <Box width="20%">
-      <Text bold underline>
-        Duration
-      </Text>
+      <Text underline>DURATION</Text>
     </Box>
   </Box>
 );

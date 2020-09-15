@@ -4598,11 +4598,6 @@
                 "name": "Initialize-start-output-template.tsx"
             },
             {
-                "relativePath": "bit-start-cmd-output-templates/Starting copy.tsx",
-                "test": false,
-                "name": "Starting copy.tsx"
-            },
-            {
                 "relativePath": "bit-start-cmd-output-templates/Starting.tsx",
                 "test": false,
                 "name": "Starting.tsx"
@@ -5290,5 +5285,5 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "version": "14.8.9-dev.14"
+    "version": "14.8.9-dev.15"
 }
