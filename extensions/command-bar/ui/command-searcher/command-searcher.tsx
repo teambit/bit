@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js';
-import { SearchProvider, CommanderSearchResult } from '@teambit/command-bar';
+import { CommanderSearchResult, SearchProvider } from '../../types';
 
 const searchedKeys: (keyof CommanderSearchResult)[] = ['displayName'];
 

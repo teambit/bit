@@ -3,10 +3,12 @@ import classnames from 'classnames';
 import styles from './key.module.scss';
 import { keySymbols } from './key-characters';
 
+export type KeySequenceProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
+export type KeyComboProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
 export type KeycapProps = { children: string } & React.HTMLAttributes<HTMLElement>;
-export type KeyShortcutProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
 
-export function KeySequence({ children, className }: { children?: string; className: string }) {
+/** renders a sequence of keys, e.g. `ctrl+K then ctrl+d` */
+export function KeySequence({ children, className, ...rest }: KeySequenceProps) {
   if (!children) return null;
 
   const content = useMemo(() => {
@@ -21,14 +23,17 @@ export function KeySequence({ children, className }: { children?: string; classN
     return withThens;
   }, [children]);
 
-  return <div className={classnames(styles.keySequence, className)}>{content}</div>;
+  return (
+    <div {...rest} className={classnames(styles.keySequence, className)}>
+      {content}
+    </div>
+  );
 }
 
 /** renders a key combination */
-export function KeyCombo({ children, className, ...rest }: KeyShortcutProps) {
+export function KeyCombo({ children, className, ...rest }: KeyComboProps) {
   if (!children) return null;
 
-  // TODO - support all separators - sequence (' '), AND ('+'), OR (string[])
   const split = children.split('+').map((x) => x.trim());
 
   return (

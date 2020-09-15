@@ -1,7 +1,8 @@
 import React from 'react';
 import classnames from 'classnames';
-import { CommanderSearchResult } from '@teambit/command-bar';
 import { KeySequence } from '@teambit/elements.keycap';
+import { mutedText } from '@teambit/base-ui.text.muted-text';
+import { CommanderSearchResult } from '../../types';
 import styles from './command-bar-item.module.scss';
 
 export type CommandItemProps = {
@@ -21,7 +22,7 @@ export function CommandBarItem({ entry, className, active, ...rest }: CommandIte
     >
       {icon && <img src={icon} alt={iconAlt} className={styles.icon} />}
       <div className={styles.name}>{name}</div>
-      <KeySequence className={styles.commandKeys}>{selectedKeybinding}</KeySequence>
+      <KeySequence className={classnames(styles.commandKeys, mutedText)}>{selectedKeybinding}</KeySequence>
     </div>
   );
 }

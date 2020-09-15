@@ -42,6 +42,9 @@ export class CommandBarUI {
     return this;
   }
 
+  /**
+   * registers a command
+   */
   addCommand(...commands: CommandEntry[]) {
     commands.forEach(({ id: commandId }) => {
       if (this.getCommand(commandId) !== undefined) throw new Error(`command already exists: "${commandId}"`);
@@ -58,18 +61,25 @@ export class CommandBarUI {
     this.updateCommandsSearcher();
   }
 
+  /**
+   * executes command by name, if exists.
+   * @param commandId
+   */
   run(commandId: CommandId) {
     const commandEntry = this.getCommand(commandId);
-    if (!commandEntry) return;
+    if (!commandEntry) return undefined;
 
-    commandEntry.handler();
+    return commandEntry.handler();
   }
 
+  /**
+   * executes a keyboard shortcut manually
+   */
   trigger = (key: string) => {
     this.mousetrap.trigger(key);
   };
 
-  search = (term: string, limit: number = RESULT_LIMIT) => {
+  private search = (term: string, limit: number = RESULT_LIMIT) => {
     const searchers = this.searcherSlot.values();
 
     const searcher = searchers.find((x) => x.test(term));
@@ -94,8 +104,14 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
+  /**
+   * internal. Opens and closes the command bar UI.
+   */
   setVisibility?: (visible: boolean) => void;
 
+  /**
+   * generate the ui for command bar
+   */
   getCommandBar = () => {
     return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
   };
