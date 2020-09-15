@@ -22,7 +22,7 @@ export function testerSchema(tester: TesterMain): Schema {
         duration: String
         file: String
         status: String
-        error: string
+        error: String
       }
 
       type Errors {
