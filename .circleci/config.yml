@@ -480,8 +480,8 @@ jobs:
 
       - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
       - run:
-        name: 'replace git protocol from ssh to http' # to not get the authenticate error
-        command: "sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config"
+          name: 'replace git protocol from ssh to http' # to not get the authenticate error
+          command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
       -
         run:
           name: 'git commit'
