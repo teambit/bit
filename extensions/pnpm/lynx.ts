@@ -1,4 +1,5 @@
 import getConfig from '@pnpm/config';
+import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 // import createClient from '@pnpm/client'
@@ -146,13 +147,15 @@ export async function resolveRemoteVersion(
       alias: parsedPackage.name,
       pref: parsedPackage.version
     };
+    const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
     resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
+    const version = isValidRange ? parsedPackage.version : val.manifest.version;
     // const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
 
     return {
       packageName: val.manifest.name,
-      version: val.manifest.version,
+      version,
       isSemver: true,
       resolvedVia: val.resolvedVia
     };
