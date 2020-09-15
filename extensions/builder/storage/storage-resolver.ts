@@ -1,6 +1,10 @@
 import { Component } from '@teambit/component';
 import { Artifact } from '../artifact';
 
+export type StoreResult = {
+  [path: string]: string;
+};
+
 export interface StorageResolver {
   /**
    * name of the storage resolver.

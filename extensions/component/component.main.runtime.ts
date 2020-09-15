@@ -3,14 +3,16 @@ import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { flatten } from 'lodash';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
-
+import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config';
+import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
 import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
+import { ComponentID } from './id';
+import { AspectEntry, SerializableMap } from './aspect-entry';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -24,7 +26,9 @@ export class ComponentMain {
     /**
      * Express Extension
      */
-    private express: ExpressMain
+    private express: ExpressMain,
+
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -37,6 +41,16 @@ export class ComponentMain {
 
   createAspectList(legacyExtensionDataList: ExtensionDataList) {
     return AspectList.fromLegacyExtensions(legacyExtensionDataList);
+  }
+
+  createEntry(aspectId: ComponentID, data: SerializableMap = {}) {
+    if (this.aspectLoader.isCoreAspect(aspectId.toString())) {
+      const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+      return new AspectEntry(aspectId, extensionDataEntry);
+    }
+
+    const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, aspectId.toString(), {}, data, []);
+    return new AspectEntry(aspectId, extensionDataEntry);
   }
 
   registerRoute(routes: Route[]) {
@@ -90,10 +104,14 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ExpressAspect];
+  static dependencies = [GraphqlAspect, ExpressAspect, AspectLoaderAspect];
 
-  static async provider([graphql, express]: [GraphqlMain, ExpressMain], config, [hostSlot]: [ComponentHostSlot]) {
-    const componentExtension = new ComponentMain(hostSlot, express);
+  static async provider(
+    [graphql, express, aspectLoader]: [GraphqlMain, ExpressMain, AspectLoaderMain],
+    config,
+    [hostSlot]: [ComponentHostSlot]
+  ) {
+    const componentExtension = new ComponentMain(hostSlot, express, aspectLoader);
     graphql.register(componentSchema(componentExtension));
 
     return componentExtension;

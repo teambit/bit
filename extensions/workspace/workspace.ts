@@ -285,6 +285,7 @@ export class Workspace implements ComponentFactory {
       const componentId = await this.resolveComponentId(seeder);
       return componentId._legacy;
     });
+
     const legacySeedersIds = await Promise.all(legacySeedersIdsP);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
@@ -717,15 +718,11 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const loadComponentsFunc = async (ids: BitId[]) => {
-      const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
-      return loadedComps.map((c) => c.state._consumer);
-    };
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, coreAspectsBitIds);
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.

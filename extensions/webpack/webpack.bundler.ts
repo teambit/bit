@@ -28,11 +28,16 @@ export class WebpackBundler implements Bundler {
     const componentOutput = await pMapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
       longProcessLogger.logProgress(components.map((component) => component.id.toString()).join(', '));
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
-          if (err) return reject(err);
+          if (err) {
+            return resolve({
+              errors: [err],
+              components,
+            });
+          }
           const info = stats.toJson();
           return resolve({
             errors: info.errors,

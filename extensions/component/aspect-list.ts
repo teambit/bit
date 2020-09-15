@@ -9,10 +9,6 @@ import { AspectEntry } from './aspect-entry';
 export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
-  isCoreAspect(entry: ExtensionDataEntry) {
-    return !entry.extensionId && entry.name;
-  }
-
   addAspectEntry(aspectEntry: AspectEntry) {
     this.entries.push(aspectEntry);
   }
