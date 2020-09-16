@@ -17,8 +17,12 @@ export class FlattenedDependencyLoader {
   ) {}
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds().difference(this.ignoreIds));
-    const devDependencies = await this.loadManyDependencies(component.devDependencies.getAllIds().difference(this.ignoreIds));
-    const extensionDependencies = await this.loadManyDependencies(component.extensions.extensionsBitIds.difference(this.ignoreIds));
+    const devDependencies = await this.loadManyDependencies(
+      component.devDependencies.getAllIds().difference(this.ignoreIds)
+    );
+    const extensionDependencies = await this.loadManyDependencies(
+      component.extensions.extensionsBitIds.difference(this.ignoreIds)
+    );
 
     const filterIgnoreIds = (comps: any[]) => {
       if (!this.ignoreIds.length) {

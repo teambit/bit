@@ -733,7 +733,7 @@ export class Workspace implements ComponentFactory {
       const currIds = curr.state.aspects.ids;
       acc = acc.concat(currIds);
       return acc;
-    }, []);
+    }, [] as any);
     const otherDependenciesMap = components.reduce((acc, curr) => {
       // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
       const currMap = curr.state.dependencies.getIdsMap();
@@ -746,7 +746,7 @@ export class Workspace implements ComponentFactory {
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, ignoredIds);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, BitIds.fromArray(ignoredIds));
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
