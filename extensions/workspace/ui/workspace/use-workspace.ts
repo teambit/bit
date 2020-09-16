@@ -91,7 +91,7 @@ export function useWorkspace() {
   }
 
   if (onComponentRemoved.data && data) {
-    const id = onComponentRemoved.data.componentRemoved.id;
+    const name = onComponentRemoved.data.componentRemoved.id;
     data.workspace.components = data.workspace.components.filter((component) => component.id.name !== name);
   }
 
