@@ -14,9 +14,9 @@ export default () => {
         <Section>
           <LinkedHeading link="introduction">Introduction</LinkedHeading>
           <Paragraph>
-            The React aspect (environment) composes together a number of aspects relating to the lifecycle of a React
-            component. It spares you the overhead of setting up your own environment and creates a standardized
-            environment for your team.
+            The React aspect (environment) composes together a number of aspects, all relating to the lifecycle of a
+            React component in a Bit workspace. It spares you the overhead of setting up your own environment and
+            creates a standardized environment for your team.
           </Paragraph>
           <Paragraph>
             The React enviornment can be customized and extended by using it in a new environment composition.

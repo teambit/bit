@@ -25,6 +25,7 @@ export default () => {
             In a nutshell, an environment allows us to focus on building components without having to deal with setting
             up frameworks, testing libraries, CI pipelines, etc. - it is all pre-configured and standardized.
           </Paragraph>
+          <br />
           <Paragraph>
             A single workspace can have multiple environments to support components of different types.
           </Paragraph>

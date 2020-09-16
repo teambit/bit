@@ -1327,6 +1327,11 @@
                 "name": "README.md"
             },
             {
+                "relativePath": "code-snippets.ts",
+                "test": false,
+                "name": "code-snippets.ts"
+            },
+            {
                 "relativePath": "components/env-console/env-console.tsx",
                 "test": false,
                 "name": "env-console.tsx"
@@ -2464,6 +2469,11 @@
                 "relativePath": "react.aspect.ts",
                 "test": false,
                 "name": "react.aspect.ts"
+            },
+            {
+                "relativePath": "react.docs.tsx",
+                "test": false,
+                "name": "react.docs.tsx"
             },
             {
                 "relativePath": "react.env.ts",
