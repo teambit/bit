@@ -24,9 +24,9 @@ export class JestTester implements Tester {
       if (!testsFiles) return undefined;
       if (testsFiles?.length === 0) return undefined;
       const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
-        if (test.failureMessage)
+        if (test.testExecError)
           errors.push({
-            failureMessage: test.failureMessage,
+            failureMessage: test.testExecError.message,
             file: test.testFilePath,
           });
         return errors;
