@@ -4,9 +4,18 @@ import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/
 import { TestResult as JestTestResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
+
+  private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
+    return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {
+      const file = specs.find((spec) => spec.path === path);
+      if (file) acc = file;
+      return acc;
+    }, undefined);
+  }
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
@@ -19,28 +28,34 @@ export class JestTester implements Tester {
     });
   }
 
-  private buildTestsObj(components: ComponentMap<JestTestResult[] | undefined>, config?: any) {
+  private buildTestsObj(
+    components: ComponentMap<JestTestResult[] | undefined>,
+    testerContext: TesterContext,
+    config?: any
+  ) {
     const tests = components.toArray().map(([component, testsFiles]) => {
       if (!testsFiles) return undefined;
       if (testsFiles?.length === 0) return undefined;
       const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
+        const file = this.getTestFile(test.testFilePath, testerContext);
         if (test.testExecError)
           errors.push({
             failureMessage: test.testExecError.message,
-            file: test.testFilePath,
+            file: file?.relative || test.testFilePath,
           });
         return errors;
       }, []);
 
       const testsResults = testsFiles.reduce((acc: TestResult[], test) => {
         test.testResults.forEach((testResult) => {
+          const file = this.getTestFile(test.testFilePath, testerContext);
           const error = formatResultsErrors([testResult], config, { noStackTrace: false });
           acc.push(
             new TestResult(
               testResult.ancestorTitles,
               testResult.title,
               testResult.status,
-              test.testFilePath,
+              file?.relative || test.testFilePath,
               testResult.duration,
               error || undefined
             )
@@ -82,7 +97,7 @@ export class JestTester implements Tester {
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
     const componentsWithTests = this.attachTestsToComponent(context, testResults);
-    const componentTestResults = this.buildTestsObj(componentsWithTests, jestConfigWithSpecs);
+    const componentTestResults = this.buildTestsObj(componentsWithTests, context, jestConfigWithSpecs);
     const globalErrors = this.getErrors(testResults);
     return { components: componentTestResults, errors: globalErrors };
   }
