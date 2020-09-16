@@ -977,6 +977,16 @@ describe('bit tag command', function () {
       const show = helper.command.showComponentParsed('comp1');
       expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
     });
+    describe('auto-tag', () => {
+      before(() => {
+        helper.fs.appendFile('comp2/index.js');
+      });
+      it('should save the artifacts/dists to the auto-tagged components', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const compilerExt = comp1.extensions.find((e) => e.name === 'teambit.bit/compiler');
+        expect(compilerExt.artifacts.length).to.be.greaterThan(0);
+      });
+    });
   });
   describe('soft tag', () => {
     before(() => {

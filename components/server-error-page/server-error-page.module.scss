@@ -1,0 +1,29 @@
+.iconLine {
+  display: flex;
+  justify-content: center;
+  > a:nth-child(2) {
+    margin: 0 13px;
+  }
+  > a > span {
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+  }
+  .github {
+    color: var(--text-highlight);
+  }
+  .slack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--cta-button-text);
+    background-color: var(--slack-bg, #222022);
+  }
+}
+
+.logo {
+  width: 24px;
+  height: 24px;
+}

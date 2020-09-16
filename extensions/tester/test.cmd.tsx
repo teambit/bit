@@ -33,8 +33,6 @@ export class TestCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
 
-    // TODO: @david please add logger here instead.
-    // eslint-disable-next-line no-console
     this.logger.console(
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
     );

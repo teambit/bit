@@ -19,6 +19,7 @@ export type ComponentModelProps = {
   packageName: string; // pkg aspect
   compositions: CompositionProps[];
   tags: TagProps[];
+  issuesCount: number; // component/issues aspect
   status: any; // workspace aspect.
   deprecation: DeprecationInfo; // deprecation aspect
   env: Descriptor; // env aspect.
@@ -62,6 +63,10 @@ export class ComponentModel {
     readonly tags: TagMap,
 
     /**
+     * issues of component.
+     */
+    readonly issuesCount?: number,
+    /**
      * status of component.
      */
     readonly status?: any,
@@ -96,6 +101,7 @@ export class ComponentModel {
     deprecation,
     env,
     status,
+    issuesCount,
   }: ComponentModelProps) {
     const tagsArray = tags || [];
 
@@ -106,6 +112,7 @@ export class ComponentModel {
       server,
       Composition.fromArray(compositions || []),
       TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag))),
+      issuesCount,
       status,
       deprecation,
       env

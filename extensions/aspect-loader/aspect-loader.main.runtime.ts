@@ -85,6 +85,15 @@ export class AspectLoaderMain {
     return join(modulePath, dist);
   }
 
+  isAspectLoaded(id: string) {
+    if (this.failedAspects.includes(id)) return true;
+    try {
+      return this.harmony.get(id);
+    } catch (err) {
+      return false;
+    }
+  }
+
   getDescriptor(id: string): AspectDescriptor {
     const instance = this.harmony.get<any>(id);
     const iconFn = instance.icon;
@@ -172,6 +181,12 @@ export class AspectLoaderMain {
     return this;
   }
 
+  private failedLoadAspect: string[] = [];
+
+  get failedAspects() {
+    return this.failedLoadAspect;
+  }
+
   /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
@@ -203,6 +218,7 @@ export class AspectLoaderMain {
         manifest.id = id;
         return manifest;
       } catch (e) {
+        this.failedLoadAspect.push(id);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
         if (this.logger.isLoaderStarted) {
           this.logger.consoleFailure(errorMsg);

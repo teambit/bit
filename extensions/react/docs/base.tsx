@@ -76,16 +76,16 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName } = component;
 
-  const Content = isFunction(docs.default) ? docs.default : () => null;
+  const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
     <ThemeContext>
       <div className={classNames(styles.docsMainBlock)} {...rest}>
         <ComponentOverview
-          displayName={displayName}
+          displayName={Content.displayName || displayName}
           version={version}
-          abstract={abstract}
-          labels={labels}
+          abstract={Content.abstract || abstract}
+          labels={Content.labels || labels}
           packageName={packageName}
         />
 
@@ -93,7 +93,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
 
         <CompositionsSummary compositions={compositions} />
 
-        <ExamplesOverview examples={examples} />
+        <ExamplesOverview examples={Content.examples || examples} />
 
         <Properties properties={docsModel.properties} />
       </div>

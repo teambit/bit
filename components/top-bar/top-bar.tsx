@@ -1,7 +1,6 @@
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import cn from 'classnames';
 import React from 'react';
-
 import styles from './top-bar.module.scss';
 
 export interface TopBarProps extends React.HTMLAttributes<HTMLDivElement> {

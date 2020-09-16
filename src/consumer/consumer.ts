@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
@@ -67,7 +68,6 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
-import { PublishResults, publishComponentsToRegistry } from '../scope/component-ops/publish-components';
 
 type ConsumerProps = {
   projectPath: string;
@@ -520,13 +520,13 @@ export default class Consumer {
   }): Promise<{
     taggedComponents: Component[];
     autoTaggedResults: AutoTagResult[];
-    publishResults: PublishResults;
     isSoftTag: boolean;
+    publishedPackages: string[];
   }> {
     if (this.isLegacy) {
       tagParams.persist = true;
     }
-    const { ids, persist, exactVersion, releaseType } = tagParams;
+    const { ids, persist } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const components = await this._loadComponentsForTag(ids);
@@ -554,31 +554,14 @@ export default class Consumer {
       throw new ComponentsPendingImport();
     }
 
-    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       consumer: this,
       ...tagParams,
     });
 
-    const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
-    const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    if (persist) {
-      await this.updateComponentsVersions(allComponents);
-    } else {
-      this.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
-    }
-
-    let publishResults;
-    if (!this.isLegacy && persist) {
-      const allIds = [
-        ...taggedComponents.map((t) => t.id),
-        ...autoTaggedResults.map((a) => a.component.toBitIdWithLatestVersionAllowNull()),
-      ];
-      publishResults = await publishComponentsToRegistry(this, allIds);
-    }
-
-    return { taggedComponents, autoTaggedResults, publishResults, isSoftTag: !persist };
+    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
   }
 
   updateNextVersionOnBitmap(
@@ -729,7 +712,7 @@ export default class Consumer {
     return reloadedComponents;
   }
 
-  updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
+  async updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
     const getPackageJsonDir = (
       componentMap: ComponentMap,
       component: Component,
@@ -749,7 +732,7 @@ export default class Consumer {
       return modelComponent.hasHead();
     };
 
-    const updateVersionsP = components.map(async (unknownComponent) => {
+    const updateVersions = async (unknownComponent) => {
       const id: BitId =
         unknownComponent instanceof ModelComponent
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
@@ -767,8 +750,11 @@ export default class Consumer {
       return packageJsonDir // if it has package.json, it's imported, which must have a version
         ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
         : Promise.resolve();
-    });
-    return Promise.all(updateVersionsP);
+    };
+    // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
+    // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
+    // trying to get the dependencies of comp1 using its package.json.
+    return Bluebird.mapSeries(components, updateVersions);
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {

@@ -5,7 +5,6 @@ import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 
 import { Scope } from '..';
-import { Analytics } from '../../analytics/analytics';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
@@ -24,6 +23,7 @@ import { buildComponentsGraph } from '../graph/components-graph';
 import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
+import { ModelComponent } from '../models';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -184,7 +184,7 @@ export default async function tagModelComponent({
   persist: boolean;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
-}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
+}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; publishedPackages: string[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
@@ -237,49 +237,35 @@ export default async function tagModelComponent({
     }
   }
 
-  logger.debug('scope.putMany: sequentially build all components');
-  Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-
-  const legacyComps: Component[] = [];
-  const nonLegacyComps: Component[] = [];
-
-  componentsToBuildAndTest.forEach((c) => {
-    c.isLegacy ? legacyComps.push(c) : nonLegacyComps.push(c);
-  });
-  if (legacyComps.length && persist) {
-    await scope.buildMultiple(legacyComps, consumer, false, verbose);
-  }
-  if (nonLegacyComps.length && persist) {
-    const ids = nonLegacyComps.map((c) => c.id);
-    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
-    results.map(updateComponentsByTagResult(nonLegacyComps));
-  }
-
-  logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
-  if (!skipTests) {
-    const testsResultsP = scope.testMultiple({
-      components: componentsToBuildAndTest,
-      consumer,
-      verbose,
-      rejectOnFailure: !force,
-    });
-    try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      testsResults = await testsResultsP;
-    } catch (err) {
-      // if force is true, ignore the tests and continue
-      if (!force) {
+  if (consumer.isLegacy) {
+    logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
+    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+
+    logger.debug('scope.putMany: sequentially test all components');
+
+    if (!skipTests) {
+      const testsResultsP = scope.testMultiple({
+        components: componentsToBuildAndTest,
+        consumer,
+        verbose,
+        rejectOnFailure: !force,
+      });
+      try {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (!verbose) throw new ComponentSpecsFailed();
-        throw err;
+        testsResults = await testsResultsP;
+      } catch (err) {
+        // if force is true, ignore the tests and continue
+        if (!force) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          if (!verbose) throw new ComponentSpecsFailed();
+          throw err;
+        }
       }
     }
   }
 
-  logger.debug('scope.putMany: sequentially persist all components');
-  Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
-
+  logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
   isSnap ? setHashes(componentsToTag) : await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
   setCurrentSchema(componentsToTag, consumer);
@@ -327,10 +313,35 @@ export default async function tagModelComponent({
   );
   const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
+
+  const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
+  const allComponents = [...taggedComponents, ...autoTaggedComponents];
+  if (persist) {
+    await consumer.updateComponentsVersions(allComponents);
+  } else {
+    consumer.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
+  }
+  const publishedPackages: string[] = [];
+  if (!consumer.isLegacy && persist) {
+    const ids = allComponents.map((unknownComponent) => {
+      return unknownComponent instanceof ModelComponent
+        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
+        : unknownComponent.id;
+    });
+    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
+    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
+    componentsToBuildAndTest.forEach((comp) => {
+      const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
+      const publishedPackage = pkgExt?.data?.publishedPackage;
+      if (publishedPackage) publishedPackages.push(publishedPackage);
+    });
+    await bluebird.mapSeries(componentsToTag, (consumerComponent) => persistComponent(consumerComponent));
+  }
+
   if (persist) {
     await scope.objects.persist();
   }
-  return { taggedComponents, autoTaggedResults };
+  return { taggedComponents, autoTaggedResults, publishedPackages };
 }
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {

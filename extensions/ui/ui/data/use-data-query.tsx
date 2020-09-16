@@ -1,6 +1,6 @@
 import { OperationVariables, QueryResult } from '@apollo/react-common';
 import { QueryHookOptions, useQuery } from '@apollo/react-hooks';
-import { NotificationContext } from '@teambit/notifications';
+import { NotificationContext } from '@teambit/notifications.notification-context';
 import { ApolloError } from 'apollo-client';
 import { DocumentNode } from 'graphql';
 import { useContext } from 'react';

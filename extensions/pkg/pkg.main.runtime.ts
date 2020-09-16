@@ -9,6 +9,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { BuilderMain, BuilderAspect } from '@teambit/builder';
 
 import { Packer, PackOptions, PackResult } from './pack';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
@@ -18,6 +19,7 @@ import { PreparePackagesTask } from './prepare-packages.task';
 import { PublishDryRunTask } from './publish-dry-run.task';
 import { PublishCmd } from './publish.cmd';
 import { Publisher } from './publisher';
+import { PublishTask } from './publish.task';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -39,18 +41,27 @@ export type ComponentPkgExtensionConfig = {
 
 export class PkgMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, ScopeAspect, EnvsAspect, IsolatorAspect, LoggerAspect, WorkspaceAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    EnvsAspect,
+    IsolatorAspect,
+    LoggerAspect,
+    WorkspaceAspect,
+    BuilderAspect,
+  ];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static async provider(
-    [cli, scope, envs, isolator, logger, workspace]: [
+    [cli, scope, envs, isolator, logger, workspace, builder]: [
       CLIMain,
       ScopeMain,
       EnvsMain,
       IsolatorMain,
       LoggerMain,
-      Workspace
+      Workspace,
+      BuilderMain
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
@@ -62,8 +73,7 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
 
-    const postPersistTagFn = publisher.postTagPersistListener.bind(publisher);
-    if (scope) scope.legacyScope.onPostPersistTag.push(postPersistTagFn);
+    builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
 
     // TODO: maybe we don't really need the id here any more
     ConsumerComponent.registerAddConfigAction(PkgAspect.id, pkg.mergePackageJsonProps.bind(pkg));
