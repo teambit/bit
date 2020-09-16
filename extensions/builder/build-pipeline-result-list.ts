@@ -7,6 +7,7 @@ import { Serializable, TaskMetadata } from './types';
 type PipelineReport = {
   taskId: string;
   taskName?: string;
+  taskDescription?: string;
   startTime?: number;
   endTime?: number;
   errors?: Array<Error | string>;
@@ -42,6 +43,7 @@ export class BuildPipelineResultList {
       const pipelineReport: PipelineReport = {
         taskId: taskResults.task.id,
         taskName: taskResults.task.name,
+        taskDescription: taskResults.task.description,
         errors: foundComponent.errors,
         warnings: foundComponent.warnings,
         startTime: foundComponent.startTime,

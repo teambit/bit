@@ -28,12 +28,12 @@ export type ComponentResult = {
   warnings?: string[];
 
   /**
-   * timestamp when the task started
+   * timestamp in milliseconds when the task started
    */
   startTime?: number;
 
   /**
-   * timestamp when the task ended
+   * timestamp in milliseconds when the task ended
    */
   endTime?: number;
 };

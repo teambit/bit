@@ -90,7 +90,7 @@ export class BuilderMain {
       const buildId = BuilderAspect.id;
       const buildAspectEntry = aspectList.get(buildId) || aspectList.addEntry(ComponentID.fromString(buildId));
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
-      buildAspectEntry.data = pipelineReport;
+      buildAspectEntry.data = { pipeline: pipelineReport };
       return aspectList;
     });
   }
