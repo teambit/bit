@@ -130,6 +130,14 @@ export default class Dependencies {
     return BitIds.fromArray(this.dependencies.map((dependency) => dependency.id));
   }
 
+  getIdsMap(): Record<string, BitId> {
+    const result = {};
+    this.dependencies.forEach(dep => {
+      result[dep.id.toString()] = dep.id
+    });
+    return result;
+  }
+
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
     const dependenciesIds = this.dependencies.map((dependency) => dependency.id);
     const localDependencies = await scope.latestVersions(dependenciesIds);
