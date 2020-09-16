@@ -1,3 +1,4 @@
+import PubsubAspect from '@teambit/pubsub';
 import { AspectAspect } from '@teambit/aspect';
 import AspectLoaderAspect from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
@@ -42,6 +43,7 @@ import { ChangelogAspect } from '@teambit/changelog';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
+  [PubsubAspect.id]: PubsubAspect,
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
