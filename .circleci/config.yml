@@ -443,6 +443,10 @@ jobs:
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
+      # run second time until we do real bit export
+      - run:
+          name: 'bit status'
+          command: 'cd bit && bit status'
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
