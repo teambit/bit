@@ -34,7 +34,7 @@ export class PublishCmd implements Command {
           if (publishResult.errors.length) {
             return chalk.red(publishResult.errors.join('\n'));
           }
-          return chalk.green(publishResult.data as string);
+          return chalk.green(publishResult.metadata as string);
         };
         return `${chalk.bold(compName)}\n${getData()}\n`;
       })

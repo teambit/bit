@@ -15,9 +15,14 @@ export class Artifact {
     readonly storageResolver: StorageResolver,
 
     /**
-     * paths included
+     * relative paths of the artifacts
      */
     readonly paths: string[] = [],
+
+    /**
+     * join this with `this.paths` to get the absolute paths
+     */
+    readonly rootDir: string,
 
     /**
      * the declaring task.

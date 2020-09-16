@@ -95,7 +95,7 @@ export type OnTagResult = {
   id: BitId;
   extensions: ExtensionDataList;
 };
-type OnTagFunc = (ids: BitId[]) => OnTagResult[];
+export type OnTagFunc = (ids: BitId[]) => Promise<OnTagResult[]>;
 
 export default class Scope {
   created = false;

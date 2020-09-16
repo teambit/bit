@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { AspectEntry, Component, ComponentID } from '@teambit/component';
 import { StorageResolver } from './storage-resolver';
@@ -11,7 +12,7 @@ export class DefaultResolver implements StorageResolver {
     artifacts.forEach((artifact) => {
       const aspectEntry = this.getAspectEntry(component, artifact.task.id);
       const artifactsVinyl = artifact.paths.map(
-        (file) => new ArtifactVinyl({ path: file, contents: fs.readFileSync(file) })
+        (file) => new ArtifactVinyl({ path: file, contents: fs.readFileSync(path.join(artifact.rootDir, file)) })
       );
       aspectEntry.artifacts.push(...artifactsVinyl);
     });

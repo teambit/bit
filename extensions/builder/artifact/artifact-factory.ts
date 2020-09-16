@@ -1,4 +1,3 @@
-import path from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
 import { Component, ComponentMap } from '@teambit/component';
@@ -26,7 +25,7 @@ export class ArtifactFactory {
   private resolvePaths(root: string, globPatterns: string[]): string[] {
     const patternsFlattened = flatten(globPatterns);
     const paths = globby.sync(patternsFlattened, { cwd: root });
-    return paths.map((file) => path.join(root, file));
+    return paths;
   }
 
   private getArtifactContextPath(context: BuildContext, component: Component, def: ArtifactDefinition) {
@@ -46,9 +45,10 @@ export class ArtifactFactory {
 
   createFromComponent(context: BuildContext, component: Component, def: ArtifactDefinition, task: BuildTask) {
     const storageResolver = this.getStorageResolver(def);
-    const paths = this.resolvePaths(this.getArtifactContextPath(context, component, def), def.globPatterns);
+    const rootDir = this.getArtifactContextPath(context, component, def);
+    const paths = this.resolvePaths(rootDir, def.globPatterns);
 
-    return new Artifact(def, storageResolver, paths, task);
+    return new Artifact(def, storageResolver, paths, rootDir, task);
   }
 
   private getStorageResolver(def: ArtifactDefinition) {
@@ -75,10 +75,12 @@ export class ArtifactFactory {
     defs.forEach((def) => {
       const artifactContext = this.getArtifactContext(def);
       if (artifactContext === 'env') {
+        const rootDir = context.capsuleGraph.capsulesRootDir;
         const artifact = new Artifact(
           def,
           this.getStorageResolver(def),
-          this.resolvePaths(context.capsuleGraph.capsulesRootDir, ['.']),
+          this.resolvePaths(rootDir, ['.']),
+          rootDir,
           task
         );
 
