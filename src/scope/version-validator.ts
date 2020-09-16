@@ -119,6 +119,15 @@ export default function validateVersionInstance(version: Version): void {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
     extension.artifacts.map((artifact) => validateFile(artifact, 'artifact'));
+    const filesPaths = extension.artifacts.map((artifact) => artifact.relativePath);
+    const duplicateArtifacts = filesPaths.filter(
+      (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
+    );
+    if (duplicateArtifacts.length) {
+      throw new VersionInvalid(
+        `${message} the following artifact files are duplicated ${duplicateArtifacts.join(', ')}`
+      );
+    }
   };
 
   const _validateExtensions = (extensions: ExtensionDataList) => {

@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Target, BundlerResult, BundlerContext } from '@teambit/bundler';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewTask } from './preview.task';
@@ -17,5 +17,5 @@ export interface BundlingStrategy {
   /**
    * compute the results of the bundler.
    */
-  computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask): Promise<BuildResults>;
+  computeResults(context: BundlerContext, results: BundlerResult[], previewTask: PreviewTask): Promise<BuiltTaskResult>;
 }

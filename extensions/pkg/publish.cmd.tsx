@@ -1,7 +1,8 @@
+import { ComponentResult } from '@teambit/builder';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 
-import { Publisher, PublisherOptions, PublishResult } from './publisher';
+import { Publisher, PublisherOptions } from './publisher';
 
 type PublishArgs = [string];
 
@@ -22,7 +23,7 @@ export class PublishCmd implements Command {
 
   async report(args: PublishArgs, options: PublisherOptions) {
     const result = await this.json(args, options);
-    const publishResults = result.data;
+    const publishResults: ComponentResult[] = result.data;
     if (!publishResults.length) return 'no components were found candidate for publish';
 
     const publishOrDryRun = options.dryRun ? 'dry-run' : 'published';
@@ -31,7 +32,7 @@ export class PublishCmd implements Command {
       .map((publishResult) => {
         const compName = publishResult.component.id.toString();
         const getData = () => {
-          if (publishResult.errors.length) {
+          if (publishResult.errors?.length) {
             return chalk.red(publishResult.errors.join('\n'));
           }
           return chalk.green((publishResult.metadata?.publishedPackage as string) || '');
@@ -42,7 +43,10 @@ export class PublishCmd implements Command {
     return title + output;
   }
 
-  async json([componentId]: PublishArgs, options: PublisherOptions): Promise<{ data: PublishResult[]; code: number }> {
+  async json(
+    [componentId]: PublishArgs,
+    options: PublisherOptions
+  ): Promise<{ data: ComponentResult[]; code: number }> {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     const packResult = await this.publisher.publish([compId], options);
     return {

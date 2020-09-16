@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component';
 import { CapsuleList, Network } from '@teambit/isolator';
@@ -63,7 +63,7 @@ export class TypescriptCompiler implements Compiler {
   /**
    * compile multiple components on the capsules
    */
-  async build(context: BuildContext): Promise<BuildResults> {
+  async build(context: BuildContext): Promise<BuiltTaskResult> {
     const capsules = context.capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
     await this.writeTsConfig(capsuleDirs);

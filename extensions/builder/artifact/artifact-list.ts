@@ -40,7 +40,7 @@ export class ArtifactList {
   /**
    * store all artifacts using the configured storage resolvers.
    */
-  store(component: Component) {
+  async store(component: Component) {
     const byResolvers = this.groupByResolver();
     const promises = Object.keys(byResolvers).map(async (key) => {
       const artifacts = byResolvers[key];

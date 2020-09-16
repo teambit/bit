@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { Compiler } from '@teambit/compiler';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -15,7 +15,7 @@ export class PreparePackagesTask implements BuildTask {
   readonly description = 'prepare packages';
   constructor(readonly id: string, private logger: Logger) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const artifacts = await this.executeNpmIgnoreTask(context);
 
     const result = {

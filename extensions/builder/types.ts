@@ -25,5 +25,15 @@ export type ComponentResult = {
   /**
    * warnings generated throughout the build task.
    */
-  warning?: string[];
+  warnings?: string[];
+
+  /**
+   * timestamp when the task started
+   */
+  startTime?: number;
+
+  /**
+   * timestamp when the task ended
+   */
+  endTime?: number;
 };

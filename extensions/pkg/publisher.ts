@@ -1,4 +1,4 @@
-import { TaskMetadata } from '@teambit/builder';
+import { ComponentResult, TaskMetadata } from '@teambit/builder';
 import { Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -17,8 +17,6 @@ export type PublisherOptions = {
   allowStaged?: boolean;
 };
 
-export type PublishResult = { component: Component; metadata?: TaskMetadata; errors: string[] };
-
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
   constructor(
@@ -29,7 +27,7 @@ export class Publisher {
     public options: PublisherOptions = {}
   ) {}
 
-  async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+  async publish(componentIds: string[], options: PublisherOptions): Promise<ComponentResult[]> {
     // @todo: replace by `workspace.byPatter` once ready.
     if (componentIds.length === 1 && componentIds[0] === '*') {
       const all = this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
@@ -41,7 +39,7 @@ export class Publisher {
     return this.publishMultipleCapsules(capsules);
   }
 
-  public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
+  public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
@@ -52,7 +50,8 @@ export class Publisher {
     return results;
   }
 
-  private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
+  private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
+    const startTime = Date.now();
     const publishParams = ['publish'];
     if (this.options.dryRun) publishParams.push('--dry-run');
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
@@ -80,7 +79,7 @@ export class Publisher {
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
     const component = capsule.component;
-    return { component, metadata, errors };
+    return { component, metadata, errors, startTime, endTime: Date.now() };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {

@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
 
 import { Tester } from './tester';
@@ -11,7 +11,7 @@ export class TesterTask implements BuildTask {
   readonly description = 'test components';
   constructor(readonly id: string) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();
     const components = detectTestFiles(context.components);
 

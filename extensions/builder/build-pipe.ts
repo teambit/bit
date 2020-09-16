@@ -4,7 +4,7 @@ import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
 import prettyTime from 'pretty-time';
 import { ArtifactFactory, ArtifactList } from './artifact';
-import { BuildContext, BuildTask, BuildResults } from './build-task';
+import { BuildContext, BuildTask, BuiltTaskResult } from './build-task';
 import { InvalidTask } from './exceptions';
 import { ComponentResult } from './types';
 
@@ -12,7 +12,7 @@ export type BuildPipeResults = {
   /**
    * results of all tasks executed in the build pipeline.
    */
-  results: TaskResults[];
+  tasksResults: TaskResults[];
 
   /**
    * start time of the build pipeline.
@@ -67,6 +67,17 @@ export class BuildPipe {
    */
   async execute(buildContext: BuildContext): Promise<BuildPipeResults> {
     const startTime = Date.now();
+    const tasksResults = await this.executeTasks(buildContext);
+    const endTime = Date.now();
+
+    return {
+      startTime,
+      tasksResults,
+      endTime,
+    };
+  }
+
+  private async executeTasks(buildContext: BuildContext): Promise<TaskResults[]> {
     const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
     const results: TaskResults[] = await Bluebird.mapSeries(this.tasks, async (task: BuildTask) => {
       if (!task) {
@@ -76,35 +87,29 @@ export class BuildPipe {
       longProcessLogger.logProgress(taskName);
       const startTask = process.hrtime();
       const taskStartTime = Date.now();
-      const taskResult = await task.execute(buildContext);
+      const buildTaskResult = await task.execute(buildContext);
       const endTime = Date.now();
       // TODO: move this function to the upper scope. that should happen from the consumer of the service.
       // (e.g. onTag/onSnap slot, build command, etc.)
-      this.throwIfErrorsFound(task, taskResult);
+      this.throwIfErrorsFound(task, buildTaskResult);
       const duration = prettyTime(process.hrtime(startTask));
       this.logger.consoleSuccess(`task "${taskName}" has completed successfully in ${duration}`);
-      const defs = taskResult.artifacts || [];
+      const defs = buildTaskResult.artifacts || [];
       const artifacts = this.artifactFactory.generate(buildContext, defs, task);
 
       return {
         task,
-        componentsResults: taskResult.componentsResults,
+        componentsResults: buildTaskResult.componentsResults,
         artifacts,
         startTime: taskStartTime,
         endTime,
       };
     });
-    const endTime = Date.now();
     longProcessLogger.end();
-
-    return {
-      startTime,
-      results,
-      endTime,
-    };
+    return results;
   }
 
-  private throwIfErrorsFound(task: BuildTask, taskResult: BuildResults) {
+  private throwIfErrorsFound(task: BuildTask, taskResult: BuiltTaskResult) {
     const compsWithErrors = taskResult.componentsResults.filter((c) => c.errors?.length);
     if (compsWithErrors.length) {
       this.logger.consoleFailure(`task "${task.id}" has failed`);

@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { ExecutionContext } from '@teambit/environments';
-import { BuildContext, BuildResults, BuildTask, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
@@ -27,7 +27,7 @@ export class PreviewTask implements BuildTask {
 
   location: TaskLocation = 'end';
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy();

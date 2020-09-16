@@ -44,10 +44,10 @@ export interface BuildTask {
   /**
    * execute a task in a build context
    */
-  execute(context: BuildContext): Promise<BuildResults>;
+  execute(context: BuildContext): Promise<BuiltTaskResult>;
 }
 
-export interface BuildResults {
+export interface BuiltTaskResult {
   /**
    * build results for each of the components in the build context.
    */

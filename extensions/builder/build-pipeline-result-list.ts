@@ -1,7 +1,17 @@
 import { ComponentID } from '@teambit/component';
 import { flatten, isEmpty } from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { BuildPipeResults, TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
+
+type PipelineReport = {
+  taskId: string;
+  taskName?: string;
+  startTime?: number;
+  endTime?: number;
+  errors?: Array<Error | string>;
+  warnings?: string[];
+};
 
 export class BuildPipelineResultList {
   private flattenedTasksResults: TaskResults[];
@@ -10,7 +20,7 @@ export class BuildPipelineResultList {
   }
 
   private getFlattenedTaskResultsFromAllEnvs(): TaskResults[] {
-    return flatten(this.buildPipeResults.map((buildPipeResult) => buildPipeResult.results));
+    return flatten(this.buildPipeResults.map((buildPipeResult) => buildPipeResult.tasksResults));
   }
 
   public getMetadataFromTaskResults(componentId: ComponentID): { [taskId: string]: TaskMetadata } {
@@ -23,6 +33,23 @@ export class BuildPipelineResultList {
       return acc;
     }, {});
     return compResults;
+  }
+
+  public getPipelineReportOfComponent(componentId: ComponentID): PipelineReport[] {
+    const compResults = this.flattenedTasksResults.map((taskResults: TaskResults) => {
+      const foundComponent = taskResults.componentsResults.find((c) => c.component.id.isEqual(componentId));
+      if (!foundComponent) return null;
+      const pipelineReport: PipelineReport = {
+        taskId: taskResults.task.id,
+        taskName: taskResults.task.name,
+        errors: foundComponent.errors,
+        warnings: foundComponent.warnings,
+        startTime: foundComponent.startTime,
+        endTime: foundComponent.endTime,
+      };
+      return pipelineReport;
+    });
+    return compact(compResults);
   }
 
   private mergeDataIfPossible(currentData: Serializable, existingData: Serializable | undefined, taskId: string) {

@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import fs from 'fs-extra';
 import path from 'path';
@@ -12,7 +12,7 @@ export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
   constructor(readonly id: string) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const compilerInstance: Compiler = context.env.getCompiler();
     const buildResults = await compilerInstance.build(context);
 

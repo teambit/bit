@@ -50,19 +50,49 @@ export class BuilderMain {
   private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
     const artifacts: ComponentMap<ArtifactList>[] = flatten(
       buildServiceResults.map((pipeResult) => {
-        return pipeResult.results.map((val) => val.artifacts);
+        return pipeResult.tasksResults.map((val) => val.artifacts);
       })
     );
 
-    return artifacts.map((artifactMap) =>
-      artifactMap.toArray().forEach(([component, artifactList]) => {
-        try {
-          return artifactList.store(component);
-        } catch (err) {
-          throw new ArtifactStorageError(err, component);
+    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
+      return Promise.all(
+        artifactMap.toArray().map(async ([component, artifactList]) => {
+          try {
+            return await artifactList.store(component);
+          } catch (err) {
+            throw new ArtifactStorageError(err, component);
+          }
+        })
+      );
+    });
+    await Promise.all(storeP);
+  }
+
+  private pipelineResultsToAspectList(
+    components: Component[],
+    buildPipelineResults: BuildPipeResults[]
+  ): ComponentMap<AspectList> {
+    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
+    return ComponentMap.as<AspectList>(components, (component) => {
+      const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
+      const aspectList = component.state.aspects.map((aspectEntry) => {
+        const dataFromBuildPipeline = taskResultsOfComponent[aspectEntry.id.toString()];
+        const newAspectEntry = dataFromBuildPipeline ? aspectEntry.transform(dataFromBuildPipeline) : aspectEntry;
+        return newAspectEntry;
+      });
+      Object.keys(taskResultsOfComponent).forEach((taskId) => {
+        const taskComponentId = ComponentID.fromString(taskId);
+        if (!component.state.aspects.find(taskComponentId)) {
+          const dataFromBuildPipeline = taskResultsOfComponent[taskId];
+          aspectList.addEntry(taskComponentId, dataFromBuildPipeline);
         }
-      })
-    );
+      });
+      const buildId = BuilderAspect.id;
+      const buildAspectEntry = aspectList.get(buildId) || aspectList.addEntry(ComponentID.fromString(buildId));
+      const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
+      buildAspectEntry.data = pipelineReport;
+      return aspectList;
+    });
   }
 
   /**
@@ -82,15 +112,7 @@ export class BuilderMain {
     envsExecutionResults.throwErrorsIfExist();
     const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
     await this.storeArtifacts(buildPipelineResults);
-    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
-
-    return ComponentMap.as<AspectList>(components, (component) => {
-      const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
-      return component.state.aspects.map((aspectEntry) => {
-        const dataFromBuildPipeline = taskResultsOfComponent[aspectEntry.id.toString()];
-        return aspectEntry.transform(dataFromBuildPipeline);
-      });
-    });
+    return this.pipelineResultsToAspectList(components, buildPipelineResults);
   }
 
   /**
