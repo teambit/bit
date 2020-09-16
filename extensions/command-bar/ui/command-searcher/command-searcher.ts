@@ -6,7 +6,7 @@ const searchedKeys: (keyof CommanderSearchResult)[] = ['displayName'];
 export class CommandSearcher implements SearchProvider {
   private fuseCommands = new Fuse<CommanderSearchResult>([], {
     // weight can be included here.
-    // fields loses weight the longer it gets, so it seems ok for now.
+    // fields loses weight the longer they get, so it seems ok for now.
     keys: searchedKeys,
   });
 

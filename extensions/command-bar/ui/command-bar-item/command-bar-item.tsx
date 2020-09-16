@@ -12,7 +12,7 @@ export type CommandItemProps = {
 
 export function CommandBarItem({ entry, className, active, ...rest }: CommandItemProps) {
   const { handler, displayName: name, icon, iconAlt, keybinding } = entry;
-  const selectedKeybinding = Array.isArray(keybinding) ? keybinding[0] : keybinding;
+  const firstKeybinding = Array.isArray(keybinding) ? keybinding[0] : keybinding;
 
   return (
     <div
@@ -22,7 +22,9 @@ export function CommandBarItem({ entry, className, active, ...rest }: CommandIte
     >
       {icon && <img src={icon} alt={iconAlt} className={styles.icon} />}
       <div className={styles.name}>{name}</div>
-      <KeySequence className={classnames(styles.commandKeys, mutedText)}>{selectedKeybinding}</KeySequence>
+      {firstKeybinding && (
+        <KeySequence className={classnames(styles.commandKeys, mutedText)}>{firstKeybinding}</KeySequence>
+      )}
     </div>
   );
 }
