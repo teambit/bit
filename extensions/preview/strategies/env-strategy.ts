@@ -51,18 +51,23 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   private getArtifactDef(context: BuildContext) {
     const env: 'env' = 'env';
+    const globPattern = `${this.getDirName(context)}/**`;
     return [
       {
         name: 'preview',
-        globPatterns: [this.getOutputPath(context)],
+        globPatterns: [globPattern],
         context: env,
       },
     ];
   }
 
-  private getOutputPath(context: BuildContext) {
+  getDirName(context: BuildContext) {
     const envName = context.id.replace('/', '__');
-    return resolve(`${context.capsuleGraph.capsulesRootDir}/${envName}-preview`);
+    return `${envName}-preview`;
+  }
+
+  private getOutputPath(context: BuildContext) {
+    return resolve(`${context.capsuleGraph.capsulesRootDir}/${this.getDirName(context)}`);
   }
 
   private getPaths(context: BuildContext, files: AbstractVinyl[], capsule: Capsule) {
