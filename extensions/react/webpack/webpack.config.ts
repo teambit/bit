@@ -79,6 +79,41 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           ],
         },
         {
+          test: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.less$/,
+          exclude: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
           test: /\.css$/,
           exclude: /\.module\.css$/,
           loader: [require.resolve('style-loader'), require.resolve('css-loader')],
