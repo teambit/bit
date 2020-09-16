@@ -551,57 +551,7 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "component-tree@0.0.43": {
-        "files": [
-            {
-                "relativePath": "component-tree-node.ts",
-                "test": false,
-                "name": "component-tree-node.ts"
-            },
-            {
-                "relativePath": "component-tree.aspect.ts",
-                "test": false,
-                "name": "component-tree.aspect.ts"
-            },
-            {
-                "relativePath": "component-tree.composition.tsx",
-                "test": false,
-                "name": "component-tree.composition.tsx"
-            },
-            {
-                "relativePath": "component-tree.docs.tsx",
-                "test": false,
-                "name": "component-tree.docs.tsx"
-            },
-            {
-                "relativePath": "component-tree.drawer.tsx",
-                "test": false,
-                "name": "component-tree.drawer.tsx"
-            },
-            {
-                "relativePath": "component-tree.ui.runtime.tsx",
-                "test": false,
-                "name": "component-tree.ui.runtime.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/component-tree",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
-    },
-    "component@0.0.43": {
+    "component": {
         "files": [
             {
                 "relativePath": "aspect-entry.ts",
@@ -921,6 +871,56 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/component",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": [],
+        "nextVersion": {
+            "version": "0.0.44",
+            "message": "",
+            "username": "David First",
+            "email": "davidnet@gmail.com"
+        }
+    },
+    "component-tree@0.0.43": {
+        "files": [
+            {
+                "relativePath": "component-tree-node.ts",
+                "test": false,
+                "name": "component-tree-node.ts"
+            },
+            {
+                "relativePath": "component-tree.aspect.ts",
+                "test": false,
+                "name": "component-tree.aspect.ts"
+            },
+            {
+                "relativePath": "component-tree.composition.tsx",
+                "test": false,
+                "name": "component-tree.composition.tsx"
+            },
+            {
+                "relativePath": "component-tree.docs.tsx",
+                "test": false,
+                "name": "component-tree.docs.tsx"
+            },
+            {
+                "relativePath": "component-tree.drawer.tsx",
+                "test": false,
+                "name": "component-tree.drawer.tsx"
+            },
+            {
+                "relativePath": "component-tree.ui.runtime.tsx",
+                "test": false,
+                "name": "component-tree.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/component-tree",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": [],
@@ -2231,7 +2231,52 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "notifications/notification-center@0.0.43": {
+    "notifications/notification": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "level-icon/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "level-icon/level-icon.module.scss",
+                "test": false,
+                "name": "level-icon.module.scss"
+            },
+            {
+                "relativePath": "level-icon/level-icon.tsx",
+                "test": false,
+                "name": "level-icon.tsx"
+            },
+            {
+                "relativePath": "notification.module.scss",
+                "test": false,
+                "name": "notification.module.scss"
+            },
+            {
+                "relativePath": "notification.tsx",
+                "test": false,
+                "name": "notification.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": [],
+        "nextVersion": {
+            "version": "0.0.44",
+            "message": "",
+            "username": "David First",
+            "email": "davidnet@gmail.com"
+        }
+    },
+    "notifications/notification-center": {
         "files": [
             {
                 "relativePath": "dismiss-button/dismiss-button.module.scss",
@@ -2291,51 +2336,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/notifications/ui/notification-context",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
-    },
-    "notifications/notification@0.0.43": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "level-icon/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "level-icon/level-icon.module.scss",
-                "test": false,
-                "name": "level-icon.module.scss"
-            },
-            {
-                "relativePath": "level-icon/level-icon.tsx",
-                "test": false,
-                "name": "level-icon.tsx"
-            },
-            {
-                "relativePath": "notification.module.scss",
-                "test": false,
-                "name": "notification.module.scss"
-            },
-            {
-                "relativePath": "notification.tsx",
-                "test": false,
-                "name": "notification.tsx"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/notification",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": [],
@@ -2586,7 +2586,7 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "pnpm@0.0.43": {
+    "pnpm": {
         "files": [
             {
                 "relativePath": "create-resolver.ts",
@@ -4496,7 +4496,7 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "typescript@0.0.43": {
+    "typescript": {
         "files": [
             {
                 "relativePath": "cmds/init.cmd.ts",
