@@ -20,7 +20,7 @@ export interface BuildContext extends ExecutionContext {
 
 export interface BuildTask {
   /**
-   * id of the task.
+   * id of the task. this is the extension/aspect id serialized.
    */
   id: string;
 

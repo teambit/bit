@@ -1,4 +1,4 @@
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -16,7 +16,7 @@ export type PublisherOptions = {
   allowStaged?: boolean;
 };
 
-export type PublishResult = { component: Component; data?: string; errors: string[] };
+export type PublishResult = { component: Component; metadata?: string; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
@@ -79,7 +79,7 @@ export class Publisher {
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
     const component = capsule.component;
-    return { component, data, errors };
+    return { component, metadata: data, errors };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {

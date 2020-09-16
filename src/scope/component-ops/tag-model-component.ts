@@ -25,6 +25,7 @@ import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { ModelComponent } from '../models';
 import { OnTagResult } from '../scope';
+import Bluebird from 'bluebird';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -329,7 +330,7 @@ export default async function tagModelComponent({
         ? unknownComponent.toBitIdWithLatestVersionAllowNull()
         : unknownComponent.id;
     });
-    const results: Array<OnTagResult[]> = await Promise.all(scope.onTag.map((func) => func(ids)));
+    const results: Array<OnTagResult[]> = await Bluebird.mapSeries(scope.onTag, (func) => func(ids));
     results.forEach((tagResult) => updateComponentsByTagResult(componentsToBuildAndTest, tagResult));
     componentsToBuildAndTest.forEach((comp) => {
       const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');

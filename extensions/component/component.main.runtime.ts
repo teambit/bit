@@ -4,7 +4,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
-import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';

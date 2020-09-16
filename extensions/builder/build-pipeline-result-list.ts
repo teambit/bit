@@ -36,46 +36,4 @@ export class BuildPipelineResultList {
     }
     return { ...currentData, ...existingData };
   }
-
-  // rename artifact here to files.
-  // public async saveBuildResults(): Promise<Component[]> {
-  //   const { components } = this.buildPipeResults;
-  //   const resultsP = components.map(async (component) => {
-  //     this.saveDataToComponent(component);
-  //     // await this.saveArtifactsToComponent(component, files);
-  //   });
-  //   await Promise.all(resultsP);
-  //   return components;
-  // }
-
-  // private saveDataToComponent(component: Component) {
-  //   // @todo: fix to use isEqual of ComponentId, not the legacy. currently it's not working
-  //   // due to defaultScope discrepancies.
-  //   const componentResult = this.taskResult.componentsResults.find((c) =>
-  //     c.component.id._legacy.isEqual(component.id._legacy)
-  //   );
-  //   const data = componentResult && componentResult.metadata;
-  //   if (data) {
-  //     const extensionDataEntry = this.getExtensionDataEntry(component);
-  //     extensionDataEntry.data = this.mergeDataIfPossible(data, extensionDataEntry.data);
-  //   }
-  // }
-
-  // private getExtensionDataEntry(component: Component): ExtensionDataEntry {
-  //   const existingExtensionDataEntry =
-  //     component.config.extensions.findCoreExtension(this.task.id) ||
-  //     component.config.extensions.findExtension(this.task.id);
-  //   if (existingExtensionDataEntry) return existingExtensionDataEntry;
-  //   const extensionDataEntry = new ExtensionDataEntry(undefined, undefined, this.task.id);
-  //   component.config.extensions.push(extensionDataEntry);
-  //   return extensionDataEntry;
-  // }
-
-  // private async getFilesByArtifacts(capsule: Capsule, artifacts: Artifact[]): Promise<string[]> {
-  //   const filesP = artifacts.map(async (artifact) => {
-  //     if (artifact.fileName) return artifact.fileName;
-  //     return capsule.getAllFilesPaths(artifact.dirName);
-  //   });
-  //   return flatten(await Promise.all(filesP));
-  // }
 }

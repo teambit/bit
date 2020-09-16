@@ -1,4 +1,3 @@
-import path from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
 import { Component, ComponentMap } from '@teambit/component';
