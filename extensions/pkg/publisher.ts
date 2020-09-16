@@ -1,3 +1,4 @@
+import { TaskMetadata } from '@teambit/builder';
 import { Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
@@ -16,7 +17,7 @@ export type PublisherOptions = {
   allowStaged?: boolean;
 };
 
-export type PublishResult = { component: Component; metadata?: string; errors: string[] };
+export type PublishResult = { component: Component; metadata?: TaskMetadata; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
@@ -63,7 +64,7 @@ export class Publisher {
     const cwd = capsule.path;
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
-    let data;
+    let metadata: TaskMetadata = {};
     try {
       // @todo: once capsule.exec works properly, replace this
       const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
@@ -71,7 +72,7 @@ export class Publisher {
       this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
       const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
-      data = { publishedPackage };
+      metadata = { publishedPackage };
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
@@ -79,7 +80,7 @@ export class Publisher {
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
     const component = capsule.component;
-    return { component, metadata: data, errors };
+    return { component, metadata, errors };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {
