@@ -6,7 +6,6 @@ import { PubsubAspect } from './pubsub.aspect';
 export class PubsubMain {
   private topicMap = {};
 
-  static runtime = MainRuntime;
   static _singletonPubsub: any = null;
 
   private createOrGetTopic = (topicUUID) => {
@@ -22,6 +21,8 @@ export class PubsubMain {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   };
+
+  static runtime = MainRuntime;
 
   static async provider() {
     if (!this._singletonPubsub) {
