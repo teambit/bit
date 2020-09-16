@@ -26,7 +26,7 @@ import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
-import LegacyScope from 'bit-bin/dist/scope/scope';
+import LegacyScope, { OnTagResult, OnTagFunc } from 'bit-bin/dist/scope/scope';
 import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
@@ -102,18 +102,29 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    // @ts-ignore
-    this.legacyScope.onTag.push(async (legacyIds: BitId[]) => {
+    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[]): Promise<OnTagResult[]> => {
       const host = this.componentExtension.getHost();
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
       // TODO: fix what legacy tag accepts to just extension name and files.
       const aspectListComponentMap = await tagFn(components);
-      aspectListComponentMap.toArray().map(([component, aspectList]) => ({
+      const extensionsToLegacy = (aspectList: AspectList) => {
+        const extensionsDataList = aspectList.toLegacy();
+        extensionsDataList.forEach((extension) => {
+          if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
+            extension.name = extension.id.toString();
+            extension.extensionId = undefined;
+          }
+        });
+        return extensionsDataList;
+      };
+      const results = aspectListComponentMap.toArray().map(([component, aspectList]) => ({
         id: component.id._legacy,
-        extensions: aspectList.toLegacy(),
+        extensions: extensionsToLegacy(aspectList),
       }));
-    });
+      return results;
+    };
+    this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
   }
 
