@@ -398,6 +398,10 @@ jobs:
       - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit/dist
 
   setup_harmony:
     resource_class: large
@@ -780,7 +784,7 @@ workflows:
             - setup_harmony
       - bit_build:
           requires:
-            - setup_harmony
+            - generate_and_check_types
       - bit_tag:
           filters:
             branches:
