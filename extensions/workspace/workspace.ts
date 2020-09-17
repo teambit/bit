@@ -743,7 +743,9 @@ export class Workspace implements ComponentFactory {
     const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
+    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds).filter((id) => {
+      return components.find((component) => id.isEqual(component.id._legacy));
+    });
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
