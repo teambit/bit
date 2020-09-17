@@ -139,12 +139,11 @@ export class IsolatorMain {
   }
 
   private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
-    const tuples = capsules.map((capsule) => {
-      return [capsule.component.id.fullName, [capsule.component, capsule.path]];
+    const tuples: [Component, string][] = capsules.map((capsule) => {
+      return [capsule.component, capsule.path];
     });
 
-    // @ts-ignore
-    return new ComponentMap(tuples);
+    return ComponentMap.create(tuples);
   }
 
   async list(workspacePath: string): Promise<ListResults> {

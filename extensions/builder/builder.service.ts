@@ -2,14 +2,14 @@ import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { Component } from '@teambit/component';
-
-import { BuildPipe } from './build-pipe';
+import { BuildPipe, BuildPipeResults } from './build-pipe';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildResults, BuildTask } from './types';
+import { BuildTask } from './build-task';
+import { ArtifactFactory } from './artifact';
 
 export type BuildServiceResults = {
   id: string;
-  buildResults: BuildResults[];
+  buildResults: BuildPipeResults;
   components: Component[];
   errors?: [];
 };
@@ -29,7 +29,9 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     /**
      * task slot (e.g tasks registered by other extensions.).
      */
-    private taskSlot: TaskSlot
+    private taskSlot: TaskSlot,
+
+    private artifactFactory: ArtifactFactory
   ) {}
 
   /**
@@ -45,6 +47,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     }
     const buildTasks: BuildTask[] = context.env.getPipe(context);
 
+    // TODO: refactor end and start task execution to a separate method
     const slotsTasks = this.taskSlot.values();
     const tasksAtStart: BuildTask[] = [];
     const tasksAtEnd: BuildTask[] = [];
@@ -64,7 +67,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
 
     // merge with extension registered tasks.
     const mergedTasks = [...tasksAtStart, ...buildTasks, ...tasksAtEnd];
-    const buildPipe = BuildPipe.from(mergedTasks, this.logger);
+    const buildPipe = BuildPipe.from(mergedTasks, this.logger, this.artifactFactory);
     this.logger.info(`start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`);
 
     const componentIds = context.components.map((component) => component.id.toString());
@@ -72,6 +75,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
       capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
     });
     const buildResults = await buildPipe.execute(buildContext);
+
     longProcessLogger.end();
     this.logger.consoleSuccess();
     return { id: context.id, buildResults, components: buildContext.components };

@@ -1,6 +1,6 @@
+import { Component } from '@teambit/component';
 import { BuildContext } from '@teambit/builder';
 import { ExecutionContext } from '@teambit/environments';
-import { Capsule } from '@teambit/isolator';
 
 export type Target = {
   /**
@@ -9,9 +9,14 @@ export type Target = {
   entries: string[];
 
   /**
-   * root path of the target
+   * array of components included in the target.
    */
-  capsule: Capsule;
+  components: Component[];
+
+  /**
+   * output path of the target
+   */
+  outputPath: string;
 };
 
 export interface BundlerContext extends BuildContext {

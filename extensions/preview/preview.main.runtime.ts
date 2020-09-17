@@ -8,8 +8,7 @@ import { UIAspect, UiMain } from '@teambit/ui';
 import { writeFileSync } from 'fs-extra';
 import { flatten } from 'lodash';
 import { join, resolve } from 'path';
-
-import { PreviewArtifactNotFound } from './exceptions';
+import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
@@ -17,8 +16,16 @@ import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { PreviewTask } from './preview.task';
+import { BundlingStrategy } from './bundling-strategy';
+import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
+
+export type PreviewConfig = {
+  bundlingStrategy: string;
+};
+
+export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
 
 export class PreviewMain {
   constructor(
@@ -29,7 +36,11 @@ export class PreviewMain {
 
     private ui: UiMain,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    readonly config: PreviewConfig,
+
+    private bundlingStrategySlot: BundlingStrategySlot
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
@@ -102,6 +113,34 @@ export class PreviewMain {
     return filePath;
   }
 
+  getDefaultStrategies() {
+    return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
+  }
+
+  /**
+   * return the configured bundling strategy.
+   */
+  getBundlingStrategy(): BundlingStrategy {
+    const defaultStrategies = this.getDefaultStrategies();
+    const strategyName = this.config.bundlingStrategy;
+    const strategies = this.bundlingStrategySlot.values().concat(defaultStrategies);
+    const selected = strategies.find((strategy) => {
+      return strategy.name === strategyName;
+    });
+
+    if (!selected) throw new BundlingStrategyNotFound(strategyName);
+
+    return selected;
+  }
+
+  /**
+   * register a new bundling strategy. default available strategies are `env` and ``
+   */
+  registerBundlingStrategy(bundlingStrategy: BundlingStrategy) {
+    this.bundlingStrategySlot.register(bundlingStrategy);
+    return this;
+  }
+
   /**
    * register a new preview definition.
    */
@@ -109,18 +148,22 @@ export class PreviewMain {
     this.previewSlot.register(previewDef);
   }
 
-  static slots = [Slot.withType<PreviewDefinition>()];
+  static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
   static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
 
+  static defaultConfig = {
+    bundlingStrategy: 'env',
+  };
+
   static async provider(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [bundler, builder, componentExtension, uiMain, envs]: [BundlerMain, BuilderMain, ComponentMain, UiMain, EnvsMain],
-    config,
-    [previewSlot]: [PreviewDefinitionRegistry]
+    config: PreviewConfig,
+    [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
   ) {
-    const preview = new PreviewMain(previewSlot, uiMain, envs);
+    const preview = new PreviewMain(previewSlot, uiMain, envs, config, bundlingStrategySlot);
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
       {

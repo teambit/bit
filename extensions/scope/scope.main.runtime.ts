@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
+import type { AspectList, ComponentMain, ComponentMap } from '@teambit/component';
 import {
   Component,
   ComponentAspect,
@@ -26,7 +26,7 @@ import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
-import LegacyScope from 'bit-bin/dist/scope/scope';
+import LegacyScope, { OnTagResult, OnTagFunc } from 'bit-bin/dist/scope/scope';
 import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
@@ -43,7 +43,7 @@ import { PutRoute, FetchRoute } from './routes';
 type TagRegistry = SlotRegistry<OnTag>;
 type PostExportRegistry = SlotRegistry<OnPostExport>;
 
-export type OnTag = (ids: BitId[]) => Promise<any>;
+export type OnTag = (components: Component[]) => Promise<ComponentMap<AspectList>>;
 export type OnPostExport = (ids: BitId[]) => Promise<any>;
 
 export type ScopeConfig = {
@@ -102,7 +102,29 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    this.legacyScope.onTag.push(tagFn);
+    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[]): Promise<OnTagResult[]> => {
+      const host = this.componentExtension.getHost();
+      const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
+      const components = await host.getMany(ids);
+      // TODO: fix what legacy tag accepts to just extension name and files.
+      const aspectListComponentMap = await tagFn(components);
+      const extensionsToLegacy = (aspectList: AspectList) => {
+        const extensionsDataList = aspectList.toLegacy();
+        extensionsDataList.forEach((extension) => {
+          if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
+            extension.name = extension.id.toString();
+            extension.extensionId = undefined;
+          }
+        });
+        return extensionsDataList;
+      };
+      const results = aspectListComponentMap.toArray().map(([component, aspectList]) => ({
+        id: component.id._legacy,
+        extensions: extensionsToLegacy(aspectList),
+      }));
+      return results;
+    };
+    this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
   }
 

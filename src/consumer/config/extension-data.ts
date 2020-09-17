@@ -6,7 +6,7 @@ import { BitId, BitIds } from '../../bit-id';
 import Source from '../../scope/models/source';
 import { sortObject } from '../../utils';
 import { AbstractVinyl } from '../component/sources';
-import { Artifact } from '../component/sources/artifact';
+import { ArtifactVinyl } from '../component/sources/artifact';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
@@ -47,7 +47,7 @@ export class ExtensionDataEntry {
 
   clone(): ExtensionDataEntry {
     const clonedArtifacts = this.artifacts.map((artifact) => {
-      return artifact instanceof Artifact ? artifact.clone() : artifact;
+      return artifact instanceof ArtifactVinyl ? artifact.clone() : artifact;
     });
     return new ExtensionDataEntry(
       this.legacyId,
