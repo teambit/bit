@@ -79,7 +79,7 @@ export class ArtifactFactory {
         const artifact = new Artifact(
           def,
           this.getStorageResolver(def),
-          this.resolvePaths(rootDir, ['.']),
+          this.resolvePaths(rootDir, def.globPatterns),
           rootDir,
           task
         );
