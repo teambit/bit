@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color, Text } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import { InsightResult } from './insight';
@@ -21,13 +21,13 @@ export default class InsightsCmd implements Command {
     if (list) {
       const results = this.insightManager.listInsights();
       const listItems = results.map((insight) => (insight += '\n'));
-      return <Color blueBright>{listItems}</Color>;
+      return <Text color="blueBright">{listItems}</Text>;
     }
     if (names) {
       let results: InsightResult[] = [];
       const namesArr = typeof names === 'string' ? [names] : names;
       results = await this.insightManager.run(namesArr);
-      return <Color blueBright>{results}</Color>;
+      return <Text color="grey">{results}</Text>;
     }
     const results = await this.insightManager.runAll();
     return template(results);

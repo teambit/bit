@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Color } from 'ink';
+import { Text } from 'ink';
 import React from 'react';
 
 import { EjectConfOptions, EjectConfResult, Workspace } from './workspace';
@@ -31,9 +31,9 @@ export default class EjectConfCmd implements Command {
     const ejectResult = await this.json(args, options);
     const [componentId] = args;
     return (
-      <Color green>
+      <Text color="yellow">
         successfully ejected config for component {componentId} in path {ejectResult.configPath}
-      </Color>
+      </Text>
     );
   }
 
