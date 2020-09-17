@@ -20,13 +20,6 @@
   }
 }
 
-.heading {
-  font-size: var(--p-xxs);
-  font-weight: bold;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
 .row {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) 20px;
@@ -49,7 +42,7 @@
   transition: max-height 300ms, visibility 300ms ease-in-out;
   &.open {
     visibility: unset;
-    max-height: 400px;
+    max-height: 450px;
   }
 }
 
@@ -69,28 +62,4 @@
       }
     }
   }
-}
-
-.test {
-  display: flex;
-  align-items: center;
-  > span {
-    margin-right: 10px;
-    align-self: baseline;
-    transform: translateY(1px);
-  }
-  > div {
-    font-size: var(--p-xs);
-  }
-}
-.duration {
-  font-size: var(--p-xs);
-  display: flex;
-  align-items: center;
-}
-.pass {
-  color: #37b26c;
-}
-.fail {
-  color: #e62e5c;
 }

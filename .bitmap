@@ -3910,6 +3910,30 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/test-row": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "test-row.module.scss",
+                "test": false,
+                "name": "test-row.module.scss"
+            },
+            {
+                "relativePath": "test-row.tsx",
+                "test": false,
+                "name": "test-row.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/test-row",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/test-table": {
         "files": [
             {
@@ -5219,5 +5243,5 @@
             "email": "davidnet@gmail.com"
         }
     },
-    "version": "14.8.9-dev.14"
+    "version": "14.8.9-dev.15"
 }

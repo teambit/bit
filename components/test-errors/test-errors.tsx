@@ -1,26 +1,44 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import classNames from 'classnames';
+
+import { TestRow } from '@teambit/staged-components.test-row';
 import { Error } from '@teambit/tester';
 import styles from './test-errors.module.scss';
 
-export function TestErrors({ errors }: { errors: Error[] }) {
+export type TestErrorsProps = {
+  errors: Error[];
+} & React.HTMLAttributes<HTMLDivElement>;
+
+export function TestErrors({ errors, className }: TestErrorsProps) {
   if (errors.length === 0) return null;
   return (
-    <>
+    <div className={classNames(className, styles.errorSection)}>
+      <div className={classNames(styles.row, styles.heading)}>
+        <div>Errors</div>
+      </div>
       {errors.map((error, index) => {
+        const name = error?.file?.split('/').slice(-1)[0];
         return (
-          <div className={styles.errorBlock} key={index}>
-            <div>An error occurred at {error.file}</div>
-            <ThemeContext>
-              <CodeSnippet className={styles.codeBlock} frameClass={styles.snippet} wrapLines={true}>
-                {error.failureMessage}
-              </CodeSnippet>
-            </ThemeContext>
-          </div>
+          <TestRow
+            key={index}
+            rowClass={styles.testRow}
+            content={error.failureMessage}
+            snippetTitle={<SnippetTitle file={error.file} />}
+          >
+            <div className={styles.rowTitle}>
+              <Icon of="warn-circle" />
+              <div>{name}</div>
+            </div>
+            <Icon className={styles.arrow} of="arrow-down" />
+          </TestRow>
         );
       })}
-    </>
+    </div>
   );
+}
+
+function SnippetTitle({ file }: { file: string }) {
+  return <div className={styles.errorBlock}>An error occurred at {file}</div>;
 }

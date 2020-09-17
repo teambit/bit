@@ -1,21 +1,21 @@
 import classNames from 'classnames';
 import prettyTime from 'pretty-time';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import React, { useState } from 'react';
+
+import { TestRow } from '@teambit/staged-components.test-row';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestResult } from '@teambit/tester';
 import styles from './test-table.module.scss';
 
 export type TestTableProps = {
   tests: TestResult[];
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
-export function TestTable({ tests }: TestTableProps) {
+export function TestTable({ tests, className }: TestTableProps) {
   if (tests.length === 0) return null;
 
   return (
-    <div className={styles.testTable}>
+    <div className={classNames(styles.testTable, className)}>
       <div className={classNames(styles.row, styles.heading)}>
         <div>Test</div>
         <div>Duration</div>
@@ -29,35 +29,18 @@ export function TestTable({ tests }: TestTableProps) {
 }
 
 function TestLine({ test }: { test: TestResult }) {
-  const [isOpen, setIsOpen] = useState(false);
-
   const durationInNanoSec = test.duration && +test.duration * 1000000;
-  const duration = durationInNanoSec ? prettyTime(durationInNanoSec, 'ms') : '';
+  const duration = durationInNanoSec != undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
 
   return (
-    <div className={classNames(styles.testBlock, isOpen && styles.hide, test.error && styles.hover)}>
-      <div
-        className={styles.row}
-        onClick={() => {
-          if (!test.error) return;
-          setIsOpen(!isOpen);
-        }}
-      >
-        <div className={styles.test}>
-          {getStatusIcon(test.status)}
-          <div>{test.name}</div>
-        </div>
-        <div className={styles.duration}>{duration}</div>
-        {test.error && <Icon of="arrow-down" />}
+    <TestRow content={test.error}>
+      <div className={styles.test}>
+        {getStatusIcon(test.status)}
+        <div>{test.name}</div>
       </div>
-      {test.error && (
-        <div className={classNames(styles.log, isOpen && styles.open)}>
-          <ThemeContext>
-            <CodeSnippet className={styles.snippet}>{test.error}</CodeSnippet>
-          </ThemeContext>
-        </div>
-      )}
-    </div>
+      <div className={styles.duration}>{duration}</div>
+      {test.error && <Icon of="arrow-down" />}
+    </TestRow>
   );
 }
 

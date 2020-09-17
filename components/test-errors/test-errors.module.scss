@@ -1,14 +1,51 @@
-.errorBlock {
-  width: 100%;
+.errorSection {
+  margin-bottom: 50px;
+}
+.heading {
+  font-size: var(--p-xxs);
+  font-weight: bold;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  > div {
-    &:first-child {
-      overflow-wrap: break-word;
-      margin-bottom: 16px;
-      font-size: var(--p-xs);
-    }
+  grid-template-columns: minmax(0, 1fr) 20px;
+  grid-gap: 30px;
+  padding: 0 13px;
+  > * {
+    padding: 15px 0;
   }
+  > span {
+    visibility: hidden;
+    margin: auto;
+  }
+}
+.testRow {
+  grid-template-columns: minmax(0, 1fr) 20px;
+}
+.rowTitle {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  > span:first-child {
+    font-size: 16px;
+    margin-right: 10px;
+    align-self: baseline;
+    transform: translateY(2px);
+    color: #e62e5c;
+  }
+  .arrow {
+    justify-self: flex-end;
+  }
+}
+
+.errorBlock {
+  overflow-wrap: break-word;
+  margin-bottom: 16px;
+  font-size: var(--p-xs);
+  padding: 0 40px;
+  color: #e62e5c;
 }
 .codeBlock {
   > span {
@@ -21,5 +58,6 @@
   span {
     color: white !important;
     font-size: 11px;
+    background: #282c34 !important;
   }
 }

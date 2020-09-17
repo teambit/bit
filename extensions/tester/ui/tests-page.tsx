@@ -58,8 +58,8 @@ export function TestsPage({ className }: TestsPageProps) {
     <div className={classNames(styles.testsPage, className)}>
       <H1 className={styles.title}>Tests</H1>
       <Separator className={styles.separator} />
-      <TestTable tests={testResults?.tests} />
       <TestErrors errors={testResults?.errors} />
+      <TestTable tests={testResults?.tests} className={styles.testBlock} />
     </div>
   );
 }
