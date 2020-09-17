@@ -397,6 +397,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -415,6 +416,8 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
@@ -428,6 +431,8 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
@@ -722,7 +727,24 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, coreAspectsBitIds);
+    const aspectsIds = components.reduce((acc, curr) => {
+      const currIds = curr.state.aspects.ids;
+      acc = acc.concat(currIds);
+      return acc;
+    }, [] as any);
+    const otherDependenciesMap = components.reduce((acc, curr) => {
+      // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+      const currMap = curr.state.dependencies.getIdsMap();
+      Object.assign(acc, currMap);
+      return acc;
+    }, {});
+
+    const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map(strId => otherDependenciesMap[strId]);
+    // We only want to load into the graph components which are aspects and not regular dependencies
+    // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
+    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, BitIds.fromArray(ignoredIds));
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
