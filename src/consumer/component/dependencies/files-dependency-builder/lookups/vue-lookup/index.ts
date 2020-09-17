@@ -1,3 +1,5 @@
+import { requireWithUndefinedGlobalWindow } from '../../../../../../utils/require-pkg-with-undefined-window';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const fs = require('fs');
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -16,8 +18,7 @@ export default function (options) {
   const cabinet = require('../../filing-cabinet').default;
 
   const fileContent = fs.readFileSync(filename);
-  // eslint-disable-next-line global-require
-  const compiler = require('vue-template-compiler');
+  const compiler = requireWithUndefinedGlobalWindow('vue-template-compiler');
   const { script, styles } = compiler.parseComponent(fileContent.toString(), { pad: 'line' });
   if (isScript) {
     const scriptExt = script.lang ? languageMap[script.lang] || script.lang : DEFAULT_SCRIPT_LANG;
