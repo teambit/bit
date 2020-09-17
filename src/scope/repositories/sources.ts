@@ -318,6 +318,49 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return { version, files, dists, compilerFiles, testerFiles, artifacts };
   }
 
+  async enrichSource(consumerComponent: ConsumerComponent) {
+    const objectRepo = this.objects();
+    const component = await this.findOrAddComponent(consumerComponent);
+    const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
+
+    const clonedComponent: ConsumerComponent = consumerComponent.clone();
+    const artifacts: any[] = [];
+    const extensions = clonedComponent.extensions.clone();
+    extensions.forEach((extensionDataEntry) => {
+      const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
+        if (!(artifact instanceof ArtifactVinyl)) {
+          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
+        }
+
+        return {
+          relativePath: pathNormalizeToLinux(artifact.relative),
+          file: artifact.toSourceAsLinuxEOL(),
+        };
+      });
+      artifacts.push(...artifactsSource);
+      extensionDataEntry.artifacts = artifactsSource;
+    });
+
+    const parseComponentExtensions = () => {
+      const extensionsCloned = extensions;
+      extensionsCloned.forEach((extensionDataEntry) => {
+        extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
+          return {
+            file: artifact.file.hash(),
+            relativePath: artifact.relativePath,
+          };
+        });
+      });
+      return extensionsCloned;
+    };
+
+    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.file));
+    version.extensions = parseComponentExtensions();
+    objectRepo.add(version);
+
+    return consumerComponent;
+  }
+
   async addSource({
     source,
     consumer,

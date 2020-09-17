@@ -26,14 +26,14 @@ export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
   bitBin: string;
-  featuresToggle: string | undefined;
+  featuresToggle: string | string[] | undefined;
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  setFeatures(featuresToggle: string) {
+  setFeatures(featuresToggle: string | string[]) {
     this.featuresToggle = featuresToggle;
   }
   resetFeatures() {
@@ -61,11 +61,12 @@ export default class CommandHelper {
   _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
     const featuresToggle = overrideFeatures || this.featuresToggle;
     if (!featuresToggle) return '';
-    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${featuresToggle}`;
+    const featuresToggleStr = Array.isArray(featuresToggle) ? featuresToggle.join(',') : featuresToggle;
+    const bitFeaturesEnvVar = `${ENV_VAR_FEATURE_TOGGLE}=${featuresToggleStr}`;
     if (process.platform === 'win32') {
-      return `set "${featureToggleStr}" && `;
+      return `set "${bitFeaturesEnvVar}" && `;
     }
-    return `${featureToggleStr} `;
+    return `${bitFeaturesEnvVar} `;
   }
 
   listRemoteScope(raw = true, options = '') {

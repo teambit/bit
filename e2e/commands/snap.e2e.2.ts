@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-
+import { HARMONY_FEATURE, LANES_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { HASH_SIZE } from '../../src/constants';
@@ -14,17 +14,20 @@ chai.use(require('chai-fs'));
 
 describe('bit snap command', function () {
   this.timeout(0);
-  const helper = new Helper();
-  helper.command.setFeatures('lanes');
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.command.setFeatures([LANES_FEATURE, HARMONY_FEATURE]);
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('snap before tag', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       output = helper.command.snapComponent('bar/foo');
     });
     it('should snap successfully', () => {
@@ -79,12 +82,13 @@ describe('bit snap command', function () {
   });
   describe('components with dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponents();
+      helper.command.linkAndRewire();
       helper.command.snapAllComponents();
     });
     it('should save the dependencies successfully with their snaps as versions', () => {
-      const barFoo = helper.command.catComponent('bar/foo@latest');
+      const barFoo = helper.command.catComponent('comp1@latest');
       expect(barFoo.dependencies).to.have.lengthOf(1);
       expect(barFoo.dependencies[0].id.version).to.be.a('string').and.have.lengthOf(HASH_SIZE);
     });
@@ -94,9 +98,9 @@ describe('bit snap command', function () {
     let secondSnap: string;
     let beforeUntagScope: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScopeHarmony();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
