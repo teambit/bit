@@ -80,4 +80,16 @@ describe('bitIds', () => {
       });
     });
   });
+  describe('difference', () => {
+    it('should remove entries from the provided array', () => {
+      const a = new BitId({ name: 'a' });
+      const b = new BitId({ name: 'b' });
+      const c = new BitId({ name: 'c' });
+      const bitIds = BitIds.fromArray([a, b]);
+      const bitIds2 = BitIds.fromArray([b, c]);
+      const res = bitIds.difference(bitIds2);
+      expect(res).to.have.lengthOf(1);
+      expect(res.serialize()[0].toString()).to.equal('a');
+    });
+  });
 });
