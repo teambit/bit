@@ -19,11 +19,11 @@ export class TesterTask implements BuildTask {
     if (testCount === 0)
       return {
         artifacts: [],
-        components: [],
+        componentsResults: [],
       };
 
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
-      const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
+      const componentSpecFiles = componentsSpecFiles.get(component);
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;
       return specs.map((specFile) => {
@@ -44,9 +44,10 @@ export class TesterTask implements BuildTask {
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
     return {
-      artifacts: [],
-      components: testsResults.components.map((componentTests) => ({
+      artifacts: [], // @ts-ignore
+      componentsResults: testsResults.components.map((componentTests) => ({
         id: componentTests.componentId,
+        component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
         data: { tests: componentTests.results },
         errors: testsResults.errors ? [] : [],
       })),
