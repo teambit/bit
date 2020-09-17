@@ -169,7 +169,7 @@ export class EnvsMain {
   /**
    * compose two environments into one.
    */
-  merge(targetEnv: Environment, sourceEnv: Environment): Environment {
+  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
     const allNames = new Set<string>();
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
@@ -186,7 +186,7 @@ export class EnvsMain {
       targetEnv[key] = fn.bind(sourceEnv);
     });
 
-    return targetEnv;
+    return targetEnv as T;
   }
 
   // refactor here

@@ -779,7 +779,6 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
-
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
