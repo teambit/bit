@@ -1,3 +1,4 @@
+import PubsubAspect, { PubsubPreview, BitBaseEvent } from '@teambit/pubsub';
 import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
 import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
 
@@ -5,6 +6,11 @@ import { DocsAspect } from './docs.aspect';
 
 export class DocsPreview {
   constructor(
+    /**
+     * pubsub extension.
+     */
+    private pubsub: PubsubPreview,
+
     /**
      * preview extension.
      */
@@ -14,7 +20,19 @@ export class DocsPreview {
      * graphql extension.
      */
     private graphql: GraphqlUI
-  ) {}
+  ) {
+    window.addEventListener('click', (e) => {
+      const be: BitBaseEvent = {
+        type: 'click-inside-an-iframe',
+        version: '0.0.1',
+        timestamp: Date.now().toString(),
+        body: Object.assign({}, e),
+      };
+
+      console.log('Event1: ', e);
+      this.pubsub.pub(DocsAspect.id, be);
+    });
+  }
 
   render = (componentId: string, modules: any, [compositions]: [any]) => {
     if (!modules.componentMap[componentId]) {
@@ -32,10 +50,10 @@ export class DocsPreview {
   };
 
   static runtime = PreviewRuntime;
-  static dependencies = [PreviewAspect, GraphqlAspect];
+  static dependencies = [PubsubAspect, PreviewAspect, GraphqlAspect];
 
-  static async provider([preview, graphql]: [PreviewPreview, GraphqlUI]) {
-    const docsPreview = new DocsPreview(preview, graphql);
+  static async provider([pubsub, preview, graphql]: [PubsubPreview, PreviewPreview, GraphqlUI]) {
+    const docsPreview = new DocsPreview(pubsub, preview, graphql);
     preview.registerPreview({
       name: 'overview',
       render: docsPreview.render,

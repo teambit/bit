@@ -11,7 +11,11 @@ export class PubsubPreview {
   private _connection;
 
   constructor() {
+    console.log('START23: ');
     this._connection = connectToParent();
+    setInterval(() => {
+      this._connection = connectToParent();
+    }, 3000);
   }
 
   sub = (topicUUID, callback) => {
@@ -21,7 +25,10 @@ export class PubsubPreview {
   };
 
   pub = (topicUUID, event: BitBaseEvent) => {
+    console.log('Event2: ', event);
+    // console.log('this._connection: ', this._connection)
     this._connection.promise.then((parent) => {
+      console.log('Event3: ', event);
       parent.pub(topicUUID, event);
     });
   };

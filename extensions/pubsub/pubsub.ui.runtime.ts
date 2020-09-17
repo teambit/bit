@@ -17,6 +17,7 @@ export class PubsubUI {
   };
 
   private connectToIframe = (iframe) => {
+    console.log('iframe1: ', iframe);
     return connectToChild({
       iframe,
       // Methods the parent is exposing to the child
@@ -29,6 +30,7 @@ export class PubsubUI {
           return this.sub(topicUUID, callback);
         },
         pub(topicUUID, event: BitBaseEvent) {
+          console.log('Event4: ', event);
           return this.pub(topicUUID, event);
         },
       },
@@ -45,7 +47,13 @@ export class PubsubUI {
   };
 
   constructor() {
+    console.log('START2: ');
     this.updateConnectionsList();
+
+    setInterval(() => {
+      this.updateConnectionsList();
+    }, 3000);
+    console.log('this._connections ', this._connections);
   }
 
   public sub = (topicUUID, callback) => {
