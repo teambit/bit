@@ -10,7 +10,7 @@ export class JestTester implements Tester {
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
-      const componentSpecFiles = testerContext.specFiles.get(component.id.fullName);
+      const componentSpecFiles = testerContext.specFiles.get(component);
       if (!componentSpecFiles) return undefined;
       const [, specs] = componentSpecFiles;
       return testResult.filter((test) => {

@@ -3,16 +3,28 @@ import { Component } from '../component';
 /**
  * allows to index components -> values.
  */
-export class ComponentMap<T> extends Map<string, [Component, T]> {
+export class ComponentMap<T> {
+  constructor(readonly hashMap: Map<string, [Component, T]>) {}
+
+  /**
+   * @deprecated please use `get` instead
+   */
   byComponent(component: Component) {
-    return super.get(component.id.fullName);
+    return this.hashMap.get(component.id.toString());
+  }
+
+  /**
+   * get a value for a component.
+   */
+  get(component: Component) {
+    return this.hashMap.get(component.id.toString());
   }
 
   /**
    * returns an array.
    */
   toArray() {
-    return Array.from(this.values());
+    return Array.from(this.hashMap.values());
   }
 
   /**
@@ -21,12 +33,11 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
   map<NewType>(predicate: (value: T, component: Component) => NewType): ComponentMap<NewType> {
     const tuples: [string, [Component, NewType]][] = this.toArray().map(([component, value]) => {
       const newValue = predicate(value, component);
-      return [component.id.fullName, [component, newValue]];
+      return [component.id.toString(), [component, newValue]];
     });
 
-    return new ComponentMap(tuples);
+    return new ComponentMap(new Map(tuples));
   }
-
   /**
    * flatten values of all components into a single array.
    */
@@ -46,10 +57,24 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
     });
 
     const asMap: [string, [Component, T]][] = tuples.map(([component, value]) => {
-      return [component.id.fullName, [component, value]];
+      return [component.id.toString(), [component, value]];
     });
 
-    return new ComponentMap(asMap);
+    return new ComponentMap(new Map(asMap));
+  }
+
+  /**
+   * get all component ids.
+   */
+  keys() {
+    return this.hashMap.keys();
+  }
+
+  static create<T>(rawMap: [Component, T][]) {
+    const newMap: [string, [Component, T]][] = rawMap.map(([component, data]) => {
+      return [component.id.toString(), [component, data]];
+    });
+    return new ComponentMap(new Map(newMap));
   }
 
   /**
@@ -59,9 +84,9 @@ export class ComponentMap<T> extends Map<string, [Component, T]> {
    */
   static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
     const tuples: [string, [Component, T]][] = components.map((component) => {
-      return [component.id.fullName, [component, predicate(component)]];
+      return [component.id.toString(), [component, predicate(component)]];
     });
 
-    return new ComponentMap(tuples);
+    return new ComponentMap(new Map(tuples));
   }
 }

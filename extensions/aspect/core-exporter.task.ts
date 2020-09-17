@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { BuildContext, BuildResults, BuildTask, TaskLocation } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { Capsule } from '@teambit/isolator';
 import { Environment } from '@teambit/environments';
@@ -9,10 +9,10 @@ export class CoreExporterTask implements BuildTask {
   constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
 
   location: TaskLocation = 'start';
-  readonly extensionId = 'teambit.bit/aspect';
+  readonly id = 'teambit.bit/aspect';
   readonly description = 'export all core aspects via the main aspects';
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const mainAspect = this.aspectLoader.mainAspect;
     const capsules = context.capsuleGraph.seedersCapsules;
     const mainAspectCapsule = capsules.find((capsule) => capsule.component.id.name === mainAspect.name);
@@ -22,7 +22,7 @@ export class CoreExporterTask implements BuildTask {
     }
 
     return {
-      components: [],
+      componentsResults: [],
       artifacts: [],
     };
   }

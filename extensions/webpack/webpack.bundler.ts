@@ -1,4 +1,4 @@
-import { Bundler, BundlerComponentResult, Target } from '@teambit/bundler';
+import { Bundler, BundlerResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -22,21 +22,27 @@ export class WebpackBundler implements Bundler {
     private logger: Logger
   ) {}
 
-  async run(): Promise<BundlerComponentResult[]> {
+  async run(): Promise<BundlerResult[]> {
     const compilers = this.getConfig().map((config) => webpack(config));
     const longProcessLogger = this.logger.createLongProcessLogger('bundling component preview', compilers.length);
     const componentOutput = await pMapSeries(compilers, (compiler: Compiler) => {
-      const componentId = this.getIdByPath(compiler.outputPath);
-      longProcessLogger.logProgress(componentId.toString());
-      return new Promise((resolve, reject) => {
+      const components = this.getComponents(compiler.outputPath);
+      longProcessLogger.logProgress(components.map((component) => component.id.toString()).join(', '));
+      return new Promise((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
-          if (err) return reject(err);
+          if (err) {
+            return resolve({
+              errors: [err],
+              components,
+            });
+          }
           const info = stats.toJson();
           return resolve({
             errors: info.errors,
-            id: this.getIdByPath(stats.compilation.outputOptions.path),
+            outputPath: stats.compilation.outputOptions.path,
+            components,
             warnings: info.warnings,
           });
         });
@@ -46,25 +52,25 @@ export class WebpackBundler implements Bundler {
     return componentOutput;
   }
 
-  private getIdByPath(outputPath: string) {
+  private getComponents(outputPath: string) {
     const target = this.targets.find((targetCandidate) => {
       const splitPath = outputPath.split('/');
       splitPath.pop();
       const path = splitPath.join('/');
-      return path === targetCandidate.capsule.path;
+      return path === targetCandidate.outputPath;
     });
 
     if (!target) {
-      throw new Error();
+      throw new Error('could not find component id for path');
     }
 
-    return target?.capsule.component.id;
+    return target.components;
   }
 
   private getSingleConfig() {
     const entries = flatten(this.targets.map((target) => target.entries));
     // TODO: fix when a proper API to capsule root is introduced.
-    const pathArray = this.targets[0].capsule.path.split('/');
+    const pathArray = this.targets[0].outputPath.split('/');
     pathArray.pop();
     const rootPath = pathArray.join('/');
 
@@ -85,11 +91,7 @@ export class WebpackBundler implements Bundler {
 
   private getConfig() {
     return this.targets.map((target) => {
-      return merge(configFactory(target.entries, target.capsule.path), this.envConfig);
+      return merge(configFactory(target.entries, target.outputPath), this.envConfig);
     });
-  }
-
-  private getCompiler() {
-    return webpack(this.getConfig());
   }
 }

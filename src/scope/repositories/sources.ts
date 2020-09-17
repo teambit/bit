@@ -6,7 +6,7 @@ import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } 
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
-import { Artifact } from '../../consumer/component/sources/artifact';
+import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
@@ -250,7 +250,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const extensions = clonedComponent.extensions.clone();
     extensions.forEach((extensionDataEntry) => {
       const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
-        if (!(artifact instanceof Artifact)) {
+        if (!(artifact instanceof ArtifactVinyl)) {
           throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
         }
 
