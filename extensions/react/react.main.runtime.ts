@@ -110,9 +110,9 @@ export class ReactMain {
   /**
    * override the preview webpack config.
    */
-  overridePreviewConfig() {
+  overridePreviewConfig(config: Configuration) {
     return this.envs.override({
-      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context),
+      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, config),
     });
   }
 
