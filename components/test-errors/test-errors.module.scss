@@ -32,7 +32,6 @@
     font-size: 16px;
     margin-right: 10px;
     align-self: baseline;
-    transform: translateY(2px);
     color: #e62e5c;
   }
   .arrow {
@@ -42,9 +41,9 @@
 
 .errorBlock {
   overflow-wrap: break-word;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   font-size: var(--p-xs);
-  padding: 0 40px;
+  padding: 5px 14px;
   color: #e62e5c;
 }
 .codeBlock {

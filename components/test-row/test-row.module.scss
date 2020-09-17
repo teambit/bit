@@ -7,17 +7,6 @@
       transform: rotate(0.5turn);
     }
   }
-  &:hover {
-    background-color: #f6f6f6;
-    > .row > span {
-      visibility: unset;
-    }
-  }
-  &.hover {
-    .row {
-      cursor: pointer;
-    }
-  }
 }
 
 .row {
@@ -25,6 +14,15 @@
   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) 20px;
   grid-gap: 30px;
   padding: 0 13px;
+  &:hover {
+    background-color: #f6f6f6;
+    > span {
+      visibility: unset;
+    }
+  }
+  &.hover {
+    cursor: pointer;
+  }
   > * {
     padding: 15px 0;
   }

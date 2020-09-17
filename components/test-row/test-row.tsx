@@ -15,9 +15,9 @@ export function TestRow({ children, content, className, rowClass, snippetTitle }
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className={classNames(styles.testBlock, className, isOpen && styles.open, content && styles.hover)}>
+    <div className={classNames(styles.testBlock, className, isOpen && styles.open)}>
       <div
-        className={classNames(styles.row, rowClass)}
+        className={classNames(styles.row, rowClass, content && styles.hover)}
         onClick={() => {
           if (!content) return;
           setIsOpen(!isOpen);
