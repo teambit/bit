@@ -13,7 +13,7 @@ export class PubsubUI {
   private _connections;
 
   private getAllIframes = () => {
-    return document.getElementsByTagName('iframe');
+    return Array.from(document.getElementsByTagName('iframe'));
   };
 
   private connectToIframe = (iframe) => {

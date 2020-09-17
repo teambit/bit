@@ -1,6 +1,8 @@
 import { Configuration } from 'webpack';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
+import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
+
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
@@ -27,6 +29,7 @@ import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
 
 type ReactDeps = [
+  PubsubPreview,
   EnvsMain,
   JestMain,
   TypescriptMain,
@@ -184,6 +187,7 @@ export class ReactMain {
 
   static runtime = MainRuntime;
   static dependencies = [
+    PubsubAspect,
     EnvsAspect,
     JestAspect,
     TypescriptAspect,
@@ -196,10 +200,10 @@ export class ReactMain {
   ];
 
   static async provider(
-    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
+    [pubsub, envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
+    const reactEnv = new ReactEnv(pubsub, jest, ts, compiler, webpack, workspace, pkg, tester, config);
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

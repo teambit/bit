@@ -1,6 +1,7 @@
 import { TsConfigSourceFile } from 'typescript';
 import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
+import { PubsubPreview } from '@teambit/pubsub';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -26,6 +27,11 @@ const defaultTsConfig = require('./typescript/tsconfig.json');
  */
 export class ReactEnv implements Environment {
   constructor(
+    /**
+     * jest extension
+     */
+    private pubsub: PubsubPreview,
+
     /**
      * jest extension
      */

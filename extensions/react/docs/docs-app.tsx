@@ -4,16 +4,17 @@ import React from 'react';
 import { Base } from './base';
 
 export type DocsAppProps = {
+  onclick: any;
   Provider: React.ComponentType;
   docs: docsFile;
   componentId: string;
   compositions: [React.ComponentType];
 };
 
-export function DocsApp({ Provider, docs, componentId, compositions }: DocsAppProps) {
+export function DocsApp({ onclick, Provider, docs, componentId, compositions }: DocsAppProps) {
   return (
     <Provider>
-      <Base docs={docs} componentId={componentId} compositions={compositions} />
+      <Base onClick={onclick} docs={docs} componentId={componentId} compositions={compositions} />
     </Provider>
   );
 }
