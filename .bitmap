@@ -2848,21 +2848,6 @@
                 "name": "properties.tsx"
             },
             {
-                "relativePath": "docs/pubsub/bitBaseEvent.ts",
-                "test": false,
-                "name": "bitBaseEvent.ts"
-            },
-            {
-                "relativePath": "docs/pubsub/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "docs/pubsub/pubsub.ts",
-                "test": false,
-                "name": "pubsub.ts"
-            },
-            {
                 "relativePath": "docs/react-docs-model.ts",
                 "test": false,
                 "name": "react-docs-model.ts"
