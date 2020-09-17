@@ -1,7 +1,7 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component';
-import { CapsuleList, Network } from '@teambit/isolator';
+import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
