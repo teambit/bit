@@ -723,7 +723,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const ids = components.map((component) => component.id._legacy);
+    const ids = BitIds.fromArray(components.map((component) => component.id._legacy));
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
@@ -743,9 +743,8 @@ export class Workspace implements ComponentFactory {
     const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds).filter((id) => {
-      return components.find((component) => id.isEqual(component.id._legacy));
-    });
+    let ignoredIds = BitIds.fromArray(coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds));
+    ignoredIds = ignoredIds.difference(ids);
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
