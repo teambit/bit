@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component';
 import { CapsuleList, Network } from '@teambit/isolator';
@@ -68,15 +68,8 @@ export class TypescriptCompiler implements Compiler {
     const capsuleDirs = capsules.getAllCapsuleDirs();
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
-    const componentsErrors: ComponentError[] = [];
 
-    await this.runTscBuild(componentsErrors, context.capsuleGraph);
-
-    const componentsResults = capsules.map((capsule) => {
-      const component = capsule.capsule.component;
-      const errors = componentsErrors.filter((c) => c.componentId.isEqual(component.id)).map((c) => c.error);
-      return { component, errors };
-    });
+    const componentsResults = await this.runTscBuild(context.capsuleGraph);
 
     return {
       artifacts: this.getArtifactDefinition(),
@@ -129,65 +122,64 @@ export class TypescriptCompiler implements Compiler {
    * we went with option #2 because it'll be easier for users to go to the capsule-root and run
    * `tsc --build` to debug issues.
    */
-  private async runTscBuild(componentsErrors: ComponentError[], capsuleGraph: Network) {
+  private async runTscBuild(capsuleGraph: Network): Promise<ComponentResult[]> {
     const rootDir = capsuleGraph.capsulesRootDir;
     const capsules = capsuleGraph.capsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
-    const host = this.createTsSolutionBuilderHost(capsules, componentsErrors);
-    await this.writeProjectReferencesTsConfig(rootDir, capsuleDirs);
-    const solutionBuilder = ts.createSolutionBuilder(host, [rootDir], { verbose: true });
-    // solutionBuilder.clean(); // probably not needed. revert otherwise.
-    const result = solutionBuilder.build();
-    if (result > 0 && !componentsErrors.length) {
-      throw new Error(`typescript exited with status code ${result}, however, no errors are found in the diagnostics`);
-    }
-  }
-
-  private createTsSolutionBuilderHost(
-    capsules: CapsuleList,
-    componentsErrors: ComponentError[]
-  ): ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram> {
-    const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     const formatHost = {
       getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
       getNewLine: () => ts.sys.newLine,
     };
-    let currentComponentFromBuilderStatus;
+    const componentsResults: ComponentResult[] = [];
+    let currentComponentResult: Partial<ComponentResult> = { errors: [] };
     const reportDiagnostic = (diagnostic: ts.Diagnostic) => {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
       this.logger.consoleFailure(errorStr);
-      if (!diagnostic.file) {
-        // this happens for example if one of the components and is not TS
-        throw new Error(errorStr);
+      if (!currentComponentResult.component || !currentComponentResult.errors) {
+        throw new Error(`currentComponentResult is not defined yet for ${diagnostic.file}`);
       }
-      const componentId = capsules.getIdByPathInCapsule(diagnostic.file.fileName) || currentComponentFromBuilderStatus;
-      if (!componentId) throw new Error(`unable to find the componentId by the filename ${diagnostic.file.fileName}`);
-      componentsErrors.push({ componentId, error: errorStr });
+      currentComponentResult.errors.push(errorStr);
     };
     // this only works when `verbose` is `true` in the `ts.createSolutionBuilder` function.
-    // it prints useful info, such as, every time it starts compiling a new capsule
     const reportSolutionBuilderStatus = (diag: ts.Diagnostic) => {
       const msg = diag.messageText as string;
       this.logger.debug(msg);
-      const capsulePath = this.getCapsulePathFromBuilderStatus(msg);
-      if (!capsulePath) return;
-      currentComponentFromBuilderStatus = capsules.getIdByPathInCapsule(capsulePath);
-      longProcessLogger.logProgress(currentComponentFromBuilderStatus);
     };
     const errorCounter = (errorCount: number) => {
       this.logger.info(`total error found: ${errorCount}`);
-      longProcessLogger.end();
     };
-    return ts.createSolutionBuilderHost(
+    const host = ts.createSolutionBuilderHost(
       undefined,
       undefined,
       reportDiagnostic,
       reportSolutionBuilderStatus,
       errorCounter
     );
+    await this.writeProjectReferencesTsConfig(rootDir, capsuleDirs);
+    const solutionBuilder = ts.createSolutionBuilder(host, [rootDir], { verbose: true });
+    let nextProject;
+    const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
+    // eslint-disable-next-line no-cond-assign
+    while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
+      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
+      if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
+      longProcessLogger.logProgress(currentComponentId.toString());
+      const capsule = capsules.getCapsule(currentComponentId);
+      if (!capsule) throw new Error(`unable to find capsule for ${currentComponentId.toString()}`);
+      currentComponentResult.component = capsule.component;
+      currentComponentResult.startTime = Date.now();
+      nextProject.done();
+      currentComponentResult.endTime = Date.now();
+      componentsResults.push({ ...currentComponentResult } as ComponentResult);
+      currentComponentResult = { errors: [] };
+    }
+    longProcessLogger.end();
+
+    return componentsResults;
   }
 
   private async writeTypes(dirs: string[]) {

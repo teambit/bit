@@ -201,6 +201,10 @@ export default class ComponentWriter {
    * that are set in package.json.files[], to have a similar structure of a package.
    */
   private populateArtifacts() {
+    if (this.isolated) {
+      // in capsule, do not write artifacts, they get created by build-pipeline
+      return;
+    }
     const artifactsVinyl: ArtifactVinyl[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {

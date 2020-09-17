@@ -21,8 +21,7 @@ export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsu
     return this.map((capsule) => capsule.capsule.wrkDir);
   }
   getIdByPathInCapsule(pathInCapsule: string): ComponentID | null {
-    // capsules with version ends with "@version-number", strip it.
-    const found = this.find((item) => pathInCapsule.startsWith(item.capsule.wrkDir.split('@')[0]));
+    const found = this.find((item) => pathInCapsule === item.capsule.path);
     return found ? found.id : null;
   }
   getAllCapsules(): Capsule[] {
