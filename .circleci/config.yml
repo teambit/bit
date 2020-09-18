@@ -483,13 +483,16 @@ jobs:
             - "SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev"
 
       - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
-      - run:
-          name: 'replace git protocol from ssh to http' # to not get the authenticate error
-          command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      # - run:
+      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
+      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      - run: mkdir -p ~/.ssh
+      - run: SCAN=$(ssh-keyscan github.com )
+      - run: echo $SCAN >> ~/.ssh/known_hosts
       -
         run:
           name: 'git commit'
-          command: 'cd bit && git commit .bitmap -m "update .bitmap file [ci-skip]"'
+          command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
       -
         run:
           name: 'git push'
