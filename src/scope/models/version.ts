@@ -642,7 +642,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: component.extensions.toModelObjects(),
+      extensions: extensions.toModelObjects(),
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;
