@@ -492,7 +492,8 @@ jobs:
       -
         run:
           name: 'git commit'
-          command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
+          # command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
+          command: 'cd bit && git commit -am "update .bitmap file [skip ci]"'
       -
         run:
           name: 'git push'
