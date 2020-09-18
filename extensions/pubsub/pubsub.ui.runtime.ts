@@ -17,7 +17,8 @@ export class PubsubUI {
   };
 
   private connectToIframe = (iframe) => {
-    console.log('iframe1: ', iframe);
+    // console.log('iframe1: ', iframe);
+    const self = this;
     return connectToChild({
       iframe,
       // Methods the parent is exposing to the child
@@ -27,11 +28,11 @@ export class PubsubUI {
           return num1 + num2;
         },
         sub(topicUUID, callback) {
-          return this.sub(topicUUID, callback);
+          return self.sub(topicUUID, callback);
         },
         pub(topicUUID, event: BitBaseEvent) {
           console.log('Event4: ', event);
-          return this.pub(topicUUID, event);
+          return self.pub(topicUUID, event);
         },
       },
     });

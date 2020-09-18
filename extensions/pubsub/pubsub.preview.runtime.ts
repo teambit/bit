@@ -26,7 +26,6 @@ export class PubsubPreview {
 
   pub = (topicUUID, event: BitBaseEvent) => {
     console.log('Event2: ', event);
-    // console.log('this._connection: ', this._connection)
     this._connection.promise.then((parent) => {
       console.log('Event3: ', event);
       parent.pub(topicUUID, event);
