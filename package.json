@@ -125,7 +125,7 @@
     "group-array": "^1.0.0",
     "ignore": "^3.3.7",
     "ini-builder": "^1.1.1",
-    "ink": "^2.6.0",
+    "ink": "^3.0.5",
     "inquirer": "^6.5.0",
     "inquirer-fuzzy-path": "^2.2.0",
     "is-glob": "^4.0.0",

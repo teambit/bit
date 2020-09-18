@@ -41,6 +41,10 @@ export class UIServer {
     private logger: Logger
   ) {}
 
+  getName() {
+    return this.uiRoot.name;
+  }
+
   private _port = 0;
 
   get port() {

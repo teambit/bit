@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import { Timer } from 'bit-bin/dist/toolbox/timer';
-import { Box, Color } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import type { TesterMain } from './tester.main.runtime';
@@ -44,7 +44,7 @@ export class TestCmd implements Command {
 
     return (
       <Box>
-        tested <Color cyan>{components.length}</Color> components in <Color cyan>{seconds}</Color> seconds.
+        tested <Text color="cyan">{components.length}</Text> components in <Text color="cyan">{seconds}</Text> seconds.
       </Box>
     );
   }

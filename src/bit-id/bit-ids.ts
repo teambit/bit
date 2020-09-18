@@ -81,6 +81,14 @@ export default class BitIds extends Array<BitId> {
     return BitIds.fromArray(this.filter((id) => !id.isEqual(bitId)));
   }
 
+  /**
+   * Return ids which are on the current instance and not in the passed list
+   * @param bitIds
+   */
+  difference(bitIds: BitIds): BitIds {
+    return BitIds.fromArray(this.filter((id) => !bitIds.search(id)));
+  }
+
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
     return BitIds.fromArray(this.filter((id) => !id.isEqualWithoutVersion(bitId)));
   }
