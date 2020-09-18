@@ -13,9 +13,11 @@ export class PubsubPreview {
   constructor() {
     console.log('START23: ');
     this._connection = connectToParent();
-    setInterval(() => {
-      this._connection = connectToParent();
-    }, 3000);
+    setTimeout(() => {this._connection = connectToParent();}, 500);
+    
+    // setInterval(() => {
+    //   this._connection = connectToParent();
+    // }, 3000);
   }
 
   sub = (topicUUID, callback) => {

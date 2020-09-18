@@ -50,10 +50,12 @@ export class PubsubUI {
   constructor() {
     console.log('START2: ');
     this.updateConnectionsList();
+    setTimeout(() => {this.updateConnectionsList();}, 500);
 
-    setInterval(() => {
-      this.updateConnectionsList();
-    }, 3000);
+    // setInterval(() => {
+    //   this.updateConnectionsList();
+    // }, 3000);
+
     console.log('this._connections ', this._connections);
   }
 
