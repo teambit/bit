@@ -2794,9 +2794,24 @@
                 "name": "preview.task.ts"
             },
             {
-                "relativePath": "ui/component-preview/index.ts",
+                "relativePath": "strategies/component-strategy.ts",
+                "test": false,
+                "name": "component-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/env-strategy.ts",
+                "test": false,
+                "name": "env-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-preview/index.ts",
+                "test": false,
+                "name": "pubsub.aspect.ts"
             },
             {
                 "relativePath": "ui/component-preview/preview.tsx",
@@ -2813,13 +2828,7 @@
         "rootDir": "extensions/preview",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pubsub": {
         "files": [
@@ -2827,23 +2836,14 @@
                 "relativePath": "bitBaseEvent.ts",
                 "test": false,
                 "name": "bitBaseEvent.ts"
-                "relativePath": "strategies/component-strategy.ts",
-                "test": false,
-                "name": "component-strategy.ts"
             },
             {
-                "relativePath": "strategies/env-strategy.ts",
-                "test": false,
-                "name": "env-strategy.ts"
-            },
-            {
-                "relativePath": "strategies/index.ts",
+                "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
                 "relativePath": "pubsub.aspect.ts",
-                "relativePath": "ui/component-preview/index.ts",
                 "test": false,
                 "name": "pubsub.aspect.ts"
             },
@@ -2865,18 +2865,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/pubsub",
-                "relativePath": "ui/component-preview/preview.tsx",
-                "test": false,
-                "name": "preview.tsx"
-            },
-            {
-                "relativePath": "ui/index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/preview",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
