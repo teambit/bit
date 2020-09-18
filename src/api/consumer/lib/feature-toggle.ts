@@ -53,7 +53,7 @@ export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
 
 export const HARMONY_FEATURE = 'harmony';
 
-const LANES_FEATURE = 'lanes';
+export const LANES_FEATURE = 'lanes';
 
 export function isLaneEnabled() {
   return isFeatureEnabled(LANES_FEATURE);

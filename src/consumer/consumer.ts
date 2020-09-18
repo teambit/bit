@@ -662,10 +662,6 @@ export default class Consumer {
       isSnap: true,
     });
 
-    const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
-    const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    await this.updateComponentsVersions(allComponents);
-
     return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
   }
 

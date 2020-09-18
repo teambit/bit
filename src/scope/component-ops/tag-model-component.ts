@@ -336,7 +336,7 @@ export default async function tagModelComponent({
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
-    await bluebird.mapSeries(componentsToTag, (consumerComponent) => persistComponent(consumerComponent));
+    await bluebird.mapSeries(componentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (persist) {
