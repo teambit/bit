@@ -2,7 +2,7 @@ import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
 
 import { connectToParent } from 'penpal';
 
-import { BitBaseEvent } from './bitBaseEvent';
+import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubPreview {
