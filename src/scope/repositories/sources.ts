@@ -331,7 +331,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
     const component = await this.findOrAddComponent(consumerComponent);
     const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
-    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(version.extensions);
+    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(consumerComponent.extensions);
     artifacts.forEach((file) => objectRepo.add(file.file));
     version.extensions = extensions.toModelObjects();
     objectRepo.add(version);
