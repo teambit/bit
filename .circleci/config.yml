@@ -471,10 +471,10 @@ jobs:
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
-      -
-        run:
-          name: 'bit tag'
-          command: 'cd bit && bit tag --persist'
+      # -
+      #   run:
+      #     name: 'bit tag'
+      #     command: 'cd bit && bit tag --persist'
       - run:
           name: 'set GitHub token'
           command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
@@ -497,8 +497,7 @@ jobs:
         run:
           name: 'git push'
           command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
-      -
-        store_artifacts:
+      - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
   e2e_test:
