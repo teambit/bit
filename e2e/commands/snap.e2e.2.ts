@@ -152,6 +152,7 @@ describe('bit snap command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
+      helper.command.setFeatures([LANES_FEATURE]);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
@@ -557,6 +558,7 @@ describe('bit snap command', function () {
       let secondSnap: string;
       let localScope;
       before(() => {
+        helper.command.setFeatures([LANES_FEATURE]);
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
@@ -622,6 +624,7 @@ describe('bit snap command', function () {
     let snapOutput;
     let isTypeHead;
     before(() => {
+      helper.command.setFeatures([LANES_FEATURE]);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.command.snapAllComponents();

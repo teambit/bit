@@ -7,6 +7,7 @@ import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
+import { ExtensionDataList } from '../../consumer/config';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
@@ -184,6 +185,28 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
+  private transformArtifactsFromVinylToSource(
+    extensions: ExtensionDataList
+  ): { extensions: ExtensionDataList; artifacts: Array<{ relativePath: string; file: Source }> } {
+    const extensionsCloned = extensions.clone();
+    const artifacts: any[] = [];
+    extensionsCloned.forEach((extensionDataEntry) => {
+      const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
+        if (!(artifact instanceof ArtifactVinyl)) {
+          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
+        }
+
+        return {
+          relativePath: pathNormalizeToLinux(artifact.relative),
+          file: artifact.toSourceAsLinuxEOL(),
+        };
+      });
+      artifacts.push(...artifactsSource);
+      extensionDataEntry.artifacts = artifactsSource;
+    });
+    return { extensions: extensionsCloned, artifacts };
+  }
+
   /**
    * given a consumer-component object, returns the Version representation.
    * useful for saving into the model or calculation the hash for comparing with other Version object.
@@ -246,22 +269,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       consumerComponent.originallySharedDir,
       isCompileSet
     );
-    const artifacts: any[] = [];
-    const extensions = clonedComponent.extensions.clone();
-    extensions.forEach((extensionDataEntry) => {
-      const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
-        if (!(artifact instanceof ArtifactVinyl)) {
-          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
-        }
 
-        return {
-          relativePath: pathNormalizeToLinux(artifact.relative),
-          file: artifact.toSourceAsLinuxEOL(),
-        };
-      });
-      artifacts.push(...artifactsSource);
-      extensionDataEntry.artifacts = artifactsSource;
-    });
+    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(clonedComponent.extensions);
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
@@ -322,40 +331,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
     const component = await this.findOrAddComponent(consumerComponent);
     const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
-
-    const clonedComponent: ConsumerComponent = consumerComponent.clone();
-    const artifacts: any[] = [];
-    const extensions = clonedComponent.extensions.clone();
-    extensions.forEach((extensionDataEntry) => {
-      const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
-        if (!(artifact instanceof ArtifactVinyl)) {
-          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
-        }
-
-        return {
-          relativePath: pathNormalizeToLinux(artifact.relative),
-          file: artifact.toSourceAsLinuxEOL(),
-        };
-      });
-      artifacts.push(...artifactsSource);
-      extensionDataEntry.artifacts = artifactsSource;
-    });
-
-    const parseComponentExtensions = () => {
-      const extensionsCloned = extensions;
-      extensionsCloned.forEach((extensionDataEntry) => {
-        extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
-          return {
-            file: artifact.file.hash(),
-            relativePath: artifact.relativePath,
-          };
-        });
-      });
-      return extensionsCloned;
-    };
-
-    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.file));
-    version.extensions = parseComponentExtensions();
+    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(version.extensions);
+    artifacts.forEach((file) => objectRepo.add(file.file));
+    version.extensions = extensions.toModelObjects();
     objectRepo.add(version);
 
     return consumerComponent;
