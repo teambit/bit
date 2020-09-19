@@ -506,7 +506,7 @@ jobs:
         run:
           name: 'git push'
           command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
-      - run: npm publish tag --dev
+      - run: cd bit && npm publish tag --dev
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
