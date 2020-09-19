@@ -40,7 +40,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -95,7 +95,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -134,6 +134,16 @@
                 "name": "bit.provider.ts"
             },
             {
+                "relativePath": "extension/extension.ts",
+                "test": false,
+                "name": "extension.ts"
+            },
+            {
+                "relativePath": "extension/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "hook-require.ts",
                 "test": false,
                 "name": "hook-require.ts"
@@ -165,7 +175,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -174,14 +184,49 @@
     "builder": {
         "files": [
             {
-                "relativePath": "artifact.ts",
+                "relativePath": "artifact/artifact-definition.ts",
+                "test": false,
+                "name": "artifact-definition.ts"
+            },
+            {
+                "relativePath": "artifact/artifact-factory.ts",
+                "test": false,
+                "name": "artifact-factory.ts"
+            },
+            {
+                "relativePath": "artifact/artifact-list.ts",
+                "test": false,
+                "name": "artifact-list.ts"
+            },
+            {
+                "relativePath": "artifact/artifact.ts",
                 "test": false,
                 "name": "artifact.ts"
+            },
+            {
+                "relativePath": "artifact/extension-artifact.ts",
+                "test": false,
+                "name": "extension-artifact.ts"
+            },
+            {
+                "relativePath": "artifact/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "build-pipe.ts",
                 "test": false,
                 "name": "build-pipe.ts"
+            },
+            {
+                "relativePath": "build-pipeline-result-list.ts",
+                "test": false,
+                "name": "build-pipeline-result-list.ts"
+            },
+            {
+                "relativePath": "build-task.ts",
+                "test": false,
+                "name": "build-task.ts"
             },
             {
                 "relativePath": "build.cmd.ts",
@@ -209,6 +254,16 @@
                 "name": "builder.service.ts"
             },
             {
+                "relativePath": "exceptions/artifact-storage-error.ts",
+                "test": false,
+                "name": "artifact-storage-error.ts"
+            },
+            {
+                "relativePath": "exceptions/capsule-not-found.ts",
+                "test": false,
+                "name": "capsule-not-found.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -224,9 +279,29 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "task-process.ts",
+                "relativePath": "pipeline/index.ts",
                 "test": false,
-                "name": "task-process.ts"
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "pipeline/pipeline-results.ts",
+                "test": false,
+                "name": "pipeline-results.ts"
+            },
+            {
+                "relativePath": "storage/default-resolver.ts",
+                "test": false,
+                "name": "default-resolver.ts"
+            },
+            {
+                "relativePath": "storage/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/storage-resolver.ts",
+                "test": false,
+                "name": "storage-resolver.ts"
             },
             {
                 "relativePath": "types.ts",
@@ -240,7 +315,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -330,7 +405,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -365,7 +440,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -415,7 +490,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -485,7 +560,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -545,7 +620,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -875,7 +950,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -925,7 +1000,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1055,7 +1130,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1140,7 +1215,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1280,7 +1355,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1315,7 +1390,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1395,7 +1470,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1425,7 +1500,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1530,7 +1605,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1595,7 +1670,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1725,7 +1800,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1780,7 +1855,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1845,7 +1920,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1905,7 +1980,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -1985,7 +2060,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2065,7 +2140,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2105,7 +2180,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2150,7 +2225,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2185,7 +2260,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2220,7 +2295,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2245,7 +2320,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2290,7 +2365,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2335,7 +2410,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2360,7 +2435,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2390,7 +2465,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2420,7 +2495,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2450,7 +2525,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2490,7 +2565,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2565,7 +2640,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2615,7 +2690,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2623,6 +2698,16 @@
     },
     "preview": {
         "files": [
+            {
+                "relativePath": "bundling-strategy.ts",
+                "test": false,
+                "name": "bundling-strategy.ts"
+            },
+            {
+                "relativePath": "exceptions/bundling-strategy-not-found.ts",
+                "test": false,
+                "name": "bundling-strategy-not-found.ts"
+            },
             {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
@@ -2709,6 +2794,21 @@
                 "name": "preview.task.ts"
             },
             {
+                "relativePath": "strategies/component-strategy.ts",
+                "test": false,
+                "name": "component-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/env-strategy.ts",
+                "test": false,
+                "name": "env-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-preview/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2730,7 +2830,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -2930,7 +3030,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3005,7 +3105,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3035,7 +3135,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3095,7 +3195,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3169,6 +3269,11 @@
                 "name": "scope.ui.runtime.tsx"
             },
             {
+                "relativePath": "types.ts",
+                "test": false,
+                "name": "types.ts"
+            },
+            {
                 "relativePath": "ui/scope-context.ts",
                 "test": false,
                 "name": "scope-context.ts"
@@ -3225,7 +3330,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3315,7 +3420,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3345,7 +3450,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3380,7 +3485,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3410,7 +3515,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3440,7 +3545,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3470,7 +3575,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3500,7 +3605,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3530,7 +3635,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3560,7 +3665,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3590,7 +3695,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3620,7 +3725,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3650,7 +3755,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3880,7 +3985,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3910,7 +4015,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3940,7 +4045,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -3995,7 +4100,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4030,7 +4135,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4060,7 +4165,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4095,7 +4200,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4125,7 +4230,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4160,7 +4265,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4190,7 +4295,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4225,7 +4330,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4255,7 +4360,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4315,7 +4420,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4410,7 +4515,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4440,7 +4545,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4470,7 +4575,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4530,7 +4635,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4695,7 +4800,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4720,7 +4825,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4745,7 +4850,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4770,7 +4875,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4795,7 +4900,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4845,7 +4950,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -4900,7 +5005,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"
@@ -5155,7 +5260,7 @@
         "exported": false,
         "lanes": [],
         "nextVersion": {
-            "version": "0.0.46",
+            "version": "0.0.44",
             "message": "",
             "username": "David First",
             "email": "davidnet@gmail.com"

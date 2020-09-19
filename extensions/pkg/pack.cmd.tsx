@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command, CommandOptions } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color } from 'ink';
+import { Text } from 'ink';
 import React from 'react';
 
 import { Packer, PackOptions } from './pack';
@@ -27,7 +27,7 @@ export class PackCmd implements Command {
 
   async render(args: PackArgs, options: PackOptions) {
     const packResult = await this.json(args, options);
-    return <Color green>tar path: {packResult.data.tarPath}</Color>;
+    return <Text color="green">tar path: {packResult.data.tarPath}</Text>;
   }
 
   async json([componentId, scopePath]: PackArgs, options: PackOptions) {

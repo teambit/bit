@@ -4,7 +4,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
-
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
@@ -36,7 +36,7 @@ export class ComponentMain {
   }
 
   createAspectList(legacyExtensionDataList: ExtensionDataList) {
-    return new AspectList(legacyExtensionDataList);
+    return AspectList.fromLegacyExtensions(legacyExtensionDataList);
   }
 
   registerRoute(routes: Route[]) {
@@ -92,7 +92,11 @@ export class ComponentMain {
   static runtime = MainRuntime;
   static dependencies = [GraphqlAspect, ExpressAspect];
 
-  static async provider([graphql, express]: [GraphqlMain, ExpressMain], config, [hostSlot]: [ComponentHostSlot]) {
+  static async provider(
+    [graphql, express]: [GraphqlMain, ExpressMain, AspectLoaderMain],
+    config,
+    [hostSlot]: [ComponentHostSlot]
+  ) {
     const componentExtension = new ComponentMain(hostSlot, express);
     graphql.register(componentSchema(componentExtension));
 

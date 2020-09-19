@@ -254,7 +254,14 @@ function getComponentsManifests(
       if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
         dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as DependenciesObjectDefinition;
       }
-      const version = component.id.hasVersion() ? (component.id.version as string) : '0.0.1-new';
+
+      const getVersion = (): string => {
+        if (!component.id.hasVersion()) return '0.0.1-new';
+        if (component.id._legacy.isVersionSnap()) return `0.0.1-${component.id.version}`;
+        return component.id.version as string;
+      };
+
+      const version = getVersion();
       const manifest = new ComponentManifest(packageName, new SemVer(version), dependencies, component);
       componentsManifests.set(packageName, manifest);
     }
