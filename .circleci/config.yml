@@ -495,9 +495,9 @@ jobs:
           name: 'git commit'
           # command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
           command: 'cd bit && git commit -am "update .bitmap file [skip ci]"'
-      - run: git remote rm origin
+      - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
-      - run: git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
       -
         run:
           name: 'git push'

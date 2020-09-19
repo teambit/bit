@@ -14,6 +14,9 @@ const nextBitBinVersion = `${currentBitBinSemVer.major}.${currentBitBinSemVer.mi
 console.log('nextBitBinVersion', nextBitBinVersion);
 
 const rootDir = path.resolve(__dirname, '..');
+// use the following sed for Mac.
+// const sed = `sed -i '' "s/${currentBitBinVersion}/${nextBitBinVersion}/g"`;
+// use the following sed for linux.
 const sed = `sed -i "s/${currentBitBinVersion}/${nextBitBinVersion}/g"`;
 execSync(`${sed} package.json`, { cwd: rootDir });
 execSync(`${sed} workspace.jsonc`, { cwd: rootDir });
