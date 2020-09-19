@@ -14,7 +14,7 @@ const nextBitBinVersion = `${currentBitBinSemVer.major}.${currentBitBinSemVer.mi
 console.log('nextBitBinVersion', nextBitBinVersion);
 
 const rootDir = path.resolve(__dirname, '..');
-const sed = `sed -i '' "s/${currentBitBinVersion}/${nextBitBinVersion}/g"`;
+const sed = `sed -i "s/${currentBitBinVersion}/${nextBitBinVersion}/g"`;
 execSync(`${sed} package.json`, { cwd: rootDir });
 execSync(`${sed} workspace.jsonc`, { cwd: rootDir });
 execSync(`find extensions/*/*.json -type f -exec ${sed} {} \\;`, { cwd: rootDir });
