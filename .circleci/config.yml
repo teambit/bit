@@ -489,6 +489,7 @@ jobs:
       # - run: mkdir -p ~/.ssh
       # - run: SCAN=$(ssh-keyscan github.com )
       # - run: echo $SCAN >> ~/.ssh/known_hosts
+      - run: cd bit && node scripts/bump-bit-bin-ver.js
       -
         run:
           name: 'git commit'
