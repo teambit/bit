@@ -4,13 +4,8 @@ const path = require('path');
 
 const currentBitBinVersion = require('../package.json').version;
 console.log('currentBitBinVersion', currentBitBinVersion);
-const currentTeambitVersion = execSync('npm show @teambit/bit version').toString();
-console.log('currentTeambitVersion', currentTeambitVersion);
-const teambitSemVer = new SemVer(currentTeambitVersion);
-const nextTeambitSemVer = teambitSemVer.inc('patch');
-const nextTeambitSemVerPatch = nextTeambitSemVer.patch;
 const currentBitBinSemVer = new SemVer(currentBitBinVersion);
-const nextBitBinVersion = `${currentBitBinSemVer.major}.${currentBitBinSemVer.minor}.${currentBitBinSemVer.patch}-dev.${nextTeambitSemVerPatch}`;
+const nextBitBinVersion = currentBitBinSemVer.inc('prerelease');
 console.log('nextBitBinVersion', nextBitBinVersion);
 
 const rootDir = path.resolve(__dirname, '..');
