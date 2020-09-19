@@ -507,6 +507,7 @@ jobs:
           name: 'git push'
           command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
       - run: cd bit && npm publish --tag dev
+      - run: cd bit && node scripts/soft-tag-teambit.js
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
