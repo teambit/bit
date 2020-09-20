@@ -289,11 +289,6 @@
                 "name": "pipeline-results.ts"
             },
             {
-                "relativePath": "storage/bitdev-resolver.ts",
-                "test": false,
-                "name": "bitdev-resolver.ts"
-            },
-            {
                 "relativePath": "storage/default-resolver.ts",
                 "test": false,
                 "name": "default-resolver.ts"
@@ -302,6 +297,11 @@
                 "relativePath": "storage/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/s3-resolver.ts",
+                "test": false,
+                "name": "s3-resolver.ts"
             },
             {
                 "relativePath": "storage/storage-resolver.ts",
