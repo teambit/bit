@@ -289,6 +289,11 @@
                 "name": "pipeline-results.ts"
             },
             {
+                "relativePath": "storage/bitdev-resolver.ts",
+                "test": false,
+                "name": "bitdev-resolver.ts"
+            },
+            {
                 "relativePath": "storage/default-resolver.ts",
                 "test": false,
                 "name": "default-resolver.ts"
@@ -1557,6 +1562,16 @@
                 "relativePath": "environments.main.runtime.ts",
                 "test": false,
                 "name": "environments.main.runtime.ts"
+            },
+            {
+                "relativePath": "exceptions/env-not-found-in-runtime.ts",
+                "test": false,
+                "name": "env-not-found-in-runtime.ts"
+            },
+            {
+                "relativePath": "exceptions/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -3839,9 +3854,9 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/inflate-paths.spec.ts",
+                "relativePath": "component-tree/inflate-paths/inflate-paths.specx.ts",
                 "test": false,
-                "name": "inflate-paths.spec.ts"
+                "name": "inflate-paths.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/inflate-paths.ts",
@@ -3849,9 +3864,9 @@
                 "name": "inflate-paths.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.specx.ts",
                 "test": false,
-                "name": "key-tree-to-node-tree.spec.ts"
+                "name": "key-tree-to-node-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.ts",
@@ -3859,9 +3874,9 @@
                 "name": "key-tree-to-node-tree.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree.specx.ts",
                 "test": false,
-                "name": "key-tree.spec.ts"
+                "name": "key-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree.ts",
@@ -4187,6 +4202,11 @@
                 "relativePath": "status.module.scss",
                 "test": false,
                 "name": "status.module.scss"
+            },
+            {
+                "relativePath": "status.specx.tsx",
+                "test": false,
+                "name": "status.specx.tsx"
             },
             {
                 "relativePath": "status.tsx",

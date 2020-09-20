@@ -3,6 +3,7 @@ import { join } from 'path';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
+import { Compiler } from '@teambit/compiler';
 
 /**
  * tester build task. Allows to test components during component build.
@@ -29,8 +30,11 @@ export class TesterTask implements BuildTask {
       return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
+        const compiler: Compiler = context.env.getCompiler();
+        const distPath = compiler.getDistPathBySrcPath(specFile.relative);
+
         // TODO: fix spec type file need to capsule will return files with type AbstractVinyl
-        return { path: join(capsule.wrkDir, specFile.relative), relative: specFile.relative };
+        return { path: join(capsule.path, distPath), relative: distPath };
       });
     });
 

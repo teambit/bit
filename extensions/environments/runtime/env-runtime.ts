@@ -2,6 +2,9 @@ import { Component } from '@teambit/component';
 
 import { Environment } from '../environment';
 
+/**
+ * env runtime is an instance which represent the given env in a
+ */
 export class EnvRuntime {
   constructor(
     /**
