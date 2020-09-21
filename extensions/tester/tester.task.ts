@@ -1,4 +1,4 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
@@ -9,9 +9,9 @@ import { detectTestFiles } from './utils';
  */
 export class TesterTask implements BuildTask {
   readonly description = 'test components';
-  constructor(readonly extensionId: string) {}
+  constructor(readonly id: string) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();
     const componentsSpecFiles = ComponentMap.as(context.components, detectTestFiles);
 
@@ -19,11 +19,11 @@ export class TesterTask implements BuildTask {
     if (testCount === 0)
       return {
         artifacts: [],
-        components: [],
+        componentsResults: [],
       };
 
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
-      const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
+      const componentSpecFiles = componentsSpecFiles.get(component);
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;
       return specs.map((specFile) => {
@@ -44,9 +44,10 @@ export class TesterTask implements BuildTask {
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
     return {
-      artifacts: [],
-      components: testsResults.components.map((componentTests) => ({
+      artifacts: [], // @ts-ignore
+      componentsResults: testsResults.components.map((componentTests) => ({
         id: componentTests.componentId,
+        component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
         data: { tests: componentTests.results },
         errors: testsResults.errors ? [] : [],
       })),

@@ -285,6 +285,7 @@ export class Workspace implements ComponentFactory {
       const componentId = await this.resolveComponentId(seeder);
       return componentId._legacy;
     });
+
     const legacySeedersIds = await Promise.all(legacySeedersIdsP);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
@@ -293,7 +294,8 @@ export class Workspace implements ComponentFactory {
     const consumerComponents = compsAndDeps.filter((c) =>
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
-    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
+    const components = await this.getMany(ids);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -301,7 +303,7 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
@@ -721,15 +723,29 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const loadComponentsFunc = async (ids: BitId[]) => {
-      const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
-      return loadedComps.map((c) => c.state._consumer);
-    };
-    const ids = components.map((component) => component.id._legacy);
+    const ids = BitIds.fromArray(components.map((component) => component.id._legacy));
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
+    const aspectsIds = components.reduce((acc, curr) => {
+      const currIds = curr.state.aspects.ids;
+      acc = acc.concat(currIds);
+      return acc;
+    }, [] as any);
+    const otherDependenciesMap = components.reduce((acc, curr) => {
+      // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+      const currMap = curr.state.dependencies.getIdsMap();
+      Object.assign(acc, currMap);
+      return acc;
+    }, {});
+
+    const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
+    // We only want to load into the graph components which are aspects and not regular dependencies
+    // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
+    let ignoredIds = BitIds.fromArray(coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds));
+    ignoredIds = ignoredIds.difference(ids);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
@@ -762,7 +778,6 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
-
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });

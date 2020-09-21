@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "rootDir": "."
   },
   "exclude": [
     "dist"

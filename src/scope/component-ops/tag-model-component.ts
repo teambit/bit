@@ -24,6 +24,7 @@ import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './au
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { ModelComponent } from '../models';
+import { OnTagResult } from '../scope';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -328,14 +329,14 @@ export default async function tagModelComponent({
         ? unknownComponent.toBitIdWithLatestVersionAllowNull()
         : unknownComponent.id;
     });
-    const results: any[] = await Promise.all(scope.onTag.map((func) => func(ids)));
-    results.map(updateComponentsByTagResult(componentsToBuildAndTest));
+    const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) => func(ids));
+    results.forEach((tagResult) => updateComponentsByTagResult(componentsToBuildAndTest, tagResult));
     componentsToBuildAndTest.forEach((comp) => {
       const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
-    await bluebird.mapSeries(componentsToTag, (consumerComponent) => persistComponent(consumerComponent));
+    await bluebird.mapSeries(componentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (persist) {
@@ -352,60 +353,17 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
 }
 
 /**
- * This will take a result from the tag hook, and apply it on the components
- * (usually take the result extensions and set them on the components)
- *
- * @param {Component[]} components
- * @returns
+ * @todo: currently, there is only one function registered to the OnTag, which is the builder.
+ * we set the extensions data and artifacts we got from the builder to the consumer-components.
+ * however, if there is more than one function registered to the OnTag, the data will be overridden
+ * by the last called function. when/if this happen, some kind of merge need to be done between the
+ * results.
  */
-function updateComponentsByTagResult(components: Component[]) {
-  // we can't import types from harmony to legacy, but the type here is the type returned by tagListener()
-  return (envsResult: { results: any[] }) => {
-    if (!envsResult || !envsResult.results || envsResult.results.length === 0) return;
-    envsResult.results.map(updateComponentsByTagEnvResultsComponents(components));
-  };
-}
-
-/**
- * This will take a specific env tag result and apply it on the components
- *
- * @param {Component[]} componentsToUpdate
- * @returns
- */
-function updateComponentsByTagEnvResultsComponents(componentsToUpdate: Component[]) {
-  return (envResult: any) => updateComponentsByTagResultsComponents(componentsToUpdate, envResult?.data?.components);
-}
-
-/**
- * This will take the components to update and the modified components by the env service and apply the changes on the component to update
- *
- * @param {Component[]} componentsToUpdate
- * @param {any[]} [envTagResultComponents]
- * @returns
- */
-function updateComponentsByTagResultsComponents(componentsToUpdate: Component[], envTagResultComponents?: any[]) {
-  if (!envTagResultComponents || envTagResultComponents.length === 0 || !envTagResultComponents[0]) {
-    return;
-  }
-
-  // Since all the services changes the same components we will only use the first service
-  // This might create bugs in the future. so if you have a service which return something else, here is the place to fix it.
-  envTagResultComponents.map(updateComponentsByTagResultsComponent(componentsToUpdate));
-}
-
-/**
- * This will take the components to update and apply specific modified component on the matching component to update
- *
- * @param {Component[]} componentsToUpdate
- * @returns
- */
-function updateComponentsByTagResultsComponent(componentsToUpdate: Component[]) {
-  return (tagResultComponent: any) => {
-    const matchingComponent = componentsToUpdate.find((component) =>
-      component.id.isEqual(tagResultComponent.id._legacy)
-    );
+function updateComponentsByTagResult(components: Component[], tagResult: OnTagResult[]) {
+  tagResult.forEach((result) => {
+    const matchingComponent = components.find((c) => c.id.isEqual(result.id));
     if (matchingComponent) {
-      matchingComponent.extensions = tagResultComponent.config.extensions;
+      matchingComponent.extensions = result.extensions;
     }
-  };
+  });
 }

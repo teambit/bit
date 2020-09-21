@@ -134,6 +134,16 @@
                 "name": "bit.provider.ts"
             },
             {
+                "relativePath": "extension/extension.ts",
+                "test": false,
+                "name": "extension.ts"
+            },
+            {
+                "relativePath": "extension/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "hook-require.ts",
                 "test": false,
                 "name": "hook-require.ts"
@@ -174,14 +184,49 @@
     "builder": {
         "files": [
             {
-                "relativePath": "artifact.ts",
+                "relativePath": "artifact/artifact-definition.ts",
+                "test": false,
+                "name": "artifact-definition.ts"
+            },
+            {
+                "relativePath": "artifact/artifact-factory.ts",
+                "test": false,
+                "name": "artifact-factory.ts"
+            },
+            {
+                "relativePath": "artifact/artifact-list.ts",
+                "test": false,
+                "name": "artifact-list.ts"
+            },
+            {
+                "relativePath": "artifact/artifact.ts",
                 "test": false,
                 "name": "artifact.ts"
+            },
+            {
+                "relativePath": "artifact/extension-artifact.ts",
+                "test": false,
+                "name": "extension-artifact.ts"
+            },
+            {
+                "relativePath": "artifact/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "build-pipe.ts",
                 "test": false,
                 "name": "build-pipe.ts"
+            },
+            {
+                "relativePath": "build-pipeline-result-list.ts",
+                "test": false,
+                "name": "build-pipeline-result-list.ts"
+            },
+            {
+                "relativePath": "build-task.ts",
+                "test": false,
+                "name": "build-task.ts"
             },
             {
                 "relativePath": "build.cmd.ts",
@@ -209,6 +254,16 @@
                 "name": "builder.service.ts"
             },
             {
+                "relativePath": "exceptions/artifact-storage-error.ts",
+                "test": false,
+                "name": "artifact-storage-error.ts"
+            },
+            {
+                "relativePath": "exceptions/capsule-not-found.ts",
+                "test": false,
+                "name": "capsule-not-found.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -224,9 +279,29 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "task-process.ts",
+                "relativePath": "pipeline/index.ts",
                 "test": false,
-                "name": "task-process.ts"
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "pipeline/pipeline-results.ts",
+                "test": false,
+                "name": "pipeline-results.ts"
+            },
+            {
+                "relativePath": "storage/default-resolver.ts",
+                "test": false,
+                "name": "default-resolver.ts"
+            },
+            {
+                "relativePath": "storage/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "storage/storage-resolver.ts",
+                "test": false,
+                "name": "storage-resolver.ts"
             },
             {
                 "relativePath": "types.ts",
@@ -500,6 +575,110 @@
             "username": "David First",
             "email": "davidnet@gmail.com"
         }
+    },
+    "command-bar": {
+        "files": [
+            {
+                "relativePath": "command-bar.aspect.ts",
+                "test": false,
+                "name": "command-bar.aspect.ts"
+            },
+            {
+                "relativePath": "command-bar.commands.ts",
+                "test": false,
+                "name": "command-bar.commands.ts"
+            },
+            {
+                "relativePath": "command-bar.ui.runtime.tsx",
+                "test": false,
+                "name": "command-bar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "duplicate-command-error.tsx",
+                "test": false,
+                "name": "duplicate-command-error.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "types.tsx",
+                "test": false,
+                "name": "types.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.module.scss",
+                "test": false,
+                "name": "autocomplete-input.module.scss"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.tsx",
+                "test": false,
+                "name": "autocomplete-input.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.module.scss",
+                "test": false,
+                "name": "command-bar-item.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.tsx",
+                "test": false,
+                "name": "command-bar-item.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar-item/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.module.scss",
+                "test": false,
+                "name": "command-bar.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.tsx",
+                "test": false,
+                "name": "command-bar.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/command-searcher.ts",
+                "test": false,
+                "name": "command-searcher.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/component-searcher.ts",
+                "test": false,
+                "name": "component-searcher.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "compiler": {
         "files": [
@@ -1440,6 +1619,35 @@
             "username": "David First",
             "email": "davidnet@gmail.com"
         }
+    },
+    "elements/keycap": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "key-characters.ts",
+                "test": false,
+                "name": "key-characters.ts"
+            },
+            {
+                "relativePath": "key.module.scss",
+                "test": false,
+                "name": "key.module.scss"
+            },
+            {
+                "relativePath": "keycap.tsx",
+                "test": false,
+                "name": "keycap.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/keycap",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "environments": {
         "files": [
@@ -2634,6 +2842,16 @@
     "preview": {
         "files": [
             {
+                "relativePath": "bundling-strategy.ts",
+                "test": false,
+                "name": "bundling-strategy.ts"
+            },
+            {
+                "relativePath": "exceptions/bundling-strategy-not-found.ts",
+                "test": false,
+                "name": "bundling-strategy-not-found.ts"
+            },
+            {
                 "relativePath": "exceptions/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2719,6 +2937,21 @@
                 "name": "preview.task.ts"
             },
             {
+                "relativePath": "strategies/component-strategy.ts",
+                "test": false,
+                "name": "component-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/env-strategy.ts",
+                "test": false,
+                "name": "env-strategy.ts"
+            },
+            {
+                "relativePath": "strategies/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-preview/index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2736,41 +2969,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/preview",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
-    },
-    "pubsub": {
-        "files": [
-            {
-                "relativePath": "bitBaseEvent.ts",
-                "test": false,
-                "name": "bitBaseEvent.ts"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "pubsub.aspect.ts",
-                "test": false,
-                "name": "pubsub.aspect.ts"
-            },
-            {
-                "relativePath": "pubsub.main.runtime.ts",
-                "test": false,
-                "name": "pubsub.main.runtime.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/pubsub",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3028,6 +3226,11 @@
                 "name": "react-router.ui.runtime.tsx"
             },
             {
+                "relativePath": "route-context.tsx",
+                "test": false,
+                "name": "route-context.tsx"
+            },
+            {
                 "relativePath": "route.ts",
                 "test": false,
                 "name": "route.ts"
@@ -3206,6 +3409,11 @@
                 "relativePath": "scope.ui.runtime.tsx",
                 "test": false,
                 "name": "scope.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "types.ts",
+                "test": false,
+                "name": "types.ts"
             },
             {
                 "relativePath": "ui/scope-context.ts",

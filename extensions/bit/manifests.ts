@@ -39,6 +39,7 @@ import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CommandBarAspect } from '@teambit/command-bar';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -82,6 +83,7 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CommandBarAspect.id]: CommandBarAspect,
 };
 
 export function isCoreAspect(id: string) {

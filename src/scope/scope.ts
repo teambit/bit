@@ -26,6 +26,7 @@ import {
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
+import { ExtensionDataList } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -90,6 +91,12 @@ export type ComponentsAndVersions = {
   versionStr: string;
 };
 
+export type OnTagResult = {
+  id: BitId;
+  extensions: ExtensionDataList;
+};
+export type OnTagFunc = (ids: BitId[]) => Promise<OnTagResult[]>;
+
 export default class Scope {
   created = false;
   scopeJson: ScopeJson;
@@ -115,7 +122,7 @@ export default class Scope {
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
 
-  public onTag: Function[] = []; // enable extensions to hook during the tag process
+  public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   public onPostExport: Function[] = []; // enable extensions to hook after the export process
 
   /**

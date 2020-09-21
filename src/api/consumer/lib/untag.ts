@@ -48,7 +48,7 @@ export default async function unTagAction(
     const idsToRemoveSoftTags = getIds();
     return idsToRemoveSoftTags
       .map((bitId) => {
-        const componentMap = consumer.bitMap.getComponent(bitId);
+        const componentMap = consumer.bitMap.getComponent(bitId, { ignoreScopeAndVersion: true });
         const removedVersion = componentMap.nextVersion?.version;
         if (!removedVersion) return null;
         componentMap.clearNextVersion();
