@@ -54,7 +54,7 @@ export class StartCmd implements Command {
 
     switch (event.type) {
       case 'components-server-started':
-        setTimeout(() => this.onComponentsServerStarted(event), 500);
+        setTimeout(() => this.onComponentsServerStarted(event), 0);
         break;
       case 'webpack-compilation-done':
         setTimeout(() => this.onWebpackCompilationDone(event), 0);
@@ -131,7 +131,7 @@ export class StartCmd implements Command {
 
     return (
       <>
-        <ClearConsole />
+        {/* <ClearConsole /> */}
         <Starting workspace={WorkspaceAspect} />
         <ComponentPreviewServerStartedHeaders />
       </>
