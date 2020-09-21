@@ -19,8 +19,8 @@ const removeNils = R.reject(R.isNil);
 export type AutoTagResult = { component: Component; triggeredBy: BitIds };
 
 export async function getAutoTagData(consumer: Consumer, ids: BitIds): Promise<AutoTagResult[]> {
-  const allIds = consumer.bitMap.getAuthoredAndImportedBitIds();
-  const depGraphConsumer = await buildOneGraphForComponents(allIds, consumer);
+  const potentialIds = consumer.bitMap.getAuthoredAndImportedBitIds();
+  const depGraphConsumer = await buildOneGraphForComponents(potentialIds, consumer);
   const dependencyGraph = new DependencyGraph(depGraphConsumer);
   const autoTagData: AutoTagResult[] = [];
   const addToAutoTagData = (component: Component, triggeredBy: BitId) => {
@@ -35,8 +35,10 @@ export async function getAutoTagData(consumer: Consumer, ids: BitIds): Promise<A
     const idStr = id.toString();
     const dependentsIdsStr = dependencyGraph.getRecursiveDependents([idStr]);
     const dependents: Component[] = dependentsIdsStr.map((dependentId) => depGraphConsumer.node(dependentId));
-    const nonPendingTagsDependents = dependents.filter((dependent) => !ids.has(dependent.id));
-    nonPendingTagsDependents.forEach((dependent) => {
+    const autoTagDependents = dependents
+      .filter((dependent) => !ids.has(dependent.id))
+      .filter((dependent) => potentialIds.has(dependent.id)); // removes nested
+    autoTagDependents.forEach((dependent) => {
       addToAutoTagData(dependent, id);
     });
   });
