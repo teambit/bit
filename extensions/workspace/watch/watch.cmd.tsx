@@ -18,7 +18,7 @@ export class WatchCommand implements Command {
       }
       this.logger.console(
         chalk.yellow(
-          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:MM:SS')})...\n`
+          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:mm:ss')})...\n`
         )
       );
     },
@@ -30,13 +30,13 @@ export class WatchCommand implements Command {
       this.logger.console(`The file ${filePath} has been changed.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
-      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
+      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
     onAdd: (filePath: string, buildResults: OnComponentEventResult[], verbose: boolean, duration) => {
       this.logger.console(`The file ${filePath} has been added.\n\n`);
       this.logger.console(formatCompileResults(buildResults, verbose));
       this.logger.console(`Finished. (${duration}ms)`);
-      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:MM:SS')})...`));
+      this.logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
     },
     onUnlink: (p) => {
       this.logger.console(`file ${p} has been removed`);

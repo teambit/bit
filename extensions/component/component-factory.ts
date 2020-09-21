@@ -18,6 +18,11 @@ export interface ComponentFactory {
   get(id: ComponentID | string, withState?: boolean): Promise<Component | undefined>;
 
   /**
+   * returns many components with a group of ids.
+   */
+  getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
    * returns a specific state of a component by hash or semver.
    */
   getState(id: ComponentID, snapId: string): Promise<State>;

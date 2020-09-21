@@ -601,19 +601,6 @@ export default class Version extends BitObject {
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 
-    const parseComponentExtensions = () => {
-      const extensionsCloned = extensions;
-      extensionsCloned.forEach((extensionDataEntry) => {
-        extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
-          return {
-            file: artifact.file.hash(),
-            relativePath: artifact.relativePath,
-          };
-        });
-      });
-      return extensionsCloned;
-    };
-
     const compilerDynamicPakageDependencies = component.compiler
       ? component.compiler.dynamicPackageDependencies
       : undefined;
@@ -655,7 +642,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: parseComponentExtensions(),
+      extensions: extensions.toModelObjects(),
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;
