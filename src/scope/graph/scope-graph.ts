@@ -1,4 +1,5 @@
 import GraphLib, { Graph } from 'graphlib';
+import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
@@ -141,9 +142,9 @@ export default class DependencyGraph {
 
   /**
    * ignore nested dependencies. build the graph from only imported and authored components
-   * according to currently used versions (.bitmap versions)
+   * according to currently used versions (.bitmap versions).
+   * returns a graph that each node is a BitId object.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();
@@ -258,6 +259,19 @@ export default class DependencyGraph {
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map((node) => node.v);
     return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr;
+  }
+
+  getRecursiveDependents(ids: string[], dependents: string[] = []): string[] {
+    const dependentOfId = (idStr: string): string[] => {
+      const nodeEdges = this.graph.inEdges(idStr);
+      if (!nodeEdges) return [];
+      return nodeEdges.map((node) => node.v);
+    };
+    const dependentsResults: string[] = R.uniq(R.flatten(ids.map(dependentOfId)));
+    const newDependents = dependentsResults.filter((idStr) => !dependents.includes(idStr));
+    if (!newDependents.length) return dependents;
+    dependents.push(...newDependents);
+    return this.getRecursiveDependents(newDependents, dependents);
   }
 
   getImmediateDependenciesPerId(id: BitId): string[] {
