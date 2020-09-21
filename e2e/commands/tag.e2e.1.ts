@@ -139,9 +139,9 @@ describe('bit tag command', function () {
         });
         expect(listOutput).to.deep.include({
           id: 'components/dependent',
-          localVersion: '0.0.2',
+          localVersion: '1.0.0',
           deprecated: false,
-          currentVersion: '0.0.2',
+          currentVersion: '1.0.0',
           remoteVersion: 'N/A',
         });
       });

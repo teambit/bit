@@ -7,12 +7,10 @@ import { Consumer } from '../../consumer';
 import Component from '../../consumer/component/consumer-component';
 import { Dependency } from '../../consumer/component/dependencies';
 import { isTag } from '../../version/version-parser';
-import { buildComponentsGraphForComponentsAndVersion, buildOneGraphForComponents } from '../graph/components-graph';
+import { buildOneGraphForComponents } from '../graph/components-graph';
 import DependencyGraph from '../graph/scope-graph';
-import { Version } from '../models';
 import ModelComponent from '../models/model-component';
 import Scope, { ComponentsAndVersions } from '../scope';
-import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
 const removeNils = R.reject(R.isNil);
 
