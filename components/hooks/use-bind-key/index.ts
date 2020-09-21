@@ -1,1 +1,1 @@
-export { useKeyBind } from './use-bind-key';
+export { useKeyBind } from './use-key-bind';
