@@ -28,8 +28,6 @@ export class DocsPreview {
         timestamp: Date.now().toString(),
         body: Object.assign({}, e),
       };
-
-      console.log('Event1: ', e);
       this.pubsub.pub(DocsAspect.id, be);
     });
   }

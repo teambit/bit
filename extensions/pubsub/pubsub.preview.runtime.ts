@@ -6,32 +6,26 @@ import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubPreview {
-  static _singletonPubsub: any = null;
+  static _singletonPubsub: PubsubPreview | null = null;
 
-  private _connection;
+  private _parentPubsub;
 
-  constructor() {
-    console.log('START23: ');
-    this._connection = connectToParent();
-    setTimeout(() => {this._connection = connectToParent();}, 500);
-    
-    // setInterval(() => {
-    //   this._connection = connectToParent();
-    // }, 3000);
-  }
+  constructor() {}
 
-  sub = (topicUUID, callback) => {
-    this._connection.promise.then((parent) => {
-      parent.sub(topicUUID, callback);
+  public updateParentPubsub = async () => {
+    this._parentPubsub = await connectToParent({timeout: 300}).promise.then((parentPubsub) => {
+      return parentPubsub
+    }).catch((err) => {
+      console.error(err);
     });
   };
 
+  sub = (topicUUID, callback) => {
+    this._parentPubsub.sub(topicUUID, callback);
+  };
+
   pub = (topicUUID, event: BitBaseEvent) => {
-    console.log('Event2: ', event);
-    this._connection.promise.then((parent) => {
-      console.log('Event3: ', event);
-      parent.pub(topicUUID, event);
-    });
+    this._parentPubsub.pub(topicUUID, event);
   };
 
   static runtime = PreviewRuntime;
@@ -39,6 +33,11 @@ export class PubsubPreview {
   static async provider() {
     if (!this._singletonPubsub) {
       this._singletonPubsub = new PubsubPreview();
+      
+      setTimeout(async() => {
+        if(this._singletonPubsub)
+        await this._singletonPubsub.updateParentPubsub();
+      }, 0);
     }
     return this._singletonPubsub;
   }

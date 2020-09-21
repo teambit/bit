@@ -6,41 +6,41 @@ import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubUI {
-  private topicMap = {};
-
   static _singletonPubsub: any = null;
 
-  private _connections;
+  private topicMap = {};
+  private _childs;
+
 
   private getAllIframes = () => {
     return Array.from(document.getElementsByTagName('iframe'));
   };
 
-  private connectToIframe = (iframe) => {
-    // console.log('iframe1: ', iframe);
+  private connectToIframe = async (iframe) => {
     const self = this;
-    return connectToChild({
+    
+    return await connectToChild({
+      timeout: 300, 
       iframe,
-      // Methods the parent is exposing to the child
       methods: {
-        add(num1, num2) {
-          //TODO: remove this
-          return num1 + num2;
-        },
         sub(topicUUID, callback) {
           return self.sub(topicUUID, callback);
         },
         pub(topicUUID, event: BitBaseEvent) {
-          console.log('Event4: ', event);
           return self.pub(topicUUID, event);
         },
       },
+    })
+    .promise.then((child) => (child))
+    .catch((err) => {
+      console.error(err)
+      this.connectToIframe(iframe);
     });
   };
 
   private updateConnectionsList() {
     const _iframes = this.getAllIframes();
-    this._connections = _iframes.map((iframe) => this.connectToIframe(iframe));
+    return  _iframes.map((iframe) => this.connectToIframe(iframe));
   }
 
   private createOrGetTopic = (topicUUID) => {
@@ -48,32 +48,28 @@ export class PubsubUI {
   };
 
   constructor() {
-    console.log('START2: ');
-    this.updateConnectionsList();
-    setTimeout(() => {this.updateConnectionsList();}, 500);
 
-    // setInterval(() => {
-    //   this.updateConnectionsList();
-    // }, 3000);
-
-    console.log('this._connections ', this._connections);
+    const t = setInterval(() => {
+      const childs = this.updateConnectionsList();
+      if(childs){
+        this._childs = childs;
+        clearInterval(t);
+      }
+    }, 300);
   }
 
   public sub = (topicUUID, callback) => {
-    this.updateConnectionsList();
-
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].push(callback);
   };
 
   public pub = (topicUUID, event: BitBaseEvent) => {
-    this.updateConnectionsList();
-
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   };
 
   static runtime = UIRuntime;
+
 
   static async provider() {
     if (!this._singletonPubsub) {
