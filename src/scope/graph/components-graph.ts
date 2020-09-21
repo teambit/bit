@@ -1,5 +1,4 @@
 import graphLib, { Graph as GraphLib } from 'graphlib';
-import pMapSeries from 'p-map-series';
 import bluebird from 'bluebird';
 import R from 'ramda';
 
