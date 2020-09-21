@@ -8,10 +8,9 @@ const verboseComponentFilesArrayToString = (componentFiles) => {
 const resultsForExtensionArrayToString = (resultsForExtension, verbose) => {
   return resultsForExtension.reduce(
     (outputString, resultForExtension) =>
-      `${outputString}
-    ${chalk.green('√')} SUCCESS\t${resultForExtension.component}\n
+      `${outputString}${chalk.green('√')}SUCCESS\t${resultForExtension.component}\n
      ${verbose ? resultForExtension.componentFilesAsString : ''}\n`,
-    '\n'
+    ''
   );
 };
 
@@ -39,6 +38,6 @@ export function formatCompileResults(compileResults: OnComponentEventResult[], v
       (outputString, compileResult) =>
         `${outputString}
   ${resultsForExtensionArrayToString(compileResult.resultsForExtension, verbose)}`,
-      ` ${chalk.underline('STATUS\t\tCOMPONENT ID')}`
+      ` ${chalk.underline('STATUS\tCOMPONENT ID')}`
     );
 }

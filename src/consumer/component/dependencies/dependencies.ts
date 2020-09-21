@@ -132,8 +132,8 @@ export default class Dependencies {
 
   getIdsMap(): Record<string, BitId> {
     const result = {};
-    this.dependencies.forEach(dep => {
-      result[dep.id.toString()] = dep.id
+    this.dependencies.forEach((dep) => {
+      result[dep.id.toString()] = dep.id;
     });
     return result;
   }
