@@ -1,5 +1,5 @@
 import { TranspileOptions, transpileSync } from '@stencil/core/compiler';
-import { BuildContext, BuildResults } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 
 export class StencilCompiler implements Compiler {
@@ -31,7 +31,7 @@ export class StencilCompiler implements Compiler {
   }
   // TODO: remove this once use context
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  build(context: BuildContext): Promise<BuildResults> {
+  build(context: BuildContext): Promise<BuiltTaskResult> {
     throw new Error('Method not implemented.');
   }
 }

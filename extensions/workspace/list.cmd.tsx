@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Color } from 'ink';
+import { Text } from 'ink';
 import React from 'react';
 
 import { Workspace } from './workspace';
@@ -25,6 +25,6 @@ export class ListCmd implements Command {
   async render(params: any, options: { [key: string]: any }) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const list = await this.workspace.list();
-    return <Color green>hi there</Color>;
+    return <Text color="green">hi there</Text>;
   }
 }
