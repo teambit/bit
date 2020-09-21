@@ -8,6 +8,7 @@ import { CommandSearcher } from './ui/command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
+import { DuplicateCommandError } from './duplicate-command-error';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
@@ -47,7 +48,7 @@ export class CommandBarUI {
    */
   addCommand(...commands: CommandEntry[]) {
     commands.forEach(({ id: commandId }) => {
-      if (this.getCommand(commandId) !== undefined) throw new Error(`command already exists: "${commandId}"`);
+      if (this.getCommand(commandId) !== undefined) throw new DuplicateCommandError(commandId);
     });
 
     this.commandSlot.register(commands);
