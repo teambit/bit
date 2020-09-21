@@ -1,5 +1,6 @@
 import graphLib, { Graph as GraphLib } from 'graphlib';
 import pMapSeries from 'p-map-series';
+import bluebird from 'bluebird';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -84,7 +85,7 @@ export async function buildOneGraphForComponents(
   };
   const components = await getComponents();
   const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
-  const componentsWithDeps = await pMapSeries(components, (component: Component) =>
+  const componentsWithDeps = await bluebird.mapSeries(components, (component: Component) =>
     flattenedDependencyLoader.load(component)
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));

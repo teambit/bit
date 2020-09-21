@@ -1029,6 +1029,7 @@ describe('workspace config', function () {
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
           helper.command.addComponent('foo.js');
+          helper.command.tagAllComponents();
           const overrides = {
             bar: {
               dependencies: {
@@ -1116,11 +1117,11 @@ describe('workspace config', function () {
               });
               it('bit diff should show the removed dependency', () => {
                 const diff = helper.command.diff();
-                expect(diff).to.have.string('--- Dependencies (0.0.1 original)');
-                expect(diff).to.have.string('+++ Dependencies (0.0.1 modified)');
+                expect(diff).to.have.string('--- Dependencies (0.0.2 original)');
+                expect(diff).to.have.string('+++ Dependencies (0.0.2 modified)');
                 expect(diff).to.have.string(`- [ ${helper.scopes.remote}/foo@0.0.1 ]`);
-                expect(diff).to.have.string('--- Overrides Dependencies (0.0.1 original)');
-                expect(diff).to.have.string('+++ Overrides Dependencies (0.0.1 modified)');
+                expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
+                expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
                 expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo@0.0.1 ]`);
               });
               describe('tagging, exporting the component and then re-import for original author', () => {
@@ -1139,7 +1140,7 @@ describe('workspace config', function () {
                   expect(bitJson.overrides.bar.dependencies).to.be.empty;
                 });
                 it('should remove the dependency from the model', () => {
-                  catBar = helper.command.catComponent('bar@0.0.2');
+                  catBar = helper.command.catComponent('bar@0.0.3');
                   expect(catBar.dependencies).to.deep.equal([]);
                   expect(catBar.overrides.dependencies).to.deep.equal({});
                 });
