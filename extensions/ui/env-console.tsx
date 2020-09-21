@@ -9,8 +9,8 @@ export type UIServerConsoleProps = {
 
 export function UIServerConsole({ uiServer }: UIServerConsoleProps) {
   return (
-      <Box>
-          <Text>Bit UI server is listening to port {uiServer.port}</Text>
-      </Box>
-    ); 
+    <Box>
+      <Text>Bit UI server is listening to port {uiServer.port}</Text>
+    </Box>
+  );
 }
