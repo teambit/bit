@@ -1,9 +1,9 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
+import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
-import { Compiler } from '@teambit/compiler';
 
 /**
  * tester build task. Allows to test components during component build.

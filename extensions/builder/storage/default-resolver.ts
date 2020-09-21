@@ -7,7 +7,7 @@ import { StorageResolver } from './storage-resolver';
 import type { Artifact, ArtifactList } from '../artifact';
 
 export class DefaultResolver implements StorageResolver {
-  name: 'default';
+  name = 'default';
   // todo artifact map
   async store(component: Component, artifactList: ArtifactList) {
     const artifacts = artifactList.artifacts;

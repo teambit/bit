@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { Artifact, ArtifactList } from '../artifact';
+import { ArtifactList } from '../artifact';
 
 export type StoreResult = {
   [path: string]: string;
