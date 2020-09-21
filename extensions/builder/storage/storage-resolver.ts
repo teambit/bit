@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { Artifact } from '../artifact';
+import { Artifact, ArtifactList } from '../artifact';
 
 export type StoreResult = {
   [path: string]: string;
@@ -14,5 +14,5 @@ export interface StorageResolver {
   /**
    * store artifacts in the storage.
    */
-  store(component: Component, artifacts: Artifact[]): Promise<void>;
+  store(component: Component, artifacts: ArtifactList): Promise<void>;
 }

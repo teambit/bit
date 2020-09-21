@@ -92,6 +92,7 @@
         "apollo-link-http": "^1.5.17",
         "apollo-link-ws": "^1.0.20",
         "apollo-utilities": "^1.3.4",
+        "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
         "babel-polyfill": "^6.26.0",
