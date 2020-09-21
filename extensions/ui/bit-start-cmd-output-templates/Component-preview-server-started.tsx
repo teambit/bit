@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Color } from 'ink';
-import Spinner from 'ink-spinner';
 
 export const ComponentPreviewServerStarted = ({ envName, host, port, timestamp }) => (
   <Box>
