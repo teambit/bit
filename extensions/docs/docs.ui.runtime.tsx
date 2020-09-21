@@ -14,7 +14,6 @@ export class DocsUI {
   ) {
     window.location !== window.parent.location ? console.log('DocsUI - IFRAME') : console.log('DocsUI - Not IFRAME');
 
-    console.log('---STATRINGT---->');
     this.pubsub.sub(DocsAspect.id, (be: BitBaseEvent) => {
       console.log('Click Inside an IFrame', be);
     });
