@@ -571,23 +571,17 @@ export default class Version extends BitObject {
     mainDistFile,
     flattenedDependencies,
     flattenedDevDependencies,
-    message,
     specsResults,
     extensions,
-    username,
-    email,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    message: string;
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
     specsResults: Results | undefined;
     extensions: ExtensionDataList;
-    username: string | undefined;
-    email: string | undefined;
   }) {
     const parseFile = (file) => {
       return {
@@ -605,6 +599,7 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+    if (!component.log) throw new Error('Version.fromComponent - component.log is missing');
     const version = new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -613,12 +608,7 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,
-      log: {
-        message,
-        username,
-        email,
-        date: Date.now().toString(),
-      },
+      log: component.log as Log,
       specsResults,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
