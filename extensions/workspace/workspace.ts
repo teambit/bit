@@ -213,8 +213,8 @@ export class Workspace implements ComponentFactory {
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const isAutoTag = listAutoTagPendingComponents.find(
-      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
+      consumerComponent.id.isEqualWithoutVersion(component.id._legacy)
     );
     if (isAutoTag) return true;
     return false;
