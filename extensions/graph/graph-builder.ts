@@ -10,13 +10,17 @@ export class GraphBuilder {
   _initialized = false;
   constructor(private workspace?: Workspace, private scope?: ScopeMain) {}
 
-  async getGraph(ids?: ComponentID[]): Promise<ComponentGraph | undefined> {
-    if (this._graph || this._initialized) {
-      return this._graph;
-    }
+  async getGraph(ids?: string[] | ComponentID[]): Promise<ComponentGraph | undefined> {
+    // if (this._graph || this._initialized) {
+    //   return this._graph;
+    // }
     if (this.workspace) {
-      const listIds = (ids && ids.length) ? ids : (await this.workspace.list()).map((comp) => comp.id);
-      const bitIds = listIds.map((id) => id._legacy);
+      let listIds = (ids && ids.length) ? ids : (await this.workspace.list()).map((comp) => comp.id);
+      if (typeof listIds[0] === 'string'){
+        listIds = await this.workspace.resolveMultipleComponentIds(listIds);
+      }
+      // @ts-ignore
+      const bitIds = listIds.map(id => id._legacy)
       const legacyGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
       const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.workspace);
       this._graph = graph;
