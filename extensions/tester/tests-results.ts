@@ -1,6 +1,6 @@
 import { TestsFiles } from './tests-files';
 
-export class TestsResultList {
+export class TestsResult {
   constructor(
     public testFiles: TestsFiles[],
 

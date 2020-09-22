@@ -1,6 +1,6 @@
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
-import { Tester, TesterContext, Tests, TestResult, TestsResultList, TestsFiles } from '@teambit/tester';
+import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
@@ -79,7 +79,7 @@ export class JestTester implements Tester {
       };
     });
 
-    return compact(tests) as { componentId: ComponentID; results: TestsResultList }[];
+    return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
   }
 
   private getErrors(testResult: JestTestResult[]) {
