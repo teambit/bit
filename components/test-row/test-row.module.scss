@@ -1,5 +1,5 @@
 .testBlock {
-  border-bottom: 1px solid var(--border-color, var(--border-color, #f6f6f6));
+  // border-bottom: 1px solid var(--border-color, var(--border-color, #f6f6f6));
   &.open {
     border-bottom: none;
     > .row > span {
@@ -10,54 +10,34 @@
 }
 
 .row {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) 20px;
-  grid-gap: 30px;
-  padding: 0 13px;
-  &:hover {
-    background-color: #f6f6f6;
-    > span {
-      visibility: unset;
-    }
-  }
-  &.hover {
-    cursor: pointer;
-  }
-  > * {
-    padding: 15px 0;
-  }
-  > span {
-    visibility: hidden;
-    margin: auto;
-  }
+  padding: 11px 0;
 }
 
-.log {
-  max-height: 0;
-  visibility: hidden;
-  overflow: hidden;
-  width: 100%;
-  transition: max-height 300ms, visibility 300ms ease-in-out;
-  &.open {
-    visibility: unset;
-    max-height: 450px;
-  }
-}
+// .row {
+//   display: grid;
+//   grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) 20px;
+//   grid-gap: 30px;
+//   padding: 0 13px;
+//   &:hover {
+//     background-color: #f6f6f6;
+//     > span {
+//       visibility: unset;
+//     }
+//   }
+//   &.hover {
+//     cursor: pointer;
+//   }
+//   > * {
+//     padding: 15px 0;
+//   }
+//   > span {
+//     visibility: hidden;
+//     margin: auto;
+//   }
+// }
 
 .snippet {
-  display: grid;
-  > span {
-    display: none;
-  }
-  > pre {
-    max-height: 350px;
-    background: #282c34 !important;
-    > code {
-      > span {
-        color: white !important;
-        font-size: 11px;
-        background: #282c34 !important;
-      }
-    }
-  }
+  // &:last-child {
+  margin-bottom: 12px;
+  // }
 }

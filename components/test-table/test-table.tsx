@@ -4,27 +4,33 @@ import prettyTime from 'pretty-time';
 import { TestRow } from '@teambit/staged-components.test-row';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { TestResult } from '@teambit/tester';
+import { TestsFiles, TestResult } from '@teambit/tester';
+import { TestFileTitle } from './test-file-title';
+import { getStatusIcon, getBorderColor } from './utils';
 import styles from './test-table.module.scss';
 
 export type TestTableProps = {
-  tests: TestResult[];
+  testResults: TestsFiles[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function TestTable({ tests, className }: TestTableProps) {
-  if (tests.length === 0) return null;
-
+export function TestTable({ testResults, className }: TestTableProps) {
+  if (!testResults || testResults.length === 0) return null;
   return (
-    <div className={classNames(styles.testTable, className)}>
-      <div className={classNames(styles.row, styles.heading)}>
-        <div>Test</div>
-        <div>Duration</div>
-        <div />
-      </div>
-      {tests.map((test, index) => {
-        return <TestLine key={index} test={test} />;
+    <>
+      {testResults.map((testFile, index) => {
+        const { pass, failed, pending } = testFile;
+
+        const borderColor = getBorderColor(pass, failed, pending);
+        return (
+          <div key={index} className={styles.testTable}>
+            <TestFileTitle style={{ borderColor: borderColor }} testFile={testFile} />
+            {testFile.tests.map((test, index) => {
+              return <TestLine key={index} test={test} />;
+            })}
+          </div>
+        );
       })}
-    </div>
+    </>
   );
 }
 
@@ -33,24 +39,22 @@ function TestLine({ test }: { test: TestResult }) {
   const duration = durationInNanoSec != undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
 
   return (
-    <TestRow content={test.error}>
-      <div className={styles.test}>
-        {getStatusIcon(test.status)}
-        <div>{test.name}</div>
+    <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
+      <div className={styles.testTitle}>
+        <div className={styles.test}>
+          {getStatusIcon(test.status)}
+          <div>
+            {test.ancestor.map((a) => (
+              <span>{`${a} > `}</span>
+            ))}
+            <div>{test.name}</div>
+          </div>
+        </div>
+        <div className={styles.duration}>
+          <span>{duration}</span>
+          <Icon of="changelog" />
+        </div>
       </div>
-      <div className={styles.duration}>{duration}</div>
-      {test.error && <Icon of="arrow-down" />}
     </TestRow>
   );
-}
-
-function getStatusIcon(status?: string) {
-  if (status === 'passed') {
-    return <Icon className={styles.pass} of={'billing-checkmark'} />;
-  }
-
-  if (status === 'failed') {
-    return <Icon className={styles.fail} of={'error-circle'} />;
-  }
-  return '';
 }

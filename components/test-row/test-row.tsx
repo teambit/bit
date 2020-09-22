@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import React, { useState, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
+import { CliSnippet } from '@teambit/staged-components.cli-snippet';
 
 import styles from './test-row.module.scss';
 
@@ -12,27 +11,24 @@ export type TestRowProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function TestRow({ children, content, className, rowClass, snippetTitle }: TestRowProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className={classNames(styles.testBlock, className, isOpen && styles.open)}>
+    <div className={classNames(styles.testBlock, className)}>
       <div
-        className={classNames(styles.row, rowClass, content && styles.hover)}
-        onClick={() => {
-          if (!content) return;
-          setIsOpen(!isOpen);
-        }}
+        className={classNames(
+          styles.row,
+          rowClass
+          // , content && styles.hover
+        )}
+        // onClick={() => {
+        //   if (!content) return;
+        //   setIsOpen(!isOpen);
+        // }}
       >
         {children}
       </div>
-      {content && (
-        <div className={classNames(styles.log, isOpen && styles.open)}>
-          {snippetTitle}
-          <ThemeContext>
-            <CodeSnippet className={styles.snippet}>{content}</CodeSnippet>
-          </ThemeContext>
-        </div>
-      )}
+      {content && <CliSnippet content={content} className={styles.snippet} />}
     </div>
   );
 }
