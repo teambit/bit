@@ -29,8 +29,8 @@ export function testerSchema(tester: TesterMain): Schema {
       }
 
       type TestError {
-        failureMessage: String;
-        error: String;
+        failureMessage: String
+        error: String
       }
 
       type Tests {
