@@ -307,15 +307,12 @@ export default async function tagModelComponent({
     // Run the persistence one by one not in parallel!
     loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
     await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => addComponentsToScope(consumerComponent));
-  }
-
-  validateDirManipulation(allComponentsToTag);
-
-  if (persist) {
+    validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
   } else {
     consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   }
+
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && persist) {
     const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
