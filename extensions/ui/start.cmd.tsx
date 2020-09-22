@@ -10,6 +10,8 @@ import prettyTime from 'pretty-time';
 
 import type { UiMain } from './ui.main.runtime';
 import {
+  StartingMainUiServer,
+  StandaloneNewLine,
   Starting,
   ClearConsole,
   compilationEndedSuccessfullyOutput,
@@ -19,6 +21,8 @@ import {
 } from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
+  items: any[] = [];
+
   startingtimestamp;
   devServerCounter = 0;
   targetHost = 'localhost';
@@ -32,6 +36,7 @@ export class StartCmd implements Command {
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
+    ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
   ] as CommandOptions;
 
   constructor(
@@ -52,9 +57,11 @@ export class StartCmd implements Command {
   private eventsListeners = (event) => {
     switch (event.type) {
       case 'components-server-started':
-        setTimeout(() => this.onComponentsServerStarted(event), 0);
+        // Do not remove thetimeout or the component might be removed by theClearConsole(!)
+        setTimeout(() => this.onComponentsServerStarted(event), 300);
         break;
       case 'webpack-compilation-done':
+        // Do not remove thetimeout or the component might be removed by theClearConsole(!)
         setTimeout(() => this.onWebpackCompilationDone(event), 0);
         break;
       case 'ui-server-started':
@@ -74,32 +81,36 @@ export class StartCmd implements Command {
     this.openBrowserOn0();
   };
 
-  private onComponentsServerStarted = (event) => {
-    this.getDuration();
+  private onComponentsServerStarted(event) {
     this.devServerCounter += 1;
-    // console.log(''); // TODO: New line with ink
-    // console.log(''); // TODO: New line with ink
+    this.items.push({
+      envName: event.body.executionContext.envRuntime.id,
+      host: event.body.hostname,
+      port: event.body.port,
+      timestamp: this.getDuration(),
+    });
     render(
-      <ComponentPreviewServerStarted
-        envName={event.body.executionContext.envRuntime.id}
-        host={event.body.hostname}
-        port={event.body.port}
-        timestamp={this.getDuration()}
-      />
+      <>
+        <ComponentPreviewServerStarted items={this.items} />
+        <StandaloneNewLine />
+        <StartingMainUiServer workspace={WorkspaceAspect} />
+      </>
     );
-  };
+  }
 
   private openBrowserOn0() {
     if (this.devServerCounter === 0) {
-      console.log(''); // TODO: New line with ink
-      console.log(''); // TODO: New line with ink
       render(
-        <UIServersAreReady
-          host={this.targetHost}
-          port={this.targetPort}
-          timestamp={this.getDuration()}
-          workspace={WorkspaceAspect}
-        />
+        <>
+          <ComponentPreviewServerStarted items={this.items} />
+          <StandaloneNewLine />
+          <UIServersAreReady
+            host={this.targetHost}
+            port={this.targetPort}
+            timestamp={this.getDuration()}
+            workspace={WorkspaceAspect}
+          />
+        </>
       );
 
       setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
@@ -113,10 +124,9 @@ export class StartCmd implements Command {
 
   async render(
     [uiRootName, userPattern]: [string, string],
-    { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean }
+    { dev, port, rebuild, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean }
   ): Promise<React.ReactElement> {
     this.startingtimestamp = Date.now();
-    console.log('');
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
     const uiServer = await this.ui.createRuntime({
@@ -129,9 +139,8 @@ export class StartCmd implements Command {
 
     return (
       <>
-        {/* <ClearConsole /> */}
+        {verbose ? <StandaloneNewLine /> : <ClearConsole />}
         <Starting workspace={WorkspaceAspect} />
-        <ComponentPreviewServerStartedHeaders />
       </>
     );
   }

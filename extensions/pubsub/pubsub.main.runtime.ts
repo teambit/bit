@@ -10,15 +10,15 @@ export class PubsubMain {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
 
-  sub = (topicUUID, callback) => {
+  public sub(topicUUID, callback) {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].push(callback);
-  };
+  }
 
-  pub = (topicUUID, event: BitBaseEvent) => {
+  public pub(topicUUID, event: BitBaseEvent) {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
-  };
+  }
 
   static runtime = MainRuntime;
 

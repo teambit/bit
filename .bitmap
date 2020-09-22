@@ -4815,19 +4815,14 @@
     "ui": {
         "files": [
             {
-                "relativePath": "bit-start-cmd-output-templates/Initialize-start-output-template.tsx",
-                "test": false,
-                "name": "Initialize-start-output-template.tsx"
-            },
-            {
                 "relativePath": "bit-start-cmd-output-templates/building-dev-server-output-template.tsx",
                 "test": false,
                 "name": "building-dev-server-output-template.tsx"
             },
             {
-                "relativePath": "bit-start-cmd-output-templates/clear-console.ts",
+                "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
                 "test": false,
-                "name": "clear-console.ts"
+                "name": "clear-console.tsx"
             },
             {
                 "relativePath": "bit-start-cmd-output-templates/compilation-ended-successfully-output-template.tsx",
@@ -4868,6 +4863,16 @@
                 "relativePath": "bit-start-cmd-output-templates/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/standalone-new-line.tsx",
+                "test": false,
+                "name": "standalone-new-line.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/starting-main-ui-server.tsx",
+                "test": false,
+                "name": "starting-main-ui-server.tsx"
             },
             {
                 "relativePath": "bit-start-cmd-output-templates/starting.tsx",
