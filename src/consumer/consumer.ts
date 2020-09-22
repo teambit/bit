@@ -392,22 +392,8 @@ export default class Consumer {
     return !this.config._distEntry && !this.config._distTarget;
   }
 
-  potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
-    const candidateComponents = this.bitMap.getAuthoredAndImportedBitIds();
-    const modifiedComponentsWithoutVersions = modifiedComponents.map((modifiedComponent) =>
-      modifiedComponent.toStringWithoutVersion()
-    );
-    // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
-    // correct version
-    const idsWithoutModified = candidateComponents.filter(
-      (component) => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
-    );
-    return BitIds.fromArray(idsWithoutModified);
-  }
-
-  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<ModelComponent[]> {
-    const candidateComponents = this.potentialComponentsForAutoTagging(modifiedComponents);
-    return getAutoTagPending(this.scope, candidateComponents, modifiedComponents);
+  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
+    return getAutoTagPending(this, modifiedComponents);
   }
 
   /**
@@ -564,12 +550,7 @@ export default class Consumer {
     return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
   }
 
-  updateNextVersionOnBitmap(
-    taggedComponents: Component[],
-    autoTaggedResults: AutoTagResult[],
-    exactVersion,
-    releaseType
-  ) {
+  updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
     taggedComponents.forEach((taggedComponent) => {
       const pendingVersionLog = taggedComponent.pendingVersion.log;
       if (!pendingVersionLog) throw new Error('updateNextVersionOnBitmap, unable to get endingVersion.log');
@@ -582,18 +563,7 @@ export default class Consumer {
       if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
       taggedComponent.componentMap.updateNextVersion(nextVersion);
     });
-    autoTaggedResults.forEach((autoTaggedResult) => {
-      const versionLog = autoTaggedResult.version.log;
-      const nextVersion = {
-        version: exactVersion || releaseType,
-        message: versionLog.message,
-        username: versionLog.username,
-        email: versionLog.email,
-      };
-      const id = autoTaggedResult.component.toBitIdWithLatestVersionAllowNull();
-      const componentMap = this.bitMap.getComponent(id, { ignoreVersion: true });
-      componentMap.updateNextVersion(nextVersion);
-    });
+
     if (taggedComponents.length) this.bitMap.markAsChanged();
   }
 

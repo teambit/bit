@@ -142,7 +142,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.toBitIdWithLatestVersion().toString());
+            const autoTagComp = autoTag.map((a) => a.component.id.toString());
             componentOutput += `\n       ${AUTO_TAGGED_MSG}:
             ${autoTagComp.join('\n            ')}`;
           }

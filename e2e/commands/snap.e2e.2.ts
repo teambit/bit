@@ -619,10 +619,7 @@ describe('bit snap command', function () {
       });
     });
   });
-  // @todo: fix. needs to make a decision about the auto-tag process. whether it should load from
-  // the workspace or not. currently the OnTag re-load from workspace the auto-tag candidate with
-  // the old dependencies.
-  describe.skip('auto snap', () => {
+  describe('auto snap', () => {
     let snapOutput;
     let isTypeHead;
     before(() => {
@@ -675,10 +672,13 @@ describe('bit snap command', function () {
         helper.command.importComponent('comp1');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
-        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(
+          path.join(helper.scopes.localPath, 'app.js'),
+          `const comp1 = require('./components/comp1');\nconsole.log(comp1())`
+        );
         const result = helper.command.runCmd('node app.js');
         // notice the "v2" (!)
-        expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+        expect(result.trim()).to.equal('comp1 and comp2 and comp3 v2');
       });
     });
   });
