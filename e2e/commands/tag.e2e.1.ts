@@ -1061,7 +1061,7 @@ describe('bit tag command', function () {
         expect(tagOutput).to.have.string('3.0.0');
         expect(tagOutput).to.not.have.string('2.0.0');
       });
-      it.only('should save the version and the message into the .bitmap file', () => {
+      it('should save the version and the message into the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
         const componentsMap: any[] = Object.values(bitMap);
         componentsMap.forEach((componentMap) => {
