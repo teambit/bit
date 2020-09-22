@@ -162,10 +162,13 @@ export class ReactEnv implements Environment {
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
+
       },
       // TODO: take version from config
       peerDependencies: {
         react: '^16.13.1' || this.config.reactVersion,
+        "react-dom": '^16.13.1',
+        "@babel/runtime": "^7.11.2"
       },
     };
   }

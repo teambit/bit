@@ -299,6 +299,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "storage/s3-resolver.ts",
+                "test": false,
+                "name": "s3-resolver.ts"
+            },
+            {
                 "relativePath": "storage/storage-resolver.ts",
                 "test": false,
                 "name": "storage-resolver.ts"
@@ -565,6 +570,110 @@
             "username": "David First",
             "email": "davidnet@gmail.com"
         }
+    },
+    "command-bar": {
+        "files": [
+            {
+                "relativePath": "command-bar.aspect.ts",
+                "test": false,
+                "name": "command-bar.aspect.ts"
+            },
+            {
+                "relativePath": "command-bar.commands.ts",
+                "test": false,
+                "name": "command-bar.commands.ts"
+            },
+            {
+                "relativePath": "command-bar.ui.runtime.tsx",
+                "test": false,
+                "name": "command-bar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "duplicate-command-error.tsx",
+                "test": false,
+                "name": "duplicate-command-error.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "types.tsx",
+                "test": false,
+                "name": "types.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.module.scss",
+                "test": false,
+                "name": "autocomplete-input.module.scss"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.tsx",
+                "test": false,
+                "name": "autocomplete-input.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.module.scss",
+                "test": false,
+                "name": "command-bar-item.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.tsx",
+                "test": false,
+                "name": "command-bar-item.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar-item/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.module.scss",
+                "test": false,
+                "name": "command-bar.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.tsx",
+                "test": false,
+                "name": "command-bar.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/command-searcher.ts",
+                "test": false,
+                "name": "command-searcher.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/component-searcher.ts",
+                "test": false,
+                "name": "component-searcher.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "compiler": {
         "files": [
@@ -1506,6 +1615,35 @@
             "email": "davidnet@gmail.com"
         }
     },
+    "elements/keycap": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "key-characters.ts",
+                "test": false,
+                "name": "key-characters.ts"
+            },
+            {
+                "relativePath": "key.module.scss",
+                "test": false,
+                "name": "key.module.scss"
+            },
+            {
+                "relativePath": "keycap.tsx",
+                "test": false,
+                "name": "keycap.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/keycap",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "environments": {
         "files": [
             {
@@ -1557,6 +1695,16 @@
                 "relativePath": "environments.main.runtime.ts",
                 "test": false,
                 "name": "environments.main.runtime.ts"
+            },
+            {
+                "relativePath": "exceptions/env-not-found-in-runtime.ts",
+                "test": false,
+                "name": "env-not-found-in-runtime.ts"
+            },
+            {
+                "relativePath": "exceptions/index.ts",
+                "test": false,
+                "name": "index.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -3089,6 +3237,11 @@
                 "name": "react-router.ui.runtime.tsx"
             },
             {
+                "relativePath": "route-context.tsx",
+                "test": false,
+                "name": "route-context.tsx"
+            },
+            {
                 "relativePath": "route.ts",
                 "test": false,
                 "name": "route.ts"
@@ -3839,9 +3992,9 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/inflate-paths.spec.ts",
+                "relativePath": "component-tree/inflate-paths/inflate-paths.specx.ts",
                 "test": false,
-                "name": "inflate-paths.spec.ts"
+                "name": "inflate-paths.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/inflate-paths.ts",
@@ -3849,9 +4002,9 @@
                 "name": "inflate-paths.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.specx.ts",
                 "test": false,
-                "name": "key-tree-to-node-tree.spec.ts"
+                "name": "key-tree-to-node-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.ts",
@@ -3859,9 +4012,9 @@
                 "name": "key-tree-to-node-tree.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree.specx.ts",
                 "test": false,
-                "name": "key-tree.spec.ts"
+                "name": "key-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree.ts",
@@ -4187,6 +4340,11 @@
                 "relativePath": "status.module.scss",
                 "test": false,
                 "name": "status.module.scss"
+            },
+            {
+                "relativePath": "status.specx.tsx",
+                "test": false,
+                "name": "status.specx.tsx"
             },
             {
                 "relativePath": "status.tsx",

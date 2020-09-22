@@ -84,6 +84,7 @@
         "@teambit/explorer.ui.component-grid": "^0.0.2",
         "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
+        "@testing-library/react": "11.0.4",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
         "apollo-client": "^2.6.10",
@@ -92,6 +93,7 @@
         "apollo-link-http": "^1.5.17",
         "apollo-link-ws": "^1.0.20",
         "apollo-utilities": "^1.3.4",
+        "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
         "babel-polyfill": "^6.26.0",
@@ -113,6 +115,7 @@
         "express-history-api-fallback": "^2.2.1",
         "file-loader": "^6.0.0",
         "filenamify": "^4.1.0",
+        "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
         "graphql": "^15.1.0",
@@ -127,8 +130,10 @@
         "join-path": "^1.1.1",
         "jsx-to-string": "1.4.0",
         "lodash.head": "^4.0.1",
+        "memoize-one": "5.1.1",
         "mime": "^2.4.6",
         "mini-css-extract-plugin": "^0.9.0",
+        "mousetrap": "^1.6.5",
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
@@ -193,7 +198,8 @@
         "@types/history": "^4.7.6",
         "@types/proper-lockfile": "^4.1.1",
         "@types/lodash.head": "^4.0.6",
-        "@types/webpack-merge": "^4.1.5"
+        "@types/webpack-merge": "^4.1.5",
+        "@types/mousetrap": "^1.6.3"
       },
       "peerDependencies": {
         "react": "^16.13.1",
@@ -201,7 +207,8 @@
         "mz": "^2.7.0",
         "bit-bin": "14.8.9-dev.47",
         "graphql": "^14.3.1",
-        "react-dom": "^16.13.1"
+        "react-dom": "^16.13.1",
+        "@babel/runtime": "^7.11.2"
       }
     }
   },

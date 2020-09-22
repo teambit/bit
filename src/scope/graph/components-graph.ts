@@ -1,5 +1,5 @@
 import graphLib, { Graph as GraphLib } from 'graphlib';
-import pMapSeries from 'p-map-series';
+import bluebird from 'bluebird';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -65,6 +65,8 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 /**
  * returns one graph that includes all dependencies types. each edge has a label of the dependency
  * type. the nodes content is the Component object.
+ * note that the graph only includes the dependencies of the gives ids, but not the dependents,
+ * regardless the `direction` parameter.
  */
 export async function buildOneGraphForComponents(
   ids: BitId[],
@@ -82,7 +84,7 @@ export async function buildOneGraphForComponents(
   };
   const components = await getComponents();
   const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
-  const componentsWithDeps = await pMapSeries(components, (component: Component) =>
+  const componentsWithDeps = await bluebird.mapSeries(components, (component: Component) =>
     flattenedDependencyLoader.load(component)
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));

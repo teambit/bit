@@ -324,7 +324,7 @@ export class ScopeMain implements ComponentFactory {
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
       new Config(version.mainFile, consumerComponent.extensions),
-      this.componentExtension.createAspectList(consumerComponent.extensions),
+      this.componentExtension.createAspectList(consumerComponent.extensions, this.name),
       ComponentFS.fromVinyls(consumerComponent.files),
       version.dependencies,
       consumerComponent
