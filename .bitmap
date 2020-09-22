@@ -3426,6 +3426,30 @@
             "email": "davidnet@gmail.com"
         }
     },
+    "staged-components/cli-snippet": {
+        "files": [
+            {
+                "relativePath": "cli-snippet.module.scss",
+                "test": false,
+                "name": "cli-snippet.module.scss"
+            },
+            {
+                "relativePath": "cli-snippet.tsx",
+                "test": false,
+                "name": "cli-snippet.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/cli-snippet",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/component-status": {
         "files": [
             {
@@ -4047,6 +4071,21 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "test-file-title/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "test-file-title/test-file-title.module.scss",
+                "test": false,
+                "name": "test-file-title.module.scss"
+            },
+            {
+                "relativePath": "test-file-title/test-file-title.tsx",
+                "test": false,
+                "name": "test-file-title.tsx"
+            },
+            {
                 "relativePath": "test-table.module.scss",
                 "test": false,
                 "name": "test-table.module.scss"
@@ -4055,6 +4094,11 @@
                 "relativePath": "test-table.tsx",
                 "test": false,
                 "name": "test-table.tsx"
+            },
+            {
+                "relativePath": "utils.tsx",
+                "test": false,
+                "name": "utils.tsx"
             }
         ],
         "mainFile": "index.ts",
@@ -4566,9 +4610,9 @@
                 "name": "tests-files.ts"
             },
             {
-                "relativePath": "tests-results-list.ts",
+                "relativePath": "tests-results.ts",
                 "test": false,
-                "name": "tests-results-list.ts"
+                "name": "tests-results.ts"
             },
             {
                 "relativePath": "tests.section.tsx",
