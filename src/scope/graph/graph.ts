@@ -41,7 +41,8 @@ export default class Graph extends GraphLib {
   public getBitIdsIncludeVersionsFromGraph(ids: BitId[], graph: Graph): BitId[] {
     const components: Component[] = graph.nodes().map((n) => graph.node(n));
     return ids.map((id) => {
-      const component = components.find((c) => c.id.isEqual(id) || c.id.isEqualWithoutVersion(id));
+      const component =
+        components.find((c) => c.id.isEqual(id)) || components.find((c) => c.id.isEqualWithoutVersion(id));
       if (!component) throw new Error(`unable to find ${id.toString()} in the graph`);
       return component.id;
     });

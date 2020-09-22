@@ -42,9 +42,11 @@ export function TestsPage({ className }: TestsPageProps) {
 
   if (!data) return null;
 
-  const testResults = data?.getHost?.getTests;
+  // TODO: create TestsResultList from data
+  //const testResults = TestsResultList.from(data?.getHost?.getTests.tests);
+  const testResults = data?.getHost?.getTests.tests;
 
-  if (testResults === null) {
+  if (data?.getHost?.getTests.tests === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any test."

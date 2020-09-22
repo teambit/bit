@@ -1,4 +1,4 @@
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import { UIServer } from './ui-server';
@@ -8,5 +8,9 @@ export type UIServerConsoleProps = {
 };
 
 export function UIServerConsole({ uiServer }: UIServerConsoleProps) {
-  return <Box>Bit UI server is listening to port {uiServer.port}</Box>;
+  return (
+    <Box>
+      <Text>Bit UI server is listening to port {uiServer.port}</Text>
+    </Box>
+  );
 }

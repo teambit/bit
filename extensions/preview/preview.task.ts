@@ -1,12 +1,12 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { resolve, join } from 'path';
+import { ExecutionContext } from '@teambit/environments';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { flatten } from 'lodash';
-import { join } from 'path';
-
 import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
 
@@ -23,41 +23,33 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain
   ) {}
 
-  extensionId = 'teambit.bit/preview';
+  id = 'teambit.bit/preview';
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  location: TaskLocation = 'end';
+
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const defs = this.preview.getDefs();
-    const capsules = context.capsuleGraph.capsules;
     const url = `/preview/${context.envRuntime.id}`;
+    const bundlingStrategy = this.preview.getBundlingStrategy();
 
-    const targets: Target[] = await Promise.all(
-      capsules.map(async ({ capsule }) => {
-        return {
-          entries: await this.computePaths(capsule, defs, context),
-          capsule,
-        };
-      })
-    );
+    const targets: Target[] = await bundlingStrategy.computeTargets(context, defs, this);
 
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
       entry: [],
-      publicPath: this.getPreviewDirectory(),
+      publicPath: this.getPreviewDirectory(context),
       rootPath: url,
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
-    const componentResults = await bundler.run();
+    const bundlerResults = await bundler.run();
 
-    return {
-      components: componentResults,
-      // TODO: @guy rename to `preview` instead of `public`.
-      artifacts: [{ dirName: this.getPreviewDirectory() }],
-    };
+    return bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);
   }
 
-  private async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
+  async computePaths(capsule: Capsule, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
     const previewMain = await this.preview.writePreviewRuntime();
+
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap([capsule.component]);
       const paths = this.getPathsFromMap(capsule, moduleMap, context);
@@ -81,12 +73,12 @@ export class PreviewTask implements BuildTask {
     return flatten(moduleMaps.concat([previewMain]));
   }
 
-  getPreviewDirectory() {
-    // TODO: @guy please make sure to wire it to a config as above.
-    return 'public';
+  getPreviewDirectory(context: ExecutionContext) {
+    const outputPath = resolve(`${context.id}/public`);
+    return outputPath;
   }
 
-  private getPathsFromMap(
+  getPathsFromMap(
     capsule: Capsule,
     moduleMap: ComponentMap<AbstractVinyl[]>,
     context: BuildContext

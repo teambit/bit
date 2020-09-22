@@ -73,7 +73,7 @@ export class ComponentID {
   }
 
   isEqual(id: ComponentID, opts: { ignoreVersion?: boolean } = {}): boolean {
-    const result = id.scope === this.scope && id.fullName === this.fullName;
+    const result = id.scope === this.scope && id.toString() === this.toString();
     if (!opts.ignoreVersion) {
       return result && this.version === id.version;
     }

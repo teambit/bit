@@ -1,3 +1,3 @@
 import { AbstractVinyl } from '.';
 
-export class Artifact extends AbstractVinyl {}
+export class ArtifactVinyl extends AbstractVinyl {}

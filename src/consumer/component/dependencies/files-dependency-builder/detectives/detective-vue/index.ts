@@ -1,6 +1,7 @@
+import { requireWithUndefinedGlobalWindow } from '../../../../../../utils/require-pkg-with-undefined-window';
+
 export default function (src, options: Record<string, any> = {}) {
-  // eslint-disable-next-line import/no-dynamic-require, global-require
-  const compiler = require('vue-template-compiler');
+  const compiler = requireWithUndefinedGlobalWindow('vue-template-compiler');
   const finalDependencies = {};
   const addDependencies = (dependencies, isScript) => {
     let objDependencies = {};

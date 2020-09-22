@@ -1,24 +1,29 @@
+import { flatten } from 'lodash';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentID } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
-import { EnvsExecutionResult } from '@teambit/environments/runtime/envs-execution-result';
+import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
+import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { BitId } from 'bit-bin/dist/bit-id';
 import { IsolateComponentsOptions } from '@teambit/isolator';
-
-import { ExtensionArtifact } from './artifact';
+import { ArtifactList, ExtensionArtifact } from './artifact';
+import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
 import { BuilderService, BuildServiceResults } from './builder.service';
 import { BuilderCmd } from './build.cmd';
-import { BuildTask } from './types';
+import { BuildTask } from './build-task';
+import { StorageResolver } from './storage';
+import { BuildPipeResults } from './build-pipe';
+import { ArtifactStorageError } from './exceptions';
+import { BuildPipelineResultList } from './build-pipeline-result-list';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
+
+export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
 /**
  * extension config type.
@@ -38,17 +43,91 @@ export class BuilderMain {
     private service: BuilderService,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private taskSlot: TaskSlot
+    private taskSlot: TaskSlot,
+    private storageResolversSlot: StorageResolverSlot
   ) {}
 
-  async tagListener(ids: BitId[]): Promise<EnvsExecutionResult<BuildServiceResults>> {
+  private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
+    const artifacts: ComponentMap<ArtifactList>[] = flatten(
+      buildServiceResults.map((pipeResult) => {
+        return pipeResult.tasksResults.map((val) => val.artifacts);
+      })
+    );
+
+    const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
+      return Promise.all(
+        artifactMap.toArray().map(async ([component, artifactList]) => {
+          try {
+            return await artifactList.store(component);
+          } catch (err) {
+            throw new ArtifactStorageError(err, component);
+          }
+        })
+      );
+    });
+    await Promise.all(storeP);
+  }
+
+  private pipelineResultsToAspectList(
+    components: Component[],
+    buildPipelineResults: BuildPipeResults[]
+  ): ComponentMap<AspectList> {
+    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
+    return ComponentMap.as<AspectList>(components, (component) => {
+      const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
+      const aspectList = component.state.aspects.map((aspectEntry) => {
+        const dataFromBuildPipeline = taskResultsOfComponent[aspectEntry.id.toString()];
+        const newAspectEntry = dataFromBuildPipeline ? aspectEntry.transform(dataFromBuildPipeline) : aspectEntry;
+        return newAspectEntry;
+      });
+      Object.keys(taskResultsOfComponent).forEach((taskId) => {
+        const taskComponentId = ComponentID.fromString(taskId);
+        if (!component.state.aspects.find(taskComponentId)) {
+          const dataFromBuildPipeline = taskResultsOfComponent[taskId];
+          aspectList.addEntry(taskComponentId, dataFromBuildPipeline);
+        }
+      });
+      const buildId = BuilderAspect.id;
+      const buildAspectEntry = aspectList.get(buildId) || aspectList.addEntry(ComponentID.fromString(buildId));
+      const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
+      buildAspectEntry.data = { pipeline: pipelineReport };
+      return aspectList;
+    });
+  }
+
+  /**
+   * transform the complex EnvsExecutionResult<BuildServiceResults> type to a simpler array of
+   * BuildPipeResults. as a reminder, the build pipeline is running per env, hence the array. each
+   * item of BuildPipeResults has the results of multiple tasks.
+   */
+  private getPipelineResults(execResults: EnvsExecutionResult<BuildServiceResults>): BuildPipeResults[] {
+    const map = execResults.results.map((envRes) => envRes.data?.buildResults);
+    return map.filter((val) => val) as BuildPipeResults[];
+  }
+
+  async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
     this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
-    const componentIds = await this.workspace.resolveMultipleComponentIds(ids);
-    const components = await this.workspace.getMany(componentIds);
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
-    return envsExecutionResults;
+    const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
+    await this.storeArtifacts(buildPipelineResults);
+    return this.pipelineResultsToAspectList(components, buildPipelineResults);
+  }
+
+  /**
+   * register a new storage resolver.
+   */
+  registerStorageResolver(storageResolver: StorageResolver) {
+    this.storageResolversSlot.register(storageResolver);
+    return this;
+  }
+
+  /**
+   * get storage resolver by name. otherwise, returns default.
+   */
+  getStorageResolver(name: string): StorageResolver | undefined {
+    return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
   /**
@@ -102,7 +181,7 @@ export class BuilderMain {
     return extensionArtifacts;
   }
 
-  static slots = [Slot.withType<BuildTask>()];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -127,11 +206,21 @@ export class BuilderMain {
       GraphqlMain
     ],
     config,
-    [taskSlot]: [TaskSlot]
+    [taskSlot, storageResolversSlot]: [TaskSlot, StorageResolverSlot]
   ) {
+    const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const builderService = new BuilderService(workspace, logger, taskSlot);
-    const builder = new BuilderMain(envs, workspace, builderService, scope, aspectLoader, taskSlot);
+    const builderService = new BuilderService(workspace, logger, taskSlot, artifactFactory);
+    const builder = new BuilderMain(
+      envs,
+      workspace,
+      builderService,
+      scope,
+      aspectLoader,
+      taskSlot,
+      storageResolversSlot
+    );
+
     graphql.register(builderSchema(builder));
     const func = builder.tagListener.bind(builder);
     if (scope) scope.onTag(func);
