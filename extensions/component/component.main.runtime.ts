@@ -11,6 +11,7 @@ import { componentSchema } from './component.graphql';
 import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
+import { AspectEntry } from './aspect-entry';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -37,6 +38,10 @@ export class ComponentMain {
 
   createAspectList(legacyExtensionDataList: ExtensionDataList, scope?: string) {
     return AspectList.fromLegacyExtensions(legacyExtensionDataList, scope);
+  }
+
+  createAspectListFromEntries(entries: AspectEntry[]) {
+    return new AspectList(entries);
   }
 
   registerRoute(routes: Route[]) {

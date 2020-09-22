@@ -1,7 +1,7 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
+import { AspectEntry, AspectList, ComponentMain } from '@teambit/component';
 import {
   Component,
   ComponentFactory,
@@ -338,6 +338,15 @@ export class Workspace implements ComponentFactory {
     }
   }
 
+  private async createAspectList(extensionDataList: ExtensionDataList) {
+    const entiresP = extensionDataList.map(async (entry) => {
+      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
+    });
+
+    const entries = await Promise.all(entiresP);
+    return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
@@ -351,11 +360,10 @@ export class Workspace implements ComponentFactory {
     }
 
     const extensionDataList = await this.componentExtensions(id, component);
-    const scopeName = component?.id.scope;
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList, scopeName),
+      await this.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -674,6 +682,16 @@ export class Workspace implements ComponentFactory {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
 
+    const promises = mergedExtensions.map(async (entry) => {
+      if (entry.extensionId) {
+        const id = await this.resolveComponentId(entry.extensionId);
+        entry.extensionId = id._legacy;
+      }
+
+      return entry;
+    });
+
+    await Promise.all(promises);
     return mergedExtensions;
   }
 
