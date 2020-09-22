@@ -8,11 +8,11 @@ export type CliSnippetProps = {
   content: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function CliSnippet({ content, ...rest }: CliSnippetProps) {
+export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
   const convert = new Convert();
   const res = useMemo(() => errorFormat(content), [content]);
   return (
-    <div {...rest} className={classNames(styles.log)}>
+    <div {...rest} className={classNames(styles.log, className)}>
       {res &&
         res.map((r) => {
           return (
