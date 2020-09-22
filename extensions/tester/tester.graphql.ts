@@ -12,8 +12,17 @@ export function testerSchema(tester: TesterMain): Schema {
       }
 
       type TestsResults {
+        testsFiles: [TestsFiles]
+      }
+
+      type TestsFiles {
+        file: String
         tests: [Tests]
-        errors: [Errors]
+        pass: Int
+        failed: Int
+        pending: Int
+        duration: Int
+        slow: Boolean
       }
 
       type Tests {
@@ -23,11 +32,6 @@ export function testerSchema(tester: TesterMain): Schema {
         file: String
         status: String
         error: String
-      }
-
-      type Errors {
-        failureMessage: String
-        file: String
       }
     `,
     resolvers: {

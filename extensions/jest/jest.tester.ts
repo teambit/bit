@@ -1,7 +1,7 @@
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
-import { Tester, TesterContext, Tests, TestResult, TestsResult } from '@teambit/tester';
-import { TestResult as JestTestResult } from '@jest/test-result';
+import { Tester, TesterContext, Tests, TestResult, TestsResultList, TestsFiles } from '@teambit/tester';
+import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
@@ -29,13 +29,14 @@ export class JestTester implements Tester {
   }
 
   private buildTestsObj(
+    aggregatedResult: AggregatedResult,
     components: ComponentMap<JestTestResult[] | undefined>,
     testerContext: TesterContext,
     config?: any
   ) {
     const tests = components.toArray().map(([component, testsFiles]) => {
-      if (!testsFiles) return undefined;
-      if (testsFiles?.length === 0) return undefined;
+      if (!testsFiles) return;
+      if (testsFiles?.length === 0) return;
       const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
         const file = this.getTestFile(test.testFilePath, testerContext);
         if (test.testExecError)
@@ -46,27 +47,39 @@ export class JestTester implements Tester {
         return errors;
       }, []);
 
-      const testsResults = testsFiles.reduce((acc: TestResult[], test) => {
-        test.testResults.forEach((testResult) => {
-          const file = this.getTestFile(test.testFilePath, testerContext);
+      const tests = testsFiles.map((test) => {
+        const file = this.getTestFile(test.testFilePath, testerContext);
+        const tests = test.testResults.map((testResult) => {
           const error = formatResultsErrors([testResult], config, { noStackTrace: false });
-          acc.push(
-            new TestResult(
-              testResult.ancestorTitles,
-              testResult.title,
-              testResult.status,
-              file?.relative || test.testFilePath,
-              testResult.duration,
-              error || undefined
-            )
+          return new TestResult(
+            testResult.ancestorTitles,
+            testResult.title,
+            testResult.status,
+            testResult.duration,
+            error || undefined
           );
         });
-        return acc;
-      }, []);
-      return { componentId: component.id, results: new TestsResult(testsResults, suiteErrors) };
+        const filePath = file?.relative || test.testFilePath;
+        const error = { failureMessage: test.failureMessage, error: test.testExecError?.message };
+        return new TestsFiles(
+          filePath,
+          tests,
+          test.numPassingTests,
+          test.numFailingTests,
+          test.numPendingTests,
+          test.perfStats.runtime,
+          test.perfStats.slow,
+          error
+        );
+      });
+
+      return {
+        componentId: component.id,
+        results: new TestsResultList(tests, aggregatedResult.success, aggregatedResult.startTime),
+      };
     });
 
-    return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
+    return compact(tests) as { componentId: ComponentID; results: TestsResultList }[];
   }
 
   private getErrors(testResult: JestTestResult[]) {
@@ -97,7 +110,12 @@ export class JestTester implements Tester {
     const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
     const componentsWithTests = this.attachTestsToComponent(context, testResults);
-    const componentTestResults = this.buildTestsObj(componentsWithTests, context, jestConfigWithSpecs);
+    const componentTestResults = this.buildTestsObj(
+      testsOutPut.results,
+      componentsWithTests,
+      context,
+      jestConfigWithSpecs
+    );
     const globalErrors = this.getErrors(testResults);
     return { components: componentTestResults, errors: globalErrors };
   }

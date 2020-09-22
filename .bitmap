@@ -4561,9 +4561,14 @@
                 "name": "tester.ui.runtime.tsx"
             },
             {
-                "relativePath": "tests-results.ts",
+                "relativePath": "tests-files.ts",
                 "test": false,
-                "name": "tests-results.ts"
+                "name": "tests-files.ts"
+            },
+            {
+                "relativePath": "tests-results-list.ts",
+                "test": false,
+                "name": "tests-results-list.ts"
             },
             {
                 "relativePath": "tests.section.tsx",
