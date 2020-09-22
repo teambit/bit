@@ -15,6 +15,7 @@ export async function getAutoTagPending(consumer: Consumer, changedComponents: B
 export type AutoTagResult = { component: Component; triggeredBy: BitIds };
 
 export async function getAutoTagInfo(consumer: Consumer, changedComponents: BitIds): Promise<AutoTagResult[]> {
+  if (!changedComponents.length) return [];
   const potentialComponents = potentialComponentsForAutoTagging(consumer, changedComponents);
   const idsToLoad = new BitIds(...potentialComponents, ...changedComponents);
   const { components } = await consumer.loadComponents(idsToLoad);

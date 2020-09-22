@@ -196,9 +196,9 @@ export default async function tagModelComponent({
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
   const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
-  const componentsToTagIds = componentsToTag.map((c) => c.id);
+  const idsToTriggerAutoTag = componentsToTag.map((c) => c.id).filter((id) => id.hasVersion());
 
-  const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(componentsToTagIds));
+  const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
   const autoTagConsumerComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const allComponentsToTag = componentsToTag.concat(autoTagConsumerComponents);
 
