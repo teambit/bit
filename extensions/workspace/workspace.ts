@@ -351,10 +351,11 @@ export class Workspace implements ComponentFactory {
     }
 
     const extensionDataList = await this.componentExtensions(id, component);
+    const scopeName = component?.id.scope;
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList),
+      this.componentAspect.createAspectList(extensionDataList, scopeName),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -723,7 +724,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const ids = BitIds.fromArray(components.map((component) => component.id._legacy));
+    const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
@@ -743,8 +744,7 @@ export class Workspace implements ComponentFactory {
     const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    let ignoredIds = BitIds.fromArray(coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds));
-    ignoredIds = ignoredIds.difference(ids);
+    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
@@ -778,6 +778,7 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
+
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });

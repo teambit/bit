@@ -53,7 +53,6 @@ export class ArtifactFactory {
 
   private getStorageResolver(def: ArtifactDefinition) {
     const storageResolvers = this.storageResolverSlot.values();
-    storageResolvers.find((resolver) => resolver.name);
     return this.getResolver(storageResolvers, def.storageResolver);
   }
 

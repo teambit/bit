@@ -35,8 +35,8 @@ export class ComponentMain {
     return this;
   }
 
-  createAspectList(legacyExtensionDataList: ExtensionDataList) {
-    return AspectList.fromLegacyExtensions(legacyExtensionDataList);
+  createAspectList(legacyExtensionDataList: ExtensionDataList, scope?: string) {
+    return AspectList.fromLegacyExtensions(legacyExtensionDataList, scope);
   }
 
   registerRoute(routes: Route[]) {
