@@ -67,14 +67,15 @@ async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
   releaseType: ReleaseType | undefined,
-  exactVersion: string | null | undefined
+  exactVersion: string | null | undefined,
+  persist: boolean
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
-      if (nextVersion) {
+      if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
         if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
@@ -261,7 +262,7 @@ export default async function tagModelComponent({
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
-    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion);
+    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist);
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
@@ -271,7 +272,7 @@ export default async function tagModelComponent({
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const lane = await consumer.getCurrentLaneObject();
-  const persistComponent = async (consumerComponent: Component) => {
+  const addComponentsToScope = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
       testResult = testsResults.find((result) => {
@@ -297,41 +298,39 @@ export default async function tagModelComponent({
       specsResults: testResult ? testResult.specs : undefined,
       resolveUnmerged,
     });
-    return consumerComponent;
   };
 
-  // Run the persistence one by one not in parallel!
-  loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-  const allTaggedComponents = await bluebird.mapSeries(allComponentsToTag, (consumerComponent) =>
-    persistComponent(consumerComponent)
-  );
-  validateDirManipulation(allTaggedComponents);
+  if (persist) {
+    // Run the persistence one by one not in parallel!
+    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => addComponentsToScope(consumerComponent));
+  }
+
+  validateDirManipulation(allComponentsToTag);
 
   if (persist) {
-    await consumer.updateComponentsVersions(allTaggedComponents);
+    await consumer.updateComponentsVersions(allComponentsToTag);
   } else {
-    consumer.updateNextVersionOnBitmap(allTaggedComponents, exactVersion, releaseType);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   }
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && persist) {
-    const ids = allTaggedComponents.map((consumerComponent) => consumerComponent.id);
+    const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
     const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) => func(ids));
-    results.forEach((tagResult) => updateComponentsByTagResult(allTaggedComponents, tagResult));
-    allTaggedComponents.forEach((comp) => {
+    results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
+    allComponentsToTag.forEach((comp) => {
       const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
-    await bluebird.mapSeries(allTaggedComponents, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
+    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (persist) {
     await scope.objects.persist();
   }
-  const taggedComponents = allTaggedComponents.filter((taggedComp) =>
-    componentsToTag.find((c) => c.id.isEqualWithoutScopeAndVersion(taggedComp.id))
-  );
-  return { taggedComponents, autoTaggedResults: autoTagData, publishedPackages };
+
+  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
 }
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {

@@ -1051,6 +1051,24 @@ describe('bit tag command', function () {
         });
       });
     });
+    describe('soft tag after soft tag', () => {
+      let tagOutput;
+      before(() => {
+        helper.command.softTag('-a -s 2.0.0');
+        tagOutput = helper.command.softTag('-a -s 3.0.0');
+      });
+      it('should show the output according to the new soft-tag', () => {
+        expect(tagOutput).to.have.string('3.0.0');
+        expect(tagOutput).to.not.have.string('2.0.0');
+      });
+      it.only('should save the version and the message into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap: any[] = Object.values(bitMap);
+        componentsMap.forEach((componentMap) => {
+          expect(componentMap.nextVersion.version).to.equal('3.0.0');
+        });
+      });
+    });
     describe('untag', () => {
       before(() => {
         helper.command.softTag('-a -s 3.0.0');
