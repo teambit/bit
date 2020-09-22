@@ -1,4 +1,4 @@
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 export type props = {
@@ -6,5 +6,9 @@ export type props = {
 };
 
 export const InitializeStartOutput = ({ workspace }: props) => {
-  return <Box>Starting the development server for {workspace})...</Box>;
+  return (
+    <Box>
+      <Text>Starting the development server for {workspace})...</Text>
+    </Box>
+  );
 };

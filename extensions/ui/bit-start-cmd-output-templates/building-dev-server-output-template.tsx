@@ -1,4 +1,4 @@
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 export type props = {
@@ -6,5 +6,9 @@ export type props = {
 };
 
 export const BuildingDevServerOutput = ({ workspaceFilePath }: props) => {
-  return <Box>Building workspace UI according to the configuration found in {workspaceFilePath}</Box>;
+  return (
+    <Box>
+      <Text>Building workspace UI according to the configuration found in {workspaceFilePath}</Text>
+    </Box>
+  );
 };

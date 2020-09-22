@@ -50,8 +50,6 @@ export class StartCmd implements Command {
   }
 
   private eventsListeners = (event) => {
-    // console.log('--event-->: ', event)
-
     switch (event.type) {
       case 'components-server-started':
         setTimeout(() => this.onComponentsServerStarted(event), 0);
@@ -79,8 +77,8 @@ export class StartCmd implements Command {
   private onComponentsServerStarted = (event) => {
     this.getDuration();
     this.devServerCounter += 1;
-    console.log(''); // TODO: New line with ink
-    console.log(''); // TODO: New line with ink
+    // console.log(''); // TODO: New line with ink
+    // console.log(''); // TODO: New line with ink
     render(
       <ComponentPreviewServerStarted
         envName={event.body.executionContext.envRuntime.id}

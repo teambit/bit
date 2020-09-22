@@ -3,8 +3,8 @@ export { compilationEndedSuccessfullyOutput } from './compilation-ended-successf
 export { CompilationErrorOutput } from './compilation-error-output-template';
 export { ComponentsRebuildOutput } from './components-rebuild-output-template';
 export { DevServerRunningOutputTemplate } from './dev-server-running-output-template';
-export { ClearConsole } from './Clear-console';
-export { Starting } from './Starting';
-export { ComponentPreviewServerStarted } from './Component-preview-server-started';
-export { ComponentPreviewServerStartedHeaders } from './Component-preview-server-started-headers';
-export { UIServersAreReady } from './Ui-servers-are-ready';
+export { ClearConsole } from './clear-console';
+export { Starting } from './starting';
+export { ComponentPreviewServerStarted } from './component-preview-server-started';
+export { ComponentPreviewServerStartedHeaders } from './component-preview-server-started-headers';
+export { UIServersAreReady } from './ui-servers-are-ready';

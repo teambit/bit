@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, Color, Box } from 'ink';
+import { Text, Box, Newline } from 'ink';
 import moment from 'moment';
 
 export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
@@ -9,15 +9,15 @@ export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
     </Box>
     <Box>
       <Text>
-        {`Main UI server is running, running on http://${host}:${port} `} <Color yellow>{timestamp}</Color>
+        {`Main UI server is running, running on http://${host}:${port} `} <Text color="yellow">{timestamp}</Text>
       </Text>
     </Box>
-    <Box>{`\n`}</Box>
+    <Newline />
     <Box>
       <Text>
-        <Color yellow>
+        <Text color="yellow">
           {`Waiting for component changes (${timestamp})... `} {`(${moment().format('HH:MM:SS')})`}
-        </Color>
+        </Text>
       </Text>
     </Box>
   </>
