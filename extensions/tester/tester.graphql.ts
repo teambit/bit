@@ -25,6 +25,12 @@ export function testerSchema(tester: TesterMain): Schema {
         pending: Int
         duration: Int
         slow: Boolean
+        error: TestError
+      }
+
+      type TestError {
+        failureMessage: String;
+        error: String;
       }
 
       type Tests {
