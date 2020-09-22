@@ -12,10 +12,12 @@ export function testerSchema(tester: TesterMain): Schema {
       }
 
       type TestsResults {
-        testsFiles: [TestsFiles]
+        testFiles: [TestFiles]
+        success: Boolean
+        start: Int
       }
 
-      type TestsFiles {
+      type TestFiles {
         file: String
         tests: [Tests]
         pass: Int
@@ -29,7 +31,6 @@ export function testerSchema(tester: TesterMain): Schema {
         ancestor: [String]
         name: String
         duration: String
-        file: String
         status: String
         error: String
       }

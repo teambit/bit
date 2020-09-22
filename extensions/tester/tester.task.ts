@@ -46,10 +46,9 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: [], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => ({
-        id: componentTests.componentId,
         component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
-        data: { tests: componentTests.results },
-        errors: testsResults.errors ? [] : [],
+        metadata: { tests: componentTests.results },
+        errors: testsResults.errors ? testsResults.errors : [],
       })),
     };
   }

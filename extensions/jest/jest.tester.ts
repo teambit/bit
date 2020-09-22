@@ -75,7 +75,7 @@ export class JestTester implements Tester {
 
       return {
         componentId: component.id,
-        results: new TestsResultList(tests, aggregatedResult.success, aggregatedResult.startTime),
+        results: new TestsResult(tests, aggregatedResult.success, aggregatedResult.startTime),
       };
     });
 
@@ -83,8 +83,8 @@ export class JestTester implements Tester {
   }
 
   private getErrors(testResult: JestTestResult[]) {
-    return testResult.reduce((errors: any[], test) => {
-      errors.push(test.testExecError);
+    return testResult.reduce((errors: string[], test) => {
+      if (test.testExecError?.message) errors.push(test.testExecError.message);
       return errors;
     }, []);
   }
