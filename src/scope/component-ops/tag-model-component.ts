@@ -4,11 +4,12 @@ import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 
+import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -24,6 +25,8 @@ import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { OnTagResult } from '../scope';
+import { GlobalConfig } from '../../global-config';
+import { Log } from '../models/version';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -293,12 +296,13 @@ export default async function tagModelComponent({
       consumer,
       flattenedDependencies,
       flattenedDevDependencies,
-      message,
       lane,
       specsResults: testResult ? testResult.specs : undefined,
       resolveUnmerged,
     });
   };
+
+  await addLogToComponents(componentsToTag, autoTagConsumerComponents, persist, message);
 
   if (persist) {
     // Run the persistence one by one not in parallel!
@@ -331,6 +335,33 @@ export default async function tagModelComponent({
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+}
+
+async function addLogToComponents(
+  components: Component[],
+  autoTagComps: Component[],
+  persist: boolean,
+  message: string
+) {
+  const username = await globalConfig.get(CFG_USER_NAME_KEY);
+  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  const getLog = (component: Component): Log => {
+    const nextVersion = persist ? component.componentMap?.nextVersion : null;
+    return {
+      username: nextVersion?.username || username,
+      email: nextVersion?.email || email,
+      message: nextVersion?.message || message,
+      date: Date.now().toString(),
+    };
+  };
+
+  components.forEach((component) => {
+    component.log = getLog(component);
+  });
+  autoTagComps.forEach((autoTagComp) => {
+    autoTagComp.log = getLog(autoTagComp);
+    autoTagComp.log.message = `${autoTagComp.log.message} (bump dependencies versions)`;
+  });
 }
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {
