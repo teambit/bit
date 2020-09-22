@@ -25,7 +25,6 @@ import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { OnTagResult } from '../scope';
-import { GlobalConfig } from '../../global-config';
 import { Log } from '../models/version';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {

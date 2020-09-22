@@ -1,8 +1,6 @@
 import R from 'ramda';
-
-import * as globalConfig from '../../api/consumer/lib/global-config';
 import { BitId, BitIds } from '../../bit-id';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -12,7 +10,7 @@ import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../utils/path';
-import { isHash, isTag } from '../../version/version-parser';
+import { isHash } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
