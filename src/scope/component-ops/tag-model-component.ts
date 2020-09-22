@@ -20,7 +20,7 @@ import logger from '../../logger/logger';
 import { pathJoinLinux, sha1 } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import { buildComponentsGraph } from '../graph/components-graph';
-import { AutoTagResult, getAutoTagData } from './auto-tag';
+import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { OnTagResult } from '../scope';
@@ -198,7 +198,7 @@ export default async function tagModelComponent({
   const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map((c) => c.id);
 
-  const autoTagData = skipAutoTag ? [] : await getAutoTagData(consumer, BitIds.fromArray(componentsToTagIds));
+  const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(componentsToTagIds));
   const autoTagConsumerComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const allComponentsToTag = componentsToTag.concat(autoTagConsumerComponents);
 

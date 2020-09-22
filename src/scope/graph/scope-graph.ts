@@ -1,5 +1,4 @@
 import GraphLib, { Graph } from 'graphlib';
-import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
 import { VERSION_DELIMITER } from '../../constants';
@@ -259,19 +258,6 @@ export default class DependencyGraph {
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map((node) => node.v);
     return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr;
-  }
-
-  getRecursiveDependents(ids: string[], dependents: string[] = []): string[] {
-    const dependentOfId = (idStr: string): string[] => {
-      const nodeEdges = this.graph.inEdges(idStr);
-      if (!nodeEdges) return [];
-      return nodeEdges.map((node) => node.v);
-    };
-    const dependentsResults: string[] = R.uniq(R.flatten(ids.map(dependentOfId)));
-    const newDependents = dependentsResults.filter((idStr) => !dependents.includes(idStr));
-    if (!newDependents.length) return dependents;
-    dependents.push(...newDependents);
-    return this.getRecursiveDependents(newDependents, dependents);
   }
 
   getImmediateDependenciesPerId(id: BitId): string[] {

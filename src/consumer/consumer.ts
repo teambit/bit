@@ -392,22 +392,8 @@ export default class Consumer {
     return !this.config._distEntry && !this.config._distTarget;
   }
 
-  potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
-    const candidateComponents = this.bitMap.getAuthoredAndImportedBitIds();
-    const modifiedComponentsWithoutVersions = modifiedComponents.map((modifiedComponent) =>
-      modifiedComponent.toStringWithoutVersion()
-    );
-    // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
-    // correct version
-    const idsWithoutModified = candidateComponents.filter(
-      (component) => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
-    );
-    return BitIds.fromArray(idsWithoutModified);
-  }
-
-  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<ModelComponent[]> {
-    const candidateComponents = this.potentialComponentsForAutoTagging(modifiedComponents);
-    return getAutoTagPending(this.scope, candidateComponents, modifiedComponents);
+  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<Component[]> {
+    return getAutoTagPending(this, modifiedComponents);
   }
 
   /**
