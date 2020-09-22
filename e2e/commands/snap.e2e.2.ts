@@ -454,7 +454,7 @@ describe('bit snap command', function () {
             helper.fixtures.createComponentBarFoo('');
           });
           it('should block tagging the component', () => {
-            const output = helper.general.runWithTryCatch('bit tag bar/foo');
+            const output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
             expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
           });
           it('should not include the component when running bit tag --all', () => {
