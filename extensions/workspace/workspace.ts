@@ -1,8 +1,9 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import { AspectEntry, AspectList, ComponentMain } from '@teambit/component';
 import {
+  AspectEntry,
+  ComponentMain,
   Component,
   ComponentFactory,
   ComponentFS,
