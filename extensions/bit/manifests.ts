@@ -40,6 +40,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CommandBarAspect } from '@teambit/command-bar';
+import { GraphUIAspect } from '@teambit/graph-ui-temp';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -84,6 +85,7 @@ export const manifestsMap = {
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
   [CommandBarAspect.id]: CommandBarAspect,
+  [GraphUIAspect.id]: GraphUIAspect,
 };
 
 export function isCoreAspect(id: string) {
