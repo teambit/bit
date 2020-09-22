@@ -2067,14 +2067,24 @@
                 "name": "graph.aspect.ts"
             },
             {
-                "relativePath": "graph.ui.runtime.ts",
+                "relativePath": "graph.section.tsx",
                 "test": false,
-                "name": "graph.ui.runtime.ts"
+                "name": "graph.section.tsx"
+            },
+            {
+                "relativePath": "graph.ui.runtime.tsx",
+                "test": false,
+                "name": "graph.ui.runtime.tsx"
             },
             {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph-page.tsx",
+                "test": false,
+                "name": "graph-page.tsx"
             }
         ],
         "mainFile": "index.ts",
