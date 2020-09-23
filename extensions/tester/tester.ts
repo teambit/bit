@@ -8,7 +8,7 @@ export type Tests = {
     componentId: ComponentID;
     results: TestsResult;
   }[];
-  errors?: string[];
+  errors?: Error[];
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;

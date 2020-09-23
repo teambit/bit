@@ -5,7 +5,7 @@ export type EnvContext = {
 };
 
 export interface ServiceExecutionResult {
-  errors?: Error[] | string[];
+  errors?: Error[];
 }
 
 export interface Service<TExecResponse extends ServiceExecutionResult, TOpts = {}> {

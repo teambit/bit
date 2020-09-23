@@ -1,10 +1,11 @@
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
-import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
+import { TestResult as JestTestResult, AggregatedResult, SerializableError } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { JestError } from './error';
 
 export class JestTester implements Tester {
   constructor(readonly jestConfig: any) {}
@@ -73,9 +74,12 @@ export class JestTester implements Tester {
     return compact(testsSuiteResult) as { componentId: ComponentID; results: TestsResult }[];
   }
 
-  private getErrors(testResult: JestTestResult[]) {
-    return testResult.reduce((errors: string[], test) => {
-      if (test.testExecError?.message) errors.push(test.testExecError.message);
+  private getErrors(testResult: JestTestResult[]): JestError[] {
+    return testResult.reduce((errors: JestError[], test) => {
+      if (test.testExecError) {
+        const { message, stack, code, type } = test.testExecError;
+        errors.push(new JestError(message, stack, code, type));
+      }
       return errors;
     }, []);
   }
