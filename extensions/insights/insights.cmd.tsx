@@ -44,12 +44,10 @@ function template(results) {
               <Text bold underline>
                 {result.metaData.name}
               </Text>
-              <Newline/>
+              <Newline />
             </Box>
-            <Box>
-              {result.renderedData}
-            </Box>
-            <Newline/>
+            <Box>{result.renderedData}</Box>
+            <Newline />
           </Box>
         );
       })}

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import path from 'path';
 
 import { Consumer } from '../..';
@@ -129,14 +129,15 @@ export async function merge({
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
-  const componentsResults = await pMapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
+  const componentsResults = await mapSeries(succeededComponents, ({ componentFromFS, id, mergeResults }) => {
     return applyVersion({
       consumer,
       componentFromFS,
       id,
       mergeResults,
       mergeStrategy,
-      remoteHead: new Ref(id.version),
+      remoteHead: new Ref(id.version as string),
+      // @ts-ignore
       remoteName: remoteName || componentFromFS.scope,
       laneId,
       localLane,
@@ -256,9 +257,9 @@ export async function applyVersion({
   localLane,
 }: {
   consumer: Consumer;
-  componentFromFS: Component | null;
+  componentFromFS: Component | null | undefined;
   id: BitId;
-  mergeResults: MergeResultsThreeWay | null;
+  mergeResults: MergeResultsThreeWay | null | undefined;
   mergeStrategy: MergeStrategy;
   remoteHead: Ref;
   remoteName: string | null;

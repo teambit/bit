@@ -1,6 +1,5 @@
-import Bluebird from 'bluebird';
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -355,7 +354,7 @@ export default class Consumer {
       versionDependenciesArr,
       this.scope.objects
     );
-    const componentWithDependencies = await pMapSeries(versionDependenciesArr, (versionDependencies) =>
+    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
       versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
     );
     componentWithDependencies.forEach((componentWithDeps) => {
@@ -719,7 +718,7 @@ export default class Consumer {
     // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
     // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
     // trying to get the dependencies of comp1 using its package.json.
-    return Bluebird.mapSeries(components, updateVersions);
+    return mapSeries(components, updateVersions);
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
