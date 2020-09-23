@@ -15,6 +15,7 @@
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
+        "ansi-to-html": "^0.6.14",
         "@graphql-modules/core": "^0.7.17",
         "@jest/test-result": "26.3.0",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
@@ -206,7 +207,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.15",
+        "bit-bin": "14.8.9-dev.22",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1",
         "@babel/runtime": "^7.11.2"
@@ -237,7 +238,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.15",
+            "bit-bin": "14.8.9-dev.22",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -270,7 +271,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.15",
+            "bit-bin": "14.8.9-dev.22",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

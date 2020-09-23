@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Text } from 'ink';
+import { Box, Text, Newline } from 'ink';
 import React from 'react';
 
 import { InsightResult } from './insight';
@@ -36,20 +36,21 @@ export default class InsightsCmd implements Command {
 
 function template(results) {
   return (
-    <div key="help">
+    <Box key="help">
       {results.map(function (result) {
         return (
-          <div key={result.metaData.name}>
-            <div>
-              <Text>{'\n'}</Text>
+          <Box key={result.metaData.name}>
+            <Box>
               <Text bold underline>
                 {result.metaData.name}
               </Text>
-            </div>
-            <div>{result.renderedData}</div>
-          </div>
+              <Newline />
+            </Box>
+            <Box>{result.renderedData}</Box>
+            <Newline />
+          </Box>
         );
       })}
-    </div>
+    </Box>
   );
 }

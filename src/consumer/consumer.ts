@@ -417,13 +417,12 @@ export default class Consumer {
       if (componentMap.originallySharedDir) {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
+      componentFromFileSystem.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { version } = await this.scope.sources.consumerComponentToVersion({
         consumer: this,
         consumerComponent: componentFromFileSystem,
       });
-
-      version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
@@ -552,13 +551,13 @@ export default class Consumer {
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
     taggedComponents.forEach((taggedComponent) => {
-      const pendingVersionLog = taggedComponent.pendingVersion.log;
-      if (!pendingVersionLog) throw new Error('updateNextVersionOnBitmap, unable to get endingVersion.log');
+      const log = taggedComponent.log;
+      if (!log) throw new Error('updateNextVersionOnBitmap, unable to get log');
       const nextVersion = {
         version: exactVersion || releaseType,
-        message: pendingVersionLog.message,
-        username: pendingVersionLog.username,
-        email: pendingVersionLog.email,
+        message: log.message,
+        username: log.username,
+        email: log.email,
       };
       if (!taggedComponent.componentMap) throw new Error('updateNextVersionOnBitmap componentMap is missing');
       taggedComponent.componentMap.updateNextVersion(nextVersion);

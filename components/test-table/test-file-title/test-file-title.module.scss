@@ -1,0 +1,46 @@
+.testFileTitle {
+  padding-left: 24px;
+  border-left-width: 4px;
+  border-left-style: solid;
+  padding-bottom: 30px;
+}
+
+.testFile {
+  font-size: var(--p-xl);
+  padding: 12px 0;
+}
+
+.iconLine {
+  display: flex;
+  align-items: center;
+  // todo - remove > span
+  .testIcon {
+    &.pass {
+      > span {
+        color: #4bba7b;
+      }
+    }
+    &.fail {
+      > span {
+        color: #e9436c;
+      }
+    }
+    &.pending {
+      > span {
+        color: #0984e3;
+      }
+    }
+  }
+}
+
+.testIcon {
+  display: flex;
+  align-items: center;
+  margin-right: 16px;
+  font-size: var(--p-xs);
+  .icon {
+    margin-right: 8px;
+    font-size: var(--p-xxs);
+    color: #878c9a;
+  }
+}
