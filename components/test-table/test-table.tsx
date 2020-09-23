@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import prettyTime from 'pretty-time';
+import humanizeDuration from 'humanize-duration';
 
 import { TestRow } from '@teambit/staged-components.test-row';
 import React from 'react';
@@ -21,7 +21,7 @@ export function TestTable({ testResults }: TestTableProps) {
         const borderColor = testFile.failed > 0 ? '#e62e5c' : '#37b26c';
         return (
           <div key={index} className={styles.testTable}>
-            <TestFileTitle style={{ borderColor: borderColor }} testFile={testFile} />
+            <TestFileTitle style={{ borderColor }} testFile={testFile} />
             {testFile.tests.map((test) => {
               return <TestLine key={test.name} test={test} />;
             })}
@@ -33,8 +33,8 @@ export function TestTable({ testResults }: TestTableProps) {
 }
 
 function TestLine({ test }: { test: TestResult }) {
-  const durationInNanoSec = test.duration && +test.duration * 1000000;
-  const duration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
+  const duration = test.duration ? humanizeDuration(+test.duration, { units: ['m', 's', 'ms'] }) : '-';
+  // const duration = test.duration ? humanizeDuration(+test.duration) : '-';
 
   return (
     <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
