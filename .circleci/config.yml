@@ -505,7 +505,7 @@ jobs:
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
-      - run: 'cd bit && mkdir junit'
+      - run: 'mkdir ~/junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       - run:
           name: 'Run e2e tests'
@@ -513,12 +513,12 @@ jobs:
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
-            MOCHA_FILE: junit/e2e-test-results.xml
+            MOCHA_FILE: ~/junit/test-results.xml
           when: always
       - store_test_results:
-          path: bit/junit
+          path: ~/junit
       - store_artifacts:
-          path: bit/junit
+          path: ~/junit
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
