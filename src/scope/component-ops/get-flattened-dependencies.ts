@@ -42,7 +42,8 @@ export class FlattenedDependenciesGetter {
         const graphWithId = allGraphs.find((g) => g.node(idStr));
         return graphWithId?.node(idStr);
       })
-      .filter((bitId: BitId) => bitId && bitId.hasScope());
+      .filter((bitId: BitId) => bitId && bitId.hasScope())
+      .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     await scopeComponentsImporter.importMany(BitIds.fromArray(bitIds));
   }
