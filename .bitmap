@@ -2976,14 +2976,9 @@
     "pubsub": {
         "files": [
             {
-                "relativePath": "bitBaseEvent copy.ts",
+                "relativePath": "bit-base-event.ts",
                 "test": false,
-                "name": "bitBaseEvent copy.ts"
-            },
-            {
-                "relativePath": "bitEvent.ts",
-                "test": false,
-                "name": "bitEvent.ts"
+                "name": "bit-base-event.ts"
             },
             {
                 "relativePath": "index.ts",
@@ -4908,11 +4903,6 @@
                 "relativePath": "events/index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "events/old_ui-server-started.ts",
-                "test": false,
-                "name": "old_ui-server-started.ts"
             },
             {
                 "relativePath": "events/ui-server-started-event.ts",

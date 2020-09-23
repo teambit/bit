@@ -73,17 +73,7 @@ export class ComponentServer {
     string,
     number
   ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {
-    return {
-      type: 'components-server-started',
-      version: '0.0.1',
-      timestamp: new Date().getTime().toString(),
-      body: {
-        componentsServer,
-        executionContext: context,
-        hostname,
-        port,
-      },
-    };
+    return new ComponentsServerStartedEvent(Date.now(), componentsServer, context, hostname, port);
   };
 
   /**

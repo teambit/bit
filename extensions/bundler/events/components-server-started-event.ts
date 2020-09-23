@@ -1,13 +1,22 @@
 import { BitBaseEvent } from '@teambit/pubsub';
 
-export type ComponentsServerStartedEvent = BitBaseEvent & {
-  readonly type: 'components-server-started';
-  readonly version: '0.0.1';
-  readonly timestamp: string;
-  readonly body: {
-    componentsServer;
-    executionContext;
-    hostname;
-    port;
-  };
-};
+class ComponentsServerStartedEventData {
+  constructor(readonly componentsServer, readonly executionContext, readonly hostname, readonly port) {}
+}
+
+export class ComponentsServerStartedEvent extends BitBaseEvent<ComponentsServerStartedEventData> {
+  constructor(
+    readonly timestamp,
+    readonly componentsServer,
+    readonly executionContext,
+    readonly hostname,
+    readonly port
+  ) {
+    super(
+      'ui-server-started',
+      '0.0.1',
+      timestamp,
+      new ComponentsServerStartedEventData(componentsServer, executionContext, hostname, port)
+    );
+  }
+}

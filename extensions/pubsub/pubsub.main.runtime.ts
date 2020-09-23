@@ -1,6 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 
-import { BitBaseEvent } from './bitBaseEvent';
+import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubMain {
@@ -15,7 +15,7 @@ export class PubsubMain {
     this.topicMap[topicUUID].push(callback);
   }
 
-  public pub(topicUUID, event: BitBaseEvent) {
+  public pub(topicUUID, event: BitBaseEvent<any>) {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   }
