@@ -13,7 +13,7 @@ export type TestTableProps = {
   testResults: TestsFiles[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function TestTable({ testResults, className }: TestTableProps) {
+export function TestTable({ testResults }: TestTableProps) {
   if (!testResults || testResults.length === 0) return null;
   return (
     <>
@@ -22,8 +22,8 @@ export function TestTable({ testResults, className }: TestTableProps) {
         return (
           <div key={index} className={styles.testTable}>
             <TestFileTitle style={{ borderColor: borderColor }} testFile={testFile} />
-            {testFile.tests.map((test, index) => {
-              return <TestLine key={index} test={test} />;
+            {testFile.tests.map((test) => {
+              return <TestLine key={test.name} test={test} />;
             })}
           </div>
         );
@@ -34,7 +34,7 @@ export function TestTable({ testResults, className }: TestTableProps) {
 
 function TestLine({ test }: { test: TestResult }) {
   const durationInNanoSec = test.duration && +test.duration * 1000000;
-  const duration = durationInNanoSec != undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
+  const duration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
 
   return (
     <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
@@ -44,7 +44,7 @@ function TestLine({ test }: { test: TestResult }) {
           {/* TODO - improve this */}
           <div className={classNames(styles.testBreadcrumbs, test.status !== 'failed' && styles.singleLine)}>
             {test.ancestor.map((a) => (
-              <span>{`${a} > `}</span>
+              <span key={a}>{`${a} > `}</span>
             ))}
             <div>{test.name}</div>
           </div>

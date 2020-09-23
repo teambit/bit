@@ -13,7 +13,7 @@ type TestFileTitleProps = {
 export function TestFileTitle({ testFile, className, ...rest }: TestFileTitleProps) {
   const { duration, failed, file, pass, pending } = testFile;
   const durationInNanoSec = duration && duration * 1000000;
-  const formattedDuration = durationInNanoSec != undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
+  const formattedDuration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
   return (
     <div {...rest} className={classNames(styles.testFileTitle, className)}>
       <div className={styles.testFile}>{file}</div>

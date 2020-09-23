@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import React, { useMemo } from 'react';
 import Convert from 'ansi-to-html';
 import styles from './cli-snippet.module.scss';
@@ -10,19 +9,19 @@ export type CliSnippetProps = {
 
 export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
   const convert = new Convert();
-  const res = useMemo(() => errorFormat(content), [content]);
+  const snippetContent = useMemo(() => errorFormat(content), [content]);
   return (
     <div {...rest} className={classNames(styles.log, className)}>
-      {res &&
-        res.map((r) => {
+      {snippetContent &&
+        snippetContent.map((line, index) => {
           return (
-            <ThemeContext>
+            <div key={index}>
               <pre>
                 <div className={styles.block}>
-                  <span className={styles.line} dangerouslySetInnerHTML={{ __html: convert.toHtml(r) }} />
+                  <span className={styles.line} dangerouslySetInnerHTML={{ __html: convert.toHtml(line) }} />
                 </div>
               </pre>
-            </ThemeContext>
+            </div>
           );
         })}
     </div>
