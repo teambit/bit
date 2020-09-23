@@ -5,12 +5,12 @@ import { GraphPage } from './ui/graph-page';
 
 export class GraphSection implements Section {
   route = {
-    path: '~graph',
+    path: '~Dependencies',
     children: <GraphPage />,
   };
   navigationLink = {
-    href: '~graph',
-    children: 'Graph',
+    href: '~Dependencies',
+    children: 'Dependencies',
   };
   order = 40;
 }
