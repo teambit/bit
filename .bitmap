@@ -5325,9 +5325,14 @@
                 "name": "eject-conf.cmd.tsx"
             },
             {
-                "relativePath": "events/on-component-change.ts",
+                "relativePath": "events/index.ts",
                 "test": false,
-                "name": "on-component-change.ts"
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "events/on-component-change-event.ts",
+                "test": false,
+                "name": "on-component-change-event.ts"
             },
             {
                 "relativePath": "exceptions/dependency-type-not-supported-in-policy.ts",

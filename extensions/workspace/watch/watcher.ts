@@ -8,7 +8,7 @@ import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 
-import { OnComponentChange } from '../events';
+import { OnComponentChangeEvent } from '../events';
 import { WorkspaceAspect } from '../';
 import Bluebird from 'bluebird';
 import chalk from 'chalk';
@@ -155,16 +155,7 @@ export class Watcher {
   }
 
   private creatOnComponentChangeEvent(idStr, hook) {
-    const event: OnComponentChange = {
-      type: 'on-component-change',
-      version: '0.0.1',
-      timestamp: Date.now().toString(),
-      body: {
-        idStr,
-        hook,
-      },
-    };
-    return event;
+    return new OnComponentChangeEvent(Date.now(), idStr, hook);
   }
 
   private completeWatch() {
