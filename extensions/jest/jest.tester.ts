@@ -34,22 +34,12 @@ export class JestTester implements Tester {
     testerContext: TesterContext,
     config?: any
   ) {
-    const tests = components.toArray().map(([component, testsFiles]) => {
+    const testsSuiteResult = components.toArray().map(([component, testsFiles]) => {
       if (!testsFiles) return;
       if (testsFiles?.length === 0) return;
-      const suiteErrors = testsFiles.reduce((errors: { failureMessage: string; file: string }[], test) => {
-        const file = this.getTestFile(test.testFilePath, testerContext);
-        if (test.testExecError)
-          errors.push({
-            failureMessage: test.testExecError.message,
-            file: file?.relative || test.testFilePath,
-          });
-        return errors;
-      }, []);
-
       const tests = testsFiles.map((test) => {
         const file = this.getTestFile(test.testFilePath, testerContext);
-        const tests = test.testResults.map((testResult) => {
+        const testResults = test.testResults.map((testResult) => {
           const error = formatResultsErrors([testResult], config, { noStackTrace: false });
           return new TestResult(
             testResult.ancestorTitles,
@@ -63,7 +53,7 @@ export class JestTester implements Tester {
         const error = { failureMessage: test.failureMessage, error: test.testExecError?.message };
         return new TestsFiles(
           filePath,
-          tests,
+          testResults,
           test.numPassingTests,
           test.numFailingTests,
           test.numPendingTests,
@@ -79,7 +69,7 @@ export class JestTester implements Tester {
       };
     });
 
-    return compact(tests) as { componentId: ComponentID; results: TestsResult }[];
+    return compact(testsSuiteResult) as { componentId: ComponentID; results: TestsResult }[];
   }
 
   private getErrors(testResult: JestTestResult[]) {

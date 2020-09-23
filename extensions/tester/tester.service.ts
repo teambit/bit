@@ -25,7 +25,7 @@ export class TesterService implements EnvService<Tests> {
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
     const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
     const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
-      if (specs.length > 0) acc++;
+      if (specs.length > 0) acc = acc + 1;
       return acc;
     }, 0);
     if (testCount === 0) throw new NoTestFilesFound(this.testsRegex);
