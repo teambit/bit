@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import humanizeDuration from 'humanize-duration';
+import prettyTime from 'pretty-time';
 
 import { TestRow } from '@teambit/staged-components.test-row';
 import React from 'react';
@@ -33,8 +33,8 @@ export function TestTable({ testResults }: TestTableProps) {
 }
 
 function TestLine({ test }: { test: TestResult }) {
-  const duration = test.duration ? humanizeDuration(+test.duration, { units: ['m', 's', 'ms'] }) : '-';
-  // const duration = test.duration ? humanizeDuration(+test.duration) : '-';
+  const durationInNanoSec = test.duration && +test.duration * 1000000;
+  const duration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
 
   return (
     <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
