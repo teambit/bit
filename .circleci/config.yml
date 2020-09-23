@@ -983,8 +983,8 @@ workflows:
 
   nightly:
     triggers:
-      - schedule:
-          cron: '0 0 * * *'
+      - schedule: # every day at 6AM UTC (= 1AM EST)
+          cron: '0 6 * * *'
           filters:
             branches:
               only:
