@@ -82,7 +82,7 @@ export class StartCmd implements Command {
   };
 
   private onComponentChange = (event) => {
-    const { hook, idStr } = event.body;
+    const { hook, idStr } = event.data;
     this.onComponentChangeEvents.push({
       hook,
       idStr,
@@ -106,8 +106,8 @@ export class StartCmd implements Command {
   };
 
   private onUiServerStarted = (event) => {
-    this.targetHost = event.body.targetHost;
-    this.targetPort = event.body.targetPort;
+    this.targetHost = event.data.targetHost;
+    this.targetPort = event.data.targetPort;
   };
 
   private onWebpackCompilationDone = (event) => {
@@ -118,9 +118,9 @@ export class StartCmd implements Command {
   private onComponentsServerStarted(event) {
     this.devServerCounter += 1;
     this.items.push({
-      envName: event.body.executionContext.envRuntime.id,
-      host: event.body.hostname,
-      port: event.body.port,
+      envName: event.data.executionContext.envRuntime.id,
+      host: event.data.hostname,
+      port: event.data.port,
       timestamp: this.getDuration(),
     });
     render(
