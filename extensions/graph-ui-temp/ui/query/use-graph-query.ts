@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useDataQuery } from '@teambit/ui';
+import { GraphQlError } from '@teambit/graphql';
 import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
 import { GraphModel } from './graph-model';
 
-// TODO - fill int
-/** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
+/** provides dependencies graph data from graphQL */
 export function useGraphQuery(componentId: string[]) {
   const { data, error, loading } = useDataQuery<RawGraphQuery>(GET_GRAPH, {
     variables: { ids: componentId },
@@ -15,14 +15,7 @@ export function useGraphQuery(componentId: string[]) {
   return useMemo(() => {
     return {
       graph: rawGraph ? GraphModel.from(rawGraph) : undefined,
-      error: error ? new GraphError(500, error.message) : !rawGraph && !loading ? new GraphError(404) : undefined,
+      error: error ? new GraphQlError(500, error.message) : !rawGraph && !loading ? new GraphQlError(404) : undefined,
     };
   }, [rawGraph, error]);
-}
-
-// TODO
-class GraphError {
-  constructor(...bla: any) {
-    throw new Error('not implemented exception');
-  }
 }

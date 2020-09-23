@@ -2,6 +2,8 @@ import React from 'react';
 import ReactFlow, { Node, Controls, Background, MiniMap } from 'react-flow-renderer';
 import { useRouteMatch } from 'react-router-dom';
 
+import { NotFoundPage } from '@teambit/pages.not-found';
+import { ServerErrorPage } from '@teambit/pages.server-error';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 
 import { ComponentNode } from '../component-node';
@@ -26,11 +28,14 @@ export function GraphPage() {
   const {
     params: { componentId },
   } = useRouteMatch();
-  const { graph } = useGraphQuery([componentId]);
+  const { graph, error } = useGraphQuery([componentId]);
 
   const elements = calcElements(graph, { rootNode: componentId });
 
-  // TODO!
+  if (error) {
+    // TODO - unify
+    return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
+  }
   if (!graph) return <FullLoader />;
 
   return (
