@@ -1006,8 +1006,8 @@ export class Workspace implements ComponentFactory {
 
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
