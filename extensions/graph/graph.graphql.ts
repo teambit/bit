@@ -40,20 +40,20 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
           return Array.from(graph.nodes).map(([nodeId, component]) => {
             return {
               id: nodeId,
-              component
-            }
-          })
+              component,
+            };
+          });
         },
         edges: (graph: ComponentGraph) => {
           // TODO: this is a hack since I don't have a proper way to get the edge with the source and target id from cleargraph
           // it should be change once cleargraph provide this
           const graphJson = graph.toJson();
-          return graphJson.edges.map(edge => {
+          return graphJson.edges.map((edge) => {
             return {
               sourceId: edge.sourceId,
               targetId: edge.targetId,
-              dependencyLifecycleType: getDependencyLifecycleType(edge.edge)
-            }
+              dependencyLifecycleType: getDependencyLifecycleType(edge.edge),
+            };
           });
         },
       },

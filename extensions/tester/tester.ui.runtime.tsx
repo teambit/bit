@@ -1,29 +1,25 @@
 import { UIRuntime } from '@teambit/ui';
-import type { WorkspaceUI } from '@teambit/workspace';
-import { WorkspaceAspect } from '@teambit/workspace';
+import { ComponentAspect, ComponentUI } from '@teambit/component';
+import { TestsSection } from './tests.section';
 
 import { TesterAspect } from './tester.aspect';
 
 export class TesterUI {
-  static dependencies = [WorkspaceAspect];
+  static dependencies = [ComponentAspect];
 
   static runtime = UIRuntime;
 
   stageKey?: string;
 
-  constructor(private workspace: WorkspaceUI) {}
+  constructor(private component: ComponentUI) {}
 
-  static async provider([workspace]: [WorkspaceUI]) {
-    const testerUi = new TesterUI(workspace);
+  static async provider([component]: [ComponentUI]) {
+    const testerUi = new TesterUI(component);
 
-    // workspace.registerMenuItem({
-    //   label: <TopBarNav to="~tests">Tests</TopBarNav>
-    // });
+    const section = new TestsSection();
 
-    // workspace.registerPage({
-    //   path: '~tests',
-    //   children: <TestsPage />
-    // });
+    component.registerRoute(section.route);
+    component.registerNavigation(section.navigationLink, section.order);
 
     return testerUi;
   }

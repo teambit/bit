@@ -1,0 +1,15 @@
+.log {
+  overflow: hidden;
+  background: #282c34;
+  padding: 16px;
+  border-radius: 6px;
+}
+
+.block {
+  font-size: 12px;
+  font-family: roboto mono;
+  .line {
+    line-height: 1.5;
+    color: white;
+  }
+}
