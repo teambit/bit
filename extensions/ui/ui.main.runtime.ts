@@ -17,7 +17,7 @@ import getPort from 'get-port';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
-import type { UiServerStartedEvent } from './events';
+import { UiServerStartedEvent } from './events';
 
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
@@ -187,15 +187,7 @@ export class UiMain {
    * Events
    */
   private createUiServerStartedEvent: (string, number) => UiServerStartedEvent = (targetHost, targetPort) => {
-    return {
-      type: 'ui-server-started',
-      version: '0.0.1',
-      timestamp: new Date().getTime().toString(),
-      body: {
-        targetHost,
-        targetPort,
-      },
-    };
+    return new UiServerStartedEvent(Date.now(), targetHost, targetPort);
   };
 
   /**

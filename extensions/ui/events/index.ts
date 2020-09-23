@@ -1,1 +1,1 @@
-export * from './ui-server-started';
+export * from './ui-server-started-event';

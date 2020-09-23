@@ -1,6 +1,6 @@
 import { PubsubAspect } from './pubsub.aspect';
 
 export type { PubsubMain } from './pubsub.main.runtime';
-export type { BitBaseEvent } from './bitBaseEvent';
+export { BitBaseEvent } from './bit-base-event';
 export { PubsubAspect };
 export default PubsubAspect;
