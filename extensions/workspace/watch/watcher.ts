@@ -1,10 +1,15 @@
+import { PubsubMain } from '@teambit/pubsub';
 import { ComponentID } from '@teambit/component';
+
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+
+import { OnComponentChange } from '../events';
+import { WorkspaceAspect } from '../';
 import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
@@ -20,6 +25,7 @@ export class Watcher {
   private fsWatcher: FSWatcher;
   constructor(
     private workspace: Workspace,
+    private pubsub: PubsubMain,
     private trackDirs: { [dir: string]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
@@ -129,9 +135,8 @@ export class Watcher {
     }
     const idStr = componentId.toString();
     const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
-    logger.console(``);
-    logger.console(`Running ${hook} hook for ${chalk.bold(idStr)}`);
-    logger.console(`Building workspace UI according to the configuration found in ./workspace.jsonc...`);
+
+    this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentChangeEvent(idStr, hook));
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
@@ -147,6 +152,19 @@ export class Watcher {
     }
     logger.console(`${idStr} doesn't have a compiler, nothing to build`);
     return [];
+  }
+
+  private creatOnComponentChangeEvent(idStr, hook) {
+    const event: OnComponentChange = {
+      type: 'on-component-change',
+      version: '0.0.1',
+      timestamp: Date.now().toString(),
+      body: {
+        idStr,
+        hook,
+      },
+    };
+    return event;
   }
 
   private completeWatch() {

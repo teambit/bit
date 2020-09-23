@@ -1,3 +1,6 @@
+/**
+ * TODO[uri] - refactor to full blown React app (with state).
+ */
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
@@ -10,6 +13,7 @@ import prettyTime from 'pretty-time';
 
 import type { UiMain } from './ui.main.runtime';
 import {
+  OnComponentChange,
   StartingMainUiServer,
   StandaloneNewLine,
   Starting,
@@ -19,9 +23,11 @@ import {
   ComponentPreviewServerStartedHeaders,
   UIServersAreReady,
 } from './bit-start-cmd-output-templates';
+import moment from 'moment';
 
 export class StartCmd implements Command {
   items: any[] = [];
+  onComponentChangeEvents: any[] = [];
 
   startingtimestamp;
   devServerCounter = 0;
@@ -52,6 +58,7 @@ export class StartCmd implements Command {
     pubsub.sub('teambit.bit/ui', this.eventsListeners);
     pubsub.sub('teambit.bit/webpack', this.eventsListeners);
     pubsub.sub('teambit.bit/bundler', this.eventsListeners);
+    pubsub.sub('teambit.bit/workspace', this.eventsListeners);
   }
 
   private eventsListeners = (event) => {
@@ -67,8 +74,35 @@ export class StartCmd implements Command {
       case 'ui-server-started':
         this.onUiServerStarted(event);
         break;
+      case 'on-component-change':
+        this.onComponentChange(event);
+        break;
       default:
     }
+  };
+
+  private onComponentChange = (event) => {
+    const { hook, idStr } = event.body;
+    this.onComponentChangeEvents.push({
+      hook,
+      idStr,
+      timestamp: moment().format('HH:MM:SS'),
+    });
+
+    render(
+      <>
+        <ComponentPreviewServerStarted items={this.items} />
+        <StandaloneNewLine />
+        <UIServersAreReady
+          host={this.targetHost}
+          port={this.targetPort}
+          timestamp={this.getDuration()}
+          workspace={WorkspaceAspect}
+        />
+        <StandaloneNewLine />
+        <OnComponentChange events={this.onComponentChangeEvents} />
+      </>
+    );
   };
 
   private onUiServerStarted = (event) => {
