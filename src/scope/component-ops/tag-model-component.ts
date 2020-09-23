@@ -20,7 +20,6 @@ import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { pathJoinLinux, sha1 } from '../../utils';
 import { PathLinux } from '../../utils/path';
-import { buildComponentsGraph } from '../graph/components-graph';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
