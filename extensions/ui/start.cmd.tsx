@@ -9,7 +9,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import { ComponentsServerStartedEvent } from '@teambit/bundler';
 import { UiServerStartedEvent } from '@teambit/ui';
 import { WebpackCompilationDoneEvent } from '@teambit/webpack';
-import { OnComponentChangeEvent } from '@teambit/workspace';
+import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '@teambit/workspace';
 
 import React from 'react';
 import open from 'open';
@@ -30,7 +30,7 @@ import moment from 'moment';
 
 export class StartCmd implements Command {
   items: any[] = [];
-  onComponentChangeEvents: any[] = [];
+  onComponentChanges: any[] = [];
 
   startingtimestamp;
   devServerCounter = 0;
@@ -81,13 +81,27 @@ export class StartCmd implements Command {
       case OnComponentChangeEvent.TYPE:
         this.onComponentChange(event);
         break;
+      case OnComponentAddEvent.TYPE:
+        this.OnComponentAdd(event);
+        break;
+      case OnComponentRemovedEvent.TYPE:
+        this.OnComponentRemoved(event);
+        break;
       default:
     }
   };
 
+  private OnComponentRemoved = (event) => {
+    this.onComponentChange(event);
+  };
+
+  private OnComponentAdd = (event) => {
+    this.onComponentChange(event);
+  };
+
   private onComponentChange = (event) => {
     const { hook, idStr } = event.data;
-    this.onComponentChangeEvents.push({
+    this.onComponentChanges.push({
       hook,
       idStr,
       timestamp: moment().format('HH:MM:SS'),
@@ -104,7 +118,7 @@ export class StartCmd implements Command {
           workspace={WorkspaceAspect}
         />
         <StandaloneNewLine />
-        <OnComponentChange events={this.onComponentChangeEvents} />
+        <OnComponentChange events={this.onComponentChanges} />
       </>
     );
   };

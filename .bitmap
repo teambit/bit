@@ -5300,9 +5300,19 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "events/on-component-add-event.ts",
+                "test": false,
+                "name": "on-component-add-event.ts"
+            },
+            {
                 "relativePath": "events/on-component-change-event.ts",
                 "test": false,
                 "name": "on-component-change-event.ts"
+            },
+            {
+                "relativePath": "events/on-component-removed-event.ts",
+                "test": false,
+                "name": "on-component-removed-event.ts"
             },
             {
                 "relativePath": "exceptions/dependency-type-not-supported-in-policy.ts",

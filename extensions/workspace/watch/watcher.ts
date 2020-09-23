@@ -8,7 +8,7 @@ import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 
-import { OnComponentChangeEvent } from '../events';
+import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { WorkspaceAspect } from '../';
 import Bluebird from 'bluebird';
 import chalk from 'chalk';
@@ -86,7 +86,7 @@ export class Watcher {
     }
     const componentId = await this.getBitIdByPathAndReloadConsumer(filePath);
     if (!componentId) {
-      logger.console(`file ${filePath} is not part of any component, ignoring it`);
+      logger.debug(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch();
     }
 
@@ -120,7 +120,8 @@ export class Watcher {
   }
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {
-    logger.console(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
+    logger.debug(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
+    this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentRemovedEvent(componentId.toString()));
     await this.workspace.triggerOnComponentRemove(componentId);
   }
 
@@ -134,9 +135,15 @@ export class Watcher {
       return [];
     }
     const idStr = componentId.toString();
-    const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
 
-    this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentChangeEvent(idStr, hook));
+    if (isChange) {
+      logger.debug(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
+      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentChangeEvent(idStr, 'OnComponentChange'));
+    } else {
+      logger.debug(`running OnComponentAdd hook for ${chalk.bold(idStr)}`);
+      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
+    }
+
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
@@ -150,12 +157,20 @@ export class Watcher {
     if (buildResults && buildResults.length) {
       return buildResults;
     }
-    logger.console(`${idStr} doesn't have a compiler, nothing to build`);
+    logger.debug(`${idStr} doesn't have a compiler, nothing to build`);
     return [];
+  }
+
+  private creatOnComponentRemovedEvent(idStr) {
+    return new OnComponentRemovedEvent(Date.now(), idStr);
   }
 
   private creatOnComponentChangeEvent(idStr, hook) {
     return new OnComponentChangeEvent(Date.now(), idStr, hook);
+  }
+
+  private creatOnComponentAddEvent(idStr, hook) {
+    return new OnComponentAddEvent(Date.now(), idStr, hook);
   }
 
   private completeWatch() {
@@ -166,7 +181,7 @@ export class Watcher {
   private isComponentWatchedExternally(componentId: ComponentID) {
     const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
     if (watcherData) {
-      logger.console(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
+      logger.debug(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
     }
     return false;
