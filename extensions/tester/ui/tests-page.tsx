@@ -46,7 +46,7 @@ export function TestsPage({ className }: TestsPageProps) {
   if (!data) return null;
 
   // TODO: create TestsResultList from data
-  //const testResults = TestsResultList.from(data?.getHost?.getTests.tests);
+  // const testResults = TestsResultList.from(data?.getHost?.getTests.tests);
   const testResults = data?.getHost?.getTests?.testFiles;
 
   if (data?.getHost?.getTests === null) {
