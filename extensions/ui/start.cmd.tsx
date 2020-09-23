@@ -104,7 +104,7 @@ export class StartCmd implements Command {
     this.onComponentChanges.push({
       hook,
       idStr,
-      timestamp: moment().format('HH:MM:SS'),
+      timestamp: moment().format('HH:mm:ss'),
     });
 
     render(

@@ -9,6 +9,6 @@ export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
       Main UI server is running on http://{host}:{port} <Text color="yellow">{timestamp}</Text>
     </Text>
     <Newline />
-    <Text color="yellow">Waiting for component changes... ({moment().format('HH:MM:SS')})</Text>
+    <Text color="yellow">Waiting for component changes... ({moment().format('HH:mm:ss')})</Text>
   </>
 );
