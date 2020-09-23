@@ -1,7 +1,7 @@
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
-import { TestResult as JestTestResult, AggregatedResult, SerializableError } from '@jest/test-result';
+import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
