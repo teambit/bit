@@ -62,7 +62,8 @@ export class JestTester implements Tester {
           error
         );
       });
-
+      // TODO @guy - fix this eslint error
+      // eslint-disable-next-line
       return {
         componentId: component.id,
         results: new TestsResult(tests, aggregatedResult.success, aggregatedResult.startTime),
