@@ -1,8 +1,9 @@
 import { BitBaseEvent } from '@teambit/pubsub';
 
-export type webpackCompilationDoneEvent = BitBaseEvent & {
-  readonly type: 'webpack-compilation-done';
-  readonly version: '0.0.1';
-  readonly timestamp: string;
-  readonly body: {};
-};
+class WebpackCompilationDoneEventData {}
+
+export class WebpackCompilationDoneEvent extends BitBaseEvent<WebpackCompilationDoneEventData> {
+  constructor(readonly timestamp) {
+    super('webpack-compilation-done', '0.0.1', timestamp, new WebpackCompilationDoneEventData());
+  }
+}

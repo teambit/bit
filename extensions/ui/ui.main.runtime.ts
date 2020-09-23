@@ -186,7 +186,7 @@ export class UiMain {
   /**
    * Events
    */
-  private createUiServerStartedEvent: (string, number) => UiServerStartedEvent = (targetHost, targetPort) => {
+  private createUiServerStartedEvent = (targetHost, targetPort) => {
     return new UiServerStartedEvent(Date.now(), targetHost, targetPort);
   };
 
