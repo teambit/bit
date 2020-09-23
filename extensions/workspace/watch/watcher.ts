@@ -58,13 +58,13 @@ export class Watcher {
       });
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onAdd(filePath, buildResults, _verbose, duration);
       });

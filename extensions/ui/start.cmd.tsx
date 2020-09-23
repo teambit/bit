@@ -57,11 +57,13 @@ export class StartCmd implements Command {
     private logger: Logger,
 
     private pubsub: PubsubMain
-  ) {
-    pubsub.sub('teambit.bit/ui', this.eventsListeners);
-    pubsub.sub('teambit.bit/webpack', this.eventsListeners);
-    pubsub.sub('teambit.bit/bundler', this.eventsListeners);
-    pubsub.sub('teambit.bit/workspace', this.eventsListeners);
+  ) {}
+
+  private registerToEvents() {
+    this.pubsub.sub('teambit.bit/ui', this.eventsListeners);
+    this.pubsub.sub('teambit.bit/webpack', this.eventsListeners);
+    this.pubsub.sub('teambit.bit/bundler', this.eventsListeners);
+    this.pubsub.sub('teambit.bit/workspace', this.eventsListeners);
   }
 
   private eventsListeners = (event) => {
@@ -179,6 +181,9 @@ export class StartCmd implements Command {
     { dev, port, rebuild, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean }
   ): Promise<React.ReactElement> {
     this.startingtimestamp = Date.now();
+
+    // TODO[uri]: move outside when refactor to react app.
+    this.registerToEvents();
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
     const uiServer = await this.ui.createRuntime({
