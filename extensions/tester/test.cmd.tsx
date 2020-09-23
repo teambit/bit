@@ -20,12 +20,13 @@ export class TestCmd implements Command {
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
+    ['e', 'env <id>', 'test only the given env'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
-  async render([userPattern]: [string], { watch, debug }: Flags) {
+  async render([userPattern]: [string], { watch, debug, env }: Flags) {
     this.logger.off();
     const timer = Timer.create();
     timer.start();
@@ -39,12 +40,17 @@ export class TestCmd implements Command {
     await this.tester.test(components, {
       watch: Boolean(watch),
       debug: Boolean(debug),
+      env: env as string | undefined,
     });
     const { seconds } = timer.stop();
 
     return (
       <Box>
-        tested <Text color="cyan">{components.length}</Text> components in <Text color="cyan">{seconds}</Text> seconds.
+        <Text>tested </Text>
+        <Text color="cyan">{components.length} </Text>
+        <Text>components in </Text>
+        <Text color="cyan">{seconds} </Text>
+        <Text>seconds.</Text>
       </Box>
     );
   }

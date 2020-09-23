@@ -43,4 +43,6 @@ export class TesterService implements EnvService<Tests> {
 
     return tester.test(testerContext);
   }
+
+  watch() {}
 }

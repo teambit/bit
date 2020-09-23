@@ -1,3 +1,4 @@
+import { dirname } from 'path';
 import { ComponentID } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
@@ -163,7 +164,7 @@ export class Watcher {
 
   private async getBitIdByPathAndReloadConsumer(filePath: string): Promise<ComponentID | null> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
-    const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
+    const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
     if (!trackDir) {
       // the file is not part of any component. If it was a new component, then, .bitmap changes
       // should have added the path to the trackDir.
@@ -180,6 +181,13 @@ export class Watcher {
     }
     // the file is inside the component dir but it's ignored. (e.g. it's in IGNORE_LIST)
     return null;
+  }
+
+  private findTrackDirByFilePathRecursively(filePath: string): string | null {
+    if (this.trackDirs[filePath]) return filePath;
+    const parentDir = dirname(filePath);
+    if (parentDir === filePath) return null;
+    return this.findTrackDirByFilePathRecursively(parentDir);
   }
 
   private async createWatcher() {

@@ -1,8 +1,6 @@
 import R from 'ramda';
-
-import * as globalConfig from '../../api/consumer/lib/global-config';
 import { BitId, BitIds } from '../../bit-id';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -12,7 +10,7 @@ import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../utils/path';
-import { isHash, isTag } from '../../version/version-parser';
+import { isHash } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
@@ -221,14 +219,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async consumerComponentToVersion({
     consumerComponent,
     consumer,
-    message,
     flattenedDependencies,
     flattenedDevDependencies,
     specsResults,
   }: {
     readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
-    message?: string;
     flattenedDependencies?: Record<string, any>;
     flattenedDevDependencies?: Record<string, any>;
     force?: boolean;
@@ -274,13 +270,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
-    const nextVersion = consumerComponent.componentMap?.nextVersion;
-
-    const username = nextVersion?.username || (await globalConfig.get(CFG_USER_NAME_KEY));
-    const email = nextVersion?.email || (await globalConfig.get(CFG_USER_EMAIL_KEY));
-
-    if (nextVersion?.message) message = nextVersion.message;
-
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
       // ignoreVersion because when persisting the tag is higher than currently exist in .bitmap
@@ -316,10 +305,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedDevDependencies,
       specsResults,
       extensions,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      message,
-      username,
-      email,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
@@ -344,7 +329,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer,
     flattenedDependencies,
     flattenedDevDependencies,
-    message,
     lane,
     specsResults,
     resolveUnmerged = false,
@@ -353,7 +337,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer: Consumer;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    message: string;
     lane: Lane | null;
     specsResults?: any;
     resolveUnmerged?: boolean;
@@ -372,7 +355,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const { version, files, dists, compilerFiles, testerFiles, artifacts } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
-      message,
       flattenedDependencies,
       flattenedDevDependencies,
       specsResults,
@@ -397,34 +379,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.file));
 
     return component;
-  }
-
-  async putAdditionalVersion(
-    component: ModelComponent,
-    version: Version,
-    message: string,
-    versionToAdd: string,
-    currentLane: Lane | null
-  ): Promise<ModelComponent> {
-    const [username, email] = await Promise.all([
-      globalConfig.get(CFG_USER_NAME_KEY),
-      globalConfig.get(CFG_USER_EMAIL_KEY),
-    ]);
-    version.log = {
-      message,
-      username,
-      email,
-      date: Date.now().toString(),
-    };
-    if (isTag(versionToAdd)) {
-      version.setNewHash();
-    } else {
-      version._hash = versionToAdd;
-    }
-
-    component.addVersion(version, versionToAdd, currentLane, this.objects());
-
-    return this.put({ component, objects: [version] });
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {

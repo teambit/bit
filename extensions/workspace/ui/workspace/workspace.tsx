@@ -14,17 +14,19 @@ import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
 import { WorkspaceProvider } from './workspace-provider';
 import styles from './workspace.module.scss';
+import WorkspaceUI from '../../workspace.ui.runtime';
 
 export type WorkspaceProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
   sidebar: JSX.Element;
+  workspaceUI: WorkspaceUI;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI }: WorkspaceProps) {
   const workspace = useWorkspace();
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
@@ -37,6 +39,8 @@ export function Workspace({ routeSlot, menuSlot, sidebar }: WorkspaceProps) {
       </div>
     );
   }
+
+  workspaceUI.setComponents(workspace.components);
 
   return (
     <WorkspaceProvider workspace={workspace}>

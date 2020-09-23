@@ -23,6 +23,7 @@ export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export type PreviewConfig = {
   bundlingStrategy: string;
+  disabled: boolean;
 };
 
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
@@ -155,6 +156,7 @@ export class PreviewMain {
 
   static defaultConfig = {
     bundlingStrategy: 'env',
+    disabled: false,
   };
 
   static async provider(
@@ -171,7 +173,7 @@ export class PreviewMain {
       },
     ]);
 
-    builder.registerTask(new PreviewTask(bundler, preview));
+    if (!config.disabled) builder.registerTask(new PreviewTask(bundler, preview));
 
     return preview;
   }

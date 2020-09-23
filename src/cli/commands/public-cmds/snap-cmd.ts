@@ -91,7 +91,7 @@ export default class Snap implements LegacyCommand {
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
           );
           if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => a.component.toBitIdWithLatestVersion().toString());
+            const autoTagComp = autoTag.map((a) => a.component.id.toString());
             componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
           }
           return componentOutput;

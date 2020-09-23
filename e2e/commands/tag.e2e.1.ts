@@ -139,9 +139,9 @@ describe('bit tag command', function () {
         });
         expect(listOutput).to.deep.include({
           id: 'components/dependent',
-          localVersion: '0.0.2',
+          localVersion: '1.0.0',
           deprecated: false,
-          currentVersion: '0.0.2',
+          currentVersion: '1.0.0',
           remoteVersion: 'N/A',
         });
       });
@@ -1048,6 +1048,24 @@ describe('bit tag command', function () {
           expect(componentMap).to.have.property('nextVersion');
           expect(componentMap.nextVersion.version).to.equal('2.0.0');
           expect(componentMap.nextVersion.message).to.match(/bump dependencies versions|my custom message/);
+        });
+      });
+    });
+    describe('soft tag after soft tag', () => {
+      let tagOutput;
+      before(() => {
+        helper.command.softTag('-a -s 2.0.0');
+        tagOutput = helper.command.softTag('-a -s 3.0.0');
+      });
+      it('should show the output according to the new soft-tag', () => {
+        expect(tagOutput).to.have.string('3.0.0');
+        expect(tagOutput).to.not.have.string('2.0.0');
+      });
+      it('should save the version and the message into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap: any[] = Object.values(bitMap);
+        componentsMap.forEach((componentMap) => {
+          expect(componentMap.nextVersion.version).to.equal('3.0.0');
         });
       });
     });

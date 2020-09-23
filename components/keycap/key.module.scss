@@ -1,0 +1,46 @@
+.keyCombo {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+
+  .keycap {
+    margin-right: 4px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.keySequence {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+}
+
+.keycap {
+  display: inline-block;
+
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.thenSep {
+  font-size: 0.8em;
+  margin: 0 4px;
+}
+
+// // design similar to a physical key
+// .keycap {
+//   display: inline-block;
+//   min-width: 1em;
+//   line-height: 1;
+//   padding: 0.38em 0.38em;
+//   border-radius: 0.23em;
+//   text-align: center;
+//   vertical-align: middle;
+//   text-transform: uppercase;
+
+//   background: var(--bg-topping-highlight);
+//   box-shadow: var(--shadow-raised-low);
+// }
