@@ -11,7 +11,7 @@ export async function build(
   noCache: boolean,
   verbose: boolean,
   workspaceDir = process.cwd()
-): Promise<string[] | undefined> {
+): Promise<string[] | null | undefined> {
   const consumer = await loadConsumer(workspaceDir);
   const bitId = consumer.getParsedId(id);
   const component: Component = await consumer.loadComponent(bitId);
