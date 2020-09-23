@@ -29,6 +29,6 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
 }
 
 function errorFormat(content: string) {
-  if (!content) return;
+  if (!content) return null;
   return content.split('\n');
 }
