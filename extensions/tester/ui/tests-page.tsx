@@ -9,7 +9,6 @@ import React, { HTMLAttributes, useContext } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 
 import { TestTable } from '@teambit/staged-components.test-table';
-// import { TestErrors } from '@teambit/staged-components.test-errors';
 
 import styles from './tests-page.module.scss';
 
