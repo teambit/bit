@@ -1942,7 +1942,7 @@
         "exported": false,
         "lanes": []
     },
-        "graph-ui-temp": {
+    "graph-ui-temp": {
         "files": [
             {
                 "relativePath": "graph.aspect.ts",
@@ -1985,6 +1985,11 @@
                 "name": "calc-layout.tsx"
             },
             {
+                "relativePath": "ui/graph-page/graph-page.module.scss",
+                "test": false,
+                "name": "graph-page.module.scss"
+            },
+            {
                 "relativePath": "ui/graph-page/graph-page.tsx",
                 "test": false,
                 "name": "graph-page.tsx"
@@ -1993,11 +1998,6 @@
                 "relativePath": "ui/graph-page/index.ts",
                 "test": false,
                 "name": "index.ts"
-            },
-            {
-                "relativePath": "ui/graph-page/random-links.tsx",
-                "test": false,
-                "name": "random-links.tsx"
             },
             {
                 "relativePath": "ui/query/get-graph.query.ts",

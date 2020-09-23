@@ -1,19 +1,21 @@
-import React, { useContext, useMemo } from 'react';
-import ReactFlow, { Node, Edge, Controls } from 'react-flow-renderer';
-// import { WorkspaceContext } from '@teambit/workspace';
+import React, { useMemo } from 'react';
+import ReactFlow, { Node, Controls, Background } from 'react-flow-renderer';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 
 import { calcLayout } from './calc-layout';
-import { randomLinks } from './random-links';
 import { ComponentNode } from '../component-node';
 import { useGraph } from '../query';
+
+import styles from './graph-page.module.scss';
+
+const DEFAULT_POS = [80, 80] as [number, number];
 
 const NodeTypes = {
   default: function DefaultNode() {
     return <div>I am default node</div>;
   },
   ComponentNode: function CNW(props: any) {
-    return <ComponentNode component={props.data} />;
+    return <ComponentNode node={props.data} />;
   },
 };
 
@@ -49,14 +51,18 @@ export function GraphPage() {
 
   return (
     <ReactFlow
+      className={styles.graph}
       elements={elements}
-      draggable={false}
-      nodesDraggable={true}
-      nodesConnectable={false}
       nodeTypes={NodeTypes}
-      zoomOnDoubleClick={false}
+      draggable={false}
+      nodesDraggable={false}
       selectNodesOnDrag={false}
+      nodesConnectable={false}
+      zoomOnDoubleClick={false}
+      elementsSelectable={false}
+      defaultPosition={DEFAULT_POS}
     >
+      <Background />
       <Controls style={{ left: 'unset', right: 8 }} />
     </ReactFlow>
   );

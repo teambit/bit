@@ -1,25 +1,48 @@
 import React from 'react';
-import { ComponentModel } from '@teambit/component';
-import styles from './component-node.module.scss';
-// import { ComponentInGraph } from './data-short';
+import classnames from 'classnames';
+import { mutedText } from '@teambit/base-ui.text.muted-text';
 
-export function ComponentNode({ component }: { component: ComponentModel }) {
+import { NodeModel } from '../query/graph-model';
+
+import styles from './component-node.module.scss';
+import { ComponentID, ComponentModel } from '@teambit/component';
+
+export function ComponentNode({ node }: { node: NodeModel }) {
+  const { component } = node;
+  const { id } = component;
+
   return (
     <div className={styles.compNode}>
-      {/* <div className={styles.breadcrumbs}>
-        {component.id.legacyComponentId.scope}
-      </div> */}
-      <div>
-        <span className={styles.name}>{component.id.toString()}</span>
-        {/* <span className={styles.version}>
-          {component.id.legacyComponentId.version}
-        </span> */}
+      <Breadcrumbs componentId={id} className={mutedText} />
+      <div className={styles.nameLine}>
+        <span className={styles.name}>{id.name}</span>
+        {id.version && <span className={styles.version}>{id.version}</span>}
       </div>
       <div className={styles.buffs}>
-        {/* <img src={component.environment?.icon} alt="env" /> */}
-        {/* {component.deprecation?.isDeprecate && <span>!</span>} */}
-        {/* {component.status.isNew && <span>N</span>} */}
+        <EnvIcon component={component} />
       </div>
     </div>
   );
+}
+
+type BreadcrumbsProps = { componentId: ComponentID } & React.HTMLAttributes<HTMLDivElement>;
+
+function Breadcrumbs({ componentId, className, ...rest }: BreadcrumbsProps) {
+  const { scope, namespace } = componentId;
+  const showSep = !!scope && !!namespace;
+
+  return (
+    <div {...rest} className={classnames(styles.breadcrumbs, className)}>
+      {scope}
+      {showSep && '/'}
+      {namespace}
+    </div>
+  );
+}
+
+type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLDivElement>;
+function EnvIcon({ component, ...rest }: EnvIconProps) {
+  if (!component || !component.environment?.icon) return null;
+
+  return <img src={component.environment?.icon} alt={component.environment.id} {...rest} />;
 }

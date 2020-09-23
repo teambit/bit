@@ -13,6 +13,27 @@ export const GET_GRAPH = gql`
             version
             scope
           }
+          displayName
+
+          deprecation {
+            isDeprecate
+          }
+
+          status {
+            isNew
+            isInScope
+            isStaged
+            modifyInfo {
+              hasModifiedFiles
+              hasModifiedDependencies
+            }
+            isDeleted
+          }
+
+          env {
+            id
+            icon
+          }
         }
       }
       edges {
@@ -41,6 +62,37 @@ export type RawNode = {
       scope: string;
       version: string;
     };
+
+    displayName: string;
+
+    deprecation: {
+      isDeprecate: boolean;
+    };
+
+    status: {
+      isNew: boolean;
+      isInScope: boolean;
+      isStaged: boolean;
+      modifyInfo?: {
+        hasModifiedFiles: boolean;
+        hasModifiedDependencies: boolean;
+      };
+      isDeleted: boolean;
+    };
+
+    env: {
+      id: string;
+      icon: string;
+    };
+
+    // un-fetched values values:
+    // version: string;
+    // server: {
+    //   env: string;
+    //   url: string;
+    // };
+    // packageName: string;
+    // issuesCount: number;
   };
 };
 
