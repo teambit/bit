@@ -5,7 +5,9 @@ class OnComponentChangeEventData {
 }
 
 export class OnComponentChangeEvent extends BitBaseEvent<OnComponentChangeEventData> {
+  static readonly TYPE = 'on-component-change';
+
   constructor(readonly timestamp, readonly idStr, readonly hook) {
-    super('on-component-change', '0.0.1', timestamp, new OnComponentChangeEventData(idStr, hook));
+    super(OnComponentChangeEvent.TYPE, '0.0.1', timestamp, new OnComponentChangeEventData(idStr, hook));
   }
 }

@@ -5,7 +5,9 @@ class UiServerStartedEventData {
 }
 
 export class UiServerStartedEvent extends BitBaseEvent<UiServerStartedEventData> {
+  static readonly TYPE = 'ui-server-started';
+
   constructor(readonly timestamp, readonly targetHost, readonly targetPort) {
-    super('ui-server-started', '0.0.1', timestamp, new UiServerStartedEventData(targetHost, targetPort));
+    super(UiServerStartedEvent.TYPE, '0.0.1', timestamp, new UiServerStartedEventData(targetHost, targetPort));
   }
 }

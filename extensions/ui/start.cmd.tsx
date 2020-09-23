@@ -6,6 +6,11 @@ import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
 import { WorkspaceAspect } from '@teambit/workspace';
 
+import { ComponentsServerStartedEvent } from '@teambit/bundler';
+import { UiServerStartedEvent } from '@teambit/ui';
+import { WebpackCompilationDoneEvent } from '@teambit/webpack';
+import { OnComponentChangeEvent } from '@teambit/workspace';
+
 import React from 'react';
 import open from 'open';
 import { render } from 'ink';
@@ -63,18 +68,19 @@ export class StartCmd implements Command {
 
   private eventsListeners = (event) => {
     switch (event.type) {
-      case 'components-server-started':
+      case ComponentsServerStartedEvent.TYPE:
         // Do not remove thetimeout or the component might be removed by theClearConsole(!)
         setTimeout(() => this.onComponentsServerStarted(event), 300);
         break;
-      case 'webpack-compilation-done':
+      // case 'webpack-compilation-done':
+      case WebpackCompilationDoneEvent.TYPE:
         // Do not remove thetimeout or the component might be removed by theClearConsole(!)
         setTimeout(() => this.onWebpackCompilationDone(event), 0);
         break;
-      case 'ui-server-started':
+      case UiServerStartedEvent.TYPE:
         this.onUiServerStarted(event);
         break;
-      case 'on-component-change':
+      case OnComponentChangeEvent.TYPE:
         this.onComponentChange(event);
         break;
       default:

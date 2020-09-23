@@ -5,6 +5,8 @@ class ComponentsServerStartedEventData {
 }
 
 export class ComponentsServerStartedEvent extends BitBaseEvent<ComponentsServerStartedEventData> {
+  static readonly TYPE = 'components-server-started';
+
   constructor(
     readonly timestamp,
     readonly componentsServer,
@@ -13,7 +15,7 @@ export class ComponentsServerStartedEvent extends BitBaseEvent<ComponentsServerS
     readonly port
   ) {
     super(
-      'ui-server-started',
+      ComponentsServerStartedEvent.TYPE,
       '0.0.1',
       timestamp,
       new ComponentsServerStartedEventData(componentsServer, executionContext, hostname, port)
