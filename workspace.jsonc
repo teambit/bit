@@ -85,6 +85,7 @@
         "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
+        "@types/node-fetch": "2.5.7",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
         "apollo-client": "^2.6.10",
