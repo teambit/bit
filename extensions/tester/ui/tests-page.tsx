@@ -9,34 +9,9 @@ import React, { HTMLAttributes, useContext } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 
 import { TestTable } from '@teambit/staged-components.test-table';
-import { TestErrors } from '@teambit/staged-components.test-errors';
-import { AspectBox } from '@teambit/staged-components.aspect-box';
+// import { TestErrors } from '@teambit/staged-components.test-errors';
+
 import styles from './tests-page.module.scss';
-
-const aspects = [
-  {
-    name: 'teambit.react',
-    version: '15.12.4',
-    isCore: true,
-    icon: 'https://static.bit.dev/bit-logo.svg',
-    data: 'jashdkfjalsdf',
-    config: 'ajksdhflkjhalsdf',
-  },
-  {
-    name: 'teambit.react',
-    version: '15.12.4',
-    isCore: false,
-    icon: 'https://static.bit.dev/bit-logo.svg',
-    data: 'jashdkfjalsdf',
-    config: 'ajksdhflkjhalsdf',
-  },
-];
-
-{
-  /* {aspects.map((aspect, index) => (
-        <AspectBox {...aspect} key={index} />
-      ))} */
-}
 
 const GET_COMPONENT = gql`
   query($id: String!) {
@@ -87,9 +62,11 @@ export function TestsPage({ className }: TestsPageProps) {
 
   return (
     <div className={classNames(styles.testsPage, className)}>
-      <H1 className={styles.title}>Tests</H1>
-      <Separator className={styles.separator} />
-      <TestTable testResults={testResults} className={styles.testBlock} />
+      <div>
+        <H1 className={styles.title}>Tests</H1>
+        <Separator className={styles.separator} />
+        <TestTable testResults={testResults} className={styles.testBlock} />
+      </div>
     </div>
   );
 }

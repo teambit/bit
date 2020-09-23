@@ -26,6 +26,7 @@
   border-top-right-radius: 9px;
   border-bottom-right-radius: 9px;
   padding-right: 24px;
+  margin-bottom: 32px;
 }
 
 .testRow {
@@ -39,12 +40,16 @@
     border-left-color: #e62e5c;
     padding-bottom: 12px;
   }
+  &.pending {
+    border-left-color: #0984e3;
+  }
 }
 
 .testTitle {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .heading {
@@ -109,6 +114,16 @@
   > div {
     font-weight: bold;
     font-size: var(--p-xs);
+    > span {
+      margin-right: 5px;
+    }
+  }
+}
+.testBreadcrumbs {
+  &.singleLine {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 .duration {
@@ -128,4 +143,12 @@
 }
 .fail {
   color: #e62e5c;
+}
+.pendingIcon {
+  color: #0984e3;
+  font-size: 14px;
+}
+.skippedIcon {
+  color: #6c707c;
+  font-size: 14px;
 }

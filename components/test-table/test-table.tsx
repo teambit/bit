@@ -6,7 +6,7 @@ import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestsFiles, TestResult } from '@teambit/tester';
 import { TestFileTitle } from './test-file-title';
-import { getStatusIcon, getBorderColor } from './utils';
+import { getStatusIcon } from './utils';
 import styles from './test-table.module.scss';
 
 export type TestTableProps = {
@@ -18,9 +18,7 @@ export function TestTable({ testResults, className }: TestTableProps) {
   return (
     <>
       {testResults.map((testFile, index) => {
-        const { pass, failed, pending } = testFile;
-
-        const borderColor = getBorderColor(pass, failed, pending);
+        const borderColor = testFile.failed > 0 ? '#e62e5c' : '#37b26c';
         return (
           <div key={index} className={styles.testTable}>
             <TestFileTitle style={{ borderColor: borderColor }} testFile={testFile} />
@@ -43,7 +41,8 @@ function TestLine({ test }: { test: TestResult }) {
       <div className={styles.testTitle}>
         <div className={styles.test}>
           {getStatusIcon(test.status)}
-          <div>
+          {/* TODO - improve this */}
+          <div className={classNames(styles.testBreadcrumbs, test.status !== 'failed' && styles.singleLine)}>
             {test.ancestor.map((a) => (
               <span>{`${a} > `}</span>
             ))}
@@ -52,7 +51,7 @@ function TestLine({ test }: { test: TestResult }) {
         </div>
         <div className={styles.duration}>
           <span>{duration}</span>
-          <Icon of="changelog" />
+          <Icon of="clock" />
         </div>
       </div>
     </TestRow>

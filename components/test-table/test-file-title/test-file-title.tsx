@@ -18,11 +18,11 @@ export function TestFileTitle({ testFile, className, ...rest }: TestFileTitlePro
     <div {...rest} className={classNames(styles.testFileTitle, className)}>
       <div className={styles.testFile}>{file}</div>
       <div className={styles.iconLine}>
-        <TestIcon icon="changelog" value={formattedDuration} />
-        <TestIcon icon="floppy" value={pass + failed + pending} />
-        <TestIcon icon="billing-checkmark" value={pass} className={styles.pass} />
+        <TestIcon icon="clock" value={formattedDuration} />
+        <TestIcon icon="file" value={pass + failed + pending} />
         <TestIcon icon="error-circle" value={failed} className={styles.fail} />
-        <TestIcon icon="spinner" value={pending} className={styles.pending} />
+        <TestIcon icon="billing-checkmark" value={pass} className={styles.pass} />
+        <TestIcon icon="pending" value={pending} className={styles.pending} />
       </div>
     </div>
   );

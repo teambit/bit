@@ -1,10 +1,12 @@
 .testsPage {
   padding: 50px 40px 100px 40px;
-  max-width: 1440px;
-  margin: 0 auto;
   width: 100%;
   overflow-y: scroll;
   box-sizing: border-box;
+  > div {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
 
   @media screen and (max-width: 768px) {
     width: unset;

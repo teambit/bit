@@ -17,9 +17,11 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
         res.map((r) => {
           return (
             <ThemeContext>
-              <div className={styles.block}>
-                <span className={styles.line} dangerouslySetInnerHTML={{ __html: convert.toHtml(r) }} />
-              </div>
+              <pre>
+                <div className={styles.block}>
+                  <span className={styles.line} dangerouslySetInnerHTML={{ __html: convert.toHtml(r) }} />
+                </div>
+              </pre>
             </ThemeContext>
           );
         })}
@@ -29,6 +31,5 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
 
 function errorFormat(content: string) {
   if (!content) return;
-  const res = content.split('\n');
-  return res.map((r) => r.replace('[2m', '\xa0'));
+  return content.split('\n');
 }

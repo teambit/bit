@@ -10,12 +10,11 @@ export function getStatusIcon(status?: string) {
   if (status === 'failed') {
     return <Icon className={styles.fail} of={'error-circle'} />;
   }
-  return '';
-}
-
-export function getBorderColor(pass: number, failed: number, pending: number) {
-  if (failed > 0) return '#e62e5c';
-  if (pending > 0) return 'yellow';
-  if (pass > 0) return '#37b26c';
+  if (status === 'pending') {
+    return <Icon className={styles.pendingIcon} of={'pending'} />;
+  }
+  if (status === 'skipped') {
+    return <Icon className={styles.skippedIcon} of={'skipped'} />;
+  }
   return '';
 }
