@@ -158,7 +158,7 @@ export class Watcher {
     if (buildResults && buildResults.length) {
       return buildResults;
     }
-    logger.debug(`${idStr} doesn't have a compiler, nothing to build`);
+    logger.console(`${idStr} doesn't have a compiler, nothing to build`);
     return [];
   }
 
