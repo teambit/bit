@@ -1980,6 +1980,21 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/component-node/variants.module.scss",
+                "test": false,
+                "name": "variants.module.scss"
+            },
+            {
+                "relativePath": "ui/component-node/variants.ts",
+                "test": false,
+                "name": "variants.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/calc-elements.tsx",
+                "test": false,
+                "name": "calc-elements.tsx"
+            },
+            {
                 "relativePath": "ui/graph-page/calc-layout.tsx",
                 "test": false,
                 "name": "calc-layout.tsx"
@@ -1998,6 +2013,11 @@
                 "relativePath": "ui/graph-page/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/minimap.ts",
+                "test": false,
+                "name": "minimap.ts"
             },
             {
                 "relativePath": "ui/query/get-graph.query.ts",

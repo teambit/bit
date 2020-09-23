@@ -20,9 +20,9 @@ export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel;
         <span className={styles.name}>{id.name}</span>
         {id.version && <span className={styles.version}>{id.version}</span>}
       </div>
-      {/* <div className={styles.buffs}>
+      <div className={styles.buffs}>
         <EnvIcon component={component} />
-      </div> */}
+      </div>
     </div>
   );
 }
@@ -42,9 +42,10 @@ function Breadcrumbs({ componentId, className, ...rest }: BreadcrumbsProps) {
   );
 }
 
-// type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLDivElement>;
-// function EnvIcon({ component, ...rest }: EnvIconProps) {
-//   if (!component || !component.environment?.icon) return null;
+// TODO - unify with sidebar widgets
+type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLDivElement>;
+function EnvIcon({ component, ...rest }: EnvIconProps) {
+  if (!component || !component.environment?.icon) return null;
 
-//   return <img src={component.environment?.icon} alt={component.environment.id} {...rest} />;
-// }
+  return <img src={component.environment?.icon} alt={component.environment.id} {...rest} />;
+}
