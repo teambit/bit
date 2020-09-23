@@ -1,5 +1,5 @@
 import graphLib, { Graph } from 'graphlib';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
@@ -105,7 +105,7 @@ export async function exportMany({
     .map((item) => `scope "${item.scopeName}": ${item.ids.toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  const results = await pMapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
+  const results = await mapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
@@ -119,7 +119,7 @@ export async function exportMany({
   ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
-    const componentObjects = await pMapSeries(bitIds, (id) => scope.sources.getObjects(id));
+    const componentObjects = await mapSeries(bitIds, (id) => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
       bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
@@ -180,7 +180,7 @@ export async function exportMany({
       return new ComponentObjects(componentBuffer, objectsBuffer);
     };
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-    const manyObjects: ComponentObjects[] = await pMapSeries(componentObjects, processComponentObjects);
+    const manyObjects: ComponentObjects[] = await mapSeries(componentObjects, processComponentObjects);
     const manyLanesObjects = await Promise.all(
       lanes.map(async (lane) => {
         lane.components.forEach((c) => {

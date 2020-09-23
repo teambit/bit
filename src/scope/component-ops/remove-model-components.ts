@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
@@ -37,7 +37,7 @@ export default class RemoveModelComponents {
       // do not run this in parallel (promise.all), otherwise, it may throw an error when
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
-      const removedComponents = await pMapSeries(foundComponents, (bitId) => this._removeSingle(bitId));
+      const removedComponents = await mapSeries(foundComponents, (bitId) => this._removeSingle(bitId));
       if (this.currentLane) await this.scope.lanes.saveLane(this.currentLane);
       await this.scope.objects.persist();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
