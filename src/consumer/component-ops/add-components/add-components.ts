@@ -17,7 +17,6 @@ import Consumer from '../../../consumer/consumer';
 import GeneralError from '../../../error/general-error';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { NodeModuleLinker } from '../../../links';
-import { isSupportedExtension } from '../../../links/link-content';
 import logger from '../../../logger/logger';
 import { ModelComponent } from '../../../scope/models';
 import {
@@ -187,7 +186,6 @@ export default class AddComponents {
     componentId: BitId,
     componentMap: ComponentMap
   ): Promise<boolean> {
-    if (isSupportedExtension(fileRelativePath)) return false;
     const componentFromModel = await this.consumer.loadComponentFromModelIfExist(componentId);
     if (!componentFromModel) {
       throw new ShowDoctorError(

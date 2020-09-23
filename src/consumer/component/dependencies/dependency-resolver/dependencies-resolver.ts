@@ -10,7 +10,6 @@ import { ExtensionDataEntry } from '../../../../consumer/config';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
-import { isSupportedExtension } from '../../../../links/link-content';
 import logger from '../../../../logger/logger';
 import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import { packageNameToComponentId } from '../../../../utils/bit/package-name-to-component-id';
@@ -425,23 +424,6 @@ export default class DependencyResolver {
           depFile,
           rootDir
         ));
-      } else if (!isSupportedExtension(depFile) && this.componentFromModel) {
-        // unsupported files, such as binary files, don't have link files. instead, they have a
-        // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
-        // check whether a file is a symlink to a dependency we loop through the
-        // sourceRelativePaths of the dependency, if there is match, we use the data from the model
-        const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
-        const sourcePaths = dependenciesFromModel.getSourcesPaths();
-        if (sourcePaths.includes(depFile)) {
-          const dependencyFromModel = dependenciesFromModel.getBySourcePath(depFile);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          componentId = dependencyFromModel.id;
-          ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
-            componentId,
-            depFile,
-            rootDir
-          ));
-        }
       }
     }
 

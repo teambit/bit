@@ -3,7 +3,6 @@ import R from 'ramda';
 
 import { ImportSpecifier } from '../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import logger from '../logger/logger';
-import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getExt, getWithoutExt } from '../utils';
 import { PathOsBased } from '../utils/path';
 
@@ -36,12 +35,6 @@ export const EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES = ['ts', 'jsx', 'tsx'];
 // node-sass doesn't resolve directories to 'index.scss', @see https://github.com/sass/sass/issues/690
 export const EXTENSIONS_NOT_SUPPORT_DIRS = ['scss', 'sass'];
 
-export function isSupportedExtension(filePath: string) {
-  const ext = getExt(filePath);
-  const supportedExtensions = getSupportedExtensions();
-  return supportedExtensions.includes(ext);
-}
-
 export function getLinkToFileContent(filePath: PathOsBased, importSpecifiers?: ImportSpecifier[]): string {
   const fileExt = getExt(filePath);
   if (!filePath.startsWith('.')) {
@@ -63,14 +56,6 @@ export function getLinkToPackageContent(
   const template = getTemplateForFileOrPackage(fileExt, importSpecifiers);
   if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, bitPackageName);
-}
-
-function getSupportedExtensions(): string[] {
-  const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
-  fileTypesPlugins.forEach((plugin) => {
-    extensions.push(plugin.getExtension());
-  });
-  return extensions;
 }
 
 /**
