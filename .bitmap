@@ -1942,7 +1942,7 @@
         "exported": false,
         "lanes": []
     },
-    "graph-ui-temp": {
+        "graph-ui-temp": {
         "files": [
             {
                 "relativePath": "graph.aspect.ts",
@@ -1965,29 +1965,64 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/calc-layout.tsx",
-                "test": false,
-                "name": "calc-layout.tsx"
-            },
-            {
-                "relativePath": "ui/component-node.module.scss",
+                "relativePath": "ui/component-node/component-node.module.scss",
                 "test": false,
                 "name": "component-node.module.scss"
             },
             {
-                "relativePath": "ui/graph-component-node.tsx",
+                "relativePath": "ui/component-node/component-node.tsx",
                 "test": false,
-                "name": "graph-component-node.tsx"
+                "name": "component-node.tsx"
             },
             {
-                "relativePath": "ui/graph-page.tsx",
+                "relativePath": "ui/component-node/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/calc-layout.tsx",
+                "test": false,
+                "name": "calc-layout.tsx"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-page.tsx",
                 "test": false,
                 "name": "graph-page.tsx"
             },
             {
-                "relativePath": "ui/random-links.tsx",
+                "relativePath": "ui/graph-page/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/random-links.tsx",
                 "test": false,
                 "name": "random-links.tsx"
+            },
+            {
+                "relativePath": "ui/query/get-graph.query.ts",
+                "test": false,
+                "name": "get-graph.query.ts"
+            },
+            {
+                "relativePath": "ui/query/graph-model.ts",
+                "test": false,
+                "name": "graph-model.ts"
+            },
+            {
+                "relativePath": "ui/query/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/query/use-graph-query.ts",
+                "test": false,
+                "name": "use-graph-query.ts"
+            },
+            {
+                "relativePath": "ui/query/use-graph.tsx",
+                "test": false,
+                "name": "use-graph.tsx"
             }
         ],
         "mainFile": "index.ts",

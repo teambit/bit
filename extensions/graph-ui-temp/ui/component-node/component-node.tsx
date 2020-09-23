@@ -1,5 +1,4 @@
 import React from 'react';
-// import { ComponentData } from './data';
 import { ComponentModel } from '@teambit/component';
 import styles from './component-node.module.scss';
 // import { ComponentInGraph } from './data-short';

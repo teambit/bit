@@ -13,7 +13,6 @@ export class GraphUI {
     const section = new GraphSection();
     componentUI.registerNavigation(section.navigationLink, section.order);
     componentUI.registerRoute(section.route);
-    console.log('vv!');
 
     return graphUI;
   }
