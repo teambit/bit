@@ -1,18 +1,20 @@
 import React from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
+import { ComponentID, ComponentModel } from '@teambit/component';
 
 import { NodeModel } from '../query/graph-model';
 
+// keep order: styles, then variants
 import styles from './component-node.module.scss';
-import { ComponentID, ComponentModel } from '@teambit/component';
+import variants from './variants.module.scss';
 
-export function ComponentNode({ node }: { node: NodeModel }) {
+export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel; type: string }) {
   const { component } = node;
   const { id } = component;
 
   return (
-    <div className={styles.compNode}>
+    <div className={classnames(styles.compNode, variants[type])}>
       <Breadcrumbs componentId={id} className={mutedText} />
       <div className={styles.nameLine}>
         <span className={styles.name}>{id.name}</span>

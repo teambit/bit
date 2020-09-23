@@ -1,3 +1,12 @@
+$d30: #878c9a;
+
 .graph {
   background: var(--bg-dent, #f6f6f6);
+
+  :global {
+    .react-flow__edge-path {
+      stroke: $d30;
+      stroke-width: 2px;
+    }
+  }
 }

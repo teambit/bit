@@ -1,0 +1,15 @@
+$success: #37b26c;
+$regularNodeColor: #3a95ff;
+
+.root {
+  border-color: $success;
+}
+
+.defaultNode {
+  border-color: $regularNodeColor;
+}
+
+:export {
+  rootNodeColor: $success;
+  defaultNodeColor: $regularNodeColor;
+}
