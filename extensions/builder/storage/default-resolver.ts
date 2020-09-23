@@ -4,12 +4,13 @@ import { flatten } from 'ramda';
 import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { AspectEntry, Component, ComponentID } from '@teambit/component';
 import { StorageResolver } from './storage-resolver';
-import type { Artifact } from '../artifact';
+import type { Artifact, ArtifactList } from '../artifact';
 
 export class DefaultResolver implements StorageResolver {
-  name: 'default';
+  name = 'default';
   // todo artifact map
-  async store(component: Component, artifacts: Artifact[]) {
+  async store(component: Component, artifactList: ArtifactList) {
+    const artifacts = artifactList.artifacts;
     const artifactsGrouped = this.groupArtifactsByTaskId(artifacts);
     Object.keys(artifactsGrouped).forEach((taskId) => {
       const aspectEntry = this.getAspectEntry(component, taskId);

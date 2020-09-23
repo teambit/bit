@@ -141,9 +141,9 @@ export default class DependencyGraph {
 
   /**
    * ignore nested dependencies. build the graph from only imported and authored components
-   * according to currently used versions (.bitmap versions)
+   * according to currently used versions (.bitmap versions).
+   * returns a graph that each node is a BitId object.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();

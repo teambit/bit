@@ -124,7 +124,7 @@ jobs:
       # -
       # run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       - save_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
           # key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
@@ -410,7 +410,7 @@ jobs:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
       - run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
@@ -440,7 +440,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
@@ -455,7 +455,7 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
 
-  bit_tag:
+  tag_and_publish:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -468,7 +468,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
@@ -476,8 +476,37 @@ jobs:
           name: 'bit status'
           command: 'cd bit && bit status'
       - run:
-          name: 'bit tag'
-          command: 'cd bit && bit tag --persist'
+          name: 'set GitHub token'
+          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - add_ssh_keys:
+          fingerprints:
+            - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
+
+      - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
+      # - run:
+      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
+      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      # - run: mkdir -p ~/.ssh
+      # - run: SCAN=$(ssh-keyscan github.com )
+      # - run: echo $SCAN >> ~/.ssh/known_hosts
+      - run: cd bit && node scripts/bump-bit-bin-ver.js
+      - run:
+          name: 'git commit'
+          # command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
+          command: 'cd bit && git commit -am "bump bit-bin version [skip ci]"'
+      - run: cd bit && git remote rm origin
+      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
+      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+      - run:
+          name: 'git push'
+          command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
+      - run: cd bit && npm publish --tag dev
+      - run: cd bit && node scripts/soft-tag-teambit.js
+      - run: cd bit && bit tag --persist
+      - run: cd bit && git commit -am "bump teambit version [skip ci]"
+      - run: cd bit && git push origin ${CIRCLE_BRANCH}
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   e2e_test:
     <<: *defaults
@@ -501,7 +530,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
@@ -574,7 +603,7 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry6
+          key: bitsrc-registry8
           # key: bitsrc-registry-stg-v2
       - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
@@ -785,13 +814,7 @@ workflows:
       - bit_build:
           requires:
             - generate_and_check_types
-      - bit_tag:
-          filters:
-            branches:
-              only:
-                - master
-          requires:
-            - e2e_test
+
 
   # windows_e2e:
   #   jobs:
@@ -957,3 +980,23 @@ workflows:
             - set_ssh_key
             - set_npm_registries
             - build
+
+  nightly:
+    triggers:
+      - schedule: # every day at 6AM UTC (= 1AM EST)
+          cron: '0 6 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_npm_registries
+      - setup_harmony:
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - tag_and_publish:
+          requires:
+            - setup_harmony

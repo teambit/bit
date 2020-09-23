@@ -21,11 +21,16 @@ export default class Symlink {
     return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
 
-  async writeWithNativeFS() {
+  writeWithNativeFS() {
+    const dest = this.dest;
     this._throwForMissingDistOutsideComponent();
-    await fs.remove(this.dest);
-    await fs.ensureDir(path.dirname(this.dest));
-    return fs.symlink(this.src, this.dest);
+    const exists = fs.pathExistsSync(dest);
+    if (exists) {
+      fs.unlinkSync(dest);
+    }
+    const dir = path.dirname(dest);
+    fs.ensureDirSync(dir);
+    return fs.symlinkSync(this.src, dest);
   }
 
   static makeInstance(src: string, dest: string, componentId?: BitId) {
