@@ -84,6 +84,7 @@
         "@teambit/explorer.ui.component-grid": "^0.0.2",
         "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
+        "@testing-library/react": "11.0.4",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
         "apollo-client": "^2.6.10",
@@ -92,6 +93,7 @@
         "apollo-link-http": "^1.5.17",
         "apollo-link-ws": "^1.0.20",
         "apollo-utilities": "^1.3.4",
+        "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
         "babel-polyfill": "^6.26.0",
@@ -206,7 +208,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.15",
+        "bit-bin": "14.8.9-dev.22",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1",
         "@babel/runtime": "^7.11.2"
@@ -237,7 +239,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.15",
+            "bit-bin": "14.8.9-dev.22",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -270,7 +272,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.15",
+            "bit-bin": "14.8.9-dev.22",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

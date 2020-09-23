@@ -55,6 +55,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     return [
       {
         name: 'preview',
+        storageResolver: 's3',
         globPatterns: [globPattern],
         context: env,
       },

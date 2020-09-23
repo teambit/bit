@@ -86,4 +86,6 @@ export class JestTester implements Tester {
     const globalErrors = this.getErrors(testResults);
     return { components: componentTestResults, errors: globalErrors };
   }
+
+  watch() {}
 }

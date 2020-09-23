@@ -4,11 +4,12 @@ import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 
+import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -20,11 +21,11 @@ import logger from '../../logger/logger';
 import { pathJoinLinux, sha1 } from '../../utils';
 import { PathLinux } from '../../utils/path';
 import { buildComponentsGraph } from '../graph/components-graph';
-import { AutoTagResult, bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
+import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
-import { ModelComponent } from '../models';
 import { OnTagResult } from '../scope';
+import { Log } from '../models/version';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -68,14 +69,15 @@ async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
   releaseType: ReleaseType | undefined,
-  exactVersion: string | null | undefined
+  exactVersion: string | null | undefined,
+  persist: boolean
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
-      if (nextVersion) {
+      if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
         if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
@@ -197,23 +199,15 @@ export default async function tagModelComponent({
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
   const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
-  const componentsToTagIds = componentsToTag.map((c) => c.id);
-  const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = skipAutoTag
-    ? new BitIds()
-    : consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
-  const autoTagComponents = skipAutoTag
-    ? []
-    : await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
-  // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map((c) => c.toBitId()));
-  const autoTagConsumerComponents = autoTagComponentsLoaded.components;
-  const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
+  const idsToTriggerAutoTag = componentsToTag.map((c) => c.id).filter((id) => id.hasVersion());
+
+  const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
+  const autoTagConsumerComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
+  const allComponentsToTag = componentsToTag.concat(autoTagConsumerComponents);
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
-    const newestVersionsP = componentsToBuildAndTest.map(async (component) => {
+    const newestVersionsP = allComponentsToTag.map(async (component) => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
@@ -241,13 +235,13 @@ export default async function tagModelComponent({
   let testsResults = [];
   if (consumer.isLegacy) {
     logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially build all components');
-    await scope.buildMultiple(componentsToBuildAndTest, consumer, false, verbose);
+    await scope.buildMultiple(allComponentsToTag, consumer, false, verbose);
 
     logger.debug('scope.putMany: sequentially test all components');
 
     if (!skipTests) {
       const testsResultsP = scope.testMultiple({
-        components: componentsToBuildAndTest,
+        components: allComponentsToTag,
         consumer,
         verbose,
         rejectOnFailure: !force,
@@ -268,17 +262,19 @@ export default async function tagModelComponent({
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   // go through all components and find the future versions for them
-  isSnap ? setHashes(componentsToTag) : await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
-  setCurrentSchema(componentsToTag, consumer);
+  isSnap
+    ? setHashes(allComponentsToTag)
+    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist);
+  setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
-  updateDependenciesVersions(componentsToTag);
+  updateDependenciesVersions(allComponentsToTag);
   // build the dependencies graph
-  const allDependenciesGraphs = buildComponentsGraph(componentsToTag);
+  const allDependenciesGraphs = buildComponentsGraph(allComponentsToTag);
 
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const lane = await consumer.getCurrentLaneObject();
-  const persistComponent = async (consumerComponent: Component) => {
+  const addComponentsToScope = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
       testResult = testsResults.find((result) => {
@@ -299,50 +295,69 @@ export default async function tagModelComponent({
       consumer,
       flattenedDependencies,
       flattenedDevDependencies,
-      message,
       lane,
       specsResults: testResult ? testResult.specs : undefined,
       resolveUnmerged,
     });
-    return consumerComponent;
   };
 
-  // Run the persistence one by one not in parallel!
-  loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-  const taggedComponents = await bluebird.mapSeries(componentsToTag, (consumerComponent) =>
-    persistComponent(consumerComponent)
-  );
-  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
-  validateDirManipulation(taggedComponents);
+  await addLogToComponents(componentsToTag, autoTagConsumerComponents, persist, message);
 
-  const autoTaggedComponents = autoTaggedResults.map((r) => r.component);
-  const allComponents = [...taggedComponents, ...autoTaggedComponents];
   if (persist) {
-    await consumer.updateComponentsVersions(allComponents);
+    // Run the persistence one by one not in parallel!
+    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
+    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => addComponentsToScope(consumerComponent));
+    validateDirManipulation(allComponentsToTag);
+    await consumer.updateComponentsVersions(allComponentsToTag);
   } else {
-    consumer.updateNextVersionOnBitmap(taggedComponents, autoTaggedResults, exactVersion, releaseType);
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   }
+
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && persist) {
-    const ids = allComponents.map((unknownComponent) => {
-      return unknownComponent instanceof ModelComponent
-        ? unknownComponent.toBitIdWithLatestVersionAllowNull()
-        : unknownComponent.id;
-    });
+    const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
     const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) => func(ids));
-    results.forEach((tagResult) => updateComponentsByTagResult(componentsToBuildAndTest, tagResult));
-    componentsToBuildAndTest.forEach((comp) => {
+    results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
+    allComponentsToTag.forEach((comp) => {
       const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
-    await bluebird.mapSeries(componentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
+    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (persist) {
     await scope.objects.persist();
   }
-  return { taggedComponents, autoTaggedResults, publishedPackages };
+
+  return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+}
+
+async function addLogToComponents(
+  components: Component[],
+  autoTagComps: Component[],
+  persist: boolean,
+  message: string
+) {
+  const username = await globalConfig.get(CFG_USER_NAME_KEY);
+  const email = await globalConfig.get(CFG_USER_EMAIL_KEY);
+  const getLog = (component: Component): Log => {
+    const nextVersion = persist ? component.componentMap?.nextVersion : null;
+    return {
+      username: nextVersion?.username || username,
+      email: nextVersion?.email || email,
+      message: nextVersion?.message || message,
+      date: Date.now().toString(),
+    };
+  };
+
+  components.forEach((component) => {
+    component.log = getLog(component);
+  });
+  autoTagComps.forEach((autoTagComp) => {
+    autoTagComp.log = getLog(autoTagComp);
+    autoTagComp.log.message = `${autoTagComp.log.message} (bump dependencies versions)`;
+  });
 }
 
 function setCurrentSchema(components: Component[], consumer: Consumer) {
