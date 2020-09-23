@@ -23,9 +23,7 @@ import {
   StandaloneNewLine,
   Starting,
   ClearConsole,
-  compilationEndedSuccessfullyOutput,
   ComponentPreviewServerStarted,
-  ComponentPreviewServerStartedHeaders,
   UIServersAreReady,
 } from './bit-start-cmd-output-templates';
 import moment from 'moment';

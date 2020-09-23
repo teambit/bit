@@ -1,8 +1,4 @@
 export { OnComponentChange } from './on-component-change';
-export { compilationEndedSuccessfullyOutput } from './compilation-ended-successfully-output-template';
-export { CompilationErrorOutput } from './compilation-error-output-template';
-export { ComponentsRebuildOutput } from './components-rebuild-output-template';
-export { DevServerRunningOutputTemplate } from './dev-server-running-output-template';
 export { ClearConsole } from './clear-console';
 export { Starting } from './starting';
 export { ComponentPreviewServerStarted } from './component-preview-server-started';
