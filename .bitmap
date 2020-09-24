@@ -3441,6 +3441,44 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/deprecation-icon": {
+        "files": [
+            {
+                "relativePath": "deprecation-icon.tsx",
+                "test": false,
+                "name": "deprecation-icon.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/deprecation-icon",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/env-icon": {
+        "files": [
+            {
+                "relativePath": "env-icon.tsx",
+                "test": false,
+                "name": "env-icon.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/env-icon",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/component-status@0.0.47": {
         "files": [
             {
