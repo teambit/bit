@@ -1,3 +1,4 @@
+import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
@@ -30,6 +31,7 @@ import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 
 export type WorkspaceDeps = [
+  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -69,6 +71,7 @@ export type WorkspaceCoreConfig = {
 
 export default async function provideWorkspace(
   [
+    pubsub,
     cli,
     scope,
     component,
@@ -96,6 +99,7 @@ export default async function provideWorkspace(
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
   const workspace = new Workspace(
+    pubsub,
     config,
     consumer,
     scope,
@@ -159,7 +163,7 @@ export default async function provideWorkspace(
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
-  const watcher = new Watcher(workspace);
+  const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
     cli.register(new WatchCommand(logger, watcher));

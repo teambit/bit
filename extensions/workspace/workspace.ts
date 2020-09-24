@@ -1,3 +1,4 @@
+import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
@@ -107,6 +108,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    /**
+     * private pubsub.
+     */
+    private pubsub: PubsubMain,
+
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -168,7 +174,7 @@ export class Workspace implements ComponentFactory {
   /**
    * watcher api.
    */
-  readonly watcher = new Watcher(this);
+  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
