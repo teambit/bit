@@ -1,0 +1,43 @@
+.aspectBox {
+  border: 1px solid #ededed;
+  border-radius: 9px;
+  padding: 16px;
+}
+.titleLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  // border-bottom: 1px solid #ededed;
+  // padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+.titleLeft {
+  display: flex;
+  align-items: center;
+}
+.icon {
+  margin-right: 5px;
+}
+.name {
+  font-size: 20px;
+}
+.sectionTitle {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+.log {
+  overflow: hidden;
+  background: #282c34;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+.block {
+  font-size: 12px;
+  font-family: roboto mono;
+  .line {
+    line-height: 1.5;
+    color: white;
+  }
+}
