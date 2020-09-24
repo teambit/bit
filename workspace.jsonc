@@ -124,6 +124,7 @@
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
+        "graphql-type-json": "0.3.2",
         "history": "4.10.1",
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",

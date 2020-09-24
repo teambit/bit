@@ -60,6 +60,11 @@ export class AspectList {
     return res;
   }
 
+  serialize(){
+    const serializedEntries = this.entries.map(entry => entry.serialize());
+    return serializedEntries;
+  }
+
   toLegacy(): ExtensionDataList {
     const legacyEntries = this.entries.map((entry) => entry.legacy);
     return ExtensionDataList.fromArray(legacyEntries);
