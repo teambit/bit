@@ -15,7 +15,6 @@
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
-        "ansi-to-html": "^0.6.14",
         "@graphql-modules/core": "^0.7.17",
         "@jest/test-result": "26.3.0",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
@@ -86,6 +85,7 @@
         "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
+        "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
         "apollo-client": "^2.6.10",
@@ -129,6 +129,7 @@
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
         "join-path": "^1.1.1",
+        "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "lodash.head": "^4.0.1",
         "memoize-one": "5.1.1",

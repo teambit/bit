@@ -889,6 +889,21 @@
                 "name": "tag.ts"
             },
             {
+                "relativePath": "ui/aspect-page/aspect-page.module.scss",
+                "test": false,
+                "name": "aspect-page.module.scss"
+            },
+            {
+                "relativePath": "ui/aspect-page/aspect-page.tsx",
+                "test": false,
+                "name": "aspect-page.tsx"
+            },
+            {
+                "relativePath": "ui/aspect-page/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-error/component-error.tsx",
                 "test": false,
                 "name": "component-error.tsx"

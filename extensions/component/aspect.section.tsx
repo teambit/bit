@@ -1,11 +1,11 @@
 import React from 'react';
 import { Section } from './section';
-// import { TestsPage } from './ui/tests-page';
+import { AspectPage } from './ui/aspect-page';
 
 export class AspectSection implements Section {
   route = {
     path: '~aspect',
-    children: <div>aspects</div>,
+    children: <AspectPage />,
   };
   navigationLink = {
     href: '~aspect',
