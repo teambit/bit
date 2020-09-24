@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as pathLib from 'path';
 import R from 'ramda';
 
@@ -86,7 +86,7 @@ export default function installExtensions({
       throw e;
     }
   };
-  return pMapSeries(nonExistingEnvsIds, importEnv);
+  return mapSeries(nonExistingEnvsIds, importEnv);
 }
 
 /**

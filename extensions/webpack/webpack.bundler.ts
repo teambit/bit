@@ -1,7 +1,7 @@
 import { Bundler, BundlerResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import webpack, { Compiler, Configuration } from 'webpack';
 import merge from 'webpack-merge';
 
@@ -25,7 +25,7 @@ export class WebpackBundler implements Bundler {
   async run(): Promise<BundlerResult[]> {
     const compilers = this.getConfig().map((config) => webpack(config));
     const longProcessLogger = this.logger.createLongProcessLogger('bundling component preview', compilers.length);
-    const componentOutput = await pMapSeries(compilers, (compiler: Compiler) => {
+    const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
       longProcessLogger.logProgress(components.map((component) => component.id.toString()).join(', '));
       return new Promise((resolve) => {
@@ -49,7 +49,7 @@ export class WebpackBundler implements Bundler {
       });
     });
     longProcessLogger.end();
-    return componentOutput;
+    return componentOutput as BundlerResult[];
   }
 
   private getComponents(outputPath: string) {

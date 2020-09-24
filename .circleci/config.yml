@@ -42,6 +42,16 @@ semver_tags_only_filters: &semver_tags_only_filters
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
 
+
+nightly_tag_only_filters: &nightly_tag_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /manual-nightly/
+
 dev_tag_only_filters: &dev_tag_only_filters
   filters:
     # ignore any commit on any branch by default
@@ -499,12 +509,14 @@ jobs:
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
       - run:
           name: 'git push'
-          command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
+          # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+          command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
       - run: cd bit && node scripts/soft-tag-teambit.js
       - run: cd bit && bit tag --persist
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
-      - run: cd bit && git push origin ${CIRCLE_BRANCH}
+      # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+      - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -998,5 +1010,23 @@ workflows:
             - set_npm_registries
             - checkout_code
       - tag_and_publish:
+          requires:
+            - setup_harmony
+  # TODO: check if we can combine it with the regular nightly somehow
+  manual_nightly:
+    jobs:
+      - checkout_code:
+          <<: *nightly_tag_only_filters
+      - set_ssh_key:
+          <<: *nightly_tag_only_filters
+      - set_npm_registries:
+          <<: *nightly_tag_only_filters
+      - setup_harmony:
+          <<: *nightly_tag_only_filters
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - tag_and_publish:
+          <<: *nightly_tag_only_filters
           requires:
             - setup_harmony

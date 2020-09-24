@@ -1,5 +1,3 @@
-import fileTypesPlugins from '../../plugins/file-types-plugins';
-
 export default function getExt(filename: string): string {
   const foundPlugin = allFileTypesPlugins().find((plugin) => filename.endsWith(`.${plugin.getExtension()}`));
   if (foundPlugin) return foundPlugin.getExtension();
@@ -12,5 +10,5 @@ function allFileTypesPlugins() {
       return 'd.ts';
     },
   };
-  return [tsDeclarations, ...fileTypesPlugins];
+  return [tsDeclarations];
 }
