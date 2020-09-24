@@ -1,5 +1,5 @@
 import execa from 'execa';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -86,7 +86,7 @@ export default class Isolator {
     throwForNonLegacy(componentWithDependencies.component.isLegacy, 'evn/Isolator.isolate');
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
-      await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
+      await mapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
         if (!dep.dists || dep.dists.isEmpty()) {
           await dep.build({ scope: this.scope, consumer: this.consumer });
           dep.dists.stripOriginallySharedDir(dep.originallySharedDir);

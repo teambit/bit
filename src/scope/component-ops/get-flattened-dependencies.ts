@@ -1,5 +1,5 @@
 import graphlib, { Graph } from 'graphlib';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -99,7 +99,7 @@ async function getFlattenedDependencies({
     cache[dependency] = flattenedDependencies;
     return flattenedDependencies;
   };
-  const flattened = await pMapSeries(dependencies, flattenDependency);
+  const flattened = await mapSeries(dependencies, flattenDependency);
   const flattenedUnique = BitIds.uniqFromArray(R.flatten(flattened));
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(componentId);

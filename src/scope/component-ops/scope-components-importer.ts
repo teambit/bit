@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -50,7 +50,7 @@ export default class ScopeComponentsImporter {
     const [locals, externals] = R.partition((id) => id.isLocal(this.scope.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
-    const versionDeps = await pMapSeries(localDefs, (def) => {
+    const versionDeps = await mapSeries(localDefs, (def) => {
       if (!def.component) throw new ComponentNotFound(def.id.toString());
       return this.componentToVersionDependencies(def.component, def.id);
     });
@@ -202,9 +202,7 @@ export default class ScopeComponentsImporter {
     clientVersion: string | null | undefined,
     collectParents: boolean
   ): Promise<ComponentObjects[]> {
-    return pMapSeries(components, (component) =>
-      component.toObjects(this.scope.objects, clientVersion, collectParents)
-    );
+    return mapSeries(components, (component) => component.toObjects(this.scope.objects, clientVersion, collectParents));
   }
 
   /**
@@ -258,7 +256,7 @@ export default class ScopeComponentsImporter {
           'no more ids left, all found locally, exiting the method'
         );
 
-        return pMapSeries(defs, (def) => this.componentToVersionDependencies(def.component, def.id));
+        return mapSeries(defs, (def) => this.componentToVersionDependencies(def.component as ModelComponent, def.id));
       }
 
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);

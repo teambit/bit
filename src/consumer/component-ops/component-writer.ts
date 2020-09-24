@@ -110,7 +110,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(packageManager?: string): Promise<Record<string, any>> {
+  async populateComponentsFilesToWrite(packageManager?: string): Promise<Component> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
