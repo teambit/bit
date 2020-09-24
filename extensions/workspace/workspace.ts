@@ -747,20 +747,20 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    const aspectsIds = components.reduce((acc, curr) => {
-      const currIds = curr.state.aspects.ids;
-      acc = acc.concat(currIds);
-      return acc;
-    }, [] as any);
-    const otherDependenciesMap = components.reduce((acc, curr) => {
-      // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
-      const currMap = curr.state.dependencies.getIdsMap();
-      Object.assign(acc, currMap);
-      return acc;
-    }, {});
+    // const aspectsIds = components.reduce((acc, curr) => {
+    //   const currIds = curr.state.aspects.ids;
+    //   acc = acc.concat(currIds);
+    //   return acc;
+    // }, [] as any);
+    // const otherDependenciesMap = components.reduce((acc, curr) => {
+    //   // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+    //   const currMap = curr.state.dependencies.getIdsMap();
+    //   Object.assign(acc, currMap);
+    //   return acc;
+    // }, {});
 
-    const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
-    const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
+    // const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
