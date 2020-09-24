@@ -9,14 +9,15 @@ import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 
-import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
-import { WorkspaceAspect } from '../';
 import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
 import ComponentMap from 'bit-bin/dist/consumer/bit-map/component-map';
+
+import { WorkspaceAspect } from '../';
+import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { Workspace } from '../workspace';
 import { OnComponentEventResult } from '../on-component-events';
 

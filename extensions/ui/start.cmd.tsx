@@ -4,17 +4,22 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
-import { WorkspaceAspect } from '@teambit/workspace';
+import {
+  WorkspaceAspect,
+  OnComponentChangeEvent,
+  OnComponentAddEvent,
+  OnComponentRemovedEvent,
+} from '@teambit/workspace';
 
 import { ComponentsServerStartedEvent } from '@teambit/bundler';
 import { UiServerStartedEvent } from '@teambit/ui';
 import { WebpackCompilationDoneEvent } from '@teambit/webpack';
-import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '@teambit/workspace';
 
 import React from 'react';
 import open from 'open';
 import { render } from 'ink';
 import prettyTime from 'pretty-time';
+import moment from 'moment';
 
 import type { UiMain } from './ui.main.runtime';
 import {
@@ -26,7 +31,6 @@ import {
   ComponentPreviewServerStarted,
   UIServersAreReady,
 } from './bit-start-cmd-output-templates';
-import moment from 'moment';
 
 export class StartCmd implements Command {
   items: any[] = [];
@@ -130,7 +134,8 @@ export class StartCmd implements Command {
     this.targetPort = event.data.targetPort;
   };
 
-  private onWebpackCompilationDone = (event) => {
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  private onWebpackCompilationDone = (_event) => {
     this.devServerCounter -= 1;
     this.openBrowserOn0();
   };
@@ -186,7 +191,7 @@ export class StartCmd implements Command {
     this.registerToEvents();
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
-    const uiServer = await this.ui.createRuntime({
+    await this.ui.createRuntime({
       uiRootName,
       pattern,
       dev,

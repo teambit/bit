@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, Newline } from 'ink';
 import moment from 'moment';
 
-export const UIServersAreReady = ({ host, port, timestamp, workspace }) => (
+export const UIServersAreReady = ({ host, port, timestamp, workspace }: any) => (
   <>
     <Text>You can now view {workspace.id} components in the browser.</Text>
     <Text>

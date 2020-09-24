@@ -12,9 +12,9 @@ class WebpackCompilerDonePlugin {
     return new WebpackCompilationDoneEvent(Date.now());
   };
 
-  /* stats is passed as an argument when done hook is tapped.  */
   apply(compiler) {
-    compiler.hooks.done.tap('webpack-compiler-done-plugin', (stats) => {
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    compiler.hooks.done.tap('webpack-compiler-done-plugin', (_stats) => {
       this.pubsub.pub(WebpackAspect.id, this.createEvent());
     });
   }

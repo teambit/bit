@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, Newline, Text } from 'ink';
-import moment from 'moment';
+import { Newline, Text } from 'ink';
 
 export type props = {
   events: any[];

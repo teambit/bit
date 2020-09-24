@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { ComponentPreviewServerStartedHeaders } from './';
+import { ComponentPreviewServerStartedHeaders } from '.';
 
-export const ComponentPreviewServerStarted = ({ items }) => (
+export const ComponentPreviewServerStarted = ({ items }: any) => (
   <>
     <ComponentPreviewServerStartedHeaders />
     {items.map((item, index) => (
