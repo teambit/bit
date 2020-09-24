@@ -18,7 +18,7 @@ import { WebpackCompilationDoneEvent } from '@teambit/webpack';
 import React from 'react';
 import open from 'open';
 import { render } from 'ink';
-import prettyTime from 'pretty-time';
+import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
 import type { UiMain } from './ui.main.runtime';
@@ -178,7 +178,7 @@ export class StartCmd implements Command {
 
   private getDuration() {
     const duration = Date.now() - this.startingtimestamp;
-    return prettyTime(duration);
+    return humanizeDuration(duration);
   }
 
   async render(
