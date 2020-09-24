@@ -4402,29 +4402,19 @@
     "ui": {
         "files": [
             {
-                "relativePath": "bit-start-cmd-output-templates/Component-preview-server-started-headers.tsx",
+                "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
+                "test": false,
+                "name": "clear-console.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started-headers.tsx",
                 "test": false,
                 "name": "Component-preview-server-started-headers.tsx"
             },
             {
-                "relativePath": "bit-start-cmd-output-templates/Component-preview-server-started.tsx",
+                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started.tsx",
                 "test": false,
                 "name": "Component-preview-server-started.tsx"
-            },
-            {
-                "relativePath": "bit-start-cmd-output-templates/Starting.tsx",
-                "test": false,
-                "name": "Starting.tsx"
-            },
-            {
-                "relativePath": "bit-start-cmd-output-templates/Ui-servers-are-ready.tsx",
-                "test": false,
-                "name": "Ui-servers-are-ready.tsx"
-            },
-            {
-                "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
-                "test": false,
-                "name": "clear-console.tsx"
             },
             {
                 "relativePath": "bit-start-cmd-output-templates/index.ts",
@@ -4445,6 +4435,16 @@
                 "relativePath": "bit-start-cmd-output-templates/starting-main-ui-server.tsx",
                 "test": false,
                 "name": "starting-main-ui-server.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/starting.tsx",
+                "test": false,
+                "name": "Starting.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/ui-servers-are-ready.tsx",
+                "test": false,
+                "name": "Ui-servers-are-ready.tsx"
             },
             {
                 "relativePath": "compose.tsx",
