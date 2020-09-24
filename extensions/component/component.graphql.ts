@@ -5,7 +5,6 @@ import { GraphQLJSONObject } from 'graphql-type-json';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
-import { AspectEntry } from './aspect-entry';
 
 export function componentSchema(componentExtension: ComponentMain) {
   return {
