@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { ComponentID } from '@teambit/component';
+import { ComponentID, ComponentModel } from '@teambit/component';
 
 import { NodeModel } from '../query/graph-model';
 

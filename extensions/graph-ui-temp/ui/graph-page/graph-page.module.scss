@@ -1,4 +1,5 @@
 $d30: #878c9a;
+$b70: #0d2de3;
 
 .graph {
   background: var(--bg-dent, #f6f6f6);
@@ -9,4 +10,24 @@ $d30: #878c9a;
       stroke-width: 2px;
     }
   }
+}
+
+.minimap {
+  box-shadow: var(--shadow-faint);
+  border-radius: 5px;
+
+  :global {
+    .react-flow__minimap-mask {
+      stroke: $b70;
+      stroke-width: 4px;
+      fill: transparent;
+    }
+  }
+}
+
+.controls {
+  box-shadow: var(--shadow-faint);
+
+  left: unset;
+  right: 220px;
 }

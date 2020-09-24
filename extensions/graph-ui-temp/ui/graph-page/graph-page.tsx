@@ -52,8 +52,8 @@ export function GraphPage() {
       defaultPosition={DEFAULT_POS}
     >
       <Background />
-      <Controls style={{ left: 'unset', right: 220 }} />
-      <MiniMap nodeColor={calcMinimapColors} />
+      <Controls className={styles.controls} />
+      <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
     </ReactFlow>
   );
 }
