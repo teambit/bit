@@ -1,0 +1,42 @@
+.commandBar {
+  display: none;
+  flex-direction: column;
+
+  position: fixed;
+  top: 130px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 643px;
+  border: 1px solid var(--separator-color);
+  max-width: 90%;
+
+  overflow: hidden; // enforce border-radius
+
+  color: var(--text-highlight, #2b2b2b);
+  box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.32);
+
+  &.visible {
+    display: flex;
+  }
+}
+
+.commandBar {
+  padding: 0px;
+  z-index: 8001;
+}
+
+.input {
+  padding: 0 24px;
+  font-size: 20px;
+  height: 56px;
+  line-height: 56px;
+}
+
+.results {
+  font-size: 14px;
+
+  &:not(:empty) {
+    margin-bottom: 8px;
+    border-top: solid 1px var(--separator-color);
+  }
+}

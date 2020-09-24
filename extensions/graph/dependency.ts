@@ -1,4 +1,4 @@
-type DependencyType = 'dev' | 'peer' | 'runtime';
+export type DependencyType = 'dev' | 'peer' | 'runtime';
 
 export class Dependency {
   readonly type: DependencyType;

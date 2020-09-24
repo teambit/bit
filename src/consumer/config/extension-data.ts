@@ -153,6 +153,19 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return new ExtensionDataList(...extensionDataEntries);
   }
 
+  toModelObjects(): ExtensionDataList {
+    const cloned = this.clone();
+    cloned.forEach((extensionDataEntry) => {
+      extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
+        return {
+          file: artifact.file.hash(),
+          relativePath: artifact.relativePath,
+        };
+      });
+    });
+    return cloned;
+  }
+
   _filterLegacy(): ExtensionDataList {
     return ExtensionDataList.fromArray(this.filter((ext) => !ext.isLegacy));
   }

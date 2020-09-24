@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { Consumer } from '..';
@@ -336,7 +336,7 @@ export default class ComponentConfig extends AbstractConfig {
       `running on legacy load even for component ${id.toString()}`
     );
     try {
-      await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+      await mapSeries(Object.keys(subscribers), async (extId: string) => {
         const func = subscribers[extId];
         return func(id, config);
       });
@@ -364,7 +364,7 @@ export default class ComponentConfig extends AbstractConfig {
   static async runOnLoadEvent(subscribers: ConfigLoadRegistry, id: BitId): Promise<any[]> {
     logger.debugAndAddBreadCrumb('componentConfigLoad', `running on load even for component ${id.toString()}`);
     try {
-      const res = await pMapSeries(Object.keys(subscribers), async (extId: string) => {
+      const res = await mapSeries(Object.keys(subscribers), async (extId: string) => {
         const func = subscribers[extId];
         return func(id);
       });

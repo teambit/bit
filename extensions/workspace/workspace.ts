@@ -1,8 +1,10 @@
+import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
 import {
+  AspectEntry,
+  ComponentMain,
   Component,
   ComponentFactory,
   ComponentFS,
@@ -106,6 +108,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    /**
+     * private pubsub.
+     */
+    private pubsub: PubsubMain,
+
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -167,7 +174,7 @@ export class Workspace implements ComponentFactory {
   /**
    * watcher api.
    */
-  readonly watcher = new Watcher(this);
+  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
@@ -213,8 +220,8 @@ export class Workspace implements ComponentFactory {
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const isAutoTag = listAutoTagPendingComponents.find(
-      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
+      consumerComponent.id.isEqualWithoutVersion(component.id._legacy)
     );
     if (isAutoTag) return true;
     return false;
@@ -338,6 +345,15 @@ export class Workspace implements ComponentFactory {
     }
   }
 
+  private async createAspectList(extensionDataList: ExtensionDataList) {
+    const entiresP = extensionDataList.map(async (entry) => {
+      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
+    });
+
+    const entries = await Promise.all(entiresP);
+    return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
@@ -354,7 +370,7 @@ export class Workspace implements ComponentFactory {
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList),
+      await this.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -673,6 +689,16 @@ export class Workspace implements ComponentFactory {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
 
+    const promises = mergedExtensions.map(async (entry) => {
+      if (entry.extensionId) {
+        const id = await this.resolveComponentId(entry.extensionId);
+        entry.extensionId = id._legacy;
+      }
+
+      return entry;
+    });
+
+    await Promise.all(promises);
     return mergedExtensions;
   }
 
@@ -723,7 +749,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const ids = BitIds.fromArray(components.map((component) => component.id._legacy));
+    const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
@@ -743,8 +769,7 @@ export class Workspace implements ComponentFactory {
     const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    let ignoredIds = BitIds.fromArray(coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds));
-    ignoredIds = ignoredIds.difference(ids);
+    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
@@ -778,6 +803,7 @@ export class Workspace implements ComponentFactory {
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
+
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
     });
@@ -986,8 +1012,8 @@ export class Workspace implements ComponentFactory {
 
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output

@@ -186,8 +186,7 @@ export default class ComponentsList {
       this.listModifiedComponents(true),
     ]);
 
-    const autoTagPendingModel: ModelComponent[] = await this.listAutoTagPendingComponents();
-    const autoTagPending: Component[] = await this.scope.toConsumerComponents(autoTagPendingModel);
+    const autoTagPending: Component[] = await this.listAutoTagPendingComponents();
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const components: Component[] = [...newComponents, ...modifiedComponents, ...autoTagPending];
@@ -292,12 +291,10 @@ export default class ComponentsList {
     return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponentIfExist(id)));
   }
 
-  async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
-    const modifiedComponents = await this.listModifiedComponents();
+  async listAutoTagPendingComponents(): Promise<Component[]> {
+    const modifiedComponents = (await this.listModifiedComponents()) as BitId[];
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const modifiedComponentsLatestVersions = await this.scope.latestVersions(modifiedComponents);
-    return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
+    return this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
   }
 
   idsFromBitMap(origin?: ComponentOrigin): BitId[] {

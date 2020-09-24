@@ -1,6 +1,6 @@
 import { Logger } from '@teambit/logger';
 import BluebirdPromise from 'bluebird';
-
+import { EnvNotFoundInRuntime } from '../exceptions';
 import { ExecutionContext } from '../context';
 import { EnvService, ServiceExecutionResult } from '../services';
 import { EnvRuntime } from './env-runtime';
@@ -22,9 +22,29 @@ export class Runtime {
     private logger: Logger
   ) {}
 
-  async run<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<EnvsExecutionResult<T>> {
+  /**
+   * execute a service on a specific env.
+   */
+  runEnv<T>(
+    envRuntimeId: string,
+    service: EnvService<T>,
+    options?: { [key: string]: any }
+  ): Promise<EnvsExecutionResult<T>> {
+    const envRuntime = this.runtimeEnvs.find((runtime) => runtime.id === envRuntimeId);
+    if (!envRuntime) throw new EnvNotFoundInRuntime(envRuntimeId);
+    return this.run(service, options, [envRuntime]);
+  }
+
+  /**
+   * execute a service on all environments.
+   */
+  async run<T>(
+    service: EnvService<T>,
+    options?: { [key: string]: any },
+    runtimes?: EnvRuntime[]
+  ): Promise<EnvsExecutionResult<T>> {
     const errors: Error[] = [];
-    const contexts: EnvResult<T>[] = await BluebirdPromise.mapSeries(this.runtimeEnvs, async (env) => {
+    const contexts: EnvResult<T>[] = await BluebirdPromise.mapSeries(runtimes || this.runtimeEnvs, async (env) => {
       try {
         const serviceResult = await service.run(new ExecutionContext(this, env), options);
 

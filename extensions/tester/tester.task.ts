@@ -1,5 +1,6 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
+import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
@@ -29,8 +30,11 @@ export class TesterTask implements BuildTask {
       return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
+        const compiler: Compiler = context.env.getCompiler();
+        const distPath = compiler.getDistPathBySrcPath(specFile.relative);
+
         // TODO: fix spec type file need to capsule will return files with type AbstractVinyl
-        return { path: join(capsule.wrkDir, specFile.relative), relative: specFile.relative };
+        return { path: join(capsule.path, distPath), relative: distPath };
       });
     });
 
@@ -46,10 +50,9 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: [], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => ({
-        id: componentTests.componentId,
         component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
-        data: { tests: componentTests.results },
-        errors: testsResults.errors ? [] : [],
+        metadata: { tests: componentTests.results },
+        errors: testsResults.errors ? testsResults.errors : [],
       })),
     };
   }

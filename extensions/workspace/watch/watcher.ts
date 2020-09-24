@@ -1,16 +1,23 @@
+import { PubsubMain } from '@teambit/pubsub';
+import { dirname } from 'path';
 import { ComponentID } from '@teambit/component';
+
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+
 import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
 import ComponentMap from 'bit-bin/dist/consumer/bit-map/component-map';
+
+import { WorkspaceAspect } from '../';
+import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
 import { Workspace } from '../workspace';
 import { OnComponentEventResult } from '../on-component-events';
 
@@ -20,6 +27,7 @@ export class Watcher {
   private fsWatcher: FSWatcher;
   constructor(
     private workspace: Workspace,
+    private pubsub: PubsubMain,
     private trackDirs: { [dir: string]: ComponentID } = {},
     private verbose = false,
     private multipleWatchers: WatcherProcessData[] = []
@@ -51,13 +59,13 @@ export class Watcher {
       });
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = await this.handleChange(filePath).catch((err) => reject(err));
+        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onAdd(filePath, buildResults, _verbose, duration);
       });
@@ -80,7 +88,7 @@ export class Watcher {
     }
     const componentId = await this.getBitIdByPathAndReloadConsumer(filePath);
     if (!componentId) {
-      logger.console(`file ${filePath} is not part of any component, ignoring it`);
+      logger.debug(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch();
     }
 
@@ -114,7 +122,8 @@ export class Watcher {
   }
 
   private async executeWatchOperationsOnRemove(componentId: ComponentID) {
-    logger.console(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
+    logger.debug(`running OnComponentRemove hook for ${chalk.bold(componentId.toString())}`);
+    this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentRemovedEvent(componentId.toString()));
     await this.workspace.triggerOnComponentRemove(componentId);
   }
 
@@ -128,8 +137,15 @@ export class Watcher {
       return [];
     }
     const idStr = componentId.toString();
-    const hook = isChange ? 'OnComponentChange' : 'OnComponentAdd';
-    logger.console(`running ${hook} hook for ${chalk.bold(idStr)}`);
+
+    if (isChange) {
+      logger.debug(`running OnComponentChange hook for ${chalk.bold(idStr)}`);
+      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentChangeEvent(idStr, 'OnComponentChange'));
+    } else {
+      logger.debug(`running OnComponentAdd hook for ${chalk.bold(idStr)}`);
+      this.pubsub.pub(WorkspaceAspect.id, this.creatOnComponentAddEvent(idStr, 'OnComponentAdd'));
+    }
+
     let buildResults: OnComponentEventResult[];
     try {
       buildResults = isChange
@@ -147,6 +163,18 @@ export class Watcher {
     return [];
   }
 
+  private creatOnComponentRemovedEvent(idStr) {
+    return new OnComponentRemovedEvent(Date.now(), idStr);
+  }
+
+  private creatOnComponentChangeEvent(idStr, hook) {
+    return new OnComponentChangeEvent(Date.now(), idStr, hook);
+  }
+
+  private creatOnComponentAddEvent(idStr, hook) {
+    return new OnComponentAddEvent(Date.now(), idStr, hook);
+  }
+
   private completeWatch() {
     loader.stop();
     return [];
@@ -155,7 +183,7 @@ export class Watcher {
   private isComponentWatchedExternally(componentId: ComponentID) {
     const watcherData = this.multipleWatchers.find((m) => m.componentIds.find((id) => id.isEqual(componentId._legacy)));
     if (watcherData) {
-      logger.console(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
+      logger.debug(`${componentId.toString()} is watched by ${watcherData.compilerId.toString()}`);
       return true;
     }
     return false;
@@ -163,7 +191,7 @@ export class Watcher {
 
   private async getBitIdByPathAndReloadConsumer(filePath: string): Promise<ComponentID | null> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
-    const trackDir = Object.keys(this.trackDirs).find((dir) => relativeFile.startsWith(dir));
+    const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
     if (!trackDir) {
       // the file is not part of any component. If it was a new component, then, .bitmap changes
       // should have added the path to the trackDir.
@@ -180,6 +208,13 @@ export class Watcher {
     }
     // the file is inside the component dir but it's ignored. (e.g. it's in IGNORE_LIST)
     return null;
+  }
+
+  private findTrackDirByFilePathRecursively(filePath: string): string | null {
+    if (this.trackDirs[filePath]) return filePath;
+    const parentDir = dirname(filePath);
+    if (parentDir === filePath) return null;
+    return this.findTrackDirByFilePathRecursively(parentDir);
   }
 
   private async createWatcher() {

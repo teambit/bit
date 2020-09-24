@@ -31,6 +31,7 @@ import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
+import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
 import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
@@ -40,6 +41,7 @@ import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CommandBarAspect } from '@teambit/command-bar';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -59,6 +61,7 @@ export const manifestsMap = {
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,
+  [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
   [InsightsAspect.id]: InsightsAspect,
   [IsolatorAspect.id]: IsolatorAspect,
@@ -84,6 +87,7 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CommandBarAspect.id]: CommandBarAspect,
 };
 
 export function isCoreAspect(id: string) {

@@ -34,7 +34,7 @@ export function WorkspaceOverview() {
 function PreviewPlaceholder({ name }: { name?: string }) {
   return (
     <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
-      <Icon of="image" />
+      <Icon of="img" />
       <div>No preview available</div>
       <ReactTooltip className={styles.tooltip} place="bottom" id={name} effect="solid">
         Preview is generated from compositions during CI

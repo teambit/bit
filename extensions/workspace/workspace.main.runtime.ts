@@ -1,3 +1,4 @@
+import { PubsubAspect } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect } from '@teambit/bundler';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
@@ -21,6 +22,7 @@ export const WorkspaceMain = {
   name: EXT_NAME,
   runtime: MainRuntime,
   dependencies: [
+    PubsubAspect,
     CLIAspect,
     ScopeAspect,
     ComponentAspect,

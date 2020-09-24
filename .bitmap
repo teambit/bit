@@ -38,13 +38,7 @@
         "rootDir": "extensions/aspect",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "aspect-loader": {
         "files": [
@@ -93,13 +87,7 @@
         "rootDir": "extensions/aspect-loader",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "bit": {
         "files": [
@@ -173,13 +161,7 @@
         "rootDir": "extensions/bit",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "builder": {
         "files": [
@@ -299,6 +281,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "storage/s3-resolver.ts",
+                "test": false,
+                "name": "s3-resolver.ts"
+            },
+            {
                 "relativePath": "storage/storage-resolver.ts",
                 "test": false,
                 "name": "storage-resolver.ts"
@@ -313,13 +300,7 @@
         "rootDir": "extensions/builder",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "bundler": {
         "files": [
@@ -374,6 +355,16 @@
                 "name": "dev-server.ts"
             },
             {
+                "relativePath": "events/components-server-started-event.ts",
+                "test": false,
+                "name": "components-server-started-event.ts"
+            },
+            {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "exceptions/bind-error.ts",
                 "test": false,
                 "name": "bind-error.ts"
@@ -403,13 +394,7 @@
         "rootDir": "extensions/bundler",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "cache": {
         "files": [
@@ -438,13 +423,7 @@
         "rootDir": "extensions/cache",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "changelog": {
         "files": [
@@ -488,13 +467,7 @@
         "rootDir": "extensions/changelog",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "cli": {
         "files": [
@@ -558,13 +531,111 @@
         "rootDir": "extensions/cli",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
+    },
+    "command-bar": {
+        "files": [
+            {
+                "relativePath": "command-bar.aspect.ts",
+                "test": false,
+                "name": "command-bar.aspect.ts"
+            },
+            {
+                "relativePath": "command-bar.commands.ts",
+                "test": false,
+                "name": "command-bar.commands.ts"
+            },
+            {
+                "relativePath": "command-bar.ui.runtime.tsx",
+                "test": false,
+                "name": "command-bar.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "duplicate-command-error.tsx",
+                "test": false,
+                "name": "duplicate-command-error.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "types.tsx",
+                "test": false,
+                "name": "types.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.module.scss",
+                "test": false,
+                "name": "autocomplete-input.module.scss"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/autocomplete-input.tsx",
+                "test": false,
+                "name": "autocomplete-input.tsx"
+            },
+            {
+                "relativePath": "ui/autocomplete-input/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.module.scss",
+                "test": false,
+                "name": "command-bar-item.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar-item/command-bar-item.tsx",
+                "test": false,
+                "name": "command-bar-item.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar-item/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.module.scss",
+                "test": false,
+                "name": "command-bar.module.scss"
+            },
+            {
+                "relativePath": "ui/command-bar/command-bar.tsx",
+                "test": false,
+                "name": "command-bar.tsx"
+            },
+            {
+                "relativePath": "ui/command-bar/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/command-searcher.ts",
+                "test": false,
+                "name": "command-searcher.ts"
+            },
+            {
+                "relativePath": "ui/command-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/component-searcher.ts",
+                "test": false,
+                "name": "component-searcher.ts"
+            },
+            {
+                "relativePath": "ui/component-searcher/index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/command-bar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "compiler": {
         "files": [
@@ -618,13 +689,7 @@
         "rootDir": "extensions/compiler",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "component": {
         "files": [
@@ -948,13 +1013,7 @@
         "rootDir": "extensions/component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "component-tree": {
         "files": [
@@ -998,13 +1057,7 @@
         "rootDir": "extensions/component-tree",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "compositions": {
         "files": [
@@ -1128,13 +1181,7 @@
         "rootDir": "extensions/compositions",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "config": {
         "files": [
@@ -1213,13 +1260,7 @@
         "rootDir": "extensions/config",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "dependency-resolver": {
         "files": [
@@ -1353,13 +1394,7 @@
         "rootDir": "extensions/dependency-resolver",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "deprecation": {
         "files": [
@@ -1388,13 +1423,7 @@
         "rootDir": "extensions/deprecation",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "docs": {
         "files": [
@@ -1468,13 +1497,7 @@
         "rootDir": "extensions/docs",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "dummy": {
         "files": [
@@ -1498,13 +1521,36 @@
         "rootDir": "extensions/dummy",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
+    },
+    "elements/keycap": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "key-characters.ts",
+                "test": false,
+                "name": "key-characters.ts"
+            },
+            {
+                "relativePath": "key.module.scss",
+                "test": false,
+                "name": "key.module.scss"
+            },
+            {
+                "relativePath": "keycap.tsx",
+                "test": false,
+                "name": "keycap.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/keycap",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "environments": {
         "files": [
@@ -1559,6 +1605,16 @@
                 "name": "environments.main.runtime.ts"
             },
             {
+                "relativePath": "exceptions/env-not-found-in-runtime.ts",
+                "test": false,
+                "name": "env-not-found-in-runtime.ts"
+            },
+            {
+                "relativePath": "exceptions/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -1603,13 +1659,7 @@
         "rootDir": "extensions/environments",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "express": {
         "files": [
@@ -1668,13 +1718,7 @@
         "rootDir": "extensions/express",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "flows": {
         "files": [
@@ -1798,13 +1842,7 @@
         "rootDir": "extensions/flows",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "generator": {
         "files": [
@@ -1853,13 +1891,7 @@
         "rootDir": "extensions/generator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "graph": {
         "files": [
@@ -1894,6 +1926,11 @@
                 "name": "graph.aspect.ts"
             },
             {
+                "relativePath": "graph.graphql.ts",
+                "test": false,
+                "name": "graph.graphql.ts"
+            },
+            {
                 "relativePath": "graph.main.runtime.ts",
                 "test": false,
                 "name": "graph.main.runtime.ts"
@@ -1918,13 +1955,7 @@
         "rootDir": "extensions/graph",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "graphql": {
         "files": [
@@ -1978,13 +2009,7 @@
         "rootDir": "extensions/graphql",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "insights": {
         "files": [
@@ -2058,13 +2083,7 @@
         "rootDir": "extensions/insights",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "isolator": {
         "files": [
@@ -2138,16 +2157,15 @@
         "rootDir": "extensions/isolator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "jest": {
         "files": [
+            {
+                "relativePath": "error.ts",
+                "test": false,
+                "name": "error.ts"
+            },
             {
                 "relativePath": "index.ts",
                 "test": false,
@@ -2178,13 +2196,7 @@
         "rootDir": "extensions/jest",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "logger": {
         "files": [
@@ -2223,13 +2235,7 @@
         "rootDir": "extensions/logger",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "node": {
         "files": [
@@ -2258,13 +2264,7 @@
         "rootDir": "extensions/node",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "notifications": {
         "files": [
@@ -2293,13 +2293,7 @@
         "rootDir": "extensions/notifications/aspect",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "notifications/api": {
         "files": [
@@ -2318,13 +2312,7 @@
         "rootDir": "extensions/notifications/ui/api",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "notifications/notification": {
         "files": [
@@ -2363,13 +2351,7 @@
         "rootDir": "extensions/notifications/ui/notification",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "notifications/notification-center": {
         "files": [
@@ -2408,13 +2390,7 @@
         "rootDir": "extensions/notifications/ui/notification-center",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "notifications/notification-context": {
         "files": [
@@ -2433,13 +2409,7 @@
         "rootDir": "extensions/notifications/ui/notification-context",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pages/error": {
         "files": [
@@ -2463,13 +2433,7 @@
         "rootDir": "components/error-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pages/not-found": {
         "files": [
@@ -2493,13 +2457,7 @@
         "rootDir": "components/not-found-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pages/server-error": {
         "files": [
@@ -2523,13 +2481,7 @@
         "rootDir": "components/server-error-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "panels": {
         "files": [
@@ -2563,13 +2515,7 @@
         "rootDir": "extensions/panels",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pkg": {
         "files": [
@@ -2638,13 +2584,7 @@
         "rootDir": "extensions/pkg",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "pnpm": {
         "files": [
@@ -2688,13 +2628,7 @@
         "rootDir": "extensions/pnpm",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "preview": {
         "files": [
@@ -3061,13 +2995,7 @@
         "rootDir": "extensions/react",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "react-router": {
         "files": [
@@ -3122,6 +3050,11 @@
                 "name": "react-router.ui.runtime.tsx"
             },
             {
+                "relativePath": "route-context.tsx",
+                "test": false,
+                "name": "route-context.tsx"
+            },
+            {
                 "relativePath": "route.ts",
                 "test": false,
                 "name": "route.ts"
@@ -3136,13 +3069,7 @@
         "rootDir": "extensions/react-router",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "routing/external-link": {
         "files": [
@@ -3166,13 +3093,7 @@
         "rootDir": "components/external-link",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "schema": {
         "files": [
@@ -3226,13 +3147,7 @@
         "rootDir": "extensions/schema",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "scope": {
         "files": [
@@ -3361,13 +3276,7 @@
         "rootDir": "extensions/scope",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "sidebar": {
         "files": [
@@ -3451,13 +3360,31 @@
         "rootDir": "extensions/sidebar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
+    },
+    "staged-components/cli-snippet": {
+        "files": [
+            {
+                "relativePath": "cli-snippet.module.scss",
+                "test": false,
+                "name": "cli-snippet.module.scss"
+            },
+            {
+                "relativePath": "cli-snippet.tsx",
+                "test": false,
+                "name": "cli-snippet.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/cli-snippet",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "staged-components/component-status": {
         "files": [
@@ -3481,13 +3408,7 @@
         "rootDir": "components/component-status",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/component-status-resolver": {
         "files": [
@@ -3516,13 +3437,7 @@
         "rootDir": "components/component-status-resolver",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/component-tooltip": {
         "files": [
@@ -3546,13 +3461,7 @@
         "rootDir": "components/component-tooltip",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/corner": {
         "files": [
@@ -3576,13 +3485,7 @@
         "rootDir": "components/corner",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/empty-box": {
         "files": [
@@ -3606,13 +3509,7 @@
         "rootDir": "components/empty-box",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/full-loader": {
         "files": [
@@ -3636,13 +3533,7 @@
         "rootDir": "components/full-loader",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/main-dropdown": {
         "files": [
@@ -3666,13 +3557,7 @@
         "rootDir": "components/main-dropdown",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/pill-label": {
         "files": [
@@ -3696,13 +3581,7 @@
         "rootDir": "components/pill-label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/scope-details": {
         "files": [
@@ -3726,13 +3605,7 @@
         "rootDir": "components/scope-details",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/scope-labels": {
         "files": [
@@ -3756,13 +3629,7 @@
         "rootDir": "components/scope-labels",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/scope-title": {
         "files": [
@@ -3786,13 +3653,7 @@
         "rootDir": "components/scope-title",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/side-bar": {
         "files": [
@@ -3872,9 +3733,9 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/inflate-paths.spec.ts",
+                "relativePath": "component-tree/inflate-paths/inflate-paths.specx.ts",
                 "test": false,
-                "name": "inflate-paths.spec.ts"
+                "name": "inflate-paths.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/inflate-paths.ts",
@@ -3882,9 +3743,9 @@
                 "name": "inflate-paths.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.specx.ts",
                 "test": false,
-                "name": "key-tree-to-node-tree.spec.ts"
+                "name": "key-tree-to-node-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree-to-node-tree.ts",
@@ -3892,9 +3753,9 @@
                 "name": "key-tree-to-node-tree.ts"
             },
             {
-                "relativePath": "component-tree/inflate-paths/key-tree.spec.ts",
+                "relativePath": "component-tree/inflate-paths/key-tree.specx.ts",
                 "test": false,
-                "name": "key-tree.spec.ts"
+                "name": "key-tree.specx.ts"
             },
             {
                 "relativePath": "component-tree/inflate-paths/key-tree.ts",
@@ -4016,13 +3877,75 @@
         "rootDir": "components/side-bar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
+    },
+    "staged-components/test-row": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "test-row.module.scss",
+                "test": false,
+                "name": "test-row.module.scss"
+            },
+            {
+                "relativePath": "test-row.tsx",
+                "test": false,
+                "name": "test-row.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/test-row",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/test-table": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "test-file-title/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "test-file-title/test-file-title.module.scss",
+                "test": false,
+                "name": "test-file-title.module.scss"
+            },
+            {
+                "relativePath": "test-file-title/test-file-title.tsx",
+                "test": false,
+                "name": "test-file-title.tsx"
+            },
+            {
+                "relativePath": "test-table.module.scss",
+                "test": false,
+                "name": "test-table.module.scss"
+            },
+            {
+                "relativePath": "test-table.tsx",
+                "test": false,
+                "name": "test-table.tsx"
+            },
+            {
+                "relativePath": "utils.tsx",
+                "test": false,
+                "name": "utils.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/test-table",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
     },
     "staged-components/top-bar": {
         "files": [
@@ -4046,13 +3969,7 @@
         "rootDir": "components/top-bar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/version-dropdown": {
         "files": [
@@ -4076,13 +3993,7 @@
         "rootDir": "components/version-dropdown",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/avatar": {
         "files": [
@@ -4131,13 +4042,7 @@
         "rootDir": "components/Avatar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/label": {
         "files": [
@@ -4166,13 +4071,7 @@
         "rootDir": "components/label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/separator": {
         "files": [
@@ -4196,13 +4095,7 @@
         "rootDir": "components/separator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/status": {
         "files": [
@@ -4222,6 +4115,11 @@
                 "name": "status.module.scss"
             },
             {
+                "relativePath": "status.specx.tsx",
+                "test": false,
+                "name": "status.specx.tsx"
+            },
+            {
                 "relativePath": "status.tsx",
                 "test": false,
                 "name": "status.tsx"
@@ -4231,13 +4129,7 @@
         "rootDir": "components/status",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/time-ago": {
         "files": [
@@ -4261,13 +4153,7 @@
         "rootDir": "components/time-ago",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-components/version-tag": {
         "files": [
@@ -4296,13 +4182,7 @@
         "rootDir": "components/version-tag",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-sections/contributors": {
         "files": [
@@ -4326,13 +4206,7 @@
         "rootDir": "components/contributors",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-sections/version-block": {
         "files": [
@@ -4361,13 +4235,7 @@
         "rootDir": "components/version-block",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "staged-components/workspace-sections/version-label": {
         "files": [
@@ -4391,13 +4259,7 @@
         "rootDir": "components/version-label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "stencil": {
         "files": [
@@ -4451,13 +4313,7 @@
         "rootDir": "extensions/stencil",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "tester": {
         "files": [
@@ -4522,9 +4378,24 @@
                 "name": "tester.ui.runtime.tsx"
             },
             {
+                "relativePath": "tests-files.ts",
+                "test": false,
+                "name": "tests-files.ts"
+            },
+            {
                 "relativePath": "tests-results.ts",
                 "test": false,
                 "name": "tests-results.ts"
+            },
+            {
+                "relativePath": "tests.section.tsx",
+                "test": false,
+                "name": "tests.section.tsx"
+            },
+            {
+                "relativePath": "ui/tests-page.module.scss",
+                "test": false,
+                "name": "tests-page.module.scss"
             },
             {
                 "relativePath": "ui/tests-page.tsx",
@@ -4546,13 +4417,7 @@
         "rootDir": "extensions/tester",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "toolbox/query-string": {
         "files": [
@@ -4576,13 +4441,7 @@
         "rootDir": "toolbox/query-string",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "toolbox/string/capitalize": {
         "files": [
@@ -4606,13 +4465,7 @@
         "rootDir": "toolbox/capitalize",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "typescript": {
         "files": [
@@ -4666,16 +4519,55 @@
         "rootDir": "extensions/typescript",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "ui": {
         "files": [
+            {
+                "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
+                "test": false,
+                "name": "clear-console.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started-headers.tsx",
+                "test": false,
+                "name": "component-preview-server-started-headers.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started.tsx",
+                "test": false,
+                "name": "component-preview-server-started.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/on-component-change.tsx",
+                "test": false,
+                "name": "on-component-change.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/standalone-new-line.tsx",
+                "test": false,
+                "name": "standalone-new-line.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/starting-main-ui-server.tsx",
+                "test": false,
+                "name": "starting-main-ui-server.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/starting.tsx",
+                "test": false,
+                "name": "starting.tsx"
+            },
+            {
+                "relativePath": "bit-start-cmd-output-templates/ui-servers-are-ready.tsx",
+                "test": false,
+                "name": "ui-servers-are-ready.tsx"
+            },
             {
                 "relativePath": "compose.tsx",
                 "test": false,
@@ -4687,9 +4579,14 @@
                 "name": "create-root.ts"
             },
             {
-                "relativePath": "env-console.tsx",
+                "relativePath": "events/index.ts",
                 "test": false,
-                "name": "env-console.tsx"
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "events/ui-server-started-event.ts",
+                "test": false,
+                "name": "ui-server-started-event.ts"
             },
             {
                 "relativePath": "exceptions/index.ts",
@@ -4831,13 +4728,7 @@
         "rootDir": "extensions/ui",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "utils/capitalize": {
         "files": [
@@ -4856,13 +4747,7 @@
         "rootDir": "components/utils/capitalize",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "utils/requireable-component": {
         "files": [
@@ -4881,13 +4766,7 @@
         "rootDir": "components/utils/requireable-component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "utils/resolved-component": {
         "files": [
@@ -4906,13 +4785,7 @@
         "rootDir": "components/utils/resolved-component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "utils/to-identifier": {
         "files": [
@@ -4931,13 +4804,7 @@
         "rootDir": "components/utils/to-identifier",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "variants": {
         "files": [
@@ -4981,13 +4848,7 @@
         "rootDir": "extensions/variants",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "webpack": {
         "files": [
@@ -5007,9 +4868,24 @@
                 "name": "webpack.dev.config.js"
             },
             {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "events/webpack-compilation-done-event.ts",
+                "test": false,
+                "name": "webpack-compilation-done-event.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "plugins/webpack-compiler-done-plugin.ts",
+                "test": false,
+                "name": "webpack-compiler-done-plugin.ts"
             },
             {
                 "relativePath": "webpack.aspect.ts",
@@ -5036,13 +4912,7 @@
         "rootDir": "extensions/webpack",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
     "workspace": {
         "files": [
@@ -5090,6 +4960,26 @@
                 "relativePath": "eject-conf.cmd.tsx",
                 "test": false,
                 "name": "eject-conf.cmd.tsx"
+            },
+            {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "events/on-component-add-event.ts",
+                "test": false,
+                "name": "on-component-add-event.ts"
+            },
+            {
+                "relativePath": "events/on-component-change-event.ts",
+                "test": false,
+                "name": "on-component-change-event.ts"
+            },
+            {
+                "relativePath": "events/on-component-removed-event.ts",
+                "test": false,
+                "name": "on-component-removed-event.ts"
             },
             {
                 "relativePath": "exceptions/dependency-type-not-supported-in-policy.ts",
@@ -5291,13 +5181,7 @@
         "rootDir": "extensions/workspace",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.44",
-            "message": "",
-            "username": "David First",
-            "email": "davidnet@gmail.com"
-        }
+        "lanes": []
     },
-    "version": "14.8.9-dev.15"
+    "version": "14.8.9-dev.23"
 }
