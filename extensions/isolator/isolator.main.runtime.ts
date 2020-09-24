@@ -18,7 +18,7 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
-import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
+import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import writeComponentsToCapsules from './write-components-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
@@ -118,6 +118,7 @@ export class IsolatorMain {
         copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
       await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
+      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components
