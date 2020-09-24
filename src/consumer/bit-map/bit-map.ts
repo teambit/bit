@@ -447,8 +447,8 @@ export default class BitMap {
         const idWithoutScope = BitId.getScopeAndName(id).name;
         const matches = this.components.filter((componentMap: ComponentMap) => {
           return idHasVersion
-            ? componentMap.id.toStringWithoutScope() === idWithoutScope
-            : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutScope;
+            ? componentMap.id.toString() === idWithoutScope
+            : componentMap.id.toStringWithoutVersion() === idWithoutScope;
         });
         if (matches && matches.length > 1) {
           throw new MultipleMatches(id);
@@ -739,7 +739,7 @@ export default class BitMap {
         ? componentMapCloned.id.changeVersion(componentMapCloned.defaultVersion)
         : componentMapCloned.id;
       const idStr = id.toString();
-      delete componentMapCloned.id;
+      delete componentMapCloned?.id;
       components[idStr] = componentMapCloned.toPlainObject();
     });
 
