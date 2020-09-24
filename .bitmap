@@ -2152,6 +2152,11 @@
     "jest": {
         "files": [
             {
+                "relativePath": "error.ts",
+                "test": false,
+                "name": "error.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
