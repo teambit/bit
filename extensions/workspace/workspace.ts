@@ -366,7 +366,10 @@ export class Workspace implements ComponentFactory {
       return component;
     }
 
-    const extensionDataList = await this.componentExtensions(id, component);
+    let extensionDataList = await this.componentExtensions(id, component);
+    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
+    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
+    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
