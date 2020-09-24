@@ -2324,6 +2324,25 @@
         "exported": false,
         "lanes": []
     },
+    "notifications/notification-context": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "notification-context.tsx",
+                "test": false,
+                "name": "notification-context.tsx"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification-context",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "notifications/notification-context@0.0.48": {
         "files": [
             {
@@ -2417,25 +2436,6 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/notifications/ui/notification-center",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "notifications/notification-context": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "notification-context.tsx",
-                "test": false,
-                "name": "notification-context.tsx"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/notification-context",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2793,7 +2793,7 @@
         "exported": false,
         "lanes": []
     },
-    "react-router@0.0.48": {
+    "react-router": {
         "files": [
             {
                 "relativePath": "bit-base-event.ts",
