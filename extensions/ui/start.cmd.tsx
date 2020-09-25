@@ -137,7 +137,6 @@ export class StartCmd implements Command {
     this.targetPort = event.data.targetPort;
   };
 
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   private onWebpackCompilationDone = (event) => {
     const {stats} = event.data;
 

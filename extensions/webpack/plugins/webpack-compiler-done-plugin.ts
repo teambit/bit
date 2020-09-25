@@ -13,7 +13,6 @@ class WebpackCompilerDonePlugin {
   };
 
   apply(compiler) {
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     compiler.hooks.done.tap('webpack-compiler-done-plugin', (stats) => {
       this.pubsub.pub(WebpackAspect.id, this.createEvent(stats));
     });
