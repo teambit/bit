@@ -1,3 +1,4 @@
+import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
 import { Component, ComponentMap } from '@teambit/component';
@@ -22,8 +23,8 @@ export class ArtifactFactory {
     return userResolver || defaultResolver;
   }
 
-  private resolvePaths(root: string, globPatterns: string[]): string[] {
-    const patternsFlattened = flatten(globPatterns);
+  private resolvePaths(root: string, def: ArtifactDefinition): string[] {
+    const patternsFlattened = flatten(def.globPatterns);
     const paths = globby.sync(patternsFlattened, { cwd: root });
     return paths;
   }
@@ -46,7 +47,7 @@ export class ArtifactFactory {
   createFromComponent(context: BuildContext, component: Component, def: ArtifactDefinition, task: BuildTask) {
     const storageResolver = this.getStorageResolver(def);
     const rootDir = this.getArtifactContextPath(context, component, def);
-    const paths = this.resolvePaths(rootDir, def.globPatterns);
+    const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
 
     return new Artifact(def, storageResolver, paths, rootDir, task);
   }
@@ -65,6 +66,11 @@ export class ArtifactFactory {
     });
   }
 
+  private getRootDir(rootDir: string, def: ArtifactDefinition) {
+    if (!def.rootDir) return rootDir;
+    return join(rootDir, def.rootDir);
+  }
+
   /**
    * generate artifacts from a build context according to the spec defined in the artifact definitions.
    */
@@ -74,11 +80,13 @@ export class ArtifactFactory {
     defs.forEach((def) => {
       const artifactContext = this.getArtifactContext(def);
       if (artifactContext === 'env') {
-        const rootDir = context.capsuleGraph.capsulesRootDir;
+        const capsuleDir = context.capsuleGraph.capsulesRootDir;
+        const rootDir = this.getRootDir(capsuleDir, def);
+
         const artifact = new Artifact(
           def,
           this.getStorageResolver(def),
-          this.resolvePaths(rootDir, def.globPatterns),
+          this.resolvePaths(rootDir, def),
           rootDir,
           task
         );
