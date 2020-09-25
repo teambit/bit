@@ -77,7 +77,7 @@ export class Http implements Network {
     });
 
     if (res.status !== 200) {
-      throw new Error(await res.text());
+      throw new Error(res.status.toString());
     }
 
     const ids = await res.json();
