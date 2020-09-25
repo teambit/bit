@@ -65,6 +65,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
     devServer: {
       // For bit start command
       quiet: true,
+      stats: 'errors-warnings',
 
       // Serve index.html as the base
       contentBase: resolveWorkspacePath(publicDirectory),

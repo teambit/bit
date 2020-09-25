@@ -30,11 +30,14 @@ import {
   ClearConsole,
   ComponentPreviewServerStarted,
   UIServersAreReady,
+  WebpackErrors,
+  WebpackWarnings
 } from './bit-start-cmd-output-templates';
 
 export class StartCmd implements Command {
   items: any[] = [];
   onComponentChanges: any[] = [];
+  verbose: boolean = false;
 
   startingtimestamp;
   devServerCounter = 0;
@@ -135,7 +138,28 @@ export class StartCmd implements Command {
   };
 
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  private onWebpackCompilationDone = (_event) => {
+  private onWebpackCompilationDone = (event) => {
+    const {stats} = event.data;
+
+    const hasErrors = stats.hasErrors();
+    const hasWarnings = stats.hasWarnings();
+
+    if(!this.verbose && (hasErrors || hasWarnings)){
+      render(<ClearConsole />)
+    }
+
+    if (hasErrors) {
+      render(
+        <WebpackErrors errors={stats.compilation.errors}/>
+      )
+    }
+
+    if (hasWarnings) {
+      render(
+        <WebpackWarnings warnings={stats.compilation.warning}/>
+      )
+    }
+
     this.devServerCounter -= 1;
     this.openBrowserOn0();
   };
@@ -186,6 +210,7 @@ export class StartCmd implements Command {
     { dev, port, rebuild, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean }
   ): Promise<React.ReactElement> {
     this.startingtimestamp = Date.now();
+    this.verbose = verbose;
 
     // TODO[uri]: move outside when refactor to react app.
     this.registerToEvents();

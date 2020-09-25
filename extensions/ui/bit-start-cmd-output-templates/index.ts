@@ -6,3 +6,5 @@ export { ComponentPreviewServerStartedHeaders } from './component-preview-server
 export { UIServersAreReady } from './ui-servers-are-ready';
 export { StandaloneNewLine } from './standalone-new-line';
 export { StartingMainUiServer } from './starting-main-ui-server';
+export { WebpackErrors } from './webpack-errors';
+export { WebpackWarnings } from './webpack-warnings';

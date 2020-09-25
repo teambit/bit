@@ -8,14 +8,14 @@ class WebpackCompilerDonePlugin {
     this.pubsub = options.pubsub;
   }
 
-  private createEvent = () => {
-    return new WebpackCompilationDoneEvent(Date.now());
+  private createEvent = (stats) => {
+    return new WebpackCompilationDoneEvent(Date.now(), stats);
   };
 
   apply(compiler) {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    compiler.hooks.done.tap('webpack-compiler-done-plugin', (_stats) => {
-      this.pubsub.pub(WebpackAspect.id, this.createEvent());
+    compiler.hooks.done.tap('webpack-compiler-done-plugin', (stats) => {
+      this.pubsub.pub(WebpackAspect.id, this.createEvent(stats));
     });
   }
 }
