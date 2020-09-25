@@ -1,7 +1,7 @@
 import React from 'react';
 import { Newline, Text } from 'ink';
 
-export const WebpackWarnings = ({warnings}) => (
+export const WebpackWarnings = ({warnings} : any) => (
   <Text>
     {
       warnings.map(warning =>(

@@ -37,7 +37,7 @@ import {
 export class StartCmd implements Command {
   items: any[] = [];
   onComponentChanges: any[] = [];
-  verbose: boolean = false;
+  verbose = false;
 
   startingtimestamp;
   devServerCounter = 0;
