@@ -242,7 +242,7 @@ const randomStr = (sizeInMB: number) =>
   Array(sizeInMB * MB + 1)
     .join('a')
     .split('a')
-    .map((x) => Math.random().toString(36).charAt(2))
+    .map(() => Math.random().toString(36).charAt(2))
     .join('');
 const MAX_HEAVY_COMPONENTS = 10;
 const SIZE_IN_MB = 10;
