@@ -69,6 +69,10 @@ export class ExpressMain {
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
+    app.use((req, res, next) => {
+      this.logger.debug('express got a request to a URL: ', req.originalUrl);
+      next();
+    });
     app.use(bodyParser.text({ limit: '5000mb' }));
     app.use(bodyParser.json({ limit: '5000mb' }));
     // app.use(cors());

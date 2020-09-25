@@ -13,6 +13,7 @@ import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import logger from '../../../logger/logger';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}
@@ -69,6 +70,7 @@ export class Http implements Network {
   async pushMany(compsAndLanesObjects: CompsAndLanesObjects): Promise<string[]> {
     const route = 'api/scope/put';
     const body = compsAndLanesObjects.toString();
+    logger.debug(`http.pushMany, length ${body.length} bytes, ${body.length / 1024 / 1024} MB`);
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
@@ -92,12 +94,13 @@ export class Http implements Network {
       noDeps,
       idsAreLanes,
     });
-
+    logger.debug(`http, running fetch on a remote path ${this.scopeUrl}/${route}`);
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'post',
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
+    logger.debug(`http, returning from a remote fetch ${this.scopeUrl}/${route}`);
 
     return CompsAndLanesObjects.fromString(await res.text());
   }
