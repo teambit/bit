@@ -16,7 +16,7 @@ export class PubsubPreview {
     .promise.then((parentPubsub) => {
       this._parentPubsub = parentPubsub
     }).catch((err) => {
-      console.error(err);
+      // console.error('-PubsubPreview-', err);
       return this.updateParentPubsub();
     });
   };
