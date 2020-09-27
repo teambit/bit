@@ -1478,6 +1478,11 @@
                 "name": "click-inside-an-iframe.ts"
             },
             {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
