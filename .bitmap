@@ -2797,6 +2797,11 @@
                 "name": "pubsub.main.runtime.ts"
             },
             {
+                "relativePath": "pubsub.preview.runtime.ts",
+                "test": false,
+                "name": "pubsub.preview.runtime.ts"
+            },
+            {
                 "relativePath": "pubsub.ui.runtime.ts",
                 "test": false,
                 "name": "pubsub.ui.runtime.ts"
