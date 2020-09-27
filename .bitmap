@@ -1473,6 +1473,11 @@
                 "name": "docs.ui.runtime.tsx"
             },
             {
+                "relativePath": "events/click-inside-an-iframe.ts",
+                "test": false,
+                "name": "click-inside-an-iframe.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
