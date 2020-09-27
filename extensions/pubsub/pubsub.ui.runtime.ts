@@ -6,7 +6,6 @@ import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubUI {
-  static _singletonPubsub: any = null;
 
   private topicMap = {};
   private _childs;
@@ -26,15 +25,15 @@ export class PubsubUI {
         sub(topicUUID, callback) {
           return self.sub(topicUUID, callback);
         },
-        pub(topicUUID, event: BitBaseEvent) {
+        pub(topicUUID, event: BitBaseEvent<any>) {
           return self.pub(topicUUID, event);
         },
       },
     })
     .promise.then((child) => (child))
     .catch((err) => {
-      console.error(err)
-      this.connectToIframe(iframe);
+      console.error('--ui-->', err)
+      return this.connectToIframe(iframe);
     });
   };
 
@@ -42,13 +41,8 @@ export class PubsubUI {
     const _iframes = this.getAllIframes();
     return  _iframes.map((iframe) => this.connectToIframe(iframe));
   }
-
-  private createOrGetTopic = (topicUUID) => {
-    this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
-  };
-
-  constructor() {
-
+  
+  public async updateConnectionListWithRetry(){
     const t = setInterval(() => {
       const childs = this.updateConnectionsList();
       if(childs){
@@ -58,12 +52,18 @@ export class PubsubUI {
     }, 300);
   }
 
+  constructor() {}
+
+  private createOrGetTopic = (topicUUID) => {
+    this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
+  };
+
   public sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].push(callback);
   };
 
-  public pub = (topicUUID, event: BitBaseEvent) => {
+  public pub = (topicUUID, event: BitBaseEvent<any>) => {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   };
@@ -72,10 +72,9 @@ export class PubsubUI {
 
 
   static async provider() {
-    if (!this._singletonPubsub) {
-      this._singletonPubsub = new PubsubUI();
-    }
-    return this._singletonPubsub;
+    const pubsubUI = new PubsubUI();
+    await pubsubUI.updateConnectionListWithRetry();
+    return pubsubUI;
   }
 }
 

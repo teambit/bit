@@ -3,6 +3,7 @@ import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
 import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
 
 import { DocsAspect } from './docs.aspect';
+import { ClickInsideAnIframeEvent } from './events';
 
 export class DocsPreview {
   constructor(
@@ -21,14 +22,12 @@ export class DocsPreview {
      */
     private graphql: GraphqlUI
   ) {
+    window.location !== window.parent.location ? console.log('DocsPreview - IFRAME') : console.log('DocsPreview - Not IFRAME');
+
     window.addEventListener('click', (e) => {
-      const be: BitBaseEvent = {
-        type: 'click-inside-an-iframe',
-        version: '0.0.1',
-        timestamp: Date.now().toString(),
-        body: Object.assign({}, e),
-      };
-      this.pubsub.pub(DocsAspect.id, be);
+      const timestamp = Date.now().toString();
+      const event = Object.assign({}, e);
+      this.pubsub.pub(DocsAspect.id, new ClickInsideAnIframeEvent(timestamp, event));
     });
   }
 

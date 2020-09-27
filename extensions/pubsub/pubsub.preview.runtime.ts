@@ -6,40 +6,35 @@ import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubPreview {
-  static _singletonPubsub: PubsubPreview | null = null;
 
   private _parentPubsub;
 
   constructor() {}
 
-  public updateParentPubsub = async () => {
-    this._parentPubsub = await connectToParent({timeout: 300}).promise.then((parentPubsub) => {
-      return parentPubsub
+  public async updateParentPubsub(){
+    return await connectToParent({timeout: 300})
+    .promise.then((parentPubsub) => {
+      this._parentPubsub = parentPubsub
     }).catch((err) => {
       console.error(err);
+      return this.updateParentPubsub();
     });
   };
 
-  sub = (topicUUID, callback) => {
+  public sub(topicUUID, callback){
     this._parentPubsub.sub(topicUUID, callback);
   };
 
-  pub = (topicUUID, event: BitBaseEvent) => {
+  public pub(topicUUID, event: BitBaseEvent<any>){
     this._parentPubsub.pub(topicUUID, event);
   };
 
   static runtime = PreviewRuntime;
 
   static async provider() {
-    if (!this._singletonPubsub) {
-      this._singletonPubsub = new PubsubPreview();
-      
-      setTimeout(async() => {
-        if(this._singletonPubsub)
-        await this._singletonPubsub.updateParentPubsub();
-      }, 0);
-    }
-    return this._singletonPubsub;
+    const pubsubPreview = new PubsubPreview();
+    await pubsubPreview.updateParentPubsub();
+    return pubsubPreview;
   }
 }
 
