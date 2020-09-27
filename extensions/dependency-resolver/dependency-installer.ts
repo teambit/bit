@@ -124,7 +124,7 @@ export class DependencyInstaller {
     return this.linkBit(dir);
   }
 
-  private async linkNonExistingCoreAspects(dir: string, componentIds: string[], hasLocalInstallation: boolean = false) {
+  private async linkNonExistingCoreAspects(dir: string, componentIds: string[], hasLocalInstallation = false) {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const filtered = coreAspectsIds.filter((aspectId) => {
       // Remove bit aspect
@@ -160,7 +160,7 @@ export class DependencyInstaller {
     id: string,
     name: string,
     packageName: string,
-    hasLocalInstallation: boolean = false
+    hasLocalInstallation = false
   ) {
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
