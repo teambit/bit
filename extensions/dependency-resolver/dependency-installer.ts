@@ -176,8 +176,7 @@ export class DependencyInstaller {
     const isAspectDirExist = await fs.pathExists(aspectDir);
     if (!isAspectDirExist) {
       if (hasLocalInstallation) {
-        const aspectModulePath = path.resolve(`${dir}/@teambit/bit/dist/${name}`);
-        aspectDir = require.resolve(aspectModulePath);
+        aspectDir = path.resolve(`${dir}/@teambit/bit/dist/${name}`);
       } else {
         aspectDir = getAspectDir(id);
       }
