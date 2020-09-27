@@ -13,16 +13,25 @@ export class BuilderCmd implements Command {
   group = '';
   private = true;
   shortDescription = '';
-  options = [['', 'rebuild', 'rebuild capsules']] as CommandOptions;
+  options = [
+    ['', 'rebuild', 'rebuild capsules'],
+    ['', 'install', 'install core aspects in capsules'],
+  ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
 
-  async report([userPattern]: [string], { rebuild = false }: { rebuild: boolean }): Promise<string> {
+  async report(
+    [userPattern]: [string],
+    { rebuild = false, install = false }: { rebuild: boolean; install: boolean }
+  ): Promise<string> {
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
     if (!this.workspace) throw new ConsumerNotFound();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
-    const envsExecutionResults = await this.builder.build(components, { emptyExisting: rebuild });
+    const envsExecutionResults = await this.builder.build(components, {
+      linkingOptions: { bitLinkType: install ? 'install' : 'link' },
+      emptyExisting: rebuild,
+    });
     longProcessLogger.end();
     envsExecutionResults.throwErrorsIfExist();
     this.logger.consoleSuccess();
