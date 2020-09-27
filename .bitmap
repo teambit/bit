@@ -2795,6 +2795,11 @@
                 "relativePath": "pubsub.main.runtime.ts",
                 "test": false,
                 "name": "pubsub.main.runtime.ts"
+            },
+            {
+                "relativePath": "pubsub.ui.runtime.ts",
+                "test": false,
+                "name": "pubsub.ui.runtime.ts"
             }
         ],
         "mainFile": "index.ts",
