@@ -138,7 +138,8 @@ export class AspectLoaderMain {
   }
 
   getCoreAspectIds() {
-    return this.coreAspects.map((aspect) => aspect.id).concat(this._reserved);
+    const ids = this.coreAspects.map((aspect) => aspect.id);
+    return ids.concat(this._reserved);
   }
 
   private _reserved = ['teambit.bit/bit', 'teambit.bit/config'];
