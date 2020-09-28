@@ -17,7 +17,7 @@ export class PubsubUI {
     const self = this;
 
     return await connectToChild({
-      timeout: 300,
+      timeout: 500,
       iframe,
       methods: {
         sub(topicUUID, callback) {
@@ -30,7 +30,6 @@ export class PubsubUI {
     })
       .promise.then((child) => child)
       .catch((err) => {
-        console.error('--ui-->', err);
         return this.connectToIframe(iframe);
       });
   };
@@ -39,22 +38,27 @@ export class PubsubUI {
     const _iframes = this.getAllIframes();
     return _iframes.map((iframe) => this.connectToIframe(iframe));
   }
-
-  public async updateConnectionListWithRetry() {
-    const t = setInterval(() => {
-      const childs = this.updateConnectionsList();
-      if (childs) {
-        this._childs = childs;
-        clearInterval(t);
-      }
-    }, 300);
-  }
-
-  constructor() {}
-
+  
   private createOrGetTopic = (topicUUID) => {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
+
+  // TODO[uri]: need to run on every possibility of adding new IFrames
+  // Refactor to new DOME API (https://stackoverflow.com/questions/3219758/detect-changes-in-the-dom)
+  public async updateConnectionListWithRetry() {
+    
+    window.addEventListener('DOMNodeInserted', () => {
+      this._childs = this.updateConnectionsList();
+      console.log('childs: ', this._childs) // TODO: use log aspect
+    }, false)
+
+    window.addEventListener('DOMNodeRemoved', () => {
+      this._childs = this.updateConnectionsList();
+      console.log('childs: ', this._childs) // TODO: use log aspect
+    }, false)
+  }
+
+  constructor() {}
 
   public sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);

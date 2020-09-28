@@ -14,11 +14,28 @@ export class PubsubPreview {
     return await connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;
+        console.log('parentPubsub', parentPubsub);// TODO: use log aspect
       })
       .catch((err) => {
-        // console.error('-PubsubPreview-', err);
+        console.error('Attempt to connect to the parent window failed', err);// TODO: use log aspect
         return this.updateParentPubsub();
       });
+  }
+
+  // TODO[uri]: need to run on every possibility of adding new IFrames
+  // Autorun init on focus
+  public async updateParentPubsubWithRetry() {
+    window.addEventListener('focus', () => {this.init()});
+  }
+
+  public init(){
+    const self = this;
+
+    // Making sure parent call connect-to-child before the child call connect-to-parent
+    setTimeout(() => { 
+      self.updateParentPubsub();
+      console.log('parentPubsub', self._parentPubsub);// TODO: use log aspect
+    }, 0);
   }
 
   public sub(topicUUID, callback) {
@@ -33,7 +50,7 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    // await pubsubPreview.updateParentPubsub();
+    pubsubPreview.updateParentPubsubWithRetry();
     return pubsubPreview;
   }
 }
