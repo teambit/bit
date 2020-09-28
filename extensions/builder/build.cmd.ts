@@ -16,13 +16,18 @@ export class BuilderCmd implements Command {
   options = [
     ['', 'rebuild', 'rebuild capsules'],
     ['', 'install', 'install core aspects in capsules'],
+    ['', 'include-deps', 'include all component dependencies in the capsule context'],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
 
   async report(
     [userPattern]: [string],
-    { rebuild = false, install = false }: { rebuild: boolean; install: boolean }
+    {
+      rebuild = false,
+      install = false,
+      includeDeps = false,
+    }: { rebuild: boolean; install: boolean; includeDeps: boolean }
   ): Promise<string> {
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
@@ -31,6 +36,7 @@ export class BuilderCmd implements Command {
     const envsExecutionResults = await this.builder.build(components, {
       linkingOptions: { bitLinkType: install ? 'install' : 'link' },
       emptyExisting: rebuild,
+      includeDeps,
     });
     longProcessLogger.end();
     envsExecutionResults.throwErrorsIfExist();
