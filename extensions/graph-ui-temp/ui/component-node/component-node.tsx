@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID, ComponentModel } from '@teambit/component';
 
 import { NodeModel } from '../query/graph-model';
+import { ComponentGraphContext } from '../graph-page/graph-page';
 
 // keep order: styles, then variants
 import styles from './component-node.module.scss';
 import variants from './variants.module.scss';
 
 export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel; type: string }) {
+  const graphContext = useContext(ComponentGraphContext);
   const { component } = node;
   const { id } = component;
 
@@ -22,6 +24,8 @@ export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel;
       </div>
       <div className={styles.buffs}>
         <EnvIcon component={component} />
+        {graphContext &&
+          graphContext.componentWidgets.toArray().map(([id, Widget]) => <Widget component={component} />)}
       </div>
     </div>
   );

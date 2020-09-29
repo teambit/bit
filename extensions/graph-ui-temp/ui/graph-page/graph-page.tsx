@@ -1,11 +1,13 @@
-import React from 'react';
-import ReactFlow, { Node, Controls, Background, MiniMap } from 'react-flow-renderer';
+import React, { createContext, useMemo, useCallback } from 'react';
+import classnames from 'classnames';
+import ReactFlow, { Controls, Background, MiniMap, OnLoadParams, ReactFlowProps } from 'react-flow-renderer';
 import { useRouteMatch } from 'react-router-dom';
 
 import { NotFoundPage } from '@teambit/pages.not-found';
 import { ServerErrorPage } from '@teambit/pages.server-error';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 
+import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
 import { useGraphQuery } from '../query';
 
@@ -24,13 +26,23 @@ const NodeTypes = {
   },
 };
 
-export function GraphPage() {
+type GraphPageProps = { componentWidgets: ComponentWidgetSlot } & ReactFlowProps;
+
+export function GraphPage({ componentWidgets, className, onLoad, ...rest }: GraphPageProps) {
   const {
     params: { componentId },
   } = useRouteMatch();
   const { graph, error } = useGraphQuery([componentId]);
 
   const elements = calcElements(graph, { rootNode: componentId });
+  const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
+  const handleLoad = useCallback(
+    (instance: OnLoadParams) => {
+      instance.fitView();
+      onLoad?.(instance);
+    },
+    [onLoad]
+  );
 
   if (error) {
     // TODO - unify
@@ -39,21 +51,31 @@ export function GraphPage() {
   if (!graph) return <FullLoader />;
 
   return (
-    <ReactFlow
-      className={styles.graph}
-      elements={elements}
-      nodeTypes={NodeTypes}
-      draggable={false}
-      nodesDraggable={false}
-      selectNodesOnDrag={false}
-      nodesConnectable={false}
-      zoomOnDoubleClick={false}
-      elementsSelectable={false}
-      defaultPosition={DEFAULT_POS}
-    >
-      <Background />
-      <Controls className={styles.controls} />
-      <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
-    </ReactFlow>
+    <ComponentGraphContext.Provider value={context}>
+      <ReactFlow
+        draggable={false}
+        nodesDraggable={true}
+        selectNodesOnDrag={false}
+        nodesConnectable={false}
+        zoomOnDoubleClick={false}
+        elementsSelectable={false}
+        maxZoom={1}
+        {...rest}
+        className={classnames(styles.graph, className)}
+        elements={elements}
+        nodeTypes={NodeTypes}
+        onLoad={handleLoad}
+      >
+        <Background />
+        <Controls className={styles.controls} />
+        <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
+      </ReactFlow>
+    </ComponentGraphContext.Provider>
   );
 }
+
+type ComponentGraphContext = {
+  componentWidgets: ComponentWidgetSlot;
+};
+
+export const ComponentGraphContext = createContext<ComponentGraphContext | undefined>(undefined);

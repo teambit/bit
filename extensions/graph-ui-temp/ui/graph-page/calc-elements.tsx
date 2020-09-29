@@ -12,7 +12,6 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
     if (!graph) return [];
 
     const nodes: Node[] = graph.nodes.map((x) => {
-      console.log(x.component.id.fullName, rootNode, x.component.id.fullName === rootNode);
       return {
         id: x.id,
         type: 'ComponentNode',

@@ -30,7 +30,17 @@
 }
 
 .buffs {
+  display: flex;
   padding-top: 8px;
+  line-height: 1;
+  font-size: 16px;
+
+  > * {
+    margin-right: 4px;
+  }
+  > :last-child() {
+    margin-right: 0px;
+  }
 
   &:empty {
     display: none;

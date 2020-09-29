@@ -2,14 +2,17 @@ import { Section } from '@teambit/component';
 import React from 'react';
 
 import { GraphPage } from './ui/graph-page';
+import { ComponentWidgetSlot } from './graph.ui.runtime';
 
 export class GraphSection implements Section {
+  constructor(private componentWidgetSlot: ComponentWidgetSlot) {}
+
   route = {
-    path: '~Dependencies',
-    children: <GraphPage />,
+    path: '~dependencies',
+    children: <GraphPage componentWidgets={this.componentWidgetSlot} />,
   };
   navigationLink = {
-    href: '~Dependencies',
+    href: '~dependencies',
     children: 'Dependencies',
   };
   order = 40;
