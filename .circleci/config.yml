@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: circleci/node:10.14.2
+    - image: circleci/node:10.20.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -530,10 +530,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run:
-          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-          name: 'update npm to latest version'
-          command: 'npm i -g npm@latest'
+      # - run:
+      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+      #     name: 'update npm to latest version'
+      #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
       - bit_config
       - run:
