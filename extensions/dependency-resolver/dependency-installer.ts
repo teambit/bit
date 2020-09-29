@@ -176,12 +176,13 @@ export class DependencyInstaller {
     const isAspectDirExist = await fs.pathExists(aspectDir);
     if (!isAspectDirExist) {
       aspectDir = getAspectDir(id);
-      return createSymlinkOrCopy(aspectDir, target);
+      createSymlinkOrCopy(aspectDir, target);
+      return;
     }
 
     const src = path.relative(path.resolve(target,'..'), aspectDir);
     // in this case we want the symlinks to be relative links
     // Using the fs module to make sure it is relative to the target
-    return fs.symlinkSync(src, target);
+    fs.symlinkSync(src, target);
   }
 }
