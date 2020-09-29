@@ -52,4 +52,13 @@ export class AspectEntry {
   clone(): AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
   }
+
+  serialize() {
+    return {
+      id: this.id.toString(),
+      config: this.config,
+      data: this.data,
+      artifacts: this.artifacts,
+    };
+  }
 }

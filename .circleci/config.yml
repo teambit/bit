@@ -509,12 +509,14 @@ jobs:
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
       - run:
           name: 'git push'
-          command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
+          # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+          command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
       - run: cd bit && node scripts/soft-tag-teambit.js
       - run: cd bit && bit tag --persist
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
-      - run: cd bit && git push origin ${CIRCLE_BRANCH}
+      # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+      - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 

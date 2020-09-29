@@ -85,6 +85,7 @@
         "@teambit/harmony": "0.2.6",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
+        "@types/node-fetch": "2.5.7",
         "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -123,9 +124,11 @@
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
+        "graphql-type-json": "0.3.2",
         "history": "4.10.1",
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
+        "humanize-duration": "3.23.1",
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
         "join-path": "^1.1.1",
@@ -206,7 +209,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.23",
+        "bit-bin": "14.8.9-dev.30",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1",
         "@babel/runtime": "^7.11.2"
@@ -237,7 +240,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.23",
+            "bit-bin": "14.8.9-dev.30",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -270,7 +273,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.23",
+            "bit-bin": "14.8.9-dev.30",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

@@ -1,3 +1,4 @@
+import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { BundlerAspect, BundlerContext, BundlerMain, DevServer, DevServerContext } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -12,6 +13,11 @@ import { WebpackDevServer } from './webpack.dev-server';
 
 export class WebpackMain {
   constructor(
+    /**
+     * Pubsub extension.
+     */
+    private pubsub: PubsubMain,
+
     /**
      * workspace extension.
      */
@@ -51,17 +57,17 @@ export class WebpackMain {
   }
 
   private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
-    return configFactory(rootPath, entry, publicRoot, publicPath);
+    return configFactory(rootPath, entry, publicRoot, publicPath, this.pubsub);
   }
 
   static slots = [];
 
   static runtime = MainRuntime;
-  static dependencies = [WorkspaceAspect, BundlerAspect, LoggerAspect];
+  static dependencies = [PubsubAspect, WorkspaceAspect, BundlerAspect, LoggerAspect];
 
-  static async provider([workspace, bundler, logger]: [Workspace, BundlerMain, LoggerMain]) {
+  static async provider([pubsub, workspace, bundler, logger]: [PubsubMain, Workspace, BundlerMain, LoggerMain]) {
     const logPublisher = logger.createLogger(WebpackAspect.id);
-    return new WebpackMain(workspace, bundler, logPublisher);
+    return new WebpackMain(pubsub, workspace, bundler, logPublisher);
   }
 }
 

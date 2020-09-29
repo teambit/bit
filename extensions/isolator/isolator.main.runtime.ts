@@ -18,7 +18,7 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
-import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
+import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import writeComponentsToCapsules from './write-components-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
@@ -40,11 +40,30 @@ export type IsolateComponentsInstallOptions = {
 export type IsolateComponentsOptions = {
   name?: string;
   baseDir?: string;
-  alwaysNew?: boolean; // create a new capsule with a random string attached to the path suffix
+  /**
+   * create a new capsule with a random string attached to the path suffix
+   */
+  alwaysNew?: boolean;
+
+  /**
+   * installation options
+   */
   installOptions?: IsolateComponentsInstallOptions;
   linkingOptions?: LinkingOptions;
-  emptyExisting?: boolean; // remove the capsule content first (if exist)
-  getExistingAsIs?: boolean; // get existing capsule without doing any changes, no writes, no installations.
+  /**
+   * remove the capsule content first (if exist)
+   */
+  emptyExisting?: boolean;
+
+  /**
+   * get existing capsule without doing any changes, no writes, no installations.
+   */
+  getExistingAsIs?: boolean;
+
+  /**
+   * include all dependencies the capsule root context.
+   */
+  includeDeps?: boolean;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -102,6 +121,7 @@ export class IsolatorMain {
       const installer = this.dependencyResolver.getInstaller({
         rootDir: capsulesDir,
         linkingOptions: opts.linkingOptions,
+        cacheRootDirectory: opts.includeDeps ? capsulesDir : undefined,
       });
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
@@ -118,6 +138,7 @@ export class IsolatorMain {
         copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
       await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
+      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components
