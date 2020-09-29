@@ -76,8 +76,11 @@ export class Http implements Network {
       headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
     });
 
+    if (res.status !== 200) {
+      throw new Error(res.status.toString());
+    }
+
     const ids = await res.json();
-    // TODO: handle failures here!!!
 
     return ids;
   }

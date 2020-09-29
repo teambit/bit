@@ -1,5 +1,6 @@
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import gql from 'graphql-tag';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
@@ -8,6 +9,9 @@ import { ComponentMain } from './component.main.runtime';
 export function componentSchema(componentExtension: ComponentMain) {
   return {
     typeDefs: gql`
+      scalar JSON
+      scalar JSONObject
+
       type ComponentID {
         name: String!
         version: String
@@ -68,6 +72,14 @@ export function componentSchema(componentExtension: ComponentMain) {
 
         # list of component releases.
         tags: [Tag]!
+
+        aspects: [Aspect]
+      }
+
+      type Aspect {
+        id: String!
+        config: JSONObject
+        data: JSONObject
       }
 
       type ComponentHost {
@@ -85,6 +97,7 @@ export function componentSchema(componentExtension: ComponentMain) {
       }
     `,
     resolvers: {
+      JSONObject: GraphQLJSONObject,
       Component: {
         id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
@@ -93,6 +106,10 @@ export function componentSchema(componentExtension: ComponentMain) {
         tags: (component) => {
           // graphql doesn't support map types
           return component.tags.toArray().map((tag) => tag.toObject());
+        },
+        aspects: (component: Component) => {
+          const aspects = component.state.aspects.serialize();
+          return aspects;
         },
         /**
          * :TODO use legacy until @david will move it to the pkg extension.

@@ -16,6 +16,16 @@ export type ArtifactDefinition = {
   globPatterns: string[];
 
   /**
+   * define the root directory for reading the artifacts from the capsule file system.
+   */
+  rootDir?: string;
+
+  /**
+   * adds a directory prefix for all artifact files.
+   */
+  dirPrefix?: string;
+
+  /**
    * determine the context of the artifact.
    * default artifact context is `component`.
    */
