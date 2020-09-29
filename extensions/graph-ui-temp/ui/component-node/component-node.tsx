@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID, ComponentModel } from '@teambit/component';
+import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
 
 import { NodeModel } from '../query/graph-model';
 import { ComponentGraphContext } from '../graph-page/graph-page';
@@ -24,6 +25,7 @@ export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel;
       </div>
       <div className={styles.buffs}>
         <EnvIcon component={component} />
+        <DeprecationIcon component={component} />
         {graphContext &&
           graphContext.componentWidgets.toArray().map(([id, Widget]) => <Widget component={component} />)}
       </div>

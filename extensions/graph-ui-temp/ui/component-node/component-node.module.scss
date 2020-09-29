@@ -1,5 +1,6 @@
 .compNode {
   max-width: 260px;
+  min-width: 100px;
   border-width: 2px;
   border-style: solid;
   padding: 8px;
@@ -33,10 +34,11 @@
   display: flex;
   padding-top: 8px;
   line-height: 1;
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 16px;
 
   > * {
-    margin-right: 4px;
+    margin-right: 8px;
   }
   > :last-child() {
     margin-right: 0px;
