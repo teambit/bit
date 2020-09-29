@@ -1,6 +1,16 @@
 import React, { createContext, useMemo, useCallback } from 'react';
 import classnames from 'classnames';
-import ReactFlow, { Controls, Background, MiniMap, OnLoadParams, ReactFlowProps } from 'react-flow-renderer';
+import ReactFlow, {
+  Controls,
+  Background,
+  MiniMap,
+  OnLoadParams,
+  NodeTypesType,
+  Handle,
+  Position,
+  NodeProps,
+  ReactFlowProps,
+} from 'react-flow-renderer';
 import { useRouteMatch } from 'react-router-dom';
 
 import { NotFoundPage } from '@teambit/pages.not-found';
@@ -17,12 +27,17 @@ import { calcMinimapColors } from './minimap';
 
 const DEFAULT_POS = [80, 80] as [number, number];
 
-const NodeTypes = {
-  default: function DefaultNode() {
-    return <div>I am default node</div>;
-  },
-  ComponentNode: function CNW(props: any) {
-    return <ComponentNode node={props.data.node} type={props.data.type} />;
+const NodeTypes: NodeTypesType = {
+  ComponentNode: function ComponentNodeContainer(props: NodeProps) {
+    const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data } = props;
+
+    return (
+      <div>
+        <Handle type="target" position={targetPosition} isConnectable={false} />
+        <Handle type="source" position={sourcePosition} isConnectable={false} />
+        <ComponentNode node={data.node} type={data.type} />
+      </div>
+    );
   },
 };
 

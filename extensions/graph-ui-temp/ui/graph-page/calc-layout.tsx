@@ -4,9 +4,11 @@ import { Edge, FlowElement } from 'react-flow-renderer';
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 70;
 
+const BOTTOM_TO_TOP = 'BT';
+
 export function calcLayout(nodes: FlowElement[], edges: Edge[]) {
   const g = new graphlib.Graph();
-  g.setGraph({});
+  g.setGraph({ rankdir: BOTTOM_TO_TOP });
   g.setDefaultEdgeLabel(() => ({}));
 
   nodes.forEach((e) => {

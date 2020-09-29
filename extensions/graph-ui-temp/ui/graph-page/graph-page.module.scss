@@ -9,6 +9,15 @@ $b70: #0d2de3;
       stroke: $d30;
       stroke-width: 2px;
     }
+
+    .react-flow__arrowhead polyline {
+      stroke: $d30;
+      stroke-width: 2px;
+    }
+
+    .react-flow__handle {
+      background: none;
+    }
   }
 }
 

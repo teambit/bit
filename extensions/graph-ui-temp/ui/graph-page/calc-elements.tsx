@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Node, Edge } from 'react-flow-renderer';
+import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
 import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
@@ -27,6 +27,8 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       id: `_${e.sourceId}__${e.targetId}`,
       source: e.sourceId,
       target: e.targetId,
+      type: 'smoothstep',
+      arrowHeadType: ArrowHeadType.Arrow,
     }));
 
     const positions = calcLayout(nodes, edges);
