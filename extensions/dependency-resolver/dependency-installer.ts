@@ -166,7 +166,7 @@ export class DependencyInstaller {
       throw new MainAspectNotLinkable();
     }
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
-    let aspectDir = path.join(mainAspectPath, name);
+    let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
     const isTargetExists = await fs.pathExists(target);
     // Do not override links created by other means
@@ -175,13 +175,13 @@ export class DependencyInstaller {
     }
     const isAspectDirExist = await fs.pathExists(aspectDir);
     if (!isAspectDirExist) {
-      if (hasLocalInstallation) {
-        aspectDir = path.resolve(`${dir}/@teambit/bit/dist/${name}`);
-      } else {
-        aspectDir = getAspectDir(id);
-      }
+      aspectDir = getAspectDir(id);
+      return createSymlinkOrCopy(aspectDir, target);
     }
 
-    createSymlinkOrCopy(aspectDir, target);
+    const src = path.relative(path.resolve(target,'..'), aspectDir);
+    // in this case we want the symlinks to be relative links
+    // Using the fs module to make sure it is relative to the target
+    return fs.symlinkSync(src, target);
   }
 }
