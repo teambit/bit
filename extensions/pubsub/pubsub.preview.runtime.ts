@@ -15,7 +15,7 @@ export class PubsubPreview {
     return await connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;
-        console.log('parentPubsub', parentPubsub); // TODO: use log aspect
+        console.debug('parentPubsub', parentPubsub); // TODO: use log aspect
       })
       .catch((err) => {
         console.error('Attempt to connect to the parent window failed', err); // TODO: use log aspect
