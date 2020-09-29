@@ -26,6 +26,34 @@ export default class CompsAndLanesObjects {
     });
   }
 
+  toCompressedString() {
+    const components = this.componentsObjects.map((componentAndObject) => componentAndObject.toCompressedString());
+    if (!this.laneObjects.length) {
+      // @todo: delete this `if` block before releasing v15
+      // backward compatibility, before v15, it used to be an array of component-objects
+      // this makes sure that old clients could run "bit import"
+      return JSON.stringify(components);
+    }
+    return JSON.stringify({
+      components,
+      lanes: this.laneObjects.map((laneObj) => laneObj.toString()),
+    });
+  }
+
+  toBufferString() {
+    const components = this.componentsObjects.map((componentAndObject) => componentAndObject.toBufferString());
+    if (!this.laneObjects.length) {
+      // @todo: delete this `if` block before releasing v15
+      // backward compatibility, before v15, it used to be an array of component-objects
+      // this makes sure that old clients could run "bit import"
+      return JSON.stringify(components);
+    }
+    return JSON.stringify({
+      components,
+      lanes: this.laneObjects.map((laneObj) => laneObj.toString()),
+    });
+  }
+
   static fromString(str: string) {
     const parsed = JSON.parse(str);
     let components;

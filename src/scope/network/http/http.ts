@@ -1,4 +1,5 @@
 import { request, gql } from 'graphql-request';
+import zlib from 'zlib';
 import fetch from 'node-fetch';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -69,13 +70,32 @@ export class Http implements Network {
 
   async pushMany(compsAndLanesObjects: CompsAndLanesObjects): Promise<string[]> {
     const route = 'api/scope/put';
-    const body = compsAndLanesObjects.toString();
+    // const body = compsAndLanesObjects.toCompressedString();
+    const compsAndLanesStr = compsAndLanesObjects.toBufferString();
+    // console.log("Http -> close -> compsAndLanesStr", compsAndLanesObjects)
+    const firstComp = compsAndLanesObjects.componentsObjects[0];
+    const buffArr = [firstComp.component, ...firstComp.objects];
+    const concatenated = Buffer.concat(buffArr);
+    console.log('Http -> close -> concatenated', concatenated);
+    console.log('Http -> close -> concatenated', concatenated.length);
+    console.log('Http -> close -> deflate concatenated', zlib.deflateSync(concatenated).length);
+    // console.log("Http -> close -> buffArr", buffArr)
+    console.log(
+      `http.pushMany, length before compression ${compsAndLanesStr.length} bytes, ${
+        compsAndLanesStr.length / 1024 / 1024
+      } MB`
+    );
+    const body = zlib.deflateSync(compsAndLanesStr);
+    console.log(`http.pushMany, length ${body.length} bytes, ${body.length / 1024 / 1024} MB`);
+    console.log('Http -> close -> body', body);
+    // throw new Error('stop here!')
     logger.debug(`http.pushMany, length ${body.length} bytes, ${body.length / 1024 / 1024} MB`);
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
+      // headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/octet-stream' }),
     });
 
     if (res.status !== 200) {

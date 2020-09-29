@@ -158,7 +158,8 @@ export async function exportMany({
         componentsAndObjects.push(componentAndObjectCloned);
       }
 
-      const componentBuffer = await componentAndObject.component.compress();
+      // const componentBuffer = await componentAndObject.component.compress();
+      const componentBuffer = componentAndObject.component.serialize();
       const getObjectsBuffer = () => {
         // @todo currently, for lanes (componentAndObject.component.head) this optimization is skipped.
         // it should be enabled with a different mechanism
@@ -170,7 +171,8 @@ export async function exportMany({
           lanes.length
         ) {
           // only when really needed (e.g. fork or version changes), collect all versions objects
-          return Promise.all(componentAndObject.objects.map((obj) => obj.compress()));
+          // return Promise.all(componentAndObject.objects.map((obj) => obj.compress()));
+          componentAndObject.objects.map((obj) => obj.serialize());
         }
         // when possible prefer collecting only new/local versions. the server has already
         // the rest, so no point of sending them.

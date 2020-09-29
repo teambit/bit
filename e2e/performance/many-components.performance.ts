@@ -278,6 +278,18 @@ describe('heavy components Harmony', function () {
       it('should take less then 2 minutes to complete', () => {
         expect(addTimeInSeconds).to.be.lessThan(2 * 60);
       });
+      describe('tag command', () => {
+        let tagTimeInSeconds;
+        before(() => {
+          const start = process.hrtime();
+          helper.command.tagAllComponents();
+          [tagTimeInSeconds] = process.hrtime(start);
+          console.log('tagTimeInSeconds', tagTimeInSeconds);
+        });
+        it.only('should take less then 5 minutes to complete', () => {
+          expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
+        });
+      });
     });
   });
 });

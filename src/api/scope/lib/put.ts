@@ -1,4 +1,5 @@
 import R from 'ramda';
+import zlib from 'zlib';
 
 import BitIds from '../../../bit-id/bit-ids';
 import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
@@ -15,13 +16,21 @@ export type ComponentObjectsInput = {
   compsAndLanesObjects: string | CompsAndLanesObjects;
 };
 
-export default (async function put(
+export default async function put(
   { path, compsAndLanesObjects }: ComponentObjectsInput,
   headers: Record<string, any>
 ): Promise<string[]> {
+  console.log('in put', typeof compsAndLanesObjects);
+  console.log('in put size', compsAndLanesObjects.length);
+  // console.log('compsAndLanesObjects tostring', compsAndLanesObjects.toString());
+  // console.log('compsAndLanesObjects', zlib.inflateSync(compsAndLanesObjects));
+  // console.log('compsAndLanesObjects AFTER BUFFER', zlib.inflateSync(compsAndLanesObjects).toString());
+
   if (typeof compsAndLanesObjects === 'string') {
     compsAndLanesObjects = CompsAndLanesObjects.fromString(compsAndLanesObjects);
   }
+  // console.log('after from string', compsAndLanesObjects)
+  throw new Error('put, stop here');
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(
@@ -57,4 +66,4 @@ export default (async function put(
     headers
   );
   return componentsIds;
-});
+}

@@ -1,3 +1,4 @@
+import zlib from 'zlib';
 import { toBase64ArrayBuffer } from '../utils';
 import ModelComponent from './models/model-component';
 import BitObject from './objects/object';
@@ -15,6 +16,20 @@ export default class ComponentObjects {
     return JSON.stringify({
       component: toBase64ArrayBuffer(this.component),
       objects: this.objects.map(toBase64ArrayBuffer),
+    });
+  }
+
+  toBufferString(): string {
+    return JSON.stringify({
+      component: this.component,
+      objects: this.objects,
+    });
+  }
+
+  toCompressedString(): string {
+    return JSON.stringify({
+      component: zlib.deflateSync(this.component),
+      objects: this.objects.map((o) => zlib.deflateSync(o)),
     });
   }
 
@@ -42,6 +57,10 @@ export default class ComponentObjects {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { component, objects } = object;
+    // console.log("fromObject -> component", component);
+    // console.log("fromObject -> component buffer 64", Buffer.from(component, 'base64'));
+    // console.log("fromObject -> component just buffer", Buffer.from(component));
+    // throw new Error('stop here!')
 
     return new ComponentObjects(_from64Buffer(component), objects.map(_from64Buffer));
   }
@@ -69,5 +88,6 @@ export default class ComponentObjects {
 }
 
 function _from64Buffer(val): Buffer {
-  return Buffer.from(val, 'base64');
+  // return Buffer.from(val, 'base64');
+  return Buffer.from(val);
 }
