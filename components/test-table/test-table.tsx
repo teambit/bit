@@ -58,7 +58,6 @@ function TestBreadcrumbs({ test }: { test: TestResult }) {
     return (
       <div className={classNames(styles.testBreadcrumbs)}>
         {test.ancestor.map((a) => {
-          console.log('test', test.ancestor.indexOf(a));
           const indentVal = test.ancestor.indexOf(a) * 8;
           return <div style={{ paddingLeft: `${indentVal}px` }} key={a}>{`${a}`}</div>;
         })}
