@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { useMemo } from 'react';
 import JSONFormatter from 'json-formatter-js';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { OrgAvatar } from '@teambit/staged-components.workspace-components.avatar';
 import styles from './aspect-box.module.scss';
 
 export type AspectBoxProps = {
@@ -23,7 +22,9 @@ export function AspectBox({ icon, name, link, config, data, className, ...rest }
     <div {...rest} className={classNames(styles.aspectBox, className)}>
       <div className={styles.titleLine}>
         <div className={styles.titleLeft}>
-          <OrgAvatar size={24} account={{ profileImage: icon }} className={styles.icon} />
+          <div className={styles.iconWrapper}>
+            <img className={styles.icon} src={icon} />
+          </div>
           <div className={styles.name}>{name}</div>
         </div>
         <a className={styles.aspectLink} target="_blank" rel="noopener noreferrer" href={link}>

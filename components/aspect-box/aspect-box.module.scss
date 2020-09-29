@@ -13,8 +13,18 @@
   display: flex;
   align-items: center;
 }
-.icon {
+.iconWrapper {
+  border-radius: 50%;
+  border: 1px solid #ededed;
   margin-right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  .icon {
+    width: 12px;
+    filter: brightness(0%);
+  }
 }
 .name {
   font-size: 20px;
