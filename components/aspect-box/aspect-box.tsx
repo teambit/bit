@@ -17,7 +17,7 @@ export function AspectBox({ icon, name, link, config, data, className, ...rest }
     theme: 'dark',
     hoverPreviewEnabled: true,
   });
-  const dataContent = new JSONFormatter(data, 1, { theme: 'dark', hoverPreviewEnabled: true });
+  const dataContent = new JSONFormatter(data, 1, { theme: 'dark' });
   return (
     <div {...rest} className={classNames(styles.aspectBox, className)}>
       <div className={styles.titleLine}>
