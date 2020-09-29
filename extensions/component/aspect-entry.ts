@@ -59,6 +59,7 @@ export class AspectEntry {
       config: this.config,
       data: this.data,
       artifacts: this.artifacts,
+      icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
     };
   }
 }
