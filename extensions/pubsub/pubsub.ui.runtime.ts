@@ -1,4 +1,4 @@
-import { UIAspect, UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
 
@@ -57,8 +57,6 @@ export class PubsubUI {
       console.log('childs: ', this._childs) // TODO: use log aspect
     }, false)
   }
-
-  constructor() {}
 
   public sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);

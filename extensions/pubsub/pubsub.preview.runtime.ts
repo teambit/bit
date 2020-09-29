@@ -1,4 +1,4 @@
-import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
+import { PreviewRuntime } from '@teambit/preview';
 
 import { connectToParent } from 'penpal';
 
@@ -7,8 +7,6 @@ import { PubsubAspect } from './pubsub.aspect';
 
 export class PubsubPreview {
   private _parentPubsub;
-
-  constructor() {}
 
   public async updateParentPubsub() {
     return await connectToParent({ timeout: 300 })
