@@ -41,13 +41,7 @@ function TestLine({ test }: { test: TestResult }) {
       <div className={styles.testTitle}>
         <div className={styles.test}>
           {getStatusIcon(test.status)}
-          {/* TODO - improve this */}
-          <div className={classNames(styles.testBreadcrumbs, test.status !== 'failed' && styles.singleLine)}>
-            {test.ancestor.map((a) => (
-              <span key={a}>{`${a} > `}</span>
-            ))}
-            <div>{test.name}</div>
-          </div>
+          <TestBreadcrumbs test={test} />
         </div>
         <div className={styles.duration}>
           <span>{duration}</span>
@@ -55,5 +49,28 @@ function TestLine({ test }: { test: TestResult }) {
         </div>
       </div>
     </TestRow>
+  );
+}
+
+function TestBreadcrumbs({ test }: { test: TestResult }) {
+  if (test.status === 'failed') {
+    const nameIndentVal = test.ancestor.length * 8;
+    return (
+      <div className={classNames(styles.testBreadcrumbs)}>
+        {test.ancestor.map((a) => {
+          const indentVal = test.ancestor.indexOf(a) * 8;
+          return <div style={{ paddingLeft: `${indentVal}px` }} key={a}>{`${a}`}</div>;
+        })}
+        <div style={{ paddingLeft: `${nameIndentVal}px` }}>{test.name}</div>
+      </div>
+    );
+  }
+  return (
+    <div className={classNames(styles.testBreadcrumbs, styles.singleLine)}>
+      {test.ancestor.map((a) => {
+        return <span key={a}>{`${a} > `}</span>;
+      })}
+      <div>{test.name}</div>
+    </div>
   );
 }
