@@ -24,29 +24,31 @@ export class PubsubPreview {
   }
 
   // TODO[uri]: need to run on every possibility of adding new IFrames
-  // Autorun init on focus
+  // TODO[uri]: Role back to 'focus' event?
   public async updateParentPubsubWithRetry() {
-    window.addEventListener('focus', () => {
+    window.addEventListener('load', () => {
       this.init();
     });
   }
 
   public init() {
     const self = this;
-
     // Making sure parent call connect-to-child before the child call connect-to-parent
     setTimeout(() => {
       self.updateParentPubsub();
-      console.log('parentPubsub', self._parentPubsub); // TODO: use log aspect
     }, 0);
   }
 
   public sub(topicUUID, callback) {
-    this._parentPubsub.sub(topicUUID, callback);
+    this._parentPubsub
+      ? this._parentPubsub.sub(topicUUID, callback)
+      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
   }
 
   public pub(topicUUID, event: BitBaseEvent<any>) {
-    this._parentPubsub.pub(topicUUID, event);
+    this._parentPubsub
+      ? this._parentPubsub.pub(topicUUID, event)
+      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
   }
 
   static runtime = PreviewRuntime;
