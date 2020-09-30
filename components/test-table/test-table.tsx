@@ -1,11 +1,10 @@
 import classNames from 'classnames';
-import { timeFormat } from './utils';
 import { TestRow } from '@teambit/staged-components.test-row';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestsFiles, TestResult } from '@teambit/tester';
 import { TestFileTitle } from './test-file-title';
-import { getStatusIcon } from './utils';
+import { getStatusIcon, timeFormat } from './utils';
 import styles from './test-table.module.scss';
 
 export type TestTableProps = {

@@ -1,9 +1,9 @@
 import classNames from 'classnames';
-import { timeFormat } from '../utils';
 
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestsFiles } from '@teambit/tester';
+import { timeFormat } from '../utils';
 import styles from './test-file-title.module.scss';
 
 type TestFileTitleProps = {
