@@ -5,7 +5,7 @@ import { ComponentID, ComponentModel } from '@teambit/component';
 import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
 
 import { NodeModel } from '../query/graph-model';
-import { ComponentGraphContext } from '../graph-page/graph-page';
+import { ComponentGraphContext } from '../dependencies-graph/';
 
 // keep order: styles, then variants
 import styles from './component-node.module.scss';

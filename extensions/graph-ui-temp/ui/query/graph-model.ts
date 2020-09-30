@@ -1,4 +1,4 @@
-import { RawGraph, RawNode, RawEdge } from './get-graph.query';
+// eslint-disable-next-line max-classes-per-file
 import { ComponentModel } from '@teambit/component';
 import { EdgeType } from '@teambit/graph';
 import { RawGraph, RawNode, RawEdge } from './get-graph.query';
