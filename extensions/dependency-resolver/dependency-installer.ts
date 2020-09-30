@@ -114,10 +114,11 @@ export class DependencyInstaller {
 
   private async linkBitAspectIfNotExist(dir: string, componentIds: string[]): Promise<void> {
     // TODO: change to this.aspectLoader.mainAspect.id once default scope is resolved and the component dir map has the id with scope
-    const bitName = this.aspectLoader.mainAspect.name;
+    const mainAspectId = this.aspectLoader.mainAspect.id;
     const existing = componentIds.find((id) => {
-      return id === bitName;
+      return id === mainAspectId;
     });
+
     if (existing) {
       return undefined;
     }
@@ -134,13 +135,14 @@ export class DependencyInstaller {
       // TODO: use the aspect id once default scope is resolved and the component dir map has the id with scope
       const name = getCoreAspectName(aspectId);
       const existing = componentIds.find((componentId) => {
-        return componentId === name;
+        return componentId === name || componentId === aspectId;
       });
       if (existing) {
         return false;
       }
       return true;
     });
+
     const linkCoreAspectsP = filtered.map((id) => {
       return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id), hasLocalInstallation);
     });
