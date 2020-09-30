@@ -1,8 +1,24 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+
+  h2 {
+    margin-bottom: 16px;
+  }
+}
+
 .graph {
-  margin: 24px;
+  flex-grow: 1;
+  height: 100%;
   width: unset;
 
   border-radius: 5px;
   border: solid 1px var(--border-color);
   background: var(--bg-dent, #f6f6f6);
+}
+
+.summery {
+  margin-bottom: 24px;
 }
