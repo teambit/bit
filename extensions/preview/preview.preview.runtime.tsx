@@ -31,7 +31,6 @@ export class PreviewPreview {
   }
 
   private registerClickPubSub() {
-    const pub = this.pubsub;
     window.addEventListener('click', (e) => {
       const timestamp = Date.now().toString();
       const clickEvent = Object.assign({}, e);

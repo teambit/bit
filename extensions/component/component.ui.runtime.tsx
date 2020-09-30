@@ -1,4 +1,5 @@
 import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
+import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
 import { Slot } from '@teambit/harmony';
 import { NavigationSlot, NavLinkProps, RouteSlot } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
@@ -25,6 +26,8 @@ export type MenuItem = {
 export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
+  readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+
   constructor(
     /**
      * Pubsub aspects
@@ -39,9 +42,26 @@ export class ComponentUI {
      * slot for registering a new widget to the menu.
      */
     private widgetSlot: NavigationSlot
-  ) {}
+  ) {
+    this.registerPubSub();
+  }
 
-  readonly routePath = `/:componentId(${componentIdUrlRegex})`;
+  registerPubSub() {
+    this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
+      switch (be.type) {
+        case ClickInsideAnIframeEvent.TYPE:
+          const body = document.querySelector('body');
+          const _backgroundColor = body?.style.backgroundColor || 'red';
+
+          const new_backgroundColor = _backgroundColor == 'red' ? 'green' : 'red';
+
+          if (body) {
+            body.style.backgroundColor = new_backgroundColor;
+          }
+          break;
+      }
+    });
+  }
 
   getComponentUI(host: string) {
     return <Component routeSlot={this.routeSlot} host={host} />;
