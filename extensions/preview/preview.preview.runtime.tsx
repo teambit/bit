@@ -1,3 +1,4 @@
+import PubsubAspect, { PubsubPreview, BitBaseEvent } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { PreviewNotFound } from './exceptions';
@@ -15,6 +16,11 @@ type previewModule = {
 
 export class PreviewPreview {
   constructor(
+    /**
+     * register to pubsub
+     */
+    private pubsub: PubsubPreview,
+
     /**
      * preview slot.
      */
@@ -84,10 +90,12 @@ export class PreviewPreview {
 
   static runtime = PreviewRuntime;
 
+  static dependencies = [PubsubAspect];
+
   static slots = [Slot.withType<PreviewType>()];
 
-  static async provider(deps, config, [previewSlot]: [PreviewSlot]) {
-    const preview = new PreviewPreview(previewSlot);
+  static async provider([pubsub]: [PubsubPreview], config, [previewSlot]: [PreviewSlot]) {
+    const preview = new PreviewPreview(pubsub, previewSlot);
 
     window.addEventListener('hashchange', () => {
       preview.render();
