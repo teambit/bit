@@ -4311,6 +4311,30 @@
         "exported": false,
         "lanes": []
     },
+    "styles/ellipsis": {
+        "files": [
+            {
+                "relativePath": "ellipsis.module.scss",
+                "test": false,
+                "name": "ellipsis.module.scss"
+            },
+            {
+                "relativePath": "ellipsis.tsx",
+                "test": false,
+                "name": "ellipsis.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/styles/ellipsis",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "tester@0.0.47": {
         "files": [
             {
