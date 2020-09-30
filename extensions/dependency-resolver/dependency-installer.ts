@@ -76,8 +76,14 @@ export class DependencyInstaller {
     if (linkingOpts.bitLinkType === 'link' && !this.isBitRepoWorkspace(finalRootDir)) {
       await this.linkBitAspectIfNotExist(path.join(finalRootDir, 'node_modules'), componentIds);
     }
+
     if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(finalRootDir)) {
-      await this.linkNonExistingCoreAspects(path.join(finalRootDir, 'node_modules'), componentIds);
+      const hasLocalInstallation = linkingOpts.bitLinkType === 'install';
+      await this.linkNonExistingCoreAspects(
+        path.join(finalRootDir, 'node_modules'),
+        componentIds,
+        hasLocalInstallation
+      );
     }
     return componentDirectoryMap;
   }
@@ -118,7 +124,7 @@ export class DependencyInstaller {
     return this.linkBit(dir);
   }
 
-  private async linkNonExistingCoreAspects(dir: string, componentIds: string[]) {
+  private async linkNonExistingCoreAspects(dir: string, componentIds: string[], hasLocalInstallation = false) {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const filtered = coreAspectsIds.filter((aspectId) => {
       // Remove bit aspect
@@ -136,7 +142,7 @@ export class DependencyInstaller {
       return true;
     });
     const linkCoreAspectsP = filtered.map((id) => {
-      return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id));
+      return this.linkCoreAspect(dir, id, getCoreAspectName(id), getCoreAspectPackageName(id), hasLocalInstallation);
     });
     return Promise.all(linkCoreAspectsP);
   }
@@ -149,23 +155,34 @@ export class DependencyInstaller {
     return false;
   }
 
-  private async linkCoreAspect(dir: string, id: string, name: string, packageName: string) {
+  private async linkCoreAspect(
+    dir: string,
+    id: string,
+    name: string,
+    packageName: string,
+    hasLocalInstallation = false
+  ) {
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
-    let aspectDir = path.join(mainAspectPath, name);
+    let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
     const isTargetExists = await fs.pathExists(target);
     // Do not override links created by other means
-    if (isTargetExists) {
+    if (isTargetExists && !hasLocalInstallation) {
       return;
     }
     const isAspectDirExist = await fs.pathExists(aspectDir);
     if (!isAspectDirExist) {
       aspectDir = getAspectDir(id);
+      createSymlinkOrCopy(aspectDir, target);
+      return;
     }
 
-    createSymlinkOrCopy(aspectDir, target);
+    const src = path.relative(path.resolve(target,'..'), aspectDir);
+    // in this case we want the symlinks to be relative links
+    // Using the fs module to make sure it is relative to the target
+    fs.symlinkSync(src, target);
   }
 }
