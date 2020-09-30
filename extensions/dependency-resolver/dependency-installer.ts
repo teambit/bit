@@ -72,16 +72,21 @@ export class DependencyInstaller {
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootDepsObject, componentDirectoryMap, calculatedOpts);
-    const componentIds = Array.from(componentDirectoryMap.keys());
+    // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
+    const componentIdsWithoutVersions: string[] = [];
+    componentDirectoryMap.map((_dir, comp) => {
+      componentIdsWithoutVersions.push(comp.id.toString({ignoreVersion: true}));
+      return undefined;
+    });
     if (linkingOpts.bitLinkType === 'link' && !this.isBitRepoWorkspace(finalRootDir)) {
-      await this.linkBitAspectIfNotExist(path.join(finalRootDir, 'node_modules'), componentIds);
+      await this.linkBitAspectIfNotExist(path.join(finalRootDir, 'node_modules'), componentIdsWithoutVersions);
     }
 
     if (linkingOpts.linkCoreAspects && !this.isBitRepoWorkspace(finalRootDir)) {
       const hasLocalInstallation = linkingOpts.bitLinkType === 'install';
       await this.linkNonExistingCoreAspects(
         path.join(finalRootDir, 'node_modules'),
-        componentIds,
+        componentIdsWithoutVersions,
         hasLocalInstallation
       );
     }
