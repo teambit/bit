@@ -1473,6 +1473,16 @@
                 "name": "docs.ui.runtime.tsx"
             },
             {
+                "relativePath": "events/click-inside-an-iframe.ts",
+                "test": false,
+                "name": "click-inside-an-iframe.ts"
+            },
+            {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2785,6 +2795,16 @@
                 "relativePath": "pubsub.main.runtime.ts",
                 "test": false,
                 "name": "pubsub.main.runtime.ts"
+            },
+            {
+                "relativePath": "pubsub.preview.runtime.ts",
+                "test": false,
+                "name": "pubsub.preview.runtime.ts"
+            },
+            {
+                "relativePath": "pubsub.ui.runtime.ts",
+                "test": false,
+                "name": "pubsub.ui.runtime.ts"
             }
         ],
         "mainFile": "index.ts",
