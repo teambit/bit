@@ -436,6 +436,8 @@ jobs:
             - bit/dist
             - bit/node_modules
             - .pnpm-store
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   bit_build:
     <<: *defaults
