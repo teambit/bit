@@ -50,14 +50,15 @@ export class ComponentUI {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
       switch (be.type) {
         case ClickInsideAnIframeEvent.TYPE:
-          const body = document.querySelector('body');
-          const _backgroundColor = body?.style.backgroundColor || 'red';
+          const event = new MouseEvent('mousedown', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          });
 
-          const new_backgroundColor = _backgroundColor == 'red' ? 'green' : 'red';
+          const a = document.body;
+          a?.dispatchEvent(event);
 
-          if (body) {
-            body.style.backgroundColor = new_backgroundColor;
-          }
           break;
       }
     });
