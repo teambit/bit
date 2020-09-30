@@ -515,7 +515,10 @@ jobs:
           command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
       - run: cd bit && node scripts/soft-tag-teambit.js
-      - run: cd bit && bit tag --persist
+      - run:
+          name: tag persist
+          command: cd bit && bit tag --persist
+          no_output_timeout: '25m'
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
