@@ -27,7 +27,7 @@ export function ComponentNode({ node, type = 'defaultNode' }: { node: NodeModel;
         <EnvIcon component={component} />
         <DeprecationIcon component={component} />
         {graphContext &&
-          graphContext.componentWidgets.toArray().map(([id, Widget]) => <Widget component={component} />)}
+          graphContext.componentWidgets.toArray().map(([widgetId, Widget]) => <Widget key={widgetId} component={component} />)}
       </div>
     </div>
   );
