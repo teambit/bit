@@ -1,9 +1,10 @@
-import PubsubAspect, { PubsubPreview, BitBaseEvent } from '@teambit/pubsub';
+import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
+import { ClickInsideAnIframeEvent } from './events';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
@@ -25,7 +26,18 @@ export class PreviewPreview {
      * preview slot.
      */
     private previewSlot: PreviewSlot
-  ) {}
+  ) {
+    this.registerClickPubSub();
+  }
+
+  private registerClickPubSub() {
+    const pub = this.pubsub;
+    window.addEventListener('click', (e) => {
+      const timestamp = Date.now().toString();
+      const clickEvent = Object.assign({}, e);
+      this.pubsub.pub(PreviewAspect.id, new ClickInsideAnIframeEvent(timestamp, clickEvent));
+    });
+  }
 
   /**
    * render the preview.

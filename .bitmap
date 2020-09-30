@@ -2648,6 +2648,16 @@
                 "name": "bundling-strategy.ts"
             },
             {
+                "relativePath": "events/click-inside-an-iframe.ts",
+                "test": false,
+                "name": "click-inside-an-iframe.ts"
+            },
+            {
+                "relativePath": "events/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "exceptions/bundling-strategy-not-found.ts",
                 "test": false,
                 "name": "bundling-strategy-not-found.ts"
