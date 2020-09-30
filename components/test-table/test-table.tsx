@@ -1,6 +1,5 @@
 import classNames from 'classnames';
-import prettyTime from 'pretty-time';
-
+import { timeFormat } from './utils';
 import { TestRow } from '@teambit/staged-components.test-row';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
@@ -33,8 +32,7 @@ export function TestTable({ testResults }: TestTableProps) {
 }
 
 function TestLine({ test }: { test: TestResult }) {
-  const durationInNanoSec = test.duration && +test.duration * 1000000;
-  const duration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
+  const duration = test.duration && timeFormat(+test.duration);
 
   return (
     <TestRow className={classNames(styles.testRow, styles[test.status])} content={test.error}>
