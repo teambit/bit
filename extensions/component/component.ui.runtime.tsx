@@ -1,3 +1,4 @@
+import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
 import { Slot } from '@teambit/harmony';
 import { NavigationSlot, NavLinkProps, RouteSlot } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
@@ -25,6 +26,11 @@ export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
 
 export class ComponentUI {
   constructor(
+    /**
+     * Pubsub aspects
+     */
+    private pubsub: PubsubUI,
+
     private routeSlot: RouteSlot,
 
     private navSlot: OrderedNavigationSlot,
@@ -71,20 +77,20 @@ export class ComponentUI {
     this.widgetSlot.register(widget);
   }
 
-  static dependencies = [];
+  static dependencies = [PubsubAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<RouteProps>(), Slot.withType<NavPlugin>(), Slot.withType<NavigationSlot>()];
 
   static async provider(
-    deps,
+    [pubsub]: [PubsubUI],
     config,
     [routeSlot, navSlot, widgetSlot]: [RouteSlot, OrderedNavigationSlot, NavigationSlot]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
-    const componentUI = new ComponentUI(routeSlot, navSlot, widgetSlot);
+    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot);
     return componentUI;
   }
 }
