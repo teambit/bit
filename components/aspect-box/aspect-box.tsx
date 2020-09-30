@@ -27,9 +27,9 @@ export function AspectBox({ icon, name, link, config, data, className, ...rest }
           </div>
           <div className={styles.name}>{name}</div>
         </div>
-        <a className={styles.aspectLink} target="_blank" rel="noopener noreferrer" href={link}>
+        {/* <a className={styles.aspectLink} target="_blank" rel="noopener noreferrer" href={link}>
           <Icon of="open-tab" />
-        </a>
+        </a> */}
       </div>
       <div className={styles.sectionTitle}>Configuration</div>
       <div className={classNames(styles.log, styles.config)}>
