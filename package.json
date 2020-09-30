@@ -151,7 +151,6 @@
     "module-definition": "^3.3.0",
     "module-lookup-amd": "^6.2.0",
     "moment": "^2.27.0",
-    "mutation-observer": "^1.0.3",
     "node-sass": "^4.14.1",
     "node-source-walk": "^4.2.0",
     "normalize-path": "^2.1.1",
