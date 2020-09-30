@@ -1,6 +1,11 @@
 /**
  * Please Notice: This file will run in the preview iframe.
  */
+
+// TODO: Use log aspect - currently do not work with the legacy log.
+// TODO: Decide and configure a consistent this alias.
+/* eslint-disable no-console, @typescript-eslint/no-this-alias */
+
 import { PreviewRuntime } from '@teambit/preview';
 
 import { connectToParent } from 'penpal';
@@ -12,9 +17,10 @@ export class PubsubPreview {
   private _parentPubsub;
 
   public async updateParentPubsub() {
-    return await connectToParent({ timeout: 300 })
+    return connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;
+
         console.debug('parentPubsub', parentPubsub); // TODO: use log aspect
       })
       .catch((err) => {
@@ -32,10 +38,10 @@ export class PubsubPreview {
   }
 
   public init() {
-    const self = this;
+    const _this = this;
     // Making sure parent call connect-to-child before the child call connect-to-parent
     setTimeout(() => {
-      self.updateParentPubsub();
+      _this.updateParentPubsub();
     }, 0);
   }
 

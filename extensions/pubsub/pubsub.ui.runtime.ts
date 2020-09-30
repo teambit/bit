@@ -1,3 +1,7 @@
+// TODO: Use log aspect - currently do not work with the legacy log.
+// TODO: Decide and configure a consistent this alias.
+/* eslint-disable no-console, @typescript-eslint/no-this-alias */
+
 import { UIRuntime } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
@@ -15,22 +19,23 @@ export class PubsubUI {
   };
 
   private connectToIframe = async (iframe) => {
-    const self = this;
+    const _this = this;
 
-    return await connectToChild({
+    return connectToChild({
       timeout: 500,
       iframe,
       methods: {
         sub(topicUUID, callback) {
-          return self.sub(topicUUID, callback);
+          return _this.sub(topicUUID, callback);
         },
         pub(topicUUID, event: BitBaseEvent<any>) {
-          return self.pub(topicUUID, event);
+          return _this.pub(topicUUID, event);
         },
       },
     })
       .promise.then((child) => child)
       .catch((err) => {
+        console.error(`Pubsub fail to connect to iframe: ${err}`);
         return this.connectToIframe(iframe);
       });
   };
