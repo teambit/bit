@@ -1,4 +1,7 @@
-import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
+/**
+ * Please Notice: This file will run in the preview iframe.
+ */
+import { PreviewRuntime } from '@teambit/preview';
 
 import { connectToParent } from 'penpal';
 
@@ -8,42 +11,44 @@ import { PubsubAspect } from './pubsub.aspect';
 export class PubsubPreview {
   private _parentPubsub;
 
-  constructor() {}
-
   public async updateParentPubsub() {
     return await connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;
-        console.log('parentPubsub', parentPubsub);// TODO: use log aspect
+        console.debug('parentPubsub', parentPubsub); // TODO: use log aspect
       })
       .catch((err) => {
-        console.error('Attempt to connect to the parent window failed', err);// TODO: use log aspect
+        console.error('Attempt to connect to the parent window failed', err); // TODO: use log aspect
         return this.updateParentPubsub();
       });
   }
 
   // TODO[uri]: need to run on every possibility of adding new IFrames
-  // Autorun init on focus
+  // TODO[uri]: Role back to 'focus' event?
   public async updateParentPubsubWithRetry() {
-    window.addEventListener('focus', () => {this.init()});
+    window.addEventListener('load', () => {
+      this.init();
+    });
   }
 
-  public init(){
+  public init() {
     const self = this;
-
     // Making sure parent call connect-to-child before the child call connect-to-parent
-    setTimeout(() => { 
+    setTimeout(() => {
       self.updateParentPubsub();
-      console.log('parentPubsub', self._parentPubsub);// TODO: use log aspect
     }, 0);
   }
 
   public sub(topicUUID, callback) {
-    this._parentPubsub.sub(topicUUID, callback);
+    this._parentPubsub
+      ? this._parentPubsub.sub(topicUUID, callback)
+      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
   }
 
   public pub(topicUUID, event: BitBaseEvent<any>) {
-    this._parentPubsub.pub(topicUUID, event);
+    this._parentPubsub
+      ? this._parentPubsub.pub(topicUUID, event)
+      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
   }
 
   static runtime = PreviewRuntime;

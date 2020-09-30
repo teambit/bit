@@ -1,6 +1,7 @@
-import { UIAspect, UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
+import MutationObserver from 'mutation-observer';
 
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
@@ -38,27 +39,18 @@ export class PubsubUI {
     const _iframes = this.getAllIframes();
     return _iframes.map((iframe) => this.connectToIframe(iframe));
   }
-  
+
   private createOrGetTopic = (topicUUID) => {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
 
-  // TODO[uri]: need to run on every possibility of adding new IFrames
-  // Refactor to new DOME API (https://stackoverflow.com/questions/3219758/detect-changes-in-the-dom)
   public async updateConnectionListWithRetry() {
-    
-    window.addEventListener('DOMNodeInserted', () => {
-      this._childs = this.updateConnectionsList();
-      console.log('childs: ', this._childs) // TODO: use log aspect
-    }, false)
-
-    window.addEventListener('DOMNodeRemoved', () => {
-      this._childs = this.updateConnectionsList();
-      console.log('childs: ', this._childs) // TODO: use log aspect
-    }, false)
+    const config = { childList: true, subtree: true };
+    const observer = new MutationObserver(() => {
+      this.updateConnectionsList();
+    });
+    observer.observe(document.body, config);
   }
-
-  constructor() {}
 
   public sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);
