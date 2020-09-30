@@ -40,11 +40,30 @@ export type IsolateComponentsInstallOptions = {
 export type IsolateComponentsOptions = {
   name?: string;
   baseDir?: string;
-  alwaysNew?: boolean; // create a new capsule with a random string attached to the path suffix
+  /**
+   * create a new capsule with a random string attached to the path suffix
+   */
+  alwaysNew?: boolean;
+
+  /**
+   * installation options
+   */
   installOptions?: IsolateComponentsInstallOptions;
   linkingOptions?: LinkingOptions;
-  emptyExisting?: boolean; // remove the capsule content first (if exist)
-  getExistingAsIs?: boolean; // get existing capsule without doing any changes, no writes, no installations.
+  /**
+   * remove the capsule content first (if exist)
+   */
+  emptyExisting?: boolean;
+
+  /**
+   * get existing capsule without doing any changes, no writes, no installations.
+   */
+  getExistingAsIs?: boolean;
+
+  /**
+   * include all dependencies the capsule root context.
+   */
+  includeDeps?: boolean;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -102,6 +121,7 @@ export class IsolatorMain {
       const installer = this.dependencyResolver.getInstaller({
         rootDir: capsulesDir,
         linkingOptions: opts.linkingOptions,
+        cacheRootDirectory: opts.includeDeps ? capsulesDir : undefined,
       });
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
