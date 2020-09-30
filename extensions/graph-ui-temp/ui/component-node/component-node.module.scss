@@ -3,22 +3,30 @@
   min-width: 100px;
   border-width: 2px;
   border-style: solid;
-  padding: 8px;
+  padding: 16px;
   background: white;
-
-  border-radius: 6px;
 
   text-align: left;
 }
 
-.nameLine {
+.firstRow {
   display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.envIcon {
+  margin-right: 8px;
 }
 
 .breadcrumbs {
-  text-transform: uppercase;
   color: #6c707c;
-  font-size: 10px;
+  font-size: 12px;
+}
+
+.nameLine {
+  display: flex;
+  align-items: center;
 }
 
 .name {
@@ -30,9 +38,13 @@
   white-space: nowrap;
 }
 
+.version {
+  margin-right: 8px;
+}
+
 .buffs {
   display: flex;
-  padding-top: 8px;
+  margin-left: auto;
   line-height: 1;
   font-size: 15px;
   line-height: 16px;
@@ -40,7 +52,7 @@
   > * {
     margin-right: 8px;
   }
-  > :last-child() {
+  > *:last-child {
     margin-right: 0px;
   }
 

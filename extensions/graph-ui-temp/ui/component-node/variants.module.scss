@@ -3,6 +3,18 @@ $regularNodeColor: #3a95ff;
 
 .root {
   border-color: $success;
+  border-top-width: 20px;
+
+  border-radius: 10px;
+
+  &:before {
+    content: 'Current component';
+    position: absolute;
+    top: 0px;
+    font-size: 10px;
+    color: white;
+    line-height: 20px;
+  }
 }
 
 .defaultNode {

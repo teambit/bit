@@ -21,6 +21,7 @@ $b70: #0d2de3;
 
 .minimap {
   box-shadow: var(--shadow-faint);
+  background: white !important; // override inline styles from package
   border-radius: 5px;
 
   :global {
@@ -35,6 +36,5 @@ $b70: #0d2de3;
 .controls {
   box-shadow: var(--shadow-faint);
 
-  left: unset;
-  right: 220px;
+  left: 24px;
 }
