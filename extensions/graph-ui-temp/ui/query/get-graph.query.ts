@@ -1,4 +1,5 @@
 import { gql } from 'apollo-boost';
+import { EdgeType } from '@teambit/graph';
 
 // please update types when updating query, for added safety
 
@@ -99,5 +100,5 @@ export type RawNode = {
 export type RawEdge = {
   sourceId: string;
   targetId: string;
-  dependencyLifecycleType: string;
+  dependencyLifecycleType: EdgeType;
 };

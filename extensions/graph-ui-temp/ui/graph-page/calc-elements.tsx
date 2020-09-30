@@ -3,6 +3,8 @@ import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
 import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
+import { depTypeToClass } from './dep-edge';
+
 type ElementsOptions = {
   rootNode?: string;
 };
@@ -28,6 +30,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       source: e.sourceId,
       target: e.targetId,
       type: 'smoothstep',
+      className: depTypeToClass(e.dependencyLifecycleType),
       arrowHeadType: ArrowHeadType.Arrow,
     }));
 

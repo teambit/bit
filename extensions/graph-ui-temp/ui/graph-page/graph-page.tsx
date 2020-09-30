@@ -1,4 +1,4 @@
-import React, { createContext, useMemo, useCallback } from 'react';
+import React, { createContext, useMemo, useCallback, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
   Controls,
@@ -9,7 +9,6 @@ import ReactFlow, {
   Handle,
   Position,
   NodeProps,
-  ReactFlowProps,
 } from 'react-flow-renderer';
 import { useRouteMatch } from 'react-router-dom';
 
@@ -25,8 +24,6 @@ import styles from './graph-page.module.scss';
 import { calcElements } from './calc-elements';
 import { calcMinimapColors } from './minimap';
 
-const DEFAULT_POS = [80, 80] as [number, number];
-
 const NodeTypes: NodeTypesType = {
   ComponentNode: function ComponentNodeContainer(props: NodeProps) {
     const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data } = props;
@@ -41,7 +38,9 @@ const NodeTypes: NodeTypesType = {
   },
 };
 
-type GraphPageProps = { componentWidgets: ComponentWidgetSlot } & ReactFlowProps;
+// @TODO - temporary, until react-flow-renderer will export ReactFlowProps
+type ReactFlowProps = HTMLAttributes<HTMLDivElement>;
+export type GraphPageProps = { componentWidgets: ComponentWidgetSlot } & ReactFlowProps;
 
 export function GraphPage({ componentWidgets, className, onLoad, ...rest }: GraphPageProps) {
   const {

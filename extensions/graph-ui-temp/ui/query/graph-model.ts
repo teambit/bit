@@ -1,5 +1,7 @@
 import { RawGraph, RawNode, RawEdge } from './get-graph.query';
 import { ComponentModel } from '@teambit/component';
+import { EdgeType } from '@teambit/graph';
+import { RawGraph, RawNode, RawEdge } from './get-graph.query';
 
 export class GraphModel {
   constructor(public nodes: NodeModel[], public edges: EdgeModel[]) {}
@@ -15,7 +17,7 @@ export class NodeModel {
   component: ComponentModel;
 
   static from(rawNode: RawNode) {
-    var node = new NodeModel();
+    const node = new NodeModel();
     node.id = rawNode.id;
     // @TODO - component model should not expect all fields to have values
     // @ts-ignore
@@ -28,10 +30,10 @@ export class NodeModel {
 export class EdgeModel {
   sourceId: string;
   targetId: string;
-  dependencyLifecycleType: string;
+  dependencyLifecycleType: EdgeType;
 
   static from(rawEdge: RawEdge) {
-    var edge = new EdgeModel();
+    const edge = new EdgeModel();
     edge.sourceId = rawEdge.sourceId;
     edge.targetId = rawEdge.targetId;
     edge.dependencyLifecycleType = rawEdge.dependencyLifecycleType;
