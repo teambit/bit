@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestsFiles } from '@teambit/tester';
-import { timeFormat } from '../utils';
+import { timeFormat } from '@teambit/toolbox.time-format';
 import styles from './test-file-title.module.scss';
 
 type TestFileTitleProps = {
