@@ -50,9 +50,20 @@ export class PubsubUI {
   };
 
   public async updateConnectionListWithRetry() {
+    this.updateConnectionsList();
     const config = { childList: true, subtree: true };
-    const observer = new MutationObserver(() => {
-      this.updateConnectionsList();
+
+    const observer = new MutationObserver((e: MutationRecord[]) => {
+      const addedIframes = e
+        .map((x) => Array.from(x.addedNodes).filter((element) => element.nodeName === 'IFRAME'))
+        .flat();
+      // const removedIframes = e
+      //   .map((x) => Array.from(x.removedNodes).filter((element) => element.nodeName === 'IFRAME'))
+      //   .flat();
+      // const directChanges = e.filter((x) => x.target.nodeName === 'IFRAME');
+      if (addedIframes.length > 0) {
+        this.updateConnectionsList();
+      }
     });
     observer.observe(document.body, config);
   }
