@@ -30,7 +30,7 @@ export default async function put(
     compsAndLanesObjects = CompsAndLanesObjects.fromString(compsAndLanesObjects);
   }
   // console.log('after from string', compsAndLanesObjects)
-  throw new Error('put, stop here');
+  // throw new Error('put, stop here');
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(

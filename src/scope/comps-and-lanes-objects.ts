@@ -54,6 +54,22 @@ export default class CompsAndLanesObjects {
     });
   }
 
+  toFlattenedBufferArray(): Buffer[] {
+    const allObjects: Buffer[] = [];
+    this.componentsObjects.forEach((componentAndObject) => {
+      allObjects.push(componentAndObject.component);
+      allObjects.push(...componentAndObject.objects);
+    });
+    if (this.laneObjects.length) {
+      this.laneObjects.forEach((l) => {
+        allObjects.push(l.lane);
+        allObjects.push(...l.objects);
+      });
+    }
+    // components.forEach(c => console.log('\n!! c ', c.toString('utf-8', 0, 100)));
+    return allObjects;
+  }
+
   static fromString(str: string) {
     const parsed = JSON.parse(str);
     let components;
