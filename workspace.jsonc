@@ -3,7 +3,7 @@
   "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
-    "defaultScope": "teambit3.bit",
+    "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
@@ -139,10 +139,12 @@
         "mime": "^2.4.6",
         "mini-css-extract-plugin": "^0.9.0",
         "mousetrap": "^1.6.5",
+        "mutation-observer": "1.0.3",
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
         "parse-package-name": "0.1.0",
+        "penpal": "^5.2.1",
         "postcss": "7.0.32",
         "postcss-flexbugs-fixes": "^4.2.1",
         "postcss-loader": "^3.0.0",
@@ -209,7 +211,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.30",
+        "bit-bin": "14.8.9-dev.35",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1",
         "@babel/runtime": "^7.11.2"
@@ -240,7 +242,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.30",
+            "bit-bin": "14.8.9-dev.35",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -273,7 +275,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.30",
+            "bit-bin": "14.8.9-dev.35",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
