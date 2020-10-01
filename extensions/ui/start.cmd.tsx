@@ -132,6 +132,12 @@ export class StartCmd implements Command {
   private onUiServerStarted = (event) => {
     this.targetHost = event.data.targetHost;
     this.targetPort = event.data.targetPort;
+
+    event.data.uiRoot.workspace.list().then((componentsList) => {
+      if (!componentsList.length) {
+        this.openBrowserOn0();
+      }
+    });
   };
 
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -142,6 +148,7 @@ export class StartCmd implements Command {
 
   private onComponentsServerStarted(event) {
     this.devServerCounter += 1;
+
     this.items.push({
       envName: event.data.executionContext.envRuntime.id,
       host: event.data.hostname,
