@@ -188,6 +188,11 @@ export class AspectLoaderMain {
     return this.failedLoadAspect;
   }
 
+  private addFailure(id: string): void {
+    if (this.failedAspects.includes(id)) return;
+    this.failedLoadAspect.push(id);
+  }
+
   /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
@@ -219,7 +224,7 @@ export class AspectLoaderMain {
         manifest.id = id;
         return manifest;
       } catch (e) {
-        this.failedLoadAspect.push(id);
+        this.addFailure(id);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
         if (this.logger.isLoaderStarted) {
           this.logger.consoleFailure(errorMsg);
