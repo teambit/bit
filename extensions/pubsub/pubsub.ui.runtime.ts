@@ -60,6 +60,8 @@ export class PubsubUI {
       // const removedIframes = e
       //   .map((x) => Array.from(x.removedNodes).filter((element) => element.nodeName === 'IFRAME'))
       //   .flat();
+
+      // // to enable directChanges, add { attributes: true, attributeFilter: ['src', ...etc] } to .observe(..., config)
       // const directChanges = e.filter((x) => x.target.nodeName === 'IFRAME');
       if (addedIframes.length > 0) {
         this.updateConnectionsList();
