@@ -1,8 +1,8 @@
 import { migrate } from '../../../api/consumer';
 import { fetch } from '../../../api/scope';
 import logger from '../../../logger/logger';
-import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
@@ -20,7 +20,7 @@ export default class Fetch implements LegacyCommand {
     ['', 'lanes', 'provided ids are lanes'],
   ] as CommandOptions;
 
-  action([path, args]: [string, string], { noDependencies, lanes }: any): Promise<any> {
+  action([path, args]: [string, string], { noDependencies, lanes }: any): Promise<ObjectList> {
     const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
@@ -31,9 +31,9 @@ export default class Fetch implements LegacyCommand {
     });
   }
 
-  report(compsAndLanesObjects: CompsAndLanesObjects): string {
-    const components = compsAndLanesObjects.toString();
+  report(objectList: ObjectList): string {
+    const objectListStr = objectList.toJsonString();
     // No need to use packCommand because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
-    return JSON.stringify(buildCommandMessage(components, undefined, compressResponse));
+    return JSON.stringify(buildCommandMessage(objectListStr, undefined, compressResponse));
   }
 }

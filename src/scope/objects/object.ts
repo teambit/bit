@@ -3,6 +3,7 @@ import { inflateSync } from 'zlib';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import { deflate, inflate, sha1 } from '../../utils';
 import { typesObj as types } from '../object-registrar';
+import { ObjectItem } from './object-list';
 import Ref from './ref';
 import Repository from './repository';
 
@@ -62,9 +63,9 @@ path: ${err.path}`);
     return refsCollection;
   }
 
-  async collectRaw(repo: Repository): Promise<Buffer[]> {
+  async collectRaw(repo: Repository): Promise<ObjectItem[]> {
     const refs = await this.collectRefs(repo);
-    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
+    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
   }
 
   asRaw(repo: Repository): Promise<Buffer> {

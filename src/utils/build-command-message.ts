@@ -1,6 +1,6 @@
 import { BIT_VERSION } from '../constants';
 
-module.exports = function buildCommandMessage(payload, context, compress = true) {
+export function buildCommandMessage(payload, context, compress = true) {
   return {
     payload,
     headers: {
@@ -9,4 +9,4 @@ module.exports = function buildCommandMessage(payload, context, compress = true)
       context,
     },
   };
-};
+}

@@ -21,6 +21,7 @@ import { PathLinux, PathLinuxRelative } from '../../utils/path';
 import { isHash } from '../../version/version-parser';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
+import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
@@ -308,9 +309,9 @@ export default class Version extends BitObject {
     return [...dists, ...files, ...artifacts].filter((ref) => ref);
   }
 
-  async collectRawWithoutParents(repo: Repository): Promise<Buffer[]> {
+  async collectRawWithoutParents(repo: Repository): Promise<ObjectItem[]> {
     const refs = this.refsWithoutParents();
-    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
+    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
   }
 
   toObject() {

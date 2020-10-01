@@ -381,6 +381,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return component;
   }
 
+  putModelComponent(component: ModelComponent) {
+    const repo: Repository = this.objects();
+    repo.add(component);
+  }
+
   put({ component, objects }: ComponentTree): ModelComponent {
     logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
@@ -404,6 +409,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (isObjectShouldBeAdded(obj)) repo.add(obj);
     });
     return component;
+  }
+
+  putObjects(objects: BitObject[]) {
+    const repo: Repository = this.objects();
+    objects.forEach((obj) => repo.add(obj));
   }
 
   /**
@@ -545,19 +555,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * hasn't changed.
    */
   async merge(
-    { component, objects }: ComponentTree,
+    component: ModelComponent,
+    versionObjects: Version[],
     inScope = false,
     local = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
     // @ts-ignore
-    const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
+    // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
     const allHashes = await getAllVersionHashesByVersionsObjects(component, versionObjects, false);
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
-      this.put({ component, objects });
+      this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
     const existingComponentHead = existingComponent.getHead();
@@ -593,7 +604,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (local) mergedComponent.remoteHead = componentHead;
       }
 
-      this.put({ component: mergedComponent, objects });
+      this.putModelComponent(component);
       return { mergedComponent, mergedVersions };
     }
 
@@ -624,7 +635,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * do not update the lane object. only save the data on the refs/remote/lane-name.
    */
   async mergeLane(
-    { lane, objects }: LaneTree,
+    lane: Lane,
     local: boolean
   ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
     const repo = this.objects();
@@ -671,7 +682,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       })
     );
     repo.add(existingLane);
-    objects.forEach((obj) => repo.add(obj));
+    // objects.forEach((obj) => repo.add(obj));
     return mergeResults;
   }
 }

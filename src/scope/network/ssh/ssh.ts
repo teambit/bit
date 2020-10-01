@@ -20,7 +20,6 @@ import { userpass as promptUserpass } from '../../../prompts';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
 import ComponentObjects from '../../component-objects';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
@@ -39,6 +38,7 @@ import {
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import { Network } from '../network';
 import keyGetter from './key-getter';
+import { ObjectList } from '../../objects/object-list';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -380,14 +380,13 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(compsAndLanesObjects: CompsAndLanesObjects, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', compsAndLanesObjects.toString(), context).then((data: string) => {
-      const { payload, headers } = this._unpack(data);
-      checkVersionCompatibility(headers.version);
-      return payload.ids;
-    });
+    const data = await this.exec('_put', objectList.toJsonString(), context);
+    const { payload, headers } = this._unpack(data);
+    checkVersionCompatibility(headers.version);
+    return payload.ids;
   }
 
   deleteMany(
@@ -517,24 +516,23 @@ export default class SSH implements Network {
     noDeps = false,
     idsAreLanes = false,
     context?: Record<string, any>
-  ): Promise<CompsAndLanesObjects> {
+  ): Promise<ObjectList> {
     let options = '';
     const idsStr = ids.map((id) => id.toString());
     if (noDeps) options = '--no-dependencies';
     if (idsAreLanes) options += ' --lanes';
-    return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
-      const parseResponse = () => {
-        try {
-          const results = JSON.parse(str);
-          return results;
-        } catch (err) {
-          throw new SSHInvalidResponse(str);
-        }
-      };
-      const { payload, headers } = parseResponse();
-      checkVersionCompatibility(headers.version);
-      const componentObjects = CompsAndLanesObjects.fromString(payload);
-      return componentObjects;
-    });
+    const str = await this.exec(`_fetch ${options}`, idsStr, context);
+    const parseResponse = () => {
+      try {
+        const results = JSON.parse(str);
+        return results;
+      } catch (err) {
+        throw new SSHInvalidResponse(str);
+      }
+    };
+    const { payload, headers } = parseResponse();
+    checkVersionCompatibility(headers.version);
+    const objectList = ObjectList.fromJsonString(payload);
+    return objectList;
   }
 }
