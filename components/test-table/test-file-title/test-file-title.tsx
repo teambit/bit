@@ -1,9 +1,9 @@
 import classNames from 'classnames';
-import prettyTime from 'pretty-time';
 
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TestsFiles } from '@teambit/tester';
+import { timeFormat } from '@teambit/toolbox.time-format';
 import styles from './test-file-title.module.scss';
 
 type TestFileTitleProps = {
@@ -12,8 +12,8 @@ type TestFileTitleProps = {
 
 export function TestFileTitle({ testFile, className, ...rest }: TestFileTitleProps) {
   const { duration, failed, file, pass, pending } = testFile;
-  const durationInNanoSec = duration && duration * 1000000;
-  const formattedDuration = durationInNanoSec !== undefined ? prettyTime(durationInNanoSec, 'ms') : '-';
+  const formattedDuration = duration && timeFormat(duration);
+
   return (
     <div {...rest} className={classNames(styles.testFileTitle, className)}>
       <div className={styles.testFile}>{file}</div>

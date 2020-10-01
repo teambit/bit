@@ -4477,7 +4477,26 @@
         "exported": false,
         "lanes": []
     },
-    "typescript@0.0.58": {
+    "toolbox/time-format": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "time-format.ts",
+                "test": false,
+                "name": "time-format.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/time-format",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "typescript": {
         "files": [
             {
                 "relativePath": "cmds/init.cmd.ts",
