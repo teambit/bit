@@ -403,7 +403,9 @@ export default class NodeModuleLinker {
       packageJson.packageJsonObject.version = '0.0.1-new';
     }
 
-    packageJson.mergePropsFromExtensions(component);
+    // packageJson.mergePropsFromExtensions(component);
+    // TODO: we need to have an hook here to get the transformer from the pkg extension
+
     // delete the version, otherwise, we have to maintains it. such as, when tagging, it should be
     // changed to the new tagged version.
     delete packageJson.packageJsonObject.version;

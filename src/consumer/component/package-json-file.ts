@@ -228,22 +228,6 @@ export default class PackageJsonFile {
     return clone;
   }
 
-  /**
-   * these changes were added by extensions
-   */
-  mergePropsFromExtensions(component: Component) {
-    // The special keys will be merged in other place
-    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    if (!component.extensionsAddedConfig || R.isEmpty(component.extensionsAddedConfig)) return;
-    const valuesToMerge = R.omit(specialKeys, component.extensionsAddedConfig);
-    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
-      const value = replacePlaceHolderWithComponentValue(component, valuesToMerge[current]);
-      acc[current] = value;
-      return acc;
-    }, {});
-    this.mergePackageJsonObject(valuesToMergeFormatted);
-  }
-
   static propsNonUserChangeable() {
     return ['name', 'version', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'bit'];
   }

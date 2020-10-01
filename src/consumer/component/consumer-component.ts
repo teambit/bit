@@ -106,15 +106,10 @@ export type ComponentProps = {
   schema?: string;
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
-  extensionsAddedConfig: any;
   componentFromModel?: Component;
 };
 
 export default class Component {
-  // Just a proxy to the component config so extension won't need to access the old config directly
-  static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
-    ComponentConfig.registerAddConfigAction(extId, func);
-  }
   static registerOnComponentConfigLoading(extId, func: (id) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
@@ -184,7 +179,6 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
   extensions: ExtensionDataList = new ExtensionDataList();
-  extensionsAddedConfig: any;
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
@@ -232,7 +226,6 @@ export default class Component {
     customResolvedPaths,
     scopesList,
     extensions,
-    extensionsAddedConfig,
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -268,7 +261,6 @@ export default class Component {
     this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
     this.extensions = extensions || [];
-    this.extensionsAddedConfig = extensionsAddedConfig || {};
     this.componentFromModel = componentFromModel;
     this.schema = schema;
   }
@@ -1102,7 +1094,6 @@ export default class Component {
     }
 
     const extensions: ExtensionDataList = componentConfig.extensions;
-    const extensionsAddedConfig = componentConfig.extensionsAddedConfig;
 
     const envsContext = {
       componentDir: bitDir,
@@ -1204,8 +1195,7 @@ export default class Component {
       defaultScope,
       packageJsonFile,
       packageJsonChangedProps,
-      extensions,
-      extensionsAddedConfig,
+      extensions
     });
   }
 }

@@ -47,7 +47,6 @@ export interface ManyComponentsWriterParams {
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
-  applyExtensionsAddedConfig?: boolean;
 }
 
 /**
@@ -88,7 +87,6 @@ export default class ManyComponentsWriter {
   saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
   // Apply config added by extensions
-  applyExtensionsAddedConfig?: boolean;
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
@@ -113,7 +111,6 @@ export default class ManyComponentsWriter {
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
-    this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
@@ -243,7 +240,6 @@ export default class ManyComponentsWriter {
       consumer: this.consumer,
       bitMap: this.bitMap,
       isolated: this.isolated,
-      applyExtensionsAddedConfig: this.applyExtensionsAddedConfig,
       excludeRegistryPrefix: this.excludeRegistryPrefix,
     };
   }
