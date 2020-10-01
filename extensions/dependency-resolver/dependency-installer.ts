@@ -186,6 +186,7 @@ export class DependencyInstaller {
       return;
     }
 
+    // eslint-disable-next-line global-require, import/no-dynamic-require
     const module = require(aspectDir);
     const aspectPath = path.resolve(path.join(module.path, '..', '..'));
     // in this case we want the symlinks to be relative links
