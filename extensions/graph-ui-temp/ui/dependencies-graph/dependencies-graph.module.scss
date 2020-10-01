@@ -8,6 +8,22 @@ $b70: #0d2de3;
       stroke-width: 2px;
     }
 
+    .react-flow__handle {
+      &-bottom {
+        bottom: -4px;
+      }
+
+      &-top {
+        top: -4px;
+      }
+      &-left {
+        left: -4px;
+      }
+      &-right {
+        right: -4px;
+      }
+    }
+
     .react-flow__arrowhead polyline {
       stroke: $d30;
       stroke-width: 2px;
@@ -20,6 +36,8 @@ $b70: #0d2de3;
 }
 
 .minimap {
+  right: 24px;
+  bottom: 24px;
   box-shadow: var(--shadow-faint);
   background: white !important; // override inline styles from package
   border-radius: 5px;
@@ -37,4 +55,5 @@ $b70: #0d2de3;
   box-shadow: var(--shadow-faint);
 
   left: 24px;
+  bottom: 24px;
 }

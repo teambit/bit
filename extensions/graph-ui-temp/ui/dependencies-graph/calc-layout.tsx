@@ -2,7 +2,7 @@ import dagre, { graphlib } from 'dagre';
 import { Edge, FlowElement } from 'react-flow-renderer';
 
 const NODE_WIDTH = 260;
-const NODE_HEIGHT = 70;
+const NODE_HEIGHT = 90;
 
 const BOTTOM_TO_TOP = 'BT';
 

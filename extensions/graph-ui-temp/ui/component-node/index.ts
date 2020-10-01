@@ -1,3 +1,3 @@
 export { ComponentNode } from './component-node';
 
-export { defaultNodeColor, rootNodeColor } from './variants';
+export { defaultNodeColor, rootNodeColor, externalNodeColor } from './variants';

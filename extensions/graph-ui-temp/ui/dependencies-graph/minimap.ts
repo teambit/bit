@@ -1,5 +1,5 @@
 import { Node } from 'react-flow-renderer';
-import { rootNodeColor, defaultNodeColor } from '../component-node';
+import { rootNodeColor, defaultNodeColor, externalNodeColor } from '../component-node';
 
 export function calcMinimapColors(node: Node) {
   const type = node.data?.type;
@@ -7,6 +7,8 @@ export function calcMinimapColors(node: Node) {
   switch (type) {
     case 'root':
       return rootNodeColor;
+    case 'external':
+      return externalNodeColor;
     default:
       return defaultNodeColor;
   }
