@@ -3,7 +3,7 @@
   "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
-    "defaultScope": "teambit3.bit",
+    "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
@@ -211,7 +211,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.31",
+        "bit-bin": "14.8.9-dev.35",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1",
         "@babel/runtime": "^7.11.2"
@@ -242,7 +242,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.31",
+            "bit-bin": "14.8.9-dev.35",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1"
           }
@@ -275,7 +275,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.31",
+            "bit-bin": "14.8.9-dev.35",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
