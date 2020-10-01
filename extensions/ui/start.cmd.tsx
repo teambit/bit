@@ -133,7 +133,7 @@ export class StartCmd implements Command {
     this.targetHost = event.data.targetHost;
     this.targetPort = event.data.targetPort;
 
-    event.data.uiRoot.workspace.list().then((componentsList) => {
+    return event.data.uiRoot.workspace.list().then((componentsList) => {
       if (!componentsList.length) {
         this.openBrowserOn0();
       }
