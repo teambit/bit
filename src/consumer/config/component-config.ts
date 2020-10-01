@@ -396,6 +396,7 @@ async function runOnAddConfigEvent(configsRegistry: AddConfigRegistry, extension
     const func = configsRegistry[extId];
     return func(extensions);
   });
+
   const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
   const extensionsConfigModificationsObject = mergeExtensionsConfig(extensionsConfigModifications);
   return extensionsConfigModificationsObject;
