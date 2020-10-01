@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import React, { useMemo } from 'react';
+import React from 'react';
 import JSONFormatter from 'json-formatter-js';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './aspect-box.module.scss';
 
 export type AspectBoxProps = {
@@ -12,7 +11,7 @@ export type AspectBoxProps = {
   data: any;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function AspectBox({ icon, name, link, config, data, className, ...rest }: AspectBoxProps) {
+export function AspectBox({ icon, name, config, data, className, ...rest }: AspectBoxProps) {
   const configContent = new JSONFormatter(config, 1, {
     theme: 'dark',
     hoverPreviewEnabled: true,
