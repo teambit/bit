@@ -132,6 +132,7 @@
   display: flex;
   align-items: center;
   color: #878c9a;
+  white-space: nowrap;
   > span {
     &:first-child {
       color: var(--text-muted);

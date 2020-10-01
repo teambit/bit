@@ -75,7 +75,7 @@ export class DependencyInstaller {
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
     componentDirectoryMap.map((_dir, comp) => {
-      componentIdsWithoutVersions.push(comp.id.toString({ignoreVersion: true}));
+      componentIdsWithoutVersions.push(comp.id.toString({ ignoreVersion: true }));
       return undefined;
     });
     if (linkingOpts.bitLinkType === 'link' && !this.isBitRepoWorkspace(finalRootDir)) {
@@ -187,7 +187,7 @@ export class DependencyInstaller {
       return;
     }
 
-    const src = path.relative(path.resolve(target,'..'), aspectDir);
+    const src = path.relative(path.resolve(target, '..'), aspectDir);
     // in this case we want the symlinks to be relative links
     // Using the fs module to make sure it is relative to the target
     fs.symlinkSync(src, target);
