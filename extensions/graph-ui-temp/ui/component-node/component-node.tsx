@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID, ComponentModel } from '@teambit/component';
 import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
+import { EnvIcon } from '@teambit/staged-components.env-icon';
 import { ellipsis } from '@teambit/styles.ellipsis';
-import { ElevationHeight } from '@teambit/base-ui.css-components.elevation';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 
 import { NodeModel } from '../query/graph-model';
@@ -25,7 +25,7 @@ export function ComponentNode({ node, type = 'defaultNode', ...rest }: Component
   const { id } = component;
 
   return (
-    <Card className={classnames(styles.compNode, variants[type])} elevation={typeToElevation(type)} {...rest}>
+    <Card className={classnames(styles.compNode, variants[type])} elevation="none" {...rest}>
       <div className={styles.firstRow}>
         <EnvIcon component={component} className={styles.envIcon} />
         <Breadcrumbs componentId={id} className={mutedText} />
@@ -59,21 +59,4 @@ function Breadcrumbs({ componentId, className, ...rest }: BreadcrumbsProps) {
       {namespace}
     </div>
   );
-}
-
-// TODO - unify with sidebar widgets
-type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLDivElement>;
-function EnvIcon({ component, ...rest }: EnvIconProps) {
-  if (!component || !component.environment?.icon) return null;
-
-  return <img src={component.environment?.icon} alt={component.environment.id} {...rest} />;
-}
-
-function typeToElevation(componentType: string): ElevationHeight {
-  switch (componentType) {
-    case 'root':
-      return 'medium';
-    default:
-      return 'none';
-  }
 }

@@ -40,7 +40,6 @@
         "@svgr/webpack": "^5.4.0",
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "^0.2.10",
-        "@teambit/base-ui.css-components.elevation": "0.2.10",
         "@teambit/base-ui.css-components.roundness": "^0.2.10",
         "@teambit/base-ui.elements.separator": "^0.2.10",
         "@teambit/base-ui.input.error": "^0.2.10",

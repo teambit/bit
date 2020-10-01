@@ -43,7 +43,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        <EnvIcon component={component} />
+        <EnvIcon component={component} className={styles.envIcon} />
         <span>{getName(node.id)}</span>
       </div>
 
