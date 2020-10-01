@@ -53,12 +53,13 @@ export class AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
   }
 
-  serialize(){
+  serialize() {
     return {
       id: this.id.toString(),
       config: this.config,
       data: this.data,
-      artifacts: this.artifacts
-    }
+      artifacts: this.artifacts,
+      icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
+    };
   }
 }

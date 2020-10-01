@@ -9,6 +9,7 @@ import { RouteProps } from 'react-router-dom';
 import { ComponentAspect } from './component.aspect';
 import { Component } from './ui/component';
 import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
+import { AspectSection } from './aspect.section';
 
 export type Server = {
   env: string;
@@ -112,6 +113,10 @@ export class ComponentUI {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
     const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot);
+    const section = new AspectSection();
+
+    componentUI.registerRoute(section.route);
+    componentUI.registerNavigation(section.navigationLink, section.order);
     return componentUI;
   }
 }

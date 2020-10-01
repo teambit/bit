@@ -133,6 +133,7 @@
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
         "join-path": "^1.1.1",
+        "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "lodash.head": "^4.0.1",
         "memoize-one": "5.1.1",
