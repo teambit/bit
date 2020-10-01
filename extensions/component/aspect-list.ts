@@ -60,8 +60,8 @@ export class AspectList {
     return res;
   }
 
-  serialize(){
-    const serializedEntries = this.entries.map(entry => entry.serialize());
+  serialize() {
+    const serializedEntries = this.entries.map((entry) => entry.serialize());
     return serializedEntries;
   }
 
