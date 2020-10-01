@@ -10,11 +10,13 @@ import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
+import { ModelComponent } from '../../models';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
+import { BitObject } from '../../objects';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}
@@ -114,6 +116,41 @@ export class Http implements Network {
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
     logger.debug(`http, returning from a remote fetch ${this.scopeUrl}/${route}`);
+
+    const extract = tarStream.extract();
+    const bitObjects: BitObject[] = await new Promise((resolve, reject) => {
+      const objects: BitObject[] = [];
+      extract.on('entry', (header, stream, next) => {
+        let data = Buffer.from('');
+        stream.on('data', function (chunk) {
+          data = Buffer.concat([data, chunk]);
+        });
+
+        stream.on('end', () => {
+          const object = BitObject.parseSync(data);
+          objects.push(object);
+          data = Buffer.from('');
+          next(); // ready for next entry
+        });
+
+        stream.on('error', (err) => reject(err));
+
+        stream.resume(); // just auto drain the stream
+      });
+
+      extract.on('finish', () => {
+        console.log('completed!');
+        resolve(objects);
+      });
+
+      // console.log("res.body", res.body)
+      res.body.pipe(extract);
+    });
+
+    const components = bitObjects.filter((o) => o instanceof ModelComponent);
+    console.log('PutRoute -> constructor -> components', components);
+
+    throw new Error('stop here!');
 
     return CompsAndLanesObjects.fromString(await res.text());
   }

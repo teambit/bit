@@ -21,6 +21,7 @@ export default async function put(
   headers: Record<string, any>
 ): Promise<string[]> {
   console.log('in put', typeof compsAndLanesObjects);
+  // @ts-ignore
   console.log('in put size', compsAndLanesObjects.length);
   // console.log('compsAndLanesObjects tostring', compsAndLanesObjects.toString());
   // console.log('compsAndLanesObjects', zlib.inflateSync(compsAndLanesObjects));
