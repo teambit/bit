@@ -691,51 +691,7 @@
         "exported": false,
         "lanes": []
     },
-    "component-tree@0.0.58": {
-        "files": [
-            {
-                "relativePath": "component-tree-node.ts",
-                "test": false,
-                "name": "component-tree-node.ts"
-            },
-            {
-                "relativePath": "component-tree.aspect.ts",
-                "test": false,
-                "name": "component-tree.aspect.ts"
-            },
-            {
-                "relativePath": "component-tree.composition.tsx",
-                "test": false,
-                "name": "component-tree.composition.tsx"
-            },
-            {
-                "relativePath": "component-tree.docs.tsx",
-                "test": false,
-                "name": "component-tree.docs.tsx"
-            },
-            {
-                "relativePath": "component-tree.drawer.tsx",
-                "test": false,
-                "name": "component-tree.drawer.tsx"
-            },
-            {
-                "relativePath": "component-tree.ui.runtime.tsx",
-                "test": false,
-                "name": "component-tree.ui.runtime.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/component-tree",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "component@0.0.58": {
+    "component": {
         "files": [
             {
                 "relativePath": "aspect-entry.ts",
@@ -746,6 +702,11 @@
                 "relativePath": "aspect-list.ts",
                 "test": false,
                 "name": "aspect-list.ts"
+            },
+            {
+                "relativePath": "aspect.section.tsx",
+                "test": false,
+                "name": "aspect.section.tsx"
             },
             {
                 "relativePath": "component-factory.ts",
@@ -938,6 +899,21 @@
                 "name": "tag.ts"
             },
             {
+                "relativePath": "ui/aspect-page/aspect-page.module.scss",
+                "test": false,
+                "name": "aspect-page.module.scss"
+            },
+            {
+                "relativePath": "ui/aspect-page/aspect-page.tsx",
+                "test": false,
+                "name": "aspect-page.tsx"
+            },
+            {
+                "relativePath": "ui/aspect-page/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/component-error/component-error.tsx",
                 "test": false,
                 "name": "component-error.tsx"
@@ -1055,6 +1031,50 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/component",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "component-tree@0.0.58": {
+        "files": [
+            {
+                "relativePath": "component-tree-node.ts",
+                "test": false,
+                "name": "component-tree-node.ts"
+            },
+            {
+                "relativePath": "component-tree.aspect.ts",
+                "test": false,
+                "name": "component-tree.aspect.ts"
+            },
+            {
+                "relativePath": "component-tree.composition.tsx",
+                "test": false,
+                "name": "component-tree.composition.tsx"
+            },
+            {
+                "relativePath": "component-tree.docs.tsx",
+                "test": false,
+                "name": "component-tree.docs.tsx"
+            },
+            {
+                "relativePath": "component-tree.drawer.tsx",
+                "test": false,
+                "name": "component-tree.drawer.tsx"
+            },
+            {
+                "relativePath": "component-tree.ui.runtime.tsx",
+                "test": false,
+                "name": "component-tree.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/component-tree",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3937,7 +3957,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/test-table@0.0.58": {
+    "staged-components/test-table": {
         "files": [
             {
                 "relativePath": "index.ts",
