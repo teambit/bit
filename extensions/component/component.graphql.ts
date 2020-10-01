@@ -78,6 +78,7 @@ export function componentSchema(componentExtension: ComponentMain) {
 
       type Aspect {
         id: String!
+        icon: String
         config: JSONObject
         data: JSONObject
       }
