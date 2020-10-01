@@ -1,4 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
+import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
 import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
@@ -29,22 +30,17 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         placeholder=""
         clickToggles
         clickOutside
-        PlaceholderComponent={() => (
-          <div>
-            {/* <div className={styles.overlay} /> */}
-            <VersionPlaceholder currentVersion={currentVersion} />
-          </div>
-        )}
+        PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
       >
         <div>
           <div className={styles.title}>Select version to view</div>
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
               return (
-                <div key={index} className={classNames(styles.versionLine, hoverable)}>
+                <NavLink to={`?version=${version}`} key={index} className={classNames(styles.versionLine, hoverable)}>
                   <span className={styles.version}>{version}</span>
                   {version === currentVersion && <VersionLabel status="latest" />}
-                </div>
+                </NavLink>
               );
             })}
           </div>
