@@ -7,6 +7,14 @@ import styles from './graph-summery.module.scss';
 
 export type GraphStats = { runtime: number; dev: number; peer: number; total: number; depth: number };
 
+// const GRAPH_STATS: GraphStats = {
+//   runtime: 12,
+//   dev: 12,
+//   peer: 5,
+//   total: 29,
+//   depth: 4,
+// };
+
 export interface GraphSummeryProps extends HTMLAttributes<HTMLDivElement> {
   stats: GraphStats;
 }

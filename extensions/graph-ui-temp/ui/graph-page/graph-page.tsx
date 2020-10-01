@@ -11,18 +11,10 @@ import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 
 import styles from './graph-page.module.scss';
-import { GraphSummery, GraphStats } from './graph-summery';
+// import { GraphSummery, GraphStats } from './graph-summery';
 
 type GraphPageProps = {
   componentWidgets: ComponentWidgetSlot;
-};
-
-const GRAPH_STATS: GraphStats = {
-  runtime: 12,
-  dev: 12,
-  peer: 5,
-  total: 29,
-  depth: 4,
 };
 
 export function GraphPage({ componentWidgets }: GraphPageProps) {
@@ -40,7 +32,8 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   return (
     <div className={styles.page}>
       <H2 size="xs">Dependencies</H2>
-      <GraphSummery className={styles.summery} stats={GRAPH_STATS} />
+      {/* disabled until getting the relevant data */}
+      {/* <GraphSummery className={styles.summery} stats={GRAPH_STATS} /> */}
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}
