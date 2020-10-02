@@ -40,7 +40,6 @@ import { Network } from '../network';
 import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
-import { BitObject } from '../../objects';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
