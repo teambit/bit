@@ -23,6 +23,7 @@ export class ObjectList {
       throw new Error(`fromJsonString expect an array, got ${typeof jsonParsed}`);
     }
     jsonParsed.forEach((obj) => {
+      obj.ref = new Ref(obj.ref.hash);
       obj.buffer = Buffer.from(obj.buffer);
     });
     return new ObjectList(jsonParsed);
