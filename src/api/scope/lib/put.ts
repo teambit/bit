@@ -1,5 +1,4 @@
 import R from 'ramda';
-import zlib from 'zlib';
 
 import BitIds from '../../../bit-id/bit-ids';
 import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
@@ -22,8 +21,6 @@ export default async function put(
   if (typeof objectList === 'string') {
     objectList = ObjectList.fromJsonString(objectList);
   }
-  // console.log('after from string', compsAndLanesObjects)
-  // throw new Error('put, stop here');
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);

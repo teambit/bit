@@ -2,6 +2,7 @@ import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { RemoteLaneId } from '../lane-id/lane-id';
+import logger from '../logger/logger';
 import ComponentObjects from '../scope/component-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { LaneData } from '../scope/lanes/lanes';
@@ -97,8 +98,12 @@ export default class Remote {
     return connect(this.host).then((network) => network.push(componentObjects));
   }
 
-  pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
-    return connect(this.host).then((network) => network.pushMany(objectList, context));
+  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
+    const network = await connect(this.host);
+    logger.debug(`[-] Running pushMany on a remote`);
+    const results = await network.pushMany(objectList, context);
+    logger.debug('[-] Returning from a remote');
+    return results;
   }
   deleteMany(
     ids: string[],

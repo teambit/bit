@@ -72,35 +72,22 @@ export class Http implements Network {
 
   async pushMany(objectList: ObjectList): Promise<string[]> {
     const route = 'api/scope/put';
+    logger.debug(`Http.pushMany, total objects ${objectList.count()}`);
 
-    // const flattenedBufferArray = compsAndLanesObjects.toFlattenedBufferArray();
-    console.log('Http -> close -> flattenedBufferArray, total objects', objectList.objects.length);
-
-    const pack = tarStream.pack();
-    objectList.objects.forEach((obj) => {
-      pack.entry({ name: obj.ref.hash }, obj.buffer);
-    });
-    pack.finalize();
-    // const body = objectList.toJsonString();
+    const pack = objectList.toTar();
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
       body: pack,
-      // headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
-      // headers: this.getHeaders({ 'Content-Type': 'application/octet-stream' }),
     });
 
-    const result = await res.text();
-    console.log('result', result);
-    throw new Error('stop here!');
+    if (res.status !== 200) {
+      throw new Error(res.status.toString());
+    }
 
-    // if (res.status !== 200) {
-    //   throw new Error(res.status.toString());
-    // }
+    const ids = await res.json();
 
-    // const ids = await res.json();
-
-    // return ids;
+    return ids;
   }
 
   async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<ObjectList> {
