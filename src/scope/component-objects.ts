@@ -1,4 +1,3 @@
-import zlib from 'zlib';
 import { toBase64ArrayBuffer } from '../utils';
 import ModelComponent from './models/model-component';
 import BitObject from './objects/object';
