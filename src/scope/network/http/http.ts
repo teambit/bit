@@ -6,7 +6,6 @@ import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
@@ -17,6 +16,7 @@ import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
 import { BitObject } from '../../objects';
+import { ObjectList } from '../../objects/object-list';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}
@@ -70,17 +70,18 @@ export class Http implements Network {
     return res.removeComponents;
   }
 
-  async pushMany(compsAndLanesObjects: CompsAndLanesObjects): Promise<string[]> {
+  async pushMany(objectList: ObjectList): Promise<string[]> {
     const route = 'api/scope/put';
 
-    const flattenedBufferArray = compsAndLanesObjects.toFlattenedBufferArray();
-    console.log('Http -> close -> flattenedBufferArray, total objects', flattenedBufferArray.length);
+    // const flattenedBufferArray = compsAndLanesObjects.toFlattenedBufferArray();
+    console.log('Http -> close -> flattenedBufferArray, total objects', objectList.objects.length);
 
     const pack = tarStream.pack();
-    flattenedBufferArray.forEach((buf, key) => {
-      pack.entry({ name: `my_file_${key.toString()}` }, buf);
+    objectList.objects.forEach((obj) => {
+      pack.entry({ name: obj.ref.hash }, obj.buffer);
     });
     pack.finalize();
+    // const body = objectList.toJsonString();
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
@@ -102,7 +103,7 @@ export class Http implements Network {
     // return ids;
   }
 
-  async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {
+  async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<ObjectList> {
     const route = 'api/scope/fetch';
     const body = JSON.stringify({
       ids: ids.map((id) => id.toString()),
@@ -152,7 +153,7 @@ export class Http implements Network {
 
     throw new Error('stop here!');
 
-    return CompsAndLanesObjects.fromString(await res.text());
+    return ObjectList.fromJsonString(await res.text());
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

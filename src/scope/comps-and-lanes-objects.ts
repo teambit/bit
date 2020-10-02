@@ -2,6 +2,8 @@ import R from 'ramda';
 
 import ComponentObjects from './component-objects';
 import LaneObjects from './lane-objects';
+import { BitObject } from './objects';
+import { ObjectList } from './objects/object-list';
 
 export default class CompsAndLanesObjects {
   componentsObjects: ComponentObjects[];
@@ -68,6 +70,19 @@ export default class CompsAndLanesObjects {
     }
     // components.forEach(c => console.log('\n!! c ', c.toString('utf-8', 0, 100)));
     return allObjects;
+  }
+
+  toObjectList(): ObjectList {
+    const objectList = new ObjectList();
+    this.componentsObjects.forEach((compObj) => {
+      const buffers = [compObj.component, ...compObj.objects];
+      const objItems = buffers.map((buffer) => {
+        const obj = BitObject.parseSync(buffer);
+        return { ref: obj.hash(), buffer };
+      });
+      objectList.addIfNotExist(objItems);
+    });
+    return objectList;
   }
 
   static fromString(str: string) {

@@ -5,8 +5,8 @@ import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
+import { ObjectList } from '../scope/objects/object-list';
 import Scope from '../scope/scope';
 import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
@@ -45,7 +45,7 @@ export default class Remotes extends Map<string, Remote> {
     withoutDeps = false,
     context?: Record<string, any>,
     idsAreLanes = false
-  ): Promise<CompsAndLanesObjects> {
+  ): Promise<ObjectList> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
     const groupedIds = groupArray(ids, 'scope') as Record<string, BitId[]>;
@@ -60,10 +60,10 @@ export default class Remotes extends Map<string, Remote> {
     });
 
     logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) (idsAreLane: ${idsAreLanes}) on a remote`);
-    const manyCompsAndLanesObjects: CompsAndLanesObjects[] = await Promise.all(promises);
+    const objectLists: ObjectList[] = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
 
-    return CompsAndLanesObjects.flatten(manyCompsAndLanesObjects);
+    return ObjectList.mergeMultipleInstances(objectLists);
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
