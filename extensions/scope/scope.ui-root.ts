@@ -23,7 +23,7 @@ export class ScopeUIRoot implements UIRoot {
   }
 
   get devServers() {
-    throw Error('No Implemented');
+    throw Error('Not Implemented');
   }
 
   resolveAspects(runtime: string) {
