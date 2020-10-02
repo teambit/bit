@@ -1,4 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
+import type { ComponentServer } from '@teambit/bundler/component-server';
 import { ComponentDir } from '@teambit/bundler/get-entry';
 import { Component } from '@teambit/component';
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
@@ -21,6 +22,11 @@ export interface UIRoot extends ComponentDir {
    * name of the UI root config file.
    */
   configFile: string;
+
+  /**
+   * list of the Dev Servers.
+   */
+  devServers: Promise<ComponentServer[]>;
 
   /**
    * resolve all aspects in the UI root.

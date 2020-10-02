@@ -4574,7 +4574,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui@0.0.58": {
+    "ui": {
         "files": [
             {
                 "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
@@ -4967,7 +4967,7 @@
         "exported": false,
         "lanes": []
     },
-    "workspace@0.0.58": {
+    "workspace": {
         "files": [
             {
                 "relativePath": "capsule-create.cmd.ts",

@@ -168,7 +168,7 @@ export class UiMain {
     }
 
     // TODO: is this the right place?
-    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
+    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
@@ -186,8 +186,8 @@ export class UiMain {
   /**
    * Events
    */
-  private createUiServerStartedEvent = (targetHost, targetPort) => {
-    return new UiServerStartedEvent(Date.now(), targetHost, targetPort);
+  private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
+    return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
   };
 
   /**
