@@ -2,7 +2,7 @@ import { migrate } from '../../../api/consumer';
 import { fetch } from '../../../api/scope';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
-import { ObjectList } from '../../../scope/objects/object-list';
+import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
@@ -34,6 +34,8 @@ export default class Fetch implements LegacyCommand {
   report(objectList: ObjectList): string {
     const objectListStr = objectList.toJsonString();
     // No need to use packCommand because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
-    return JSON.stringify(buildCommandMessage(objectListStr, undefined, compressResponse));
+    return JSON.stringify(
+      buildCommandMessage(objectListStr, undefined, compressResponse, { format: FETCH_FORMAT_OBJECT_LIST })
+    );
   }
 }

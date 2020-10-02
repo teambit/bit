@@ -38,7 +38,9 @@ import {
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import { Network } from '../network';
 import keyGetter from './key-getter';
-import { ObjectList } from '../../objects/object-list';
+import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { BitObject } from '../../objects';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -532,7 +534,15 @@ export default class SSH implements Network {
     };
     const { payload, headers } = parseResponse();
     checkVersionCompatibility(headers.version);
-    const objectList = ObjectList.fromJsonString(payload);
-    return objectList;
+    const format = headers.format;
+    if (!format) {
+      // this is an old version that doesn't have the "format" header
+      const componentObjects = CompsAndLanesObjects.fromString(payload);
+      return componentObjects.toObjectList();
+    }
+    if (format === FETCH_FORMAT_OBJECT_LIST) {
+      return ObjectList.fromJsonString(payload);
+    }
+    throw new Error(`ssh.fetch, format "${format}" is not supported`);
   }
 }

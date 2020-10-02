@@ -8,6 +8,8 @@ export type ObjectItem = {
   type?: string; // for future use. e.g. to be able to export only Component/Version types but not Source/Artifact, etc.
 };
 
+export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
+
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
 
