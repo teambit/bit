@@ -246,6 +246,10 @@ export default class Repository {
     delete this._cache[ref.toString()];
   }
 
+  clearCache() {
+    this._cache = {};
+  }
+
   backup(dirName?: string) {
     const backupDir = this.getBackupPath(dirName);
     const objectsDir = this.getPath();

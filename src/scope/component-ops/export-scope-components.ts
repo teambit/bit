@@ -356,6 +356,10 @@ async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitId
       }
     })
   );
+  // components and lanes can't be just added, they need to be carefully merged.
+  const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
+  scope.sources.putObjects(objectsToAdd);
+
   const mergeLaneResultsP = lanesObjects.map((laneObject) => scope.sources.mergeLane(laneObject, false));
   const mergeLaneResults = R.flatten(await Promise.all(mergeLaneResultsP));
   const componentsWithConflicts = mergeResults.filter((result) => result instanceof MergeConflict);
@@ -372,11 +376,9 @@ async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitId
       R.prop('id'),
       componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
     );
+    scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
-  // components and lanes were merged previously, add the rest.
-  const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
-  scope.sources.putObjects(objectsToAdd);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const mergedLanesComponents = mergeLaneResults.filter(({ mergedVersions }) => mergedVersions.length);
