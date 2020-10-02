@@ -2,10 +2,10 @@ import { BitId, BitIds } from '../../bit-id';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';
 import { RemoteLaneId } from '../../lane-id/lane-id';
-import CompsAndLanesObjects from '../comps-and-lanes-objects';
 import DependencyGraph from '../graph/scope-graph';
 import { LaneData } from '../lanes/lanes';
 import { ComponentLogs } from '../models/model-component';
+import { ObjectList } from '../objects/object-list';
 import { ScopeDescriptor } from '../scope';
 import { SSHConnectionStrategyName } from './ssh/ssh';
 
@@ -15,7 +15,13 @@ export interface Network {
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
-  fetch(ids: BitId[] | RemoteLaneId[]): Promise<CompsAndLanesObjects>;
+  fetch(
+    ids: BitId[] | RemoteLaneId[],
+    noDeps?: boolean,
+    idsAreLanes?: boolean,
+    context?: Record<string, any>
+  ): Promise<ObjectList>;
+  pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   show(bitId: BitId): Promise<Component | null | undefined>;
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;

@@ -3,11 +3,9 @@ import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { loadScope, Scope } from '../../../scope';
-import ComponentObjects from '../../../scope/component-objects';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
-import LaneObjects from '../../../scope/lane-objects';
+import { ObjectList, ObjectItem } from '../../../scope/objects/object-list';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -16,8 +14,8 @@ export default async function fetch(
   ids: string[], // can be Bit ids or Lane ids
   noDependencies = false,
   idsAreLanes = false,
-  headers: Record<string, any> | null | undefined
-): Promise<CompsAndLanesObjects> {
+  headers?: Record<string, any> | null | undefined
+): Promise<ObjectList> {
   const bitIds: BitIds = idsAreLanes ? new BitIds() : BitIds.deserialize(ids);
   const laneIds: RemoteLaneId[] = idsAreLanes ? ids.map((id) => RemoteLaneId.parse(id)) : [];
 
@@ -29,8 +27,7 @@ export default async function fetch(
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
   const scope: Scope = await loadScope(path);
-  let componentObjects: ComponentObjects[] = [];
-  let lanesObjects: LaneObjects[] = [];
+  const objectList = new ObjectList();
   if (idsAreLanes) {
     const lanes = await scope.listLanes();
     const lanesToFetch = laneIds.map((laneId) => {
@@ -39,13 +36,14 @@ export default async function fetch(
       if (!laneToFetch) throw new Error(`lane ${laneId.name} was not found in scope ${scope.name}`);
       return laneToFetch;
     });
-    lanesObjects = await Promise.all(
+    const lanesObjects: ObjectItem[] = await Promise.all(
       lanesToFetch.map(async (laneToFetch) => {
         laneToFetch.scope = scope.name;
         const laneBuffer = await laneToFetch.compress();
-        return new LaneObjects(laneBuffer, []);
+        return { ref: laneToFetch.hash(), buffer: laneBuffer };
       })
     );
+    objectList.addIfNotExist(lanesObjects);
   } else {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const importedComponents = noDependencies
@@ -54,19 +52,19 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clientVersion = headers ? headers.version : null;
     const collectParents = !noDependencies;
-    componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(
+    const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(
       importedComponents,
       clientVersion,
       collectParents
     );
+    objectList.addIfNotExist(componentObjects);
   }
 
-  const compsAndLanesObjects = new CompsAndLanesObjects(componentObjects, lanesObjects);
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(
       POST_SEND_OBJECTS,
       {
-        componentObjects,
+        objectList,
         scopePath: path,
         componentsIds: bitIds.serialize(),
         scopeName: scope.scopeJson.name,
@@ -75,5 +73,5 @@ export default async function fetch(
       headers
     );
   }
-  return compsAndLanesObjects;
+  return objectList;
 }

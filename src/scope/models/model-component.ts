@@ -40,6 +40,7 @@ import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
+import { ObjectItem } from '../objects/object-list';
 
 type State = {
   versions?: {
@@ -480,7 +481,7 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
-  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<Buffer[]> {
+  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<ObjectItem[]> {
     const collectRefs = async (): Promise<Ref[]> => {
       const refsCollection: Ref[] = [];
 
@@ -498,20 +499,24 @@ export default class Component extends BitObject {
       return refsCollection;
     };
     const refs = await collectRefs();
-    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
+    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
   }
 
-  collectObjects(repo: Repository): Promise<ComponentObjects> {
-    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
-      .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
-      .catch((err) => {
-        if (err.code === 'ENOENT') {
-          throw new Error(
-            `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`
-          );
-        }
-        throw err;
-      });
+  async collectObjects(repo: Repository): Promise<ComponentObjects> {
+    try {
+      const [rawComponent, objects] = await Promise.all([this.asRaw(repo), this.collectRaw(repo)]);
+      return new ComponentObjects(
+        rawComponent,
+        objects.map((o) => o.buffer)
+      );
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(
+          `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`
+        );
+      }
+      throw err;
+    }
   }
 
   /**

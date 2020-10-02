@@ -13,7 +13,7 @@ export class PutRoute implements Route {
       const ids = await put(
         {
           path: this.scope.path,
-          compsAndLanesObjects: req.body,
+          objectList: req.body,
         },
         {}
       );

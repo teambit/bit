@@ -7,10 +7,10 @@ import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import CustomError from '../error/custom-error';
 import ShowDoctorError from '../error/show-doctor-error';
 import logger from '../logger/logger';
-import ComponentObjects from './component-objects';
 import { HashMismatch } from './exceptions';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
+import { ObjectItem } from './objects/object-list';
 import Repository from './objects/repository';
 
 export default class ComponentVersion {
@@ -60,7 +60,7 @@ export default class ComponentVersion {
     repo: Repository,
     clientVersion: string | null | undefined,
     collectParents: boolean
-  ): Promise<ComponentObjects> {
+  ): Promise<ObjectItem[]> {
     const version = await this.getVersion(repo);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
@@ -70,15 +70,11 @@ export default class ComponentVersion {
 Please upgrade your bit client to version >= v14.1.0`);
     }
     try {
-      const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
-        this.component.asRaw(repo),
-        // version.collectRawWithoutParents(repo),
-        // version.collectRaw(repo),
-        collectParents ? version.collectRaw(repo) : version.collectRawWithoutParents(repo),
-        version.asRaw(repo),
-        repo.getScopeMetaObject(),
-      ]);
-      return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
+      const componentData = { ref: this.component.hash(), buffer: await this.component.asRaw(repo) };
+      const objects = collectParents ? await version.collectRaw(repo) : await version.collectRawWithoutParents(repo);
+      const versionData = { ref: version.hash(), buffer: await version.asRaw(repo) };
+      const scopeMeta = await repo.getScopeMetaObject();
+      return [componentData, ...objects, versionData, scopeMeta];
     } catch (err) {
       logger.error('component-version.toObjects got an error', err);
       // @ts-ignore
