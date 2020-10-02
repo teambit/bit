@@ -10,7 +10,6 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-
 import { Packer, PackOptions, PackResult } from './pack';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
