@@ -1,4 +1,3 @@
-import tarStream from 'tar-stream';
 import { request, gql } from 'graphql-request';
 import fetch from 'node-fetch';
 import { Network } from '../network';
@@ -9,13 +8,11 @@ import { RemoteLaneId } from '../../../lane-id/lane-id';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
-import { ModelComponent } from '../../models';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
-import { BitObject } from '../../objects';
 import { ObjectList } from '../../objects/object-list';
 
 export class Http implements Network {
@@ -97,50 +94,13 @@ export class Http implements Network {
       noDeps,
       idsAreLanes,
     });
-    logger.debug(`http, running fetch on a remote path ${this.scopeUrl}/${route}`);
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'post',
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
-    logger.debug(`http, returning from a remote fetch ${this.scopeUrl}/${route}`);
-
-    const extract = tarStream.extract();
-    const bitObjects: BitObject[] = await new Promise((resolve, reject) => {
-      const objects: BitObject[] = [];
-      extract.on('entry', (header, stream, next) => {
-        let data = Buffer.from('');
-        stream.on('data', function (chunk) {
-          data = Buffer.concat([data, chunk]);
-        });
-
-        stream.on('end', () => {
-          const object = BitObject.parseSync(data);
-          objects.push(object);
-          data = Buffer.from('');
-          next(); // ready for next entry
-        });
-
-        stream.on('error', (err) => reject(err));
-
-        stream.resume(); // just auto drain the stream
-      });
-
-      extract.on('finish', () => {
-        console.log('completed!');
-        resolve(objects);
-      });
-
-      // console.log("res.body", res.body)
-      res.body.pipe(extract);
-    });
-
-    const components = bitObjects.filter((o) => o instanceof ModelComponent);
-    console.log('PutRoute -> constructor -> components', components);
-
-    throw new Error('stop here!');
-
-    return ObjectList.fromJsonString(await res.text());
+    const objectList = await ObjectList.fromTar(res.body);
+    return objectList;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

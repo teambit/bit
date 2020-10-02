@@ -24,7 +24,6 @@ export function errorHandle(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
-  console.log('err', err);
   err.status = err.status || 500;
   res.status(err.status);
   return res.jsonp({
