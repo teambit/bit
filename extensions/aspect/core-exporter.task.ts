@@ -51,5 +51,6 @@ function generateBarrelFile(packageName) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const aspect = require("${packageName}");
 module.exports = aspect;
+module.exports.path = require.resolve("${packageName}");
 `;
 }

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 
 import logger from '../../logger/logger';
@@ -16,6 +16,6 @@ export default (async function removeFilesAndEmptyDirsRecursively(filesPaths: st
   await Promise.all(deleteP);
   // Sorting it to make sure we will delete the inner dirs first
   const sortedDirs = dirs.sort().reverse();
-  await pMapSeries(sortedDirs, (dir) => removeEmptyDir(dir));
+  await mapSeries(sortedDirs, (dir) => removeEmptyDir(dir));
   return true;
 });

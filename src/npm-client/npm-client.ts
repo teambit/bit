@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import execa from 'execa';
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R, { is, isNil, join, map, merge, toPairs } from 'ramda';
 import semver from 'semver';
@@ -369,7 +369,7 @@ const installAction = async ({
 
   // run npm install for each one of the directories serially, not in parallel. Don’t use Promise.all() here.
   // running them in parallel result in race condition and random NPM errors. (see https://github.com/teambit/bit/issues/1617)
-  const promisesResults = await pMapSeries(dirs, installInDir);
+  const promisesResults = await mapSeries(dirs, installInDir);
   return results.concat(R.flatten(promisesResults));
 };
 

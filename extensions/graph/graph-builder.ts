@@ -15,12 +15,12 @@ export class GraphBuilder {
     //   return this._graph;
     // }
     if (this.workspace) {
-      let listIds = (ids && ids.length) ? ids : (await this.workspace.list()).map((comp) => comp.id);
-      if (typeof listIds[0] === 'string'){
+      let listIds = ids && ids.length ? ids : (await this.workspace.list()).map((comp) => comp.id);
+      if (typeof listIds[0] === 'string') {
         listIds = await this.workspace.resolveMultipleComponentIds(listIds);
       }
       // @ts-ignore
-      const bitIds = listIds.map(id => id._legacy)
+      const bitIds = listIds.map((id) => id._legacy);
       const legacyGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
       const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.workspace);
       this._graph = graph;

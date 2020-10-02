@@ -1,13 +1,22 @@
 import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/environments';
+import { PubsubMain } from '@teambit/pubsub';
+
 import { AddressInfo } from 'net';
 
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
+import { ComponentsServerStartedEvent } from './events';
+import { BundlerAspect } from './bundler.aspect';
 
 export class ComponentServer {
   errors?: Error[];
   constructor(
+    /**
+     * browser runtime slot
+     */
+    private pubsub: PubsubMain,
+
     /**
      * components contained in the existing component server.
      */
@@ -39,6 +48,11 @@ export class ComponentServer {
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
+
+    this.pubsub.pub(
+      BundlerAspect.id,
+      this.createComponentsServerStartedEvent(server, this.context, hostname, this.port)
+    );
   }
 
   private getHostname(address: string | AddressInfo | null) {
@@ -52,6 +66,15 @@ export class ComponentServer {
 
     return hostname;
   }
+
+  private createComponentsServerStartedEvent: (
+    DevServer,
+    ExecutionContext,
+    string,
+    number
+  ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {
+    return new ComponentsServerStartedEvent(Date.now(), componentsServer, context, hostname, port);
+  };
 
   /**
    * get the url of the component server.
