@@ -2,6 +2,7 @@ import { migrate } from '../../../api/consumer';
 import { put } from '../../../api/scope';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { ObjectList } from '../../../scope/objects/object-list';
 import { buildCommandMessage, fromBase64, packCommand, unpackCommand } from '../../../utils';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import { LegacyCommand } from '../../legacy-command';
@@ -28,9 +29,10 @@ export default class Put implements LegacyCommand {
         .on('end', () => {
           logger.info('Checking if a migration is needed');
           const scopePath = fromBase64(path);
+          const objectList = ObjectList.fromJsonString(data);
           return migrate(scopePath, false)
             .then(() => {
-              return put({ objectList: data, path: fromBase64(path) }, headers);
+              return put({ objectList, path: fromBase64(path) }, headers);
             })
             .then(resolve)
             .catch(reject);
