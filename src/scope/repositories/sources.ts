@@ -604,7 +604,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (local) mergedComponent.remoteHead = componentHead;
       }
 
-      this.putModelComponent(component);
+      this.putModelComponent(mergedComponent);
       return { mergedComponent, mergedVersions };
     }
 
