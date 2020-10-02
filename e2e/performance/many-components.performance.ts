@@ -286,7 +286,7 @@ describe('heavy components Harmony', function () {
           [tagTimeInSeconds] = process.hrtime(start);
           console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
-        it.only('should take less then 5 minutes to complete', () => {
+        it('should take less then 5 minutes to complete', () => {
           expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
         });
       });
