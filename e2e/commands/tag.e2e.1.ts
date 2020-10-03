@@ -26,7 +26,7 @@ describe('bit tag command', function () {
   before(() => {
     helper.scopeHelper.reInitLocalScope();
   });
-  describe('tag component with corrupted bit.json', () => {
+  describe.only('tag component with corrupted bit.json', () => {
     let output;
     it('Should not tag component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
