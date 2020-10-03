@@ -7,8 +7,8 @@ import {
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
+  ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';

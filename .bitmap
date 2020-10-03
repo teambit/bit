@@ -1385,6 +1385,11 @@
                 "name": "merge-with-root.ts"
             },
             {
+                "relativePath": "manifest/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "manifest/manifest.ts",
                 "test": false,
                 "name": "manifest.ts"
@@ -5261,5 +5266,34 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.32"
+    "yarn": {
+        "files": [
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "yarn.aspect.ts",
+                "test": false,
+                "name": "yarn.aspect.ts"
+            },
+            {
+                "relativePath": "yarn.main.runtime.ts",
+                "test": false,
+                "name": "yarn.main.runtime.ts"
+            },
+            {
+                "relativePath": "yarn.package-manager.ts",
+                "test": false,
+                "name": "yarn.package-manager.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/yarn",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "version": "14.8.9-dev.35"
 }
