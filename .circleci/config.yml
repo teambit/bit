@@ -750,7 +750,7 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: true
       SKIP_BIT_DEV_TESTS: true
-    parallelism: 25
+    parallelism: 30
     steps:
       - attach_workspace:
           at: .
