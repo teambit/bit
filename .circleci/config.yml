@@ -555,6 +555,7 @@ jobs:
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
       - run: 'rm bit/node_modules/.bin/bit'
+
       - run: circleci tests glob "/home/circleci/bit/bit/e2e/**/*.e2e*.ts"
       - run: circleci tests glob "/home/circleci/bit/bit/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings
       - run:
