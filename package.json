@@ -20,7 +20,7 @@
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-junit-reporter './src/**/*.spec.ts'",
-    "mocha-circleci": "mocha --require ./babel-register --reporter mocha-junit-reporter",
+    "mocha-circleci": "mocha --require ./babel-register --colors --reporter mocha-jenkins-reporter",
     "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
     "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
     "e2e-test:ssh": "npm run e2e-test --with-ssh",
@@ -204,6 +204,7 @@
     "yn": "^2.0.0"
   },
   "devDependencies": {
+    "mocha-jenkins-reporter": "^0.4.5",
     "@babel/cli": "^7.11.5",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-decorators": "^7.8.3",
