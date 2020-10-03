@@ -555,13 +555,15 @@ jobs:
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
       - run: 'rm bit/node_modules/.bin/bit'
+      - run: circleci tests glob "/home/circleci/bit/bit/e2e/**/*.e2e*.ts"
+      - run: circleci tests glob "/home/circleci/bit/bit/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings
       - run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "/home/circleci/bit/bit/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
-            MOCHA_FILE: ~/junit/test-results.xml
+            JUNIT_REPORT_PATH: ~/junit/e2e-test-results.xml
           when: always
       - store_test_results:
           path: ~/junit
