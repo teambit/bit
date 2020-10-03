@@ -563,7 +563,8 @@ jobs:
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
-            JUNIT_REPORT_PATH: junit/e2e-test-results.xml
+            MOCHA_FILE: junit/e2e-test-results.xml
+            # JUNIT_REPORT_PATH: junit/e2e-test-results.xml # this is for mocha-jenkins-reporter
           when: always
       - store_test_results:
           path: bit/junit
