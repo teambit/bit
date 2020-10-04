@@ -37,6 +37,7 @@ export type ComponentWriterProps = {
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
+  applyPackageJsonTransformers?: boolean;
 };
 
 export default class ComponentWriter {
@@ -54,6 +55,7 @@ export default class ComponentWriter {
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   saveOnLane: boolean;
+  applyPackageJsonTransformers: boolean;
 
   constructor({
     component,
@@ -70,6 +72,7 @@ export default class ComponentWriter {
     existingComponentMap,
     excludeRegistryPrefix = false,
     saveOnLane = false,
+    applyPackageJsonTransformers = true,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -85,6 +88,7 @@ export default class ComponentWriter {
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.saveOnLane = saveOnLane;
+    this.applyPackageJsonTransformers = applyPackageJsonTransformers;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -174,7 +178,7 @@ export default class ComponentWriter {
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
 
-      if (!this.consumer?.isLegacy) {
+      if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
         await this._applyTransformers(this.component, packageJson)
       }
 

@@ -47,6 +47,7 @@ export interface ManyComponentsWriterParams {
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
+  applyPackageJsonTransformers?: boolean;
 }
 
 /**
@@ -86,6 +87,7 @@ export default class ManyComponentsWriter {
   basePath?: string;
   saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
+  applyPackageJsonTransformers?: boolean;
   // Apply config added by extensions
 
   constructor(params: ManyComponentsWriterParams) {
@@ -111,6 +113,7 @@ export default class ManyComponentsWriter {
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
+    this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
@@ -237,6 +240,7 @@ export default class ManyComponentsWriter {
   _getDefaultWriteParams(): Record<string, any> {
     return {
       writePackageJson: this.writePackageJson,
+      applyPackageJsonTransformers: this.applyPackageJsonTransformers,
       consumer: this.consumer,
       bitMap: this.bitMap,
       isolated: this.isolated,
