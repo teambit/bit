@@ -1906,6 +1906,11 @@
                 "name": "duplicate-dependency.ts"
             },
             {
+                "relativePath": "edge-type.ts",
+                "test": false,
+                "name": "edge-type.ts"
+            },
+            {
                 "relativePath": "graph-builder.ts",
                 "test": false,
                 "name": "graph-builder.ts"
@@ -1914,6 +1919,11 @@
                 "relativePath": "graph.aspect.ts",
                 "test": false,
                 "name": "graph.aspect.ts"
+            },
+            {
+                "relativePath": "graph.graphql.ts",
+                "test": false,
+                "name": "graph.graphql.ts"
             },
             {
                 "relativePath": "graph.main.runtime.ts",
@@ -1926,35 +1936,6 @@
                 "name": "graph.provider.ts"
             },
             {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "readme.md",
-                "test": false,
-                "name": "readme.md"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/graph",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "graph-ui-temp": {
-        "files": [
-            {
-                "relativePath": "graph.aspect.ts",
-                "test": false,
-                "name": "graph.aspect.ts"
-            },
-            {
-                "relativePath": "graph.section.tsx",
-                "test": false,
-                "name": "graph.section.tsx"
-            },
-            {
                 "relativePath": "graph.ui.runtime.tsx",
                 "test": false,
                 "name": "graph.ui.runtime.tsx"
@@ -1963,6 +1944,11 @@
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "readme.md",
+                "test": false,
+                "name": "readme.md"
             },
             {
                 "relativePath": "ui/component-node/component-node.module.scss",
@@ -1990,14 +1976,54 @@
                 "name": "variants.ts"
             },
             {
-                "relativePath": "ui/graph-page/calc-elements.tsx",
+                "relativePath": "ui/dependencies-graph/calc-elements.tsx",
                 "test": false,
                 "name": "calc-elements.tsx"
             },
             {
-                "relativePath": "ui/graph-page/calc-layout.tsx",
+                "relativePath": "ui/dependencies-graph/calc-layout.tsx",
                 "test": false,
                 "name": "calc-layout.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/dep-edge.tsx",
+                "test": false,
+                "name": "dep-edge.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/edge.module.scss",
+                "test": false,
+                "name": "edge.module.scss"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dependencies-graph.module.scss",
+                "test": false,
+                "name": "dependencies-graph.module.scss"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dependencies-graph.tsx",
+                "test": false,
+                "name": "dependencies-graph.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/graph-context.ts",
+                "test": false,
+                "name": "graph-context.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/minimap.ts",
+                "test": false,
+                "name": "minimap.ts"
             },
             {
                 "relativePath": "ui/graph-page/graph-page.module.scss",
@@ -2010,14 +2036,34 @@
                 "name": "graph-page.tsx"
             },
             {
+                "relativePath": "ui/graph-page/graph-summery/graph-summery.module.scss",
+                "test": false,
+                "name": "graph-summery.module.scss"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-summery/graph-summery.tsx",
+                "test": false,
+                "name": "graph-summery.tsx"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-summery/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "ui/graph-page/index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "ui/graph-page/minimap.ts",
+                "relativePath": "ui/graph.section.tsx",
                 "test": false,
-                "name": "minimap.ts"
+                "name": "graph.section.tsx"
+            },
+            {
+                "relativePath": "ui/query/edge-model.ts",
+                "test": false,
+                "name": "edge-model.ts"
             },
             {
                 "relativePath": "ui/query/get-graph.query.ts",
@@ -2035,6 +2081,11 @@
                 "name": "index.ts"
             },
             {
+                "relativePath": "ui/query/node-model.ts",
+                "test": false,
+                "name": "node-model.ts"
+            },
+            {
                 "relativePath": "ui/query/use-graph-query.ts",
                 "test": false,
                 "name": "use-graph-query.ts"
@@ -2046,7 +2097,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/graph-ui-temp",
+        "rootDir": "extensions/graph",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
