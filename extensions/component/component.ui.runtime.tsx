@@ -57,8 +57,8 @@ export class ComponentUI {
             cancelable: true,
           });
 
-          const a = document.body;
-          a?.dispatchEvent(event);
+          const body = document.body;
+          body?.dispatchEvent(event);
 
           break;
       }
