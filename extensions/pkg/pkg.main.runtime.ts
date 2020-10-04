@@ -11,7 +11,6 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-
 import { Packer, PackOptions, PackResult } from './pack';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';

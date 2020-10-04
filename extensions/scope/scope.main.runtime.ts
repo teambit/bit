@@ -153,6 +153,7 @@ export class ScopeMain implements ComponentFactory {
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
   async getResolvedAspects(components: Component[]) {
+    if (!components.length) return [];
     const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path });
 
     return capsules.map(({ capsule }) => {
@@ -163,7 +164,7 @@ export class ScopeMain implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const componentIds = ids.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
-    const resolvedAspects = await this.getResolvedAspects(await this.getMany(componentIds));
+    const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
 
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
@@ -188,6 +189,26 @@ export class ScopeMain implements ComponentFactory {
     const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
     return aspectDefs.concat(coreAspects);
+  }
+
+  /**
+   * import components into the scope.
+   */
+  async import(ids: ComponentID[]) {
+    const legacyIds = ids.map((id) => {
+      const legacyId = id._legacy;
+      if (legacyId.scope === this.name) return legacyId.changeScope(null);
+      return legacyId;
+    });
+
+    const withoutOwnScope = legacyIds.filter((id) => {
+      return id.scope === this.name;
+    });
+
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
+
+    // TODO: return a much better output based on legacy version-dependencies
+    return this.getMany(ids);
   }
 
   /**
