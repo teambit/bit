@@ -18,7 +18,7 @@ export type ComponentWidgetSlot = SlotRegistry<ComponentWidget>;
 export class GraphUI {
   /**
    * adds plugins to component nodes
-   * @param value 
+   * @param value
    */
   registerComponentWidget(value: ComponentWidget) {
     this.componentWidgetSlot.register(value);
@@ -30,6 +30,9 @@ export class GraphUI {
   static slots = [Slot.withType<ComponentWidget>()];
   static async provider([componentUI]: [ComponentUI], config, [componentWidgetSlot]: [ComponentWidgetSlot]) {
     const graphUI = new GraphUI(componentWidgetSlot);
+
+    // TODO - remove feature flag when data provider works for all workspaces
+    if (window.location.pathname !== '/enable-graph') return;
 
     const section = new GraphSection(componentWidgetSlot);
     componentUI.registerNavigation(section.navigationLink, section.order);
