@@ -45,7 +45,6 @@ export interface IsolateOptions {
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
   silentPackageManagerResult?: boolean; // Print environment install result
-  applyExtensionsAddedConfig?: boolean; // apply configs added by extension in the package.json
 }
 
 export default class Isolator {
@@ -116,8 +115,8 @@ export default class Isolator {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig,
       isolated: true,
+      applyPackageJsonTransformers: !this.consumer?.isLegacy
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

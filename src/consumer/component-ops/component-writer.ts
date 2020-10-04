@@ -14,6 +14,7 @@ import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
+import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import { ArtifactVinyl } from '../component/sources/artifact';
 import DataToPersist from '../component/sources/data-to-persist';
@@ -36,7 +37,7 @@ export type ComponentWriterProps = {
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
-  applyExtensionsAddedConfig?: boolean;
+  applyPackageJsonTransformers?: boolean;
 };
 
 export default class ComponentWriter {
@@ -54,7 +55,8 @@ export default class ComponentWriter {
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   saveOnLane: boolean;
-  applyExtensionsAddedConfig?: boolean;
+  applyPackageJsonTransformers: boolean;
+
   constructor({
     component,
     writeToPath,
@@ -70,7 +72,7 @@ export default class ComponentWriter {
     existingComponentMap,
     excludeRegistryPrefix = false,
     saveOnLane = false,
-    applyExtensionsAddedConfig = false,
+    applyPackageJsonTransformers = true,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -86,7 +88,7 @@ export default class ComponentWriter {
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.saveOnLane = saveOnLane;
-    this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
+    this.applyPackageJsonTransformers = applyPackageJsonTransformers;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -175,9 +177,11 @@ export default class ComponentWriter {
       componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
-      if (this.applyExtensionsAddedConfig) {
-        packageJson.mergePropsFromExtensions(this.component);
+
+      if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
+        await this._applyTransformers(this.component, packageJson)
       }
+
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
@@ -248,6 +252,13 @@ export default class ComponentWriter {
   _mergePackageJsonPropsFromOverrides(packageJson: PackageJsonFile) {
     const valuesToMerge = this.component.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
+  }
+
+  /**
+   * these are changes made by aspects
+   */
+  async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
+    return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 
   /**
