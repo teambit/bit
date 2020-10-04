@@ -26,6 +26,8 @@ import { MutatedProject, mutateModules } from 'supi';
 // import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package'
+import { RegistriesMap } from '@teambit/dependency-resolver';
+import getCredentialsByURI = require('credentials-by-uri')
 
 async function readConfig(){
   const pnpmConfig = await getConfig({
@@ -189,4 +191,20 @@ export async function resolveRemoteVersion(
       resolvedVia: val.resolvedVia
     };
   }
+}
+
+
+export async function getRegistries(): Promise<RegistriesMap> {
+  const config = await readConfig();
+  const registriesMap: RegistriesMap = {};
+  Object.keys(config.config.registries).forEach(regName => {
+    const uri = config.config.registries[regName];
+    const credentials = getCredentialsByURI(config.config.rawConfig, uri);
+    registriesMap[regName] = {
+      uri,
+      alwaysAuth: !!credentials.alwaysAuth,
+      authHeaderValue: credentials.authHeaderValue
+    };
+  });
+  return registriesMap
 }

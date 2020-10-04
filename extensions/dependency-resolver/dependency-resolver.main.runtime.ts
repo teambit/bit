@@ -35,6 +35,7 @@ import {
   DependencyResolverWorkspaceConfig,
   DepObjectKeyName,
   PolicyDep,
+  RegistriesMap,
   WorkspaceDependenciesPolicy,
 } from './types';
 
@@ -213,6 +214,16 @@ export class DependencyResolverMain {
     }
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyVersionResolver(packageManager, cacheRootDir);
+  }
+
+  async getRegistries(): Promise<RegistriesMap> {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    // TODO: support getting from default package manager
+    if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function'){
+      return packageManager?.getRegistries();
+    }
+    return {};
   }
 
   get packageManagerName(): string {

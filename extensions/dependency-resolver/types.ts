@@ -8,6 +8,17 @@ import { ComponentManifest } from './manifest/component-manifest';
 export type SemverVersion = string;
 export type PackageName = string;
 
+export type RegistryName = string;
+
+export type Registry = {
+  uri: string,
+  alwaysAuth: boolean,
+  authHeaderValue?: string
+  // TODO: consider add plain token here?
+}
+
+export type RegistriesMap = Record<RegistryName, Registry>;
+
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
