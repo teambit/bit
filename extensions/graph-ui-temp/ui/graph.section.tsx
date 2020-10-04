@@ -1,8 +1,8 @@
 import { Section } from '@teambit/component';
 import React from 'react';
 
-import { GraphPage } from './ui/graph-page';
-import { ComponentWidgetSlot } from './graph.ui.runtime';
+import { GraphPage } from './graph-page';
+import { ComponentWidgetSlot } from '../graph.ui.runtime';
 
 export class GraphSection implements Section {
   constructor(private componentWidgetSlot: ComponentWidgetSlot) {}

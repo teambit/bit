@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { GraphUIAspect } from './graph.aspect';
-import { GraphSection } from './graph.section';
+import { GraphSection } from './ui/graph.section';
 
 export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   component: ComponentModel;
