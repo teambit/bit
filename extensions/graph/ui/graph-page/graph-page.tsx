@@ -1,4 +1,4 @@
-import React, { HTMLAttributes } from 'react';
+import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 
 import { H2 } from '@teambit/documenter.ui.heading';

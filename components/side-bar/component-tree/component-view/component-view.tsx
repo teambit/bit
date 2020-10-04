@@ -1,11 +1,9 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-// import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/react-router';
 import { EnvIcon } from '@teambit/staged-components.env-icon';
 import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
-import _ from 'lodash';
 import React, { useCallback, useContext } from 'react';
 
 import { ComponentTreeContext } from '../component-tree-context';
@@ -20,7 +18,6 @@ export type ComponentViewProps<Payload = any> = {
 } & TreeNodeProps<Payload>;
 
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
-  // TODO: @oded refactor here to regular prop use.
   const { node } = props;
   const component = node.payload;
 

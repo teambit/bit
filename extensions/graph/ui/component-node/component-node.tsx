@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { ComponentID, ComponentModel } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
 import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
 import { EnvIcon } from '@teambit/staged-components.env-icon';
 import { ellipsis } from '@teambit/styles.ellipsis';
