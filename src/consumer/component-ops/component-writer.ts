@@ -1,4 +1,3 @@
-import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
@@ -15,11 +14,11 @@ import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
+import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import { ArtifactVinyl } from '../component/sources/artifact';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
-import { ExtensionDataList } from '../config';
 import ComponentConfig from '../config/component-config';
 import Consumer from '../consumer';
 
@@ -39,8 +38,6 @@ export type ComponentWriterProps = {
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
 };
-
-type PackageJsonTransformers = Function[];
 
 export default class ComponentWriter {
   component: Component;
@@ -88,11 +85,6 @@ export default class ComponentWriter {
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.saveOnLane = saveOnLane;
-  }
-
-  static packageJsonTransformersRegistry: PackageJsonTransformers = [];
-  static registerPackageJsonTransformer(func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>) {
-    this.packageJsonTransformersRegistry.push(func);
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -262,13 +254,7 @@ export default class ComponentWriter {
    * these are changes made by aspects
    */
   async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
-    let newPackageJsonObject = packageJson.packageJsonObject;
-
-    await Bluebird.mapSeries(ComponentWriter.packageJsonTransformersRegistry, async (transformer) =>
-      newPackageJsonObject = await transformer(component, newPackageJsonObject)
-    );
-
-    packageJson.mergePackageJsonObject(newPackageJsonObject);
+    return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 
   /**

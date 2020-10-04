@@ -7,7 +7,7 @@ import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import ComponentWriter from 'bit-bin/dist/consumer/component-ops/component-writer';
+import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
@@ -95,7 +95,7 @@ export class PkgMain {
       });
     }
 
-    ComponentWriter.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
+    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
     cli.register(new PublishCmd(publisher));

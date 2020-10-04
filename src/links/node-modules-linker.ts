@@ -11,6 +11,7 @@ import ComponentsList from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { Dependency } from '../consumer/component/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import { PackageJsonTransformer } from '../consumer/component/package-json-transformer';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
 import Consumer from '../consumer/consumer';
@@ -205,7 +206,7 @@ export default class NodeModuleLinker {
    * node expects the module inside node_modules to have either package.json with valid "main"
    * property or an index.js file. this main property can't be relative.
    */
-  _populateAuthoredComponentsLinks(component: Component): void {
+  async _populateAuthoredComponentsLinks(component: Component): Promise<void> {
     const componentId = component.id;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent({
       bindingPrefix: component.bindingPrefix,
@@ -252,7 +253,7 @@ export default class NodeModuleLinker {
       }
     });
     this._deleteOldLinksOfIdWithoutScope(component);
-    this._createPackageJsonForAuthor(component);
+    await this._createPackageJsonForAuthor(component);
   }
   /**
    * for AUTHORED components, when a component is new, upon build, we generate links on
@@ -387,7 +388,7 @@ export default class NodeModuleLinker {
    * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
    * It makes it easier for Author to use absolute syntax between their own components.
    */
-  _createPackageJsonForAuthor(component: Component) {
+  async _createPackageJsonForAuthor(component: Component) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const hasPackageJsonAsComponentFile = component.files.some((file) => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
@@ -399,6 +400,9 @@ export default class NodeModuleLinker {
       })
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    if (!this.consumer?.isLegacy) {
+      await this._applyTransformers(component, packageJson);
+    }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';
     }
@@ -431,5 +435,12 @@ export default class NodeModuleLinker {
       }
       component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
     });
+  }
+
+  /**
+   * these are changes made by aspects
+   */
+  async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
+    return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 }
