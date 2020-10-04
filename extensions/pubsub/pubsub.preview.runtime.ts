@@ -4,7 +4,7 @@
 
 // TODO: Use log aspect - currently do not work with the legacy log.
 // TODO: Decide and configure a consistent this alias.
-/* eslint-disable no-console, @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-this-alias */
 
 import { PreviewRuntime } from '@teambit/preview';
 
@@ -20,11 +20,8 @@ export class PubsubPreview {
     return connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;
-
-        console.debug('parentPubsub', parentPubsub); // TODO: use log aspect
       })
       .catch((err) => {
-        console.error('Attempt to connect to the parent window failed', err); // TODO: use log aspect
         return this.updateParentPubsub();
       });
   }
@@ -46,15 +43,15 @@ export class PubsubPreview {
   }
 
   public sub(topicUUID, callback) {
-    this._parentPubsub
-      ? this._parentPubsub.sub(topicUUID, callback)
-      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
+    if (this._parentPubsub) {
+      this._parentPubsub.sub(topicUUID, callback);
+    }
   }
 
   public pub(topicUUID, event: BitBaseEvent<any>) {
-    this._parentPubsub
-      ? this._parentPubsub.pub(topicUUID, event)
-      : console.error(`Parent Pubsub is ${this._parentPubsub}`);
+    if (this._parentPubsub) {
+      this._parentPubsub.pub(topicUUID, event);
+    }
   }
 
   static runtime = PreviewRuntime;

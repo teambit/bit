@@ -1,6 +1,6 @@
 // TODO: Use log aspect - currently do not work with the legacy log.
 // TODO: Decide and configure a consistent this alias.
-/* eslint-disable no-console, @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-this-alias */
 
 import { UIRuntime } from '@teambit/ui';
 
@@ -35,7 +35,6 @@ export class PubsubUI {
     })
       .promise.then((child) => child)
       .catch((err) => {
-        console.error(`Pubsub fail to connect to iframe: ${err}`);
         return this.connectToIframe(iframe);
       });
   };
@@ -57,15 +56,7 @@ export class PubsubUI {
       const addedIframes = e
         .map((x) => Array.from(x.addedNodes).filter((element) => element.nodeName === 'IFRAME'))
         .flat();
-      // const removedIframes = e
-      //   .map((x) => Array.from(x.removedNodes).filter((element) => element.nodeName === 'IFRAME'))
-      //   .flat();
-
-      // // to enable directChanges, add { attributes: true, attributeFilter: ['src', ...etc] } to .observe(..., config)
-      // const directChanges = e.filter((x) => x.target.nodeName === 'IFRAME');
-      if (addedIframes.length > 0) {
-        this.updateConnectionsList();
-      }
+      this.updateConnectionsList();
     });
     observer.observe(document.body, config);
   }
