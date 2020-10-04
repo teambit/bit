@@ -8,7 +8,9 @@ type PackageJsonTransformers = Function[];
 
 export class PackageJsonTransformer {
   static packageJsonTransformersRegistry: PackageJsonTransformers = [];
-  static registerPackageJsonTransformer(func: (component: ConsumerComponent, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>) {
+  static registerPackageJsonTransformer(
+    func: (component: ConsumerComponent, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>
+  ) {
     this.packageJsonTransformersRegistry.push(func);
   }
 
@@ -18,8 +20,9 @@ export class PackageJsonTransformer {
   static async applyTransformers(component: ConsumerComponent, packageJson: PackageJsonFile) {
     let newPackageJsonObject = packageJson.packageJsonObject;
 
-    await Bluebird.mapSeries(PackageJsonTransformer.packageJsonTransformersRegistry, async (transformer) =>
-      newPackageJsonObject = await transformer(component, newPackageJsonObject)
+    await Bluebird.mapSeries(
+      PackageJsonTransformer.packageJsonTransformersRegistry,
+      async (transformer) => (newPackageJsonObject = await transformer(component, newPackageJsonObject))
     );
 
     Object.keys(newPackageJsonObject).forEach((key) => {
