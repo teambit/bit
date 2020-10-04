@@ -9,7 +9,7 @@ import {
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap, Component } from '@teambit/component';
-import { unlinkSync, statSync } from 'fs-extra';
+import { unlinkSync, statSync, existsSync } from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -24,6 +24,7 @@ import {
 import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath } from '@yarnpkg/fslib';
 import { PkgMain } from '@teambit/pkg';
+import userHome from 'user-home';
 
 export class YarnPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain) {}
@@ -53,7 +54,18 @@ export class YarnPackageManager implements PackageManager {
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
     // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use('<bit>', { nodeLinker: 'node-modules' }, rootDirPath, {});
+    config.use(
+      '<bit>',
+      {
+        nodeLinker: 'node-modules',
+        installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+        cacheFolder: installOptions.cacheRootDir ? installOptions.cacheRootDir : `${userHome}/.yarn`,
+        pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
+        bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      },
+      rootDirPath,
+      {}
+    );
     const project = new Project(rootDirPath, { configuration: config });
     // @ts-ignore
     project.setupResolutions();
@@ -96,17 +108,19 @@ export class YarnPackageManager implements PackageManager {
       }
     );
 
-    this.removeSymlinks(rootDir, components);
+    this.clean(rootDir, componentDirectoryMap);
   }
 
-  private removeSymlinks(rootDir: string, components: Component[]) {
-    return components.map((component) => {
+  private clean(rootDir: string, componentDirectoryMap: ComponentMap<string>) {
+    return componentDirectoryMap.toArray().map(([component, dir]) => {
       const packageName = this.pkg.getPackageName(component);
-      const path = resolve(join(rootDir, 'node_modules', packageName));
-      const stats = statSync(path);
-      if (stats.isSymbolicLink()) {
-        unlinkSync(path);
-      }
+      const modulePath = resolve(join(rootDir, 'node_modules', packageName));
+      const packageJsonPath = resolve(join(dir, 'package.json'));
+      const exists = existsSync(modulePath);
+      if (!exists) return;
+      // const stats = statSync(path);
+      unlinkSync(modulePath);
+      unlinkSync(packageJsonPath);
     });
   }
 
