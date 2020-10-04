@@ -5115,6 +5115,21 @@
                 "name": "use-workspace.ts"
             },
             {
+                "relativePath": "ui/workspace/workspace-component-card/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/workspace/workspace-component-card/workspace-component-card.module.scss",
+                "test": false,
+                "name": "workspace-component-card.module.scss"
+            },
+            {
+                "relativePath": "ui/workspace/workspace-component-card/workspace-component-card.tsx",
+                "test": false,
+                "name": "workspace-component-card.tsx"
+            },
+            {
                 "relativePath": "ui/workspace/workspace-context.tsx",
                 "test": false,
                 "name": "workspace-context.tsx"
