@@ -1,4 +1,5 @@
 import getConfig from '@pnpm/config';
+import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 // import createClient from '@pnpm/client'
@@ -6,17 +7,36 @@ import defaultReporter from '@pnpm/default-reporter';
 import { LogBase, streamParser } from '@pnpm/logger';
 // import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
+// import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
+import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { createNewStoreController } from '@pnpm/store-connection-manager';
 // TODO: this should be taken from - @pnpm/store-connection-manager
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
 import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
-import execa from 'execa';
+// import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
 // import { createResolver } from './create-resolver';
+// import {isValidPath} from 'bit-bin/dist/utils';
+// import {createResolver} from '@pnpm/default-resolver';
+import createResolverAndFetcher from '@pnpm/client';
+import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
+
+async function readConfig() {
+  const pnpmConfig = await getConfig({
+    cliOptions: {
+      // 'global': true,
+      // 'link-workspace-packages': true,
+    },
+    packageManager: {
+      name: 'pnpm',
+      version: '1.0.0',
+    },
+  });
+  return pnpmConfig;
+}
 
 async function createStoreController(storeDir: string): Promise<StoreController> {
   // const fetchFromRegistry = createFetchFromRegistry({});
@@ -38,16 +58,7 @@ async function createStoreController(storeDir: string): Promise<StoreController>
   //   storeDir,
   //   verifyStoreIntegrity: true,
   // });
-  const pnpmConfig = await getConfig({
-    cliOptions: {
-      // 'global': true,
-      // 'link-workspace-packages': true,
-    },
-    packageManager: {
-      name: 'pnpm',
-      version: '1.0.0',
-    },
-  });
+  const pnpmConfig = await readConfig();
   const opts: CreateNewStoreControllerOptions = {
     storeDir,
     rawConfig: pnpmConfig.config.rawConfig,
@@ -55,6 +66,17 @@ async function createStoreController(storeDir: string): Promise<StoreController>
   };
   const { ctrl } = await createNewStoreController(opts);
   return ctrl;
+}
+
+async function generateResolverAndFetcher(storeDir: string) {
+  const pnpmConfig = await readConfig();
+
+  const opts = {
+    authConfig: pnpmConfig.config.rawConfig,
+    storeDir,
+  };
+  const result = createResolverAndFetcher(opts);
+  return result;
 }
 
 export async function install(rootPathToManifest, pathsToManifests, storeDir: string, logFn?: (log: LogBase) => void) {
@@ -109,38 +131,49 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
 
 export async function resolveRemoteVersion(
   packageName: string,
-  _rootDir: string,
-  _storeDir: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _fetchToCache = true,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _update = true
+  rootDir: string,
+  storeDir: string
 ): Promise<ResolvedPackageVersion> {
-  // const storeController = await createStoreController(storeDir);
-  // const wantedDep: WantedDependency = {
-  //   alias: packageName,
-  // };
-  // const preferredVersions: PreferredVersions = {
-  //   [packageName]: 'range'
-  // };
-  // const opts: RequestPackageOptions = {
-  //   skipFetch: !fetchToCache,
-  //   update,
-  //   downloadPriority: 1,
-  //   preferredVersions,
-  //   lockfileDir: rootDir,
-  //   projectDir: rootDir,
-  //   registry
-  // };
-  // const res = storeController.requestPackage(wantedDep, opts);
-
-  // TODO: change to use pnpm API. this is just a workaround
-  const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
-  const parsedPackage = parsePackageName(packageName);
-
-  return {
-    packageName: parsedPackage.name,
-    version: stdout,
+  const { resolve } = await generateResolverAndFetcher(storeDir);
+  const resolveOpts = {
+    projectDir: rootDir,
+    registry: '',
   };
-  // npm view ${packageName} version
+  try {
+    const parsedPackage = parsePackageName(packageName);
+    const pnpmConfig = await readConfig();
+    const registry = pickRegistryForPackage(pnpmConfig.config.registries, parsedPackage);
+    const wantedDep: WantedDependency = {
+      alias: parsedPackage.name,
+      pref: parsedPackage.version,
+    };
+    const isValidRange = parsedPackage.version ? !!semver.validRange(parsedPackage.version) : false;
+    resolveOpts.registry = registry;
+    const val = await resolve(wantedDep, resolveOpts);
+    const version = isValidRange ? parsedPackage.version : val.manifest.version;
+    // const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
+
+    return {
+      packageName: val.manifest.name,
+      version,
+      isSemver: true,
+      resolvedVia: val.resolvedVia,
+    };
+  } catch (e) {
+    if (!e.message?.includes('is not a valid string')) {
+      throw e;
+    }
+    // The provided package is probably a git url or path to a folder
+    const wantedDep: WantedDependency = {
+      alias: undefined,
+      pref: packageName,
+    };
+    const val = await resolve(wantedDep, resolveOpts);
+    return {
+      packageName: val.manifest.name,
+      version: val.normalizedPref,
+      isSemver: false,
+      resolvedVia: val.resolvedVia,
+    };
+  }
 }

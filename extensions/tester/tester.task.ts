@@ -1,5 +1,6 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
+import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
@@ -9,9 +10,9 @@ import { detectTestFiles } from './utils';
  */
 export class TesterTask implements BuildTask {
   readonly description = 'test components';
-  constructor(readonly extensionId: string) {}
+  constructor(readonly id: string) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();
     const componentsSpecFiles = ComponentMap.as(context.components, detectTestFiles);
 
@@ -19,18 +20,21 @@ export class TesterTask implements BuildTask {
     if (testCount === 0)
       return {
         artifacts: [],
-        components: [],
+        componentsResults: [],
       };
 
     const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
-      const componentSpecFiles = componentsSpecFiles.get(component.id.fullName);
+      const componentSpecFiles = componentsSpecFiles.get(component);
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;
       return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
+        const compiler: Compiler = context.env.getCompiler();
+        const distPath = compiler.getDistPathBySrcPath(specFile.relative);
+
         // TODO: fix spec type file need to capsule will return files with type AbstractVinyl
-        return { path: join(capsule.wrkDir, specFile.relative), relative: specFile.relative };
+        return { path: join(capsule.path, distPath), relative: distPath };
       });
     });
 
@@ -44,11 +48,11 @@ export class TesterTask implements BuildTask {
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
     return {
-      artifacts: [],
-      components: testsResults.components.map((componentTests) => ({
-        id: componentTests.componentId,
-        data: { tests: componentTests.results },
-        errors: testsResults.errors ? [] : [],
+      artifacts: [], // @ts-ignore
+      componentsResults: testsResults.components.map((componentTests) => ({
+        component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
+        metadata: { tests: componentTests.results },
+        errors: testsResults.errors ? testsResults.errors : [],
       })),
     };
   }

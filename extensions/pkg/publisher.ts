@@ -1,4 +1,5 @@
-import { Component, ComponentID } from '@teambit/component';
+import { ComponentResult, TaskMetadata } from '@teambit/builder';
+import { Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -16,8 +17,6 @@ export type PublisherOptions = {
   allowStaged?: boolean;
 };
 
-export type PublishResult = { id: ComponentID; data?: string; errors: string[] };
-
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
   constructor(
@@ -28,7 +27,7 @@ export class Publisher {
     public options: PublisherOptions = {}
   ) {}
 
-  async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+  async publish(componentIds: string[], options: PublisherOptions): Promise<ComponentResult[]> {
     // @todo: replace by `workspace.byPatter` once ready.
     if (componentIds.length === 1 && componentIds[0] === '*') {
       const all = this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
@@ -40,7 +39,7 @@ export class Publisher {
     return this.publishMultipleCapsules(capsules);
   }
 
-  public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
+  public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
@@ -51,7 +50,8 @@ export class Publisher {
     return results;
   }
 
-  private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
+  private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
+    const startTime = Date.now();
     const publishParams = ['publish'];
     if (this.options.dryRun) publishParams.push('--dry-run');
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
@@ -63,7 +63,7 @@ export class Publisher {
     const cwd = capsule.path;
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
-    let data;
+    let metadata: TaskMetadata = {};
     try {
       // @todo: once capsule.exec works properly, replace this
       const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
@@ -71,15 +71,15 @@ export class Publisher {
       this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
       const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
-      data = { publishedPackage };
+      metadata = { publishedPackage };
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
-    const id = capsule.component.id;
-    return { id, data, errors };
+    const component = capsule.component;
+    return { component, metadata, errors, startTime, endTime: Date.now() };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {

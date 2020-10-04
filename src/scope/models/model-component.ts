@@ -15,7 +15,7 @@ import {
 import ConsumerComponent from '../../consumer/component';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import { Dist, License, SourceFile } from '../../consumer/component/sources';
-import { Artifact } from '../../consumer/component/sources/artifact';
+import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
@@ -581,7 +581,7 @@ export default class Component extends BitObject {
     const extensions = version.extensions.clone();
     await Promise.all(
       extensions.map(async (extension) => {
-        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(Artifact)));
+        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(ArtifactVinyl)));
       })
     );
 

@@ -3,6 +3,14 @@ import Source from 'bit-bin/dist/scope/models/source';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { ComponentID } from './id';
 
+export type Serializable = {
+  toString(): string;
+};
+
+export type SerializableMap = {
+  [key: string]: Serializable;
+};
+
 export class AspectEntry {
   constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
 
@@ -35,7 +43,23 @@ export class AspectEntry {
     this.legacy.artifacts = val;
   }
 
+  transform(newData: SerializableMap): AspectEntry {
+    const newEntry = this.clone();
+    newEntry.data = newData;
+    return new AspectEntry(this.id, newEntry.legacy);
+  }
+
   clone(): AspectEntry {
     return new AspectEntry(this.id, this.legacyEntry.clone());
+  }
+
+  serialize() {
+    return {
+      id: this.id.toString(),
+      config: this.config,
+      data: this.data,
+      artifacts: this.artifacts,
+      icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
+    };
   }
 }

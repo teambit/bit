@@ -1,15 +1,15 @@
-import { ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 
 export interface DevServer {
   start();
 }
 
-export type BundlerComponentResult = {
+export type BundlerResult = {
   errors: Error[];
-  id: ComponentID;
   warnings: string[];
+  components: Component[];
 };
 
 export interface Bundler {
-  run(): Promise<BundlerComponentResult[]>;
+  run(): Promise<BundlerResult[]>;
 }

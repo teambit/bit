@@ -6,13 +6,13 @@ export class TestResult {
     /** name of test  */
     public name: string,
 
-    /*  the status of test (passing, skipped) */
+    /*  the status of test (passing, skipped, failed) */
     public status: string,
 
-    /*  the file of test */
-    public file: string,
-
     /** test object data  */
-    public duration?: number | null
+    public duration?: number | null,
+
+    /*  error log */
+    public error?: string
   ) {}
 }

@@ -12,17 +12,19 @@ import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
 import { useScope } from './use-scope';
+import ScopeUI from '../scope.ui.runtime';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
   menuSlot: RouteSlot;
   sidebar: JSX.Element;
+  scopeUi: ScopeUI;
 };
 
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
+export function Scope({ routeSlot, menuSlot, sidebar, scopeUi }: ScopeProps) {
   const { scope } = useScope();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
@@ -30,6 +32,8 @@ export function Scope({ routeSlot, menuSlot, sidebar }: ScopeProps) {
   if (!scope) {
     return <FullLoader />;
   }
+
+  scopeUi.setComponents(scope.components);
 
   return (
     <ScopeProvider scope={scope}>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
-import { Box, Color, render, Text } from 'ink';
+import { Box, Newline, Text } from 'ink';
 import React from 'react';
 
 import { Insight, InsightResult, RawResult } from '../insight';
@@ -78,28 +78,32 @@ export default class DuplicateDependencies implements Insight {
 
   _renderData(data: FormattedEntry[]) {
     const element = (
-      <div>
+      <Box>
         {data.map(function (mainDependency) {
           return (
-            <div key={mainDependency.dependencyId}>
+            <Box key={mainDependency.dependencyId}>
               <Text>dependency: {mainDependency.dependencyId}</Text>
+              <Newline />
               <Text>latest version: {mainDependency.latestVersion}</Text>
-              <div>
-                <Text>dependents that dont use latest version:</Text>
+              <Newline />
+              <Box>
+                <Text>dependents that do not use latest version:</Text>
                 {mainDependency.dependents.map(function (dependent) {
                   return (
-                    <div key={dependent.id}>
+                    <Box key={dependent.id}>
                       <Text>
-                        <Color redBright>{dependent.id}</Color> uses <Color redBright>{dependent.usedVersion}</Color>
+                        <Text color="redBright">{dependent.id}</Text> uses{' '}
+                        <Text color="redBright">{dependent.usedVersion}</Text>
                       </Text>
-                    </div>
+                      <Newline />
+                    </Box>
                   );
                 })}
-              </div>
-            </div>
+              </Box>
+            </Box>
           );
         })}
-      </div>
+      </Box>
     );
     return element;
   }

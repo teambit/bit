@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, Environment } from '@teambit/environments';
 import { ReactAspect, ReactMain } from '@teambit/react';
 
 import { NodeAspect } from './node.aspect';
@@ -15,7 +15,7 @@ export class NodeMain {
   static dependencies = [EnvsAspect, ReactAspect];
 
   static async provider([envs, react]: [EnvsMain, ReactMain]) {
-    const nodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
+    const nodeEnv: Environment = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
     return new NodeMain();
   }

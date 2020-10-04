@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command } from '@teambit/cli';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Color, Text } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import { Create } from './create';
@@ -24,7 +24,7 @@ export class CreateCmd implements Command {
 
     const files = result.files.map((item, key) => (
       <li key={key}>
-        <Color green>{item.relativePath}</Color>
+        <Text color="green">{item.relativePath}</Text>
       </li>
     ));
 
@@ -32,7 +32,9 @@ export class CreateCmd implements Command {
     const AddedComponent = () => (
       <Box padding={1} flexDirection="column">
         <Box>
-          tracking component <Text bold>{result.id}</Text>
+          <Text>
+            tracking component <Text bold>{result.id}</Text>
+          </Text>
         </Box>
         <Box paddingLeft={2}>
           <ul>{files}</ul>

@@ -1,8 +1,9 @@
+import { requireWithUndefinedGlobalWindow } from '../../../../../../utils/require-pkg-with-undefined-window';
+
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const fs = require('fs');
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const path = require('path');
-const compiler = require('vue-template-compiler');
 
 const DEFAULT_SCRIPT_LANG = 'js';
 const DEFAULT_STYLE_LANG = 'scss';
@@ -17,6 +18,7 @@ export default function (options) {
   const cabinet = require('../../filing-cabinet').default;
 
   const fileContent = fs.readFileSync(filename);
+  const compiler = requireWithUndefinedGlobalWindow('vue-template-compiler');
   const { script, styles } = compiler.parseComponent(fileContent.toString(), { pad: 'line' });
   if (isScript) {
     const scriptExt = script.lang ? languageMap[script.lang] || script.lang : DEFAULT_SCRIPT_LANG;

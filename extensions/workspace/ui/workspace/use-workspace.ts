@@ -37,7 +37,7 @@ const componentFields = gql`
 `;
 
 const WORKSPACE = gql`
-  {
+  query workspace {
     workspace {
       name
       path

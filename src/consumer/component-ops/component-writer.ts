@@ -15,7 +15,7 @@ import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
-import { Artifact } from '../component/sources/artifact';
+import { ArtifactVinyl } from '../component/sources/artifact';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
@@ -110,7 +110,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(packageManager?: string): Promise<Record<string, any>> {
+  async populateComponentsFilesToWrite(packageManager?: string): Promise<Component> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -201,7 +201,11 @@ export default class ComponentWriter {
    * that are set in package.json.files[], to have a similar structure of a package.
    */
   private populateArtifacts() {
-    const artifactsVinyl: Artifact[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
+    if (this.isolated) {
+      // in capsule, do not write artifacts, they get created by build-pipeline
+      return;
+    }
+    const artifactsVinyl: ArtifactVinyl[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
       artifactsVinyl.forEach((a) => a.updatePaths({ newBase: artifactsDir }));

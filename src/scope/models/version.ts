@@ -571,23 +571,17 @@ export default class Version extends BitObject {
     mainDistFile,
     flattenedDependencies,
     flattenedDevDependencies,
-    message,
     specsResults,
     extensions,
-    username,
-    email,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    message: string;
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
     specsResults: Results | undefined;
     extensions: ExtensionDataList;
-    username: string | undefined;
-    email: string | undefined;
   }) {
     const parseFile = (file) => {
       return {
@@ -601,23 +595,11 @@ export default class Version extends BitObject {
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 
-    const parseComponentExtensions = () => {
-      const extensionsCloned = extensions;
-      extensionsCloned.forEach((extensionDataEntry) => {
-        extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
-          return {
-            file: artifact.file.hash(),
-            relativePath: artifact.relativePath,
-          };
-        });
-      });
-      return extensionsCloned;
-    };
-
     const compilerDynamicPakageDependencies = component.compiler
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+    if (!component.log) throw new Error('Version.fromComponent - component.log is missing');
     const version = new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -626,12 +608,7 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,
-      log: {
-        message,
-        username,
-        email,
-        date: Date.now().toString(),
-      },
+      log: component.log as Log,
       specsResults,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
@@ -655,7 +632,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: parseComponentExtensions(),
+      extensions: extensions.toModelObjects(),
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;

@@ -1,8 +1,10 @@
+import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
 import {
+  AspectEntry,
+  ComponentMain,
   Component,
   ComponentFactory,
   ComponentFS,
@@ -106,6 +108,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    /**
+     * private pubsub.
+     */
+    private pubsub: PubsubMain,
+
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -167,7 +174,7 @@ export class Workspace implements ComponentFactory {
   /**
    * watcher api.
    */
-  readonly watcher = new Watcher(this);
+  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
@@ -213,8 +220,8 @@ export class Workspace implements ComponentFactory {
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const isAutoTag = listAutoTagPendingComponents.find(
-      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
+      consumerComponent.id.isEqualWithoutVersion(component.id._legacy)
     );
     if (isAutoTag) return true;
     return false;
@@ -285,6 +292,7 @@ export class Workspace implements ComponentFactory {
       const componentId = await this.resolveComponentId(seeder);
       return componentId._legacy;
     });
+
     const legacySeedersIds = await Promise.all(legacySeedersIdsP);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
@@ -293,7 +301,8 @@ export class Workspace implements ComponentFactory {
     const consumerComponents = compsAndDeps.filter((c) =>
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
-    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
+    const components = await this.getMany(ids);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -301,7 +310,7 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
@@ -336,6 +345,15 @@ export class Workspace implements ComponentFactory {
     }
   }
 
+  private async createAspectList(extensionDataList: ExtensionDataList) {
+    const entiresP = extensionDataList.map(async (entry) => {
+      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
+    });
+
+    const entries = await Promise.all(entiresP);
+    return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
@@ -348,11 +366,14 @@ export class Workspace implements ComponentFactory {
       return component;
     }
 
-    const extensionDataList = await this.componentExtensions(id, component);
+    let extensionDataList = await this.componentExtensions(id, component);
+    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
+    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
+    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList),
+      await this.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -395,6 +416,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -413,6 +435,8 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
@@ -426,6 +450,8 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
@@ -666,6 +692,16 @@ export class Workspace implements ComponentFactory {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
 
+    const promises = mergedExtensions.map(async (entry) => {
+      if (entry.extensionId) {
+        const id = await this.resolveComponentId(entry.extensionId);
+        entry.extensionId = id._legacy;
+      }
+
+      return entry;
+    });
+
+    await Promise.all(promises);
     return mergedExtensions;
   }
 
@@ -716,15 +752,29 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const loadComponentsFunc = async (ids: BitId[]) => {
-      const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
-      return loadedComps.map((c) => c.state._consumer);
-    };
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
+    // const aspectsIds = components.reduce((acc, curr) => {
+    //   const currIds = curr.state.aspects.ids;
+    //   acc = acc.concat(currIds);
+    //   return acc;
+    // }, [] as any);
+    // const otherDependenciesMap = components.reduce((acc, curr) => {
+    //   // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+    //   const currMap = curr.state.dependencies.getIdsMap();
+    //   Object.assign(acc, currMap);
+    //   return acc;
+    // }, {});
+
+    // const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
+    // We only want to load into the graph components which are aspects and not regular dependencies
+    // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
+    // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
+    const ignoredIds = coreAspectsBitIds.concat([]);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
@@ -836,7 +886,10 @@ export class Workspace implements ComponentFactory {
       if (!extensionEntry.extensionId) {
         return extensionEntry.stringId;
       }
-      return extensionEntry.extensionId.toString();
+
+      const id = await this.resolveComponentId(extensionEntry.extensionId);
+      // return this.resolveComponentId(extensionEntry.extensionId);
+      return id.toString();
     });
     const extensionsIds = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;
@@ -966,8 +1019,8 @@ export class Workspace implements ComponentFactory {
 
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output

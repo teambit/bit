@@ -1,3 +1,4 @@
+import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
@@ -19,6 +20,11 @@ export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
  */
 export class BundlerMain {
   constructor(
+    /**
+     * Pubsub extension.
+     */
+    private pubsub: PubsubMain,
+
     /**
      * environments extension.
      */
@@ -101,10 +107,14 @@ export class BundlerMain {
   static slots = [Slot.withType<BrowserRuntime>()];
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, GraphqlAspect, ComponentAspect];
+  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
 
-  static async provider([envs, graphql]: [EnvsMain, GraphqlMain], config, [runtimeSlot]: [BrowserRuntimeSlot]) {
-    const bundler = new BundlerMain(envs, new DevServerService(runtimeSlot), runtimeSlot);
+  static async provider(
+    [pubsub, envs, graphql]: [PubsubMain, EnvsMain, GraphqlMain],
+    config,
+    [runtimeSlot]: [BrowserRuntimeSlot]
+  ) {
+    const bundler = new BundlerMain(pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
 
     graphql.register(devServerSchema(bundler));
 
