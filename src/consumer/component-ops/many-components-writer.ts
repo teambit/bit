@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -185,7 +185,7 @@ export default class ManyComponentsWriter {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
-    this.writtenComponents = await pMapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
+    this.writtenComponents = await mapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }

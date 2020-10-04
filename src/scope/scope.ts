@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -326,7 +326,7 @@ export default class Scope {
     verbose: boolean,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dontPrintEnvMsg? = false
-  ): Promise<{ component: string; buildResults: Record<string, any> }> {
+  ): Promise<{ component: string; buildResults: string[] | null | undefined }[]> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
@@ -343,8 +343,8 @@ export default class Scope {
     };
     const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
 
-    const buildResults = await pMapSeries(components, build);
-    await pMapSeries(components, writeLinks);
+    const buildResults = await mapSeries(components, build);
+    await mapSeries(components, writeLinks);
     return buildResults;
   }
 
@@ -416,7 +416,7 @@ export default class Scope {
       const missingDistSpecs = specs && R.isEmpty(specs);
       return { componentId: component.id, missingDistSpecs, specs, pass };
     };
-    return pMapSeries(components, test);
+    return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
   /**
@@ -444,7 +444,7 @@ export default class Scope {
       'scope.writeManyComponentsToModel',
       `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
     );
-    await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
+    await mapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
       componentObjects.toObjectsAsync().then((objects) => this.mergeModelComponent(objects))
     );
     let nonLaneIds: BitId[] = ids;

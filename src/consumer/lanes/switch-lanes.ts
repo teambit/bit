@@ -1,10 +1,11 @@
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import { DEFAULT_LANE } from '../../constants';
 import GeneralError from '../../error/general-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import { ComponentWithDependencies } from '../../scope';
 import { Version } from '../../scope/models';
 import { LaneComponent } from '../../scope/models/lane';
 import { Tmp } from '../../scope/repositories';
@@ -51,12 +52,14 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
-  const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
+  const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
   await saveLanesData();
 
-  const componentsWithDependencies = componentsResults.map((c) => c.component).filter((c) => c);
+  const componentsWithDependencies = componentsResults
+    .map((c) => c.component)
+    .filter((c) => c) as ComponentWithDependencies[];
 
   const manyComponentsWriter = new ManyComponentsWriter({
     consumer,

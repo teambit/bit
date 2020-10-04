@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 import yn from 'yn';
@@ -283,7 +283,7 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
 }
 
 async function reImportComponents(consumer: Consumer, ids: BitId[]) {
-  await pMapSeries(ids, (id) => reImportComponent(consumer, id));
+  await mapSeries(ids, (id) => reImportComponent(consumer, id));
 }
 
 async function reImportComponent(consumer: Consumer, id: BitId) {

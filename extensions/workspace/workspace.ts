@@ -1,8 +1,10 @@
+import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
 import {
+  AspectEntry,
+  ComponentMain,
   Component,
   ComponentFactory,
   ComponentFS,
@@ -106,6 +108,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    /**
+     * private pubsub.
+     */
+    private pubsub: PubsubMain,
+
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -167,7 +174,7 @@ export class Workspace implements ComponentFactory {
   /**
    * watcher api.
    */
-  readonly watcher = new Watcher(this);
+  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
@@ -338,6 +345,15 @@ export class Workspace implements ComponentFactory {
     }
   }
 
+  private async createAspectList(extensionDataList: ExtensionDataList) {
+    const entiresP = extensionDataList.map(async (entry) => {
+      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
+    });
+
+    const entries = await Promise.all(entiresP);
+    return this.componentAspect.createAspectListFromEntries(entries);
+  }
+
   /**
    * get a component from workspace
    * @param id component ID
@@ -350,12 +366,14 @@ export class Workspace implements ComponentFactory {
       return component;
     }
 
-    const extensionDataList = await this.componentExtensions(id, component);
-    const scopeName = component?.id.scope;
+    let extensionDataList = await this.componentExtensions(id, component);
+    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
+    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
+    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList, scopeName),
+      await this.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -674,6 +692,16 @@ export class Workspace implements ComponentFactory {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
 
+    const promises = mergedExtensions.map(async (entry) => {
+      if (entry.extensionId) {
+        const id = await this.resolveComponentId(entry.extensionId);
+        entry.extensionId = id._legacy;
+      }
+
+      return entry;
+    });
+
+    await Promise.all(promises);
     return mergedExtensions;
   }
 
@@ -728,23 +756,24 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    const aspectsIds = components.reduce((acc, curr) => {
-      const currIds = curr.state.aspects.ids;
-      acc = acc.concat(currIds);
-      return acc;
-    }, [] as any);
-    const otherDependenciesMap = components.reduce((acc, curr) => {
-      // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
-      const currMap = curr.state.dependencies.getIdsMap();
-      Object.assign(acc, currMap);
-      return acc;
-    }, {});
+    // const aspectsIds = components.reduce((acc, curr) => {
+    //   const currIds = curr.state.aspects.ids;
+    //   acc = acc.concat(currIds);
+    //   return acc;
+    // }, [] as any);
+    // const otherDependenciesMap = components.reduce((acc, curr) => {
+    //   // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+    //   const currMap = curr.state.dependencies.getIdsMap();
+    //   Object.assign(acc, currMap);
+    //   return acc;
+    // }, {});
 
-    const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
-    const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
+    // const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
     // We only want to load into the graph components which are aspects and not regular dependencies
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
-    const ignoredIds = coreAspectsBitIds.concat(depsWhichAreNotAspectsBitIds);
+    // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
+    const ignoredIds = coreAspectsBitIds.concat([]);
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
@@ -857,7 +886,10 @@ export class Workspace implements ComponentFactory {
       if (!extensionEntry.extensionId) {
         return extensionEntry.stringId;
       }
-      return extensionEntry.extensionId.toString();
+
+      const id = await this.resolveComponentId(extensionEntry.extensionId);
+      // return this.resolveComponentId(extensionEntry.extensionId);
+      return id.toString();
     });
     const extensionsIds = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;
@@ -987,8 +1019,8 @@ export class Workspace implements ComponentFactory {
 
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output

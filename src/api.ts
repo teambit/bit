@@ -39,7 +39,7 @@ export async function buildOne(
   noCache = false,
   verbose = false,
   workspaceDir?: string
-): Promise<string[] | undefined> {
+): Promise<string[] | null | undefined> {
   return build(id, noCache, verbose, workspaceDir);
 }
 

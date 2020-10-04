@@ -6,6 +6,7 @@ export type { ResolvedComponent } from '@teambit/utils.resolved-component';
 export type { AlreadyExistsError as ComponentConfigFileAlreadyExistsError } from './component-config-file';
 export type { WorkspaceMain } from './workspace.main.runtime';
 
+export * from './events';
 export type { WorkspaceUI } from './workspace.ui.runtime';
 export type { SerializableResults, OnComponentEventResult, ExtensionData } from './on-component-events';
 export { ComponentStatus } from './workspace-component';
