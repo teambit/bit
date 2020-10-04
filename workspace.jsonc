@@ -109,6 +109,7 @@
         "copy-to-clipboard": "^3.3.1",
         "core-js": "^3.6.5",
         "cors": "^2.8.5",
+        "credentials-by-uri": "2.0.0",
         "cross-spawn": "^7.0.3",
         "didyoumean": "^1.2.1",
         "eslint-import-resolver-node": "0.3.4",
