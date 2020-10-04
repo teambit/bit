@@ -3,7 +3,7 @@ import { UIRuntime } from '@teambit/ui';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
-import { GraphUIAspect } from './graph.aspect';
+import { GraphAspect } from './graph.aspect';
 import { GraphSection } from './ui/graph.section';
 
 export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -32,4 +32,4 @@ export class GraphUI {
   }
 }
 
-GraphUIAspect.addRuntime(GraphUI);
+GraphAspect.addRuntime(GraphUI);

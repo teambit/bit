@@ -7,7 +7,7 @@ import { EnvIcon } from '@teambit/staged-components.env-icon';
 import { ellipsis } from '@teambit/styles.ellipsis';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 
-import { NodeModel } from '../query/graph-model';
+import { NodeModel } from "../query/node-model";
 import { ComponentGraphContext } from '../dependencies-graph/';
 
 // keep order: styles, then variants

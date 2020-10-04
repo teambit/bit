@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
-import GraphUIAspect, { GraphUI } from '@teambit/graph-ui-temp';
+import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher } from '@teambit/command-bar';
@@ -107,7 +107,7 @@ export class WorkspaceUI {
     ComponentTreeAspect,
     CommandBarAspect,
     ReactRouterAspect,
-    GraphUIAspect,
+    GraphAspect,
   ];
 
   static runtime = UIRuntime;
