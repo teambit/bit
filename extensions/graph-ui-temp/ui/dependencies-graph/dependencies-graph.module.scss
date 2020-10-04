@@ -30,6 +30,33 @@ $b70: #0d2de3;
       stroke: $d30;
       stroke-width: 2px;
     }
+
+    // show labels for labels, on hover
+    .react-flow__edge {
+      pointer-events: all !important;
+      &:hover {
+        .react-flow__edge-textbg,
+        .react-flow__edge-text {
+          transition: all 300ms;
+          opacity: 1;
+        }
+      }
+    }
+
+    .react-flow__edge-textbg {
+      fill: #414141;
+      padding: 8px;
+    }
+
+    .react-flow__edge-text {
+      fill: white;
+      // padding: 8px;
+    }
+
+    .react-flow__edge-textbg,
+    .react-flow__edge-text {
+      opacity: 0;
+    }
   }
 }
 

@@ -29,6 +29,8 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       id: `_${e.sourceId}__${e.targetId}`,
       source: e.sourceId,
       target: e.targetId,
+      label: e.dependencyLifecycleType?.toLowerCase(),
+      labelBgPadding: [4, 4],
       type: 'smoothstep',
       className: depTypeToClass(e.dependencyLifecycleType),
       arrowHeadType: ArrowHeadType.Arrow,
