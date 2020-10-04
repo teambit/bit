@@ -22,9 +22,11 @@ export class ScopeUIRoot implements UIRoot {
     return 'scope.json';
   }
 
+  // @ts-ignore-start
   get devServers() {
     throw Error('Not Implemented');
   }
+  // @ts-ignore-end
 
   resolveAspects(runtime: string) {
     return this.scope.resolveAspects(runtime);
