@@ -9,7 +9,6 @@ import stringifyPackage from 'stringify-package';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import Component from './consumer-component';
 import PackageJsonVinyl from './package-json-vinyl';

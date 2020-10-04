@@ -370,15 +370,3 @@ export default class ComponentConfig extends AbstractConfig {
     return [];
   }
 }
-
-/**
- * Merge added configs from many extensions
- *
- * @param {any[]} configs
- * @returns A merge results of all config
- */
-function mergeExtensionsConfig(configs: any[]): any {
-  return configs.reduce((prev, curr) => {
-    return R.mergeDeepLeft(prev, curr);
-  }, {});
-}

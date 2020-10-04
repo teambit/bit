@@ -1,4 +1,5 @@
 import Bluebird from 'bluebird';
+import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 import ConsumerComponent from './consumer-component';
 import PackageJsonFile from './package-json-file';
@@ -20,6 +21,11 @@ export class PackageJsonTransformer {
     await Bluebird.mapSeries(PackageJsonTransformer.packageJsonTransformersRegistry, async (transformer) =>
       newPackageJsonObject = await transformer(component, newPackageJsonObject)
     );
+
+    Object.keys(newPackageJsonObject).forEach((key) => {
+      const value = replacePlaceHolderWithComponentValue(component, newPackageJsonObject[key]);
+      newPackageJsonObject[key] = value;
+    }, {});
 
     packageJson.mergePackageJsonObject(newPackageJsonObject);
   }

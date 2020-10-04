@@ -205,7 +205,8 @@ export class PkgMain {
     return (currentData?.packageJson ?? {});
   }
 
-  async transformPackageJson(component: LegacyComponent, packageJsonObject: Record<string, any>): Promise<Record<string, any>> {
+  async transformPackageJson(component: LegacyComponent,
+                            packageJsonObject: Record<string, any>): Promise<Record<string, any>> {
     const newId = await this.workspace.resolveComponentId(component.id);
     const newComponent = await this.workspace.get(newId);
     const newProps = this.getPackageJsonModifications(newComponent);
