@@ -16,7 +16,7 @@ export function StatusTooltip({ status, name, issuesCount }: any) {
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
   if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles) return null;
   return (
-    <ReactTooltip place="right" id={name} effect="solid" className={styles.tooltip}>
+    <ReactTooltip place="right" id={name} effect="solid">
       <ul className={styles.list}>
         {isNew && <li>New component</li>}
         {isStaged && <li>Staged component</li>}

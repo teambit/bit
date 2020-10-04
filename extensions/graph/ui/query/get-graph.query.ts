@@ -20,17 +20,6 @@ export const GET_GRAPH = gql`
             isDeprecate
           }
 
-          status {
-            isNew
-            isInScope
-            isStaged
-            modifyInfo {
-              hasModifiedFiles
-              hasModifiedDependencies
-            }
-            isDeleted
-          }
-
           env {
             id
             icon
@@ -70,30 +59,10 @@ export type RawNode = {
       isDeprecate: boolean;
     };
 
-    status: {
-      isNew: boolean;
-      isInScope: boolean;
-      isStaged: boolean;
-      modifyInfo?: {
-        hasModifiedFiles: boolean;
-        hasModifiedDependencies: boolean;
-      };
-      isDeleted: boolean;
-    };
-
     env: {
       id: string;
       icon: string;
     };
-
-    // un-fetched values values:
-    // version: string;
-    // server: {
-    //   env: string;
-    //   url: string;
-    // };
-    // packageName: string;
-    // issuesCount: number;
   };
 };
 

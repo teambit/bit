@@ -8,10 +8,11 @@ $b70: #0d2de3;
       stroke-width: 2px;
     }
 
+    // creates space between the handles and lines
     .react-flow__handle {
       background: none;
       border: none;
-      
+
       &-bottom {
         bottom: -4px;
       }
@@ -45,12 +46,10 @@ $b70: #0d2de3;
 
     .react-flow__edge-textbg {
       fill: #414141;
-      padding: 8px;
     }
 
     .react-flow__edge-text {
       fill: white;
-      // padding: 8px;
     }
 
     .react-flow__edge-textbg,

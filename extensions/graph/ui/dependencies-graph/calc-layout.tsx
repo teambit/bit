@@ -6,6 +6,9 @@ const NODE_HEIGHT = 90;
 
 const BOTTOM_TO_TOP = 'BT';
 
+/**
+ * calculate the specific location of each node in the graph
+ */
 export function calcLayout(nodes: FlowElement[], edges: Edge[]) {
   const g = new graphlib.Graph();
   g.setGraph({ rankdir: BOTTOM_TO_TOP });

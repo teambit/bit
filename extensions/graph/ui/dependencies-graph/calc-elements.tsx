@@ -9,6 +9,9 @@ type ElementsOptions = {
   rootNode?: string;
 };
 
+/**
+ * generate Nodes and Edges for the ReactFlowRenderer graph renderer
+ */
 export function calcElements(graph: GraphModel | undefined, { rootNode }: ElementsOptions) {
   return useMemo(() => {
     if (!graph) return [];

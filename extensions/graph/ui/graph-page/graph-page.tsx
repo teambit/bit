@@ -11,7 +11,6 @@ import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 
 import styles from './graph-page.module.scss';
-// import { GraphSummery, GraphStats } from './graph-summery';
 
 type GraphPageProps = {
   componentWidgets: ComponentWidgetSlot;
@@ -24,7 +23,6 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   const { graph, error } = useGraphQuery([componentId]);
 
   if (error) {
-    // TODO - unify
     return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
   }
   if (!graph) return <FullLoader />;
@@ -32,8 +30,6 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   return (
     <div className={styles.page}>
       <H2 size="xs">Dependencies</H2>
-      {/* disabled until getting the relevant data */}
-      {/* <GraphSummery className={styles.summery} stats={GRAPH_STATS} /> */}
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}

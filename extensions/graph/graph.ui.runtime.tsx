@@ -12,7 +12,14 @@ export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElemen
 export type ComponentWidget = ComponentType<ComponentWidgetProps>;
 export type ComponentWidgetSlot = SlotRegistry<ComponentWidget>;
 
+/**
+ * Presents dependencies graph in the component page
+ */
 export class GraphUI {
+  /**
+   * adds plugins to component nodes
+   * @param value 
+   */
   registerComponentWidget(value: ComponentWidget) {
     this.componentWidgetSlot.register(value);
   }

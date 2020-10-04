@@ -34,7 +34,7 @@ const NodeTypes: NodeTypesType = {
   },
 };
 
-// @TODO - temporary, until react-flow-renderer will export ReactFlowProps
+// temporary type, until react-flow-renderer will export ReactFlowProps
 type ReactFlowProps = Omit<HTMLAttributes<HTMLDivElement>, 'onLoad'>;
 export type DependenciesGraphProps = {
   rootNode: string;
