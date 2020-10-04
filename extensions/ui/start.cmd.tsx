@@ -129,9 +129,15 @@ export class StartCmd implements Command {
     );
   };
 
-  private onUiServerStarted = (event) => {
+  private onUiServerStarted = async (event) => {
     this.targetHost = event.data.targetHost;
     this.targetPort = event.data.targetPort;
+    const devServers = await event.data.uiRoot.devServers;
+
+    if (!devServers.length) {
+      // no dev servers to wait for.
+      this.openBrowserOn0();
+    }
   };
 
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
