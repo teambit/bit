@@ -40,7 +40,7 @@
         "peerDependencies": {
           "react": "^16.13.1",
           "react-dom": "^16.13.1",
-          "bit-bin": "14.8.9-dev.37",
+          "bit-bin": "14.8.9-dev.38",
           "graphql": "^14.3.1"
         }
       }
