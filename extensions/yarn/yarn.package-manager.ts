@@ -8,8 +8,8 @@ import {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
-import { ComponentMap, Component } from '@teambit/component';
-import { unlinkSync, statSync, existsSync } from 'fs-extra';
+import { ComponentMap } from '@teambit/component';
+import { unlinkSync, existsSync } from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -22,7 +22,7 @@ import {
   StreamReport,
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
-import { npath } from '@yarnpkg/fslib';
+import { npath, PortablePath } from '@yarnpkg/fslib';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 
@@ -51,21 +51,8 @@ export class YarnPackageManager implements PackageManager {
     );
 
     const rootDirPath = npath.toPortablePath(rootDir);
-    const pluginConfig = getPluginConfiguration();
-    const config = await Configuration.find(rootDirPath, pluginConfig);
-    // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use(
-      '<bit>',
-      {
-        nodeLinker: 'node-modules',
-        installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
-        cacheFolder: installOptions.cacheRootDir ? installOptions.cacheRootDir : `${userHome}/.yarn`,
-        pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
-        bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
-      },
-      rootDirPath,
-      {}
-    );
+    const config = await this.computeConfiguration(rootDirPath, installOptions);
+
     const project = new Project(rootDirPath, { configuration: config });
     // @ts-ignore
     project.setupResolutions();
@@ -118,7 +105,7 @@ export class YarnPackageManager implements PackageManager {
       const packageJsonPath = resolve(join(dir, 'package.json'));
       const exists = existsSync(modulePath);
       if (!exists) return;
-      // const stats = statSync(path);
+      // TODO: check if this can be done through the yarn API.
       unlinkSync(modulePath);
       unlinkSync(packageJsonPath);
     });
@@ -158,7 +145,25 @@ export class YarnPackageManager implements PackageManager {
   }
 
   // TODO: implement this to automate configuration.
-  private computeConfiguration() {}
+  private async computeConfiguration(rootDirPath: PortablePath, installOptions: PackageManagerInstallOptions) {
+    const pluginConfig = getPluginConfiguration();
+    const config = await Configuration.find(rootDirPath, pluginConfig);
+    // TODO: node-modules is hardcoded now until adding support for pnp.
+    config.use(
+      '<bit>',
+      {
+        nodeLinker: 'node-modules',
+        installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+        cacheFolder: installOptions.cacheRootDir ? installOptions.cacheRootDir : `${userHome}/.yarn`,
+        pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
+        bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      },
+      rootDirPath,
+      {}
+    );
+
+    return config;
+  }
 
   private computeComponents(
     componentManifests: ComponentsManifestsMap,
