@@ -95,6 +95,8 @@ export class YarnPackageManager implements PackageManager {
       }
     );
 
+    // TODO: check if package.json and link files generation can be prevented through the yarn API or
+    // mock the files by hooking to `xfs`.
     this.clean(rootDir, componentDirectoryMap);
   }
 
@@ -192,6 +194,7 @@ export class YarnPackageManager implements PackageManager {
     return map;
   }
 
+  // TODO: implement this with either the yarn API or add a default resolver in the dep resolver.
   async resolveRemoteVersion(
     packageName: string,
     options: PackageManagerResolveRemoteVersionOptions
