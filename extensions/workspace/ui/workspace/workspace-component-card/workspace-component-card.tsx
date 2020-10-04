@@ -4,8 +4,8 @@ import { ComponentCard } from '@teambit/explorer.ui.component-card';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useState } from 'react';
-import styles from './workspace-component-card.module.scss';
 import { ComponentModel } from '@teambit/component';
+import styles from './workspace-component-card.module.scss';
 
 type WorkspaceComponentCardProps = {
   component: ComponentModel;
