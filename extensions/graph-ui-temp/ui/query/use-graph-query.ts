@@ -11,11 +11,13 @@ export function useGraphQuery(componentId: string[]) {
   });
 
   const rawGraph = data?.graph;
+  const clientError = !rawGraph && !loading ? new GraphQlError(404) : undefined;
+  const serverError = error ? new GraphQlError(500, error.message) : undefined;
 
   return useMemo(() => {
     return {
       graph: rawGraph ? GraphModel.from(rawGraph) : undefined,
-      error: error ? new GraphQlError(500, error.message) : !rawGraph && !loading ? new GraphQlError(404) : undefined,
+      error: serverError || clientError,
     };
   }, [rawGraph, error]);
 }
