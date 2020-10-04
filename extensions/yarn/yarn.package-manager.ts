@@ -62,7 +62,7 @@ export class YarnPackageManager implements PackageManager {
       workspaceManifest.toJson({
         includeDir: true,
         copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      })
+      }).manifest
     );
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
