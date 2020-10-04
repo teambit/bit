@@ -4,45 +4,6 @@
     "aspect-loader@0.0.61": {
         "files": [
             {
-                "relativePath": "aspect.aspect.ts",
-                "test": false,
-                "name": "aspect.aspect.ts"
-            },
-            {
-                "relativePath": "aspect.env.ts",
-                "test": false,
-                "name": "aspect.env.ts"
-            },
-            {
-                "relativePath": "aspect.main.runtime.ts",
-                "test": false,
-                "name": "aspect.main.runtime.ts"
-            },
-            {
-                "relativePath": "core-exporter.task.ts",
-                "test": false,
-                "name": "core-exporter.task.ts"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "typescript/tsconfig.json",
-                "test": false,
-                "name": "tsconfig.json"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/aspect",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "aspect@0.0.61": {
-        "files": [
-            {
                 "relativePath": "aspect-definition.ts",
                 "test": false,
                 "name": "aspect-definition.ts"
@@ -85,6 +46,45 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/aspect-loader",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "aspect@0.0.61": {
+        "files": [
+            {
+                "relativePath": "aspect.aspect.ts",
+                "test": false,
+                "name": "aspect.aspect.ts"
+            },
+            {
+                "relativePath": "aspect.env.ts",
+                "test": false,
+                "name": "aspect.env.ts"
+            },
+            {
+                "relativePath": "aspect.main.runtime.ts",
+                "test": false,
+                "name": "aspect.main.runtime.ts"
+            },
+            {
+                "relativePath": "core-exporter.task.ts",
+                "test": false,
+                "name": "core-exporter.task.ts"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "typescript/tsconfig.json",
+                "test": false,
+                "name": "tsconfig.json"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/aspect",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2340,21 +2340,21 @@
             {
                 "relativePath": "index.ts",
                 "test": false,
-                "name": "notification-reducer.tsx"
+                "name": "index.ts"
             },
             {
-                "relativePath": "notification.ui.runtime.tsx",
+                "relativePath": "notification-center.module.scss",
                 "test": false,
-                "name": "notification.ui.runtime.tsx"
+                "name": "notification-center.module.scss"
             },
             {
-                "relativePath": "notifications.aspect.ts",
+                "relativePath": "notification-center.tsx",
                 "test": false,
-                "name": "notifications.aspect.ts"
+                "name": "notification-center.tsx"
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/aspect",
+        "rootDir": "extensions/notifications/ui/notification-center",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2367,13 +2367,13 @@
                 "name": "index.ts"
             },
             {
-                "relativePath": "notification-api.tsx",
+                "relativePath": "notification-context.tsx",
                 "test": false,
-                "name": "notification-api.tsx"
+                "name": "notification-context.tsx"
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/api",
+        "rootDir": "extensions/notifications/ui/notification-context",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2420,57 +2420,28 @@
     "notifications@0.0.61": {
         "files": [
             {
-                "relativePath": "dismiss-button/dismiss-button.module.scss",
-                "test": false,
-                "name": "dismiss-button.module.scss"
-            },
-            {
-                "relativePath": "dismiss-button/dismiss-button.tsx",
-                "test": false,
-                "name": "dismiss-button.tsx"
-            },
-            {
-                "relativePath": "dismiss-button/index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
             },
             {
-                "relativePath": "notification-center.module.scss",
+                "relativePath": "notification-reducer.tsx",
                 "test": false,
-                "name": "notification-center.module.scss"
+                "name": "notification-reducer.tsx"
             },
             {
-                "relativePath": "notification-center.tsx",
+                "relativePath": "notification.ui.runtime.tsx",
                 "test": false,
-                "name": "notification-center.tsx"
+                "name": "notification.ui.runtime.tsx"
+            },
+            {
+                "relativePath": "notifications.aspect.ts",
+                "test": false,
+                "name": "notifications.aspect.ts"
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/notification-center",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "notifications/notification-context": {
-        "files": [
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            },
-            {
-                "relativePath": "notification-context.tsx",
-                "test": false,
-                "name": "notification-context.tsx"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/notification-context",
+        "rootDir": "extensions/notifications/aspect",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3477,30 +3448,6 @@
     "staged-components/component-status-resolver@0.0.61": {
         "files": [
             {
-                "relativePath": "component-status.module.scss",
-                "test": false,
-                "name": "component-status.module.scss"
-            },
-            {
-                "relativePath": "component-status.tsx",
-                "test": false,
-                "name": "component-status.tsx"
-            },
-            {
-                "relativePath": "index.ts",
-                "test": false,
-                "name": "index.ts"
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/component-status",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/component-status@0.0.61": {
-        "files": [
-            {
                 "relativePath": "color-override.ts",
                 "test": false,
                 "name": "color-override.ts"
@@ -3523,6 +3470,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "components/component-status-resolver",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-status@0.0.61": {
+        "files": [
+            {
+                "relativePath": "component-status.module.scss",
+                "test": false,
+                "name": "component-status.module.scss"
+            },
+            {
+                "relativePath": "component-status.tsx",
+                "test": false,
+                "name": "component-status.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
