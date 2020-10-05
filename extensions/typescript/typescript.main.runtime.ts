@@ -26,8 +26,7 @@ export class TypescriptMain {
    */
   getPackageJsonProps() {
     return {
-      main: 'dist/{main}.js',
-      types: '{main}.ts',
+      main: 'dist/{main}.js'
     };
   }
 
