@@ -412,6 +412,9 @@ export class Workspace implements ComponentFactory {
 
     await Promise.all(promises);
 
+    // Update the aspect list to have changes happened during the on load slot (new data added above)
+    const updatedAspectList = await this.createAspectList(component.state.config.extensions);
+    component.state.aspects = updatedAspectList;
     return component;
   }
 
