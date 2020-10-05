@@ -1,4 +1,4 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
+// import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
@@ -28,7 +28,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         className={styles.dropdown}
         dropClass={styles.menu}
         placeholder=""
-        clickToggles
+        clickToggles={false}
         clickOutside
         PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
       >
@@ -54,7 +54,7 @@ function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
   return (
     <div className={classNames(styles.placeholder)}>
       <div>{currentVersion}</div>
-      <Icon of="fat-arrow-down" />
+      {/* <Icon of="fat-arrow-down" /> */}
     </div>
   );
 }

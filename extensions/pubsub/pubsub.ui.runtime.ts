@@ -34,7 +34,7 @@ export class PubsubUI {
       },
     })
       .promise.then((child) => child)
-      .catch((err) => {
+      .catch(() => {
         return this.connectToIframe(iframe);
       });
   };
@@ -53,6 +53,7 @@ export class PubsubUI {
     const config = { childList: true, subtree: true };
 
     const observer = new MutationObserver((e: MutationRecord[]) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const addedIframes = e
         .map((x) => Array.from(x.addedNodes).filter((element) => element.nodeName === 'IFRAME'))
         .flat();

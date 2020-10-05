@@ -49,18 +49,15 @@ export class ComponentUI {
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
-      switch (be.type) {
-        case ClickInsideAnIframeEvent.TYPE:
-          const event = new MouseEvent('mousedown', {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-          });
+      if (be.type === ClickInsideAnIframeEvent.TYPE) {
+        const event = new MouseEvent('mousedown', {
+          view: window,
+          bubbles: true,
+          cancelable: true,
+        });
 
-          const body = document.body;
-          body?.dispatchEvent(event);
-
-          break;
+        const body = document.body;
+        body?.dispatchEvent(event);
       }
     });
   }
