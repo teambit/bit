@@ -38,7 +38,7 @@ export class YarnPackageManager implements PackageManager {
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
-      dedupe: false,
+      dedupe: true,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
@@ -95,21 +95,26 @@ export class YarnPackageManager implements PackageManager {
       }
     );
 
+    if (installReport.hasErrors()) process.exit(installReport.exitCode());
+
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
-    this.clean(rootDir, componentDirectoryMap);
+    this.clean(rootDir, componentDirectoryMap, installOptions);
   }
 
-  private clean(rootDir: string, componentDirectoryMap: ComponentMap<string>) {
-    return componentDirectoryMap.toArray().map(([component, dir]) => {
+  private clean(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>,
+    installOptions: PackageManagerInstallOptions
+  ) {
+    return componentDirectoryMap.toArray().forEach(([component, dir]) => {
       const packageName = this.pkg.getPackageName(component);
       const modulePath = resolve(join(rootDir, 'node_modules', packageName));
       const packageJsonPath = resolve(join(dir, 'package.json'));
+      if (installOptions.cacheRootDir) unlinkSync(packageJsonPath);
       const exists = existsSync(modulePath);
-      if (!exists) return;
-      // TODO: check if this can be done through the yarn API.
+      if (!exists) return; // TODO: check if this can be done through the yarn API.
       unlinkSync(modulePath);
-      unlinkSync(packageJsonPath);
     });
   }
 
@@ -156,9 +161,18 @@ export class YarnPackageManager implements PackageManager {
       {
         nodeLinker: 'node-modules',
         installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
-        cacheFolder: installOptions.cacheRootDir ? installOptions.cacheRootDir : `${userHome}/.yarn`,
+        cacheFolder: installOptions.cacheRootDir ? `${installOptions.cacheRootDir}/.yarn/cache` : `${userHome}/.yarn`,
         pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
         bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+        npmScopes: {
+          bit: {
+            npmRegistryServer: 'https://node.bit.dev',
+            npmAuthToken: '4c583557-1e53-44fb-9702-e6c6cbfaa1f5',
+          },
+        },
+        virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
+        // enableInlineBuilds: true,
+        globalFolder: `${rootDirPath}/.yarn/global`,
       },
       rootDirPath,
       {}

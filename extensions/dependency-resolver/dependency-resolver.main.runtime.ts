@@ -179,6 +179,13 @@ export class DependencyResolverMain {
   }
 
   /**
+   * get all configured package registries.
+   */
+  getRegistries() {}
+
+  getLegacyRegistry() {}
+
+  /**
    * get a component dependency installer.
    */
   getInstaller(options: GetInstallerOptions = {}) {

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 
-import { StatusTypes } from '@teambit/staged-components.side-bar/component-tree/recursive-tree';
+import { StatusTypes } from '@teambit/staged-components.side-bar';
 import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {

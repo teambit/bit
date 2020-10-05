@@ -1,5 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { ComponentDir } from '@teambit/bundler/get-entry';
+import { ComponentDir } from '@teambit/bundler';
 import { Component } from '@teambit/component';
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
 // import { WebpackDevServer } from '../webpack/webpack.dev-server';
