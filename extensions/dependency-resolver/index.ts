@@ -10,7 +10,7 @@ export {
   ComponentsManifestsMap,
   PolicyDep,
   RegistriesMap,
-  Registry
+  Registry,
 } from './types';
 export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
 export {

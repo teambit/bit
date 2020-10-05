@@ -45,5 +45,5 @@ export interface PackageManager {
     options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion>;
 
-  getRegistries?(): Promise<RegistriesMap>
+  getRegistries?(): Promise<RegistriesMap>;
 }

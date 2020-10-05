@@ -179,7 +179,7 @@ export default class ComponentWriter {
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
 
       if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
-        await this._applyTransformers(this.component, packageJson)
+        await this._applyTransformers(this.component, packageJson);
       }
 
       this._mergeChangedPackageJsonProps(packageJson);

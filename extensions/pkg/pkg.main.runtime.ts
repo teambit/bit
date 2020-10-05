@@ -84,12 +84,12 @@ export class PkgMain {
     const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, packer, envs, dryRunTask, preparePackagesTask);
 
     builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
-    if (workspace){
+    if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
         const data = await pkg.mergePackageJsonProps(component);
         return {
-          packageJson: data
+          packageJson: data,
         };
       });
     }
@@ -202,11 +202,13 @@ export class PkgMain {
   getPackageJsonModifications(component: Component): Record<string, any> {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
-    return (currentData?.packageJson ?? {});
+    return currentData?.packageJson ?? {};
   }
 
-  async transformPackageJson(component: LegacyComponent,
-                            packageJsonObject: Record<string, any>): Promise<Record<string, any>> {
+  async transformPackageJson(
+    component: LegacyComponent,
+    packageJsonObject: Record<string, any>
+  ): Promise<Record<string, any>> {
     const newId = await this.workspace.resolveComponentId(component.id);
     const newComponent = await this.workspace.get(newId);
     const newProps = this.getPackageJsonModifications(newComponent);

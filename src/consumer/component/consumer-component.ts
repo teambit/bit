@@ -1195,7 +1195,7 @@ export default class Component {
       defaultScope,
       packageJsonFile,
       packageJsonChangedProps,
-      extensions
+      extensions,
     });
   }
 }

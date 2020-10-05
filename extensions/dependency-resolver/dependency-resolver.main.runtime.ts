@@ -220,7 +220,7 @@ export class DependencyResolverMain {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     // TODO: support getting from default package manager
-    if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function'){
+    if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
       return packageManager?.getRegistries();
     }
     return {};
