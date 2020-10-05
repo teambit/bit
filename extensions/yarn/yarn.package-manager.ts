@@ -1,3 +1,7 @@
+import execa from 'execa';
+import * as semver from 'semver';
+
+import parsePackageName from 'parse-package-name';
 import {
   DependenciesObjectDefinition,
   DependencyResolverMain,
@@ -225,6 +229,20 @@ export class YarnPackageManager implements PackageManager {
   // TODO: implement this with either the yarn API or add a default resolver in the dep resolver.
   async resolveRemoteVersion(
     packageName: string,
-    options: PackageManagerResolveRemoteVersionOptions
-  ): Promise<ResolvedPackageVersion> {}
+  ): Promise<ResolvedPackageVersion> {
+    const parsedPackage = parsePackageName(packageName);
+    const parsedVersion = parsedPackage.version;
+    if (parsedVersion && semver.valid(parsedVersion)){
+      return {
+        packageName: parsedPackage.name,
+        version: parsedVersion
+      };
+    }
+    const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
+
+    return {
+      packageName: parsedPackage.name,
+      version: stdout,
+    };
+  }
 }
