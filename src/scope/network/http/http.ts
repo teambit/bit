@@ -11,7 +11,7 @@ import { ComponentLogs } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
-import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import { CFG_USER_TOKEN_KEY, FETCH_OPTIONS } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 
@@ -87,12 +87,11 @@ export class Http implements Network {
     return ids;
   }
 
-  async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<ObjectList> {
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
     const route = 'api/scope/fetch';
     const body = JSON.stringify({
-      ids: ids.map((id) => id.toString()),
-      noDeps,
-      idsAreLanes,
+      ids,
+      fetchOptions,
     });
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'post',

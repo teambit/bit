@@ -16,6 +16,10 @@ export class BitObjectList {
     return this.objects.filter((object) => object instanceof Lane) as Lane[];
   }
 
+  getAll(): BitObject[] {
+    return this.objects;
+  }
+
   getAllExceptComponentsAndLanes(): BitObject[] {
     return this.objects.filter((object) => !(object instanceof ModelComponent) && !(object instanceof Lane));
   }

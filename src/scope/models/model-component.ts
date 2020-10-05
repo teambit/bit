@@ -584,11 +584,6 @@ export default class Component extends BitObject {
     ]);
 
     const extensions = version.extensions.clone();
-    await Promise.all(
-      extensions.map(async (extension) => {
-        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(ArtifactVinyl)));
-      })
-    );
 
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that

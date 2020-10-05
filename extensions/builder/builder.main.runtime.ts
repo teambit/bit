@@ -1,4 +1,5 @@
 import { flatten } from 'lodash';
+import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
@@ -128,6 +129,12 @@ export class BuilderMain {
    */
   getStorageResolver(name: string): StorageResolver | undefined {
     return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
+  }
+
+  async getArtifactsByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
+    const dataEntry = component.state.aspects.get(aspectName);
+    if (!dataEntry) return [];
+    return dataEntry.legacy.getArtifactsVinylImportIfMissing(component.id.scope, this.scope);
   }
 
   /**

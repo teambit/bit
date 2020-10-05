@@ -59,7 +59,8 @@ export default class ComponentVersion {
   async toObjects(
     repo: Repository,
     clientVersion: string | null | undefined,
-    collectParents: boolean
+    collectParents: boolean,
+    collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
     const version = await this.getVersion(repo);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
@@ -71,7 +72,8 @@ Please upgrade your bit client to version >= v14.1.0`);
     }
     try {
       const componentData = { ref: this.component.hash(), buffer: await this.component.asRaw(repo) };
-      const objects = collectParents ? await version.collectRaw(repo) : await version.collectRawWithoutParents(repo);
+      const versionRefs = version.refsWithOptions(collectParents, collectArtifacts);
+      const objects = await version.collectManyObjects(repo, versionRefs);
       const versionData = { ref: version.hash(), buffer: await version.asRaw(repo) };
       const scopeMeta = await repo.getScopeMetaObject();
       return [componentData, ...objects, versionData, scopeMeta];

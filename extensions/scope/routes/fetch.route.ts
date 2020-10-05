@@ -10,7 +10,7 @@ export class FetchRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      const objectList = await fetch(this.scope.path, req.body.ids, req.body.noDeps, req.body.idsAreLanes, {});
+      const objectList = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
       const pack = objectList.toTar();
       pack.pipe(res);
     },

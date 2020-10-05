@@ -1,5 +1,6 @@
 import { deprecate, fetch, put, remove, undeprecate } from '../../../api/scope';
 import { BitId } from '../../../bit-id';
+import { FETCH_OPTIONS } from '../../../constants';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
@@ -59,9 +60,8 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  async fetch(ids: Array<BitId | RemoteLaneId>, noDependencies = false, idsAreLanes = false): Promise<ObjectList> {
-    const idsStr = ids.map((id) => id.toString());
-    return fetch(this.scopePath, idsStr, noDependencies, idsAreLanes);
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
+    return fetch(this.scopePath, ids, fetchOptions);
   }
 
   latestVersions(componentIds: BitId[]): Promise<string[]> {

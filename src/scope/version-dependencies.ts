@@ -54,10 +54,13 @@ export default class VersionDependencies {
   async toObjects(
     repo: Repository,
     clientVersion: string | null | undefined,
-    collectParents: boolean
+    collectParents: boolean,
+    collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
-    const depsP = Promise.all(this.allDependencies.map((dep) => dep.toObjects(repo, clientVersion, collectParents)));
-    const compP = this.component.toObjects(repo, clientVersion, collectParents);
+    const depsP = Promise.all(
+      this.allDependencies.map((dep) => dep.toObjects(repo, clientVersion, collectParents, collectArtifacts))
+    );
+    const compP = this.component.toObjects(repo, clientVersion, collectParents, collectArtifacts);
     const [component, dependencies] = await Promise.all([compP, depsP]);
     return [...component, ...R.flatten(dependencies)];
   }

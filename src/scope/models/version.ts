@@ -294,8 +294,27 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
-    const withoutParents = this.refsWithoutParents();
-    return [...this.parents, ...withoutParents].filter((ref) => ref);
+    return this.refsWithOptions();
+  }
+
+  refsWithOptions(includeParents = true, includeArtifacts = true): Ref[] {
+    const allRefs: Ref[] = [];
+    const extractRefsFromFiles = (files) => {
+      const refs = files ? files.map((file) => file.file) : [];
+      return refs;
+    };
+    const files = extractRefsFromFiles(this.files);
+    const dists = extractRefsFromFiles(this.dists);
+    allRefs.push(...files);
+    allRefs.push(...dists);
+    if (includeParents) {
+      allRefs.push(...this.parents);
+    }
+    if (includeArtifacts) {
+      const artifacts = extractRefsFromFiles(R.flatten(this.extensions.map((e) => e.artifacts)));
+      allRefs.push(...artifacts);
+    }
+    return allRefs;
   }
 
   refsWithoutParents(): Ref[] {
@@ -309,8 +328,7 @@ export default class Version extends BitObject {
     return [...dists, ...files, ...artifacts].filter((ref) => ref);
   }
 
-  async collectRawWithoutParents(repo: Repository): Promise<ObjectItem[]> {
-    const refs = this.refsWithoutParents();
+  async collectManyObjects(repo: Repository, refs: Ref[]): Promise<ObjectItem[]> {
     return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
   }
 

@@ -1,4 +1,5 @@
 import { BitId } from '../bit-id';
+import { FETCH_OPTIONS } from '../constants';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { RemoteLaneId } from '../lane-id/lane-id';
@@ -72,13 +73,12 @@ export default class Remote {
   }
 
   fetch(
-    ids: BitId[] | RemoteLaneId[],
-    withoutDeps: boolean,
+    ids: string[],
+    fetchOptions: FETCH_OPTIONS,
     context?: Record<string, any>,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
-    idsAreLanes = false
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<ObjectList> {
-    return this.connect(strategiesNames).then((network) => network.fetch(ids, withoutDeps, idsAreLanes, context));
+    return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
   }
 
   latestVersions(

@@ -2,6 +2,7 @@ import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
 
 import { BitId } from '../bit-id';
+import { FETCH_OPTIONS } from '../constants';
 import GlobalRemotes from '../global-config/global-remotes';
 import { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
@@ -40,27 +41,24 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   async fetch(
-    ids: BitId[] | RemoteLaneId[],
+    idsGroupedByScope: { [scopeName: string]: string[] }, // option.type determines the id: component-id/lane-id/object-id (hash)
     thisScope: Scope,
-    withoutDeps = false,
-    context?: Record<string, any>,
-    idsAreLanes = false
+    options: Partial<FETCH_OPTIONS> = {},
+    context?: Record<string, any>
   ): Promise<ObjectList> {
-    // TODO - Transfer the fetch logic into the ssh module,
-    // in order to close the ssh connection in the end of the multifetch instead of one fetch
-    const groupedIds = groupArray(ids, 'scope') as Record<string, BitId[]>;
-    const promises = [];
-    forEach(groupedIds, (scopeIds, scopeName) => {
-      promises.push(
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.resolve(scopeName, thisScope).then((remote) =>
-          remote.fetch(scopeIds, withoutDeps, context, undefined, idsAreLanes)
-        )
-      );
-    });
-
-    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) (idsAreLane: ${idsAreLanes}) on a remote`);
-    const objectLists: ObjectList[] = await Promise.all(promises);
+    const fetchOptions: FETCH_OPTIONS = {
+      type: 'component',
+      withoutDependencies: false,
+      includeArtifacts: false,
+      ...options,
+    };
+    logger.debug('[-] Running fetch on a remote, with the following options', fetchOptions);
+    const objectLists: ObjectList[] = await Promise.all(
+      Object.keys(idsGroupedByScope).map(async (scopeName) => {
+        const remote = await this.resolve(scopeName, thisScope);
+        return remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+      })
+    );
     logger.debug('[-] Returning from a remote');
 
     return ObjectList.mergeMultipleInstances(objectLists);

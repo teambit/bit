@@ -9,7 +9,7 @@ import { getSync } from '../../../api/consumer/lib/global-config';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { BitId } from '../../../bit-id';
 import globalFlags from '../../../cli/global-flags';
-import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
+import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT, FETCH_OPTIONS } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
@@ -512,16 +512,12 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(
-    ids: Array<BitId | RemoteLaneId>,
-    noDeps = false,
-    idsAreLanes = false,
-    context?: Record<string, any>
-  ): Promise<ObjectList> {
+  async fetch(idsStr: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList> {
     let options = '';
-    const idsStr = ids.map((id) => id.toString());
-    if (noDeps) options = '--no-dependencies';
-    if (idsAreLanes) options += ' --lanes';
+    const { type, withoutDependencies, includeArtifacts } = fetchOptions;
+    if (type !== 'component') options = ` --type ${type}`;
+    if (withoutDependencies) options += ' --no-dependencies';
+    if (includeArtifacts) options += ' --include-artifacts';
     const str = await this.exec(`_fetch ${options}`, idsStr, context);
     const parseResponse = () => {
       try {

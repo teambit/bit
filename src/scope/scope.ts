@@ -55,7 +55,7 @@ import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson } from './scope-json';
 import VersionDependencies from './version-dependencies';
-import { ObjectList } from './objects/object-list';
+import { ObjectItem, ObjectList } from './objects/object-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -464,6 +464,15 @@ export default class Scope {
 
   getRawObject(hash: string): Promise<BitRawObject> {
     return this.objects.loadRawObject(new Ref(hash));
+  }
+
+  getObjectItems(refs: Ref[]): Promise<ObjectItem[]> {
+    return Promise.all(
+      refs.map(async (ref) => ({
+        ref,
+        buffer: await this.objects.loadRaw(ref),
+      }))
+    );
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
