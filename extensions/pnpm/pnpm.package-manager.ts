@@ -7,6 +7,7 @@ import {
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
+  RegistriesMap,
 } from '@teambit/dependency-resolver';
 import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
@@ -58,7 +59,7 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');
-    await install(rootManifest, componentsManifests, storeDir);
+    await install(rootManifest, componentsManifests, storeDir, this.logger);
     this.logger.consoleSuccess('installing dependencies');
   }
 
@@ -85,5 +86,11 @@ export class PnpmPackageManager implements PackageManager {
     const { resolveRemoteVersion } = require('./lynx');
     const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
     return resolveRemoteVersion(packageName, options.rootDir, storeDir);
+  }
+
+  async getRegistries(): Promise<RegistriesMap> {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { getRegistries } = require('./lynx');
+    return getRegistries();
   }
 }

@@ -167,7 +167,6 @@ export class ReactEnv implements Environment {
       peerDependencies: {
         react: '^16.13.1' || this.config.reactVersion,
         'react-dom': '^16.13.1',
-        '@babel/runtime': '^7.11.2',
       },
     };
   }
