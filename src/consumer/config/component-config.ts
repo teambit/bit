@@ -27,7 +27,6 @@ type ConfigProps = {
 
 type ConfigLoadRegistry = { [extId: string]: Function };
 type ConfigLegacyLoadRegistry = { [extId: string]: Function };
-type AddConfigRegistry = { [extId: string]: Function };
 
 // TODO: take for some other place like config
 // TODO: unify this and the same in src/components/utils/load-extensions/load-resolved-extensions.ts
@@ -38,7 +37,6 @@ export default class ComponentConfig extends AbstractConfig {
   defaultScope: string | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
-  extensionsAddedConfig: { [prop: string]: any } | undefined;
 
   static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
   static registerOnComponentConfigLoading(extId, func: (id) => any) {
@@ -47,10 +45,6 @@ export default class ComponentConfig extends AbstractConfig {
   static componentConfigLegacyLoadingRegistry: ConfigLegacyLoadRegistry = {};
   static registerOnComponentConfigLegacyLoading(extId, func: (id, config) => any) {
     this.componentConfigLegacyLoadingRegistry[extId] = func;
-  }
-  static addConfigRegistry: AddConfigRegistry = {};
-  static registerAddConfigAction(extId, func: (extensions: ExtensionDataList) => any) {
-    this.addConfigRegistry[extId] = func;
   }
 
   constructor({ compiler, tester, lang, bindingPrefix, extensions, defaultScope, overrides }: ConfigProps) {
@@ -309,13 +303,6 @@ export default class ComponentConfig extends AbstractConfig {
 
       await this.runOnLegacyLoadEvent(this.componentConfigLegacyLoadingRegistry, componentId, componentConfig);
     }
-    let extensionsAddedConfig = {};
-    // Do not run the hook for legacy projects since it will use the default env in that case for takeing dependencies and will change the main file
-    if (!consumer.isLegacy) {
-      extensionsAddedConfig = await runOnAddConfigEvent(this.addConfigRegistry, componentConfig.parseExtensions());
-    }
-
-    componentConfig.extensionsAddedConfig = extensionsAddedConfig;
 
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     return componentConfig;
@@ -382,34 +369,4 @@ export default class ComponentConfig extends AbstractConfig {
     }
     return [];
   }
-}
-
-/**
- * Runs all the functions from the registry and merged their results
- *
- * @param {AddConfigRegistry} configsRegistry
- * @returns {Promise<any>} A merge results of the added config by all the extensions
- */
-async function runOnAddConfigEvent(configsRegistry: AddConfigRegistry, extensions: ExtensionDataList): Promise<any> {
-  const extensionsConfigModificationsP = Object.keys(configsRegistry).map((extId) => {
-    // TODO: only running func for relevant extensions
-    const func = configsRegistry[extId];
-    return func(extensions);
-  });
-
-  const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
-  const extensionsConfigModificationsObject = mergeExtensionsConfig(extensionsConfigModifications);
-  return extensionsConfigModificationsObject;
-}
-
-/**
- * Merge added configs from many extensions
- *
- * @param {any[]} configs
- * @returns A merge results of all config
- */
-function mergeExtensionsConfig(configs: any[]): any {
-  return configs.reduce((prev, curr) => {
-    return R.mergeDeepLeft(prev, curr);
-  }, {});
 }

@@ -35,6 +35,5 @@ function getComponentWriteParams(component: ConsumerComponent, ids: BitIds): Com
     ignoreBitDependencies: ids,
     excludeRegistryPrefix: false,
     isolated: true,
-    applyExtensionsAddedConfig: true,
   };
 }

@@ -98,6 +98,7 @@ export default async function provideWorkspace(
   if (!consumer) return undefined;
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
+
   const workspace = new Workspace(
     pubsub,
     config,

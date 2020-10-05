@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
@@ -6,8 +7,8 @@ import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
+import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Packer, PackOptions, PackResult } from './pack';
@@ -32,6 +33,16 @@ export type PkgExtensionConfig = {};
  * Config for variants
  */
 export type ComponentPkgExtensionConfig = {
+  /**
+   * properties to add to the package.json of the component.
+   */
+  packageJson: Record<string, any>;
+};
+
+/**
+ * Data stored in the component
+ */
+export type ComponentPkgExtensionData = {
   /**
    * properties to add to the package.json of the component.
    */
@@ -70,12 +81,20 @@ export class PkgMain {
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    const pkg = new PkgMain(config, packageJsonPropsRegistry, packer, envs, dryRunTask, preparePackagesTask);
+    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, packer, envs, dryRunTask, preparePackagesTask);
 
     builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
+    if (workspace) {
+      // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
+      workspace.onComponentLoad(async (component) => {
+        const data = await pkg.mergePackageJsonProps(component);
+        return {
+          packageJson: data,
+        };
+      });
+    }
 
-    // TODO: maybe we don't really need the id here any more
-    ConsumerComponent.registerAddConfigAction(PkgAspect.id, pkg.mergePackageJsonProps.bind(pkg));
+    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer));
     cli.register(new PublishCmd(publisher));
@@ -108,6 +127,7 @@ export class PkgMain {
      */
     private packageJsonPropsRegistry: PackageJsonPropsRegistry,
 
+    private workspace: Workspace,
     /**
      * A utils class to packing components into tarball
      */
@@ -151,16 +171,16 @@ export class PkgMain {
    * 1. envs configured in the component - via getPackageJsonProps method
    * 2. extensions that registered to the registerPackageJsonNewProps slot (and configured for the component)
    * 3. props defined by the user (they are the strongest one)
-   * @param configuredExtensions
    */
-  async mergePackageJsonProps(configuredExtensions: ExtensionDataList): Promise<PackageJsonProps> {
+  async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnvFromExtensions(configuredExtensions)?.env;
+    const env = this.envs.getEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);
     }
-    const configuredIds = configuredExtensions.ids;
+
+    const configuredIds = component.state.aspects.ids;
     configuredIds.forEach((extId) => {
       // Only get props from configured extensions on this specific component
       const props = this.packageJsonPropsRegistry.get(extId);
@@ -168,12 +188,31 @@ export class PkgMain {
         newProps = Object.assign(newProps, props);
       }
     });
-    const currentExtension = configuredExtensions.findExtension(PkgAspect.id);
+
+    const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentConfig = (currentExtension?.config as unknown) as ComponentPkgExtensionConfig;
     if (currentConfig && currentConfig.packageJson) {
       newProps = Object.assign(newProps, currentConfig.packageJson);
     }
-    return newProps;
+    // Keys not allowed to override
+    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
+    return R.omit(specialKeys, newProps);
+  }
+
+  getPackageJsonModifications(component: Component): Record<string, any> {
+    const currentExtension = component.state.aspects.get(PkgAspect.id);
+    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    return currentData?.packageJson ?? {};
+  }
+
+  async transformPackageJson(
+    component: LegacyComponent,
+    packageJsonObject: Record<string, any>
+  ): Promise<Record<string, any>> {
+    const newId = await this.workspace.resolveComponentId(component.id);
+    const newComponent = await this.workspace.get(newId);
+    const newProps = this.getPackageJsonModifications(newComponent);
+    return Object.assign(packageJsonObject, newProps);
   }
 }
 
