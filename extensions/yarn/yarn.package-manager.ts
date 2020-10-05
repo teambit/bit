@@ -9,7 +9,7 @@ import {
   PackageManagerInstallOptions,
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
-  PackageManagerResolveRemoteVersionOptions,
+  // PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
@@ -229,13 +229,15 @@ export class YarnPackageManager implements PackageManager {
   // TODO: implement this with either the yarn API or add a default resolver in the dep resolver.
   async resolveRemoteVersion(
     packageName: string,
+    // options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion> {
     const parsedPackage = parsePackageName(packageName);
     const parsedVersion = parsedPackage.version;
     if (parsedVersion && semver.valid(parsedVersion)){
       return {
         packageName: parsedPackage.name,
-        version: parsedVersion
+        version: parsedVersion,
+        isSemver: true
       };
     }
     const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
@@ -243,6 +245,7 @@ export class YarnPackageManager implements PackageManager {
     return {
       packageName: parsedPackage.name,
       version: stdout,
+      isSemver: true
     };
   }
 }
