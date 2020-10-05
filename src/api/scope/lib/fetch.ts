@@ -2,6 +2,7 @@ import { BitIds } from '../../../bit-id';
 import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
+import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -16,6 +17,7 @@ export default async function fetch(
   idsAreLanes = false,
   headers?: Record<string, any> | null | undefined
 ): Promise<ObjectList> {
+  logger.debug(`scope.fetch started, path ${path}`);
   const bitIds: BitIds = idsAreLanes ? new BitIds() : BitIds.deserialize(ids);
   const laneIds: RemoteLaneId[] = idsAreLanes ? ids.map((id) => RemoteLaneId.parse(id)) : [];
 
@@ -73,5 +75,6 @@ export default async function fetch(
       headers
     );
   }
+  logger.debug('scope.fetch completed');
   return objectList;
 }

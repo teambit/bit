@@ -12,6 +12,7 @@ import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 
 export class Http implements Network {
@@ -68,12 +69,13 @@ export class Http implements Network {
 
   async pushMany(objectList: ObjectList): Promise<string[]> {
     const route = 'api/scope/put';
-    const body = objectList.toJsonString();
+    logger.debug(`Http.pushMany, total objects ${objectList.count()}`);
+
+    const pack = objectList.toTar();
 
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'POST',
-      body,
-      headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
+      body: pack,
     });
 
     if (res.status !== 200) {
@@ -92,14 +94,13 @@ export class Http implements Network {
       noDeps,
       idsAreLanes,
     });
-
     const res = await fetch(`${this.scopeUrl}/${route}`, {
       method: 'post',
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
-
-    return ObjectList.fromJsonString(await res.text());
+    const objectList = await ObjectList.fromTar(res.body);
+    return objectList;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

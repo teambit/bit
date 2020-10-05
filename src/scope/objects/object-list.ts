@@ -1,3 +1,4 @@
+import tarStream from 'tar-stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
@@ -12,6 +13,10 @@ export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
 
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
+
+  count() {
+    return this.objects.length;
+  }
 
   static mergeMultipleInstances(ObjectLists: ObjectList[]): ObjectList {
     const objectList = new ObjectList();
@@ -30,9 +35,43 @@ export class ObjectList {
     });
     return new ObjectList(jsonParsed);
   }
-
   toJsonString(): string {
     return JSON.stringify(this.objects);
+  }
+
+  toTar(): NodeJS.ReadableStream {
+    const pack = tarStream.pack();
+    this.objects.forEach((obj) => {
+      pack.entry({ name: obj.ref.hash }, obj.buffer);
+    });
+    pack.finalize();
+    return pack;
+  }
+  static async fromTar(packStream: NodeJS.ReadableStream): Promise<ObjectList> {
+    const extract = tarStream.extract();
+    const objectItems: ObjectItem[] = await new Promise((resolve, reject) => {
+      const objects: ObjectItem[] = [];
+      extract.on('entry', (header, stream, next) => {
+        let data = Buffer.from('');
+        stream.on('data', (chunk) => {
+          data = Buffer.concat([data, chunk]);
+        });
+        stream.on('end', () => {
+          objects.push({ ref: new Ref(header.name), buffer: data });
+          next(); // ready for next entry
+        });
+        stream.on('error', (err) => reject(err));
+
+        stream.resume(); // just auto drain the stream
+      });
+
+      extract.on('finish', () => {
+        resolve(objects);
+      });
+
+      packStream.pipe(extract);
+    });
+    return new ObjectList(objectItems);
   }
 
   addIfNotExist(objectItems: ObjectItem[]) {
