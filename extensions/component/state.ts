@@ -13,7 +13,7 @@ export class State {
     /**
      * list of aspects configured on the component.
      */
-    readonly aspects: AspectList,
+    private _aspects: AspectList,
 
     /**
      * in-memory representation of the component current filesystem.
@@ -37,6 +37,14 @@ export class State {
    */
   get hash() {
     return '';
+  }
+
+  get aspects(): AspectList {
+    return this._aspects;
+  }
+
+  set aspects(aspects: AspectList) {
+    this._aspects = aspects;
   }
 
   // static fromLegacy(consumerComponent: ConsumerComponent) {

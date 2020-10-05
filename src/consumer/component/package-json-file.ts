@@ -9,7 +9,6 @@ import stringifyPackage from 'stringify-package';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import Component from './consumer-component';
 import PackageJsonVinyl from './package-json-vinyl';
@@ -226,22 +225,6 @@ export default class PackageJsonFile {
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = R.clone(this.packageJsonObject);
     return clone;
-  }
-
-  /**
-   * these changes were added by extensions
-   */
-  mergePropsFromExtensions(component: Component) {
-    // The special keys will be merged in other place
-    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    if (!component.extensionsAddedConfig || R.isEmpty(component.extensionsAddedConfig)) return;
-    const valuesToMerge = R.omit(specialKeys, component.extensionsAddedConfig);
-    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
-      const value = replacePlaceHolderWithComponentValue(component, valuesToMerge[current]);
-      acc[current] = value;
-      return acc;
-    }, {});
-    this.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   static propsNonUserChangeable() {
