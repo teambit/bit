@@ -19,7 +19,7 @@ export class PackageDependency extends Dependency {}
 
 export class ComponentDependency extends Dependency {}
 
-export class DependencyList extends Array<Dependency> {
+export class DependencyList {
   /**
    * Get only package dependencies
    *

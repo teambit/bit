@@ -9,11 +9,10 @@ export {
   DependencyType,
   ComponentsManifestsMap,
   PolicyDep,
-  RegistriesMap,
-  Registry,
 } from './types';
 export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
 export { WorkspaceManifest, ComponentManifest } from './manifest';
+export { Registries, Registry } from './registry';
 export {
   PackageManager,
   PackageManagerInstallOptions,

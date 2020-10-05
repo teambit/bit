@@ -1415,6 +1415,21 @@
                 "name": "readme.md"
             },
             {
+                "relativePath": "registry/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "registry/registries.ts",
+                "test": false,
+                "name": "registries.ts"
+            },
+            {
+                "relativePath": "registry/registry.ts",
+                "test": false,
+                "name": "registry.ts"
+            },
+            {
                 "relativePath": "types.ts",
                 "test": false,
                 "name": "types.ts"

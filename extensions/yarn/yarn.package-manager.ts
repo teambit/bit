@@ -151,26 +151,40 @@ export class YarnPackageManager implements PackageManager {
     });
   }
 
+  private async getScopedRegistries() {
+    const registries = await this.depResolver.getRegistries();
+    const scopedRegistries = Object.keys(registries.scopes).reduce((acc, scopeName) => {
+      const regDef = registries.scopes[scopeName];
+      acc[scopeName] = {
+        npmAuthToken: regDef.token,
+        npmRegistryServer: regDef.uri,
+        npmAlwaysAuth: regDef.alwaysAuth,
+      };
+
+      return acc;
+    }, {});
+    return scopedRegistries;
+  }
+
   // TODO: implement this to automate configuration.
   private async computeConfiguration(rootDirPath: PortablePath, installOptions: PackageManagerInstallOptions) {
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
+    const scopedRegistries = await this.getScopedRegistries();
     // TODO: node-modules is hardcoded now until adding support for pnp.
     config.use(
       '<bit>',
       {
         nodeLinker: 'node-modules',
         installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
-        cacheFolder: installOptions.cacheRootDir ? `${installOptions.cacheRootDir}/.yarn/cache` : `${userHome}/.yarn`,
+        cacheFolder: installOptions.cacheRootDir
+          ? `${installOptions.cacheRootDir}/.yarn/cache`
+          : `${userHome}/.yarn/cache`,
         pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
         bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
-        npmScopes: {
-          bit: {
-            npmRegistryServer: 'https://node.bit.dev',
-            npmAuthToken: '4c583557-1e53-44fb-9702-e6c6cbfaa1f5',
-          },
-        },
+        npmScopes: scopedRegistries,
         virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
+        npmRegistryServer: 'https://registry.yarnpkg.com',
         // enableInlineBuilds: true,
         globalFolder: `${rootDirPath}/.yarn/global`,
       },
