@@ -92,7 +92,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async getRegistries(): Promise<Registries> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const { getRegistries } = require('./lynx');
+    const { getRegistries } = require('./get-registries');
     const pnpmRegistry = await getRegistries();
     const defaultRegistry = new Registry(
       pnpmRegistry.default.uri,

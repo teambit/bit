@@ -2649,6 +2649,11 @@
                 "name": "create-resolver.ts"
             },
             {
+                "relativePath": "get-registries.ts",
+                "test": false,
+                "name": "get-registries.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2677,6 +2682,11 @@
                 "relativePath": "pnpm.package-manager.ts",
                 "test": false,
                 "name": "pnpm.package-manager.ts"
+            },
+            {
+                "relativePath": "read-config.ts",
+                "test": false,
+                "name": "read-config.ts"
             }
         ],
         "mainFile": "index.ts",
