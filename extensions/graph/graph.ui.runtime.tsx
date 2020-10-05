@@ -32,11 +32,11 @@ export class GraphUI {
     const graphUI = new GraphUI(componentWidgetSlot);
 
     // TODO - remove feature flag when data provider works for all workspaces
-    if (window.location.pathname !== '/enable-graph') return;
-
-    const section = new GraphSection(componentWidgetSlot);
-    componentUI.registerNavigation(section.navigationLink, section.order);
-    componentUI.registerRoute(section.route);
+    if (window.location.pathname === '/enable-graph') {
+      const section = new GraphSection(componentWidgetSlot);
+      componentUI.registerNavigation(section.navigationLink, section.order);
+      componentUI.registerRoute(section.route);
+    }
 
     return graphUI;
   }
