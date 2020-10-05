@@ -1,3 +1,4 @@
+import { useSubscription } from '@apollo/react-hooks';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
@@ -11,6 +12,30 @@ import { useQuery } from '@apollo/react-hooks';
 import { TestTable } from '@teambit/staged-components.test-table';
 
 import styles from './tests-page.module.scss';
+
+const TESTS_SUBSCRIPTION_CHANGED = gql`
+  subscription OnTestsChanged {
+    testsChanged {
+      componentId
+      testsResults {
+        testFiles {
+          file
+          duration
+          pass
+          failed
+          pending
+          tests {
+            ancestor
+            duration
+            status
+            name
+            error
+          }
+        }
+      }
+    }
+  }
+`;
 
 const GET_COMPONENT = gql`
   query($id: String!) {
@@ -37,7 +62,10 @@ const GET_COMPONENT = gql`
 
 type TestsPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
+// TODO:
 export function TestsPage({ className }: TestsPageProps) {
+  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED);
+
   const component = useContext(ComponentContext);
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id._legacy.name },
@@ -45,9 +73,12 @@ export function TestsPage({ className }: TestsPageProps) {
 
   if (!data) return null;
 
+  if (onTestsChanged.data?.testsChanged?.componentId != component.id.fullName) return null;
+  const testResults = onTestsChanged.data?.testsChanged.testsResults.testFiles;
+
   // TODO: create TestsResultList from data
   // const testResults = TestsResultList.from(data?.getHost?.getTests.tests);
-  const testResults = data?.getHost?.getTests?.testFiles;
+  // const testResults = data?.getHost?.getTests?.testFiles;
 
   if (data?.getHost?.getTests === null) {
     return (

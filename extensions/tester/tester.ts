@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ConcreteService, ExecutionContext } from '@teambit/environments';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
@@ -8,6 +9,12 @@ export type Tests = {
     componentId: ComponentID;
     results: TestsResult;
   }[];
+  errors?: Error[];
+};
+
+export type TestsWatchResults = {
+  bla: string;
+  watch: EventEmitter;
   errors?: Error[];
 };
 
@@ -58,4 +65,9 @@ export interface Tester extends ConcreteService {
    * execute tests on all components in the given execution context.
    */
   test(context: TesterContext): Promise<Tests>;
+
+  /**
+   * watch tests on all components
+   */
+  watch(context: TesterContext): Promise<TestsWatchResults>;
 }

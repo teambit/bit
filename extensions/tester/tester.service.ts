@@ -5,11 +5,11 @@ import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 
 import { NoTestFilesFound } from './exceptions';
-import { Tester, Tests } from './tester';
+import { Tester, Tests, TestsWatchResults } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-export class TesterService implements EnvService<Tests> {
+export class TesterService implements EnvService<Tests | TestsWatchResults> {
   constructor(
     readonly workspace: Workspace,
     /**
@@ -20,7 +20,7 @@ export class TesterService implements EnvService<Tests> {
     private logger: Logger
   ) {}
 
-  async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
+  async run(context: ExecutionContext, options: TesterOptions): Promise<Tests | TestsWatchResults> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
     const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
@@ -41,8 +41,7 @@ export class TesterService implements EnvService<Tests> {
       debug: options.debug,
     });
 
+    if (options.watch) return tester.watch(testerContext);
     return tester.test(testerContext);
   }
-
-  watch() {}
 }

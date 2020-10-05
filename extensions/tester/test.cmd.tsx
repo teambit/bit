@@ -37,11 +37,20 @@ export class TestCmd implements Command {
     this.logger.console(
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
     );
-    await this.tester.test(components, {
-      watch: Boolean(watch),
-      debug: Boolean(debug),
-      env: env as string | undefined,
-    });
+
+    if (watch) {
+      await this.tester.watch(components, {
+        watch: Boolean(watch),
+        debug: Boolean(debug),
+        env: env as string | undefined,
+      });
+    } else {
+      await this.tester.test(components, {
+        watch: Boolean(watch),
+        debug: Boolean(debug),
+        env: env as string | undefined,
+      });
+    }
     const { seconds } = timer.stop();
 
     return (

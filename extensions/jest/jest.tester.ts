@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
@@ -84,6 +85,8 @@ export class JestTester implements Tester {
     }, []);
   }
 
+  onTestRunComplete(testResults: AggregatedResult) {}
+
   async test(context: TesterContext): Promise<Tests> {
     const config: any = {
       rootDir: context.rootPath,
@@ -115,5 +118,49 @@ export class JestTester implements Tester {
     return { components: componentTestResults, errors: globalErrors };
   }
 
-  watch() {}
+  watch(context: TesterContext): any {
+    return new Promise((resolve, reject) => {
+      const events = new EventEmitter();
+      const config: any = {
+        rootDir: context.rootPath,
+        watch: true,
+        watchAll: true,
+        watchPlugins: [
+          [
+            `${__dirname}/watch.js`,
+            {
+              onComplete: (results) => {
+                const testResults = results.testResults;
+                const componentsWithTests = this.attachTestsToComponent(context, testResults);
+                const componentTestResults = this.buildTestsObj(
+                  results,
+                  componentsWithTests,
+                  context,
+                  jestConfigWithSpecs
+                );
+                const globalErrors = this.getErrors(testResults);
+
+                const a = { components: componentTestResults, errors: globalErrors };
+                events.emit('onComplete', a);
+              },
+            },
+          ],
+        ],
+      };
+      // eslint-disable-next-line
+      const jestConfig = require(this.jestConfig);
+      const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
+        specs.forEach((spec) => acc.push(spec.path));
+        return acc;
+      }, []);
+
+      const jestConfigWithSpecs = Object.assign(jestConfig, {
+        testMatch: testFiles,
+      });
+
+      const withEnv = Object.assign(jestConfigWithSpecs, config);
+      runCLI(withEnv, [this.jestConfig]);
+      resolve({ watch: events });
+    });
+  }
 }
