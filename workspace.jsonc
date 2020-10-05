@@ -78,7 +78,7 @@
         "@teambit/evangelist.elements.image": "^0.0.3",
         "@teambit/evangelist.elements.x-button": "0.0.2",
         "@teambit/evangelist.input.input": "^0.0.3",
-        "@teambit/evangelist.surfaces.dropdown": "0.0.3",
+        "@teambit/evangelist.surfaces.dropdown": "0.0.4",
         "@teambit/evangelist.surfaces.tooltip": "0.0.3",
         "@teambit/evangelist.theme.icon-font": "^0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.2",
