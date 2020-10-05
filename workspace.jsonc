@@ -121,7 +121,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        "graphql": "^15.1.0",
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -214,8 +213,7 @@
         "mz": "^2.7.0",
         "bit-bin": "14.8.9-dev.39",
         "graphql": "^14.3.1",
-        "react-dom": "^16.13.1",
-        "@babel/runtime": "^7.11.2"
+        "react-dom": "^16.13.1"
       }
     }
   },
@@ -244,8 +242,7 @@
           "peerDependencies": {
             "react": "^16.13.1",
             "bit-bin": "14.8.9-dev.39",
-            "react-dom": "^16.13.1",
-            "graphql": "^14.3.1"
+            "react-dom": "^16.13.1"
           }
         }
       }
@@ -282,7 +279,8 @@
             "graphql": "^14.3.1",
             "browserslist": "^4",
             "reflect-metadata": "^0.1.13",
-            "mz": "^2.7.0"
+            "mz": "^2.7.0",
+            "react-refresh": "^0.8.2"
           },
           "devDependencies": {
             "@types/react": "^16.9.43",
@@ -294,7 +292,17 @@
             "bit-bin": "-",
             "browserslist": "-",
             "graphql": "-",
-            "react": "-"
+            "react": "-",
+            "react-dom": "-"
+          }
+        }
+      }
+    },
+    "extensions/jest": {
+      "teambit.bit/dependency-resolver": {
+        "policy": {
+          "peerDependencies": {
+            "jest": "^26.0.1"
           }
         }
       }
