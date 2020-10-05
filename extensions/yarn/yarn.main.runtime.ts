@@ -1,7 +1,7 @@
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { YarnPackageManager } from './yarn.package-manager';
 import { MainRuntime } from '@teambit/cli';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
+import { YarnPackageManager } from './yarn.package-manager';
 import { YarnAspect } from './yarn.aspect';
 
 export class YarnMain {
