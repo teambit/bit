@@ -89,6 +89,7 @@ export class DependencyInstaller {
         hasLocalInstallation
       );
     }
+
     return componentDirectoryMap;
   }
 
@@ -184,7 +185,9 @@ export class DependencyInstaller {
       const aspectPath = path.resolve(path.join(module.path, '..', '..'));
       // in this case we want the symlinks to be relative links
       // Using the fs module to make sure it is relative to the target
-      if (fs.existsSync(target)) fs.unlinkSync(target);
+      if (fs.existsSync(target)) {
+        return;
+      }
       fs.symlinkSync(aspectPath, target);
     } catch (err) {
       throw new CoreAspectLinkError(id, err);
