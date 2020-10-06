@@ -4,6 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
+import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher } from '@teambit/command-bar';
@@ -107,6 +108,7 @@ export class WorkspaceUI {
     ComponentTreeAspect,
     CommandBarAspect,
     ReactRouterAspect,
+    GraphAspect,
   ];
 
   static runtime = UIRuntime;
@@ -114,19 +116,21 @@ export class WorkspaceUI {
   static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>(), Slot.withType<ComponentTreeNode>()];
 
   static async provider(
-    [ui, componentUi, sidebar, componentTree, commandBarUI, reactRouterUI]: [
+    [ui, componentUi, sidebar, componentTree, commandBarUI, reactRouterUI, graphUI]: [
       UiUI,
       ComponentUI,
       SidebarUI,
       ComponentTreeUI,
       CommandBarUI,
-      ReactRouterUI
+      ReactRouterUI,
+      GraphUI
     ],
     config,
     [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarWidgetSlot]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
+    graphUI.registerComponentWidget(new ComponentTreeWidget().widget);
 
     const workspaceUI = new WorkspaceUI(
       routeSlot,

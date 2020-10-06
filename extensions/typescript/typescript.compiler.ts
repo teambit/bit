@@ -71,6 +71,13 @@ export class TypescriptCompiler implements Compiler {
 
     const componentsResults = await this.runTscBuild(context.capsuleGraph);
 
+    capsules.forEach(({ capsule }) => {
+      const packageJsonContent = capsule.fs.readFileSync('package.json', 'utf-8');
+      const packageJson = JSON.parse(packageJsonContent);
+      delete packageJson.types;
+      capsule.fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+    });
+
     return {
       artifacts: this.getArtifactDefinition(),
       componentsResults,
