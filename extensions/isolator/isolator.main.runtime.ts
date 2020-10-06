@@ -12,14 +12,14 @@ import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
 import { equals, map } from 'ramda';
-
+import BitMap from 'bit-bin/dist/consumer/bit-map';
+import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
-import writeComponentsToCapsules from './write-components-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -104,8 +104,7 @@ export class IsolatorMain {
     }
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    const consumerComponents = components.map((c) => c.state._consumer);
-    await writeComponentsToCapsules(consumerComponents, capsuleList);
+    await this.writeComponentsInCapsules(components, capsuleList);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
@@ -157,6 +156,38 @@ export class IsolatorMain {
     });
 
     return capsuleList;
+  }
+
+  private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList) {
+    const legacyComponents = components.map((component) => component.state._consumer.clone());
+    const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
+    await Promise.all(
+      components.map(async (component) => {
+        const capsule = capsuleList.getCapsule(component.id);
+        if (!capsule) return;
+        const params = this.getComponentWriteParams(component.state._consumer, allIds);
+        const componentWriter = new ComponentWriter(params);
+        await componentWriter.populateComponentsFilesToWrite();
+        await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
+      })
+    );
+  }
+
+  private getComponentWriteParams(component: ConsumerComponent, ids: BitIds): ComponentWriterProps {
+    return {
+      component,
+      // @ts-ignore
+      bitMap: new BitMap(),
+      writeToPath: '.',
+      origin: 'IMPORTED',
+      consumer: undefined,
+      override: false,
+      writePackageJson: true,
+      writeConfig: false,
+      ignoreBitDependencies: ids,
+      excludeRegistryPrefix: false,
+      isolated: true,
+    };
   }
 
   private toComponentMap(capsules: Capsule[]): ComponentMap<string> {

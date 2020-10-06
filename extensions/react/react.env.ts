@@ -90,6 +90,17 @@ export class ReactEnv implements Environment {
     });
   }
 
+  getCompilers(): CompilationManifest {
+    return [
+      this.ts.createCompiler({
+        artifactName: 'es2015',
+      }),
+      this.babel.createCompiler({
+        artifactName: 'esm2015',
+      }),
+    ];
+  }
+
   /**
    * returns and configures the component linter.
    * TODO: linter aspect, es-hint aspect

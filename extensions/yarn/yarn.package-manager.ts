@@ -117,7 +117,7 @@ export class YarnPackageManager implements PackageManager {
       const packageJsonPath = resolve(join(dir, 'package.json'));
       if (installOptions.cacheRootDir) unlinkSync(packageJsonPath);
       const exists = existsSync(modulePath);
-      if (!exists) return; // TODO: check if this can be done through the yarn API.
+      if (exists) return; // TODO: check if this can be done through the yarn API.
       unlinkSync(modulePath);
     });
   }
@@ -170,20 +170,23 @@ export class YarnPackageManager implements PackageManager {
     return scopedRegistries;
   }
 
+  private getCacheFolder(options: PackageManagerInstallOptions) {
+    return options.cacheRootDir ? `${options.cacheRootDir}/.yarn/cache` : `${userHome}/.yarn/cache`;
+  }
+
   // TODO: implement this to automate configuration.
   private async computeConfiguration(rootDirPath: PortablePath, installOptions: PackageManagerInstallOptions) {
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries();
+    const cacheFolder = this.getCacheFolder(installOptions);
     // TODO: node-modules is hardcoded now until adding support for pnp.
     config.use(
       '<bit>',
       {
         nodeLinker: 'node-modules',
         installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
-        cacheFolder: installOptions.cacheRootDir
-          ? `${installOptions.cacheRootDir}/.yarn/cache`
-          : `${userHome}/.yarn/cache`,
+        cacheFolder,
         pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
         bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
         npmScopes: scopedRegistries,
@@ -228,16 +231,16 @@ export class YarnPackageManager implements PackageManager {
 
   // TODO: implement this with either the yarn API or add a default resolver in the dep resolver.
   async resolveRemoteVersion(
-    packageName: string,
+    packageName: string
     // options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion> {
     const parsedPackage = parsePackageName(packageName);
     const parsedVersion = parsedPackage.version;
-    if (parsedVersion && semver.valid(parsedVersion)){
+    if (parsedVersion && semver.valid(parsedVersion)) {
       return {
         packageName: parsedPackage.name,
         version: parsedVersion,
-        isSemver: true
+        isSemver: true,
       };
     }
     const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
@@ -245,7 +248,7 @@ export class YarnPackageManager implements PackageManager {
     return {
       packageName: parsedPackage.name,
       version: stdout,
-      isSemver: true
+      isSemver: true,
     };
   }
 }
