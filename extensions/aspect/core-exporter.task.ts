@@ -49,8 +49,8 @@ export class CoreExporterTask implements BuildTask {
 function generateBarrelFile(packageName) {
   return `
 Object.defineProperty(exports, "__esModule", { value: true });
-const aspect = require("${packageName}");
-module.exports = aspect;
+// const aspect = require("${packageName}");
+// module.exports = aspect;
 module.exports.path = require.resolve("${packageName}");
 `;
 }
