@@ -3,14 +3,8 @@ import R, { forEachObjIndexed } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { BitId, BitIds } from '../../bit-id';
-import ShowDoctorError from '../../error/show-doctor-error';
-import { Scope } from '../../scope';
-import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
-import Source from '../../scope/models/source';
-import { Ref, Repository } from '../../scope/objects';
 import { sortObject } from '../../utils';
-import { AbstractVinyl } from '../component/sources';
-import { ArtifactVinyl } from '../component/sources/artifact';
+import { Artifacts } from '../component/sources/artifacts';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
@@ -26,9 +20,7 @@ export class ExtensionDataEntry {
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
     // TODO: rename to files and make sure it only includes abstract vinyl
-    public artifacts: Array<
-      AbstractVinyl | { relativePath: string; file: Source } | { relativePath: string; file: Ref }
-    > = [],
+    public artifacts: Artifacts = new Artifacts(),
     public newExtensionId: any = undefined
   ) {}
 
@@ -51,42 +43,14 @@ export class ExtensionDataEntry {
     return false;
   }
 
-  async getArtifactsVinylImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
-    await this.importMissingArtifacts(scopeName, scope);
-    return this.getArtifactsAsVinyl(scope);
-  }
-
-  private async importMissingArtifacts(scopeName: string, scope: Scope) {
-    if (!this.artifacts.length) return;
-    if (this.artifacts[0] instanceof ArtifactVinyl) return;
-    const allHashes = this.artifacts.map((artifact) => artifact.file.hash);
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-    await scopeComponentsImporter.importManyObjects({ [scopeName]: allHashes });
-  }
-
-  async getArtifactsAsVinyl(scope: Scope): Promise<ArtifactVinyl[]> {
-    if (!this.artifacts.length) return [];
-    if (this.artifacts[0] instanceof ArtifactVinyl) return this.artifacts as ArtifactVinyl[];
-    const getOneArtifact = async (artifact: { file: Ref; relativePath: string }) => {
-      const content = (await artifact.file.load(scope.objects)) as Source;
-      if (!content) throw new ShowDoctorError(`failed loading file ${artifact.relativePath} from the model`);
-      return new ArtifactVinyl({ base: '.', path: artifact.relativePath, contents: content.contents });
-    };
-    // @ts-ignore
-    return Promise.all(this.artifacts.map((artifact) => getOneArtifact(artifact)));
-  }
-
   clone(): ExtensionDataEntry {
-    const clonedArtifacts = this.artifacts.map((artifact) => {
-      return artifact instanceof ArtifactVinyl ? artifact.clone() : artifact;
-    });
     return new ExtensionDataEntry(
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
       R.clone(this.config),
       R.clone(this.data),
-      clonedArtifacts
+      this.artifacts.clone()
     );
   }
 
@@ -182,19 +146,6 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     return new ExtensionDataList(...extensionDataEntries);
-  }
-
-  toModelObjects(): ExtensionDataList {
-    const cloned = this.clone();
-    cloned.forEach((extensionDataEntry) => {
-      extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
-        return {
-          file: artifact.file.hash(),
-          relativePath: artifact.relativePath,
-        };
-      });
-    });
-    return cloned;
   }
 
   _filterLegacy(): ExtensionDataList {

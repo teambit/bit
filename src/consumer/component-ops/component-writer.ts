@@ -8,7 +8,6 @@ import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TES
 import ShowDoctorError from '../../error/show-doctor-error';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
-import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
@@ -214,7 +213,7 @@ export default class ComponentWriter {
     if (!scope) throw new Error(`unable to populate artifacts for ${this.component.name}, the consumer is undefined`);
     const artifactsVinyl = await Promise.all(
       extensionDataEntries.map((extDataEntry) =>
-        extDataEntry?.getArtifactsVinylImportIfMissing(this.component.scope as string, scope)
+        extDataEntry?.artifacts.getVinylsAndImportIfMissing(this.component.scope as string, scope)
       )
     );
     const artifactsVinylFlattened: ArtifactVinyl[] = R.flatten(artifactsVinyl);

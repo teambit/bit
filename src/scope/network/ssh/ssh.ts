@@ -14,7 +14,6 @@ import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';

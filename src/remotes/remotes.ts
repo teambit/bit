@@ -1,10 +1,8 @@
-import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
 
 import { BitId } from '../bit-id';
 import { FETCH_OPTIONS } from '../constants';
 import GlobalRemotes from '../global-config/global-remotes';
-import { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { ObjectList } from '../scope/objects/object-list';

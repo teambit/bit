@@ -2,7 +2,6 @@ import { BitId } from '../bit-id';
 import { FETCH_OPTIONS } from '../constants';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
-import { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import ComponentObjects from '../scope/component-objects';
 import DependencyGraph from '../scope/graph/scope-graph';

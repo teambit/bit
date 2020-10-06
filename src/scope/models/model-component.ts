@@ -15,7 +15,6 @@ import {
 import ConsumerComponent from '../../consumer/component';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import { Dist, License, SourceFile } from '../../consumer/component/sources';
-import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';

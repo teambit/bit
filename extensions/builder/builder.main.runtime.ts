@@ -134,7 +134,7 @@ export class BuilderMain {
   async getArtifactsByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const dataEntry = component.state.aspects.get(aspectName);
     if (!dataEntry) return [];
-    return dataEntry.legacy.getArtifactsVinylImportIfMissing(component.id.scope, this.scope);
+    return dataEntry.legacy.artifacts.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope);
   }
 
   /**
