@@ -1,6 +1,4 @@
 import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
-import { PackageDependency } from './package-dependency';
-import { ComponentDependency } from './component-dependency';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 
 export class DependencyList {

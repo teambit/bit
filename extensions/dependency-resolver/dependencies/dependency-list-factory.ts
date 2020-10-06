@@ -20,5 +20,7 @@ export class DependencyListFactory {
     return new DependencyList(dependencies);
   }
 
-  static fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {}
+  static fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {
+    // legacyComponent.dependencies.
+  }
 }
