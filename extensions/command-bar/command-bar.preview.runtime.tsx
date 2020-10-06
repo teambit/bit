@@ -1,7 +1,7 @@
 import { PreviewRuntime } from '@teambit/preview';
 import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { CommandBarAspect } from './command-bar.aspect';
-import { KeyTypeEvent } from './model/key-event';
+import { KeyEvent } from './model/key-event';
 
 export class CommandBarPreview {
   constructor(private pubSub: PubsubPreview) {
@@ -11,7 +11,7 @@ export class CommandBarPreview {
   }
 
   handleKeyEvent = (e: KeyboardEvent) => {
-    this.pubSub.pub(CommandBarAspect.id, new KeyTypeEvent(e));
+    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
   };
 
   static dependencies = [PubsubAspect];
