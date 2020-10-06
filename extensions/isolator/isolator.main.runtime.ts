@@ -12,7 +12,6 @@ import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
 import { equals, map } from 'ramda';
-
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';

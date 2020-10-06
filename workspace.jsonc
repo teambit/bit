@@ -87,6 +87,9 @@
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/node-fetch": "2.5.7",
+        "@yarnpkg/cli": "2.3.1",
+        "@yarnpkg/core": "2.2.2",
+        "@yarnpkg/fslib": "2.2.2",
         "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -212,7 +215,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.39",
+        "bit-bin": "14.8.9-dev.45",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -242,7 +245,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.39",
+            "bit-bin": "14.8.9-dev.45",
             "react-dom": "^16.13.1"
           }
         }
@@ -274,7 +277,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.39",
+            "bit-bin": "14.8.9-dev.45",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
