@@ -1,5 +1,5 @@
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { H3 } from '@teambit/documenter.ui.heading';
+import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -12,10 +12,9 @@ type ScopeTitleProps = {
 
 export function ScopeTitle({ owner, scopeName, className }: ScopeTitleProps) {
   return (
-    // TODO - @oded - replace with h1 once I remove possibleSizes from the heading component
-    <H3 className={styles.title}>
+    <H1 className={styles.title} size="sm">
       <span className={classNames(mutedText, styles.orgName, className)}>{owner}/</span>
       <span>{scopeName}</span>
-    </H3>
+    </H1>
   );
 }
