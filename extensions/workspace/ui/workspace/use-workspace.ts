@@ -11,6 +11,9 @@ const componentFields = gql`
       version
       scope
     }
+    compositions {
+      identifier
+    }
     issuesCount
     status {
       isNew
