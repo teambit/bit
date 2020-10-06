@@ -216,7 +216,7 @@ export default class ComponentWriter {
         extDataEntry?.artifacts.getVinylsAndImportIfMissing(this.component.scope as string, scope)
       )
     );
-    const artifactsVinylFlattened: ArtifactVinyl[] = R.flatten(artifactsVinyl);
+    const artifactsVinylFlattened: ArtifactVinyl[] = R.flatten(artifactsVinyl).filter((vinyl) => vinyl);
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
