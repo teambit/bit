@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -59,19 +59,21 @@ export class PkgMain {
     LoggerAspect,
     WorkspaceAspect,
     BuilderAspect,
+    ComponentAspect,
   ];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static async provider(
-    [cli, scope, envs, isolator, logger, workspace, builder]: [
+    [cli, scope, envs, isolator, logger, workspace, builder, componentAspect]: [
       CLIMain,
       ScopeMain,
       EnvsMain,
       IsolatorMain,
       LoggerMain,
       Workspace,
-      BuilderMain
+      BuilderMain,
+      ComponentMain
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
@@ -81,7 +83,16 @@ export class PkgMain {
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, packer, envs, dryRunTask, preparePackagesTask);
+    const pkg = new PkgMain(
+      config,
+      packageJsonPropsRegistry,
+      workspace,
+      packer,
+      envs,
+      dryRunTask,
+      preparePackagesTask,
+      componentAspect
+    );
 
     builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
     if (workspace) {
@@ -140,7 +151,9 @@ export class PkgMain {
 
     readonly dryRunTask: PublishDryRunTask,
 
-    readonly preparePackagesTask: PreparePackagesTask
+    readonly preparePackagesTask: PreparePackagesTask,
+
+    private componentAspect: ComponentMain
   ) {}
 
   /**
@@ -206,11 +219,15 @@ export class PkgMain {
   }
 
   async transformPackageJson(
-    component: LegacyComponent,
+    legacyComponent: LegacyComponent,
     packageJsonObject: Record<string, any>
   ): Promise<Record<string, any>> {
-    const newId = await this.workspace.resolveComponentId(component.id);
-    const newComponent = await this.workspace.get(newId);
+    // const newId = await this.workspace.resolveComponentId(component.id);
+    // const newComponent = await this.workspace.get(newId);
+    const host = await this.componentAspect.getHost();
+    const id = await host.resolveComponentId(legacyComponent.id);
+    const newComponent = await host.get(id);
+    if (!newComponent) throw new Error(`cannot transform package.json of component: ${legacyComponent.id.toString()}`);
     const newProps = this.getPackageJsonModifications(newComponent);
     return Object.assign(packageJsonObject, newProps);
   }

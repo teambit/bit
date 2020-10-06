@@ -302,7 +302,7 @@ export class Workspace implements ComponentFactory {
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
     const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
-    const components = await this.getMany(ids);
+    const components = await this.getMany(ids, true);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -337,9 +337,11 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
-  private async getConsumerComponent(id: ComponentID) {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
     try {
-      return await this.consumer.loadComponent(id._legacy);
+      return forCapsule
+        ? await this.consumer.loadComponentForCapsule(id._legacy)
+        : await this.consumer.loadComponent(id._legacy);
     } catch (err) {
       return undefined;
     }
@@ -358,8 +360,8 @@ export class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.getConsumerComponent(id);
+  async get(id: ComponentID, forCapsule = false): Promise<Component> {
+    const consumerComponent = await this.getConsumerComponent(id, forCapsule);
     const component = await this.scope.get(id);
     if (!consumerComponent) {
       if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
@@ -510,13 +512,13 @@ export class Workspace implements ComponentFactory {
   /**
    * @todo: remove the string option, use only BitId
    */
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id).catch((err) => {
+      return this.get(id, forCapsule).catch((err) => {
         errors.push({
           id,
           err,

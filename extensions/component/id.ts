@@ -72,6 +72,11 @@ export class ComponentID {
     return ComponentID.fromLegacy(legacyId);
   }
 
+  changeVersion(version: string) {
+    const legacyId = this._legacy.changeVersion(version);
+    return ComponentID.fromLegacy(legacyId, this.scope);
+  }
+
   isEqual(id: ComponentID, opts: { ignoreVersion?: boolean } = {}): boolean {
     const result = id.scope === this.scope && id.toString() === this.toString();
     if (!opts.ignoreVersion) {
