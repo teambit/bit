@@ -409,13 +409,13 @@ export default class ComponentWriter {
   }
 
   _updateFilesBasePaths() {
-    // if (!this.isolated) {
-    const newBase = this.writeToPath || '.';
-    this.component.files.forEach((file) => file.updatePaths({ newBase }));
-    if (!this.component.dists.isEmpty()) {
-      this.component.dists.get().forEach((dist) => dist.updatePaths({ newBase }));
+    if (!this.isolated) {
+      const newBase = this.writeToPath || '.';
+      this.component.files.forEach((file) => file.updatePaths({ newBase }));
+      if (!this.component.dists.isEmpty()) {
+        this.component.dists.get().forEach((dist) => dist.updatePaths({ newBase }));
+      }
     }
-    // }
   }
 
   async _cleanOldNestedComponent() {
