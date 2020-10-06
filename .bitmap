@@ -1971,6 +1971,11 @@
                 "name": "duplicate-dependency.ts"
             },
             {
+                "relativePath": "edge-type.ts",
+                "test": false,
+                "name": "edge-type.ts"
+            },
+            {
                 "relativePath": "graph-builder.ts",
                 "test": false,
                 "name": "graph-builder.ts"
@@ -1996,6 +2001,11 @@
                 "name": "graph.provider.ts"
             },
             {
+                "relativePath": "graph.ui.runtime.tsx",
+                "test": false,
+                "name": "graph.ui.runtime.tsx"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -2004,6 +2014,151 @@
                 "relativePath": "readme.md",
                 "test": false,
                 "name": "readme.md"
+            },
+            {
+                "relativePath": "ui/component-node/component-node.module.scss",
+                "test": false,
+                "name": "component-node.module.scss"
+            },
+            {
+                "relativePath": "ui/component-node/component-node.tsx",
+                "test": false,
+                "name": "component-node.tsx"
+            },
+            {
+                "relativePath": "ui/component-node/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/component-node/variants.module.scss",
+                "test": false,
+                "name": "variants.module.scss"
+            },
+            {
+                "relativePath": "ui/component-node/variants.ts",
+                "test": false,
+                "name": "variants.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/calc-elements.tsx",
+                "test": false,
+                "name": "calc-elements.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/calc-layout.tsx",
+                "test": false,
+                "name": "calc-layout.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/dep-edge.tsx",
+                "test": false,
+                "name": "dep-edge.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/edge.module.scss",
+                "test": false,
+                "name": "edge.module.scss"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dep-edge/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dependencies-graph.module.scss",
+                "test": false,
+                "name": "dependencies-graph.module.scss"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/dependencies-graph.tsx",
+                "test": false,
+                "name": "dependencies-graph.tsx"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/graph-context.ts",
+                "test": false,
+                "name": "graph-context.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/dependencies-graph/minimap.ts",
+                "test": false,
+                "name": "minimap.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-page.module.scss",
+                "test": false,
+                "name": "graph-page.module.scss"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-page.tsx",
+                "test": false,
+                "name": "graph-page.tsx"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-summery/graph-summery.module.scss",
+                "test": false,
+                "name": "graph-summery.module.scss"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-summery/graph-summery.tsx",
+                "test": false,
+                "name": "graph-summery.tsx"
+            },
+            {
+                "relativePath": "ui/graph-page/graph-summery/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph-page/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/graph.section.tsx",
+                "test": false,
+                "name": "graph.section.tsx"
+            },
+            {
+                "relativePath": "ui/query/edge-model.ts",
+                "test": false,
+                "name": "edge-model.ts"
+            },
+            {
+                "relativePath": "ui/query/get-graph.query.ts",
+                "test": false,
+                "name": "get-graph.query.ts"
+            },
+            {
+                "relativePath": "ui/query/graph-model.ts",
+                "test": false,
+                "name": "graph-model.ts"
+            },
+            {
+                "relativePath": "ui/query/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "ui/query/node-model.ts",
+                "test": false,
+                "name": "node-model.ts"
+            },
+            {
+                "relativePath": "ui/query/use-graph-query.ts",
+                "test": false,
+                "name": "use-graph-query.ts"
+            },
+            {
+                "relativePath": "ui/query/use-graph.tsx",
+                "test": false,
+                "name": "use-graph.tsx"
             }
         ],
         "mainFile": "index.ts",
@@ -3514,6 +3669,44 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/deprecation-icon": {
+        "files": [
+            {
+                "relativePath": "deprecation-icon.tsx",
+                "test": false,
+                "name": "deprecation-icon.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/deprecation-icon",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/env-icon": {
+        "files": [
+            {
+                "relativePath": "env-icon.tsx",
+                "test": false,
+                "name": "env-icon.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/env-icon",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/component-status@0.0.65": {
         "files": [
             {
@@ -4410,6 +4603,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/stencil",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "styles/ellipsis": {
+        "files": [
+            {
+                "relativePath": "ellipsis.module.scss",
+                "test": false,
+                "name": "ellipsis.module.scss"
+            },
+            {
+                "relativePath": "ellipsis.tsx",
+                "test": false,
+                "name": "ellipsis.tsx"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/styles/ellipsis",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

@@ -17,8 +17,8 @@ export type ComponentModelProps = {
   server: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
-  compositions: CompositionProps[];
-  tags: TagProps[];
+  compositions?: CompositionProps[];
+  tags?: TagProps[];
   issuesCount: number; // component/issues aspect
   status: any; // workspace aspect.
   deprecation: DeprecationInfo; // deprecation aspect
@@ -95,23 +95,21 @@ export class ComponentModel {
     id,
     server,
     displayName,
-    compositions,
+    compositions = [],
     packageName,
-    tags,
+    tags = [],
     deprecation,
     env,
     status,
     issuesCount,
   }: ComponentModelProps) {
-    const tagsArray = tags || [];
-
     return new ComponentModel(
       ComponentID.fromObject(id),
       displayName,
       packageName,
       server,
-      Composition.fromArray(compositions || []),
-      TagMap.fromArray(tagsArray.map((tag) => Tag.fromObject(tag))),
+      Composition.fromArray(compositions),
+      TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
       issuesCount,
       status,
       deprecation,
