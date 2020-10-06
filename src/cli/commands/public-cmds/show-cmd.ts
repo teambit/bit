@@ -110,7 +110,7 @@ export default class Show implements LegacyCommand {
         componentObj.dists = componentObj.dists.getAsReadable();
         if (comp.extensions && comp.extensions.length) {
           componentObj.extensions.forEach(
-            (extension) => (extension.artifacts = extension.artifacts.map((file) => file.toReadableString()))
+            (extension) => (extension.artifacts = extension.artifacts.refs.map((file) => file.relativePath))
           );
         }
 
