@@ -2201,11 +2201,6 @@
                 "relativePath": "symlink-dependencies-to-capsules.ts",
                 "test": false,
                 "name": "symlink-dependencies-to-capsules.ts"
-            },
-            {
-                "relativePath": "write-components-to-capsules.ts",
-                "test": false,
-                "name": "write-components-to-capsules.ts"
             }
         ],
         "mainFile": "index.ts",
