@@ -9,6 +9,7 @@ import {
   PackageManagerInstallOptions,
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
+  Registries,
   // PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
@@ -155,8 +156,7 @@ export class YarnPackageManager implements PackageManager {
     });
   }
 
-  private async getScopedRegistries() {
-    const registries = await this.depResolver.getRegistries();
+  private async getScopedRegistries(registries: Registries) {
     const scopedRegistries = Object.keys(registries.scopes).reduce((acc, scopeName) => {
       const regDef = registries.scopes[scopeName];
       acc[scopeName] = {
@@ -176,9 +176,11 @@ export class YarnPackageManager implements PackageManager {
 
   // TODO: implement this to automate configuration.
   private async computeConfiguration(rootDirPath: PortablePath, installOptions: PackageManagerInstallOptions) {
+    const registries = await this.depResolver.getRegistries();
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
-    const scopedRegistries = await this.getScopedRegistries();
+    const scopedRegistries = await this.getScopedRegistries(registries);
+    const defaultRegistry = registries.defaultRegistry;
     const cacheFolder = this.getCacheFolder(installOptions);
     // TODO: node-modules is hardcoded now until adding support for pnp.
     config.use(
@@ -191,7 +193,9 @@ export class YarnPackageManager implements PackageManager {
         bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
         npmScopes: scopedRegistries,
         virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
-        npmRegistryServer: 'https://registry.yarnpkg.com',
+        npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
+        npmAuthToken: defaultRegistry.token,
+        npmAlwaysAuth: defaultRegistry.alwaysAuth,
         // enableInlineBuilds: true,
         globalFolder: `${rootDirPath}/.yarn/global`,
       },
