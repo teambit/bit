@@ -7,10 +7,12 @@ import {
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
-  RegistriesMap,
+  ResolvedPackageVersion,
+  Registries,
+  Registry,
 } from '@teambit/dependency-resolver';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
+import { omit } from 'lodash';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
 import userHome from 'user-home';
@@ -88,9 +90,24 @@ export class PnpmPackageManager implements PackageManager {
     return resolveRemoteVersion(packageName, options.rootDir, storeDir);
   }
 
-  async getRegistries(): Promise<RegistriesMap> {
+  async getRegistries(): Promise<Registries> {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    const { getRegistries } = require('./lynx');
-    return getRegistries();
+    const { getRegistries } = require('./get-registries');
+    const pnpmRegistry = await getRegistries();
+    const defaultRegistry = new Registry(
+      pnpmRegistry.default.uri,
+      pnpmRegistry.default.alwaysAuth,
+      pnpmRegistry.default.authHeaderValue
+    );
+
+    const pnpmScoped = omit(pnpmRegistry, ['default']);
+    const scopesRegistries = Object.keys(pnpmScoped).reduce((acc, scopedRegName) => {
+      const scopedReg = pnpmScoped[scopedRegName];
+      const name = scopedRegName.replace('@', '');
+      acc[name] = new Registry(scopedReg.uri, scopedReg.alwaysAuth, scopedReg.authHeaderValue);
+      return acc;
+    }, {});
+
+    return new Registries(defaultRegistry, scopesRegistries);
   }
 }

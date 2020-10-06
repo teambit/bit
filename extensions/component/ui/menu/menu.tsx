@@ -1,6 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavigationSlot } from '@teambit/react-router';
 // import { MainDropdown } from '@teambit/staged-components.main-dropdown';
+// import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/staged-components.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import classnames from 'classnames';
@@ -34,6 +35,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
     ?.toArray()
     .map((tag) => tag?.version?.version)
     .reverse();
+  // const componentFullName = component?.id?.toString();
 
   return (
     <div className={classnames(styles.topBar, className)}>
@@ -41,6 +43,9 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         <MenuNav navigationSlot={navigationSlot} />
       </div>
       <div className={styles.rightSide}>
+        {/* 
+        {versionList.length > 0 && <ImportAction copyLink={componentFullName} componentName={component.id.name} />} 
+        */}
         <VersionDropdown versions={versionList} currentVersion={component.version} />
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />

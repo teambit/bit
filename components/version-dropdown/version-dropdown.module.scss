@@ -17,18 +17,6 @@
   }
 }
 
-// TODO  @oded - @hack! this is for closing the menu when clicking an iframe for the beta. we need a better way to do this because it uses a global data-attr
-.overlay {
-  [data-open='true'] & {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
-  }
-}
-
 .title {
   padding: 16px;
   padding-bottom: 12px;
@@ -47,6 +35,12 @@
   align-items: center;
   height: 36px;
   padding: 0 24px;
+  text-decoration: none;
+  color: var(--text-highlight);
+  &:last-child {
+    margin-bottom: 8px;
+  }
+
   .version {
     margin-right: 16px;
   }
@@ -73,7 +67,7 @@
     }
   }
   // > div {
-  // margin-right: 5px;
+  //   margin-right: 5px;
   // }
   .label {
     margin-right: 8px;

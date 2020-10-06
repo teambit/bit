@@ -44,6 +44,7 @@ export class WorkspaceUI {
 
     reactRouterUI: ReactRouterUI
   ) {
+    // TODO: @oded please never add logic in the constructor - this should be done from the provider.
     this.registerExplicitRoutes();
     this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
   }
