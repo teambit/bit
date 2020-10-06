@@ -76,7 +76,7 @@ export default class DataToPersist {
   }
   async persistAllToCapsule(capsule: any, opts = { keepExistingCapsule: false }) {
     this._log();
-    // this._validateRelative();
+    this._validateRelative();
     if (!opts.keepExistingCapsule) {
       await Promise.all(this.remove.map((pathToRemove) => capsule.removePath(pathToRemove.path)));
     }
@@ -90,8 +90,8 @@ export default class DataToPersist {
   async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
     // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
     if (opts.overwriteExistingFile) {
-      await capsule.removePath(file.relative);
-      return capsule.outputFile(file.relative, file.contents, {});
+      await capsule.removePath(file.path);
+      return capsule.outputFile(file.path, file.contents, {});
     }
     if (file.override === false) {
       // @todo, capsule hack. use capsule.fs once you get it as a component.
@@ -99,7 +99,7 @@ export default class DataToPersist {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const absPath = path.join(capsulePath, file.relative);
+      const absPath = path.join(capsulePath, file.path);
       try {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
         logger.debug(`skip file ${absPath}, it already exists`);
@@ -113,7 +113,7 @@ export default class DataToPersist {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return capsule.outputFile(file.relative, file.contents);
+    return capsule.outputFile(file.path, file.contents);
   }
   async atomicSymlink(capsule: Capsule, symlink: Symlink) {
     try {
