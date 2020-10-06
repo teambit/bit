@@ -1,45 +1,34 @@
-import { Dependency } from './dependency';
+import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
 import { PackageDependency } from './package-dependency';
 import { ComponentDependency } from './component-dependency';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 
 export class DependencyList {
-  constructor(private _dependencies: Array<T extends Dependency>){}
+  constructor(private _dependencies: Array<Dependency>) {}
   // constructor(private _dependencies: Dependency[]){}
 
-  get dependencies(): Dependency[]{
+  get dependencies(): Dependency[] {
     return this._dependencies;
   }
 
-  /**
-   * Get only package dependencies
-   *
-   * @readonly
-   * @memberof DependencyList
-   */
-  get packages(): PackageDependency[] {
-    return this.dependencies.filter((dep) => dep instanceof PackageDependency);
+  byTypeName<T extends Dependency>(typeName: string): T[] {
+    const list: T[] = (this.dependencies.filter((dep) => dep.type === typeName) as any) as T[];
+    return list;
   }
 
-  get components(): ComponentDependency[] {
-    return this.dependencies.filter((dep) => dep instanceof ComponentDependency);
+  byLifecycle(lifecycle: DependencyLifecycleType): DependencyList {
+    const filtered = this.dependencies.filter((dep) => dep.lifecycle === lifecycle);
+    return DependencyList.fromArray(filtered);
   }
 
-  serialize() {
-
+  serialize(): SerializedDependency[] {
+    const serialized = this.dependencies.map((dep) => {
+      return dep.serialize();
+    });
+    return serialized;
   }
 
-  static fromArray(dependencies: Dependency[]): DependencyList {
+  static fromArray(dependencies: Array<Dependency>) {
     return new DependencyList(dependencies);
   }
-
-  static parse(){
-
-  }
-
-  static fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {
-
-  }
 }
-
-

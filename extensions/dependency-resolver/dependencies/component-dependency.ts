@@ -1,9 +1,31 @@
-import { ComponentID } from "@teambit/component";
+import { ComponentID } from '@teambit/component';
 
-import { Dependency } from './dependency';
+import { Dependency, SerializedDependency } from './dependency';
+import { BaseDependency } from './base-dependency';
+import { DependencyLifecycleType } from './dependency';
 
-export class ComponentDependency extends Dependency {
-  constructor(readonly id: ComponentID, version: string) {
-    super(version);
+export interface SerializedComponentDependency extends SerializedDependency {
+  componentId: Object;
+}
+export class ComponentDependency extends BaseDependency {
+  constructor(
+    private _componentId: ComponentID,
+    id: string,
+    version: string,
+    type: string,
+    lifecycle: DependencyLifecycleType
+  ) {
+    super(id, version, type, lifecycle);
+  }
+
+  get componentId() {
+    return this._componentId;
+  }
+
+  serialize(): SerializedComponentDependency {
+    const serialized: SerializedComponentDependency = Object.assign({}, super.serialize(), {
+      componentId: this.componentId.toObject(),
+    });
+    return serialized;
   }
 }

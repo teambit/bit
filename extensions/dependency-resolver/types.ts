@@ -86,7 +86,6 @@ export interface RawComponentState {
   config: ComponentConfig;
 }
 
-export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 export type DependencyType = 'package' | 'component';
 
 /**

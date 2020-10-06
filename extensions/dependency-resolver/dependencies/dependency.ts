@@ -1,7 +1,17 @@
-export abstract class Dependency {
-  constructor(private _version: string){}
+export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 
-  get version(){
-    return this.version;
-  }
+export interface SerializedDependency {
+  id: string;
+  version: string;
+  type: string;
+  lifecycle: string;
+}
+
+export interface Dependency {
+  id: string;
+  version: string;
+  type: string;
+  lifecycle: DependencyLifecycleType;
+
+  serialize: () => SerializedDependency;
 }
