@@ -303,6 +303,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const component = await this.findOrAddComponent(consumerComponent);
     const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
     const artifacts = this.transformArtifactsFromVinylToSource(consumerComponent.extensions);
+    version.extensions = consumerComponent.extensions;
     artifacts.forEach((file) => objectRepo.add(file.source));
     objectRepo.add(version);
 

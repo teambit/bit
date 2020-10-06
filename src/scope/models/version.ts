@@ -312,7 +312,7 @@ export default class Version extends BitObject {
       allRefs.push(...this.parents);
     }
     if (includeArtifacts) {
-      const artifacts = extractRefsFromFiles(R.flatten(this.extensions.map((e) => e.artifacts)));
+      const artifacts = R.flatten(this.extensions.map((e) => e.artifacts.refs.map((r) => r.ref)));
       allRefs.push(...artifacts);
     }
     return allRefs;
