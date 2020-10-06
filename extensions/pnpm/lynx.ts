@@ -1,4 +1,3 @@
-import getConfig from '@pnpm/config';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
@@ -14,9 +13,7 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
-import { Logger } from '@teambit/logger';
-
+import { ResolvedPackageVersion } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
@@ -26,22 +23,8 @@ import { MutatedProject, mutateModules } from 'supi';
 // import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
-import { RegistriesMap } from '@teambit/dependency-resolver';
-import getCredentialsByURI = require('credentials-by-uri');
-
-async function readConfig() {
-  const pnpmConfig = await getConfig({
-    cliOptions: {
-      // 'global': true,
-      // 'link-workspace-packages': true,
-    },
-    packageManager: {
-      name: 'pnpm',
-      version: '1.0.0',
-    },
-  });
-  return pnpmConfig;
-}
+import { Logger } from '@teambit/logger';
+import {readConfig} from './read-config';
 
 // TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
 // function getReporter(logger: Logger): ReporterFunction {
@@ -191,19 +174,4 @@ export async function resolveRemoteVersion(
       resolvedVia: val.resolvedVia,
     };
   }
-}
-
-export async function getRegistries(): Promise<RegistriesMap> {
-  const config = await readConfig();
-  const registriesMap: RegistriesMap = {};
-  Object.keys(config.config.registries).forEach((regName) => {
-    const uri = config.config.registries[regName];
-    const credentials = getCredentialsByURI(config.config.rawConfig, uri);
-    registriesMap[regName] = {
-      uri,
-      alwaysAuth: !!credentials.alwaysAuth,
-      authHeaderValue: credentials.authHeaderValue,
-    };
-  });
-  return registriesMap;
 }

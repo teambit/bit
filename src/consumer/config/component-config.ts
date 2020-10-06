@@ -1,6 +1,5 @@
 import { mapSeries } from 'bluebird';
 import R from 'ramda';
-
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
